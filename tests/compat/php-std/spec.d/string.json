@@ -1602,6 +1602,32 @@
         }
       ]
     },
+    "string.basename": {
+      "doc": "basename($path, $suffix)",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "path": {
+                "gen": "string",
+                "alphabet": "ab./\u00e9\u0000",
+                "min": 0,
+                "max": 12
+              },
+              "suffix": {
+                "gen": "pick",
+                "from": ["", ".", "b", ".b", "a/", "ab"]
+              }
+            },
+            "optional": [
+              "suffix"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
     "string.chunk_split": {
       "doc": "chunk_split($string, $length, $separator)",
       "fuzz": [

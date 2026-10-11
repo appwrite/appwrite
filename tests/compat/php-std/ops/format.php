@@ -20,6 +20,10 @@ return [
     'format.boolval' => fn (array $a) => boolval(...$a),
     'format.max' => fn (array $a) => max(...$a['values']),
     'format.min' => fn (array $a) => min(...$a['values']),
+    // A direct two-argument call, which PHP compiles to its frameless form.
+    'format.min_pair' => fn (array $a) => min((float) $a['a'], (float) $a['b']),
+    'format.max_pair' => fn (array $a) => max((float) $a['a'], (float) $a['b']),
+    'format.pow' => fn (array $a) => (float) $a['base'] ** (float) $a['exponent'],
     'format.max_array' => fn (array $a) => max(...$a),
     'format.min_array' => fn (array $a) => min(...$a),
     'format.arith' => fn (array $a) => match ($a['op']) {

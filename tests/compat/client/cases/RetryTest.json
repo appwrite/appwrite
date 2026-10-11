@@ -1,0 +1,650 @@
+{
+  "source": "packages/client/tests/Decorator/RetryTest.php",
+  "cases": [
+    {
+      "name": "retries transient failures until success",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:a&fail=2&mode=drop"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "10"
+                ]
+              ]
+            ],
+            "body": "ok after 3",
+            "sleeps": [
+              0.1,
+              0.2
+            ]
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/count?key=${ns}:a"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "1"
+                ]
+              ]
+            ],
+            "body": "3",
+            "sleeps": [
+              0.1,
+              0.2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "stops and rethrows after exhausting attempts",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:b&fail=5&mode=drop"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\ConnectionException",
+              "message": "Empty reply from server"
+            }
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/count?key=${ns}:b"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "1"
+                ]
+              ]
+            ],
+            "body": "3",
+            "sleeps": [
+              0.1,
+              0.2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "does not retry request exceptions",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "ftp://${http}/x"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\InvalidUriException",
+              "message": "Requests must use an absolute URI."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "does not retry non-idempotent methods",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "POST",
+              "uri": "http://${http}/flaky?key=${ns}:c&fail=1&mode=drop"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\ConnectionException",
+              "message": "Empty reply from server"
+            }
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/count?key=${ns}:c"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "1"
+                ]
+              ]
+            ],
+            "body": "1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "retries overloaded status responses",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:d&fail=1&status=503"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "10"
+                ]
+              ]
+            ],
+            "body": "ok after 2",
+            "sleeps": [
+              0.1
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "honours retry-after from the server",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:e&fail=1&status=429&retry_after=2"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "10"
+                ]
+              ]
+            ],
+            "body": "ok after 2",
+            "sleeps": [
+              2.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "returns the last overloaded response",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:f&fail=9&status=502"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 502,
+            "reason": "Bad Gateway",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "9"
+                ]
+              ]
+            ],
+            "body": "failure 3",
+            "sleeps": [
+              0.1,
+              0.2
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "retries streams only when no bytes were delivered",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:g&fail=1&mode=drop"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "10"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "ok after 2",
+            "sleeps": [
+              0.1
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "does not retry streams after bytes were delivered",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/raw?r=SFRUUC8xLjEgMjAwIE9LDQpDb250ZW50LUxlbmd0aDogMjANCg0KcGFydGlhbA%3D%3D"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Client\\Exception\\ProtocolException",
+              "message": "end of response with 13 bytes missing"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "retries a stream on an overloaded response",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.stream",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/flaky?key=${ns}:h&fail=1&status=503"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 503,
+            "reason": "Service Unavailable",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "text/plain;charset=UTF-8"
+                ]
+              ],
+              [
+                "Content-Length",
+                [
+                  "9"
+                ]
+              ]
+            ],
+            "body": "",
+            "streamed": "failure 1"
+          }
+        }
+      ]
+    },
+    {
+      "name": "forwards configuration to the inner adapter",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "with": [
+              [
+                "timeout",
+                5
+              ],
+              [
+                "connect_timeout",
+                1
+              ],
+              [
+                "ssl_verification",
+                false
+              ],
+              [
+                "custom_ca",
+                "/tmp/compat-fs/client-certs/ca.pem"
+              ],
+              [
+                "certificate",
+                [
+                  "/tmp/compat-fs/client-certs/server.pem",
+                  "/tmp/compat-fs/client-certs/server.key"
+                ]
+              ],
+              [
+                "min_tls",
+                "V1_2"
+              ]
+            ],
+            "retry": {
+              "random": 1.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "request": {
+              "method": "GET",
+              "uri": "http://${http}/echo"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "status": 200,
+            "reason": "OK",
+            "headers": [
+              [
+                "Content-Type",
+                [
+                  "application/json"
+                ]
+              ],
+              [
+                "Transfer-Encoding",
+                [
+                  "chunked"
+                ]
+              ]
+            ],
+            "body": "{\"method\":\"GET\",\"target\":\"/echo\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"]],\"body\":\"\"}"
+          }
+        }
+      ]
+    }
+  ]
+}

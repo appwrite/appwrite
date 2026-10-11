@@ -51,6 +51,7 @@ return [
     'string.strval' => fn (array $a) => strval(...$a),
     'string.str_split' => fn (array $a) => str_split(...$a),
     'string.chunk_split' => fn (array $a) => chunk_split(...$a),
+    'string.basename' => fn (array $a) => basename(...$a),
     'string.wordwrap' => fn (array $a) => wordwrap(...$a),
     'string.nl2br' => fn (array $a) => nl2br(...$a),
     'string.str_repeat' => fn (array $a) => str_repeat(...$a),

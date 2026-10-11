@@ -1,0 +1,371 @@
+{
+  "source": "packages/smtp/tests/ExceptionTest.php",
+  "cases": [
+    {
+      "name": "every runtime failure is one category: connection",
+      "op": "exception.new",
+      "args": {
+        "class": "connection",
+        "message": "because"
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\ConnectionException",
+        "message": "because",
+        "code": 0,
+        "smtp": true,
+        "connection": true
+      }
+    },
+    {
+      "name": "every runtime failure is one category: timeout",
+      "op": "exception.new",
+      "args": {
+        "class": "timeout",
+        "message": "because"
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\TimeoutException",
+        "message": "because",
+        "code": 0,
+        "smtp": true,
+        "connection": true
+      }
+    },
+    {
+      "name": "every runtime failure is one category: protocol",
+      "op": "exception.new",
+      "args": {
+        "class": "protocol",
+        "message": "because"
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+        "message": "because",
+        "code": 0,
+        "smtp": true,
+        "connection": false
+      }
+    },
+    {
+      "name": "every runtime failure is one category: authentication",
+      "op": "exception.new",
+      "args": {
+        "class": "authentication",
+        "message": "because"
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\AuthenticationException",
+        "message": "because",
+        "code": 0,
+        "smtp": true,
+        "connection": false
+      }
+    },
+    {
+      "name": "every runtime failure is one category: capability",
+      "op": "exception.new",
+      "args": {
+        "class": "capability",
+        "message": "because"
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\CapabilityException",
+        "message": "because",
+        "code": 0,
+        "smtp": true,
+        "connection": false
+      }
+    },
+    {
+      "name": "every runtime failure is one category: message",
+      "op": "exception.new",
+      "args": {
+        "class": "message",
+        "message": "because"
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\MessageException",
+        "message": "because",
+        "code": 0,
+        "smtp": true,
+        "connection": false
+      }
+    },
+    {
+      "name": "a transaction failure is one too",
+      "op": "exception.new",
+      "args": {
+        "class": "transaction",
+        "reply": {
+          "code": 550,
+          "lines": [
+            "No"
+          ]
+        }
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\TransactionException",
+        "message": "550 No",
+        "code": 550,
+        "reply": {
+          "code": 550,
+          "lines": [
+            "No"
+          ],
+          "status": null,
+          "outcome": "Permanent",
+          "text": "No",
+          "string": "550 No"
+        },
+        "rejected": [],
+        "transient": false,
+        "permanent": true,
+        "smtp": true,
+        "connection": false
+      }
+    },
+    {
+      "name": "a transaction failure carries the reply",
+      "op": "exception.new",
+      "args": {
+        "class": "transaction",
+        "reply": {
+          "code": 451,
+          "lines": [
+            "4.3.0 Try later"
+          ]
+        }
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\TransactionException",
+        "message": "451 4.3.0 Try later",
+        "code": 451,
+        "reply": {
+          "code": 451,
+          "lines": [
+            "4.3.0 Try later"
+          ],
+          "status": "4.3.0",
+          "outcome": "Transient",
+          "text": "4.3.0 Try later",
+          "string": "451 4.3.0 Try later"
+        },
+        "rejected": [],
+        "transient": true,
+        "permanent": false,
+        "smtp": true,
+        "connection": false
+      }
+    },
+    {
+      "name": "a transaction failure with a message and refusals",
+      "op": "exception.new",
+      "args": {
+        "class": "transaction",
+        "message": "Every recipient was refused",
+        "reply": {
+          "code": 550,
+          "lines": [
+            "5.1.1 No"
+          ]
+        },
+        "rejected": {
+          "a@example.test": {
+            "code": 550,
+            "lines": [
+              "5.1.1 No"
+            ]
+          }
+        }
+      },
+      "expect": {
+        "class": "Utopia\\SMTP\\Exception\\TransactionException",
+        "message": "Every recipient was refused",
+        "code": 550,
+        "reply": {
+          "code": 550,
+          "lines": [
+            "5.1.1 No"
+          ],
+          "status": "5.1.1",
+          "outcome": "Permanent",
+          "text": "5.1.1 No",
+          "string": "550 5.1.1 No"
+        },
+        "rejected": [
+          [
+            "a@example.test",
+            {
+              "code": 550,
+              "lines": [
+                "5.1.1 No"
+              ],
+              "status": "5.1.1",
+              "outcome": "Permanent",
+              "text": "5.1.1 No",
+              "string": "550 5.1.1 No"
+            }
+          ]
+        ],
+        "transient": false,
+        "permanent": true,
+        "smtp": true,
+        "connection": false
+      }
+    },
+    {
+      "name": "a caller mistake is not an SMTP failure",
+      "op": "address.new",
+      "args": {
+        "email": "not an address"
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "Not an address: not an address"
+        }
+      }
+    },
+    {
+      "name": "using a transport before connecting is a logic error",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "port": 1
+          },
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "transport.read",
+          "args": {
+            "transport": {
+              "$ref": "t"
+            },
+            "length": 8192,
+            "timeout": 1.0
+          },
+          "expect": {
+            "$error": {
+              "class": "LogicException",
+              "message": "The transport is not connected"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unreadable attachment is a message failure",
+      "steps": [
+        {
+          "op": "file.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/vanish.txt",
+            "content": "x"
+          },
+          "expect": null
+        },
+        {
+          "op": "attachment.new",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/vanish.txt"
+          },
+          "expect": {
+            "name": "vanish.txt",
+            "type": "application/octet-stream",
+            "content": null,
+            "path": "/tmp/compat-fs/${ns}/vanish.txt",
+            "cid": null
+          }
+        },
+        {
+          "op": "file.delete",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/vanish.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "message.render",
+          "args": {
+            "message": {
+              "from": {
+                "email": "jane@example.test",
+                "name": "Jane Doe"
+              },
+              "to": [
+                {
+                  "email": "john@example.test"
+                }
+              ],
+              "subject": "Hello",
+              "text": "Body",
+              "date": {
+                "timestamp": 1786613400,
+                "offset": 0
+              },
+              "message_id": "fixed@example.test",
+              "attachments": [
+                {
+                  "path": "/tmp/compat-fs/${ns}/vanish.txt"
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Cannot read attachment: /tmp/compat-fs/${ns}/vanish.txt"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a catch of the base covers a protocol failure",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "transport": {
+              "replies": [
+                "nonsense"
+              ]
+            },
+            "encryption": "none"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.send_raw",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "envelope": {
+              "sender": "jane@example.test",
+              "recipients": [
+                "john@example.test"
+              ]
+            },
+            "content": "Body",
+            "catch": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\SMTP\\Exception\\ProtocolException",
+              "message": "Not a reply: nonsense",
+              "code": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

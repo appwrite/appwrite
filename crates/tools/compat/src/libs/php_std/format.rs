@@ -29,6 +29,9 @@ pub const OPS: &[&str] = &[
     "format.min",
     "format.max_array",
     "format.min_array",
+    "format.min_pair",
+    "format.max_pair",
+    "format.pow",
     "format.arith",
     "format.array_sum",
 ];
@@ -113,6 +116,18 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
             let values = numbers(a.array("values")?)?;
             let f = if op == "format.max" { format::max } else { format::min };
             f(&values).map(number_value).map(Outcome::Ok).ok_or_else(|| Fault::new("max/min need values"))
+        }
+        "format.min_pair" | "format.max_pair" => {
+            let (x, y) = (float(a.value("a")?), float(a.value("b")?));
+            let (Some(x), Some(y)) = (x, y) else { return Err(Fault::new("min_pair/max_pair take floats")) };
+            let f = if op == "format.min_pair" { format::min_pair } else { format::max_pair };
+            Ok(Outcome::Ok(float_value(f(x, y))))
+        }
+        "format.pow" => {
+            let (Some(x), Some(y)) = (float(a.value("base")?), float(a.value("exponent")?)) else {
+                return Err(Fault::new("pow takes floats"));
+            };
+            Ok(Outcome::Ok(float_value(format::pow(x, y))))
         }
         "format.max_array" | "format.min_array" => {
             let values = numbers(a.array("value")?)?;

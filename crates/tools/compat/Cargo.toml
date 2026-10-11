@@ -60,4 +60,6 @@ utopia-user-agent.workspace = true
 utopia-telemetry = { workspace = true, features = ["otlp"] }
 utopia-pools.workspace = true
 utopia-circuit-breaker = { workspace = true, features = ["redis"] }
+utopia-client.workspace = true
+utopia-smtp.workspace = true
 utopia-validators.workspace = true
