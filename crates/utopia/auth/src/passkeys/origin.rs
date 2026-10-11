@@ -1,8 +1,12 @@
+//! The web origins allowed to run passkey ceremonies for a relying party.
+
 use crate::oauth2::parse_url;
 
-/// The web origins allowed to run ceremonies for a relying party
-/// (`Utopia\Auth\Passkeys\Origin`): HTTPS on the RP ID or a subdomain, with
-/// no path, query, fragment or credentials; HTTP only for `localhost`.
+/// The web origins allowed to run ceremonies for a relying party: HTTPS on
+/// the RP ID or a subdomain, with no path, query, fragment or credentials;
+/// HTTP only for `localhost`.
+///
+/// PHP: `Utopia\Auth\Passkeys\Origin`.
 ///
 /// ```
 /// use utopia_auth::passkeys::Origin;
@@ -24,16 +28,22 @@ pub struct Origin {
     rp_id: String,
 }
 
-/// `Origin::LOCALHOST`.
+/// The only host allowed over plain HTTP, when it is also the RP ID.
+///
+/// PHP: `Origin::LOCALHOST`.
 pub const LOCALHOST: &str = "localhost";
 
 impl Origin {
-    /// `new Origin($rpId)`.
+    /// The origin rules for the relying party ID `rp_id`.
+    ///
+    /// PHP: `new Origin($rpId)`.
     pub fn new(rp_id: impl Into<String>) -> Self {
         Self { rp_id: rp_id.into() }
     }
 
-    /// `getDescription()`.
+    /// A sentence describing a valid origin, for a validation error message.
+    ///
+    /// PHP: `getDescription()`.
     pub fn description(&self) -> String {
         format!(
             "Origin must be an HTTPS URL without a path, such as \"https://{0}\", on \"{0}\" or one of its subdomains. HTTP is only allowed when the relying party ID is \"localhost\".",
@@ -41,7 +51,10 @@ impl Origin {
         )
     }
 
-    /// `normalize($origin)`: `scheme://host[:port]` without default ports, or `None` when not allowed.
+    /// The origin as `scheme://host[:port]` without a default port, or `None`
+    /// when it is not allowed.
+    ///
+    /// PHP: `normalize($origin)`.
     pub fn normalize(&self, origin: &[u8]) -> Option<String> {
         let parts = parse_url(origin)?;
         let (scheme, host) = (parts.scheme?, parts.host?);

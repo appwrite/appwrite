@@ -1,3 +1,5 @@
+//! Firebase's modified scrypt password hash.
+
 use aes::cipher::{KeyIvInit, StreamCipher};
 use php_std::encoding::{base64_decode, base64_encode, hex2bin};
 use php_std::mb::mb_scrub;
@@ -8,8 +10,12 @@ use super::scrypt::scrypt;
 use crate::hash::{hash_equals, random_bytes};
 use crate::{Error, Hash, Options};
 
-/// Firebase's modified scrypt (`Utopia\Auth\Hashes\ScryptModified`): the
-/// signer key encrypted with AES-256-CTR under a scrypt-derived key, base64.
+/// Firebase's modified scrypt: the signer key encrypted with AES-256-CTR
+/// under a key scrypt derives from the password, as base64.
+///
+/// Use it to verify passwords exported from Firebase Authentication.
+///
+/// PHP: `Utopia\Auth\Hashes\ScryptModified`.
 ///
 /// Options: `type`, `salt`, `saltSeparator`, `signerKey` (all base64).
 #[derive(Debug, Clone, PartialEq)]
@@ -18,6 +24,7 @@ pub struct ScryptModified {
 }
 
 impl Default for ScryptModified {
+    /// The same as [`ScryptModified::new`].
     fn default() -> Self {
         Self::new()
     }
@@ -30,7 +37,10 @@ fn is_base64(value: &[u8]) -> bool {
 }
 
 impl ScryptModified {
-    /// `new ScryptModified()`: random salt (16 bytes), separator (16) and signer key (32).
+    /// Modified scrypt with a random salt (16 bytes), salt separator (16) and
+    /// signer key (32).
+    ///
+    /// PHP: `new ScryptModified()`.
     pub fn new() -> Self {
         let (mut salt, mut separator, mut signer) = ([0u8; 16], [0u8; 16], [0u8; 32]);
         random_bytes(&mut salt);
@@ -44,7 +54,11 @@ impl ScryptModified {
         Self { options }
     }
 
-    /// `setSalt()`: non-empty base64.
+    /// Sets the base64 salt.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when it is empty, `"0"` or not base64.
+    ///
+    /// PHP: `setSalt()`.
     pub fn set_salt(&mut self, salt: &[u8]) -> Result<&mut Self, Error> {
         if salt.is_empty() || salt == b"0" {
             return Err(Error::InvalidArgument("Salt cannot be empty".into()));
@@ -56,7 +70,11 @@ impl ScryptModified {
         Ok(self)
     }
 
-    /// `setSaltSeparator()`: base64.
+    /// Sets the base64 salt separator.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when it is not base64.
+    ///
+    /// PHP: `setSaltSeparator()`.
     pub fn set_salt_separator(&mut self, separator: &[u8]) -> Result<&mut Self, Error> {
         if !is_base64(separator) {
             return Err(Error::InvalidArgument("Salt separator must be base64 encoded".into()));
@@ -65,7 +83,11 @@ impl ScryptModified {
         Ok(self)
     }
 
-    /// `setSignerKey()`: non-empty base64.
+    /// Sets the base64 signer key.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when it is empty, `"0"` or not base64.
+    ///
+    /// PHP: `setSignerKey()`.
     pub fn set_signer_key(&mut self, key: &[u8]) -> Result<&mut Self, Error> {
         if key.is_empty() || key == b"0" {
             return Err(Error::InvalidArgument("Signer key cannot be empty".into()));
@@ -81,6 +103,10 @@ impl ScryptModified {
 impl Hash for ScryptModified {
     hash_plumbing!("scryptMod");
 
+    /// Encrypts the signer key under a key derived from `value`, as base64.
+    ///
+    /// Invalid UTF-8 in `value` is replaced before the key is derived. Fails
+    /// when the salt, separator or signer key is not a string.
     fn hash(&self, value: &[u8]) -> Result<Vec<u8>, Error> {
         let o = &self.options;
         let Some(signer) = o.string("signerKey") else {
@@ -101,6 +127,7 @@ impl Hash for ScryptModified {
         Ok(base64_encode(&data).into_bytes())
     }
 
+    /// Whether hashing `value` gives `hash`, compared in constant time.
     fn verify(&self, value: &[u8], hash: &[u8]) -> Result<bool, Error> {
         Ok(hash_equals(hash, &self.hash(value)?))
     }

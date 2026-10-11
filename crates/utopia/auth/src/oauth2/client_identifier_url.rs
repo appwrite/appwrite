@@ -1,12 +1,17 @@
+//! Client identifier URLs: OAuth2 clients identified by the URL of their
+//! metadata document.
+
 use php_std::filter::{FILTER_VALIDATE_URL, Options, Value, filter_var};
 use php_std::string::strtolower;
 
 use super::parse_url;
 use crate::Error;
 
-/// A Client Identifier URL of the OAuth Client ID Metadata Document draft
-/// (`Utopia\Auth\OAuth2\ClientIdentifierUrl`), kept verbatim: client ids
-/// compare as plain strings.
+/// A client identifier URL, from the OAuth Client ID Metadata Document draft.
+///
+/// It is kept verbatim: client ids compare as plain strings.
+///
+/// PHP: `Utopia\Auth\OAuth2\ClientIdentifierUrl`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ClientIdentifierUrl {
     value: Vec<u8>,
@@ -18,13 +23,22 @@ fn invalid(message: &str) -> Error {
 }
 
 impl ClientIdentifierUrl {
-    /// `isCandidate($value)`: starts with `https://` or `http://`, in any case.
+    /// Whether a client id looks like a URL: it starts with `https://` or
+    /// `http://`, in any case.
+    ///
+    /// PHP: `isCandidate($value)`.
     pub fn is_candidate(value: &[u8]) -> bool {
         let lower = strtolower(value);
         lower.starts_with(b"https://") || lower.starts_with(b"http://")
     }
 
-    /// `fromString($value, $allowHttp)`.
+    /// Validates a client identifier URL.
+    ///
+    /// It must be a well-formed `https` URL (`http` too with `allow_http`)
+    /// with a host and a path, and without userinfo, a fragment or `.`/`..`
+    /// path segments; otherwise it fails with [`Error::InvalidClientMetadata`].
+    ///
+    /// PHP: `fromString($value, $allowHttp)`.
     pub fn from_string(value: &[u8], allow_http: bool) -> Result<Self, Error> {
         let parts = parse_url(value);
         let valid = matches!(
@@ -55,12 +69,16 @@ impl ClientIdentifierUrl {
         Ok(Self { value: value.to_vec(), host })
     }
 
-    /// `toString()`.
+    /// The URL, exactly as given.
+    ///
+    /// PHP: `toString()`.
     pub fn as_bytes(&self) -> &[u8] {
         &self.value
     }
 
-    /// `host()`.
+    /// The URL's host.
+    ///
+    /// PHP: `host()`.
     pub fn host(&self) -> &[u8] {
         &self.host
     }

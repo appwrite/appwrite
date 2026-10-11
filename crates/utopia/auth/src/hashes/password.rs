@@ -1,6 +1,8 @@
-//! How the hashes call PHP's `password_hash()`, `password_verify()` and
-//! `crypt()` (implemented in `php_std::string`): the options they pass and
-//! the random salt PHP draws.
+//! The shared bcrypt, Argon2id and crypt calls behind the hashes: the
+//! options they read and the random salt they draw.
+//!
+//! PHP: how the hashes call `password_hash()`, `password_verify()` and
+//! `crypt()`, implemented in `php_std::string`.
 
 use crate::Error;
 use crate::hash::random_bytes;

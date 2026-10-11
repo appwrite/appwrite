@@ -1,9 +1,13 @@
+//! Rich authorization requests: the `authorization_details` parameter (RFC 9396).
+
 use php_std::{Array, ArrayKey, Value};
 
 use super::AuthorizationDetail;
 
-/// RFC 9396 `authorization_details` (`Utopia\Auth\OAuth2\AuthorizationDetails`):
-/// the object entries of a list; anything malformed contributes nothing.
+/// The `authorization_details` of a request (RFC 9396): the object entries
+/// of a list. Anything malformed contributes nothing.
+///
+/// PHP: `Utopia\Auth\OAuth2\AuthorizationDetails`.
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct AuthorizationDetails(Vec<Array>);
 
@@ -23,7 +27,10 @@ fn lists(values: &Array, value: &[u8]) -> bool {
 }
 
 impl AuthorizationDetails {
-    /// `new AuthorizationDetails($value)`.
+    /// The entries of a decoded `authorization_details` value: the arrays in
+    /// a list. Any other value gives no entries.
+    ///
+    /// PHP: `new AuthorizationDetails($value)`.
     pub fn new(value: &Value) -> Self {
         match value {
             Value::Array(list) if list.is_list() => Self(
@@ -38,8 +45,10 @@ impl AuthorizationDetails {
         }
     }
 
-    /// `grants($type, $value, $field, $wildcard)`: whether an entry of `kind`
-    /// lists `value` (or `wildcard`) in its array field `field`.
+    /// Whether an entry of type `kind` lists `value` (or `wildcard`) in its
+    /// array field `field`.
+    ///
+    /// PHP: `grants($type, $value, $field, $wildcard)`.
     pub fn grants(&self, kind: &[u8], value: &[u8], field: &[u8], wildcard: Option<&[u8]>) -> bool {
         if kind.is_empty() || value.is_empty() || field.is_empty() {
             return false;
@@ -67,10 +76,13 @@ impl AuthorizationDetails {
         false
     }
 
-    /// `restrict($field, $resolver, $wildcard)`: narrows `field` of each entry
-    /// to what `resolver(type, values)` allows (`None` keeps the entry, an
-    /// empty result drops it). Values the entry did not list are discarded,
-    /// unless it lists `wildcard`.
+    /// Narrows `field` of each entry to what `resolver(type, values)` allows.
+    ///
+    /// `None` from the resolver keeps the entry as is, an empty result drops
+    /// it. Values the entry did not list are discarded, unless it lists
+    /// `wildcard`.
+    ///
+    /// PHP: `restrict($field, $resolver, $wildcard)`.
     pub fn restrict(
         &self,
         field: &[u8],
@@ -110,7 +122,9 @@ impl AuthorizationDetails {
         Self(entries)
     }
 
-    /// `toArray()`.
+    /// The entries, in request order.
+    ///
+    /// PHP: `toArray()`.
     pub fn entries(&self) -> &[Array] {
         &self.0
     }

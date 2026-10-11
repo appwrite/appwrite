@@ -1,4 +1,18 @@
-//! Authentication primitives with the semantics of `utopia-php/auth`.
+//! Authentication primitives: password hashes, one-time secrets, signed
+//! JWTs, session stores, OAuth2 request values and passkey ceremonies.
+//!
+//! Every value is stored byte for byte as other implementations of the same
+//! library store it, so hashes, tokens and sessions written by one can be
+//! read by the other.
+//!
+//! Values are bytes (`&[u8]`), and free-form documents (hash options, JWT
+//! claims, client metadata) are [`php_std::Array`] and [`php_std::Value`].
+//! Nothing reads the clock: functions that depend on the time take `now`
+//! (Unix seconds). Hashing is CPU bound, so async callers run it on the
+//! blocking pool. JWT keys are PEM, inline or as a `file://` path, of any
+//! type and curve OpenSSL reads.
+//!
+//! PHP: ports `utopia-php/auth`. The PHP classes map to Rust as follows.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -33,11 +47,8 @@
 //! | `Passkeys\RelyingParty`, `Origin`, `Counter` | [`passkeys::RelyingParty`], [`passkeys::Origin`], [`passkeys::Counter`] |
 //! | `Passkeys\Exception` | [`Error::Passkey`] |
 //!
-//! PHP strings are bytes, so values are `&[u8]`, and PHP arrays and values
-//! are [`php_std::Array`] and [`php_std::Value`]. Every place PHP reads the
-//! clock (`time()`) takes `now` (Unix seconds) instead. Hashing is CPU
-//! bound: async callers run it on the blocking pool. JWT keys are PEM, inline
-//! or as a `file://` path, of any type and curve OpenSSL reads.
+//! PHP strings are bytes, so values are `&[u8]`, and every place PHP reads
+//! the clock (`time()`) takes `now` instead.
 //!
 //! Hash a password and check it later:
 //!
@@ -61,6 +72,8 @@
 //! echo substr($hash, 0, 7), "\n";              // $2y$10$
 //! var_dump($bcrypt->verify('secret', $hash)); // bool(true)
 //! ```
+
+#![warn(missing_docs)]
 
 /// The getting started guide (`guide.md`), compiled and run with the doctests.
 #[cfg(doctest)]

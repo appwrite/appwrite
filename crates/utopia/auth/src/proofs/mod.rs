@@ -1,4 +1,7 @@
-//! Secrets a user proves knowledge of (`Utopia\Auth\Proof` and `Utopia\Auth\Proofs\*`).
+//! Secrets a user proves they know: passwords, one-time codes, tokens and
+//! passphrases, each generated and stored through a [`Hash`].
+//!
+//! PHP: `Utopia\Auth\Proof` and `Utopia\Auth\Proofs\*`.
 
 mod code;
 mod password;
@@ -12,27 +15,42 @@ pub use token::Token;
 
 use crate::{Error, Hash};
 
-/// A kind of secret: how it is generated, and the [`Hash`] that stores it
-/// (`Utopia\Auth\Proof`). Argon2 unless set otherwise.
+/// A kind of secret: how it is generated, and the [`Hash`] that stores it.
+///
+/// Every proof hashes with Argon2 unless set otherwise.
+///
+/// PHP: `Utopia\Auth\Proof`.
 pub trait Proof {
-    /// `generate()`: a new secret.
+    /// A new random secret.
+    ///
+    /// PHP: `generate()`.
     fn generate(&self) -> Result<Vec<u8>, Error>;
 
-    /// `getHash()`.
+    /// The hash that stores this secret.
+    ///
+    /// PHP: `getHash()`.
     fn hasher(&self) -> &dyn Hash;
 
-    /// `getHash()`, to change its options.
+    /// The hash that stores this secret, to change its options.
+    ///
+    /// PHP: `getHash()`.
     fn hasher_mut(&mut self) -> &mut dyn Hash;
 
-    /// `setHash()`.
+    /// Replaces the hash that stores this secret.
+    ///
+    /// PHP: `setHash()`.
     fn set_hash(&mut self, hash: Box<dyn Hash>);
 
-    /// `hash($proof)`.
+    /// Hashes `proof` with this proof's hash, returning the string to store.
+    ///
+    /// PHP: `hash($proof)`.
     fn hash(&self, proof: &[u8]) -> Result<Vec<u8>, Error> {
         self.hasher().hash(proof)
     }
 
-    /// `verify($proof, $hash)`.
+    /// Whether `proof` matches a stored `hash`.
+    ///
+    /// PHP: `verify($proof, $hash)`.
     fn verify(&self, proof: &[u8], hash: &[u8]) -> Result<bool, Error> {
         self.hasher().verify(proof, hash)
     }

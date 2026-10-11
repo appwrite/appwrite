@@ -1,4 +1,7 @@
-//! The built-in algorithms (`Utopia\Auth\Hashes\*`).
+//! The built-in password hashing algorithms, each a [`Hash`](crate::Hash)
+//! with its own options.
+//!
+//! PHP: `Utopia\Auth\Hashes\*`.
 
 mod argon2;
 mod bcrypt;

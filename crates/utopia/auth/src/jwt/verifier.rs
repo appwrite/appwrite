@@ -1,3 +1,5 @@
+//! JWT verification: the signature checks and the verifier of registered claims.
+
 use hmac::{Hmac, Mac};
 use php_std::json::{self, Flags};
 use php_std::value::{Number, compare_numbers, numeric_str};
@@ -13,9 +15,9 @@ use crate::options::to_long;
 /// An `aud` value: one recipient, or an array of them.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Audience {
-    /// One recipient (`string`).
+    /// One recipient.
     One(Vec<u8>),
-    /// Several recipients (`array`).
+    /// Several recipients, as a list.
     Many(Array),
 }
 
@@ -31,21 +33,31 @@ impl Audience {
 /// How a [`Verifier`] checks signatures: the JWS `alg` it expects and the
 /// check itself. Implement it to verify another algorithm.
 pub trait SignatureCheck {
-    /// `getAlgorithm()`.
+    /// The JWS `alg` this check verifies, such as `HS256`.
+    ///
+    /// PHP: `getAlgorithm()`.
     fn algorithm(&self) -> &str;
 
-    /// `verifySignature($signingInput, $signature)`.
+    /// Whether `signature` is valid for the signing input `input`.
+    ///
+    /// PHP: `verifySignature($signingInput, $signature)`.
     fn verify_signature(&self, input: &[u8], signature: &[u8]) -> Result<bool, Error>;
 }
 
-/// HS256 with a shared secret (`Utopia\Auth\Verifiers\Symmetric`).
+/// Checks HS256 signatures with a shared secret.
+///
+/// PHP: `Utopia\Auth\Verifiers\Symmetric`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Hs256 {
     secret: Vec<u8>,
 }
 
 impl Hs256 {
-    /// `new Verifiers\Symmetric($secret)`: refuses an empty (or `"0"`) secret.
+    /// A check with `secret`.
+    ///
+    /// Fails with [`Error::Exception`] when the secret is empty or `"0"`.
+    ///
+    /// PHP: `new Verifiers\Symmetric($secret)`.
     pub fn new(secret: &[u8]) -> Result<Self, Error> {
         if secret.is_empty() || secret == b"0" {
             return Err(Error::Exception("A signing secret is required".into()));
@@ -55,10 +67,12 @@ impl Hs256 {
 }
 
 impl SignatureCheck for Hs256 {
+    /// Always `HS256`.
     fn algorithm(&self) -> &str {
         "HS256"
     }
 
+    /// Whether `signature` is the HMAC-SHA256 of `input`, compared in constant time.
     fn verify_signature(&self, input: &[u8], signature: &[u8]) -> Result<bool, Error> {
         let mut mac = Hmac::<Sha256>::new_from_slice(&self.secret).expect("HMAC takes any key length");
         mac.update(input);
@@ -66,16 +80,21 @@ impl SignatureCheck for Hs256 {
     }
 }
 
-/// RS256 with a PEM RSA public key (`Utopia\Auth\Verifiers\Asymmetric`).
+/// Checks RS256 signatures with a PEM RSA public key.
+///
+/// PHP: `Utopia\Auth\Verifiers\Asymmetric`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Rs256 {
     public_key: Vec<u8>,
 }
 
 impl Rs256 {
-    /// `new Verifiers\Asymmetric($publicKey)`: refuses an empty (or `"0"`) key. The
-    /// key is PEM (a public key or a certificate), or a `file://` path to one, read
-    /// when verifying.
+    /// A check with `public_key`: PEM (a public key or a certificate), or a
+    /// `file://` path to one, read when verifying.
+    ///
+    /// Fails with [`Error::Exception`] when the key is empty or `"0"`.
+    ///
+    /// PHP: `new Verifiers\Asymmetric($publicKey)`.
     pub fn new(public_key: &[u8]) -> Result<Self, Error> {
         if public_key.is_empty() || public_key == b"0" {
             return Err(Error::Exception("A public key is required".into()));
@@ -83,7 +102,13 @@ impl Rs256 {
         Ok(Self { public_key: public_key.to_vec() })
     }
 
-    /// `getKeyId()`: SHA-256 (hex) of the RSA modulus, as the issuer derives it.
+    /// The key's id: the SHA-256 of the RSA modulus as hex, as
+    /// [`Asymmetric::key_id`](super::Asymmetric::key_id) derives it.
+    ///
+    /// Fails with [`Error::Verification`] when the key cannot be read or is
+    /// not RSA.
+    ///
+    /// PHP: `getKeyId()`.
     pub fn key_id(&self) -> Result<String, Error> {
         match key::public_key(&self.public_key)? {
             None => Err(Error::Verification("Unable to parse the public key".into())),
@@ -94,10 +119,15 @@ impl Rs256 {
 }
 
 impl SignatureCheck for Rs256 {
+    /// Always `RS256`.
     fn algorithm(&self) -> &str {
         "RS256"
     }
 
+    /// Whether `signature` is a valid RSA SHA-256 signature of `input`.
+    ///
+    /// Fails with [`Error::Verification`] when the key cannot be read or is
+    /// not RSA.
     fn verify_signature(&self, input: &[u8], signature: &[u8]) -> Result<bool, Error> {
         match key::public_key(&self.public_key)? {
             None => Err(Error::Verification("Unable to parse the public key".into())),
@@ -107,7 +137,9 @@ impl SignatureCheck for Rs256 {
     }
 }
 
-/// Verifies compact JWS tokens and their registered claims (`Utopia\Auth\Verifier`).
+/// Verifies a JWT: its signature, header and registered claims.
+///
+/// PHP: `Utopia\Auth\Verifier`.
 ///
 /// The expectations are fixed at construction: `iss`, acceptable `aud`
 /// values and `typ` are checked when given; `exp` is required unless
@@ -174,7 +206,14 @@ fn is_numeric(v: &Value) -> bool {
 }
 
 impl<S: SignatureCheck> Verifier<S> {
-    /// `new Verifier($issuer, $audience, $type, $allowExpired, $leeway)`.
+    /// A verifier checking signatures with `check`, and when given, the
+    /// issuer, one of the audiences and the `typ` header.
+    ///
+    /// With `allow_expired`, `exp` is neither required nor checked. `leeway`
+    /// is the clock skew tolerated, in seconds; it fails with
+    /// [`Error::InvalidArgument`] when negative.
+    ///
+    /// PHP: `new Verifier($issuer, $audience, $type, $allowExpired, $leeway)`.
     pub fn new(
         check: S,
         issuer: Option<&[u8]>,
@@ -200,12 +239,17 @@ impl<S: SignatureCheck> Verifier<S> {
         })
     }
 
-    /// The signature check (to reach `Rs256::key_id`).
+    /// The signature check, for example to read [`Rs256::key_id`].
     pub fn check(&self) -> &S {
         &self.check
     }
 
-    /// `verify($token)` at `now`: the claims of a valid token.
+    /// The claims of `token` when it is valid at `now`.
+    ///
+    /// Fails with [`Error::Verification`] when the token is malformed, its
+    /// `alg` or `typ` is unexpected, its signature is wrong or a claim fails.
+    ///
+    /// PHP: `verify($token)`.
     pub fn verify(&self, token: &[u8], now: i64) -> Result<Array, Error> {
         let segments: Vec<&[u8]> = token.split(|b| *b == b'.').collect();
         let [encoded_header, encoded_claims, encoded_signature] = segments[..] else {

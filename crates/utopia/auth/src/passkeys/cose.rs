@@ -1,6 +1,8 @@
-//! COSE public keys (RFC 9052/9053) as web-auth/cose-lib reads them from a
-//! normalized CBOR map, and the signature algorithms the ceremony accepts
-//! (ES256, RS256), with cose-lib's checks and messages.
+//! Passkey public keys in COSE form (RFC 9052/9053), and the signature
+//! algorithms ceremonies accept: ES256 and RS256.
+//!
+//! PHP: COSE keys as web-auth/cose-lib reads them from a normalized CBOR
+//! map, with cose-lib's checks and messages.
 
 use openssl::bn::BigNum;
 use php_std::types::KeyRef;
@@ -9,7 +11,8 @@ use php_std::{Array, ArrayKey, Str, Value};
 use super::cbor::{self, Stream};
 use crate::jwt::{self, key::RsaPublicKey};
 
-/// COSE algorithm identifiers the ceremony offers (`pubKeyCredParams`).
+/// A signature algorithm passkeys may use, offered to the browser in
+/// `pubKeyCredParams`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Algorithm {
     /// ECDSA P-256 with SHA-256 (-7).
@@ -37,7 +40,9 @@ const D: i64 = -4;
 const N: i64 = -1;
 const E: i64 = -2;
 
-/// A credential public key: its normalized COSE_Key map (`Cose\Key\Key`).
+/// A passkey's public key: its normalized COSE_Key map.
+///
+/// PHP: `Cose\Key\Key`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PublicKey {
     data: Array,
@@ -81,8 +86,12 @@ fn filter_int(s: &[u8]) -> Option<i64> {
 }
 
 impl PublicKey {
-    /// webauthn-lib's `getCoseKey()`: decode the stored COSE_Key (no trailing
-    /// bytes), normalize it and build a `Cose\Key\Key` (which needs a `kty`).
+    /// Decodes a stored CBOR COSE_Key.
+    ///
+    /// Fails with the error message when the bytes are not exactly one CBOR
+    /// map, or the map has no key type (`kty`).
+    ///
+    /// PHP: webauthn-lib's `getCoseKey()`, which builds a `Cose\Key\Key`.
     pub fn from_cbor(data: &[u8]) -> Result<Self, Vec<u8>> {
         let mut stream = Stream::new(data);
         let item = cbor::decode(&mut stream)?;
@@ -105,7 +114,11 @@ impl PublicKey {
         self.data.get(&ArrayKey::Int(key))
     }
 
-    /// `Key::alg()`.
+    /// The key's COSE algorithm identifier, such as `-7` for ES256.
+    ///
+    /// Fails with the error message when it is missing or not an integer.
+    ///
+    /// PHP: `Key::alg()`.
     pub fn alg(&self) -> Result<i64, Vec<u8>> {
         match self.get(ALG) {
             None => Err(format!("The key has no data at index {ALG}").into()),
@@ -115,7 +128,12 @@ impl PublicKey {
         }
     }
 
-    /// The algorithm's `verify()` (`Manager::get()` first: ES256 and RS256 only).
+    /// Whether `signature` is valid for `data` under this key.
+    ///
+    /// Only ES256 and RS256 keys are supported; any other algorithm fails
+    /// with the error message.
+    ///
+    /// PHP: the algorithm's `verify()`, after `Manager::get()`.
     pub fn verify(&self, data: &[u8], signature: &[u8]) -> Result<bool, Vec<u8>> {
         match self.alg()? {
             -7 => self.verify_es256(data, signature),

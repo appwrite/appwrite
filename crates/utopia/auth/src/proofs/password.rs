@@ -1,3 +1,6 @@
+//! User passwords: a registry of named hashes, the one in use, and random
+//! password generation.
+
 use indexmap::IndexMap;
 use php_std::Array;
 use php_std::types::KeyRef;
@@ -7,13 +10,21 @@ use crate::hash::random_int;
 use crate::hashes::{Argon2, Bcrypt, Md5, PHPass, Scrypt, ScryptModified, Sha};
 use crate::{Error, Hash};
 
-/// Names of the built-in algorithms (`Password::ARGON2`, ...).
+/// The registered name of [`Argon2`].
+///
+/// PHP: `Password::ARGON2`, like the other names below.
 pub const ARGON2: &str = "argon2";
+/// The registered name of [`Bcrypt`].
 pub const BCRYPT: &str = "bcrypt";
+/// The registered name of [`Scrypt`].
 pub const SCRYPT: &str = "scrypt";
+/// The registered name of [`ScryptModified`].
 pub const SCRYPT_MODIFIED: &str = "scryptMod";
+/// The registered name of [`Sha`].
 pub const SHA: &str = "sha";
+/// The registered name of [`Md5`].
 pub const MD5: &str = "md5";
+/// The registered name of the phpass hash.
 pub const PHPASS: &str = "phpass";
 
 const CHARSET: &[u8] = b"abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_+-=[]{}|;:,.<>?";
@@ -25,9 +36,11 @@ enum Current {
     Own(Box<dyn Hash>),
 }
 
-/// A user password (`Utopia\Auth\Proofs\Password`): a registry of named
-/// hashes (every built-in by default), the one in use, and how generated
-/// passwords look (16 characters from a symbol-rich charset).
+/// A user password: a registry of named hashes (every built-in by default),
+/// the one in use, and how generated passwords look (16 characters from a
+/// symbol-rich charset).
+///
+/// PHP: `Utopia\Auth\Proofs\Password`.
 ///
 /// ```
 /// use utopia_auth::proofs::{Password, Proof};
@@ -63,19 +76,26 @@ pub struct Password {
 }
 
 impl Default for Password {
+    /// The same as [`Password::new`].
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Password {
-    /// `new Password()`: every built-in hash, Argon2 in use.
+    /// A password with every built-in hash registered, hashing with Argon2.
+    ///
+    /// PHP: `new Password()`.
     pub fn new() -> Self {
         Self::with_hashes(IndexMap::new())
     }
 
-    /// `new Password($hashes)`: an empty registry means the built-ins. The hash
-    /// in use is the registry's `argon2`, else its first.
+    /// A password with its own registry of named hashes; an empty registry
+    /// means the built-ins.
+    ///
+    /// The hash in use is the registry's `argon2`, else its first.
+    ///
+    /// PHP: `new Password($hashes)`.
     pub fn with_hashes(hashes: IndexMap<String, Box<dyn Hash>>) -> Self {
         let hashes = if hashes.is_empty() {
             let mut defaults: IndexMap<String, Box<dyn Hash>> = IndexMap::new();
@@ -98,13 +118,20 @@ impl Password {
         Self { hashes, current: Current::Registered(current), length: 16, charset: CHARSET.to_vec() }
     }
 
-    /// `addHash($name, $hash)`: registers (or replaces) a named hash.
+    /// Registers a hash under `name`, replacing any hash of that name.
+    ///
+    /// PHP: `addHash($name, $hash)`.
     pub fn add_hash(&mut self, name: &str, hash: Box<dyn Hash>) -> &mut Self {
         self.hashes.insert(name.to_owned(), hash);
         self
     }
 
-    /// `removeHash($name)`: fails when it is unknown or in use.
+    /// Unregisters the hash named `name`.
+    ///
+    /// Fails with [`Error::Exception`] when no hash has that name or it is
+    /// the one in use.
+    ///
+    /// PHP: `removeHash($name)`.
     pub fn remove_hash(&mut self, name: &str) -> Result<&mut Self, Error> {
         if !self.hashes.contains_key(name) {
             return Err(Error::Exception(format!("Hash '{name}' not found")));
@@ -116,12 +143,20 @@ impl Password {
         Ok(self)
     }
 
-    /// `getHashByName($name)`.
+    /// The registered hash named `name`.
+    ///
+    /// Fails with [`Error::Exception`] when no hash has that name.
+    ///
+    /// PHP: `getHashByName($name)`.
     pub fn hash_by_name(&self, name: &str) -> Result<&dyn Hash, Error> {
         self.hashes.get(name).map(|h| h.as_ref()).ok_or_else(|| Error::Exception(format!("Hash '{name}' not found")))
     }
 
-    /// `getHashByName($name)`, to change its options.
+    /// The registered hash named `name`, to change its options.
+    ///
+    /// Fails with [`Error::Exception`] when no hash has that name.
+    ///
+    /// PHP: `getHashByName($name)`.
     pub fn hash_by_name_mut(&mut self, name: &str) -> Result<&mut dyn Hash, Error> {
         match self.hashes.get_mut(name) {
             Some(h) => Ok(h.as_mut()),
@@ -129,7 +164,11 @@ impl Password {
         }
     }
 
-    /// `setHash($this->getHashByName($name))`: hash with a registered algorithm.
+    /// Hashes with the registered hash named `name` from now on.
+    ///
+    /// Fails with [`Error::Exception`] when no hash has that name.
+    ///
+    /// PHP: `setHash($this->getHashByName($name))`.
     pub fn use_hash(&mut self, name: &str) -> Result<&mut Self, Error> {
         self.hash_by_name(name)?;
         self.current = Current::Registered(name.to_owned());
@@ -144,7 +183,11 @@ impl Password {
         }
     }
 
-    /// `setLength()`: at least 8.
+    /// Sets the length of generated passwords.
+    ///
+    /// Fails with [`Error::Exception`] when it is below 8.
+    ///
+    /// PHP: `setLength()`.
     pub fn set_length(&mut self, length: i64) -> Result<&mut Self, Error> {
         if length < 8 {
             return Err(Error::Exception("Password length must be at least 8 characters".into()));
@@ -153,7 +196,11 @@ impl Password {
         Ok(self)
     }
 
-    /// `setCharset()`: at least 10 bytes.
+    /// Sets the characters generated passwords are drawn from.
+    ///
+    /// Fails with [`Error::Exception`] when it has fewer than 10 bytes.
+    ///
+    /// PHP: `setCharset()`.
     pub fn set_charset(&mut self, charset: &[u8]) -> Result<&mut Self, Error> {
         if charset.len() < 10 {
             return Err(Error::Exception("Password charset must contain at least 10 characters".into()));
@@ -162,8 +209,13 @@ impl Password {
         Ok(self)
     }
 
-    /// `Password::createHash($type, $options)`: a built-in hash by name, with
-    /// options applied over its defaults (unknown options are kept).
+    /// A built-in hash by name, with `options` applied over its defaults;
+    /// unknown options are kept.
+    ///
+    /// Use it to rebuild the hash a password was stored with from its saved
+    /// name and options. Fails with [`Error::Exception`] for an unknown name.
+    ///
+    /// PHP: `Password::createHash($type, $options)`.
     pub fn create_hash(kind: &str, options: &Array) -> Result<Box<dyn Hash>, Error> {
         let mut hash: Box<dyn Hash> = match kind {
             ARGON2 => Box::new(Argon2::new()),
@@ -180,8 +232,12 @@ impl Password {
     }
 }
 
-/// `Hash::setOptions($options)`: every entry through `setOption(string $key)`,
-/// which (with strict types) rejects integer keys.
+/// Sets every option in `options` on `hash`, in order.
+///
+/// Fails with [`Error::Type`] at the first integer key: option names are strings.
+///
+/// PHP: `Hash::setOptions($options)`, which passes every entry through
+/// `setOption(string $key)`; with strict types it rejects integer keys.
 pub fn set_options(hash: &mut dyn Hash, options: &Array) -> Result<(), Error> {
     for (key, value) in options.iter() {
         match key {
@@ -197,6 +253,9 @@ pub fn set_options(hash: &mut dyn Hash, options: &Array) -> Result<(), Error> {
 }
 
 impl Proof for Password {
+    /// A new random password of the set length, drawn from the charset.
+    ///
+    /// Fails with [`Error::Exception`] when the charset is empty.
     fn generate(&self) -> Result<Vec<u8>, Error> {
         if self.charset.is_empty() {
             return Err(Error::Exception("Password charset is empty".into()));
@@ -205,6 +264,7 @@ impl Proof for Password {
         Ok((0..self.length).map(|_| self.charset[random_int(max) as usize]).collect())
     }
 
+    /// The hash in use: a registered one, or one set with [`Proof::set_hash`].
     fn hasher(&self) -> &dyn Hash {
         match &self.current {
             Current::Own(h) => h.as_ref(),
@@ -212,6 +272,7 @@ impl Proof for Password {
         }
     }
 
+    /// The hash in use, to change its options.
     fn hasher_mut(&mut self) -> &mut dyn Hash {
         match &mut self.current {
             Current::Own(h) => h.as_mut(),
@@ -224,6 +285,7 @@ impl Proof for Password {
         }
     }
 
+    /// Hashes with `hash` from now on, without registering it.
     fn set_hash(&mut self, hash: Box<dyn Hash>) {
         self.current = Current::Own(hash);
     }

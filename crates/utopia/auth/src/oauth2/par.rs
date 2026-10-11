@@ -1,7 +1,11 @@
+//! Pushed authorization request URIs (RFC 9126).
+
 use crate::Error;
 
-/// A Pushed Authorization Request `request_uri` (RFC 9126): a deployment
-/// prefix plus a stored request id (`Utopia\Auth\OAuth2\PAR`).
+/// A pushed authorization request `request_uri` (RFC 9126): a deployment
+/// prefix plus a stored request id.
+///
+/// PHP: `Utopia\Auth\OAuth2\PAR`.
 ///
 /// ```
 /// use utopia_auth::oauth2::Par;
@@ -28,7 +32,11 @@ pub struct Par {
 }
 
 impl Par {
-    /// `PAR::fromId($prefix, $id)`.
+    /// The request URI for the stored request `id`.
+    ///
+    /// Fails with [`Error::InvalidRequestUri`] when the prefix or the id is empty.
+    ///
+    /// PHP: `PAR::fromId($prefix, $id)`.
     pub fn from_id(prefix: &[u8], id: &[u8]) -> Result<Self, Error> {
         if prefix.is_empty() || id.is_empty() {
             return Err(Error::InvalidRequestUri("request_uri prefix and id must be non-empty strings.".into()));
@@ -36,7 +44,12 @@ impl Par {
         Ok(Self { prefix: prefix.to_vec(), id: id.to_vec() })
     }
 
-    /// `PAR::fromRequestUri($prefix, $requestUri)`.
+    /// Parses a `request_uri` a client sent back, extracting the request id.
+    ///
+    /// Fails with [`Error::InvalidRequestUri`] when it does not start with
+    /// `prefix` or has no id after it.
+    ///
+    /// PHP: `PAR::fromRequestUri($prefix, $requestUri)`.
     pub fn from_request_uri(prefix: &[u8], request_uri: &[u8]) -> Result<Self, Error> {
         let invalid = || Error::InvalidRequestUri("Invalid request_uri.".into());
         if prefix.is_empty() {
@@ -49,12 +62,16 @@ impl Par {
         Ok(Self { prefix: prefix.to_vec(), id: id.to_vec() })
     }
 
-    /// `id()`.
+    /// The stored request id.
+    ///
+    /// PHP: `id()`.
     pub fn id(&self) -> &[u8] {
         &self.id
     }
 
-    /// `requestUri()`.
+    /// The `request_uri`: the prefix followed by the id.
+    ///
+    /// PHP: `requestUri()`.
     pub fn request_uri(&self) -> Vec<u8> {
         [self.prefix.as_slice(), self.id.as_slice()].concat()
     }

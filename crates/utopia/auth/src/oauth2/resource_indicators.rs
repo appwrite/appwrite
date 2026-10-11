@@ -1,22 +1,26 @@
+//! Resource indicators: the `resource` request parameter (RFC 8707).
+
 use php_std::string::strtolower;
 use php_std::{Array, Str, Value};
 
 use super::parse_url;
 use crate::Error;
 
-/// RFC 8707 resource indicators of a request (`Utopia\Auth\OAuth2\ResourceIndicators`):
-/// distinct absolute http(s) URIs without fragments.
+/// The resource indicators of a request (RFC 8707): distinct absolute
+/// http(s) URIs without fragments.
+///
+/// PHP: `Utopia\Auth\OAuth2\ResourceIndicators`.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct ResourceIndicators(Vec<Vec<u8>>);
 
 /// The `resource` request parameter: absent, one value, or several.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Resources<'a> {
-    /// No `audience` was given.
+    /// No `resource` was given.
     None,
-    /// One audience (`string`).
+    /// One resource.
     One(&'a [u8]),
-    /// Several audiences (`array`).
+    /// Several resources, as a list.
     Many(&'a Array),
 }
 
@@ -60,8 +64,14 @@ impl ResourceIndicators {
         Ok(Self(seen))
     }
 
-    /// `ResourceIndicators::from($value, $audience)`: duplicates collapse; a
-    /// legacy `audience` must be one of the resources, or is the only one.
+    /// Parses the `resource` parameter, with an optional legacy `audience`.
+    ///
+    /// Duplicates collapse. The `audience` must be one of the resources, or
+    /// is the only one when there are none. Fails with
+    /// [`Error::InvalidResource`] when a value is not an absolute http(s) URI
+    /// without a fragment, or the audience is not among the resources.
+    ///
+    /// PHP: `ResourceIndicators::from($value, $audience)`.
     pub fn from(value: Resources<'_>, audience: Option<&[u8]>) -> Result<Self, Error> {
         let values: Vec<Value> = match value {
             Resources::None | Resources::One(b"") => vec![],
@@ -88,12 +98,16 @@ impl ResourceIndicators {
         Ok(resources)
     }
 
-    /// `isSubsetOf($granted)`.
+    /// Whether every resource is among `granted`.
+    ///
+    /// PHP: `isSubsetOf($granted)`.
     pub fn is_subset_of(&self, granted: &ResourceIndicators) -> bool {
         self.0.iter().all(|r| granted.0.contains(r))
     }
 
-    /// `equals($resources)`: same set, in any order.
+    /// Whether both hold the same resources, in any order.
+    ///
+    /// PHP: `equals($resources)`.
     pub fn equals(&self, other: &ResourceIndicators) -> bool {
         let (mut left, mut right) = (self.0.clone(), other.0.clone());
         left.sort();
@@ -101,12 +115,16 @@ impl ResourceIndicators {
         left == right
     }
 
-    /// `audience($defaultAudience)`: the resources, or the default when none.
+    /// The token audience: the resources, or `default` when there are none.
+    ///
+    /// PHP: `audience($defaultAudience)`.
     pub fn audience(&self, default: &[u8]) -> Vec<Vec<u8>> {
         if self.0.is_empty() { vec![default.to_vec()] } else { self.0.clone() }
     }
 
-    /// `toArray()`.
+    /// The resources, in request order.
+    ///
+    /// PHP: `toArray()`.
     pub fn to_vec(&self) -> &[Vec<u8>] {
         &self.0
     }

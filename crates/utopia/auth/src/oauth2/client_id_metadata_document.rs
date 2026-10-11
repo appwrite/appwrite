@@ -1,3 +1,6 @@
+//! Client ID Metadata Documents: the metadata an OAuth2 client publishes at
+//! its client identifier URL.
+
 use php_std::json::{self, Flags};
 use php_std::types::KeyRef;
 use php_std::{Array, ArrayKey, Str, Value};
@@ -21,8 +24,9 @@ const STRING_PROPERTIES: [&str; 9] = [
 /// JWK members carrying private or symmetric key material.
 const PRIVATE_JWK_PARAMETERS: [&str; 8] = ["d", "dp", "dq", "k", "oth", "p", "q", "qi"];
 
-/// A validated OAuth Client ID Metadata Document
-/// (`Utopia\Auth\OAuth2\ClientIdMetadataDocument`). Unknown metadata is kept.
+/// A validated OAuth Client ID Metadata Document. Unknown metadata is kept.
+///
+/// PHP: `Utopia\Auth\OAuth2\ClientIdMetadataDocument`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ClientIdMetadataDocument {
     client_id: ClientIdentifierUrl,
@@ -114,7 +118,12 @@ fn validate_jwks(jwks: &Value) -> Result<(), Error> {
 }
 
 impl ClientIdMetadataDocument {
-    /// `fromJson($clientId, $json)`.
+    /// Parses and validates the JSON document fetched from `client_id`.
+    ///
+    /// Fails with [`Error::InvalidClientMetadata`] when it is not a JSON
+    /// object or fails [`ClientIdMetadataDocument::from_array`]'s checks.
+    ///
+    /// PHP: `fromJson($clientId, $json)`.
     pub fn from_json(client_id: ClientIdentifierUrl, json: &[u8]) -> Result<Self, Error> {
         let decoded = json::decode(json, None, json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
             .map_err(|_| invalid("Client ID Metadata Document is not valid JSON."))?;
@@ -127,7 +136,15 @@ impl ClientIdMetadataDocument {
         Self::from_array(client_id, metadata)
     }
 
-    /// `fromArray($clientId, $metadata)`.
+    /// Validates decoded metadata for `client_id`.
+    ///
+    /// Its `client_id` must equal the URL exactly; it must declare a
+    /// `token_endpoint_auth_method` that is not a shared secret and hold no
+    /// client secret; lists must hold non-empty strings, redirect URIs be
+    /// absolute without fragments, and `jwks` hold only public keys (and not
+    /// alongside `jwks_uri`). Fails with [`Error::InvalidClientMetadata`].
+    ///
+    /// PHP: `fromArray($clientId, $metadata)`.
     pub fn from_array(client_id: ClientIdentifierUrl, metadata: Array) -> Result<Self, Error> {
         if metadata.get(&key("client_id")) != Some(&Value::Str(Str::copy_from(client_id.as_bytes()))) {
             return Err(invalid("client_id must exactly match the Client Identifier URL."));
@@ -179,37 +196,53 @@ impl ClientIdMetadataDocument {
         })
     }
 
-    /// `clientId()`.
+    /// The client identifier URL.
+    ///
+    /// PHP: `clientId()`.
     pub fn client_id(&self) -> &ClientIdentifierUrl {
         &self.client_id
     }
 
-    /// `tokenEndpointAuthMethod()`.
+    /// The declared `token_endpoint_auth_method`, such as `none` or
+    /// `private_key_jwt`.
+    ///
+    /// PHP: `tokenEndpointAuthMethod()`.
     pub fn token_endpoint_auth_method(&self) -> &[u8] {
         &self.token_endpoint_auth_method
     }
 
-    /// `grantTypes()`.
+    /// The `grant_types`, `authorization_code` when absent.
+    ///
+    /// PHP: `grantTypes()`.
     pub fn grant_types(&self) -> &[Vec<u8>] {
         &self.grant_types
     }
 
-    /// `responseTypes()`.
+    /// The `response_types`, `code` when absent.
+    ///
+    /// PHP: `responseTypes()`.
     pub fn response_types(&self) -> &[Vec<u8>] {
         &self.response_types
     }
 
-    /// `redirectUris()`.
+    /// The registered `redirect_uris`.
+    ///
+    /// PHP: `redirectUris()`.
     pub fn redirect_uris(&self) -> &RedirectUris {
         &self.redirect_uris
     }
 
-    /// `get($property)`: the stored value, including `null` (`None` when absent).
+    /// The value of the metadata `property`, including a null value; `None`
+    /// when absent.
+    ///
+    /// PHP: `get($property)`.
     pub fn get(&self, property: &[u8]) -> Option<&Value> {
         self.metadata.get(&ArrayKey::from_bytes(property))
     }
 
-    /// `toArray()`.
+    /// All the metadata, as decoded.
+    ///
+    /// PHP: `toArray()`.
     pub fn to_array(&self) -> &Array {
         &self.metadata
     }
