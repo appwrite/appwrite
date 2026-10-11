@@ -31,7 +31,7 @@ var_dump(parse_url('http://:80')); // bool(false)
 
 ## Match a regular expression like preg_match
 
-Patterns take PHP's delimiters and modifiers, and run on a port of the PCRE2 engine PHP bundles. Compile a pattern once with `Regex::compiled` and read the groups of a match.
+Patterns take PHP's delimiters and modifiers, and run on PCRE2 10.44 with its JIT, the library PHP bundles, called the way PHP calls it. Compile a pattern once with `Regex::compiled` and read the groups of a match.
 
 ```
 use php_std::pcre::Regex;

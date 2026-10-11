@@ -4716,18 +4716,8 @@
   "deviations": [
     {
       "symbol": "preg_match()",
-      "php": "PHP runs patterns in the PCRE2 JIT with a 192 KiB stack (pcre.jit=1, applies to every preg_* function): deep recursion and long runs of group repetitions fail with PREG_JIT_STACKLIMIT_ERROR after a number of iterations set by the words the JIT's code keeps on that stack, and pcre.backtrack_limit or a pattern's (*LIMIT_MATCH=n) counts the steps where that code calls count_match()",
-      "reason": "php_std keeps the same words (allocate_stack() in pcre2_jit_compile.c: groups, alternatives, captures, BRAZERO, iterators, counted loops, recursions, assertions, atomic frames, marks and THEN traps), counts the same steps and searches start positions the same way (fast_forward_first_n_chars()); this is checked by comparing, for some 50,000 generated patterns, the smallest (*LIMIT_MATCH=n) with which PHP and php_std give each result. Callouts ((?C), which PHP never calls) are left out of the compiled pattern, so a pattern with a callout can run out of stack or steps at a different point"
-    },
-    {
-      "symbol": "preg_match()",
-      "php": "(*LIMIT_HEAP=n) limits the interpreter's frame memory; PHP reuses one match data block across calls, so whether a small limit is hit depends on earlier calls",
-      "reason": "Not modelled: php_std parses (*LIMIT_HEAP=n) and ignores it"
-    },
-    {
-      "symbol": "preg_match()",
       "php": "(*UTF) without the u modifier: PHP passes PCRE2_NO_UTF_CHECK, so an invalid UTF-8 subject is undefined behaviour in PCRE2",
-      "reason": "php_std does not reproduce undefined behaviour; patterns starting with (*UTF) are fuzzed with valid UTF-8 subjects"
+      "reason": "php_std runs the same PCRE2 10.44 with the same options, but undefined behaviour has no single answer (it depends on memory beyond the subject and on the JIT target); patterns starting with (*UTF) are fuzzed with valid UTF-8 subjects"
     },
     {
       "symbol": "preg_match_all()",

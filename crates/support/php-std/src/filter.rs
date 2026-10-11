@@ -18,9 +18,12 @@
 //! `FILTER_NULL_ON_FAILURE`, `null`) result, even a valid `false` from
 //! `FILTER_VALIDATE_BOOL`.
 //!
-//! `FILTER_VALIDATE_EMAIL` and `FILTER_VALIDATE_REGEXP` run their regular
-//! expressions on [`crate::pcre`], through PHP's compiled-pattern cache like
-//! PHP does. `FILTER_VALIDATE_URL` parses with [`crate::url::parse_url`], or
+//! `FILTER_VALIDATE_REGEXP` runs its regular expression on [`crate::pcre`],
+//! through PHP's compiled-pattern cache like PHP does.
+//! `FILTER_VALIDATE_EMAIL` checks the language of PHP's fixed expressions
+//! directly (`filter/email.rs`), and runs the expression itself only for
+//! the addresses where PCRE2's backtracking limit could decide the result.
+//! `FILTER_VALIDATE_URL` parses with [`crate::url::parse_url`], or
 //! with [`crate::url::rfc3986`] for `"uri_parser_class" =>
 //! Uri\Rfc3986\Uri`.
 //!
@@ -43,11 +46,13 @@
 //! Every function here is checked against the real PHP function by
 //! `bin/compat fuzz php-std` (operations `filter.*`).
 
+use std::borrow::Cow;
 use std::fmt;
 
 pub use crate::pcre::Key;
 use crate::{number, pcre, url, value};
 
+mod email;
 mod sanitize;
 
 /// No flags, as PHP's `FILTER_FLAG_NONE`.
@@ -404,21 +409,21 @@ fn strtod(s: &[u8]) -> f64 {
     std::str::from_utf8(&s[..i]).ok().and_then(|t| t.parse::<f64>().ok()).unwrap_or(0.0)
 }
 
-/// `convert_to_string()` of a scalar; `NAN` warns (PHP 8.5).
-fn to_php_string(v: &Value, warning: &mut Option<Vec<u8>>) -> Vec<u8> {
+/// `convert_to_string()` of a scalar; `NAN` warns (PHP 8.5). A string is
+/// borrowed, not copied.
+fn to_php_string<'v>(v: &'v Value, warning: &mut Option<Vec<u8>>) -> Cow<'v, [u8]> {
     if let Value::Float(f) = v
         && f.is_nan()
     {
         *warning = Some(b"unexpected NAN value was coerced to string".to_vec());
     }
     match v {
-        Value::Null | Value::Bool(false) => Vec::new(),
-        Value::Bool(true) => b"1".to_vec(),
-        Value::Int(i) => i.to_string().into_bytes(),
-        Value::Float(f) => number::to_string(*f).into_bytes(),
-        Value::Str(s) => s.clone(),
-        Value::Array(_) => b"Array".to_vec(),
-        Value::Object => Vec::new(),
+        Value::Null | Value::Bool(false) | Value::Object => Cow::Borrowed(b""),
+        Value::Bool(true) => Cow::Borrowed(b"1"),
+        Value::Int(i) => Cow::Owned(i.to_string().into_bytes()),
+        Value::Float(f) => Cow::Owned(number::to_string(*f).into_bytes()),
+        Value::Str(s) => Cow::Borrowed(s),
+        Value::Array(_) => Cow::Borrowed(b"Array"),
     }
 }
 
@@ -771,15 +776,19 @@ fn run_filter(
                 .map(|ok| if ok { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
         }
         FILTER_VALIDATE_EMAIL => {
-            if s.len() > 320 {
+            if s.len() > email::MAX_LENGTH {
                 return Ok(Outcome::Failed);
             }
-            let re = if flags & FILTER_FLAG_EMAIL_UNICODE != 0 { EMAIL_UNICODE } else { EMAIL };
-            let (matched, w) = pcre::engine_match("filter_var", re, s);
-            if w.is_some() {
-                *warning = w;
-            }
-            Ok(if matched == Some(true) { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
+            let unicode = flags & FILTER_FLAG_EMAIL_UNICODE != 0;
+            let valid = email::validate(s, unicode).unwrap_or_else(|| {
+                let re = if unicode { email::EMAIL_UNICODE } else { email::EMAIL };
+                let (matched, w) = pcre::engine_match("filter_var", re, s);
+                if w.is_some() {
+                    *warning = w;
+                }
+                matched == Some(true)
+            });
+            Ok(if valid { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
         }
         FILTER_VALIDATE_IP => {
             Ok(if validate_ip(s, flags) { Outcome::Ok(Value::Str(s.to_vec())) } else { Outcome::Failed })
@@ -1110,24 +1119,25 @@ fn is_userinfo_valid(s: &[u8]) -> bool {
     true
 }
 
-/// `php_filter_url()` (`FILTER_SANITIZE_URL`): the bytes allowed in a URL.
-fn sanitize_url(s: &[u8]) -> Vec<u8> {
-    const EXTRA: &[u8] = b"$-_.+!*'(),{}|\\^~[]`<>#%\";/?:@&=";
-    s.iter().copied().filter(|c| c.is_ascii_alphanumeric() || EXTRA.contains(c)).collect()
+/// Whether `php_filter_url()` (`FILTER_SANITIZE_URL`) keeps the byte.
+fn is_url_byte(c: u8) -> bool {
+    c.is_ascii_alphanumeric() || b"$-_.+!*'(),{}|\\^~[]`<>#%\";/?:@&=".contains(&c)
 }
 
 /// `php_filter_validate_url()`: `Err` for an invalid `uri_parser_class`.
 fn validate_url(s: &[u8], flags: i64, parser: Option<&[u8]>) -> Result<bool, Error> {
-    if sanitize_url(s).len() != s.len() {
+    // PHP sanitizes a copy and fails when that removed anything.
+    if !s.iter().all(|&c| is_url_byte(c)) {
         return Ok(false);
     }
-    struct Parts {
-        scheme: Option<Vec<u8>>,
-        user: Option<Vec<u8>>,
-        pass: Option<Vec<u8>>,
-        host: Option<Vec<u8>>,
-        path: Option<Vec<u8>>,
-        query: Option<Vec<u8>>,
+    /// The components, borrowed from the input.
+    struct Parts<'a> {
+        scheme: Option<Cow<'a, [u8]>>,
+        user: Option<Cow<'a, [u8]>>,
+        pass: Option<Cow<'a, [u8]>>,
+        host: Option<Cow<'a, [u8]>>,
+        path: Option<Cow<'a, [u8]>>,
+        query: Option<Cow<'a, [u8]>>,
     }
     let php_parse_url = match parser {
         None | Some(b"parse_url") => true,
@@ -1135,26 +1145,18 @@ fn validate_url(s: &[u8], flags: i64, parser: Option<&[u8]>) -> Result<bool, Err
         Some(b"Uri\\WhatWg\\Url") => return Err(Error::new("Unsupported", "the WHATWG URL parser")),
         Some(_) => return Err(Error::new("ValueError", "filter_var(): \"uri_parser_class\" option has invalid value")),
     };
-    let own = |c: Option<std::borrow::Cow<'_, [u8]>>| c.map(|c| c.into_owned());
     let parts = if php_parse_url {
         let Some(u) = url::parse_url(s) else { return Ok(false) };
-        Parts {
-            scheme: own(u.scheme()),
-            user: own(u.user()),
-            pass: own(u.pass()),
-            host: own(u.host()),
-            path: own(u.path()),
-            query: own(u.query()),
-        }
+        Parts { scheme: u.scheme(), user: u.user(), pass: u.pass(), host: u.host(), path: u.path(), query: u.query() }
     } else {
         let Some(u) = url::rfc3986::Uri::parse(s) else { return Ok(false) };
         Parts {
-            scheme: own(u.raw_scheme()),
-            user: own(u.raw_username()),
-            pass: own(u.raw_password()),
-            host: own(u.raw_host()),
-            path: Some(u.raw_path().into_owned()),
-            query: own(u.raw_query()),
+            scheme: u.raw_scheme(),
+            user: u.raw_username(),
+            pass: u.raw_password(),
+            host: u.raw_host(),
+            path: Some(u.raw_path()),
+            query: u.raw_query(),
         }
     };
     if let Some(scheme) = &parts.scheme
@@ -1166,7 +1168,7 @@ fn validate_url(s: &[u8], flags: i64, parser: Option<&[u8]>) -> Result<bool, Err
         }
     }
     let Some(scheme) = &parts.scheme else { return Ok(false) };
-    if parts.host.is_none() && !matches!(scheme.as_slice(), b"mailto" | b"news" | b"file") {
+    if parts.host.is_none() && !matches!(scheme.as_ref(), b"mailto" | b"news" | b"file") {
         return Ok(false);
     }
     if (flags & FILTER_FLAG_PATH_REQUIRED != 0 && parts.path.is_none())
@@ -1478,11 +1480,6 @@ fn validate_mac(s: &[u8], expected: Option<u8>) -> bool {
     }
     true
 }
-
-/// The `FILTER_VALIDATE_EMAIL` regular expressions of `logical_filters.c`
-/// (`regexp0` with `FILTER_FLAG_EMAIL_UNICODE`, `regexp1` without).
-const EMAIL_UNICODE: &[u8] = br#"/^(?!(?:(?:\x22?\x5C[\x00-\x7E]\x22?)|(?:\x22?[^\x5C\x22]\x22?)){255,})(?!(?:(?:\x22?\x5C[\x00-\x7E]\x22?)|(?:\x22?[^\x5C\x22]\x22?)){65,}@)(?:(?:[\x21\x23-\x27\x2A\x2B\x2D\x2F-\x39\x3D\x3F\x5E-\x7E\pL\pN]+)|(?:\x22(?:[\x01-\x08\x0B\x0C\x0E-\x1F\x21\x23-\x5B\x5D-\x7F\pL\pN]|(?:\x5C[\x00-\x7F]))*\x22))(?:\.(?:(?:[\x21\x23-\x27\x2A\x2B\x2D\x2F-\x39\x3D\x3F\x5E-\x7E\pL\pN]+)|(?:\x22(?:[\x01-\x08\x0B\x0C\x0E-\x1F\x21\x23-\x5B\x5D-\x7F\pL\pN]|(?:\x5C[\x00-\x7F]))*\x22)))*@(?:(?:(?!.*[^.]{64,})(?:(?:(?:xn--)?[a-z0-9]+(?:-+[a-z0-9]+)*\.){1,126}){1,}(?:(?:[a-z][a-z0-9]*)|(?:(?:xn--)[a-z0-9]+))(?:-+[a-z0-9]+)*)|(?:\[(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){7})|(?:(?!(?:.*[a-f0-9][:\]]){7,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?)))|(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){5}:)|(?:(?!(?:.*[a-f0-9]:){5,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3}:)?)))?(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))(?:\.(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))){3}))\]))$/iDu"#;
-const EMAIL: &[u8] = br#"/^(?!(?:(?:\x22?\x5C[\x00-\x7E]\x22?)|(?:\x22?[^\x5C\x22]\x22?)){255,})(?!(?:(?:\x22?\x5C[\x00-\x7E]\x22?)|(?:\x22?[^\x5C\x22]\x22?)){65,}@)(?:(?:[\x21\x23-\x27\x2A\x2B\x2D\x2F-\x39\x3D\x3F\x5E-\x7E]+)|(?:\x22(?:[\x01-\x08\x0B\x0C\x0E-\x1F\x21\x23-\x5B\x5D-\x7F]|(?:\x5C[\x00-\x7F]))*\x22))(?:\.(?:(?:[\x21\x23-\x27\x2A\x2B\x2D\x2F-\x39\x3D\x3F\x5E-\x7E]+)|(?:\x22(?:[\x01-\x08\x0B\x0C\x0E-\x1F\x21\x23-\x5B\x5D-\x7F]|(?:\x5C[\x00-\x7F]))*\x22)))*@(?:(?:(?!.*[^.]{64,})(?:(?:(?:xn--)?[a-z0-9]+(?:-+[a-z0-9]+)*\.){1,126}){1,}(?:(?:[a-z][a-z0-9]*)|(?:(?:xn--)[a-z0-9]+))(?:-+[a-z0-9]+)*)|(?:\[(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){7})|(?:(?!(?:.*[a-f0-9][:\]]){7,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,5})?)))|(?:(?:IPv6:(?:(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){5}:)|(?:(?!(?:.*[a-f0-9]:){5,})(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3})?::(?:[a-f0-9]{1,4}(?::[a-f0-9]{1,4}){0,3}:)?)))?(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))(?:\.(?:(?:25[0-5])|(?:2[0-4][0-9])|(?:1[0-9]{2})|(?:[1-9]?[0-9]))){3}))\]))$/iD"#;
 
 #[cfg(test)]
 mod tests {

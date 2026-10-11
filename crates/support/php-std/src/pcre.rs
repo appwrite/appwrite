@@ -1,6 +1,6 @@
 //! PHP's PCRE functions: `preg_match`, `preg_match_all`, `preg_replace`,
-//! `preg_replace_callback`, `preg_split`, `preg_quote` and `preg_grep`, on a
-//! Rust port of PCRE2 10.44 (the version bundled with PHP 8.5).
+//! `preg_replace_callback`, `preg_split`, `preg_quote` and `preg_grep`, on
+//! PCRE2 10.44 with its JIT, the library and version PHP 8.5 bundles.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -15,63 +15,40 @@
 //! | `preg_match($p, $s, $m) === 1` on a pattern compiled once | [`Regex::compiled`], [`Regex::captures`], [`Regex::is_match`] |
 //! | `preg_last_error()` / `preg_last_error_msg()` | [`PregError`] in every result |
 //!
-//! The engine is a port, not a translation to another regex dialect: the
-//! pattern parser (`parse_regex()`), the lookbehind checks, the compiler
-//! (`compile_branch()`, including class construction and caseless sets),
-//! auto-possessification (`auto_possessify()`), the matcher (`match()`, with
-//! PCRE2's backtracking frames, so verbs, recursion, conditions, atomic
-//! groups and `\K` behave identically, and the match and depth limits run
-//! out at the same step) and the Unicode 15.0.0 tables. Patterns are
-//! delimited and take modifiers exactly as `pcre_get_compiled_regex_cache()`
-//! parses them (`/i m n s x A D r S X U u J`), and compile errors produce
-//! PHP's warning text, with PCRE2's error messages and offsets.
-//!
-//! PHP runs patterns with the PCRE2 JIT (`pcre2_jit_match()`, or
-//! `pcre2_match()` when the subject needs a UTF-8 check) and retries an
-//! empty match with the interpreter. The matcher runs in both modes and
-//! reproduces where the JIT differs from the interpreter: it ignores
-//! `(*NOTEMPTY)` when called directly, ends the subject at a lookbehind
-//! with a variable-length branch (and keeps that end like a register when
-//! backtracking into a non-atomic lookbehind), lets an unmatched
-//! `(*SKIP:NAME)` end a negative assertion and otherwise just backtracks
-//! past it, has no recursion-loop check, searches for start positions its
-//! own way (`fast_forward_first_n_chars()`), counts match steps where its
-//! code calls `count_match()` (so `pcre.backtrack_limit` and
-//! `(*LIMIT_MATCH=n)` run out at the same step), keeps the words its code
-//! would hold on the 192 KiB JIT stack (so `PREG_JIT_STACKLIMIT_ERROR`
-//! comes at the same depth), and fails a JIT compilation (disabling the
-//! JIT for the process) for `\C` in UTF mode and backtracking verbs in
-//! non-atomic assertions. See the `pcre` deviations in
-//! `tests/compat/php-std/spec.d/pcre.json`.
+//! User patterns must behave exactly as in PHP, down to where
+//! `pcre.backtrack_limit` and the JIT stack run out, and only PCRE2 itself
+//! does that: `build.rs` compiles the sources PHP 8.5 bundles
+//! (`ext/pcre/pcre2lib`), and this module calls them as `ext/pcre/php_pcre.c`
+//! does. Patterns are delimited and take modifiers exactly as
+//! `pcre_get_compiled_regex_cache()` parses them (`/i m n s x A D r S X U u
+//! J`), then go through PHP's per-process cache of compiled patterns, which
+//! JIT-compiles them while `pcre.jit` is on (a JIT failure warns and turns it
+//! off for the process). Matches run with `pcre.backtrack_limit` and
+//! `pcre.recursion_limit` (their defaults) as the match and depth limits and
+//! the 32 KiB–192 KiB JIT stack, through `pcre2_jit_match()` when no UTF-8
+//! check is needed and `pcre2_match()` otherwise, and an empty match is
+//! retried with `PCRE2_NOTEMPTY_ATSTART | PCRE2_ANCHORED`, as PHP does.
 //!
 //! Every function here is checked against the real PHP function by
 //! `bin/compat fuzz php-std` (operations `pcre.*`).
 
 use std::collections::{HashMap, VecDeque};
 use std::fmt;
+use std::sync::atomic::{AtomicBool, AtomicU8, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
 
-mod compile;
 mod compiled;
-mod exec;
-mod forward;
-mod lookbehind;
-mod parse;
-mod possess;
-mod program;
-mod study;
-mod ucd;
-mod unicode;
+mod engine;
+mod ffi;
 
-use exec::{Exec, MatchData, Matcher, UNSET};
-use parse::{Bsr, Newline, opt};
-use program::{BraKind, Op, Program};
-use study::StartInfo;
+use engine::{Code, Session};
+use ffi::UNSET;
 
 pub use compiled::Captures;
+pub(crate) use engine::is_letter_or_number;
 
 /// The Unicode version of PCRE2's tables (PHP's "PCRE Unicode Version").
-pub const UNICODE_VERSION: &str = ucd::UNICODE_VERSION;
+pub const UNICODE_VERSION: &str = "15.0.0";
 
 /// Orders `preg_match_all()` results by group, as PHP's `PREG_PATTERN_ORDER`.
 pub const PREG_PATTERN_ORDER: i64 = 1;
@@ -89,10 +66,6 @@ pub const PREG_SPLIT_DELIM_CAPTURE: i64 = 2;
 pub const PREG_SPLIT_OFFSET_CAPTURE: i64 = 4;
 /// Returns the entries that do not match from `preg_grep()`, as PHP's `PREG_GREP_INVERT`.
 pub const PREG_GREP_INVERT: i64 = 1;
-
-/// `pcre.backtrack_limit` and `pcre.recursion_limit` defaults.
-const BACKTRACK_LIMIT: u64 = 1_000_000;
-const RECURSION_LIMIT: u32 = 100_000;
 
 /// A PHP array key.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -233,12 +206,24 @@ impl PregError {
     /// `pcre_handle_exec_error()`.
     fn from_pcre(code: i32) -> Self {
         match code {
-            exec::ERROR_MATCHLIMIT => PregError::BacktrackLimit,
-            exec::ERROR_DEPTHLIMIT => PregError::RecursionLimit,
-            exec::ERROR_BADUTFOFFSET => PregError::BadUtf8Offset,
-            exec::ERROR_JIT_STACKLIMIT => PregError::JitStackLimit,
-            -23..=-3 => PregError::BadUtf8,
+            ffi::ERROR_MATCHLIMIT => PregError::BacktrackLimit,
+            ffi::ERROR_DEPTHLIMIT => PregError::RecursionLimit,
+            ffi::ERROR_BADUTFOFFSET => PregError::BadUtf8Offset,
+            ffi::ERROR_JIT_STACKLIMIT => PregError::JitStackLimit,
+            ffi::ERROR_UTF8_ERR21..=ffi::ERROR_UTF8_ERR1 => PregError::BadUtf8,
             _ => PregError::Internal,
+        }
+    }
+
+    fn from_u8(v: u8) -> Self {
+        match v {
+            1 => PregError::Internal,
+            2 => PregError::BacktrackLimit,
+            3 => PregError::RecursionLimit,
+            4 => PregError::BadUtf8,
+            5 => PregError::BadUtf8Offset,
+            6 => PregError::JitStackLimit,
+            _ => PregError::None,
         }
     }
 }
@@ -290,47 +275,60 @@ pub struct CompileFailure {
     pub message: Vec<u8>,
 }
 
-/// A compiled PHP regular expression (delimiters and modifiers included).
-#[derive(Debug, Clone)]
+/// A compiled PHP regular expression (delimiters and modifiers included):
+/// a `pcre_cache_entry`.
 pub struct Regex {
-    prog: Program,
-    options: u32,
-    /// The `u` modifier: PHP decides on UTF-8 checks and how far to step
-    /// after an empty match from it, not from a `(*UTF)` in the pattern.
-    php_utf: bool,
-    newline: Newline,
-    bsr: Bsr,
+    code: Code,
+    /// `PREG_JIT`: the pattern has JIT code.
     jit: bool,
-    notempty: bool,
-    notempty_atstart: bool,
-    match_limit: u64,
-    depth_limit: u32,
-    /// Group number to name (`subpats_table`).
-    names: Vec<Option<Vec<u8>>>,
-    name_count: usize,
-    start: StartInfo,
+    /// The `u` modifier (`compile_options & PCRE2_UTF`): PHP decides on
+    /// UTF-8 checks and how far to step after an empty match from it, not
+    /// from a `(*UTF)` in the pattern.
+    php_utf: bool,
+    capture_count: u32,
+    /// Group number to name (`subpats_table`), when the pattern has names.
+    names: Option<Vec<Option<Vec<u8>>>>,
+}
+
+impl fmt::Debug for Regex {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Regex")
+            .field("jit", &self.jit)
+            .field("utf", &self.php_utf)
+            .field("capture_count", &self.capture_count)
+            .finish_non_exhaustive()
+    }
 }
 
 /// The ways PHP runs a pattern.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Call {
-    /// `pcre2_jit_match(..., PCRE2_NO_UTF_CHECK)`: no UTF-8 check, and the
-    /// pattern's `(*NOTEMPTY)`/`(*NOTEMPTY_ATSTART)` are not applied (only
-    /// `pcre2_match()` copies them into the options). A pattern without JIT
-    /// code goes to `pcre2_match(..., PCRE2_NO_UTF_CHECK)` instead.
+    /// `pcre2_jit_match(..., PCRE2_NO_UTF_CHECK)`, or for a pattern without
+    /// JIT code `pcre2_match(..., PCRE2_NO_UTF_CHECK)`.
     Fast,
     /// `pcre2_match(..., 0)` for a `/u` pattern and a subject not known to
     /// be valid UTF-8: the UTF-8 check, then the JIT.
     Checked,
     /// `pcre2_match(..., PCRE2_NO_UTF_CHECK | PCRE2_NOTEMPTY_ATSTART |
-    /// PCRE2_ANCHORED)` after an empty match: the interpreter.
+    /// PCRE2_ANCHORED)` after an empty match.
     Retry,
 }
 
 impl Regex {
     /// Parses the delimiters and modifiers of a PHP regex and compiles it
-    /// (`pcre_get_compiled_regex_cache()`).
+    /// (`pcre_get_compiled_regex_cache()`), with JIT code while `pcre.jit`
+    /// is on. Unlike [`Regex::compiled`], it bypasses PHP's cache, and a
+    /// JIT failure leaves the pattern interpreted without a warning.
     pub fn new(regex: &[u8]) -> Result<Regex, CompileFailure> {
+        let mut re = Self::compile(regex)?;
+        if globals().jit.load(Ordering::Relaxed) {
+            re.jit = re.code.jit_compile().unwrap_or(false);
+        }
+        Ok(re)
+    }
+
+    /// The delimiters, the modifiers and `pcre2_compile()`, without the JIT.
+    fn compile(regex: &[u8]) -> Result<Regex, CompileFailure> {
         let fail = |m: String| Err(CompileFailure { message: m.into_bytes() });
         let mut p = 0;
         while p < regex.len() && is_c_space(regex[p]) {
@@ -393,18 +391,18 @@ impl Regex {
         let mut eoptions = 0u32;
         for &m in &regex[pp + 1..] {
             match m {
-                b'i' => coptions |= opt::CASELESS,
-                b'm' => coptions |= opt::MULTILINE,
-                b'n' => coptions |= opt::NO_AUTO_CAPTURE,
-                b's' => coptions |= opt::DOTALL,
-                b'x' => coptions |= opt::EXTENDED,
-                b'A' => coptions |= opt::ANCHORED,
-                b'D' => coptions |= opt::DOLLAR_ENDONLY,
-                b'r' => eoptions |= opt::X_CASELESS_RESTRICT,
+                b'i' => coptions |= ffi::CASELESS,
+                b'm' => coptions |= ffi::MULTILINE,
+                b'n' => coptions |= ffi::NO_AUTO_CAPTURE,
+                b's' => coptions |= ffi::DOTALL,
+                b'x' => coptions |= ffi::EXTENDED,
+                b'A' => coptions |= ffi::ANCHORED,
+                b'D' => coptions |= ffi::DOLLAR_ENDONLY,
+                b'r' => eoptions |= ffi::EXTRA_CASELESS_RESTRICT,
                 b'S' | b'X' | b' ' | b'\n' | b'\r' => {}
-                b'U' => coptions |= opt::UNGREEDY,
-                b'u' => coptions |= opt::UTF | opt::UCP | opt::NEVER_BACKSLASH_C,
-                b'J' => coptions |= opt::DUPNAMES,
+                b'U' => coptions |= ffi::UNGREEDY,
+                b'u' => coptions |= ffi::UTF | ffi::UCP | ffi::NEVER_BACKSLASH_C,
+                b'J' => coptions |= ffi::DUPNAMES,
                 0 => return fail("NUL byte is not a valid modifier".into()),
                 c => {
                     let mut msg = b"Unknown modifier '".to_vec();
@@ -414,161 +412,55 @@ impl Regex {
                 }
             }
         }
-        let mut re = Self::compile(pattern, coptions, eoptions).map_err(|e| {
-            let text: &[u8] = if e.code == 83 {
-                b"using \\C is incompatible with the 'u' modifier"
-            } else {
-                parse::error_message(e.code).as_bytes()
-            };
+        let code = Code::compile(pattern, coptions, eoptions).map_err(|e| {
             let mut m = b"Compilation failed: ".to_vec();
-            m.extend_from_slice(text);
+            if e.code == ffi::ERROR_BACKSLASH_C_CALLER_DISABLED {
+                m.extend_from_slice(b"using \\C is incompatible with the 'u' modifier");
+            } else {
+                m.extend_from_slice(&engine::error_message(e.code));
+            }
             m.extend_from_slice(format!(" at offset {}", e.offset).as_bytes());
             CompileFailure { message: m }
         })?;
-        re.php_utf = coptions & opt::UTF != 0;
-        Ok(re)
-    }
-
-    /// `pcre2_compile()` on a bare pattern.
-    fn compile(pattern: &[u8], options: u32, xoptions: u32) -> Result<Regex, parse::CompileError> {
-        let mut parsed = parse::parse(pattern, options, xoptions)?;
-        let mut meta = std::mem::take(&mut parsed.meta);
-        if parsed.has_lookbehind {
-            let mut checker = lookbehind::Checker::new(&mut meta, pattern, &parsed);
-            let mut recurses = Vec::new();
-            let mut loopcount = 0;
-            let rc = checker.check_lookbehinds(0, None, &mut recurses, &mut loopcount);
-            if rc != 0 {
-                return Err(parse::CompileError { code: rc, offset: checker.erroroffset });
+        let capture_count = code.capture_count();
+        let named = code.names();
+        let names = (!named.is_empty()).then(|| {
+            let mut names = vec![None; capture_count as usize + 1];
+            for (group, name) in named {
+                if let Some(slot) = names.get_mut(group) {
+                    *slot = Some(name);
+                }
             }
-        }
-        let tree = compile::build(&meta, pattern, &parsed, xoptions)?;
-        let mut prog = program::lower(&tree);
-        if parsed.options & opt::NO_AUTO_POSSESS == 0 {
-            possess::auto_possessify(&mut prog.code, parsed.options & opt::UTF != 0, parsed.options & opt::UCP != 0);
-        }
-        let start = study::study(&prog, parsed.options);
-        let jit_options = program::JitOptions {
-            early_fail: !start.anchored && !start.disabled && !program::skip_in_lookbehind(&prog.code),
-            utf: parsed.options & opt::UTF != 0,
-            ucp: parsed.options & opt::UCP != 0,
-        };
-        prog.jit = program::JitLayout::new(&prog.code, prog.top_bracket, &prog.group_start, &jit_options);
-        let mut names = vec![None; prog.top_bracket as usize + 1];
-        for (name, number) in &prog.names {
-            names[*number as usize] = Some(name.clone());
-        }
-        let name_count = prog.names.len();
-        let jit = !contains_no_jit(pattern);
-        Ok(Regex {
-            options: parsed.options,
-            php_utf: false,
-            newline: parsed.newline,
-            bsr: parsed.bsr,
-            jit,
-            notempty: parsed.notempty,
-            notempty_atstart: parsed.notempty_atstart,
-            match_limit: parsed.limit_match.map_or(BACKTRACK_LIMIT, |l| BACKTRACK_LIMIT.min(u64::from(l))),
-            depth_limit: parsed.limit_depth.map_or(RECURSION_LIMIT, |l| RECURSION_LIMIT.min(l)),
-            names,
-            name_count,
-            start,
-            prog,
-        })
-    }
-
-    /// Whether `pcre2_jit_compile()` accepts the pattern: it refuses
-    /// backtracking verbs (other than `(*MARK)` and a bare `(*THEN)`) and
-    /// `(*ACCEPT)` inside a non-atomic assertion (`check_opcode_types()`).
-    fn jit_compiles(&self) -> bool {
-        let code = &self.prog.code;
-        let mut assert_na_end = 0;
-        for (pc, op) in code.iter().enumerate() {
-            match op {
-                // `\C` in UTF mode (`next_opcode()` gives up on OP_ANYBYTE).
-                Op::Item(compile::Lit::AnyByte) | Op::Rep { lit: compile::Lit::AnyByte, .. } if self.utf() => {
-                    return false;
-                }
-                Op::Bra { kind: BraKind::AssertNa | BraKind::AssertBackNa, .. } => {
-                    let mut k = pc;
-                    loop {
-                        k = match code[k] {
-                            Op::Bra { link, .. } | Op::Alt { link } => link,
-                            _ => break,
-                        };
-                    }
-                    assert_na_end = assert_na_end.max(k + 1);
-                }
-                Op::Commit(_) | Op::Prune(_) | Op::Skip | Op::SkipArg(_) | Op::Then(Some(_)) | Op::AssertAccept
-                    if pc < assert_na_end =>
-                {
-                    return false;
-                }
-                _ => {}
-            }
-        }
-        true
+            names
+        });
+        Ok(Regex { code, jit: false, php_utf: coptions & ffi::UTF != 0, capture_count, names })
     }
 
     /// The number of capturing groups.
     pub fn capture_count(&self) -> u32 {
-        self.prog.top_bracket
+        self.capture_count
     }
 
-    fn utf(&self) -> bool {
-        self.options & opt::UTF != 0
+    /// The match data for the calls of one `preg_*` function.
+    fn session(&self) -> Session {
+        Session::new(&self.code, self.capture_count)
     }
 
-    /// One `pcre2_match()`/`pcre2_jit_match()` call as PHP makes it.
-    fn call(&self, subject: &[u8], start_offset: usize, call: Call) -> Result<Option<MatchData>, i32> {
-        let utf = self.utf();
-        let (jit, check_utf, mut options) = match call {
-            Call::Fast => (self.jit, false, 0),
-            Call::Checked => (self.jit, true, 0),
-            Call::Retry => (false, false, exec::NOTEMPTY_ATSTART | exec::ANCHORED),
+    /// One `pcre2_match()`/`pcre2_jit_match()` call as PHP makes it: the
+    /// match count, `None` for no match, or the PCRE2 error.
+    fn call(&self, session: &mut Session, subject: &[u8], start: usize, call: Call) -> Result<Option<usize>, i32> {
+        let (jit, options) = match call {
+            Call::Fast => (self.jit, ffi::NO_UTF_CHECK),
+            Call::Checked => (false, 0),
+            Call::Retry => (false, ffi::NO_UTF_CHECK | ffi::NOTEMPTY_ATSTART | ffi::ANCHORED),
         };
-        if call != Call::Fast || !self.jit {
-            if self.notempty {
-                options |= exec::NOTEMPTY;
-            }
-            if self.notempty_atstart {
-                options |= exec::NOTEMPTY_ATSTART;
-            }
-        }
-        if start_offset > subject.len() {
-            return Err(-33);
-        }
-        let mut check_subject = 0;
-        if utf && check_utf {
-            if start_offset < subject.len() && subject[start_offset] & 0xc0 == 0x80 {
-                return Err(if start_offset > 0 { exec::ERROR_BADUTFOFFSET } else { -22 });
-            }
-            let mut sm = start_offset;
-            for _ in 0..self.prog.max_lookbehind {
-                if sm == 0 {
-                    break;
-                }
-                sm -= 1;
-                while sm > 0 && subject[sm] & 0xc0 == 0x80 {
-                    sm -= 1;
-                }
-            }
-            if let Err((code, _)) = unicode::valid_utf8(&subject[sm..]) {
-                return Err(code);
-            }
-            if !jit {
-                check_subject = sm;
-            }
-        }
-        let mut m = Matcher::new(&self.prog, subject, self.options, self.newline, self.bsr);
-        m.jit = jit;
-        m.check_subject = check_subject;
-        m.match_limit = self.match_limit;
-        m.depth_limit = if jit { u32::MAX } else { self.depth_limit };
-        match exec::exec(&mut m, start_offset, options, &self.start, self.prog.has_cr_or_lf) {
-            Exec::Match(md) => Ok(Some(md)),
-            Exec::NoMatch => Ok(None),
-            Exec::Error(e) => Err(e),
+        match session.run(&self.code, subject, start, options, jit) {
+            // "Matched, but too many substrings" cannot happen: the match
+            // data always has room for every group.
+            0 => Ok(Some(self.capture_count as usize + 1)),
+            n if n > 0 => Ok(Some(n as usize)),
+            ffi::ERROR_NOMATCH => Ok(None),
+            e => Err(e),
         }
     }
 
@@ -592,23 +484,15 @@ impl Regex {
         }
     }
 
-    fn mark_value(&self, mark: Option<u32>) -> Option<Vec<u8>> {
-        mark.map(|id| {
-            let name = &self.prog.marks[id as usize];
-            let end = name.iter().position(|&b| b == 0).unwrap_or(name.len());
-            name[..end].to_vec()
-        })
-    }
-
-    /// `populate_subpat_array()`.
-    fn populate_subpat_array(&self, out: &mut Array, subject: &[u8], md: &MatchData, flags: i64) {
+    /// `populate_subpat_array()` for the last match of `session`, which
+    /// set `count` groups.
+    fn populate_subpat_array(&self, out: &mut Array, subject: &[u8], session: &Session, count: usize, flags: i64) {
         let offset_capture = flags & PREG_OFFSET_CAPTURE != 0;
         let unmatched_as_null = flags & PREG_UNMATCHED_AS_NULL != 0;
-        let num_subpats = self.prog.top_bracket as usize + 1;
-        let count = md.count;
-        let names = if self.name_count > 0 { Some(&self.names) } else { None };
-        let ov = &md.ovector;
-        if let Some(names) = names {
+        let num_subpats = self.capture_count as usize + 1;
+        let ov = session.ovector(count);
+        let count = ov.len() / 2;
+        if let Some(names) = &self.names {
             if offset_capture {
                 for i in 0..count {
                     add_offset_pair(out, subject, ov[2 * i], ov[2 * i + 1], names[i].as_deref(), unmatched_as_null);
@@ -654,8 +538,8 @@ impl Regex {
                 }
             }
         }
-        if let Some(mark) = self.mark_value(md.mark) {
-            out.add(Key::Str(b"MARK".to_vec()), Value::Str(mark));
+        if let Some(mark) = session.mark(&self.code) {
+            out.add(Key::Str(b"MARK".to_vec()), Value::Str(mark.to_vec()));
         }
     }
 }
@@ -663,95 +547,166 @@ impl Regex {
 /// `PCRE_CACHE_SIZE`.
 const CACHE_SIZE: usize = 4096;
 
-/// PHP's per-process PCRE state: whether the JIT is still enabled
-/// (`pcre.jit`, switched off for good when a pattern fails to JIT-compile)
-/// and the compiled-pattern cache, which keeps how each pattern was
-/// compiled.
+/// PHP's per-process PCRE state: `pcre.jit` (switched off for good when a
+/// pattern fails to JIT-compile), `PCRE_G(error_code)` and the
+/// compiled-pattern cache, which keeps how each pattern was compiled.
 struct Globals {
-    jit: bool,
-    /// `PCRE_G(error_code)`: what `preg_last_error()` returns. Calls that
-    /// never reach a pattern (an empty array of patterns or subjects) leave
-    /// it as the previous call set it.
-    error: PregError,
-    order: VecDeque<Vec<u8>>,
-    cache: HashMap<Vec<u8>, Arc<Regex>>,
+    jit: AtomicBool,
+    /// What `preg_last_error()` returns. Calls that never reach a pattern
+    /// (an empty array of patterns or subjects) leave it as the previous
+    /// call set it.
+    error: AtomicU8,
+    cache: Mutex<Cache>,
+    /// How many times the cache has evicted entries.
+    evictions: AtomicU64,
 }
 
-fn globals() -> &'static Mutex<Globals> {
-    static GLOBALS: OnceLock<Mutex<Globals>> = OnceLock::new();
-    GLOBALS.get_or_init(|| {
-        Mutex::new(Globals { jit: true, error: PregError::None, order: VecDeque::new(), cache: HashMap::new() })
+/// A cached regex, delimiters and modifiers included: the cache's key.
+type Source = Arc<[u8]>;
+
+#[derive(Default)]
+struct Cache {
+    order: VecDeque<Source>,
+    entries: HashMap<Source, Arc<Regex>>,
+}
+
+fn globals() -> &'static Globals {
+    static GLOBALS: OnceLock<Globals> = OnceLock::new();
+    GLOBALS.get_or_init(|| Globals {
+        jit: AtomicBool::new(true),
+        error: AtomicU8::new(0),
+        cache: Mutex::new(Cache::default()),
+        evictions: AtomicU64::new(0),
     })
-}
-
-fn lock() -> std::sync::MutexGuard<'static, Globals> {
-    match globals().lock() {
-        Ok(g) => g,
-        Err(poisoned) => poisoned.into_inner(),
-    }
 }
 
 /// Sets `preg_last_error()`, returning the value.
 fn set_last_error(e: PregError) -> PregError {
-    lock().error = e;
+    globals().error.store(e as u8, Ordering::Relaxed);
     e
 }
 
 /// `preg_last_error()`: the error of the last `preg_*` call that set one.
 pub fn preg_last_error() -> PregError {
-    lock().error
+    PregError::from_u8(globals().error.load(Ordering::Relaxed))
 }
 
 /// `ini_set('pcre.jit', ...)`: switches the JIT on or off for patterns
-/// compiled from now on (cached patterns keep how they were compiled).
+/// compiled from now on (cached patterns keep how they were compiled), and
+/// gives JIT code the 192 KiB JIT stack only while it is on.
 pub fn set_jit(enabled: bool) {
-    lock().jit = enabled;
+    globals().jit.store(enabled, Ordering::Relaxed);
+    engine::assign_jit_stack(enabled);
 }
+
+/// A compiled pattern and the warning its JIT compilation emitted.
+type Cached = (Arc<Regex>, Option<Vec<u8>>);
 
 /// `pcre_get_compiled_regex_cache()`: the cached pattern, compiling it on
 /// a miss. `Err` carries the warning of a pattern that does not compile;
 /// `Ok` may carry the warning of a pattern the JIT could not compile, which
 /// switches the JIT off for the rest of the process, as PHP does.
-/// A compiled pattern and the warning its JIT compilation emitted.
-type Cached = (Arc<Regex>, Option<Vec<u8>>);
-
 fn cached(func: &str, regex: &[u8]) -> Result<Cached, Vec<u8>> {
-    let mut g = lock();
-    if let Some(re) = g.cache.get(regex) {
+    let g = globals();
+    if let Some(re) = recent(g, regex) {
+        return Ok((re, None));
+    }
+    let mut cache = match g.cache.lock() {
+        Ok(c) => c,
+        Err(poisoned) => poisoned.into_inner(),
+    };
+    if let Some((key, re)) = cache.entries.get_key_value(regex) {
+        remember(g, key, re);
         return Ok((re.clone(), None));
     }
-    let mut re = match Regex::new(regex) {
+    let mut re = match Regex::compile(regex) {
         Ok(re) => re,
         Err(e) => {
-            g.error = PregError::Internal;
+            set_last_error(PregError::Internal);
             return Err(warn(func, e));
         }
     };
     let mut warning = None;
-    if !g.jit {
-        re.jit = false;
-    } else if re.jit && !re.jit_compiles() {
-        warning = Some(
-            format!(
-                "{func}(): Allocation of JIT memory failed, PCRE JIT will be disabled. This is likely caused by security \
-                 restrictions. Either grant PHP permission to allocate executable memory, or set pcre.jit=0"
-            )
-            .into_bytes(),
-        );
-        g.jit = false;
-        re.jit = false;
+    if g.jit.load(Ordering::Relaxed) {
+        match re.code.jit_compile() {
+            Ok(jit) => re.jit = jit,
+            Err(ffi::ERROR_NOMEMORY) => {
+                warning = Some(
+                    format!(
+                        "{func}(): Allocation of JIT memory failed, PCRE JIT will be disabled. This is likely caused \
+                         by security restrictions. Either grant PHP permission to allocate executable memory, or set \
+                         pcre.jit=0"
+                    )
+                    .into_bytes(),
+                );
+                g.jit.store(false, Ordering::Relaxed);
+            }
+            Err(e) => {
+                let mut w = format!("{func}(): JIT compilation failed: ").into_bytes();
+                w.extend_from_slice(&engine::error_message(e));
+                warning = Some(w);
+                set_last_error(PregError::Internal);
+            }
+        }
     }
-    if g.cache.len() == CACHE_SIZE {
+    if cache.entries.len() == CACHE_SIZE {
+        g.evictions.fetch_add(1, Ordering::Release);
         for _ in 0..CACHE_SIZE / 8 {
-            if let Some(k) = g.order.pop_front() {
-                g.cache.remove(&k);
+            if let Some(k) = cache.order.pop_front() {
+                cache.entries.remove(&k);
             }
         }
     }
     let re = Arc::new(re);
-    g.order.push_back(regex.to_vec());
-    g.cache.insert(regex.to_vec(), re.clone());
+    let key: Source = regex.into();
+    cache.order.push_back(key.clone());
+    cache.entries.insert(key.clone(), re.clone());
+    remember(g, &key, &re);
     Ok((re, warning))
+}
+
+/// How many cache entries each thread remembers.
+const RECENT: usize = 16;
+
+/// The cache entries a thread used last, so that a hit takes neither the
+/// cache's lock nor a hash of the pattern. They stand for the entries of
+/// the shared cache, which never change while they are in it: the thread
+/// forgets them all when the shared cache evicts.
+struct Recent {
+    evictions: u64,
+    next: usize,
+    entries: [Option<(Source, Arc<Regex>)>; RECENT],
+}
+
+thread_local! {
+    static RECENT_ENTRIES: std::cell::RefCell<Recent> =
+        const { std::cell::RefCell::new(Recent { evictions: 0, next: 0, entries: [const { None }; RECENT] }) };
+}
+
+/// The thread's remembered entry for `regex`, if the shared cache still
+/// holds it.
+fn recent(g: &Globals, regex: &[u8]) -> Option<Arc<Regex>> {
+    RECENT_ENTRIES.with_borrow_mut(|r| {
+        let evictions = g.evictions.load(Ordering::Acquire);
+        if r.evictions != evictions {
+            *r = Recent { evictions, next: 0, entries: [const { None }; RECENT] };
+            return None;
+        }
+        r.entries.iter().flatten().find(|(k, _)| **k == *regex).map(|(_, re)| re.clone())
+    })
+}
+
+/// Remembers an entry of the shared cache (called with its lock held).
+fn remember(g: &Globals, key: &Source, re: &Arc<Regex>) {
+    RECENT_ENTRIES.with_borrow_mut(|r| {
+        let evictions = g.evictions.load(Ordering::Acquire);
+        if r.evictions != evictions {
+            *r = Recent { evictions, next: 0, entries: [const { None }; RECENT] };
+        }
+        let slot = r.next;
+        r.entries[slot] = Some((key.clone(), re.clone()));
+        r.next = (slot + 1) % RECENT;
+    })
 }
 
 /// What `ext/filter` does with a regular expression:
@@ -761,26 +716,16 @@ fn cached(func: &str, regex: &[u8]) -> Result<Cached, Vec<u8>> {
 pub(crate) fn engine_match(func: &str, regex: &[u8], subject: &[u8]) -> (Option<bool>, Option<Vec<u8>>) {
     match cached(func, regex) {
         Err(w) => (None, Some(w)),
-        Ok((re, w)) => (Some(matches!(re.call(subject, 0, Call::Checked), Ok(Some(_)))), w),
+        Ok((re, w)) => {
+            let mut session = re.session();
+            (Some(matches!(re.call(&mut session, subject, 0, Call::Checked), Ok(Some(_)))), w)
+        }
     }
 }
 
 /// `isspace()` in the C locale.
 fn is_c_space(b: u8) -> bool {
     matches!(b, b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r')
-}
-
-/// Whether the pattern starts with a `(*NO_JIT)` option.
-fn contains_no_jit(pattern: &[u8]) -> bool {
-    let mut p = 0;
-    while pattern.len() > p + 2 && pattern[p] == b'(' && pattern[p + 1] == b'*' {
-        let Some(close) = pattern[p..].iter().position(|&b| b == b')') else { return false };
-        if &pattern[p + 2..p + close] == b"NO_JIT" {
-            return true;
-        }
-        p += close + 1;
-    }
-    false
 }
 
 fn match_value(subject: &[u8], start: usize, end: usize, unmatched_as_null: bool) -> Value {
@@ -929,42 +874,47 @@ fn match_impl(
     if start_offset2 > len {
         return done(Value::Bool(false), matches, set_last_error(PregError::Internal), None);
     }
-    let num_subpats = re.prog.top_bracket as usize + 1;
+    let num_subpats = re.capture_count as usize + 1;
     let mut match_sets: Option<Vec<Array>> =
         if global && subpats_order == PREG_PATTERN_ORDER { Some(vec![Array::new(); num_subpats]) } else { None };
     let mut marks: Option<Array> = None;
     let mut error = set_last_error(PregError::None);
     let mut matched: i64 = 0;
+    let mut session = re.session();
     // PHP's empty string is flagged as valid UTF-8; other subjects reach
     // these functions without the flag.
     let first = re.first_call(subject.is_empty());
-    let mut pending = Some(re.call(subject, start_offset2, first));
+    let mut pending = Some(re.call(&mut session, subject, start_offset2, first));
     loop {
-        let count = pending.take().unwrap_or_else(|| re.call(subject, start_offset2, Call::Fast));
+        let count = pending.take().unwrap_or_else(|| re.call(&mut session, subject, start_offset2, Call::Fast));
         match count {
-            Ok(Some(md)) => {
+            Ok(Some(count)) => {
                 matched += 1;
-                let ov = &md.ovector;
+                let ov = session.ovector(count);
+                let (ov0, ov1) = (ov[0], ov[1]);
                 // Without `$matches` nothing is recorded, and a single
                 // match goes on to the empty-match retry below.
                 if subpats {
-                    if ov[1] < ov[0] {
+                    if ov1 < ov0 {
                         let warning = Some(format!("{func}(): Get subpatterns list failed").into_bytes());
                         return done(Value::Bool(false), matches, error, warning);
                     }
                     if global {
                         if let Some(sets) = match_sets.as_mut() {
-                            for (i, set) in sets.iter_mut().enumerate().take(md.count) {
+                            let set_count = ov.len() / 2;
+                            for (i, set) in sets.iter_mut().enumerate().take(set_count) {
                                 if offset_capture {
                                     add_offset_pair(set, subject, ov[2 * i], ov[2 * i + 1], None, unmatched_as_null);
                                 } else {
                                     set.push(match_value(subject, ov[2 * i], ov[2 * i + 1], unmatched_as_null));
                                 }
                             }
-                            if let Some(mark) = re.mark_value(md.mark) {
-                                marks.get_or_insert_with(Array::new).add(Key::Int(matched - 1), Value::Str(mark));
+                            if let Some(mark) = session.mark(&re.code) {
+                                marks
+                                    .get_or_insert_with(Array::new)
+                                    .add(Key::Int(matched - 1), Value::Str(mark.to_vec()));
                             }
-                            for set in sets.iter_mut().take(num_subpats).skip(md.count) {
+                            for set in sets.iter_mut().take(num_subpats).skip(set_count) {
                                 if offset_capture {
                                     add_offset_pair(set, subject, UNSET, UNSET, None, unmatched_as_null);
                                 } else if unmatched_as_null {
@@ -975,22 +925,22 @@ fn match_impl(
                             }
                         } else {
                             let mut set = Array::new();
-                            re.populate_subpat_array(&mut set, subject, &md, flags);
+                            re.populate_subpat_array(&mut set, subject, &session, count, flags);
                             matches.push(Value::Array(set));
                         }
                     } else {
-                        re.populate_subpat_array(&mut matches, subject, &md, flags);
+                        re.populate_subpat_array(&mut matches, subject, &session, count, flags);
                         break;
                     }
                 }
-                start_offset2 = ov[1];
-                if start_offset2 == ov[0] {
-                    match re.call(subject, start_offset2, Call::Retry) {
-                        Ok(Some(md)) => {
+                start_offset2 = ov1;
+                if start_offset2 == ov0 {
+                    match re.call(&mut session, subject, start_offset2, Call::Retry) {
+                        Ok(Some(count)) => {
                             if !global {
                                 break;
                             }
-                            pending = Some(Ok(Some(md)));
+                            pending = Some(Ok(Some(count)));
                             continue;
                         }
                         Ok(None) => {
@@ -1023,8 +973,8 @@ fn match_impl(
     }
     if let Some(sets) = match_sets {
         for (i, set) in sets.into_iter().enumerate() {
-            if re.name_count > 0
-                && let Some(name) = &re.names[i]
+            if let Some(names) = &re.names
+                && let Some(name) = &names[i]
             {
                 matches.update(Key::Str(name.clone()), Value::Array(set.clone()));
             }
@@ -1075,8 +1025,9 @@ fn get_backref(r: &[u8], walk: usize) -> Option<(usize, usize)> {
     Some((backref, w))
 }
 
-/// Expands a replacement template for one match (`php_pcre_replace_impl()`).
-fn expand_replacement(out: &mut Vec<u8>, replace: &[u8], subject: &[u8], md: &MatchData) {
+/// Expands a replacement template for one match (`php_pcre_replace_impl()`):
+/// `ov` holds the pairs of the groups the match set.
+fn expand_replacement(out: &mut Vec<u8>, replace: &[u8], subject: &[u8], ov: &[usize]) {
     let mut walk = 0;
     let mut walk_last = 0u8;
     while walk < replace.len() {
@@ -1091,8 +1042,8 @@ fn expand_replacement(out: &mut Vec<u8>, replace: &[u8], subject: &[u8], md: &Ma
                 continue;
             }
             if let Some((backref, next)) = get_backref(replace, walk) {
-                if backref < md.count {
-                    let (s, e) = (md.ovector[2 * backref], md.ovector[2 * backref + 1]);
+                if backref < ov.len() / 2 {
+                    let (s, e) = (ov[2 * backref], ov[2 * backref + 1]);
                     if s != UNSET {
                         out.extend_from_slice(&subject[s..e]);
                     }
@@ -1128,38 +1079,43 @@ fn replace_impl(
     let mut result: Option<Vec<u8>> = None;
     let mut last_end_offset = 0usize;
     let mut start_offset;
-    let mut count = re.call(subject, 0, re.first_call(false));
+    let mut session = re.session();
+    let mut count = re.call(&mut session, subject, 0, re.first_call(false));
     loop {
         let mut piece = last_end_offset;
         match count {
             Ok(Some(first)) if limit > 0 => {
-                let mut md = first;
+                let mut n = first;
                 loop {
-                    if md.ovector[1] < md.ovector[0] {
+                    let (ov0, ov1) = {
+                        let ov = session.ovector(n);
+                        (ov[0], ov[1])
+                    };
+                    if ov1 < ov0 {
                         *error = set_last_error(PregError::Internal);
                         return None;
                     }
                     *replace_count += 1;
                     let mut out = result.take().unwrap_or_default();
-                    out.extend_from_slice(&subject[piece..md.ovector[0]]);
+                    out.extend_from_slice(&subject[piece..ov0]);
                     match replacement {
-                        Replacement::Template(r) => expand_replacement(&mut out, r, subject, &md),
+                        Replacement::Template(r) => expand_replacement(&mut out, r, subject, session.ovector(n)),
                         Replacement::Callback { func, flags } => {
                             let mut arg = Array::new();
-                            re.populate_subpat_array(&mut arg, subject, &md, *flags);
+                            re.populate_subpat_array(&mut arg, subject, &session, n, *flags);
                             out.extend_from_slice(&func(&arg));
                         }
                     }
                     result = Some(out);
                     limit -= 1;
-                    start_offset = md.ovector[1];
+                    start_offset = ov1;
                     last_end_offset = start_offset;
-                    if start_offset == md.ovector[0] {
-                        let retry = re.call(subject, start_offset, Call::Retry);
+                    if start_offset == ov0 {
+                        let retry = re.call(&mut session, subject, start_offset, Call::Retry);
                         piece = start_offset;
                         match retry {
                             Ok(Some(m)) if limit > 0 => {
-                                md = m;
+                                n = m;
                                 continue;
                             }
                             Ok(_) => {}
@@ -1185,7 +1141,7 @@ fn replace_impl(
                 return None;
             }
         }
-        count = re.call(subject, start_offset, Call::Fast);
+        count = re.call(&mut session, subject, start_offset, Call::Fast);
     }
 }
 
@@ -1278,10 +1234,10 @@ pub fn preg_replace(
                     let mut current = subject.to_vec();
                     let mut replace_idx = 0;
                     for (_, p) in patterns {
-                        let r: Vec<u8> = match replacement {
-                            StrOrArray::Str(r) => r.to_vec(),
+                        let r: &[u8] = match replacement {
+                            StrOrArray::Str(r) => r,
                             StrOrArray::Array(rs) => {
-                                let r = rs.get(replace_idx).map(|(_, r)| r.clone()).unwrap_or_default();
+                                let r = rs.get(replace_idx).map_or(&[][..], |(_, r)| r.as_slice());
                                 replace_idx += 1;
                                 r
                             }
@@ -1290,7 +1246,7 @@ pub fn preg_replace(
                             "preg_replace",
                             p,
                             &current,
-                            &mut Replacement::Template(&r),
+                            &mut Replacement::Template(r),
                             limit,
                             count,
                             error,
@@ -1413,24 +1369,26 @@ pub fn preg_split(pattern: &[u8], subject: &[u8], limit: i64, flags: i64) -> Pre
         run = false;
     }
     if run {
-        let mut pending = Some(re.call(subject, start_offset, re.first_call(false)));
+        let mut session = re.session();
+        let mut pending = Some(re.call(&mut session, subject, start_offset, re.first_call(false)));
         loop {
-            let count = pending.take().unwrap_or_else(|| re.call(subject, start_offset, Call::Fast));
+            let count = pending.take().unwrap_or_else(|| re.call(&mut session, subject, start_offset, Call::Fast));
             match count {
-                Ok(Some(md)) => {
-                    let ov = &md.ovector;
-                    if ov[1] < ov[0] {
+                Ok(Some(count)) => {
+                    let ov = session.ovector(count);
+                    let (ov0, ov1) = (ov[0], ov[1]);
+                    if ov1 < ov0 {
                         error = set_last_error(PregError::Internal);
                         break;
                     }
-                    if !no_empty || ov[0] != last_match_offset {
-                        piece(&mut out, last_match_offset, ov[0]);
+                    if !no_empty || ov0 != last_match_offset {
+                        piece(&mut out, last_match_offset, ov0);
                         if limit_val != -1 {
                             limit_val -= 1;
                         }
                     }
                     if delim_capture {
-                        for i in 1..md.count {
+                        for i in 1..ov.len() / 2 {
                             if !no_empty || ov[2 * i] != ov[2 * i + 1] {
                                 if ov[2 * i] == UNSET {
                                     if offset_capture {
@@ -1444,13 +1402,13 @@ pub fn preg_split(pattern: &[u8], subject: &[u8], limit: i64, flags: i64) -> Pre
                             }
                         }
                     }
-                    start_offset = ov[1];
-                    last_match_offset = ov[1];
-                    if start_offset == ov[0] {
+                    start_offset = ov1;
+                    last_match_offset = ov1;
+                    if start_offset == ov0 {
                         if limit_val != -1 && limit_val <= 1 {
                             break;
                         }
-                        match re.call(subject, start_offset, Call::Retry) {
+                        match re.call(&mut session, subject, start_offset, Call::Retry) {
                             Ok(Some(m)) => {
                                 pending = Some(Ok(Some(m)));
                                 continue;
@@ -1524,8 +1482,9 @@ pub fn preg_grep(pattern: &[u8], input: &[(Key, Vec<u8>)], flags: i64) -> Preg<V
     let invert = flags & PREG_GREP_INVERT != 0;
     let mut out = Array::new();
     let mut error = set_last_error(PregError::None);
+    let mut session = re.session();
     for (k, s) in input {
-        match re.call(s, 0, re.first_call(false)) {
+        match re.call(&mut session, s, 0, re.first_call(false)) {
             Ok(Some(_)) => {
                 if !invert {
                     out.update(k.clone(), Value::Str(s.clone()));
@@ -1604,19 +1563,32 @@ mod tests {
     }
 
     #[test]
-    fn jit_start_search() {
-        use forward::Forward;
-        let plan = |p: &str| Regex::compile(p.as_bytes(), 0, 0).unwrap().start.forward;
-        // Positions {a,x} {a} {a}: no pair without a common unit.
-        assert_eq!(plan("x?(?:a){3}"), Some(Forward::Char { offset: 1, chars: *b"aa" }));
-        assert_eq!(plan("abc"), Some(Forward::Pair { offs1: 1, chars1: *b"bb", offs2: 0, chars2: *b"aa" }));
-        assert_eq!(plan("\\d+a"), None);
-        let pair = Forward::Pair { offs1: 1, chars1: *b"bb", offs2: 0, chars2: *b"aa" };
-        assert_eq!(pair.next(b"xaxab", 0, false), Some(3));
-        assert_eq!(pair.next(b"xaxa", 0, false), None);
-        // A limit of one step is enough: the JIT never tries "ab".
-        let r = preg_match(b"~(*LIMIT_MATCH=1)x?(?:a){3}~", b"abab", 0, 0).unwrap();
-        assert_eq!((r.value.result, r.error), (Value::Int(0), PregError::None));
+    fn limits() {
+        let r = preg_match(b"/(?:\\D+|<\\d+>)*[!?]/", b"foobar foobar foobar", 0, 0).unwrap();
+        assert_eq!((r.value.result, r.error), (Value::Bool(false), PregError::BacktrackLimit));
+        let r = preg_match(b"/^(?:a|b)*$/", &b"ab".repeat(4096), 0, 0).unwrap();
+        assert_eq!(r.error, PregError::JitStackLimit);
+        let r = preg_match(b"/./u", b"\xff", 0, 0).unwrap();
+        assert_eq!(r.error, PregError::BadUtf8);
+    }
+
+    #[test]
+    fn nested_calls() {
+        let r = preg_replace_callback(
+            &StrOrArray::Str(b"/\\w+/"),
+            &mut |m| {
+                let Some(Value::Str(word)) = m.get(&Key::Int(0)) else { return Vec::new() };
+                let inner = preg_replace(&StrOrArray::Str(b"/o/"), &StrOrArray::Str(b"0"), &StrOrArray::Str(word), -1);
+                match inner.unwrap().value.result {
+                    Value::Str(s) => s,
+                    _ => Vec::new(),
+                }
+            },
+            &StrOrArray::Str(b"foo boo"),
+            -1,
+            0,
+        );
+        assert_eq!(r.value.result, Value::Str(b"f00 b00".to_vec()));
     }
 
     #[test]
@@ -1634,5 +1606,22 @@ mod tests {
         );
         let r = preg_match(b"/abc/k", b"x", 0, 0).unwrap();
         assert_eq!(r.warning.unwrap(), b"preg_match(): Unknown modifier 'k'".to_vec());
+        let r = preg_match(b"/\\C/u", b"x", 0, 0).unwrap();
+        assert_eq!(
+            r.warning.unwrap(),
+            b"preg_match(): Compilation failed: using \\C is incompatible with the 'u' modifier at offset 2".to_vec()
+        );
+    }
+
+    /// A full cache evicts its oldest entries, and a thread that remembers
+    /// one of them compiles it again, as PHP would.
+    #[test]
+    fn cache_evicts() {
+        let first = Regex::compiled(b"/cache-evicts-first/").unwrap();
+        assert!(Arc::ptr_eq(&first, &Regex::compiled(b"/cache-evicts-first/").unwrap()));
+        for i in 0..CACHE_SIZE {
+            Regex::compiled(format!("/cache-evicts-{i}/").as_bytes()).unwrap();
+        }
+        assert!(!Arc::ptr_eq(&first, &Regex::compiled(b"/cache-evicts-first/").unwrap()));
     }
 }
