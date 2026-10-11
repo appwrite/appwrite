@@ -380,6 +380,7 @@ dependencies = [
  "futures-util",
  "httparse",
  "indexmap",
+ "mimalloc",
  "p256",
  "php-std",
  "proc-macro2",
