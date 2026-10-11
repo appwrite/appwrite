@@ -5,6 +5,7 @@
 //! one Appwrite serves with: headers, cookies, query and form fields are
 //! parsed the way Swoole parses them, the JSON body the way Utopia does.
 
+use std::borrow::Cow;
 use std::net::IpAddr;
 use std::sync::{Arc, OnceLock};
 
@@ -13,7 +14,7 @@ use indexmap::IndexMap;
 use php_std::{Array, Value as Php};
 use serde_json::{Map, Value};
 
-use crate::headers::Headers;
+use crate::headers::{self, Headers};
 use crate::multipart;
 use crate::params::{self, Params};
 use crate::trusted::TrustedHeaders;
@@ -62,10 +63,10 @@ pub struct Range {
 /// Query, body and cookie params and uploaded files are parsed on first use.
 #[derive(Debug)]
 pub struct Request {
-    method: String,
+    method: Cow<'static, str>,
     uri: String,
     query_string: Option<String>,
-    protocol: String,
+    protocol: Cow<'static, str>,
     remote_addr: Option<String>,
     remote_port: Option<u16>,
     server_port: Option<u16>,
@@ -135,22 +136,23 @@ impl Request {
         let mut cookie_lines = Vec::new();
         let mut form = Form::None;
         for (name, value) in headers {
-            let name = name.to_ascii_lowercase();
-            if name == "cookie" {
+            if name.eq_ignore_ascii_case("cookie") {
                 // Swoole parses cookies out of the headers (`http_parse_cookie`).
                 cookie_lines.push(value.to_owned());
                 continue;
             }
+            // Lowercased once; common names are static and cost nothing.
+            let name = headers::name(name);
             if name == "content-type" && form == Form::None {
                 form = form_kind(value);
             }
             // Swoole drops the whitespace before a value (hyper drops it around).
-            let value = value.trim_start_matches([' ', '\t']);
-            if SINGLE.contains(&name.as_str()) {
+            let value = value.trim_start_matches([' ', '\t']).to_owned();
+            if SINGLE.contains(&name.as_ref()) {
                 // Headers Swoole keeps one value of: the last one wins.
-                map.set(&name, value);
+                map.set_lowercase(name, value);
             } else {
-                map.push_lowercase(name, value.to_owned());
+                map.push_lowercase(name, value);
             }
         }
         // Swoole parses form bodies of these methods only.
@@ -158,10 +160,10 @@ impl Request {
             form = Form::None;
         }
         Self {
-            method: method.to_owned(),
+            method: method_name(method),
             uri,
             query_string,
-            protocol: "HTTP/1.1".to_owned(),
+            protocol: Cow::Borrowed("HTTP/1.1"),
             remote_addr: None,
             remote_port: None,
             server_port: None,
@@ -171,7 +173,7 @@ impl Request {
             cookie_lines,
             body,
             form,
-            trusted: Arc::new(TrustedHeaders::default()),
+            trusted: TrustedHeaders::shared_default(),
             query: OnceLock::new(),
             payload: OnceLock::new(),
             post: OnceLock::new(),
@@ -196,14 +198,13 @@ impl Request {
                 .collect();
             Self::new(parts.method.as_str(), target, lossy.iter().map(|(n, v)| (n.as_str(), v.as_str())), body)
         };
-        request.protocol = match parts.version {
+        request.protocol = Cow::Borrowed(match parts.version {
             http::Version::HTTP_09 => "HTTP/0.9",
             http::Version::HTTP_10 => "HTTP/1.0",
             http::Version::HTTP_2 => "HTTP/2",
             http::Version::HTTP_3 => "HTTP/3",
             _ => "HTTP/1.1",
-        }
-        .to_owned();
+        });
         if let Some(remote) = remote {
             request.remote_addr = Some(remote.ip().to_string());
             request.remote_port = Some(remote.port());
@@ -231,7 +232,7 @@ impl Request {
     ///
     /// PHP: `$server['server_protocol']`.
     pub fn with_protocol(mut self, protocol: impl Into<String>) -> Self {
-        self.protocol = protocol.into();
+        self.protocol = Cow::Owned(protocol.into());
         self
     }
 
@@ -256,13 +257,13 @@ impl Request {
             return Some(v.clone());
         }
         match key {
-            "request_method" => Some(self.method.clone()),
+            "request_method" => Some(self.method.clone().into_owned()),
             "request_uri" => Some(self.uri.clone()),
             "path_info" => {
                 Some(String::from_utf8_lossy(&php_std::encoding::rawurldecode(self.uri.as_bytes())).into_owned())
             }
             "query_string" => self.query_string.clone(),
-            "server_protocol" => Some(self.protocol.clone()),
+            "server_protocol" => Some(self.protocol.clone().into_owned()),
             "remote_addr" => self.remote_addr.clone(),
             "remote_port" => self.remote_port.map(|p| p.to_string()),
             "server_port" => self.server_port.map(|p| p.to_string()),
@@ -279,7 +280,7 @@ impl Request {
     pub fn set_server(&mut self, key: &str, value: impl Into<String>) -> &mut Self {
         let value = value.into();
         match key {
-            "request_method" => self.method = value,
+            "request_method" => self.method = Cow::Owned(value),
             "request_uri" => self.uri = value,
             _ => {
                 self.server.insert(key.to_owned(), value);
@@ -301,7 +302,7 @@ impl Request {
     ///
     /// PHP: `setMethod($method)`.
     pub fn set_method(&mut self, method: impl Into<String>) -> &mut Self {
-        self.method = method.into();
+        self.method = Cow::Owned(method.into());
         self
     }
 
@@ -555,10 +556,26 @@ impl Request {
     /// PHP: `getCookieParams()`.
     pub fn cookies(&self) -> &Params {
         self.cookies.get_or_init(|| {
+            // Straight into params while every name is flat (no `[`).
+            let mut cookies = Map::new();
+            let mut count = 0;
+            let mut flat = |name: &[u8], value| params::register_flat(&mut cookies, name, value, true);
+            if self
+                .cookie_lines
+                .iter()
+                .try_for_each(|line| parse_cookie(line.as_bytes(), &mut count, &mut flat))
+                .is_some()
+            {
+                return cookies;
+            }
             let mut array = Array::new();
             let mut count = 0;
+            let mut register = |name: &[u8], value: Vec<u8>| {
+                php_std::encoding::register_variable(&mut array, name, Php::Str(value.into()), true);
+                Some(())
+            };
             for line in &self.cookie_lines {
-                parse_cookie(line.as_bytes(), &mut array, &mut count);
+                parse_cookie(line.as_bytes(), &mut count, &mut register);
             }
             params::array_to_params(&array)
         })
@@ -624,7 +641,7 @@ impl Request {
     }
 
     fn has_body_params(&self) -> bool {
-        matches!(self.method.as_str(), "POST" | "PUT" | "PATCH" | "DELETE")
+        matches!(self.method.as_ref(), "POST" | "PUT" | "PATCH" | "DELETE")
     }
 
     /// A param from [`Request::params`]; a `null` value counts as missing.
@@ -798,6 +815,15 @@ fn int(digits: &str) -> i64 {
     php_std::format::str_to_int(digits.as_bytes())
 }
 
+/// The method as given: a static copy for the standard methods.
+fn method_name(method: &str) -> Cow<'static, str> {
+    const METHODS: [&str; 9] = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD", "CONNECT", "TRACE"];
+    match METHODS.iter().find(|m| **m == method) {
+        Some(m) => Cow::Borrowed(m),
+        None => Cow::Owned(method.to_owned()),
+    }
+}
+
 fn now() -> f64 {
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_secs_f64()).unwrap_or(0.0)
 }
@@ -828,7 +854,9 @@ fn valid_ip(ip: &[u8]) -> bool {
 /// Pairs are separated by `;`, leading whitespace of names is skipped, names
 /// are registered like PHP variables (first one wins at the top level) and
 /// values are raw-URL-decoded.
-fn parse_cookie(line: &[u8], array: &mut Array, count: &mut usize) {
+///
+/// `register` takes each name and value; `None` from it stops parsing.
+fn parse_cookie(line: &[u8], count: &mut usize, register: &mut impl FnMut(&[u8], Vec<u8>) -> Option<()>) -> Option<()> {
     for pair in line.split(|&b| b == b';').filter(|p| !p.is_empty()) {
         let start = pair.iter().position(|b| !b.is_ascii_whitespace() && *b != 0x0B).unwrap_or(pair.len());
         let pair = &pair[start..];
@@ -837,12 +865,13 @@ fn parse_cookie(line: &[u8], array: &mut Array, count: &mut usize) {
         }
         *count += 1;
         if *count > php_std::encoding::MAX_INPUT_VARS {
-            return;
+            return Some(());
         }
         let (name, value) = match pair.iter().position(|&b| b == b'=') {
             Some(eq) => (&pair[..eq], php_std::encoding::rawurldecode(&pair[eq + 1..])),
             None => (pair, Vec::new()),
         };
-        php_std::encoding::register_variable(array, name, Php::Str(value.into()), true);
+        register(name, value)?;
     }
+    Some(())
 }

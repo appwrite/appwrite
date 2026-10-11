@@ -6,6 +6,7 @@
 //! PHP: `Utopia\Http\Response`; the [`Wire`] stands for the server
 //! adapter's output.
 
+use std::fmt::Write;
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
 use bytes::Bytes;
@@ -13,6 +14,7 @@ use http::{HeaderName, HeaderValue, StatusCode};
 use serde_json::Value;
 
 use crate::compression::{self, Compression};
+use crate::encode;
 use crate::error::{Error, Result};
 use crate::headers::Headers;
 
@@ -188,19 +190,18 @@ impl Cookie {
             return None;
         }
         let value = self.value.as_deref().unwrap_or("");
-        let mut out = String::with_capacity(64);
+        let mut out = String::with_capacity(name.len() + value.len() * 3 + 128);
         out.push_str(name);
         out.push('=');
         if value.is_empty() {
             out.push_str("deleted; expires=Thu, 01-Jan-1970 00:00:01 GMT; Max-Age=0");
         } else {
-            out.push_str(&php_std::encoding::urlencode(value.as_bytes()));
+            urlencode_into(&mut out, value.as_bytes());
             let expires = self.expire.unwrap_or(0);
             if expires > 0 {
                 out.push_str("; expires=");
-                out.push_str(&cookie_date(expires));
-                out.push_str("; Max-Age=");
-                out.push_str(&(expires - now).max(0).to_string());
+                cookie_date(&mut out, expires);
+                let _ = write!(out, "; Max-Age={}", (expires - now).max(0));
             }
         }
         if let Some(path) = self.path.as_deref().filter(|p| !p.is_empty()) {
@@ -225,14 +226,32 @@ impl Cookie {
     }
 }
 
-/// `D, d-M-Y H:i:s GMT` in UTC.
-fn cookie_date(timestamp: i64) -> String {
+/// PHP `urlencode()`, appended: alphanumerics and `-_.` are kept, a space
+/// is `+`, every other byte is `%XX`.
+fn urlencode_into(out: &mut String, s: &[u8]) {
+    const HEX: &[u8; 16] = b"0123456789ABCDEF";
+    for &c in s {
+        if c == b' ' {
+            out.push('+');
+        } else if c.is_ascii_alphanumeric() || matches!(c, b'-' | b'.' | b'_') {
+            out.push(char::from(c));
+        } else {
+            out.push('%');
+            out.push(char::from(HEX[usize::from(c >> 4)]));
+            out.push(char::from(HEX[usize::from(c & 15)]));
+        }
+    }
+}
+
+/// `D, d-M-Y H:i:s GMT` in UTC, appended.
+fn cookie_date(out: &mut String, timestamp: i64) {
     const DAYS: [&str; 7] = ["Thu", "Fri", "Sat", "Sun", "Mon", "Tue", "Wed"];
     const MONTHS: [&str; 12] = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     let days = timestamp.div_euclid(86_400);
     let secs = timestamp.rem_euclid(86_400);
     let (y, m, d) = civil(days);
-    format!(
+    let _ = write!(
+        out,
         "{}, {:02}-{}-{:04} {:02}:{:02}:{:02} GMT",
         DAYS[days.rem_euclid(7) as usize],
         d,
@@ -241,7 +260,7 @@ fn cookie_date(timestamp: i64) -> String {
         secs / 3600,
         secs % 3600 / 60,
         secs % 60
-    )
+    );
 }
 
 /// Days since the Unix epoch to (year, month, day).
@@ -670,7 +689,7 @@ impl Response {
     ///
     /// PHP: `addCookie($name, ...)`.
     pub fn add_cookie(&mut self, mut cookie: Cookie) -> &mut Self {
-        cookie.name = cookie.name.to_ascii_lowercase();
+        cookie.name.make_ascii_lowercase();
         self.cookies.push((self.next_cookie, cookie));
         self.next_cookie += 1;
         self
@@ -793,13 +812,12 @@ impl Response {
     fn append_headers(&mut self) {
         self.wire.status = Some(self.status);
         if !self.content_type.is_empty() && self.content_type != "0" {
-            let ct = self.content_type.clone();
-            self.headers.set("Content-Type", ct);
+            self.headers.set("Content-Type", self.content_type.as_str());
         }
-        let headers: Vec<(String, Vec<String>)> =
-            self.headers.iter().map(|(k, v)| (k.to_owned(), v.to_vec())).collect();
-        for (name, values) in headers {
-            self.wire.header(&name, &values);
+        // The response keeps its headers (PHP's getters read them after a
+        // send): the wire gets one copy.
+        for (name, values) in self.headers.iter() {
+            self.wire.header(name, values);
         }
     }
 
@@ -932,12 +950,7 @@ impl Response {
         if !matches!(data, Value::Array(_) | Value::Object(_)) {
             return Err(Error::Generic("Invalid JSON input var".to_owned()));
         }
-        let body = php_std::json::encode(
-            &php_std::Value::<php_std::Never>::from_json(data),
-            php_std::json::Flags::UNESCAPED_UNICODE,
-            php_std::json::DEFAULT_DEPTH,
-        )
-        .unwrap_or_default();
+        let body = encode::json(data, true).unwrap_or_default();
         self.set_content_type(content_type::JSON, CHARSET_UTF8);
         self.send(body.as_bytes());
         Ok(())
@@ -948,12 +961,7 @@ impl Response {
     ///
     /// PHP: `jsonp($callback, $data)`.
     pub fn jsonp(&mut self, callback: &str, data: &Value) {
-        let json = php_std::json::encode(
-            &php_std::Value::<php_std::Never>::from_json(data),
-            php_std::json::Flags::NONE,
-            php_std::json::DEFAULT_DEPTH,
-        )
-        .unwrap_or_default();
+        let json = encode::json(data, false).unwrap_or_default();
         self.set_content_type(content_type::JAVASCRIPT, CHARSET_UTF8);
         self.send(format!("parent.{callback}({json});").as_bytes());
     }
@@ -963,12 +971,7 @@ impl Response {
     ///
     /// PHP: `iframe($callback, $data)`.
     pub fn iframe(&mut self, callback: &str, data: &Value) {
-        let json = php_std::json::encode(
-            &php_std::Value::<php_std::Never>::from_json(data),
-            php_std::json::Flags::NONE,
-            php_std::json::DEFAULT_DEPTH,
-        )
-        .unwrap_or_default();
+        let json = encode::json(data, false).unwrap_or_default();
         self.set_content_type(content_type::HTML, CHARSET_UTF8);
         self.send(format!("<script type=\"text/javascript\">window.parent.{callback}({json});</script>").as_bytes());
     }
