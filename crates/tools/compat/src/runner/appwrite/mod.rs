@@ -7,8 +7,9 @@
 //!   routers to the Rust container in the compose files ([`rust`]);
 //! - tests: the E2E suites, the CI steps that run them against Rust, and the
 //!   recorded runs in `tests/e2e/results` ([`e2e`]);
-//! - benchmarks: `tests/benchmarks/results/*.json`, written by
-//!   `tests/benchmarks/users-compare.sh`;
+//! - benchmarks: which endpoints each service's k6 script has a scenario for
+//!   ([`bench`]), and `tests/benchmarks/results/*.json`, written by
+//!   `tests/benchmarks/api/compare.sh`;
 //! - cross-cutting hooks: every `Http::init`/`shutdown`/`error` hook found in
 //!   the code, with what `crates/appwrite/hooks.json` says about each one
 //!   (what it does, and where `appwrite-core` reproduces it).
@@ -16,6 +17,7 @@
 //! Without Docker or a dev stack everything is still generated; only the
 //! recorded runs and benchmarks are read, never produced.
 
+pub mod bench;
 pub mod e2e;
 pub mod inventory;
 pub mod php;
@@ -242,12 +244,64 @@ fn hooks(
 
 /// Writes `<out>/appwrite.json`; returns a one-line summary.
 pub fn write(root: &Path, out: &Path) -> Result<String, String> {
+    let (doc, warnings) = document(root);
+    std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
+    let path = out.join("appwrite.json");
+    std::fs::write(&path, serde_json::to_string(&doc).map_err(|e| e.to_string())?)
+        .map_err(|e| format!("{}: {e}", path.display()))?;
+    for w in &warnings {
+        eprintln!("compat appwrite: {w}");
+    }
+    let summary = &doc["summary"];
+    Ok(format!(
+        "{} services, {} endpoints ({} served by Rust, {} benchmarked), {} hooks, {} suites",
+        summary["services"],
+        summary["endpoints"],
+        summary["served"],
+        summary["bench_covered"],
+        summary["hooks"]["total"],
+        summary["suites"]
+    ))
+}
+
+/// Endpoints a benchmark must cover and does not: every endpoint Rust
+/// serves, and every endpoint of a service that has a benchmark script
+/// (unless the script skips it with a reason); plus scenarios whose route is
+/// no endpoint of their service.
+pub fn benchmark_gaps(root: &Path) -> Vec<String> {
+    let (doc, warnings) = document(root);
+    let mut gaps: Vec<String> = warnings.into_iter().filter(|w| w.starts_with("tests/benchmarks/")).collect();
+    for service in doc["services"].as_array().into_iter().flatten() {
+        let id = service["id"].as_str().unwrap_or_default();
+        let scripted = !service["bench_script"].is_null();
+        for e in doc["details"][id]["endpoints"].as_array().into_iter().flatten() {
+            let route =
+                format!("{} {}", e["method"].as_str().unwrap_or_default(), e["path"].as_str().unwrap_or_default());
+            match e["bench"]["status"].as_str() {
+                Some("covered") => {}
+                Some("skipped") if e["bench"]["reason"].as_str().is_some_and(|r| !r.trim().is_empty()) => {}
+                Some("skipped") => gaps.push(format!("{id}: `{route}` is skipped without a reason")),
+                _ if e["rust"] == "served" => {
+                    gaps.push(format!("{id}: `{route}` is served by Rust and has no benchmark scenario"))
+                }
+                _ if scripted => gaps.push(format!("{id}: `{route}` has no scenario in tests/benchmarks/api/{id}.js")),
+                _ => {}
+            }
+        }
+    }
+    gaps
+}
+
+/// The migration as the JSON `write` stores, with what to warn about.
+fn document(root: &Path) -> (Value, Vec<String>) {
     let Inventory { services, hooks: found, mut warnings } = inventory::read(root);
     let rust_routes = rust::routes(root);
     let routers = rust::routers(root);
     let suites = e2e::suites(root);
     let rust_runs = e2e::ci_rust_runs(root);
     let results = e2e::results(root);
+    let coverage = bench::coverage(root);
+    let mut declared: BTreeSet<(String, String)> = BTreeSet::new();
     let benchmarks: Vec<Value> = {
         let dir = root.join("tests/benchmarks/results");
         let mut files: Vec<_> = std::fs::read_dir(&dir).into_iter().flatten().flatten().map(|e| e.path()).collect();
@@ -273,6 +327,8 @@ pub fn write(root: &Path, out: &Path) -> Result<String, String> {
         let mut counts: BTreeMap<&str, usize> = BTreeMap::new();
         let mut sdk_total = 0;
         let mut sdk_served = 0;
+        let cover = coverage.get(&s.id);
+        let mut bench_counts: BTreeMap<&str, usize> = BTreeMap::new();
         let endpoints: Vec<Value> = s
             .endpoints
             .iter()
@@ -299,7 +355,29 @@ pub fn write(root: &Path, out: &Path) -> Result<String, String> {
                         json!({ "path": a, "rust": endpoint_status(rust::routed(&routers, a), at.is_some()) })
                     })
                     .collect();
-                endpoint_json(e, status, at, aliases)
+                let mut out = endpoint_json(e, status, at, aliases);
+                let routes: Vec<String> =
+                    std::iter::once(&e.path).chain(&e.aliases).map(|p| format!("{} {p}", e.method)).collect();
+                let bench = match cover {
+                    Some(c) if routes.iter().any(|r| c.routes.contains(r)) => json!({ "status": "covered" }),
+                    Some(c) => match routes.iter().find_map(|r| c.skipped.get(r)) {
+                        Some(reason) => json!({ "status": "skipped", "reason": reason }),
+                        None => json!({ "status": "missing" }),
+                    },
+                    None => json!({ "status": "missing" }),
+                };
+                declared.extend(routes.into_iter().map(|r| (s.id.clone(), r)));
+                *bench_counts
+                    .entry(if bench["status"] == "covered" {
+                        "covered"
+                    } else if bench["status"] == "skipped" {
+                        "skipped"
+                    } else {
+                        "missing"
+                    })
+                    .or_default() += 1;
+                out["bench"] = bench;
+                out
             })
             .collect();
         let total = s.endpoints.len();
@@ -361,6 +439,9 @@ pub fn write(root: &Path, out: &Path) -> Result<String, String> {
                 "missing": counts.get("missing").copied().unwrap_or(0),
                 "sdk": sdk_total,
                 "sdk_served": sdk_served,
+                "bench_covered": bench_counts.get("covered").copied().unwrap_or(0),
+                "bench_skipped": bench_counts.get("skipped").copied().unwrap_or(0),
+                "bench_missing": bench_counts.get("missing").copied().unwrap_or(0),
             },
             "tests": {
                 "suites": my_suites.iter().map(|x| &x.name).collect::<Vec<_>>(),
@@ -370,6 +451,7 @@ pub fn write(root: &Path, out: &Path) -> Result<String, String> {
                 "latest": latest,
             },
             "bench": my_bench.first().map(|b| json!({ "date": b["environment"]["date"], "file": b["file"] })),
+            "bench_script": cover.map(|c| &c.script),
         }));
         details.insert(
             s.id.clone(),
@@ -380,6 +462,15 @@ pub fn write(root: &Path, out: &Path) -> Result<String, String> {
                 "benchmarks": my_bench,
             }),
         );
+    }
+
+    // Scenarios and skips whose route is no endpoint of their service (a typo, or a route that moved).
+    for (service, c) in &coverage {
+        for route in c.routes.iter().chain(c.skipped.keys()) {
+            if !declared.contains(&(service.clone(), route.clone())) {
+                warnings.push(format!("{}: `{route}` is not a route of the {service} service", c.script));
+            }
+        }
     }
 
     // Rust routes no PHP route matches (e.g. a route PHP dropped, or a typo).
@@ -422,6 +513,9 @@ pub fn write(root: &Path, out: &Path) -> Result<String, String> {
             "missing": sum("missing"),
             "sdk": sum("sdk"),
             "sdk_served": sum("sdk_served"),
+            "bench_covered": sum("bench_covered"),
+            "bench_skipped": sum("bench_skipped"),
+            "bench_missing": sum("bench_missing"),
             "suites": suites.len(),
             "tests": suites.iter().map(e2e::Suite::tests).sum::<usize>(),
             "rust_suites": suites.iter().filter(|s| rust_runs.iter().any(|r| r.suite == s.name)).count(),
@@ -453,21 +547,7 @@ pub fn write(root: &Path, out: &Path) -> Result<String, String> {
         "unassigned_suites": unassigned,
         "warnings": warnings,
     });
-    std::fs::create_dir_all(out).map_err(|e| format!("{}: {e}", out.display()))?;
-    let path = out.join("appwrite.json");
-    std::fs::write(&path, serde_json::to_string(&doc).map_err(|e| e.to_string())?)
-        .map_err(|e| format!("{}: {e}", path.display()))?;
-    for w in &warnings {
-        eprintln!("compat appwrite: {w}");
-    }
-    Ok(format!(
-        "{} services, {} endpoints ({} served by Rust), {} hooks, {} suites",
-        services.len(),
-        endpoints,
-        sum("served"),
-        hook_list.len(),
-        suites.len()
-    ))
+    (doc, warnings)
 }
 
 #[cfg(test)]

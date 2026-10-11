@@ -11,6 +11,7 @@ import {
   pairs,
   type Benchmark,
   type BenchStep,
+  type Endpoint,
   type Hook,
   type HookStatus,
   type RouteStatus,
@@ -236,8 +237,8 @@ export function Duel({
   higher?: boolean
   compact?: boolean
 }) {
-  if (php == null || rust == null || !php || !rust) return <span className="text-[12px] text-muted-foreground">–</span>
-  const max = Math.max(php, rust)
+  if (!php && !rust) return <span className="text-[12px] text-muted-foreground">–</span>
+  const max = Math.max(php || 0, rust || 0)
   const row = (who: 'PHP' | 'Rust', v: number, color: string) => (
     <div className="grid grid-cols-[2.6rem_minmax(0,1fr)_auto] items-center gap-2">
       <span className="text-[11px] text-muted-foreground">{who}</span>
@@ -252,11 +253,11 @@ export function Duel({
       {label || !compact ? (
         <div className="flex items-center justify-between gap-2">
           {label ? <span className="text-[11px] tracking-wide text-muted-foreground uppercase">{label}</span> : <span />}
-          <Verdict x={advantage(php, rust, higher)} word={higher ? ['more', 'less'] : ['faster', 'slower']} />
+          {php && rust ? <Verdict x={advantage(php, rust, higher)} word={higher ? ['more', 'less'] : ['faster', 'slower']} /> : null}
         </div>
       ) : null}
-      {row('PHP', php, 'bg-php')}
-      {row('Rust', rust, 'bg-rust')}
+      {php ? row('PHP', php, 'bg-php') : null}
+      {rust ? row('Rust', rust, 'bg-rust') : null}
     </div>
   )
 }
@@ -268,7 +269,7 @@ const mib = (v: number) => `${Math.round(v)} MiB`
 
 /** PHP against Rust at every step of the load ladder, as paired bars. */
 export function BenchSteps({ bench }: { bench: Benchmark }) {
-  const rows = pairs(bench).filter((r) => r.php && r.rust)
+  const rows = pairs(bench).filter((r) => r.php || r.rust)
   return (
     <div className="grid min-w-0 gap-3">
       <DuelLegend />
@@ -298,7 +299,7 @@ export function BenchSteps({ bench }: { bench: Benchmark }) {
 
 /** The benchmark steps a page can show per endpoint, and the chosen one. */
 export function useBenchStep(bench: Benchmark | undefined) {
-  const rows = bench ? pairs(bench).filter((r) => r.php && r.rust) : []
+  const rows = bench ? pairs(bench).filter((r) => r.php || r.rust) : []
   const [at, setAt] = useState(Math.max(0, rows.findIndex((r) => r.mode === 'vus')))
   return { rows, step: rows[at], at, setAt }
 }
@@ -320,15 +321,41 @@ export function StepPicker({ rows, at, setAt }: { rows: ReturnType<typeof pairs>
 }
 
 /** One endpoint's benchmark at a step: median latency and throughput, PHP against Rust. */
-export function EndpointBench({ step, route }: { step: ReturnType<typeof pairs>[number] | undefined; route: string }) {
-  const find = (s: BenchStep | undefined) => (s ? Object.values(s.endpoints).find((e) => e.route === route) : undefined)
-  const p = find(step?.php)
-  const r = find(step?.rust)
-  if (!p || !r) return <span className="text-[12px] text-muted-foreground">Not benchmarked</span>
+/**
+ * An endpoint's timings at one step: each scenario that measures it (a route
+ * can have several, like a list and a search), PHP against Rust, or PHP alone
+ * while Rust does not serve it. Without timings, why: no scenario yet, a
+ * scenario not run yet, or the reason it is skipped.
+ */
+export function EndpointBench({ step, route, bench }: { step: ReturnType<typeof pairs>[number] | undefined; route: string; bench: Endpoint['bench'] }) {
+  const of = (s: BenchStep | undefined) => Object.entries(s?.endpoints ?? {}).filter(([, e]) => e.route === route)
+  const names = [...new Set([...of(step?.php), ...of(step?.rust)].map(([name]) => name))]
+  if (!names.length) {
+    if (bench.status === 'skipped') return <span className="text-[12px] text-muted-foreground">Skipped: {bench.reason}</span>
+    if (bench.status === 'covered') return <span className="text-[12px] text-muted-foreground">Scenario written, not run yet</span>
+    return <span className="text-[12px] text-red-600 dark:text-red-400">No benchmark scenario</span>
+  }
   return (
-    <div className="grid min-w-[220px] gap-2">
-      <Duel label="Median" php={p.p50} rust={r.p50} format={millis} compact />
-      <Duel label="p99" php={p.p99} rust={r.p99} format={millis} compact />
+    <div className="grid min-w-[220px] gap-3">
+      {names.map((name) => {
+        const p = step?.php?.endpoints[name]
+        const r = step?.rust?.endpoints[name]
+        const note = p?.note ?? r?.note
+        return (
+          <div key={name} className="grid gap-2">
+            {names.length > 1 || note ? (
+              <span className="text-[11px] text-muted-foreground">
+                {names.length > 1 ? <span className="font-mono">{name}</span> : null}
+                {names.length > 1 && note ? ' · ' : null}
+                {note}
+              </span>
+            ) : null}
+            <Duel label="Median" php={p?.p50} rust={r?.p50} format={millis} compact />
+            <Duel label="p99" php={p?.p99} rust={r?.p99} format={millis} compact />
+            {p && !r ? <span className="text-[11px] text-muted-foreground">PHP only: Rust does not serve it yet</span> : null}
+          </div>
+        )
+      })}
     </div>
   )
 }
@@ -337,6 +364,7 @@ export function EndpointBench({ step, route }: { step: ReturnType<typeof pairs>[
  * load, and CPU per request at the highest fixed rate. */
 export function ServiceSpeed({ bench }: { bench: Benchmark | undefined }) {
   if (!bench) return <span className="text-[12px] text-muted-foreground">–</span>
+  if (!bench.steps.some((s) => s.target === 'rust')) return <span className="text-[12px] text-muted-foreground">PHP baseline</span>
   const rows = pairs(bench).filter((r) => r.php && r.rust)
   const loop = rows.filter((r) => r.mode === 'vus').at(-1)
   const rate = rows.filter((r) => r.mode === 'rate').at(-1)
@@ -363,7 +391,7 @@ export function BenchEnvironment({ bench }: { bench: Benchmark }) {
       {e.machine.cpu ?? e.machine.arch}
       {e.machine.cores ? `, ${e.machine.cores} cores` : ''}
       {e.machine.memory_gib ? `, ${e.machine.memory_gib} GiB` : ''} ({e.machine.os}) · Docker {e.docker} · k6 {e.k6} · {bench.workload.duration} per step,{' '}
-      {bench.workload.users} seeded users{bench.workload.hashing ? ', with password hashing' : ''} · CPU from {e.cpu_source} · PHP <code className="font-mono">{e.php.image}</code>, Rust{' '}
+      {bench.workload.seed ?? bench.workload.users} seeded records{bench.workload.hashing ? ', with password hashing' : ''} · CPU from {e.cpu_source} · PHP <code className="font-mono">{e.php.image}</code>, Rust{' '}
       <code className="font-mono">{e.rust.image}</code> · commit <code className="font-mono">{e.commit}</code> · {e.date.slice(0, 10)}. Load generator, API and database share
       the machine; compare the runtimes, not the numbers across machines.
     </p>

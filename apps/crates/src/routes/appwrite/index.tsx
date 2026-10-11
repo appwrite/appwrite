@@ -53,6 +53,15 @@ function Overview() {
             <Stat label="SDK endpoints" value={s.sdk_served} of={s.sdk}>
               <Bar total={s.sdk} parts={[{ value: s.sdk_served, className: 'bg-ok' }]} />
             </Stat>
+            <Stat label="Endpoints benchmarked" value={s.bench_covered} of={s.endpoints}>
+              <Bar
+                total={s.endpoints}
+                parts={[
+                  { value: s.bench_covered, className: 'bg-ok' },
+                  { value: s.bench_skipped, className: 'bg-started' },
+                ]}
+              />
+            </Stat>
             <Stat label="Services" value={s.rust} of={s.services}>
               <Bar
                 total={s.services}

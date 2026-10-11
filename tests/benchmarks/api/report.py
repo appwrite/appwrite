@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarises a users-compare.sh run.
+"""Summarises a compare.sh run of one service ($SERVICE).
 
 For every step it reports throughput, latency percentiles, CPU time per
 request (API container and PostgreSQL + Redis), and memory (baseline,
@@ -7,10 +7,10 @@ average and peak under load), as a Markdown table on stdout.
 
 With `--json <path>` it also writes the run as JSON, per step and per
 endpoint, with the environment it ran in. Committed as
-tests/benchmarks/results/users.json, it is what `bin/compat appwrite`
+tests/benchmarks/results/<service>.json, it is what `bin/compat appwrite`
 shows on the docs site:
 
-    users-report.py <run directory> [--json tests/benchmarks/results/users.json]
+    SERVICE=users report.py <run directory> [--json tests/benchmarks/results/users.json]
 """
 import csv
 import datetime
@@ -159,6 +159,7 @@ def document(found, directory):
         for name, e in (k6.get('endpoints') or {}).items():
             endpoints[name] = {
                 'route': e.get('route'),
+                **({'note': e['note']} if e.get('note') else {}),
                 'count': e.get('count'),
                 'rps': round(e['count'] / workload_seconds, 2) if workload_seconds and e.get('count') else None,
                 **{k: round(e[k], 3) for k in ('avg', 'p50', 'p90', 'p95', 'p99', 'max') if e.get(k) is not None},
@@ -181,15 +182,16 @@ def document(found, directory):
             },
             'endpoints': endpoints,
         })
+    service = os.environ.get('SERVICE', 'users')
     memory = run('sysctl', '-n', 'hw.memsize') if platform.system() == 'Darwin' else None
     return {
-        'service': 'users',
-        'file': 'tests/benchmarks/results/users.json',
+        'service': service,
+        'file': f'tests/benchmarks/results/{service}.json',
         'workload': {
-            'script': 'tests/benchmarks/users.js',
+            'script': f'tests/benchmarks/api/{service}.js',
             'duration': duration,
             'hashing': os.environ.get('HASHING', 'false') == 'true',
-            'users': int(os.environ.get('APPWRITE_BENCHMARK_USERS', '200')),
+            'seed': int(os.environ.get('APPWRITE_BENCHMARK_SEED', '200')),
             'run': os.path.basename(os.path.normpath(directory)),
         },
         'environment': {

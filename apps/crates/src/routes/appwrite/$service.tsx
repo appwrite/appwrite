@@ -94,6 +94,15 @@ function ServicePage() {
             <Stat label="SDK endpoints" value={s.counts.sdk_served} of={s.counts.sdk}>
               <Bar total={s.counts.sdk} parts={[{ value: s.counts.sdk_served, className: 'bg-ok' }]} />
             </Stat>
+            <Stat label="Endpoints benchmarked" value={s.counts.bench_covered} of={s.counts.endpoints}>
+              <Bar
+                total={s.counts.endpoints}
+                parts={[
+                  { value: s.counts.bench_covered, className: 'bg-ok' },
+                  { value: s.counts.bench_skipped, className: 'bg-started' },
+                ]}
+              />
+            </Stat>
             <Stat label="E2E test methods" value={s.tests.tests}>
               <span className="text-[12px] text-muted-foreground">
                 {s.tests.suites.length ? `${s.tests.classes} classes in ${s.tests.suites.join(', ')}` : 'No suite'}
@@ -150,7 +159,7 @@ function ServicePage() {
                 <tr className="border-b border-border text-left text-[11px] tracking-wider text-muted-foreground uppercase">
                   <th className="px-3 py-2 font-semibold">Endpoint</th>
                   <th className="px-3 py-2 font-semibold">Status</th>
-                  <th className="px-3 py-2 font-semibold">{bench.step ? 'PHP vs Rust' : 'Benchmark'}</th>
+                  <th className="px-3 py-2 font-semibold">{bench.step?.rust ? 'PHP vs Rust' : 'Benchmark'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -198,11 +207,7 @@ function ServicePage() {
                       ) : null}
                     </td>
                     <td className="px-3 py-2.5">
-                      {bench.step ? (
-                        <EndpointBench step={bench.step} route={`${e.method} ${e.path}`} />
-                      ) : (
-                        <span className="text-[12px] text-muted-foreground">{e.rust === 'served' ? 'Not benchmarked yet' : '–'}</span>
-                      )}
+                      <EndpointBench step={bench.step} route={`${e.method} ${e.path}`} bench={e.bench} />
                     </td>
                   </tr>
                 ))}

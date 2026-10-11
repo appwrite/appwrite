@@ -22,6 +22,10 @@ export interface Counts {
   /** Routes published in an SDK. */
   sdk: number
   sdk_served: number
+  /** Endpoints with a benchmark scenario, skipped with a reason, or neither. */
+  bench_covered: number
+  bench_skipped: number
+  bench_missing: number
 }
 
 export interface RunSummary {
@@ -46,6 +50,8 @@ export interface ServiceSummary {
   counts: Counts
   tests: { suites: string[]; classes: number; tests: number; rust: boolean; latest: RunSummary[] }
   bench: { date: string; file: string } | null
+  /** The service's k6 script, when it has one. */
+  bench_script: string | null
 }
 
 export interface Endpoint {
@@ -66,6 +72,7 @@ export interface Endpoint {
   rust: RouteStatus
   rust_file: string | null
   rust_line: number | null
+  bench: { status: 'covered' | 'skipped' | 'missing'; reason?: string }
 }
 
 export interface Suite {
@@ -114,13 +121,13 @@ export interface BenchStep {
   cpu_ms_per_request: number
   db_cpu_ms_per_request: number
   memory_mib: { baseline: number; avg: number; peak: number }
-  endpoints: Record<string, Latency & { route: string | null; count: number | null; rps: number | null }>
+  endpoints: Record<string, Latency & { route: string | null; note?: string; count: number | null; rps: number | null }>
 }
 
 export interface Benchmark {
   service: string
   file: string
-  workload: { script: string; duration: string; hashing: boolean; users: number; run: string }
+  workload: { script: string; duration: string; hashing: boolean; seed?: number; users?: number; run: string }
   environment: {
     date: string
     commit: string | null
@@ -180,6 +187,9 @@ export interface Migration {
     missing: number
     sdk: number
     sdk_served: number
+    bench_covered: number
+    bench_skipped: number
+    bench_missing: number
     suites: number
     tests: number
     rust_suites: number
