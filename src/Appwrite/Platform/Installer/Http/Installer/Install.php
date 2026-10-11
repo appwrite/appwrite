@@ -9,13 +9,13 @@ use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
 use Appwrite\Platform\Installer\Validator\AppDomain;
+use Appwrite\Platform\Installer\Validator\Port;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 use Utopia\Validator\Nullable;
-use Utopia\Validator\Range;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
@@ -35,8 +35,8 @@ class Install extends Action
             ->setHttpPath('/install')
             ->desc('Run installation')
             ->param('appDomain', '', new AppDomain(), 'Application domain (hostname, IP, or bracket IPv6 with optional port)')
-            ->param('httpPort', 80, new Range(1, 65535), 'HTTP port')
-            ->param('httpsPort', 443, new Range(1, 65535), 'HTTPS port')
+            ->param('httpPort', '80', new Port(), 'HTTP port, optionally bound to a host IP (127.0.0.1:80)')
+            ->param('httpsPort', '443', new Port(), 'HTTPS port, optionally bound to a host IP (127.0.0.1:443)')
             ->param('forceHttps', false, new \Utopia\Validator\Boolean(true), 'Generate HTTPS API URLs and enforce HTTPS', true)
             ->param('emailCertificates', '', new Email(allowEmpty: true), 'Email for SSL certificates', true)
             ->param('opensslKey', '', new Text(64, 0), 'Secret API key', true)
@@ -66,8 +66,8 @@ class Install extends Action
 
     public function action(
         string $appDomain,
-        int $httpPort,
-        int $httpsPort,
+        string $httpPort,
+        string $httpsPort,
         bool $forceHttps,
         string $emailCertificates,
         string $opensslKey,
@@ -249,8 +249,8 @@ class Install extends Action
             if ($this->hasPayload($existing) && !$previousHadError) {
                 $stored = $existing['payload'];
                 $inputValues = [
-                    'httpPort' => (string) $httpPort,
-                    'httpsPort' => (string) $httpsPort,
+                    'httpPort' => $httpPort,
+                    'httpsPort' => $httpsPort,
                     'database' => $database,
                     'appDomain' => $appDomain,
                     'emailCertificates' => $emailCertificates,
@@ -313,8 +313,8 @@ class Install extends Action
                 $payloadInput['_APP_DB_ADAPTER'] = $lockedDatabase ?? ($stored['database'] ?? $payloadInput['_APP_DB_ADAPTER']);
                 $forceHttps = (bool) ($stored['forceHttps'] ?? $forceHttps);
                 $payloadInput['_APP_OPTIONS_FORCE_HTTPS'] = $forceHttps ? 'enabled' : 'disabled';
-                $httpPort = (int) ($stored['httpPort'] ?? $httpPort ?: $config->getDefaultHttpPort());
-                $httpsPort = (int) ($stored['httpsPort'] ?? $httpsPort ?: $config->getDefaultHttpsPort());
+                $httpPort = (string) ($stored['httpPort'] ?? $httpPort ?: $config->getDefaultHttpPort());
+                $httpsPort = (string) ($stored['httpsPort'] ?? $httpsPort ?: $config->getDefaultHttpsPort());
             }
 
             $vars = $config->getVars();

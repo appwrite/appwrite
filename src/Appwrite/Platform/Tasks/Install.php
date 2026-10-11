@@ -13,6 +13,7 @@ use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Platform\Installer\Validator\AppDomain;
+use Appwrite\Platform\Installer\Validator\Port;
 use Appwrite\Utopia\View;
 use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
@@ -70,8 +71,8 @@ class Install extends Action
     {
         $this
             ->desc('Install Appwrite')
-            ->param('http-port', '', new Text(4), 'Server HTTP port', true)
-            ->param('https-port', '', new Text(4), 'Server HTTPS port', true)
+            ->param('http-port', '', new Port(), 'Server HTTP port, optionally bound to a host IP (127.0.0.1:80)', true)
+            ->param('https-port', '', new Port(), 'Server HTTPS port, optionally bound to a host IP (127.0.0.1:443)', true)
             ->param('organization', 'appwrite', new Text(0), 'Docker Registry organization', true)
             ->param('image', 'appwrite', new Text(0), 'Main appwrite docker image', true)
             ->param('interactive', 'Y', new Text(1), 'Run an interactive session', true)
@@ -170,6 +171,21 @@ class Install extends Action
                     }
                 }
 
+                foreach ($ports as $published => $target) {
+                    $published = (string) $published;
+                    if (\str_starts_with($published, '$')) {
+                        continue;
+                    }
+
+                    if ($target === '80') {
+                        $defaultHttpPort = $published;
+                    }
+
+                    if ($target === '443') {
+                        $defaultHttpsPort = $published;
+                    }
+                }
+
                 $envData = @file_get_contents($this->path . '/' . $this->getEnvFileName());
 
                 if ($envData !== false) {
@@ -189,16 +205,10 @@ class Install extends Action
                             $vars[$key]['default'] = $value;
                         }
                     }
-                }
 
-                foreach ($ports as $key => $value) {
-                    if ($value === $defaultHttpPort) {
-                        $defaultHttpPort = $key;
-                    }
-
-                    if ($value === $defaultHttpsPort) {
-                        $defaultHttpsPort = $key;
-                    }
+                    // The compose file publishes ${_APP_HTTP_PORT} and ${_APP_HTTPS_PORT}, so .env holds the ports in use.
+                    $defaultHttpPort = ($env->list()['_APP_HTTP_PORT'] ?? '') ?: $defaultHttpPort;
+                    $defaultHttpsPort = ($env->list()['_APP_HTTPS_PORT'] ?? '') ?: $defaultHttpsPort;
                 }
             }
 
@@ -262,6 +272,14 @@ class Install extends Action
         if (empty($httpsPort)) {
             $httpsPort = Console::confirm('Choose your server HTTPS port: (default: ' . $defaultHttpsPort . ')');
             $httpsPort = ($httpsPort) ?: $defaultHttpsPort;
+        }
+
+        $portValidator = new Port();
+        foreach (['HTTP' => $httpPort, 'HTTPS' => $httpsPort] as $label => $port) {
+            if (!$portValidator->isValid($port)) {
+                Console::error("Invalid {$label} port '{$port}'. " . $portValidator->getDescription() . '.');
+                Console::exit(1);
+            }
         }
 
         $userInput = [];
@@ -1063,6 +1081,12 @@ class Install extends Action
         $requestFactory = new RequestFactory();
 
         $healthPath = '/v1/health/version';
+
+        // A port bound to one host interface (127.0.0.1:80) is still reached on its port.
+        $separator = \strrpos($httpPort, ':');
+        if ($separator !== false) {
+            $httpPort = \substr($httpPort, $separator + 1);
+        }
 
         if ($isLocalInstall) {
             $candidates = (file_exists('/.dockerenv') || file_exists('/run/.containerenv'))
