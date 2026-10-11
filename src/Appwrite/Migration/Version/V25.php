@@ -193,6 +193,36 @@ class V25 extends Migration
                     $this->dbForProject->purgeCachedCollection($id);
                     break;
 
+                case 'transactions':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"type\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        try {
+                            $this->createIndexFromCollection($this->dbForProject, $id, '_key_type');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create index \"_key_type\" from {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+
+                        // Transactions created before type was stored keep working on
+                        // the legacy Databases API and TablesDB. DocumentsDB and
+                        // VectorsDB only list and resolve transactions they created.
+                        $transactions = \iterator_to_array($this->documentsIterator($id, [Query::isNull('type')]));
+                        foreach ($transactions as $transaction) {
+                            try {
+                                $this->dbForProject->updateDocument($id, $transaction->getId(), new Document([
+                                    'type' => 'legacy',
+                                ]));
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to backfill \"type\" for transaction {$transaction->getId()}: {$th->getMessage()}");
+                            }
+                        }
+                    }
+                    break;
+
                 case 'databases':
                     if ($collectionType === 'projects') {
                         try {

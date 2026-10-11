@@ -61,6 +61,35 @@ class Action extends AppwriteAction
         return !in_array($database->getAttribute('type', ''), $this->getAllowedDatabaseTypes(), true);
     }
 
+    /**
+     * List filter for transactions on this path. Same allowed-type set as
+     * {@see isTransactionTypeMismatch()} so list and by-id stay aligned.
+     *
+     * @return Query[]
+     */
+    protected function getTransactionTypeQueryFilters(): array
+    {
+        return [Query::equal('type', $this->getAllowedDatabaseTypes())];
+    }
+
+    /**
+     * A transaction resolved by id must be one of the path's allowed types;
+     * otherwise it is treated as not found, matching the list filter.
+     *
+     * Transactions created before `type` was stored have an empty value and
+     * are treated as the legacy family. TablesDB and the legacy Databases
+     * API serve that family; DocumentsDB and VectorsDB do not.
+     */
+    protected function isTransactionTypeMismatch(Document $transaction): bool
+    {
+        $type = $transaction->getAttribute('type', '');
+        if ($type === '') {
+            $type = DATABASE_TYPE_LEGACY;
+        }
+
+        return !\in_array($type, $this->getAllowedDatabaseTypes(), true);
+    }
+
     public function setHttpPath(string $path): self
     {
         if (\str_contains($path, '/tablesdb')) {

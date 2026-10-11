@@ -2612,6 +2612,16 @@ return [
                 'array' => false,
                 'filters' => ['datetime'],
             ],
+            [
+                '$id' => ID::custom('type'),
+                'type' => Database::VAR_STRING,
+                'size' => 32,
+                'signed' => true,
+                'required' => false,
+                'default' => 'legacy',
+                'array' => false,
+                'filters' => [],
+            ],
         ],
         'indexes' => [
             [
@@ -2620,6 +2630,13 @@ return [
                 'attributes' => ['expiresAt'],
                 'lengths' => [],
                 'orders' => [Database::ORDER_DESC],
+            ],
+            [
+                '$id' => ID::custom('_key_type'),
+                'type' => Database::INDEX_KEY,
+                'attributes' => ['type'],
+                'lengths' => [],
+                'orders' => [Database::ORDER_ASC],
             ],
         ],
     ],

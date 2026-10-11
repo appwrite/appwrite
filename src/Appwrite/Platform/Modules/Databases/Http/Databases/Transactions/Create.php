@@ -80,6 +80,7 @@ class Create extends Action
             'status' => 'pending',
             'operations' => 0,
             'expiresAt' => DateTime::addSeconds(new \DateTime(), $ttl),
+            'type' => $this->getDatabaseType(),
         ])));
 
         $response

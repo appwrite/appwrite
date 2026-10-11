@@ -58,7 +58,7 @@ class Get extends Action
     {
         $transaction = $dbForProject->getDocument('transactions', $transactionId);
 
-        if ($transaction->isEmpty()) {
+        if ($transaction->isEmpty() || $this->isTransactionTypeMismatch($transaction)) {
             throw new Exception(Exception::TRANSACTION_NOT_FOUND, params: [$transactionId]);
         }
 
