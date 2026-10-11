@@ -93,11 +93,16 @@ fn set(container: &Container, id: &str, factory: &Value, dependencies: &[&str]) 
         "format" => {
             let template = field("template").as_str().map(str::to_owned).ok_or_else(|| Fault::new("template"))?;
             container.set(id, dependencies, move |deps| {
-                let mut out = template.clone();
-                for (i, v) in values(deps)?.iter().enumerate() {
-                    out = out.replace(&format!("{{{i}}}"), &text(v));
-                }
-                Ok(Value::String(out))
+                // PHP's array-form strtr: one pass over the template, so text a
+                // dependency inserts is never replaced again.
+                let pairs: Vec<(Vec<u8>, Vec<u8>)> = values(deps)?
+                    .iter()
+                    .enumerate()
+                    .map(|(i, v)| (format!("{{{i}}}").into_bytes(), text(v).into_bytes()))
+                    .collect();
+                let pairs: Vec<(&[u8], &[u8])> = pairs.iter().map(|(k, v)| (k.as_slice(), v.as_slice())).collect();
+                let out = php_std::string::strtr_array(template.as_bytes(), &pairs);
+                Ok(Value::String(String::from_utf8_lossy(&out).into_owned()))
             });
         }
         "list" => {

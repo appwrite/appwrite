@@ -1766,6 +1766,76 @@
           ]
         }
       ]
+    },
+    {
+      "name": "a dependency's value is not replaced again",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "first",
+            "factory": {
+              "kind": "value",
+              "value": "{1}"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "second",
+            "factory": {
+              "kind": "value",
+              "value": "two"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service",
+            "factory": {
+              "kind": "format",
+              "template": "{0}|{1}"
+            },
+            "dependencies": [
+              "first",
+              "second"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service"
+          },
+          "expect": "{1}|two"
+        }
+      ]
     }
   ]
 }
