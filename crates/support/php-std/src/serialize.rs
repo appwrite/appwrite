@@ -29,6 +29,7 @@ use std::fmt;
 
 use indexmap::IndexMap;
 
+use crate::json::push_int;
 use crate::number;
 use crate::types::{Array, ArrayKey, Extension, KeyRef, Str, Value};
 
@@ -38,7 +39,7 @@ use crate::types::{Array, ArrayKey, Extension, KeyRef, Str, Value};
 
 /// `serialize($value)`: PHP's byte string.
 pub fn serialize<X: Extension>(value: &Value<X>) -> Vec<u8> {
-    let mut out = Vec::new();
+    let mut out = Vec::with_capacity(128);
     serialize_into(&mut out, value);
     out
 }
@@ -50,7 +51,7 @@ pub fn serialize_into<X: Extension>(out: &mut Vec<u8>, value: &Value<X>) {
         Value::Bool(b) => out.extend_from_slice(if *b { b"b:1;" } else { b"b:0;" }),
         Value::Int(i) => {
             out.extend_from_slice(b"i:");
-            out.extend_from_slice(i.to_string().as_bytes());
+            push_int(out, *i);
             out.push(b';');
         }
         Value::Float(f) => {
@@ -76,7 +77,7 @@ pub fn serialize_into<X: Extension>(out: &mut Vec<u8>, value: &Value<X>) {
 
 fn serialize_string(out: &mut Vec<u8>, s: &[u8]) {
     out.extend_from_slice(b"s:");
-    out.extend_from_slice(s.len().to_string().as_bytes());
+    push_int(out, s.len() as i64);
     out.extend_from_slice(b":\"");
     out.extend_from_slice(s);
     out.extend_from_slice(b"\";");
@@ -84,13 +85,13 @@ fn serialize_string(out: &mut Vec<u8>, s: &[u8]) {
 
 /// `php_var_serialize_nested_data`.
 fn nested<X: Extension>(out: &mut Vec<u8>, entries: &Array<X>) {
-    out.extend_from_slice(entries.len().to_string().as_bytes());
+    push_int(out, entries.len() as i64);
     out.extend_from_slice(b":{");
     for (key, value) in entries.iter() {
         match key {
             KeyRef::Int(i) => {
                 out.extend_from_slice(b"i:");
-                out.extend_from_slice(i.to_string().as_bytes());
+                push_int(out, i);
                 out.push(b';');
             }
             KeyRef::Str(s) => serialize_string(out, s),
@@ -289,16 +290,33 @@ pub fn unserialize(data: &[u8], options: &Options) -> Result<Unserialized, Error
     if options.max_depth < 0 {
         return Err(Error::Value("unserialize(): Option \"max_depth\" must be greater than or equal to 0".into()));
     }
-    let mut u = Unserializer {
+    let fresh = || Unserializer {
         buf: data,
         max_depth: options.max_depth,
         cur_depth: 0,
         slots: Vec::new(),
-        cells: vec![Cell::Null],
+        cells: Vec::new(),
         warnings: Vec::new(),
         opened: None,
         unsupported: None,
     };
+    // Data without back-references (what `serialize` writes for these
+    // values) is built directly; anything else, including every failure,
+    // is read again into locations, which back-references point at.
+    let mut u = fresh();
+    let mut p = 0;
+    if let Some(value) = u.direct(&mut p) {
+        if p < data.len() {
+            u.warn(format!("unserialize(): Extra data starting at offset {p} of {} bytes", data.len()));
+        }
+        if let Some(what) = u.unsupported {
+            return Err(Error::Unsupported(what));
+        }
+        return Ok(Unserialized { value, warnings: u.warnings });
+    }
+    let mut u = fresh();
+    // The root location.
+    u.cells.push(Cell::Null);
     let mut p = 0;
     match u.run(&mut p) {
         Ok(true) => {}
@@ -365,6 +383,16 @@ enum KeyValue {
 }
 
 type Step = Result<bool, Error>;
+
+/// What [`Unserializer::read`] found at the cursor.
+enum Read {
+    /// A complete value.
+    Value(Value),
+    /// `R:` or `r:`, not read yet (the cursor has not moved).
+    Reference,
+    /// An array (or object) of this many elements, opened.
+    Open { elements: i64, object: bool },
+}
 
 impl Unserializer<'_> {
     fn warn(&mut self, message: String) {
@@ -475,9 +503,22 @@ impl Unserializer<'_> {
         if c0 != b'R' {
             self.slots.push(cell);
         }
-        let c1 = self.at(start + 1);
-        match (c0, c1) {
-            (b'R' | b'r', b':') => {
+        match self.read(p)? {
+            None => Ok(false),
+            Some(Read::Value(v)) => {
+                self.set(cell, v);
+                Ok(true)
+            }
+            Some(Read::Open { object, elements }) => {
+                self.cells[cell] = if object {
+                    Cell::Object { props: IndexMap::new(), done: false }
+                } else {
+                    Cell::Array { entries: IndexMap::new(), done: false }
+                };
+                self.opened = Some((elements, object));
+                Ok(true)
+            }
+            Some(Read::Reference) => {
                 let Some(end) = self.uiv_then(start + 2, b';') else { return Ok(false) };
                 *p = end;
                 let id = self.parse_uiv(start + 2).wrapping_sub(1);
@@ -500,23 +541,33 @@ impl Unserializer<'_> {
                 }
                 Ok(true)
             }
+        }
+    }
+
+    /// `php_var_unserialize_internal` at the cursor, without `var_hash`:
+    /// the value, a back-reference to resolve, or an opened container;
+    /// `None` after setting `p` where PHP reports the error.
+    fn read(&mut self, p: &mut usize) -> Result<Option<Read>, Error> {
+        let start = *p;
+        if start >= self.buf.len() {
+            return Ok(None);
+        }
+        let c0 = self.at(start);
+        let c1 = self.at(start + 1);
+        let value = match (c0, c1) {
+            (b'R' | b'r', b':') => return Ok(Some(Read::Reference)),
             (b'N', b';') => {
                 *p = start + 2;
-                self.set(cell, Value::Null);
-                Ok(true)
+                Value::Null
             }
             (b'b', b':') if matches!(self.at(start + 2), b'0' | b'1') && self.at(start + 3) == b';' => {
                 *p = start + 4;
-                let b = self.at(start + 2) == b'1';
-                self.set(cell, Value::Bool(b));
-                Ok(true)
+                Value::Bool(self.at(start + 2) == b'1')
             }
             (b'i', b':') => {
-                let Some(end) = self.iv(start + 2).filter(|&e| self.at(e) == b';') else { return Ok(false) };
+                let Some(end) = self.iv(start + 2).filter(|&e| self.at(e) == b';') else { return Ok(None) };
                 *p = end + 1;
-                let (i, _) = self.parse_iv2(start + 2);
-                self.set(cell, Value::Int(i));
-                Ok(true)
+                Value::Int(self.parse_iv2(start + 2).0)
             }
             (b'd', b':') => {
                 let rest = &self.buf[(start + 2).min(self.buf.len())..];
@@ -524,47 +575,49 @@ impl Unserializer<'_> {
                 {
                     if rest.starts_with(text) {
                         *p = start + 2 + text.len();
-                        self.set(cell, Value::Float(value));
-                        return Ok(true);
+                        return Ok(Some(Read::Value(Value::Float(value))));
                     }
                 }
-                let Some(end) = self.number(start + 2).filter(|&e| self.at(e) == b';') else { return Ok(false) };
+                let Some(end) = self.number(start + 2).filter(|&e| self.at(e) == b';') else { return Ok(None) };
                 *p = end + 1;
                 let text = std::str::from_utf8(&self.buf[start + 2..end]).unwrap_or("0");
-                self.set(cell, Value::Float(strtod(text)));
-                Ok(true)
+                Value::Float(strtod(text))
             }
-            (b's' | b'S', b':') => {
-                let Some(s) = self.string(p, start)? else { return Ok(false) };
-                self.set(cell, Value::Str(s));
-                Ok(true)
-            }
+            (b's' | b'S', b':') => match self.string(p, start)? {
+                Some(s) => Value::Str(s),
+                None => return Ok(None),
+            },
             (b'a', b':') => {
                 let Some(cursor) = self.uiv_then(start + 2, b':').filter(|&e| self.at(e) == b'{').map(|e| e + 1) else {
-                    return Ok(false);
+                    return Ok(None);
                 };
                 let (elements, _) = self.parse_iv2(start + 2);
                 *p = cursor;
                 if !(0..HT_MAX_SIZE).contains(&elements) || fake_count(elements, self.buf.len() - cursor) {
-                    return Ok(false);
+                    return Ok(None);
                 }
                 if elements == 0 {
                     // No nested data, so no depth check.
-                    self.cells[cell] = Cell::Array { entries: IndexMap::new(), done: true };
-                    return Ok(self.finish(p));
+                    if !self.finish(p) {
+                        return Ok(None);
+                    }
+                    Value::Array(Array::new())
+                } else {
+                    return Ok(Some(Read::Open { elements, object: false }));
                 }
-                self.cells[cell] = Cell::Array { entries: IndexMap::new(), done: false };
-                self.opened = Some((elements, false));
-                Ok(true)
             }
-            (b'O' | b'C', b':') => self.object(p, cell, start),
-            (b'E', b':') => self.enumeration(p, start),
+            (b'O' | b'C', b':') => return self.object(p, start),
+            (b'E', b':') => {
+                self.enumeration(p, start)?;
+                return Ok(None);
+            }
             (b'}', _) => {
                 self.warn("unserialize(): Unexpected end of serialized data".into());
-                Ok(false)
+                return Ok(None);
             }
-            _ => Ok(false),
-        }
+            _ => return Ok(None),
+        };
+        Ok(Some(Read::Value(value)))
     }
 
     /// `"s:" uiv ":" ["]` and `"S:" uiv ":" ["]` at `start`: the string, or
@@ -661,34 +714,34 @@ impl Unserializer<'_> {
     }
 
     /// `object ":" uiv ":" ["]`: `O:` and `C:` of `stdClass`.
-    fn object(&mut self, p: &mut usize, cell: CellId, start: usize) -> Step {
+    fn object(&mut self, p: &mut usize, start: usize) -> Result<Option<Read>, Error> {
         let custom = self.at(start) == b'C';
         let Some(mut cursor) = self.uiv_then(start + 2, b':').filter(|&e| self.at(e) == b'"').map(|e| e + 1) else {
-            return Ok(false);
+            return Ok(None);
         };
         let len = self.parse_uiv(start + 2);
         let maxlen = (self.buf.len() - cursor) as u64;
         if maxlen < len || len == 0 {
             *p = start + 2;
-            return Ok(false);
+            return Ok(None);
         }
         let name = &self.buf[cursor..cursor + len as usize];
         cursor += len as usize;
         if self.at(cursor) != b'"' {
             *p = cursor;
-            return Ok(false);
+            return Ok(None);
         }
         if self.at(cursor + 1) != b':' {
             *p = cursor + 1;
-            return Ok(false);
+            return Ok(None);
         }
         if name[0] == 0 || name[0] == b'\\' {
-            return Ok(false);
+            return Ok(None);
         }
         let incomplete = !name.eq_ignore_ascii_case(b"stdClass");
         if incomplete {
             if !valid_class_name(name) {
-                return Ok(false);
+                return Ok(None);
             }
             // No PHP class exists here: PHP reads such an object as
             // __PHP_Incomplete_Class, parsing on exactly like stdClass. Read
@@ -701,51 +754,48 @@ impl Unserializer<'_> {
             let (datalen, q) = self.parse_iv2(*p + 2);
             *p = q;
             if self.buf.len().saturating_sub(*p) < 2 || self.at(*p) != b':' {
-                return Ok(false);
+                return Ok(None);
             }
             if self.at(*p + 1) != b'{' {
                 *p += 1;
-                return Ok(false);
+                return Ok(None);
             }
             *p += 2;
             let present = (self.buf.len() - *p) as i64;
             if datalen < 0 || present <= datalen {
                 self.warn(format!("Insufficient data for unserializing - {datalen} required, {present} present"));
-                return Ok(false);
+                return Ok(None);
             }
             if self.at(*p + datalen as usize) != b'}' {
                 *p += datalen as usize;
-                return Ok(false);
+                return Ok(None);
             }
             let class = if incomplete { "__PHP_Incomplete_Class" } else { "stdClass" };
             self.warn(format!("Class {class} has no unserializer"));
-            self.cells[cell] = Cell::Value(Value::Object(Array::new()));
             *p += datalen as usize + 1;
-            return Ok(true);
+            return Ok(Some(Read::Value(Value::Object(Array::new()))));
         }
         if *p + 2 >= self.buf.len() {
             self.warn("Bad unserialize data".into());
-            return Ok(false);
+            return Ok(None);
         }
         let (elements, q) = self.parse_iv2(*p + 2);
         *p = q;
         if elements < 0 || fake_count(elements, self.buf.len() - cursor) {
-            return Ok(false);
+            return Ok(None);
         }
         if self.at(*p) != b':' {
-            return Ok(false);
+            return Ok(None);
         }
         if self.at(*p + 1) != b'{' {
             *p += 1;
-            return Ok(false);
+            return Ok(None);
         }
         *p += 2;
         if elements >= HT_MAX_SIZE {
-            return Ok(false);
+            return Ok(None);
         }
-        self.cells[cell] = Cell::Object { props: IndexMap::new(), done: false };
-        self.opened = Some((elements, true));
-        Ok(true)
+        Ok(Some(Read::Open { elements, object: true }))
     }
 
     /// `finish_nested_data`.
@@ -872,6 +922,67 @@ impl Unserializer<'_> {
                 if !self.finish(p) {
                     return Ok(false);
                 }
+            }
+        }
+    }
+
+    /// Reads the whole value, building it directly: [`Unserializer::run`]
+    /// without locations. `None` when the data has a back-reference or
+    /// fails (then `run` reads it again and reports what PHP reports).
+    fn direct(&mut self, p: &mut usize) -> Option<Value> {
+        struct Frame {
+            /// Where its entries start in `entries`.
+            start: usize,
+            key: Option<ArrayKey>,
+            remaining: i64,
+            object: bool,
+            started: bool,
+        }
+        let mut frames: Vec<Frame> = Vec::new();
+        // The entries of the open containers, innermost last.
+        let mut entries: Vec<(ArrayKey, Value)> = Vec::with_capacity((self.buf.len() / 16).min(64));
+        loop {
+            let mut done = match self.read(p).ok()?? {
+                Read::Reference => return None,
+                Read::Value(v) => Some(v),
+                Read::Open { elements, object } => {
+                    if self.max_depth > 0 && self.cur_depth >= self.max_depth {
+                        return None;
+                    }
+                    self.cur_depth += 1;
+                    frames.push(Frame { start: entries.len(), key: None, remaining: elements, object, started: false });
+                    None
+                }
+            };
+            // The value is complete (or a container opened): find the next one.
+            loop {
+                let Some(frame) = frames.last_mut() else { return done };
+                if let Some(value) = done.take() {
+                    entries.push((frame.key.take()?, value));
+                }
+                if frame.started && frame.remaining > 0 && !matches!(self.at(p.wrapping_sub(1)), b';' | b'}') {
+                    return None;
+                }
+                frame.started = true;
+                if frame.remaining > 0 {
+                    frame.remaining -= 1;
+                    frame.key = Some(match (self.key(p).ok()??, frame.object) {
+                        (KeyValue::Other, _) => return None,
+                        (KeyValue::Int(i), false) => ArrayKey::Int(i),
+                        (KeyValue::Str(s), false) => ArrayKey::normalize(s),
+                        (KeyValue::Int(i), true) => ArrayKey::Str(Str::from(i.to_string())),
+                        (KeyValue::Str(s), true) => ArrayKey::Str(s),
+                    });
+                    break;
+                }
+                let frame = frames.pop()?;
+                self.cur_depth -= 1;
+                if !self.finish(p) {
+                    return None;
+                }
+                // Each entry assigned in order (a repeated key keeps its place).
+                let array: Array = entries.drain(frame.start..).collect();
+                done = Some(if frame.object { Value::Object(array) } else { Value::Array(array) });
             }
         }
     }

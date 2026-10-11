@@ -66,6 +66,9 @@ ctr = "0.9"
 deadpool-postgres = "0.14"
 fancy-regex = "0.14"
 flate2 = "1"
+# Fast hashing for php-std's array tables (IndexMap's default SipHash dominates
+# small-key lookups); pure Rust, maintained, randomly seeded per map.
+foldhash = "0.2"
 form_urlencoded = "1"
 futures-util = { version = "0.3", default-features = false, features = ["std", "async-await-macro"] }
 getrandom = "0.3"

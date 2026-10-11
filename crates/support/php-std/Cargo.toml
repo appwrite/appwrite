@@ -12,6 +12,7 @@ bytes.workspace = true
 # crypt(), password_*() and hash(): Argon2, Blowfish (EksBlowfish), MD5, SHA-1, SHA-2 and SHA-3 (RustCrypto).
 argon2.workspace = true
 blowfish.workspace = true
+foldhash.workspace = true
 getrandom.workspace = true
 gost94.workspace = true
 indexmap.workspace = true

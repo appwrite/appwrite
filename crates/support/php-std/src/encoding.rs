@@ -271,7 +271,7 @@ pub fn base64_encode(s: &[u8]) -> String {
 }
 
 /// `base64_reverse_table`: a value, -1 for skipped white space, -2 otherwise.
-fn base64_value(c: u8) -> i32 {
+const fn base64_value(c: u8) -> i32 {
     match c {
         b'A'..=b'Z' => (c - b'A') as i32,
         b'a'..=b'z' => (c - b'a') as i32 + 26,
@@ -282,6 +282,17 @@ fn base64_value(c: u8) -> i32 {
         _ => -2,
     }
 }
+
+/// [`base64_value`] of every byte (negative: not in the alphabet).
+const BASE64_VALUES: [i8; 256] = {
+    let mut t = [-2i8; 256];
+    let mut c = 0;
+    while c < 256 {
+        t[c] = base64_value(c as u8) as i8;
+        c += 1;
+    }
+    t
+};
 
 /// PHP `base64_decode($string, $strict)`. Non-strict skips every byte that
 /// is not in the alphabet (and decodes data after `=` padding); strict skips
@@ -296,7 +307,23 @@ pub fn base64_decode(s: &[u8], strict: bool) -> Option<Vec<u8>> {
         if or { out[j] |= v } else { out[j] = v }
     };
     let (mut i, mut padding, mut j) = (0usize, 0usize, 0usize);
-    for &c in s {
+    let mut k = 0;
+    while k < s.len() {
+        // Four alphabet characters at a group boundary: three bytes at once.
+        if i.is_multiple_of(4) && (!strict || padding == 0) && k + 4 <= s.len() {
+            let v = |n: usize| BASE64_VALUES[s[k + n] as usize];
+            let (a, b, c, d) = (v(0), v(1), v(2), v(3));
+            if (a | b | c | d) >= 0 {
+                let (a, b, c, d) = (a as u8, b as u8, c as u8, d as u8);
+                out.extend_from_slice(&[a << 2 | b >> 4, b << 4 | c >> 2, c << 6 | d]);
+                j += 3;
+                i += 4;
+                k += 4;
+                continue;
+            }
+        }
+        let c = s[k];
+        k += 1;
         if c == b'=' {
             padding += 1;
             continue;

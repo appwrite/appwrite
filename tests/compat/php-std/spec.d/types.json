@@ -161,7 +161,7 @@
       ]
     },
     "types.array_ops": {
-      "doc": "$a[$k] = $v, $a[] = $v (the key it used, or the Error), unset($a[$k]), $a[$k] ?? null, array_key_exists: next free index, unset then set appends, numeric string keys",
+      "doc": "$a[$k] = $v, $a[] = $v (the key it used, or the Error), unset($a[$k]), $a[$k] ?? null, array_key_exists, $copy = $a (copy) and going on with the copy (swap): next free index, unset then set appends, numeric string keys, copies never alias",
       "fuzz": [
         {
           "name": "steps",
@@ -225,7 +225,9 @@
                         "push",
                         "unset",
                         "get",
-                        "exists"
+                        "exists",
+                        "copy",
+                        "swap"
                       ]
                     },
                     "k": {

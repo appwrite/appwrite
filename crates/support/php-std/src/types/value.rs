@@ -7,7 +7,7 @@ use serde_json::{Map, Number as JsonNumber, Value as Json};
 use super::{Array, ArrayKey, EngineError, Extension, KeyRef, Never, Str};
 use crate::format::str_to_float;
 use crate::number;
-use crate::value::{Number, numeric_str_ex};
+use crate::value::{Number, numeric_bytes_ex};
 
 /// A PHP value.
 #[derive(Clone, PartialEq, Debug, Default)]
@@ -84,7 +84,7 @@ fn threeway(a: f64, b: f64) -> i32 {
     }
 }
 
-fn normalize(i: i32) -> i32 {
+pub(crate) fn normalize(i: i32) -> i32 {
     i.signum()
 }
 
@@ -98,13 +98,18 @@ pub(crate) fn binary_strcmp(a: &[u8], b: &[u8]) -> i32 {
 }
 
 /// `is_numeric_string_ex` on bytes: the number and the overflow direction.
-fn numeric(s: &[u8]) -> Option<(Number, i8)> {
-    std::str::from_utf8(s).ok().and_then(numeric_str_ex)
+pub(crate) fn numeric(s: &[u8]) -> Option<(Number, i8)> {
+    numeric_bytes_ex(s)
 }
 
 /// `zendi_smart_strcmp`: numeric strings compare as numbers.
 pub(crate) fn smart_strcmp(s1: &[u8], s2: &[u8]) -> i32 {
-    if let (Some((n1, o1)), Some((n2, o2))) = (numeric(s1), numeric(s2)) {
+    smart_strcmp_parsed(s1, numeric(s1), s2, numeric(s2))
+}
+
+/// [`smart_strcmp`] with each string's [`numeric`] form already parsed.
+pub(crate) fn smart_strcmp_parsed(s1: &[u8], p1: Option<(Number, i8)>, s2: &[u8], p2: Option<(Number, i8)>) -> i32 {
+    if let (Some((n1, o1)), Some((n2, o2))) = (p1, p2) {
         let (d1, d2) = (n1.as_f64(), n2.as_f64());
         if o1 != 0 && o1 == o2 && d1 - d2 == 0.0 {
             return binary_strcmp(s1, s2);
@@ -135,7 +140,12 @@ pub(crate) fn smart_strcmp(s1: &[u8], s2: &[u8]) -> i32 {
 
 /// `compare_longs_to_string`.
 fn compare_long_to_string(l: i64, s: &[u8]) -> i32 {
-    match numeric(s) {
+    compare_long_to_string_parsed(l, s, numeric(s))
+}
+
+/// [`compare_long_to_string`] with the string's [`numeric`] form already parsed.
+pub(crate) fn compare_long_to_string_parsed(l: i64, s: &[u8], parsed: Option<(Number, i8)>) -> i32 {
+    match parsed {
         Some((Number::Int(i), _)) => match l.cmp(&i) {
             Ordering::Less => -1,
             Ordering::Equal => 0,
@@ -148,7 +158,12 @@ fn compare_long_to_string(l: i64, s: &[u8]) -> i32 {
 
 /// `compare_doubles_to_string` (`d` is not NaN).
 fn compare_double_to_string(d: f64, s: &[u8]) -> i32 {
-    match numeric(s) {
+    compare_double_to_string_parsed(d, s, numeric(s))
+}
+
+/// [`compare_double_to_string`] with the string's [`numeric`] form already parsed.
+pub(crate) fn compare_double_to_string_parsed(d: f64, s: &[u8], parsed: Option<(Number, i8)>) -> i32 {
+    match parsed {
         Some((Number::Int(i), _)) => threeway(d, i as f64),
         Some((Number::Float(f), _)) => threeway(d, f),
         None => binary_strcmp(number::to_string(d).as_bytes(), s),

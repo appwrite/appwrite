@@ -58,6 +58,7 @@ pub async fn call(op: &str, args: &Json, _session: &mut Session) -> OpResult {
         "types.array_ops" => {
             let mut array = decode_array(a.value("a")?)?;
             let mut results = Vec::new();
+            let mut copies: Vec<php_std::Array> = Vec::new();
             for step in a.array("ops")? {
                 let k = step.get("k");
                 let v = || -> Result<Value, Fault> { decode(step.get("v").unwrap_or(&Json::Null)) };
@@ -76,10 +77,25 @@ pub async fn call(op: &str, args: &Json, _session: &mut Session) -> OpResult {
                     }
                     Some("get") => dump(array.get(&key(k)?).unwrap_or(&Value::Null)),
                     Some("exists") => Json::Bool(array.contains_key(&key(k)?)),
+                    Some("copy") => {
+                        copies.push(array.clone());
+                        json!(copies.len() - 1)
+                    }
+                    Some("swap") => {
+                        if let Some(last) = copies.last_mut() {
+                            std::mem::swap(&mut array, last);
+                        }
+                        Json::Null
+                    }
                     _ => return Err(Fault::new("unknown step")),
                 });
             }
-            json!({"array": dump(&Value::Array(array.clone())), "results": results, "list": array.is_list()})
+            let mut out =
+                json!({"array": dump(&Value::Array(array.clone())), "results": results, "list": array.is_list()});
+            if !copies.is_empty() {
+                out["copies"] = copies.into_iter().map(|c| dump(&Value::Array(c))).collect();
+            }
+            out
         }
         _ => return Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }))

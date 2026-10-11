@@ -42,6 +42,7 @@
 mod unicode;
 
 use std::borrow::Cow;
+use std::sync::OnceLock;
 
 use crate::string::{Error, Pad};
 
@@ -614,13 +615,64 @@ pub fn mb_convert_case(s: &[u8], case: Case) -> Vec<u8> {
 
 /// PHP `mb_strtoupper($string)`: full upper case (`MB_CASE_UPPER`).
 pub fn mb_strtoupper(s: &[u8]) -> Vec<u8> {
-    convert_case(s, Case::Upper, SUBSTITUTE)
+    map_case(s, false).unwrap_or_else(|| convert_case(s, Case::Upper, SUBSTITUTE))
 }
 
 /// PHP `mb_strtolower($string)`: full lower case with the final sigma rule
 /// (`MB_CASE_LOWER`).
 pub fn mb_strtolower(s: &[u8]) -> Vec<u8> {
-    convert_case(s, Case::Lower, SUBSTITUTE)
+    map_case(s, true).unwrap_or_else(|| convert_case(s, Case::Lower, SUBSTITUTE))
+}
+
+/// [`convert_case`] for full lower or upper case, where each code point maps
+/// on its own: ASCII runs are converted in bulk, without the chunking.
+/// `None` for a capital sigma in lower case (the final sigma rule looks at
+/// its neighbours, within PHP's chunks).
+fn map_case(s: &[u8], lower: bool) -> Option<Vec<u8>> {
+    // The raw mappings of the first code points (Latin, Greek, Cyrillic,
+    // Armenian, Hebrew), looked up directly instead of searched.
+    const DIRECT: usize = 0x600;
+    static TABLES: OnceLock<[Vec<u32>; 2]> = OnceLock::new();
+    let tables = TABLES
+        .get_or_init(|| [(0..DIRECT as u32).map(toupper_raw).collect(), (0..DIRECT as u32).map(tolower_raw).collect()]);
+    let direct = &tables[usize::from(lower)];
+    let mut out = Vec::with_capacity(s.len() + s.len() / 4 + 1);
+    let mut pos = 0;
+    while pos < s.len() {
+        let run = s[pos..].iter().position(|&c| c >= 0x80).map_or(s.len(), |n| pos + n);
+        if lower {
+            out.extend(s[pos..run].iter().map(u8::to_ascii_lowercase));
+        } else {
+            out.extend(s[pos..run].iter().map(u8::to_ascii_uppercase));
+        }
+        pos = run;
+        if pos == s.len() {
+            break;
+        }
+        let w = decode_one(s, &mut pos);
+        if w > 0xFFFFFF {
+            encode(&mut out, w, SUBSTITUTE);
+            continue;
+        }
+        if lower && w == 0x3A3 {
+            return None;
+        }
+        let raw = match direct.get(w as usize) {
+            Some(&raw) => raw,
+            None if lower => tolower_raw(w),
+            None => toupper_raw(w),
+        };
+        if raw > 0xFFFFFF {
+            let len = (raw >> 24) as usize;
+            let at = (raw & 0xFFFFFF) as usize;
+            for &w in &unicode::EXTRA[at + 1..=at + len] {
+                encode(&mut out, w, SUBSTITUTE);
+            }
+        } else {
+            encode(&mut out, raw, SUBSTITUTE);
+        }
+    }
+    Some(out)
 }
 
 /// `php_mb_ulcfirst`: converts the first character with `case`; returns the

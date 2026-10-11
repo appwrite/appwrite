@@ -52,6 +52,7 @@ return [
             throw new \Tests\Compat\Fault('`a` must be an array');
         }
         $results = [];
+        $copies = [];
         foreach ($a['ops'] as $step) {
             $key = $step['k'] ?? null;
             $results[] = match ($step['op']) {
@@ -76,10 +77,31 @@ return [
                 })(),
                 'get' => Typed::dump($array[$key] ?? null),
                 'exists' => array_key_exists($key, $array),
+                // `$copy = $array`: later steps must not change the copy.
+                'copy' => (function () use (&$array, &$copies) {
+                    $copies[] = $array;
+
+                    return \count($copies) - 1;
+                })(),
+                // Go on with the latest copy; the array so far becomes a copy.
+                'swap' => (function () use (&$array, &$copies) {
+                    if ($copies === []) {
+                        return;
+                    }
+                    $last = \count($copies) - 1;
+                    [$array, $copies[$last]] = [$copies[$last], $array];
+
+                    return;
+                })(),
                 default => throw new \Tests\Compat\Fault('unknown step'),
             };
         }
 
-        return ['array' => Typed::dump($array), 'results' => $results, 'list' => array_is_list($array)];
+        $out = ['array' => Typed::dump($array), 'results' => $results, 'list' => array_is_list($array)];
+        if ($copies !== []) {
+            $out['copies'] = array_map(Typed::dump(...), $copies);
+        }
+
+        return $out;
     },
 ];
