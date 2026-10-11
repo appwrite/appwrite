@@ -394,7 +394,9 @@ dependencies = [
  "utopia-auth",
  "utopia-cache",
  "utopia-circuit-breaker",
+ "utopia-config",
  "utopia-database",
+ "utopia-di",
  "utopia-domains",
  "utopia-dsn",
  "utopia-emails",
@@ -403,6 +405,8 @@ dependencies = [
  "utopia-lock",
  "utopia-pools",
  "utopia-queue",
+ "utopia-registry",
+ "utopia-span",
  "utopia-system",
  "utopia-telemetry",
  "utopia-user-agent",
@@ -1500,6 +1504,7 @@ dependencies = [
  "sha1",
  "sha2 0.10.9",
  "sha3",
+ "unsafe-libyaml",
  "whirlpool",
  "xxhash-rust",
 ]
@@ -2302,6 +2307,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "unsafe-libyaml"
+version = "0.2.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "673aac59facbab8a9007c7f6108d11f63b603f7cabff99fabf650fea5c32b861"
+
+[[package]]
 name = "untrusted"
 version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2381,6 +2392,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-config"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror",
+ "utopia-validators",
+]
+
+[[package]]
 name = "utopia-database"
 version = "0.1.0"
 dependencies = [
@@ -2396,6 +2416,14 @@ dependencies = [
  "tracing",
  "utopia-cache",
  "utopia-validators",
+]
+
+[[package]]
+name = "utopia-di"
+version = "0.1.0"
+dependencies = [
+ "foldhash",
+ "thiserror",
 ]
 
 [[package]]
@@ -2499,6 +2527,29 @@ dependencies = [
  "redis",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "utopia-registry"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+]
+
+[[package]]
+name = "utopia-span"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "getrandom 0.3.4",
+ "http-body-util",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "php-std",
+ "rustls",
+ "thiserror",
+ "tokio",
 ]
 
 [[package]]

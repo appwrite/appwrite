@@ -1,0 +1,264 @@
+{
+  "ops": {
+    "yaml.parse": {
+      "doc": "yaml_parse($input): the first document as a Typed value, or false",
+      "covers": [
+        "yaml_parse()"
+      ],
+      "fuzz": [
+        {
+          "name": "documents",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "input": {
+                "gen": "ref",
+                "name": "yaml_doc"
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "noise",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "input": {
+                "gen": "string",
+                "alphabet": "ab: -?[]{},&*!|>'\"#%@`\n 01.~<",
+                "min": 0,
+                "max": 28
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "yaml_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "yes",
+            "No",
+            "y",
+            "n",
+            "on",
+            "OFF",
+            "~",
+            "null",
+            "Null",
+            "",
+            "0755",
+            "08",
+            "0o17",
+            "0x1F",
+            "0b101",
+            "-0b11",
+            "1:20",
+            "1:20:30",
+            "190:20:30.15",
+            "1_000",
+            "1,000",
+            "+12",
+            "-12",
+            "1.5",
+            ".5",
+            "1.",
+            "1e3",
+            "1.5e+3",
+            "1.5E-2",
+            ".inf",
+            "-.Inf",
+            ".nan",
+            ".",
+            "99999999999999999999",
+            "9223372036854775808",
+            "2001-12-14",
+            "2001-12-14 21:59:43.10 -5",
+            "'quoted'",
+            "\"dq\"",
+            "'yes'",
+            "!!str 12",
+            "!!int '13'",
+            "!!int 1.9",
+            "!!float 2",
+            "!!float abc",
+            "!!bool 0",
+            "!!bool yes",
+            "!!null x",
+            "! 12",
+            "!!binary aGk=",
+            "abc",
+            "a b",
+            "\"a\\nb\"",
+            "[1, 2]",
+            "[]",
+            "{}",
+            "{a: 1}",
+            "[a, [b]]",
+            "&x 5",
+            "*x",
+            "&m {k: v}",
+            "*m",
+            "|\n  text",
+            ">\n  folded",
+            "@bad",
+            "`bad",
+            "- 1",
+            "a: b",
+            "%x"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab01:.-_ ",
+          "min": 0,
+          "max": 6
+        }
+      ]
+    },
+    "yaml_key": {
+      "gen": "pick",
+      "from": [
+        "a",
+        "b",
+        "y",
+        "n",
+        "1",
+        "1.5",
+        "true",
+        "~",
+        "'07'",
+        "\"x\"",
+        "<<",
+        "'<<'",
+        "[1]",
+        "{a: 1}",
+        "a b",
+        "-1",
+        "0",
+        "? q",
+        "&k a",
+        "*k",
+        "",
+        "!!str 1"
+      ]
+    },
+    "yaml_line": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "  ",
+                "    ",
+                "- "
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "yaml_key"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ": ",
+                ":",
+                ":  "
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "yaml_scalar"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "  "
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "- ",
+                "-"
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "yaml_scalar"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "# c",
+            "---",
+            "...",
+            "",
+            "<<: *m",
+            "<<: [*m, {z: 1}]",
+            "m: &m {k: v, j: 1}",
+            "x: &x 5",
+            "%YAML 1.1\n---"
+          ]
+        }
+      ]
+    },
+    "yaml_doc": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "yaml_line"
+          },
+          "sep": "\n",
+          "min": 1,
+          "max": 6
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            " ",
+            "plain string",
+            "123",
+            "true",
+            "- a\n- b",
+            ":value",
+            "a: 1\n--- x",
+            "0: x\n1: y",
+            "1: x\n0: y"
+          ]
+        }
+      ]
+    }
+  },
+  "deviations": [
+    {
+      "symbol": "yaml_parse()",
+      "php": "an alias inside the node its anchor names builds a recursive array of references",
+      "reason": "Rust values cannot be recursive: such an alias is refused as unknown (false)"
+    }
+  ]
+}

@@ -39,6 +39,10 @@ utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }
 utopia-database.workspace = true
 utopia-domains.workspace = true
 utopia-dsn.workspace = true
+utopia-config.workspace = true
+utopia-span.workspace = true
+utopia-di.workspace = true
+utopia-registry.workspace = true
 utopia-emails.workspace = true
 utopia-http.workspace = true
 utopia-locale.workspace = true

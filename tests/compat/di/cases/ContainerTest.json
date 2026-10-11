@@ -1,0 +1,1771 @@
+{
+  "source": "packages/di/tests/ContainerTest.php",
+  "cases": [
+    {
+      "name": "testSetAndGetDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "bar"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": "bar"
+        }
+      ]
+    },
+    {
+      "name": "testSetDefaultsDependenciesToEmptyArray",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "bar"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": "bar"
+        }
+      ]
+    },
+    {
+      "name": "testSetReturnsContainer",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "bar"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testGetReturnsCachedInstance",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter"
+          },
+          "expect": 1
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "counter"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testGetThrowsForUnknownDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+              "message": "Dependency missing not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testHasReturnsTrueForRegisteredDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "bar"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testHasReturnsFalseForUnregisteredDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "missing"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testHasDelegatesToParent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "parentDep",
+            "factory": {
+              "kind": "value",
+              "value": "fromParent"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "parentDep"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testHasReturnsFalseWhenNeitherChildNorParentHasDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "missing"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testBuildWithSingleDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "config",
+            "factory": {
+              "kind": "value",
+              "value": "configValue"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service",
+            "factory": {
+              "kind": "format",
+              "template": "service:{0}"
+            },
+            "dependencies": [
+              "config"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service"
+          },
+          "expect": "service:configValue"
+        }
+      ]
+    },
+    {
+      "name": "testDependencyChaining",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "a",
+            "factory": {
+              "kind": "value",
+              "value": "A"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "b",
+            "factory": {
+              "kind": "format",
+              "template": "B({0})"
+            },
+            "dependencies": [
+              "a"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "c",
+            "factory": {
+              "kind": "format",
+              "template": "C({0})"
+            },
+            "dependencies": [
+              "b"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "c"
+          },
+          "expect": "C(B(A))"
+        }
+      ]
+    },
+    {
+      "name": "testFactoryReceivesResolvedDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "greeting",
+            "factory": {
+              "kind": "value",
+              "value": "Hello"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "message",
+            "factory": {
+              "kind": "format",
+              "template": "{0}, World!"
+            },
+            "dependencies": [
+              "greeting"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "message"
+          },
+          "expect": "Hello, World!"
+        }
+      ]
+    },
+    {
+      "name": "testSetOverridesPreviousFactory",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "first"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "second"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": "second"
+        }
+      ]
+    },
+    {
+      "name": "testSetOverridesCachedInstance",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "first"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": "first"
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "second"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": "second"
+        }
+      ]
+    },
+    {
+      "name": "testFactoryCanReturnNull",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "nullable",
+            "factory": {
+              "kind": "value",
+              "value": null
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "nullable"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testFactoryCanReturnDifferentTypes",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "int",
+            "factory": {
+              "kind": "value",
+              "value": 42
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "array",
+            "factory": {
+              "kind": "value",
+              "value": [
+                1,
+                2,
+                3
+              ]
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "object",
+            "factory": {
+              "kind": "value",
+              "value": {
+                "a": 1
+              }
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "int"
+          },
+          "expect": 42
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "array"
+          },
+          "expect": [
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "object"
+          },
+          "expect": {
+            "a": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNullCachedValueIsReturnedWithoutRebuild",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "n",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "nullable",
+            "factory": {
+              "kind": "list"
+            },
+            "dependencies": [
+              "n"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "nullable"
+          },
+          "expect": [
+            1
+          ]
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "nothing",
+            "factory": {
+              "kind": "value",
+              "value": null
+            },
+            "dependencies": [
+              "n"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "nothing"
+          },
+          "expect": null
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "nothing"
+          },
+          "expect": null
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "n"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testChildContainerDoesNotAffectParent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "childOnly",
+            "factory": {
+              "kind": "value",
+              "value": "childValue"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "childOnly"
+          },
+          "expect": true
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "childOnly"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "testGetResolvesFromParent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "fromParent"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": "fromParent"
+        }
+      ]
+    },
+    {
+      "name": "testGetResolvesFromGrandparent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "g"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "fromGrandparent"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "p",
+          "args": {
+            "parent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": "fromGrandparent"
+        }
+      ]
+    },
+    {
+      "name": "testChildOverridesParentDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "fromParent"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo",
+            "factory": {
+              "kind": "value",
+              "value": "fromChild"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "foo"
+          },
+          "expect": "fromChild"
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "foo"
+          },
+          "expect": "fromParent"
+        }
+      ]
+    },
+    {
+      "name": "testGetThrowsWhenNotInChildOrParent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "missing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+              "message": "Dependency missing not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testParentDependencyIsCachedInParent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "singleton",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "singleton"
+          },
+          "expect": 1
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "singleton"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testChildFactoryCanDependOnParentDependency",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "config",
+            "factory": {
+              "kind": "value",
+              "value": "prodConfig"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service",
+            "factory": {
+              "kind": "format",
+              "template": "service:{0}"
+            },
+            "dependencies": [
+              "config"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "service"
+          },
+          "expect": "service:prodConfig"
+        }
+      ]
+    },
+    {
+      "name": "testParentFactoryResolvesChildDependencyViaChildGet",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "greeter",
+            "factory": {
+              "kind": "format",
+              "template": "Hello, {0}"
+            },
+            "dependencies": [
+              "name"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "name",
+            "factory": {
+              "kind": "value",
+              "value": "Alice"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "greeter"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\DI\\Exceptions\\NotFoundException",
+              "message": "Dependency name not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMultipleSiblingContainersShareParent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "p"
+            },
+            "id": "shared",
+            "factory": {
+              "kind": "counter"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "c1",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c2",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c1"
+            },
+            "id": "shared"
+          },
+          "expect": 1
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c2"
+            },
+            "id": "shared"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testHasDelegatesToGrandparent",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "g"
+            },
+            "id": "deep",
+            "factory": {
+              "kind": "value",
+              "value": "deepValue"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.new",
+          "bind": "p",
+          "args": {
+            "parent": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.new",
+          "bind": "c",
+          "args": {
+            "parent": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.has",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "deep"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testBuildWithMultipleDependencies",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "first",
+            "factory": {
+              "kind": "value",
+              "value": "A"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "second",
+            "factory": {
+              "kind": "value",
+              "value": "B"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "combined",
+            "factory": {
+              "kind": "format",
+              "template": "{0}+{1}"
+            },
+            "dependencies": [
+              "first",
+              "second"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "combined"
+          },
+          "expect": "A+B"
+        }
+      ]
+    },
+    {
+      "name": "testBuildWithThreeDependencies",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "x",
+            "factory": {
+              "kind": "value",
+              "value": 1
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "y",
+            "factory": {
+              "kind": "value",
+              "value": 2
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "z",
+            "factory": {
+              "kind": "value",
+              "value": 3
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "sum",
+            "factory": {
+              "kind": "sum"
+            },
+            "dependencies": [
+              "x",
+              "y",
+              "z"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "sum"
+          },
+          "expect": 6
+        }
+      ]
+    },
+    {
+      "name": "testMultipleDependenciesPreservesOrder",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "a",
+            "factory": {
+              "kind": "value",
+              "value": "first"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "b",
+            "factory": {
+              "kind": "value",
+              "value": "second"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "c",
+            "factory": {
+              "kind": "value",
+              "value": "third"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "ordered",
+            "factory": {
+              "kind": "format",
+              "template": "{0},{1},{2}"
+            },
+            "dependencies": [
+              "a",
+              "b",
+              "c"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "ordered"
+          },
+          "expect": "first,second,third"
+        }
+      ]
+    },
+    {
+      "name": "testMultipleDependenciesAllReceived",
+      "steps": [
+        {
+          "op": "di.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "dep1",
+            "factory": {
+              "kind": "value",
+              "value": "val1"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "dep2",
+            "factory": {
+              "kind": "value",
+              "value": "val2"
+            },
+            "dependencies": []
+          },
+          "expect": true
+        },
+        {
+          "op": "di.set",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "collector",
+            "factory": {
+              "kind": "list"
+            },
+            "dependencies": [
+              "dep1",
+              "dep2"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "di.get",
+          "args": {
+            "container": {
+              "$ref": "c"
+            },
+            "id": "collector"
+          },
+          "expect": [
+            "val1",
+            "val2"
+          ]
+        }
+      ]
+    }
+  ]
+}

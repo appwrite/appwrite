@@ -1,0 +1,857 @@
+{
+  "source": "packages/span/tests/Exporter/PrettyTest.php",
+  "cases": [
+    {
+      "name": "testExportWritesOutput",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "action",
+                  "value": "test.action"
+                },
+                {
+                  "key": "span.finished_at",
+                  "value": 1700000000.5
+                },
+                {
+                  "key": "span.duration",
+                  "value": 0.25
+                },
+                {
+                  "key": "level",
+                  "value": "info"
+                }
+              ],
+              "action": "test.action"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32mtest.action\u001b[0m\u001b[2m · \u001b[0m\u001b[33m250ms\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36mlevel \u001b[0m \u001b[37minfo\u001b[0m\n  \u001b[36maction\u001b[0m \u001b[37mtest.action\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportDoesNotThrow",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": []
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32munknown\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportHandlesAllAttributeTypes",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "string",
+                  "value": "value"
+                },
+                {
+                  "key": "int",
+                  "value": 42
+                },
+                {
+                  "key": "float",
+                  "value": 3.14
+                },
+                {
+                  "key": "bool",
+                  "value": true
+                },
+                {
+                  "key": "null",
+                  "value": null
+                }
+              ],
+              "action": "test.types"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32mtest.types\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36mstring\u001b[0m \u001b[37mvalue\u001b[0m\n  \u001b[36mint   \u001b[0m \u001b[37m42\u001b[0m\n  \u001b[36mfloat \u001b[0m \u001b[37m3.14\u001b[0m\n  \u001b[36mbool  \u001b[0m \u001b[37mtrue\u001b[0m\n  \u001b[36mnull  \u001b[0m \u001b[37mnull\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportHandlesError",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [],
+              "action": "test.error",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test error",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "code": 42
+              }
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": "\u001b[1m\u001b[31mtest.error\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\u001b[31m\u001b[1m  RuntimeException\u001b[0m\u001b[31m: Test error\u001b[0m\n\u001b[2m    at /app/src/Test.php:10\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExportIncludesSpanMetadata",
+      "steps": [
+        {
+          "op": "span.reset",
+          "expect": null
+        },
+        {
+          "op": "span.new",
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "span.finish",
+          "args": {
+            "span": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.trace_id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 32,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.id"
+          },
+          "expect": {
+            "type": "string",
+            "length": 16,
+            "hex": true
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.started_at"
+          },
+          "expect": {
+            "type": "float"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.finished_at"
+          },
+          "expect": {
+            "type": "float"
+          }
+        },
+        {
+          "op": "span.describe",
+          "args": {
+            "span": {
+              "$ref": "s"
+            },
+            "key": "span.duration"
+          },
+          "expect": {
+            "type": "float"
+          }
+        }
+      ]
+    },
+    {
+      "name": "error with a long trace",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {
+              "max_trace_frames": 2
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "level",
+                  "value": "error"
+                },
+                {
+                  "key": "user.id",
+                  "value": "u1"
+                }
+              ],
+              "action": "job",
+              "error": {
+                "class": "RuntimeException",
+                "message": "boom",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "trace": [
+                  {
+                    "file": "/app/src/Worker.php",
+                    "line": 12,
+                    "function": "run",
+                    "class": "App\\Worker",
+                    "type": "->"
+                  },
+                  {
+                    "file": "/app/vendor/lib/Kernel.php",
+                    "line": 40,
+                    "function": "handle",
+                    "class": "Kernel",
+                    "type": "::"
+                  },
+                  {
+                    "function": "{closure}"
+                  },
+                  {
+                    "file": "/app/public/index.php",
+                    "line": 3,
+                    "function": "main"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": "\u001b[1m\u001b[31mjob\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36mlevel  \u001b[0m \u001b[37merror\u001b[0m\n  \u001b[36muser.id\u001b[0m \u001b[37mu1\u001b[0m\n\n\u001b[31m\u001b[1m  RuntimeException\u001b[0m\u001b[31m: boom\u001b[0m\n\u001b[2m    at /app/src/Test.php:10\u001b[0m\n\u001b[2m    at /app/src/Worker.php:12\u001b[0m\n\u001b[2m    at /app/vendor/lib/Kernel.php:40\u001b[0m\n\u001b[2m    ... 2 more\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "error with a trace and no frames kept",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {
+              "max_trace_frames": 0
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [],
+              "action": "job",
+              "error": {
+                "class": "RuntimeException",
+                "message": "boom",
+                "file": "/app/src/Test.php",
+                "line": 10,
+                "trace": [
+                  {
+                    "file": "/app/src/Worker.php",
+                    "line": 12,
+                    "function": "run",
+                    "class": "App\\Worker",
+                    "type": "->"
+                  },
+                  {
+                    "file": "/app/vendor/lib/Kernel.php",
+                    "line": 40,
+                    "function": "handle",
+                    "class": "Kernel",
+                    "type": "::"
+                  },
+                  {
+                    "function": "{closure}"
+                  },
+                  {
+                    "file": "/app/public/index.php",
+                    "line": 3,
+                    "function": "main"
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": "\u001b[1m\u001b[31mjob\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\u001b[31m\u001b[1m  RuntimeException\u001b[0m\u001b[31m: boom\u001b[0m\n\u001b[2m    at /app/src/Test.php:10\u001b[0m\n\u001b[2m    ... 4 more\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "numeric and odd keys",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "1",
+                  "value": "one"
+                },
+                {
+                  "key": "01",
+                  "value": "zero-one"
+                },
+                {
+                  "key": "",
+                  "value": "empty"
+                },
+                {
+                  "key": "level",
+                  "value": "warn"
+                },
+                {
+                  "key": "action",
+                  "value": "attribute action"
+                },
+                {
+                  "key": "error.type",
+                  "value": "user value"
+                }
+              ],
+              "action": "odd",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": {
+            "stdout": "",
+            "stderr": "\u001b[1m\u001b[31modd\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36mlevel     \u001b[0m \u001b[37mwarn\u001b[0m\n  \u001b[36m1         \u001b[0m \u001b[37mone\u001b[0m\n  \u001b[36m01        \u001b[0m \u001b[37mzero-one\u001b[0m\n  \u001b[36m          \u001b[0m \u001b[37mempty\u001b[0m\n  \u001b[36maction    \u001b[0m \u001b[37mattribute action\u001b[0m\n  \u001b[36merror.type\u001b[0m \u001b[37muser value\u001b[0m\n\n\u001b[31m\u001b[1m  RuntimeException\u001b[0m\u001b[31m: Test\u001b[0m\n\u001b[2m    at /app/src/Test.php:10\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "floats",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "a",
+                  "value": 0.1
+                },
+                {
+                  "key": "b",
+                  "value": 1e+25
+                },
+                {
+                  "key": "c",
+                  "value": -0.0
+                },
+                {
+                  "key": "d",
+                  "value": 1.0
+                },
+                {
+                  "key": "e",
+                  "value": 0.30000000000000004
+                },
+                {
+                  "key": "span.duration",
+                  "value": 1.234567
+                }
+              ],
+              "action": "f"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32mf\u001b[0m\u001b[2m · \u001b[0m\u001b[31m1.23s\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36ma\u001b[0m \u001b[37m0.1\u001b[0m\n  \u001b[36mb\u001b[0m \u001b[37m1.0E+25\u001b[0m\n  \u001b[36mc\u001b[0m \u001b[37m-0\u001b[0m\n  \u001b[36md\u001b[0m \u001b[37m1\u001b[0m\n  \u001b[36me\u001b[0m \u001b[37m0.3\u001b[0m\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "durations",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.0
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[32m0ms\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.00049
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[32m0.5ms\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.0995
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[32m99.5ms\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.1
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[33m100ms\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 0.99999
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[33m1000ms\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 1.0
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[31m1s\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 1.005
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[31m1.01s\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 12.3456
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[31m12.35s\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "span.duration",
+                  "value": 3
+                }
+              ],
+              "action": "d"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32md\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m────────────────────────────────────────────────────────────\u001b[0m\n",
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "binary values",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "bytes",
+                  "value": {
+                    "$bytes": "/w=="
+                  }
+                },
+                {
+                  "key": "ok",
+                  "value": "fine"
+                }
+              ],
+              "action": "bin"
+            }
+          },
+          "expect": {
+            "stdout": {
+              "$bytes": "G1sxbRtbMzJtYmluG1swbRtbMm0gwrcgG1swbRtbMm0wYWY3NjUxORtbMG0KCiAgG1szNm1ieXRlcxtbMG0gG1szN23/G1swbQogIBtbMzZtb2sgICAbWzBtIBtbMzdtZmluZRtbMG0KChtbMm3ilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIDilIAbWzBtCg=="
+            },
+            "stderr": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "sampler",
+      "steps": [
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "pretty",
+            "options": {},
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": []
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "pretty",
+            "options": {
+              "sampler": {
+                "kind": "none"
+              }
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": []
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "exporter.sample",
+          "args": {
+            "exporter": "pretty",
+            "options": {
+              "sampler": {
+                "kind": "error"
+              }
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [],
+              "action": "x",
+              "error": {
+                "class": "RuntimeException",
+                "message": "Test",
+                "file": "/app/src/Test.php",
+                "line": 10
+              }
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "width",
+      "steps": [
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {
+              "width": 0
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [
+                {
+                  "key": "k",
+                  "value": "v"
+                }
+              ],
+              "action": "w"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32mw\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n  \u001b[36mk\u001b[0m \u001b[37mv\u001b[0m\n\n\u001b[2m\u001b[0m\n",
+            "stderr": ""
+          }
+        },
+        {
+          "op": "exporter.export",
+          "args": {
+            "exporter": "pretty",
+            "options": {
+              "width": 5
+            },
+            "span": {
+              "base": {
+                "trace_id": "0af7651916cd43dd8448eb211c80319c",
+                "span_id": "b7ad6b7169203331",
+                "started_at": 1700000000.25
+              },
+              "attributes": [],
+              "action": "w"
+            }
+          },
+          "expect": {
+            "stdout": "\u001b[1m\u001b[32mw\u001b[0m\u001b[2m · \u001b[0m\u001b[2m0af76519\u001b[0m\n\n\n\u001b[2m─────\u001b[0m\n",
+            "stderr": ""
+          }
+        }
+      ]
+    }
+  ]
+}

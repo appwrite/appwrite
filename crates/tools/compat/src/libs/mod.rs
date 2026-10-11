@@ -14,7 +14,9 @@ use crate::bench::Bench;
 pub mod auth;
 pub mod cache;
 pub mod circuit_breaker;
+pub mod config;
 pub mod database;
+pub mod di;
 pub mod domains;
 pub mod dsn;
 pub mod emails;
@@ -25,6 +27,8 @@ pub mod php_std;
 pub mod pools;
 pub mod query;
 pub mod queue;
+pub mod registry;
+pub mod span;
 pub mod system;
 pub mod telemetry;
 pub mod user_agent;
@@ -45,6 +49,10 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("php-std", php_std::OPS),
     ("pools", pools::OPS),
     ("query", query::OPS),
+    ("config", config::OPS),
+    ("span", span::OPS),
+    ("di", di::OPS),
+    ("registry", registry::OPS),
     ("queue", queue::OPS),
     ("system", system::OPS),
     ("telemetry", telemetry::OPS),
@@ -68,6 +76,10 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "php-std" => php_std::call(op, args, session).await,
         "pools" => pools::call(op, args, session).await,
         "query" => query::call(op, args, session).await,
+        "config" => config::call(op, args, session).await,
+        "span" => span::call(op, args, session).await,
+        "di" => di::call(op, args, session).await,
+        "registry" => registry::call(op, args, session).await,
         "queue" => queue::call(op, args, session).await,
         "system" => system::call(op, args, session).await,
         "telemetry" => telemetry::call(op, args, session).await,
@@ -91,6 +103,10 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "lock" => lock::BENCHES,
         "php-std" => php_std::BENCHES,
         "pools" => pools::BENCHES,
+        "config" => config::BENCHES,
+        "span" => span::BENCHES,
+        "di" => di::BENCHES,
+        "registry" => registry::BENCHES,
         "system" => system::BENCHES,
         "telemetry" => telemetry::BENCHES,
         "user-agent" => user_agent::BENCHES,
@@ -113,6 +129,10 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "lock" => lock::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
         "pools" => pools::bench(name, session).await,
+        "config" => config::bench(name, session).await,
+        "span" => span::bench(name, session).await,
+        "di" => di::bench(name, session).await,
+        "registry" => registry::bench(name, session).await,
         "system" => system::bench(name, session).await,
         "telemetry" => telemetry::bench(name, session).await,
         "user-agent" => user_agent::bench(name, session).await,

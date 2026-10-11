@@ -1,0 +1,1199 @@
+{
+  "lib": "config",
+  "description": "utopia-php/config: the Config::$params registry with dotted keys, and typed configs loaded from env, dotenv, JSON, YAML and PHP sources.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/config/src"
+    ],
+    "tests": [
+      "packages/config/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/config"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "config.reset_params": {
+      "doc": "Config::$params = []",
+      "covers": []
+    },
+    "config.set_param": {
+      "doc": "Config::setParam(key, value); value is Typed, or {\"$handle\"} of a loaded config",
+      "covers": [
+        "Utopia\\Config\\Config::setParam"
+      ]
+    },
+    "config.get_param": {
+      "doc": "Config::getParam(key, default?)",
+      "covers": [
+        "Utopia\\Config\\Config::getParam"
+      ]
+    },
+    "config.params": {
+      "doc": "on empty params: calls {op: set|get, key, value}; get is Config::getParam(key, 'default')",
+      "covers": [
+        "Utopia\\Config\\Config::setParam",
+        "Utopia\\Config\\Config::getParam"
+      ],
+      "fuzz": [
+        {
+          "name": "dotted",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "calls": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "param_call"
+                },
+                "min": 1,
+                "max": 10
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "config.source": {
+      "doc": "getContents() of a source {kind: variable, value} | {kind: file, path, contents?} | {kind: environment, set?}; `keys` keeps only those keys of an array",
+      "covers": [
+        "Utopia\\Config\\Source::getContents",
+        "Utopia\\Config\\Source\\Variable::__construct",
+        "Utopia\\Config\\Source\\File::__construct",
+        "Utopia\\Config\\Source\\Environment::__construct"
+      ]
+    },
+    "config.parse": {
+      "doc": "(new <parser>)->parse(contents, schema ? new ReflectionClass(schema) : null) for parser dotenv|json|yaml|php|none",
+      "covers": [
+        "Utopia\\Config\\Parser\\Dotenv::parse",
+        "Utopia\\Config\\Parser\\JSON::parse",
+        "Utopia\\Config\\Parser\\YAML::parse",
+        "Utopia\\Config\\Parser\\PHP::parse",
+        "Utopia\\Config\\Parser\\None::parse"
+      ],
+      "fuzz": [
+        {
+          "name": "dotenv",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "parser": {
+                "gen": "const",
+                "value": "dotenv"
+              },
+              "contents": {
+                "gen": "ref",
+                "name": "dotenv"
+              },
+              "schema": {
+                "gen": "pick",
+                "from": [
+                  "FuzzConfig",
+                  "TestValueConvertorConfig"
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "json",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "parser": {
+                "gen": "const",
+                "value": "json"
+              },
+              "contents": {
+                "gen": "ref",
+                "name": "json_text"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "yaml",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "parser": {
+                "gen": "const",
+                "value": "yaml"
+              },
+              "contents": {
+                "gen": "ref",
+                "name": "yaml"
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "yaml text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "parser": {
+                "gen": "const",
+                "value": "yaml"
+              },
+              "contents": {
+                "gen": "string",
+                "alphabet": "ab: -?[]{},&*!|>'\"#%@`\n 01.~",
+                "min": 0,
+                "max": 24
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "php",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "parser": {
+                "gen": "const",
+                "value": "php"
+              },
+              "contents": {
+                "gen": "ref",
+                "name": "php"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "config.load": {
+      "doc": "Config::load(source, parser, schema) dumped as {\"$config\", properties}, or a handle when `handle` is true",
+      "covers": [
+        "Utopia\\Config\\Config::load",
+        "Utopia\\Config\\Source\\Variable::__construct",
+        "Utopia\\Config\\Source\\File::__construct",
+        "Utopia\\Config\\Source\\Environment::__construct",
+        "Utopia\\Config\\Source::getContents",
+        "Utopia\\Config\\Parser\\Dotenv::parse",
+        "Utopia\\Config\\Parser\\JSON::parse",
+        "Utopia\\Config\\Parser\\YAML::parse",
+        "Utopia\\Config\\Parser\\PHP::parse",
+        "Utopia\\Config\\Parser\\None::parse"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "source": {
+                "gen": "object",
+                "fields": {
+                  "kind": {
+                    "gen": "const",
+                    "value": "variable"
+                  },
+                  "value": {
+                    "gen": "ref",
+                    "name": "fuzz_values"
+                  }
+                }
+              },
+              "parser": {
+                "gen": "const",
+                "value": "none"
+              },
+              "schema": {
+                "gen": "const",
+                "value": "FuzzConfig"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "dotenv",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "source": {
+                "gen": "object",
+                "fields": {
+                  "kind": {
+                    "gen": "const",
+                    "value": "variable"
+                  },
+                  "value": {
+                    "gen": "ref",
+                    "name": "dotenv"
+                  }
+                }
+              },
+              "parser": {
+                "gen": "const",
+                "value": "dotenv"
+              },
+              "schema": {
+                "gen": "const",
+                "value": "FuzzConfig"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "scalar_text": {
+      "gen": "pick",
+      "from": [
+        "1",
+        "0",
+        "1.5",
+        " 2 ",
+        "1e3",
+        "abc",
+        "",
+        "true",
+        "null",
+        "NULL",
+        "yes",
+        "-0",
+        "9223372036854775808",
+        "0x1A",
+        "1.0",
+        "01"
+      ]
+    },
+    "any_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "scalar_text"
+        },
+        {
+          "gen": "int",
+          "min": -100,
+          "max": 100
+        },
+        {
+          "gen": "float",
+          "min": -10,
+          "max": 10
+        },
+        {
+          "gen": "pick",
+          "from": [
+            1.5,
+            -0.0,
+            1e+25,
+            0.1,
+            9.3e+18,
+            2.0
+          ]
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "scalar_text"
+          },
+          "min": 0,
+          "max": 2
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "text": {
+              "gen": "ref",
+              "name": "scalar_text"
+            }
+          }
+        }
+      ]
+    },
+    "fuzz_values": {
+      "gen": "object",
+      "fields": {
+        "str": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "int": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "float": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "bool": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "list": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "db.text": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "FLAG": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "mixed": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "db": {
+          "gen": "ref",
+          "name": "any_value"
+        },
+        "nested": {
+          "gen": "ref",
+          "name": "any_value"
+        }
+      },
+      "optional": [
+        "str",
+        "int",
+        "float",
+        "bool",
+        "list",
+        "db.text",
+        "FLAG",
+        "mixed",
+        "db",
+        "nested"
+      ]
+    },
+    "param_key": {
+      "gen": "pick",
+      "from": [
+        "a",
+        "a.b",
+        "a.b.c",
+        "a..b",
+        ".",
+        "",
+        "0",
+        "a.0",
+        "b",
+        "a.x",
+        "1.2"
+      ]
+    },
+    "param_call": {
+      "gen": "object",
+      "fields": {
+        "op": {
+          "gen": "pick",
+          "from": [
+            "set",
+            "get",
+            "get"
+          ]
+        },
+        "key": {
+          "gen": "ref",
+          "name": "param_key"
+        },
+        "value": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "ref",
+              "name": "any_value"
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "b": {
+                  "gen": "ref",
+                  "name": "any_value"
+                },
+                "0": {
+                  "gen": "ref",
+                  "name": "any_value"
+                }
+              }
+            },
+            {
+              "gen": "object",
+              "fields": {
+                "b": {
+                  "gen": "object",
+                  "fields": {
+                    "c": {
+                      "gen": "ref",
+                      "name": "any_value"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      }
+    },
+    "dotenv_key": {
+      "gen": "pick",
+      "from": [
+        "KEY",
+        "FLAG",
+        "str",
+        "int",
+        "export KEY",
+        "export\tFLAG",
+        "exported",
+        "",
+        "0",
+        " A ",
+        "KEY1",
+        "KEY25",
+        "#C",
+        "a b"
+      ]
+    },
+    "dotenv_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "value",
+            "",
+            "null",
+            "NULL",
+            "Null",
+            "1",
+            "0",
+            "on",
+            "OFF",
+            "Enabled",
+            "disabled",
+            "yes",
+            "no",
+            "1.0",
+            "01",
+            " 1",
+            "0.0",
+            "1e0",
+            "true",
+            "x#y",
+            "x #y",
+            "# c",
+            "a\t# c",
+            "\"q#1\"",
+            "'s#2'",
+            "\"a\\\"b\"",
+            "\"a\\\\b\"",
+            "\"C:\\tmp\"",
+            "\"open",
+            "'x'tail",
+            "\"x\" # ok",
+            "'x' #ok",
+            "\"\"",
+            "=",
+            "a=b"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab01 #\"'\\=",
+          "min": 0,
+          "max": 8
+        }
+      ]
+    },
+    "dotenv_line": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "dotenv_key"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "=",
+                " = ",
+                "="
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "dotenv_value"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "# comment",
+            "   ",
+            "NOEQUALS",
+            "=b",
+            "\r"
+          ]
+        }
+      ]
+    },
+    "dotenv": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "dotenv_line"
+          },
+          "sep": "\n",
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "KEY=",
+            "A=1\r\nB=2"
+          ]
+        }
+      ]
+    },
+    "json_text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            "{}",
+            "[]",
+            "[1]",
+            "\"x\"",
+            "123",
+            "true",
+            "null",
+            "{\"a\":1}",
+            "{\"0\":1}",
+            "{\"1\":1}",
+            "{\"a\":{\"b\":[1,2]}}",
+            "{\"a\":1,\"a\":2}",
+            "{\"a\":",
+            "{a:1}",
+            "{\"a\":1e400}",
+            "{\"\":1}",
+            "{\"0\":1,\"1\":2}",
+            "{\"1\":1,\"0\":2}",
+            " {} ",
+            "{\"a\":-0}",
+            "{\"k\":9223372036854775808}",
+            "[[]]"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "{}[]\":,01ae ",
+          "min": 0,
+          "max": 14
+        }
+      ]
+    },
+    "yaml_scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "yes",
+            "No",
+            "y",
+            "n",
+            "on",
+            "OFF",
+            "~",
+            "null",
+            "Null",
+            "",
+            "0755",
+            "08",
+            "0o17",
+            "0x1F",
+            "0b101",
+            "-0b11",
+            "1:20",
+            "1:20:30",
+            "190:20:30.15",
+            "1_000",
+            "1,000",
+            "+12",
+            "-12",
+            "1.5",
+            ".5",
+            "1.",
+            "1e3",
+            "1.5e+3",
+            "1.5E-2",
+            ".inf",
+            "-.Inf",
+            ".nan",
+            ".",
+            "99999999999999999999",
+            "9223372036854775808",
+            "2001-12-14",
+            "2001-12-14 21:59:43.10 -5",
+            "'quoted'",
+            "\"dq\"",
+            "'yes'",
+            "!!str 12",
+            "!!int '13'",
+            "!!int 1.9",
+            "!!float 2",
+            "!!float abc",
+            "!!bool 0",
+            "!!bool yes",
+            "!!null x",
+            "! 12",
+            "!!binary aGk=",
+            "abc",
+            "a b",
+            "\"a\\nb\"",
+            "[1, 2]",
+            "[]",
+            "{}",
+            "{a: 1}",
+            "[a, [b]]",
+            "&x 5",
+            "*x",
+            "&m {k: v}",
+            "*m",
+            "|\n  text",
+            ">\n  folded",
+            "@bad",
+            "`bad",
+            "- 1",
+            "a: b",
+            "%x"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab01:.-_ ",
+          "min": 0,
+          "max": 6
+        }
+      ]
+    },
+    "yaml_key": {
+      "gen": "pick",
+      "from": [
+        "a",
+        "b",
+        "y",
+        "n",
+        "1",
+        "1.5",
+        "true",
+        "~",
+        "'07'",
+        "\"x\"",
+        "<<",
+        "'<<'",
+        "[1]",
+        "{a: 1}",
+        "a b",
+        "-1",
+        "0",
+        "? q",
+        "&k a",
+        "*k",
+        "",
+        "!!str 1"
+      ]
+    },
+    "yaml_line": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "  ",
+                "    ",
+                "- "
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "yaml_key"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ": ",
+                ":",
+                ":  "
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "yaml_scalar"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "  "
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "- ",
+                "-"
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "yaml_scalar"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "# c",
+            "---",
+            "...",
+            "",
+            "<<: *m",
+            "<<: [*m, {z: 1}]",
+            "m: &m {k: v, j: 1}",
+            "x: &x 5",
+            "%YAML 1.1\n---"
+          ]
+        }
+      ]
+    },
+    "yaml": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "yaml_line"
+          },
+          "sep": "\n",
+          "min": 1,
+          "max": 6
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "0",
+            " ",
+            "plain string",
+            "123",
+            "true",
+            "- a\n- b",
+            ":value",
+            "a: 1\n--- x",
+            "0: x\n1: y",
+            "1: x\n0: y"
+          ]
+        }
+      ]
+    },
+    "php_atom": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "1",
+            "0",
+            "-1",
+            "1.5",
+            ".5",
+            "1e3",
+            "1_000",
+            "0x1F",
+            "0b11",
+            "0o17",
+            "017",
+            "019",
+            "9223372036854775807",
+            "9223372036854775808",
+            "'s'",
+            "\"d\"",
+            "\"a\\tb\\x41\\101\\u{48}\\q\"",
+            "'it\\'s'",
+            "true",
+            "FALSE",
+            "null",
+            "PHP_EOL",
+            "PHP_INT_MAX",
+            "UNKNOWN",
+            "'5x'",
+            "'abc'"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "-",
+                "+",
+                "!",
+                "",
+                "- -"
+              ]
+            },
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 9
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "("
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 9
+            },
+            {
+              "gen": "const",
+              "value": ")"
+            }
+          ]
+        }
+      ]
+    },
+    "php_expr": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "php_atom"
+          },
+          "sep": " + ",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "php_atom"
+          },
+          "sep": " - ",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "php_atom"
+          },
+          "sep": " * ",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "php_atom"
+          },
+          "sep": " / ",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "php_atom"
+          },
+          "sep": " % ",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "php_atom"
+          },
+          "sep": " ** ",
+          "min": 1,
+          "max": 3
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "php_atom"
+          },
+          "sep": " . ",
+          "min": 1,
+          "max": 3
+        }
+      ]
+    },
+    "php": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "<?php return [",
+                "<?php\nreturn [",
+                "<?php declare(strict_types=1); return ["
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "php_entries"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "];",
+                "];\n?>",
+                "]; // end"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "<?php return array("
+            },
+            {
+              "gen": "ref",
+              "name": "php_entries"
+            },
+            {
+              "gen": "const",
+              "value": ");"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "<?php return ",
+                "<?php\n\nreturn ",
+                "<?php 1; return "
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "php_expr"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ";",
+                ";;",
+                "; return 2;"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "<?php",
+            "<?php ",
+            "<?phpx",
+            " <?php return [];",
+            "return [];",
+            "<?php // c\nreturn ['a' => 1]; # d",
+            "<?php /* x */ return [/* y */];"
+          ]
+        }
+      ]
+    },
+    "php_key": {
+      "gen": "pick",
+      "from": [
+        "0",
+        "1",
+        "-1",
+        "1.5",
+        "'a'",
+        "'07'",
+        "'7'",
+        "\"k\"",
+        "true",
+        "false",
+        "null",
+        "PHP_INT_MAX",
+        "2 + 3",
+        "'a' . 1",
+        "9223372036854775808"
+      ]
+    },
+    "php_array": {
+      "gen": "pick",
+      "from": [
+        "[]",
+        "[1, 2]",
+        "['a' => 1]",
+        "[1 => 'a', 'b']",
+        "array(1, 2)",
+        "[1.5 => 'x', true => 'y', null => 'z', '07' => 1, '7' => 2]",
+        "[[1], ['k' => [2]]]"
+      ]
+    },
+    "php_entries": {
+      "gen": "repeat",
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "ref",
+            "name": "php_expr"
+          },
+          {
+            "gen": "ref",
+            "name": "php_array"
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "ref",
+                "name": "php_key"
+              },
+              {
+                "gen": "const",
+                "value": " => "
+              },
+              {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "php_expr"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "php_array"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "sep": ", ",
+      "min": 0,
+      "max": 4
+    }
+  },
+  "waivers": {
+    "Utopia\\Config\\Attribute\\Key::__construct": "A PHP attribute: Rust schemas describe the key with Property::key(), covered by every config.load case",
+    "Utopia\\Config\\Attribute\\ConfigKey::__construct": "A PHP attribute: Rust schemas describe it with Property::config(), covered by the config.load cases of TestGroupConfig, TestOptionalConfig and FuzzConfig"
+  },
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Config\\Config::load",
+      "description": "#[ConfigKey('0')] reads the property's own name, as PHP's empty() treats \"0\" as empty",
+      "case": "edge.json#nested configs"
+    },
+    {
+      "symbol": "Utopia\\Config\\Parser\\Dotenv::parse",
+      "description": "boolean words are compared with PHP's loose ==, so numeric look-alikes convert too: FLAG=1.0, FLAG=01 and FLAG= 1 are true, FLAG=0.0 is false",
+      "case": "edge.json#dotenv booleans compare loosely"
+    },
+    {
+      "symbol": "Utopia\\Config\\Parser\\YAML::parse",
+      "description": "YAML keys are converted like PHP array offsets after YAML 1.1 resolution: `y`, `yes` and `true` become key 1, `n` and `no` key 0, `~` the empty string, 1.5 the key 1",
+      "case": "edge.json#yaml keys"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Config\\Config::load",
+      "php": "A schema class with methods or a constructor, a property without a type, a property without a #[Key] or #[ConfigKey] attribute, or a non-public property is refused with Load (ConfigTest::testExceptionWithMethod, testExceptionWithExtraProperties, testExceptionWithoutType, testNonPublicKeyPropertyThrowsLoad, testNonPublicPropertyWithoutAttributeThrowsLoad, testConstructorArgumentThrowsLoad).",
+      "reason": "A Rust Schema is data: every Property has a Type and a Field, and there are no methods or visibility, so these shapes cannot be described; PHP's only behaviour for them is the Load error."
+    },
+    {
+      "symbol": "Utopia\\Config\\Parser\\PHP::parse",
+      "php": "includes the file: any PHP code runs (variables, function calls, interpolation, heredoc, __DIR__, class constants), and the result can hold objects and closures.",
+      "reason": "Rust cannot run PHP. It evaluates the constant expression the file returns (literals, arrays, engine constants, arithmetic and concatenation, with the engine's errors for the same scripts) and refuses anything else with Parse('Failed to parse PHP config file: unsupported PHP: ...'). The fuzz profile covers that language."
+    },
+    {
+      "symbol": "Utopia\\Config\\Parser\\YAML::parse",
+      "php": "an alias inside the node its anchor names (`&a [*a]`) builds a recursive array of references.",
+      "reason": "Rust values cannot be recursive: such an alias is refused like an unknown alias (the document is not valid YAML)."
+    },
+    {
+      "symbol": "Utopia\\Config\\Config::load",
+      "php": "a ConfigKey property accepts an instance of the class or of a subclass.",
+      "reason": "Rust schemas have no inheritance: an Instance must have been loaded with that very schema."
+    }
+  ]
+}

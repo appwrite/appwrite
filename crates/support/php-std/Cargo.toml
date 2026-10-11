@@ -28,6 +28,9 @@ sha2.workspace = true
 sha3.workspace = true
 whirlpool.workspace = true
 xxhash-rust.workspace = true
+# yaml_parse(): libyaml 0.2.5 translated to Rust, the parser ext-yaml links, so
+# documents are accepted, refused and split into events exactly as in PHP.
+unsafe-libyaml.workspace = true
 
 [build-dependencies]
 # PCRE2 10.44 with its JIT, from the sources PHP 8.5 bundles (pcre2/): the

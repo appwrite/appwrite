@@ -1,0 +1,2253 @@
+{
+  "cases": [
+    {
+      "name": "nested configs",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "ENV_KEY=x"
+            },
+            "parser": "dotenv",
+            "schema": "TestConfig",
+            "handle": true
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "nested": {
+                  "$ref": "c"
+                },
+                "int": "7"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                7
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                {
+                  "$config": "TestConfig",
+                  "properties": [
+                    [
+                      "phpKey",
+                      null
+                    ],
+                    [
+                      "jsonKey",
+                      null
+                    ],
+                    [
+                      "yamlKey",
+                      null
+                    ],
+                    [
+                      "ymlKey",
+                      null
+                    ],
+                    [
+                      "envKey",
+                      "x"
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "nested": "not a config"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for nested: Must be instance of Tests\\Compat\\Config\\TestConfig."
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "host": "h",
+                "tls": {
+                  "$ref": "c"
+                }
+              }
+            },
+            "parser": "none",
+            "schema": "TestOptionalConfig"
+          },
+          "expect": {
+            "$config": "TestOptionalConfig",
+            "properties": [
+              [
+                "host",
+                "h"
+              ],
+              [
+                "mode",
+                "auto"
+              ],
+              [
+                "port",
+                null
+              ],
+              [
+                "tls",
+                {
+                  "$config": "TestConfig",
+                  "properties": [
+                    [
+                      "phpKey",
+                      null
+                    ],
+                    [
+                      "jsonKey",
+                      null
+                    ],
+                    [
+                      "yamlKey",
+                      null
+                    ],
+                    [
+                      "ymlKey",
+                      null
+                    ],
+                    [
+                      "envKey",
+                      "x"
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "config1": {
+                  "$ref": "c"
+                },
+                "config2": "x",
+                "rootKey": "r"
+              }
+            },
+            "parser": "none",
+            "schema": "TestGroupConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for config2: Must be instance of Tests\\Compat\\Config\\TestConfig."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "dotenv booleans compare loosely",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "FLAG=1.0",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$array": [
+              [
+                "FLAG",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "FLAG=01",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$array": [
+              [
+                "FLAG",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "FLAG=0.0",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$array": [
+              [
+                "FLAG",
+                false
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "FLAG=1e0",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$array": [
+              [
+                "FLAG",
+                true
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "FLAG=maybe",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$array": [
+              [
+                "FLAG",
+                "maybe"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "dotenv",
+            "contents": "FLAG=NULL",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$array": [
+              [
+                "FLAG",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaml keys",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "y: a\nn: b\n~: c\n1.5: d\ntrue: e\n'07': f\n.inf: g\n-1: h"
+          },
+          "expect": {
+            "$array": [
+              [
+                1,
+                "e"
+              ],
+              [
+                0,
+                "g"
+              ],
+              [
+                "",
+                "c"
+              ],
+              [
+                "07",
+                "f"
+              ],
+              [
+                -1,
+                "h"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaml scalars",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "a: 99999999999999999999\nb: 0x7FFFFFFFFFFFFFFFFF\nc: 1,000\nd: 1:20:30\ne: 190:20:30.15\nf: 0b11\ng: -0b11\nh: 0o17\ni: 1.5e+3\nj: .5\nk: +.inf\nl: 08\nm: 1e3\nn: 0755\no: .NaN"
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                7766279631452241919
+              ],
+              [
+                "b",
+                9223372036854775807
+              ],
+              [
+                "c",
+                1000
+              ],
+              [
+                "d",
+                4830
+              ],
+              [
+                "e",
+                685230.15
+              ],
+              [
+                "f",
+                3
+              ],
+              [
+                "g",
+                -3
+              ],
+              [
+                "h",
+                "0o17"
+              ],
+              [
+                "i",
+                1500.0
+              ],
+              [
+                "j",
+                0.5
+              ],
+              [
+                "k",
+                {
+                  "$float": "INF"
+                }
+              ],
+              [
+                "l",
+                "08"
+              ],
+              [
+                "m",
+                "1e3"
+              ],
+              [
+                0,
+                493
+              ],
+              [
+                "o",
+                {
+                  "$float": "NAN"
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaml tags",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "a: !!str 12\nb: !!int '13'\nc: !!float 2\nd: !!int 1.9\ne: !!bool 0\nf: !!null x\ng: ! 12\nh: !!binary aGk=\ni: 2001-12-14 21:59:43.10 -5\nj: !!float abc\nk: 'yes'\nl: !!bool yes"
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                "12"
+              ],
+              [
+                "b",
+                13
+              ],
+              [
+                "c",
+                2.0
+              ],
+              [
+                "d",
+                1
+              ],
+              [
+                "e",
+                "0"
+              ],
+              [
+                "f",
+                null
+              ],
+              [
+                "g",
+                "12"
+              ],
+              [
+                "h",
+                "aGk="
+              ],
+              [
+                "i",
+                "2001-12-14 21:59:43.10 -5"
+              ],
+              [
+                "j",
+                0.0
+              ],
+              [
+                "k",
+                "yes"
+              ],
+              [
+                "l",
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaml merge keys",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "base: &b {x: 1, k: 2}\nm:\n  <<: *b\n  k: 3\nq:\n  k: 4\n  <<: [*b, {z: 5}]\no:\n  <<: {p: 1}\nr:\n  '<<': *b\ns: &s 1\nt:\n  <<: *s"
+          },
+          "expect": {
+            "$array": [
+              [
+                "base",
+                {
+                  "$array": [
+                    [
+                      "x",
+                      1
+                    ],
+                    [
+                      "k",
+                      2
+                    ]
+                  ]
+                }
+              ],
+              [
+                "m",
+                {
+                  "$array": [
+                    [
+                      "x",
+                      1
+                    ],
+                    [
+                      "k",
+                      3
+                    ]
+                  ]
+                }
+              ],
+              [
+                "q",
+                {
+                  "$array": [
+                    [
+                      "k",
+                      4
+                    ],
+                    [
+                      "x",
+                      1
+                    ]
+                  ]
+                }
+              ],
+              [
+                "o",
+                []
+              ],
+              [
+                "r",
+                {
+                  "$array": [
+                    [
+                      "<<",
+                      {
+                        "$array": [
+                          [
+                            "x",
+                            1
+                          ],
+                          [
+                            "k",
+                            2
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "s",
+                1
+              ],
+              [
+                "t",
+                {
+                  "$array": [
+                    [
+                      "<<",
+                      1
+                    ]
+                  ]
+                }
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "yaml documents and errors",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "a: 1\n--- x\n"
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "a: *undefined"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid YAML file."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "[1, 2]: a\nb: c"
+          },
+          "expect": {
+            "$array": [
+              [
+                "b",
+                "c"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "a: 1\na: 2"
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "  "
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid YAML file."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "# only"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid YAML file."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "no"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file is not a valid YAML file."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "0: x\n1: y"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Config file must decode to a YAML mapping."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "yaml",
+            "contents": "1: x\n0: y"
+          },
+          "expect": {
+            "$array": [
+              [
+                1,
+                "x"
+              ],
+              [
+                0,
+                true
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "php expressions",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [1 2];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: syntax error, unexpected integer \"2\", expecting \"]\""
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return foo;"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Undefined constant \"foo\""
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [\"a\" => ];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: syntax error, unexpected token \"]\""
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: syntax error, unexpected end of file, expecting \";\""
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [1,"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Unclosed '['"
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return 1 +;"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: syntax error, unexpected token \";\""
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [\"x\"]];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Unmatched ']'"
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php\nreturn [\n  1,\n};"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Unclosed '[' on line 2 does not match '}'"
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php\nreturn [\n  1,\n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Unclosed '[' on line 2"
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [2 ** 63, -2 ** 2, 7 / 2, 6 / 3, 7 % 3, -7 % 3, 0x10 + 0b11 + 0o17 + 017 + 1_000, 1e3];"
+          },
+          "expect": [
+            9.223372036854776e+18,
+            -4,
+            3.5,
+            2,
+            1,
+            -1,
+            1049,
+            1000.0
+          ]
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [1 % 0];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Modulo by zero"
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [1 / 0];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Division by zero"
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return ['abc' + 1];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Unsupported operand types: string + int"
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return ['5' + 1, '1.5' * 2];"
+          },
+          "expect": [
+            6,
+            3.0
+          ]
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [1.5 => 'a', true => 'b', null => 'c', '07' => 1, '7' => 2];"
+          },
+          "expect": {
+            "$array": [
+              [
+                1,
+                "b"
+              ],
+              [
+                "",
+                "c"
+              ],
+              [
+                "07",
+                1
+              ],
+              [
+                7,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [\"\\x41\\101\\u{1F600}\\q\", 'a\\'b\\\\c', PHP_EOL, 9223372036854775807 + 1, -9223372036854775808];"
+          },
+          "expect": [
+            "AA😀\\q",
+            "a'b\\c",
+            "\n",
+            9.223372036854776e+18,
+            -9.223372036854776e+18
+          ]
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return 'string';"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "PHP config file must return an array."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return null;"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "PHP config file must return an array."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [1 . 2, 'a' . 1.5, 0.1 + 0.2 . ''];"
+          },
+          "expect": [
+            "12",
+            "a1.5",
+            "0.3"
+          ]
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return ['a' => 1, 'a' => 2, 5 => 'x', 'y'];"
+          },
+          "expect": {
+            "$array": [
+              [
+                "a",
+                2
+              ],
+              [
+                5,
+                "x"
+              ],
+              [
+                6,
+                "y"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return array('k' => array(1, 2));"
+          },
+          "expect": {
+            "$array": [
+              [
+                "k",
+                [
+                  1,
+                  2
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [UNKNOWN_CONSTANT];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Undefined constant \"UNKNOWN_CONSTANT\""
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "type coercion",
+      "steps": [
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "int": " 12 "
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                12
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "int": "1.5"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                1
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "int": 1.5
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                1
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "int": "1e2"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                100
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "int": true
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                1
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "int": "123abc"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for int: does not match the type of property int."
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "int": 1e+20
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for int: does not match the type of property int."
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "int": ""
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for int: does not match the type of property int."
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "float": "abc"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for float: does not match the type of property float."
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "float": "1.5 "
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                1.5
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "float": false
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "str": true
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "1"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "str": false
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                ""
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "str": 0.30000000000000004
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "0.3"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "str": 1e+25
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "1.0E+25"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "bool": "0"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "bool": 0.0
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "bool": "abc"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                true
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "bool": []
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for bool: does not match the type of property bool."
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "str": null
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for str: does not match the type of property str."
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "list": "x"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for list: does not match the type of property list."
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "db": {
+                  "text": "toolongvalue"
+                }
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Invalid value for db.text: Value must be a valid string and no longer than 8 chars"
+            }
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "FLAG": "true"
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                true
+              ],
+              [
+                "mixed",
+                null
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": {
+                "mixed": [
+                  1,
+                  {
+                    "a": 2
+                  }
+                ]
+              }
+            },
+            "parser": "none",
+            "schema": "FuzzConfig"
+          },
+          "expect": {
+            "$config": "FuzzConfig",
+            "properties": [
+              [
+                "str",
+                "d"
+              ],
+              [
+                "int",
+                null
+              ],
+              [
+                "float",
+                0.0
+              ],
+              [
+                "bool",
+                false
+              ],
+              [
+                "list",
+                []
+              ],
+              [
+                "text",
+                null
+              ],
+              [
+                "flag",
+                null
+              ],
+              [
+                "mixed",
+                [
+                  1,
+                  {
+                    "$array": [
+                      [
+                        "a",
+                        2
+                      ]
+                    ]
+                  }
+                ]
+              ],
+              [
+                "nested",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "sources",
+      "steps": [
+        {
+          "op": "config.source",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": "x"
+            }
+          },
+          "expect": "x"
+        },
+        {
+          "op": "config.source",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/missing.txt"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "config.source",
+          "args": {
+            "source": {
+              "kind": "file",
+              "path": "/tmp/compat-fs/${ns}/present.txt",
+              "contents": "data"
+            }
+          },
+          "expect": "data"
+        },
+        {
+          "op": "config.source",
+          "args": {
+            "source": {
+              "kind": "environment",
+              "set": {
+                "_COMPAT_A": "1",
+                "_COMPAT_B": "two"
+              }
+            },
+            "keys": [
+              "_COMPAT_A",
+              "_COMPAT_B",
+              "_COMPAT_MISSING"
+            ]
+          },
+          "expect": {
+            "$array": [
+              [
+                "_COMPAT_A",
+                "1"
+              ],
+              [
+                "_COMPAT_B",
+                "two"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "config.load",
+          "args": {
+            "source": {
+              "kind": "variable",
+              "value": null
+            },
+            "parser": "none",
+            "schema": "TestConfig"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Load",
+              "message": "Loader returned null contents."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "dotted params",
+      "steps": [
+        {
+          "op": "config.params",
+          "args": {
+            "calls": [
+              {
+                "op": "set",
+                "key": "a",
+                "value": {
+                  "b": {
+                    "c": 1
+                  },
+                  "0": null,
+                  "e": ""
+                }
+              },
+              {
+                "op": "get",
+                "key": "a.b.c"
+              },
+              {
+                "op": "get",
+                "key": "a.0"
+              },
+              {
+                "op": "get",
+                "key": "a.e"
+              },
+              {
+                "op": "get",
+                "key": "a..b"
+              },
+              {
+                "op": "get",
+                "key": "a.b.c.d"
+              },
+              {
+                "op": "set",
+                "key": "0",
+                "value": "zero"
+              },
+              {
+                "op": "get",
+                "key": "0"
+              },
+              {
+                "op": "get",
+                "key": ""
+              },
+              {
+                "op": "set",
+                "key": "a.b",
+                "value": 5
+              },
+              {
+                "op": "get",
+                "key": "a.b"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            1,
+            "default",
+            "",
+            "default",
+            "default",
+            null,
+            "zero",
+            "default",
+            null,
+            {
+              "$array": [
+                [
+                  "c",
+                  1
+                ]
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

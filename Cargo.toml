@@ -44,6 +44,10 @@ utopia-dsn = { path = "crates/utopia/dsn" }
 utopia-telemetry = { path = "crates/utopia/telemetry", default-features = false }
 utopia-pools = { path = "crates/utopia/pools" }
 utopia-circuit-breaker = { path = "crates/utopia/circuit-breaker", default-features = false }
+utopia-config = { path = "crates/utopia/config" }
+utopia-span = { path = "crates/utopia/span" }
+utopia-di = { path = "crates/utopia/di" }
+utopia-registry = { path = "crates/utopia/registry" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -138,6 +142,9 @@ whirlpool = "0.10"
 # XXH3 and XXH128 for php-std hash(); pure Rust.
 xxhash-rust = { version = "0.8", features = ["xxh3"] }
 zstd = { version = "0.13", default-features = false }
+# libyaml 0.2.5 translated to Rust (php-std yaml_parse(), which must accept and
+# refuse documents as the libyaml of PHP's ext-yaml does); no C toolchain needed.
+unsafe-libyaml = "0.2"
 
 [profile.release]
 lto = "fat"
