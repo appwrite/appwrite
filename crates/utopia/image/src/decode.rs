@@ -6,7 +6,7 @@ use image::RgbaImage;
 
 use crate::error::{Error, Result};
 use crate::frame::{Format, Frame};
-use crate::options::{canvas_bytes, check_dimensions, check_pixels};
+use crate::options::{canvas_bytes, check_dimensions, check_pixels, pixel_budget};
 
 /// The container a blob's first bytes announce.
 pub(crate) fn sniff(data: &[u8]) -> Option<Format> {
@@ -57,10 +57,21 @@ fn corrupt(format: Format, e: impl std::fmt::Display) -> Error {
 fn single(data: &[u8], format: Format) -> Result<Vec<Frame>> {
     let kind = if format == Format::Jpeg { image::ImageFormat::Jpeg } else { image::ImageFormat::Png };
     let mut reader = image::ImageReader::with_format(Cursor::new(data), kind);
-    reader.no_limits();
-    let (w, h) = reader.into_dimensions().map_err(|e| corrupt(format, e))?;
+    // A backstop under the check below: the decoder refuses allocations past
+    // the whole budget on its own.
+    let mut limits = image::Limits::no_limits();
+    limits.max_alloc = Some(pixel_budget());
+    reader.limits(limits);
+    let decoder = reader.into_decoder().map_err(|e| corrupt(format, e))?;
+    let (w, h) = image::ImageDecoder::dimensions(&decoder);
     check_dimensions(w.into(), h.into())?;
-    let decoded = image::load_from_memory_with_format(data, kind).map_err(|e| corrupt(format, e))?;
+    // The decoded pixels in the file's own layout (up to 8 bytes a pixel for
+    // 16-bit PNG), and the RGBA copy when that layout is not RGBA8.
+    let color = image::ImageDecoder::color_type(&decoder);
+    let decoded_size = u64::from(w) * u64::from(h) * u64::from(color.bytes_per_pixel());
+    let copy = if color == image::ColorType::Rgba8 { 0 } else { canvas_bytes(w.into(), h.into()) };
+    check_pixels(decoded_size.saturating_add(copy))?;
+    let decoded = image::DynamicImage::from_decoder(decoder).map_err(|e| corrupt(format, e))?;
     let alpha = decoded.color().has_alpha();
     Ok(vec![Frame::new(decoded.into_rgba8(), alpha, 0, format)])
 }
@@ -68,25 +79,45 @@ fn single(data: &[u8], format: Format) -> Result<Vec<Frame>> {
 fn gif(data: &[u8]) -> Result<Vec<Frame>> {
     let mut options = gif::DecodeOptions::new();
     options.set_color_output(gif::ColorOutput::RGBA);
+    // A backstop under the checks below: the decoder refuses a frame buffer
+    // past the whole budget on its own.
+    if let Some(limit) = std::num::NonZeroU64::new(pixel_budget()) {
+        options.set_memory_limit(gif::MemoryLimit::Bytes(limit));
+    }
     let mut decoder = options.read_info(Cursor::new(data)).map_err(|e| corrupt(Format::Gif, e))?;
     let (sw, sh) = (u32::from(decoder.width()), u32::from(decoder.height()));
     check_dimensions(sw.into(), sh.into())?;
+    let canvas_size = canvas_bytes(sw.max(1).into(), sh.max(1).into());
     let mut canvas = RgbaImage::new(sw.max(1), sh.max(1));
     let mut frames = Vec::new();
+    let mut buffer = Vec::new();
     loop {
-        let frame = match decoder.read_next_frame() {
-            Ok(Some(frame)) => frame,
+        // The frame's descriptor first: its declared size is checked before
+        // its pixels are decoded.
+        let info = match decoder.next_frame_info() {
+            Ok(Some(f)) => (f.left, f.top, f.width, f.height, f.dispose, f.transparent.is_some(), f.delay),
             Ok(None) => break,
             // ImageMagick keeps the frames it read before a damaged one.
-            Err(e) if !frames.is_empty() => {
-                let _ = e;
-                break;
-            }
+            Err(_) if !frames.is_empty() => break,
             Err(e) => return Err(corrupt(Format::Gif, e)),
         };
-        let previous = (frame.dispose == gif::DisposalMethod::Previous).then(|| canvas.clone());
-        let (left, top) = (u32::from(frame.left), u32::from(frame.top));
-        let (fw, fh) = (u32::from(frame.width), u32::from(frame.height));
+        let (left, top, fw, fh, dispose, transparent, delay) = info;
+        let (left, top, fw, fh) = (u32::from(left), u32::from(top), u32::from(fw), u32::from(fh));
+        // Everything alive at once: the frames kept so far, the working
+        // canvas, the copy pushed for this frame, the canvas saved for a
+        // `Previous` disposal, and this frame's own pixels.
+        let saved = u64::from(dispose == gif::DisposalMethod::Previous);
+        let live = canvas_size
+            .saturating_mul(frames.len() as u64 + 2 + saved)
+            .saturating_add(canvas_bytes(fw.into(), fh.into()));
+        check_pixels(live)?;
+        buffer.resize(decoder.buffer_size(), 0);
+        match decoder.read_into_buffer(&mut buffer) {
+            Ok(()) => {}
+            Err(_) if !frames.is_empty() => break,
+            Err(e) => return Err(corrupt(Format::Gif, e)),
+        }
+        let previous = (dispose == gif::DisposalMethod::Previous).then(|| canvas.clone());
         for y in 0..fh {
             for x in 0..fw {
                 let (cx, cy) = (left + x, top + y);
@@ -94,16 +125,14 @@ fn gif(data: &[u8]) -> Result<Vec<Frame>> {
                     continue;
                 }
                 let i = ((y * fw + x) * 4) as usize;
-                let px = &frame.buffer[i..i + 4];
+                let px = &buffer[i..i + 4];
                 if px[3] != 0 {
                     canvas.put_pixel(cx, cy, image::Rgba([px[0], px[1], px[2], px[3]]));
                 }
             }
         }
-        // Every frame keeps a whole canvas: the frames together stay in budget.
-        check_pixels(canvas_bytes(sw.max(1).into(), sh.max(1).into()).saturating_mul(frames.len() as u64 + 1))?;
-        frames.push(Frame::new(canvas.clone(), frame.transparent.is_some(), u32::from(frame.delay), Format::Gif));
-        match frame.dispose {
+        frames.push(Frame::new(canvas.clone(), transparent, u32::from(delay), Format::Gif));
+        match dispose {
             gif::DisposalMethod::Background => {
                 for y in top..(top + fh).min(canvas.height()) {
                     for x in left..(left + fw).min(canvas.width()) {
@@ -127,8 +156,12 @@ fn webp(data: &[u8]) -> Result<Vec<Frame>> {
     let (w, h) = decoder.dimensions();
     check_dimensions(w.into(), h.into())?;
     let alpha = decoder.has_alpha();
-    let channels = if alpha { 4 } else { 3 };
-    let mut buf = vec![0u8; w as usize * h as usize * channels];
+    let channels: u64 = if alpha { 4 } else { 3 };
+    let canvas_size = canvas_bytes(w.into(), h.into());
+    // The decoder's buffer and the RGBA copy made of it, before either exists.
+    let read_size = u64::from(w) * u64::from(h) * channels;
+    check_pixels(read_size.saturating_add(canvas_size))?;
+    let mut buf = vec![0u8; read_size as usize];
     let to_rgba = |buf: &[u8]| -> RgbaImage {
         if alpha {
             RgbaImage::from_raw(w, h, buf.to_vec()).unwrap_or_else(|| RgbaImage::new(w, h))
@@ -146,12 +179,13 @@ fn webp(data: &[u8]) -> Result<Vec<Frame>> {
     }
     let mut frames = Vec::new();
     for _ in 0..decoder.num_frames() {
+        // The frames kept so far, the decoder's buffer and this frame's copy.
+        check_pixels(canvas_size.saturating_mul(frames.len() as u64 + 1).saturating_add(read_size))?;
         let ms = match decoder.read_frame(&mut buf) {
             Ok(ms) => ms,
             Err(_) if !frames.is_empty() => break,
             Err(e) => return Err(corrupt(Format::Webp, e)),
         };
-        check_pixels(canvas_bytes(w.into(), h.into()).saturating_mul(frames.len() as u64 + 1))?;
         frames.push(Frame::new(to_rgba(&buf), alpha, ms / 10, Format::Webp));
     }
     Ok(frames)
