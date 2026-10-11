@@ -3,7 +3,6 @@
 //! dependencies.
 
 use php_std::json::{self, DEFAULT_DEPTH, Flags};
-use php_std::pcre::{self, StrOrArray};
 use php_std::types::KeyRef;
 use php_std::{Value, yaml};
 
@@ -112,30 +111,96 @@ fn js_build(packager: &str) -> &'static str {
     }
 }
 
-/// `$content` without `//` comments (`preg_replace('/(?<!:)\/\/[^\n]*/', '', ...)`,
-/// leaving `https://` alone), or the content itself when the replacement fails.
-fn strip_comments(config: &[u8]) -> Vec<u8> {
-    match pcre::preg_replace(
-        &StrOrArray::Str(br"/(?<!:)\/\/[^\n]*/"),
-        &StrOrArray::Str(b""),
-        &StrOrArray::Str(config),
-        -1,
-    ) {
-        Ok(p) => match p.value.result {
-            pcre::Value::Str(s) => s,
-            _ => config.to_vec(),
-        },
-        Err(_) => config.to_vec(),
+/// `$content` without `//` comments, leaving `https://` alone.
+///
+/// PHP: `preg_replace('/(?<!:)\/\/[^\n]*/', '', $content)`: a `//` not right
+/// after a `:` starts a comment that runs to the end of the line (the
+/// newline stays). Scanned natively; `equivalence` tests pin it to the regex.
+fn strip_comments(config: &[u8]) -> std::borrow::Cow<'_, [u8]> {
+    if memchr::memmem::find(config, b"//").is_none() {
+        return std::borrow::Cow::Borrowed(config);
     }
-}
-
-/// `preg_match($pattern, $subject)` as a condition: a match.
-fn matches(pattern: &[u8], subject: &[u8]) -> bool {
-    pcre::preg_match_bare(pattern, subject).is_ok_and(|p| matches!(p.value, pcre::Value::Int(n) if n > 0))
+    let mut out = Vec::with_capacity(config.len());
+    let (mut copied, mut i) = (0, 0);
+    // Every `/`, so overlapping candidates (`:///`) are all tried, as the
+    // regex tries every position.
+    while let Some(n) = memchr::memchr(b'/', &config[i..]) {
+        let at = i + n;
+        if config.get(at + 1) == Some(&b'/') && (at == 0 || config[at - 1] != b':') {
+            out.extend_from_slice(&config[copied..at]);
+            copied = memchr::memchr(b'\n', &config[at..]).map_or(config.len(), |n| at + n);
+            i = copied;
+        } else {
+            i = at + 1;
+        }
+    }
+    out.extend_from_slice(&config[copied..]);
+    std::borrow::Cow::Owned(out)
 }
 
 fn contains(haystack: &[u8], needle: &[u8]) -> bool {
-    haystack.windows(needle.len()).any(|w| w == needle)
+    memchr::memmem::find(haystack, needle).is_some()
+}
+
+/// A PCRE word character outside UTF mode: `[A-Za-z0-9_]`.
+fn word(b: u8) -> bool {
+    b.is_ascii_alphanumeric() || b == b'_'
+}
+
+/// PCRE's `\s` outside UTF mode: space, `\t`, `\n`, `\v`, `\f`, `\r`.
+fn space(b: u8) -> bool {
+    matches!(b, b' ' | b'\t' | b'\n' | 0x0B | 0x0C | b'\r')
+}
+
+/// Where `s[i..]` continues after any `\s*`.
+fn skip_spaces(s: &[u8], mut i: usize) -> usize {
+    while i < s.len() && space(s[i]) {
+        i += 1;
+    }
+    i
+}
+
+/// The positions just after each `\b<name>` in `s` (a word boundary before it).
+fn words_at<'a>(s: &'a [u8], name: &'a [u8]) -> impl Iterator<Item = usize> + 'a {
+    memchr::memmem::find_iter(s, name).filter(move |&i| i == 0 || !word(s[i - 1])).map(move |i| i + name.len())
+}
+
+/// Whether `s` matches `/\bprerender\b/`, and whether it matches
+/// `/\bprerender[\x27\x22]?\s*:\s*false\b/`, in one pass.
+fn prerender(s: &[u8]) -> (bool, bool) {
+    let mut found = false;
+    for mut i in words_at(s, b"prerender") {
+        found |= i == s.len() || !word(s[i]);
+        if i < s.len() && (s[i] == b'\'' || s[i] == b'"') {
+            i += 1;
+        }
+        i = skip_spaces(s, i);
+        if s.get(i) != Some(&b':') {
+            continue;
+        }
+        i = skip_spaces(s, i + 1);
+        if s[i..].starts_with(b"false") && s.get(i + 5).is_none_or(|&b| !word(b)) {
+            return (true, true);
+        }
+    }
+    (found, false)
+}
+
+/// `/\boutput\s*:\s*[\x27\x22\x60](?:server|hybrid)[\x27\x22\x60]/`.
+fn output_server(s: &[u8]) -> bool {
+    let quote = |b: Option<&u8>| matches!(b, Some(b'\'' | b'"' | b'`'));
+    words_at(s, b"output").any(|i| {
+        let i = skip_spaces(s, i);
+        if s.get(i) != Some(&b':') {
+            return false;
+        }
+        let i = skip_spaces(s, i + 1);
+        if !quote(s.get(i)) {
+            return false;
+        }
+        let rest = &s[i + 1..];
+        (rest.starts_with(b"server") || rest.starts_with(b"hybrid")) && quote(rest.get(6))
+    })
 }
 
 macro_rules! framework {
@@ -231,7 +296,7 @@ framework!(
     config: ["astro.config.mjs", "astro.config.js", "astro.config.ts"],
     adapter: |config| {
         let stripped = strip_comments(config);
-        Some(if matches(br"/\boutput\s*:\s*[\x27\x22\x60](?:server|hybrid)[\x27\x22\x60]/", &stripped) {
+        Some(if output_server(&stripped) {
             Adapter::Ssr
         } else {
             Adapter::Static
@@ -377,7 +442,8 @@ framework!(
         if contains(&stripped, b"nitro/vite") || contains(&stripped, b"@tanstack/nitro-v2-vite-plugin") {
             return Some(Adapter::Ssr);
         }
-        if !matches(br"/\bprerender\b/", &stripped) || matches(br"/\bprerender[\x27\x22]?\s*:\s*false\b/", &stripped) {
+        let (prerenders, disabled) = prerender(&stripped);
+        if !prerenders || disabled {
             return Some(Adapter::Ssr);
         }
         Some(Adapter::Static)
@@ -608,5 +674,99 @@ impl<T: Framework + ?Sized> Detected<'_, T> {
     /// PHP: `getBuildCommand()` on the detected framework.
     pub fn build_command(&self) -> &str {
         self.item().build_command(self.packager())
+    }
+}
+
+/// The native scans against the regexes PHP runs, on generated configs.
+#[cfg(test)]
+mod equivalence {
+    use php_std::pcre::{self, StrOrArray};
+
+    use super::{output_server, prerender, strip_comments};
+
+    fn regex_strip(s: &[u8]) -> Vec<u8> {
+        match pcre::preg_replace(
+            &StrOrArray::Str(br"/(?<!:)\/\/[^\n]*/"),
+            &StrOrArray::Str(b""),
+            &StrOrArray::Str(s),
+            -1,
+        ) {
+            Ok(p) => match p.value.result {
+                pcre::Value::Str(s) => s,
+                _ => s.to_vec(),
+            },
+            Err(_) => s.to_vec(),
+        }
+    }
+
+    fn regex(pattern: &[u8], s: &[u8]) -> bool {
+        pcre::preg_match_bare(pattern, s).is_ok_and(|p| matches!(p.value, pcre::Value::Int(n) if n > 0))
+    }
+
+    /// Strings built from the pieces the patterns care about, by a small
+    /// deterministic generator (xorshift), so failures replay.
+    fn inputs() -> impl Iterator<Item = Vec<u8>> {
+        const PIECES: &[&[u8]] = &[
+            b"prerender",
+            b"output",
+            b"server",
+            b"hybrid",
+            b"false",
+            b"falsey",
+            b":",
+            b"//",
+            b"/",
+            b"https:",
+            b"\n",
+            b" ",
+            b"\t",
+            b"\x0b",
+            b"\x0c",
+            b"\r",
+            b"'",
+            b"\"",
+            b"`",
+            b"_",
+            b"x",
+            b"9",
+            b"\xc3\xa9",
+            b"{",
+            b"}",
+            b"=",
+            b"prerender:",
+            b"enabled: true",
+        ];
+        let mut state = 0x9E37_79B9_7F4A_7C15u64;
+        (0..30_000).map(move |_| {
+            let mut next = || {
+                state ^= state << 13;
+                state ^= state >> 7;
+                state ^= state << 17;
+                state
+            };
+            let n = (next() % 12) as usize;
+            (0..n).flat_map(|_| PIECES[(next() % PIECES.len() as u64) as usize].to_vec()).collect()
+        })
+    }
+
+    #[test]
+    fn native_scans_match_the_regexes() {
+        for s in inputs() {
+            assert_eq!(&*strip_comments(&s), &regex_strip(&s)[..], "strip {:?}", String::from_utf8_lossy(&s));
+            let (found, disabled) = prerender(&s);
+            assert_eq!(found, regex(br"/\bprerender\b/", &s), "prerender {:?}", String::from_utf8_lossy(&s));
+            assert_eq!(
+                disabled,
+                regex(br"/\bprerender[\x27\x22]?\s*:\s*false\b/", &s),
+                "prerender false {:?}",
+                String::from_utf8_lossy(&s)
+            );
+            assert_eq!(
+                output_server(&s),
+                regex(br"/\boutput\s*:\s*[\x27\x22\x60](?:server|hybrid)[\x27\x22\x60]/", &s),
+                "output {:?}",
+                String::from_utf8_lossy(&s)
+            );
+        }
     }
 }

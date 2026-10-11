@@ -1,8 +1,8 @@
 {
   "lib": "detector",
   "environment": {
-    "date": "2026-10-11T19:33:03Z",
-    "commit": "e2c3406452",
+    "date": "2026-10-11T19:58:45Z",
+    "commit": "6b2000ecfb",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -13,7 +13,7 @@
       "opcache": true,
       "jit": "tracing",
       "runs": "in a container of the dev image (bin/compat-php)",
-      "image": "compat-cache-php",
+      "image": "appwrite-dev",
       "os": "Alpine Linux v3.24",
       "kernel": "6.10.14-linuxkit"
     },
@@ -31,88 +31,88 @@
       "name": "framework",
       "description": "Score 15 frameworks on 10 file names and a package.json",
       "php": {
-        "ns": 13529.319482288829,
-        "min": 13475.505449591281,
-        "max": 13653.837193460491,
+        "ns": 16205.47462406015,
+        "min": 13939.536654135338,
+        "max": 19278.312969924813,
         "samples": 15,
-        "calls": 1468
+        "calls": 1064
       },
       "rust": {
-        "ns": 1767.0514449315558,
-        "min": 1716.2700187885837,
-        "max": 2251.763263845397,
+        "ns": 1871.9976935141617,
+        "min": 1847.8180643970845,
+        "max": 2100.163022419042,
         "samples": 15,
-        "calls": 11177,
-        "allocations": 39.00000596462974,
-        "bytes": 5034.000715755569
+        "calls": 10839,
+        "allocations": 39.0000061506289,
+        "bytes": 5034.000738075468
       },
-      "speedup": 7.656437802699552,
+      "speedup": 8.656781298506207,
       "bound": null
     },
     {
       "name": "runtime",
       "description": "Find the runtime of 10 file names by extension among 11 runtimes",
       "php": {
-        "ns": 2931.2882977133463,
-        "min": 2912.45075474518,
-        "max": 3017.7477208190107,
+        "ns": 3022.873661337886,
+        "min": 2987.053080862952,
+        "max": 3405.717988514667,
         "samples": 15,
-        "calls": 6691
+        "calls": 6443
       },
       "rust": {
-        "ns": 261.18537233014086,
-        "min": 257.77004086157336,
-        "max": 272.6929968161487,
+        "ns": 261.22480640065754,
+        "min": 257.97407117264055,
+        "max": 267.46192867325055,
         "samples": 15,
-        "calls": 77579,
-        "allocations": 18.00000085933908,
-        "bytes": 1401.0001031206898
+        "calls": 77867,
+        "allocations": 18.000000856160717,
+        "bytes": 1401.0001027392861
       },
-      "speedup": 11.223018622988462,
+      "speedup": 11.571924209607824,
       "bound": null
     },
     {
       "name": "rendering",
       "description": "Tell the rendering of a 6-file Next.js build",
       "php": {
-        "ns": 1567.9878755116224,
-        "min": 1543.758205266816,
-        "max": 1595.5382655031276,
+        "ns": 1554.3033569448721,
+        "min": 1535.2248229134586,
+        "max": 1643.6967970434248,
         "samples": 15,
-        "calls": 12949
+        "calls": 12988
       },
       "rust": {
-        "ns": 182.34042649604407,
-        "min": 180.84430991200009,
-        "max": 193.8868326370071,
+        "ns": 181.97649397623627,
+        "min": 179.7388567273798,
+        "max": 187.73910522489024,
         "samples": 15,
-        "calls": 110341,
-        "allocations": 13.000000604187624,
-        "bytes": 560.000072502515
+        "calls": 108653,
+        "allocations": 13.0000006135741,
+        "bytes": 560.000073628892
       },
-      "speedup": 8.59923334415169,
+      "speedup": 8.541231468872258,
       "bound": null
     },
     {
       "name": "adapter",
       "description": "Read the rendering adapter of a TanStack Start vite.config.ts",
       "php": {
-        "ns": 198.7566153309461,
-        "min": 194.9239711480254,
-        "max": 206.21458399597796,
+        "ns": 201.9637514553228,
+        "min": 192.61747757090725,
+        "max": 211.11149484889103,
         "samples": 15,
-        "calls": 97463
+        "calls": 102211
       },
       "rust": {
-        "ns": 232.1919436191529,
-        "min": 227.22915083258482,
-        "max": 243.0003800179645,
+        "ns": 122.92606124076212,
+        "min": 119.21181972890312,
+        "max": 128.65573194968403,
         "samples": 15,
-        "calls": 86838,
-        "allocations": 2.0000007677130593,
-        "bytes": 183.00009212556714
+        "calls": 168058,
+        "allocations": 1.0000003966884448,
+        "bytes": 166.0000476026134
       },
-      "speedup": 0.8560013419628018,
+      "speedup": 1.6429693542344777,
       "bound": null
     }
   ]

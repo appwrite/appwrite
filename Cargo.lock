@@ -3497,6 +3497,7 @@ dependencies = [
 name = "utopia-detector"
 version = "0.1.0"
 dependencies = [
+ "memchr",
  "php-std",
  "thiserror",
 ]
