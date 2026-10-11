@@ -177,6 +177,22 @@ class Update extends Action
                     $user->setAttribute('targets', [...$user->getAttribute('targets', []), $target]);
                 }
             }
+            if ($oldEmail !== $email) {
+                $sequence = $user->getSequence();
+                if ($sequence !== '' && $sequence !== null) {
+                    $dbForProject->deleteDocuments('tokens', [
+                        Query::equal('userInternalId', [$sequence]),
+                        Query::equal('type', [
+                            TOKEN_TYPE_RECOVERY,
+                            TOKEN_TYPE_RECOVERY_OTP,
+                            TOKEN_TYPE_VERIFICATION,
+                            TOKEN_TYPE_VERIFICATION_OTP,
+                            TOKEN_TYPE_MAGIC_URL,
+                            TOKEN_TYPE_EMAIL,
+                        ]),
+                    ]);
+                }
+            }
             $dbForProject->purgeCachedDocument('users', $user->getId());
         } catch (Duplicate $th) {
             throw new Exception(Exception::USER_EMAIL_ALREADY_EXISTS);
