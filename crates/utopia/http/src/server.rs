@@ -1,11 +1,13 @@
-//! The HTTP/1.1 server (hyper), in place of the Swoole and FPM adapters.
+//! The HTTP/1.1 server on hyper: serves an application on a TCP socket.
 //!
-//! Behaviour the Swoole adapter defines and this server keeps: a server-wide
-//! cap on requests in flight (`max_concurrency`, 503 past it), a drain
-//! deadline for in-flight requests on shutdown (`max_wait_time`), Nagle
-//! disabled, compression left to the application, header names sent in
-//! `Title-Case`, and a fresh request context per request whose parent is the
-//! application's static resources.
+//! It caps the requests in flight server-wide (503 past the cap), drains
+//! in-flight requests on shutdown up to a deadline, disables Nagle, leaves
+//! compression to the application, sends header names in `Title-Case`, and
+//! gives each request a fresh context whose parent is the application's
+//! static resources.
+//!
+//! PHP: replaces the Swoole and FPM adapters, keeping the behaviour the
+//! Swoole adapter defines (`max_concurrency`, `max_wait_time`).
 
 use std::convert::Infallible;
 use std::future::Future;
@@ -28,8 +30,9 @@ use crate::response::{Body, Stream, head_response};
 use crate::trusted::TrustedHeaders;
 use crate::{Request, Response};
 
-/// Application entry point: turns a request into a response.
+/// What the server runs for each request: turns a request into a response.
 pub trait Handler: Send + Sync + 'static {
+    /// The response to `request`.
     fn handle(&self, request: Request) -> impl Future<Output = Response> + Send;
 
     /// The hyper response for `request`. By default the handler's response,
@@ -42,9 +45,14 @@ pub trait Handler: Send + Sync + 'static {
 
 /// Serves an [`Http`] application: each request runs [`Http::run`] in a
 /// fresh context.
-pub struct App(pub Arc<Http>);
+pub struct App(
+    /// The application.
+    pub Arc<Http>,
+);
 
 impl Handler for App {
+    /// Runs the request through the application in a fresh context; a
+    /// failure gives an empty 500.
     fn handle(&self, request: Request) -> impl Future<Output = Response> + Send {
         let http = self.0.clone();
         async move {
@@ -106,48 +114,76 @@ impl Handler for App {
     }
 }
 
-/// `Utopia\Http\Adapter\Swoole\Mode`: the two server shapes.
+/// The two server shapes: many single-request workers, or a few concurrent
+/// ones.
+///
+/// PHP: `Utopia\Http\Adapter\Swoole\Mode`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
-    /// One request at a time per worker, many workers (`HYPERLOOP_A`).
+    /// One request at a time per worker, many workers.
+    ///
+    /// PHP: `HYPERLOOP_A`.
     HyperloopA,
-    /// Concurrent requests per worker, one worker per core (`HYPERLOOP_B`).
+    /// Concurrent requests per worker, one worker per core.
+    ///
+    /// PHP: `HYPERLOOP_B`.
     HyperloopB,
 }
 
-/// The settings of a [`Mode`] (`Mode::settings()`), with the CPU count
-/// limited by the cgroup quota.
+/// The server settings of a [`Mode`], with the CPU count limited by the
+/// cgroup quota. [`ServerOptions`] can be built from them.
+///
+/// PHP: `Mode::settings()`, the Swoole server settings.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Settings {
     /// Server-side compression (off: the application compresses).
     pub compression: bool,
+    /// Whether Nagle's algorithm is disabled on connections.
     pub tcp_nodelay: bool,
+    /// Whether TCP Fast Open is enabled.
     pub tcp_fastopen: bool,
     /// Seconds `accept()` waits for the first bytes.
     pub tcp_defer_accept: u32,
+    /// Whether several processes may bind the same port.
     pub reuse_port: bool,
     /// Seconds in-flight requests get to finish on shutdown.
     pub max_wait_time: u64,
     /// Requests in flight before the server answers 503.
     pub max_concurrency: usize,
+    /// Whether workers reload one at a time, finishing their requests first.
     pub reload_async: bool,
+    /// Event-loop threads: one per CPU.
     pub reactors: usize,
+    /// Worker processes.
     pub workers: usize,
     /// Whether a worker serves requests concurrently.
     pub coroutine: bool,
-    /// 3: to an idle worker, 2: by connection.
+    /// How connections reach workers: 3 to an idle worker, 2 by connection.
     pub dispatch_mode: u8,
-    /// Whether blocking I/O yields (`hook_flags = SWOOLE_HOOK_ALL`).
+    /// Whether blocking I/O yields to other requests.
+    ///
+    /// PHP: `hook_flags = SWOOLE_HOOK_ALL`.
     pub hook_all: Option<bool>,
+    /// Whether a send waits for buffer space instead of failing.
+    ///
+    /// PHP: Swoole's `send_yield`.
     pub send_yield: Option<bool>,
     /// Requests before a worker is recycled.
     pub max_request: Option<u64>,
+    /// Threads for asynchronous file I/O.
+    ///
+    /// PHP: Swoole's `aio_worker_num`.
     pub aio_workers: Option<usize>,
+    /// Asynchronous I/O threads kept alive when idle.
+    ///
+    /// PHP: Swoole's `aio_core_worker_num`.
     pub aio_core_workers: Option<usize>,
 }
 
 impl Mode {
-    /// `$mode->settings()`.
+    /// The server settings of this mode, sized by the available CPUs.
+    ///
+    /// PHP: `$mode->settings()`.
     pub fn settings(self) -> Settings {
         // `(int) max(1, ceil(System::getCPU() * n))`: the cgroup-aware CPU
         // count, multiplied before rounding up.
@@ -190,7 +226,7 @@ impl Mode {
     }
 }
 
-/// Server tuning.
+/// Server tuning for [`serve`].
 #[derive(Debug, Clone)]
 pub struct ServerOptions {
     /// Maximum accepted request body size in bytes.
@@ -208,6 +244,8 @@ pub struct ServerOptions {
 }
 
 impl Default for ServerOptions {
+    /// 32 MiB bodies, keep-alive, 30 seconds to read headers and to drain on
+    /// shutdown, 1000 requests in flight, `x-forwarded-proto` trusted.
     fn default() -> Self {
         Self {
             max_body: 32 * 1024 * 1024,
@@ -221,6 +259,8 @@ impl Default for ServerOptions {
 }
 
 impl From<&Settings> for ServerOptions {
+    /// The default options with the drain deadline and the concurrency cap
+    /// of `settings`.
     fn from(settings: &Settings) -> Self {
         Self {
             shutdown_grace: Duration::from_secs(settings.max_wait_time),
@@ -317,6 +357,7 @@ where
 struct InFlight<'a>(&'a AtomicUsize);
 
 impl Drop for InFlight<'_> {
+    /// Decrements the counter.
     fn drop(&mut self) {
         self.0.fetch_sub(1, Ordering::SeqCst);
     }

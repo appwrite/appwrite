@@ -1,8 +1,14 @@
-//! `Utopia\Http\TrustedHeaders`: which forwarded headers this server believes.
+//! Which forwarded headers the server believes for the client's address and
+//! scheme, when it runs behind a proxy.
+//!
+//! PHP: `Utopia\Http\TrustedHeaders`.
 
 /// Headers naming the client address and the scheme it used, read in order;
 /// the first usable value wins. Names are lowercased and trimmed, empty ones
 /// dropped.
+///
+/// The default trusts no address header and `x-forwarded-proto` for the
+/// scheme.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TrustedHeaders {
     ip: Vec<String>,
@@ -10,14 +16,20 @@ pub struct TrustedHeaders {
 }
 
 impl Default for TrustedHeaders {
-    /// `new TrustedHeaders()`: no IP header, `x-forwarded-proto` for the scheme.
+    /// No address header, and `x-forwarded-proto` for the scheme.
+    ///
+    /// PHP: `new TrustedHeaders()`.
     fn default() -> Self {
         Self { ip: Vec::new(), proto: vec!["x-forwarded-proto".to_owned()] }
     }
 }
 
 impl TrustedHeaders {
-    /// `new TrustedHeaders($ip, $proto)`.
+    /// Trusts the headers `ip` for the client address and `proto` for the
+    /// scheme. Names are lowercased and trimmed; empty names and `0` are
+    /// dropped.
+    ///
+    /// PHP: `new TrustedHeaders($ip, $proto)`.
     pub fn new<I, P>(ip: I, proto: P) -> Self
     where
         I: IntoIterator,

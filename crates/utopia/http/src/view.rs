@@ -1,9 +1,12 @@
-//! `Utopia\Http\View`: templates with escaped params, filters, nesting and
+//! Server-side views: templates with escaped params, filters, nesting and
 //! HTML minification.
 //!
-//! PHP templates are `.phtml` files executed with the view as `$this`. A Rust
-//! template is a [`Template`] function that writes the output; a file path
-//! without one renders the file's content as is (a template without PHP code).
+//! A template is a [`Template`] function that writes the output; a view
+//! without one renders its file's content as is.
+//!
+//! PHP: `Utopia\Http\View`. PHP templates are `.phtml` files executed with
+//! the view as `$this`; a file path without a Rust template renders like a
+//! template without PHP code.
 
 use std::sync::Arc;
 
@@ -13,9 +16,15 @@ use serde_json::Value;
 
 use crate::error::{Error, Result};
 
-/// `View::FILTER_ESCAPE`.
+/// The name of the filter that HTML-escapes a value (every character with
+/// an HTML entity, quotes included).
+///
+/// PHP: `View::FILTER_ESCAPE`, `htmlentities($value, ENT_QUOTES, 'UTF-8')`.
 pub const FILTER_ESCAPE: &str = "escape";
-/// `View::FILTER_NL2P`.
+/// The name of the filter that wraps blank-line separated blocks in `<p>`
+/// and turns the remaining line breaks into `<br />`.
+///
+/// PHP: `View::FILTER_NL2P`.
 pub const FILTER_NL2P: &str = "nl2p";
 
 /// A filter: a string transformation registered by name.
@@ -24,7 +33,8 @@ pub type Filter = Arc<dyn Fn(&str) -> String + Send + Sync>;
 /// A template: renders a view into `out`.
 pub type Template = Arc<dyn Fn(&View, &mut String) -> Result<()> + Send + Sync>;
 
-/// A view.
+/// A view: a template path or function, its params and filters, and an
+/// optional parent view.
 #[derive(Clone)]
 pub struct View {
     parent: Option<Box<View>>,
@@ -36,6 +46,7 @@ pub struct View {
 }
 
 impl std::fmt::Debug for View {
+    /// Shows the path, whether it was rendered, and the params.
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("View")
             .field("path", &self.path)
@@ -49,7 +60,10 @@ impl std::fmt::Debug for View {
 const QUOTES: i64 = 3;
 
 impl View {
-    /// `new View($path)`, with the `escape` and `nl2p` filters.
+    /// A view of the template file at `path`, with the `escape` and `nl2p`
+    /// filters registered.
+    ///
+    /// PHP: `new View($path)`.
     pub fn new(path: &str) -> Self {
         let mut view = Self {
             parent: None,
@@ -80,7 +94,10 @@ impl View {
         self
     }
 
-    /// `setParam($key, $value, $escapeHtml)`: strings are HTML-escaped unless `escape` is false.
+    /// Sets a param; a string value is HTML-escaped (`&`, `<`, `>` and
+    /// quotes) when `escape` is true. Fails for a key containing a dot.
+    ///
+    /// PHP: `setParam($key, $value, $escapeHtml)`.
     pub fn set_param(&mut self, key: &str, value: Value, escape: bool) -> Result<&mut Self> {
         if key.contains('.') {
             return Err(Error::Generic("$key can't contain a dot \".\" character".into()));
@@ -100,19 +117,26 @@ impl View {
         Ok(self)
     }
 
-    /// `setParent($view)`.
+    /// Sets the parent view.
+    ///
+    /// PHP: `setParent($view)`.
     pub fn set_parent(&mut self, parent: View) -> &mut Self {
         self.parent = Some(Box::new(parent));
         self
     }
 
-    /// `getParent()`.
+    /// The parent view, if any.
+    ///
+    /// PHP: `getParent()`.
     pub fn parent(&self) -> Option<&View> {
         self.parent.as_deref()
     }
 
-    /// `getParam($path, $default)`: a dotted path into the params; `None`
-    /// when a step is missing or `null`.
+    /// The param at a dotted path, such as `user.name` or `items.0`;
+    /// `None` when a step is missing or `null`. A numeric step indexes an
+    /// array, or a character of a string (negative from the end).
+    ///
+    /// PHP: `getParam($path, $default)`.
     pub fn param(&self, path: &str) -> Option<Value> {
         let mut current: Option<Value> = None;
         for (i, key) in path.split('.').enumerate() {
@@ -143,7 +167,9 @@ impl View {
         current
     }
 
-    /// `setPath($path)`.
+    /// Sets the template path.
+    ///
+    /// PHP: `setPath($path)`.
     pub fn set_path(&mut self, path: &str) -> &mut Self {
         self.path = path.to_owned();
         self
@@ -154,24 +180,34 @@ impl View {
         &self.path
     }
 
-    /// `setRendered($state)`.
+    /// Marks the view as rendered (or not); a rendered view renders as
+    /// empty.
+    ///
+    /// PHP: `setRendered($state)`.
     pub fn set_rendered(&mut self, state: bool) -> &mut Self {
         self.rendered = state;
         self
     }
 
-    /// `isRendered()`.
+    /// Whether the view is marked as rendered.
+    ///
+    /// PHP: `isRendered()`.
     pub fn is_rendered(&self) -> bool {
         self.rendered
     }
 
-    /// `addFilter($name, $callback)`.
+    /// Registers a filter under `name`, replacing one of the same name.
+    ///
+    /// PHP: `addFilter($name, $callback)`.
     pub fn add_filter(&mut self, name: &str, filter: Filter) -> &mut Self {
         self.filters.insert(name.to_owned(), filter);
         self
     }
 
-    /// `print($value, $filter)`: applies the named filters in order.
+    /// Applies the named filters to `value`, in order; fails for a filter
+    /// that is not registered.
+    ///
+    /// PHP: `print($value, $filter)`.
     pub fn print(&self, value: &str, filters: &[&str]) -> Result<String> {
         let mut value = value.to_owned();
         for name in filters {
@@ -184,7 +220,12 @@ impl View {
         Ok(value)
     }
 
-    /// `render($minify)`.
+    /// Renders the view with its template function, or else the content of
+    /// its file, minified when `minify` is true (see [`minify_html`]).
+    ///
+    /// A view marked as rendered gives `""`; an unreadable file is an error.
+    ///
+    /// PHP: `render($minify)`.
     pub fn render(&self, minify: bool) -> Result<String> {
         if self.rendered {
             return Ok(String::new());
@@ -205,7 +246,10 @@ impl View {
         Ok(html)
     }
 
-    /// `exec($view)`: renders child views with this one as their parent.
+    /// Renders child views, minified, with this one as their parent, and
+    /// concatenates the output.
+    ///
+    /// PHP: `exec($view)`.
     pub fn exec(&self, views: &mut [View]) -> Result<String> {
         let mut out = String::new();
         for view in views.iter_mut() {
@@ -230,8 +274,11 @@ fn nl2p(value: &str) -> String {
     paragraphs.replace('\n', "<br />")
 }
 
-/// `View::render()`'s minifier: collapses whitespace around tags and runs of
-/// whitespace, keeping `<textarea>` and `<pre>` blocks intact.
+/// Minifies HTML: drops tabs and line breaks right after `>` and right
+/// before `<`, collapses runs of whitespace to one character, and keeps
+/// `<textarea>` and `<pre>` blocks intact.
+///
+/// PHP: the minifier of `View::render()`.
 pub fn minify_html(html: &str) -> String {
     use php_std::pcre::{StrOrArray, Value as P};
 

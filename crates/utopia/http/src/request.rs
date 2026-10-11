@@ -1,6 +1,9 @@
-//! `Utopia\Http\Request` with the semantics of its Swoole adapter, the one
-//! Appwrite serves with: headers, cookies, query and form fields are parsed
-//! the way Swoole parses them, the JSON body the way Utopia does.
+//! The incoming request: method, path, headers, cookies, query string, form,
+//! multipart and JSON bodies, and the client's address and scheme.
+//!
+//! PHP: `Utopia\Http\Request` with the semantics of its Swoole adapter, the
+//! one Appwrite serves with: headers, cookies, query and form fields are
+//! parsed the way Swoole parses them, the JSON body the way Utopia does.
 
 use std::net::IpAddr;
 use std::sync::{Arc, OnceLock};
@@ -27,7 +30,9 @@ const SINGLE: [&str; 8] = [
     "content-length",
 ];
 
-/// Schemes a trusted proto header may name (`Request::SCHEMES`).
+/// Schemes a trusted proto header may name.
+///
+/// PHP: `Request::SCHEMES`.
 pub const SCHEMES: [&str; 4] = ["http", "https", "ws", "wss"];
 
 /// How the body was encoded, decided by the original `Content-Type` (Swoole
@@ -39,18 +44,22 @@ enum Form {
     Multipart,
 }
 
-/// An `Range` or `Content-Range` header, parsed.
+/// A `Range` or `Content-Range` header, parsed.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Range {
+    /// The range unit, such as `bytes`.
     pub unit: String,
+    /// The first position, inclusive.
     pub start: i64,
-    /// `None` for an open range (`bytes=0-`).
+    /// The last position, inclusive; `None` for an open range (`bytes=0-`).
     pub end: Option<i64>,
     /// The total size (`Content-Range` only).
     pub size: Option<i64>,
 }
 
 /// An incoming HTTP request.
+///
+/// Query, body and cookie params and uploaded files are parsed on first use.
 #[derive(Debug)]
 pub struct Request {
     method: String,
@@ -75,6 +84,7 @@ pub struct Request {
 }
 
 impl Clone for Request {
+    /// A copy of the request, with the params parsed so far.
     fn clone(&self) -> Self {
         let cell = |c: &OnceLock<Params>| {
             let n = OnceLock::new();
@@ -169,7 +179,8 @@ impl Request {
         }
     }
 
-    /// A request from hyper's parts.
+    /// A request from hyper's request parts, its body and the client's
+    /// socket address. Header values that are not UTF-8 are decoded lossily.
     pub fn from_http(parts: &http::request::Parts, body: Bytes, remote: Option<std::net::SocketAddr>) -> Self {
         let target = parts.uri.path_and_query().map(|p| p.as_str()).unwrap_or("/");
         let headers = parts.headers.iter().map(|(n, v)| (n.as_str(), std::str::from_utf8(v.as_bytes()).unwrap_or("")));
@@ -200,26 +211,33 @@ impl Request {
         request
     }
 
-    /// Which forwarded headers to believe (set by the server adapter).
+    /// Sets which forwarded headers to believe for the client's address and
+    /// scheme (the server does this from its options).
     pub fn with_trusted(mut self, trusted: Arc<TrustedHeaders>) -> Self {
         self.trusted = trusted;
         self
     }
 
-    /// The client socket address (`$server['remote_addr']`).
+    /// Sets the client's socket address and port.
+    ///
+    /// PHP: `$server['remote_addr']`, `$server['remote_port']`.
     pub fn with_remote(mut self, addr: impl Into<String>, port: Option<u16>) -> Self {
         self.remote_addr = Some(addr.into());
         self.remote_port = port;
         self
     }
 
-    /// The request-line protocol (`$server['server_protocol']`, `HTTP/1.1`).
+    /// Sets the request-line protocol, such as `HTTP/1.1` (the default).
+    ///
+    /// PHP: `$server['server_protocol']`.
     pub fn with_protocol(mut self, protocol: impl Into<String>) -> Self {
         self.protocol = protocol.into();
         self
     }
 
-    /// The listening port (`$server['server_port']`).
+    /// Sets the port the server listens on.
+    ///
+    /// PHP: `$server['server_port']`.
     pub fn with_server_port(mut self, port: u16) -> Self {
         self.server_port = Some(port);
         self
@@ -227,7 +245,12 @@ impl Request {
 
     // -- server ------------------------------------------------------------
 
-    /// `getServer($key, $default)`.
+    /// A server variable by lowercase name: `request_method`, `request_uri`,
+    /// `path_info` (the decoded path), `query_string`, `server_protocol`,
+    /// `remote_addr`, `remote_port`, `server_port`, `request_time`,
+    /// `request_time_float`, or one set with [`Request::set_server`].
+    ///
+    /// PHP: `getServer($key, $default)`.
     pub fn server(&self, key: &str) -> Option<String> {
         if let Some(v) = self.server.get(key) {
             return Some(v.clone());
@@ -249,7 +272,10 @@ impl Request {
         }
     }
 
-    /// `setServer($key, $value)`.
+    /// Sets a server variable; `request_method` and `request_uri` change the
+    /// method and path.
+    ///
+    /// PHP: `setServer($key, $value)`.
     pub fn set_server(&mut self, key: &str, value: impl Into<String>) -> &mut Self {
         let value = value.into();
         match key {
@@ -264,30 +290,38 @@ impl Request {
 
     // -- request line ------------------------------------------------------
 
-    /// `getMethod()`.
+    /// The HTTP method, such as `GET`.
+    ///
+    /// PHP: `getMethod()`.
     pub fn method(&self) -> &str {
         &self.method
     }
 
-    /// `setMethod($method)`.
+    /// Sets the HTTP method.
+    ///
+    /// PHP: `setMethod($method)`.
     pub fn set_method(&mut self, method: impl Into<String>) -> &mut Self {
         self.method = method.into();
         self
     }
 
-    /// `getURI()`: the request-line path, without the query string, as sent.
+    /// The request-line path, without the query string, as sent.
+    ///
+    /// PHP: `getURI()`.
     pub fn uri(&self) -> &str {
         &self.uri
     }
 
-    /// The path as sent (the request-line target without its query).
+    /// The path as sent (the request-line target without its query); the
+    /// same as [`Request::uri`].
     pub fn path(&self) -> &str {
         &self.uri
     }
 
-    /// The path the router matches (`Http::match()`): `parse_url($uri,
-    /// PHP_URL_PATH)`, `/` when it has none. `//host/path` is a network
-    /// path: only `/path` is matched.
+    /// The path the router matches: the path part of the URI, `/` when it
+    /// has none. `//host/path` is a network path: only `/path` is matched.
+    ///
+    /// PHP: `parse_url($uri, PHP_URL_PATH)`, as `Http::match()` reads it.
     pub fn route_path(&self) -> std::borrow::Cow<'_, str> {
         // A plain absolute path is its own path; anything else goes through parse_url().
         let plain = self.uri.starts_with('/')
@@ -303,7 +337,9 @@ impl Request {
         })
     }
 
-    /// `setURI($uri)`.
+    /// Sets the path.
+    ///
+    /// PHP: `setURI($uri)`.
     pub fn set_uri(&mut self, uri: impl Into<String>) -> &mut Self {
         self.uri = uri.into();
         self
@@ -314,29 +350,35 @@ impl Request {
         self.query_string.as_deref()
     }
 
-    /// The request-line protocol (`HTTP/1.1`).
+    /// The request-line protocol, such as `HTTP/1.1`.
     pub fn version(&self) -> &str {
         &self.protocol
     }
 
-    /// The client socket address.
+    /// The client's socket address, when known and a valid IP.
     pub fn remote_addr(&self) -> Option<IpAddr> {
         self.remote_addr.as_deref().and_then(|a| a.parse().ok())
     }
 
     // -- headers -----------------------------------------------------------
 
-    /// `getHeaders()`.
+    /// Every header.
+    ///
+    /// PHP: `getHeaders()`.
     pub fn headers(&self) -> &Headers {
         &self.headers
     }
 
-    /// `hasHeader($key)`.
+    /// Whether a header is present.
+    ///
+    /// PHP: `hasHeader($key)`.
     pub fn has_header(&self, name: &str) -> bool {
         self.headers.has(name)
     }
 
-    /// `getHeader($key)`: every value (empty when missing).
+    /// Every value of a header (empty when missing).
+    ///
+    /// PHP: `getHeader($key)`.
     pub fn header_values(&self, name: &str) -> &[String] {
         self.headers.get(name).unwrap_or(&[])
     }
@@ -351,58 +393,78 @@ impl Request {
         self.header(name).unwrap_or("")
     }
 
-    /// `getHeaderLine($key, $default)`: the values joined with `", "`.
+    /// The values of a header joined with `", "`, or `None` when missing.
+    ///
+    /// PHP: `getHeaderLine($key, $default)`.
     pub fn header_line(&self, name: &str) -> Option<String> {
         self.headers.line(name)
     }
 
-    /// `getHeaderLine($key, $default)` with its default.
+    /// The values of a header joined with `", "`, or `default` when missing.
+    ///
+    /// PHP: `getHeaderLine($key, $default)`.
     pub fn header_line_or(&self, name: &str, default: &str) -> String {
         self.headers.line(name).unwrap_or_else(|| default.to_owned())
     }
 
-    /// `setHeader($key, $value)`.
+    /// Sets a header to one value, replacing the others.
+    ///
+    /// PHP: `setHeader($key, $value)`.
     pub fn set_header(&mut self, name: &str, value: impl Into<String>) -> &mut Self {
         self.headers.set(name, value);
         self
     }
 
-    /// `addHeader($key, $value)`.
+    /// Appends a value to a header.
+    ///
+    /// PHP: `addHeader($key, $value)`.
     pub fn add_header(&mut self, name: &str, value: impl Into<String>) -> &mut Self {
         self.headers.add(name, value);
         self
     }
 
-    /// `removeHeader($key)`.
+    /// Removes a header.
+    ///
+    /// PHP: `removeHeader($key)`.
     pub fn remove_header(&mut self, name: &str) -> &mut Self {
         self.headers.remove(name);
         self
     }
 
-    /// `getReferer($default)`.
+    /// The `Referer` header, or `default`.
+    ///
+    /// PHP: `getReferer($default)`.
     pub fn referer(&self, default: &str) -> String {
         self.header_line_or("referer", default)
     }
 
-    /// `getOrigin($default)`.
+    /// The `Origin` header, or `default`.
+    ///
+    /// PHP: `getOrigin($default)`.
     pub fn origin(&self, default: &str) -> String {
         self.header_line_or("origin", default)
     }
 
-    /// `getUserAgent($default)`.
+    /// The `User-Agent` header, or `default`.
+    ///
+    /// PHP: `getUserAgent($default)`.
     pub fn user_agent(&self, default: &str) -> String {
         self.header_line_or("user-agent", default)
     }
 
-    /// `getAccept($default)`.
+    /// The `Accept` header, or `default`.
+    ///
+    /// PHP: `getAccept($default)`.
     pub fn accept(&self, default: &str) -> String {
         self.header_line_or("accept", default)
     }
 
     // -- client ------------------------------------------------------------
 
-    /// `getIP()`: the first trusted header carrying a valid IP (its leftmost
-    /// address), else the socket address, else `0.0.0.0`.
+    /// The client's IP: the leftmost address of the first trusted header
+    /// that carries a valid IP, else the socket address, else `0.0.0.0`.
+    ///
+    /// PHP: `getIP()`.
     pub fn ip(&self) -> String {
         for header in self.trusted.ip() {
             let Some(value) = self.headers.line(header) else { continue };
@@ -435,7 +497,11 @@ impl Request {
         None
     }
 
-    /// `getProtocol()`: a trusted proto header, else what the request line says.
+    /// The scheme the client used: the first trusted proto header naming one
+    /// of [`SCHEMES`], else `http` for an `HTTP/1.1` request line and `https`
+    /// for any other protocol.
+    ///
+    /// PHP: `getProtocol()`.
     pub fn protocol(&self) -> String {
         if let Some(trusted) = self.trusted_protocol() {
             return trusted;
@@ -456,7 +522,10 @@ impl Request {
         format!("{}://{}", self.protocol(), host)
     }
 
-    /// `getPort()`: `X-Forwarded-Port`, else the port of the (forwarded) host.
+    /// The port the client connected to: `X-Forwarded-Port`, else the port of
+    /// the `X-Forwarded-Host` or `Host` header, else `""`.
+    ///
+    /// PHP: `getPort()`.
     pub fn port(&self) -> String {
         let authority = self.authority();
         let port = php_std::url::parse_url(authority.as_bytes())
@@ -466,7 +535,10 @@ impl Request {
         self.header_line_or("x-forwarded-port", &port)
     }
 
-    /// `getHostname()`: the lowercased host of the (forwarded) host header.
+    /// The lowercased host name of the `X-Forwarded-Host` or `Host` header,
+    /// without the port; `""` when there is none.
+    ///
+    /// PHP: `getHostname()`.
     pub fn hostname(&self) -> String {
         let authority = self.authority();
         php_std::url::parse_url(authority.as_bytes())
@@ -477,7 +549,10 @@ impl Request {
 
     // -- cookies -----------------------------------------------------------
 
-    /// `getCookieParams()`.
+    /// Every cookie, parsed from the `Cookie` headers (values URL-decoded;
+    /// the first of two cookies with the same name wins).
+    ///
+    /// PHP: `getCookieParams()`.
     pub fn cookies(&self) -> &Params {
         self.cookies.get_or_init(|| {
             let mut array = Array::new();
@@ -489,12 +564,17 @@ impl Request {
         })
     }
 
-    /// `getCookie($key)`: a cookie that is a string.
+    /// The value of a cookie, when it is a plain string (not a bracketed
+    /// array name such as `a[]`).
+    ///
+    /// PHP: `getCookie($key)`.
     pub fn cookie(&self, name: &str) -> Option<&str> {
         self.cookies().get(name).and_then(Value::as_str)
     }
 
-    /// `setCookieParams($cookies)`.
+    /// Replaces the cookies.
+    ///
+    /// PHP: `setCookieParams($cookies)`.
     pub fn set_cookies(&mut self, cookies: Params) -> &mut Self {
         self.cookies = OnceLock::from(cookies);
         self
@@ -513,12 +593,16 @@ impl Request {
         })
     }
 
-    /// The query string parameters (`$request->get`).
+    /// The query string parameters, parsed on first use.
+    ///
+    /// PHP: Swoole's `$request->get`.
     pub fn query_params(&self) -> &Params {
         self.query.get_or_init(|| self.query_string.as_deref().map(params::parse_query).unwrap_or_default())
     }
 
-    /// The body parameters: the JSON body, or the form fields.
+    /// The body parameters, parsed on first use: the JSON body for an
+    /// `application/json` content type, else the form fields (urlencoded or
+    /// multipart).
     pub fn payload_params(&self) -> &Params {
         self.payload.get_or_init(|| {
             let ct = self.headers.line("content-type").unwrap_or_default();
@@ -531,8 +615,10 @@ impl Request {
         })
     }
 
-    /// `getParams()`: the body for POST, PUT, PATCH and DELETE, the query
-    /// string for every other method.
+    /// The request's params: the body params for `POST`, `PUT`, `PATCH` and
+    /// `DELETE`, the query string params for every other method.
+    ///
+    /// PHP: `getParams()`.
     pub fn params(&self) -> &Params {
         if self.has_body_params() { self.payload_params() } else { self.query_params() }
     }
@@ -541,33 +627,43 @@ impl Request {
         matches!(self.method.as_str(), "POST" | "PUT" | "PATCH" | "DELETE")
     }
 
-    /// `getParam($key)` (a `null` value counts as missing).
+    /// A param from [`Request::params`]; a `null` value counts as missing.
+    ///
+    /// PHP: `getParam($key)`.
     pub fn param(&self, key: &str) -> Option<&Value> {
         self.params().get(key).filter(|v| !v.is_null())
     }
 
-    /// `getQuery($key)` (a `null` value counts as missing).
+    /// A query string param; a `null` value counts as missing.
+    ///
+    /// PHP: `getQuery($key)`.
     pub fn query(&self, key: &str) -> Option<&Value> {
         self.query_params().get(key).filter(|v| !v.is_null())
     }
 
-    /// A query string value as a string.
+    /// A query string param, when it is a string.
     pub fn query_value(&self, key: &str) -> Option<&str> {
         self.query_params().get(key).and_then(Value::as_str)
     }
 
-    /// `getPayload($key)` (a `null` value counts as missing).
+    /// A body param; a `null` value counts as missing.
+    ///
+    /// PHP: `getPayload($key)`.
     pub fn payload(&self, key: &str) -> Option<&Value> {
         self.payload_params().get(key).filter(|v| !v.is_null())
     }
 
-    /// `setQueryString($params)`.
+    /// Replaces the query string params.
+    ///
+    /// PHP: `setQueryString($params)`.
     pub fn set_query(&mut self, params: Params) -> &mut Self {
         self.query = OnceLock::from(params);
         self
     }
 
-    /// `setPayload($params)`.
+    /// Replaces the body params.
+    ///
+    /// PHP: `setPayload($params)`.
     pub fn set_payload(&mut self, params: Params) -> &mut Self {
         self.payload = OnceLock::from(params);
         self
@@ -578,14 +674,19 @@ impl Request {
         &self.body
     }
 
-    /// `getRawPayload()`: the body, except that a body of exactly `0` reads
-    /// as empty (`$swoole->rawContent() ?: ''`; quirk kept).
+    /// The raw body, except that a body of exactly `0` reads as empty.
+    ///
+    /// PHP: `getRawPayload()`; the `0` case reproduces
+    /// `$swoole->rawContent() ?: ''` (quirk kept).
     pub fn raw_payload(&self) -> &[u8] {
         if self.body.as_ref() == b"0" { b"" } else { &self.body }
     }
 
-    /// `getFiles($key)`: the uploaded file(s) of a multipart field (field
-    /// names are looked up lowercased, as the Swoole adapter does).
+    /// The uploaded file or files of a multipart field, each an object with
+    /// `name`, `type`, `tmp_name` (the temporary file it was saved to),
+    /// `error` and `size`. The field name is looked up lowercased.
+    ///
+    /// PHP: `getFiles($key)`; lowercased as the Swoole adapter does.
     pub fn files(&self, key: &str) -> Option<&Value> {
         self.post().1.get(&key.to_ascii_lowercase())
     }
@@ -597,8 +698,11 @@ impl Request {
 
     // -- size and ranges ---------------------------------------------------
 
-    /// `getSize()`: the header lines (`name: v1, v2`, joined by `\n`). The
-    /// body is not counted: under Swoole `php://input` is always empty.
+    /// The size of the request in bytes, counted as its header lines
+    /// (`name: v1, v2`, joined by `\n`). The body is not counted.
+    ///
+    /// PHP: `getSize()`; the body is not counted because under Swoole
+    /// `php://input` is always empty.
     pub fn size(&self) -> usize {
         let mut total = 0usize;
         for (i, (name, values)) in self.headers.iter().enumerate() {
@@ -616,7 +720,11 @@ impl Request {
         total
     }
 
-    /// The `Content-Range` header: `getContentRangeUnit/Start/End/Size()`.
+    /// The `Content-Range` header (`bytes 0-99/200`), or `None` when it is
+    /// missing or malformed, or its range is reversed or past the size.
+    ///
+    /// PHP: `getContentRangeUnit()`, `getContentRangeStart()`,
+    /// `getContentRangeEnd()`, `getContentRangeSize()`.
     pub fn content_range(&self) -> Option<Range> {
         let header = self.headers.line("content-range").unwrap_or_default();
         if php_std::value::empty(&Value::String(header.clone())) {
@@ -649,7 +757,10 @@ impl Request {
         Some(Range { unit, start, end: Some(end), size: Some(size) })
     }
 
-    /// The `Range` header: `getRangeUnit/Start/End()`.
+    /// The `Range` header (`bytes=0-99`, or open-ended `bytes=100-`), or
+    /// `None` when it is missing or malformed, or its range is reversed.
+    ///
+    /// PHP: `getRangeUnit()`, `getRangeStart()`, `getRangeEnd()`.
     pub fn range(&self) -> Option<Range> {
         let header = self.headers.line("range").unwrap_or_default();
         if header.is_empty() || header == "0" {

@@ -1,57 +1,78 @@
-//! The HTTP server metrics [`crate::Http::run`] records
-//! (`Http::setTelemetry()`), following the OpenTelemetry semantic
-//! conventions. `utopia-php/telemetry` has no crate yet: these traits are the
-//! part of its adapter the HTTP layer uses, for an exporter to implement.
+//! The HTTP server metrics [`crate::Http::run`] records, following the
+//! OpenTelemetry semantic conventions, and the instrument traits an exporter
+//! implements to receive them.
+//!
+//! PHP: `Http::setTelemetry()`. `utopia-php/telemetry` has no crate yet:
+//! these traits are the part of its adapter the HTTP layer uses.
 
 use std::sync::Arc;
 
 /// A measurement attribute value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Attribute {
+    /// A string value.
     Str(String),
+    /// An integer value.
     Int(i64),
     /// An attribute that does not apply (`null`).
     None,
 }
 
-/// Attributes of a measurement.
+/// Attributes of a measurement: name and value pairs.
 pub type Attributes = [(&'static str, Attribute)];
 
-/// `Utopia\Telemetry\Histogram`.
+/// An instrument that records a distribution of values, such as request
+/// durations or body sizes.
+///
+/// PHP: `Utopia\Telemetry\Histogram`.
 pub trait Histogram: Send + Sync {
+    /// Records `value` with `attributes`.
     fn record(&self, value: f64, attributes: &Attributes);
 }
 
-/// `Utopia\Telemetry\UpDownCounter`.
+/// An instrument that counts up and down, such as requests in flight.
+///
+/// PHP: `Utopia\Telemetry\UpDownCounter`.
 pub trait UpDownCounter: Send + Sync {
+    /// Adds `value` (negative to subtract) with `attributes`.
     fn add(&self, value: i64, attributes: &Attributes);
 }
 
-/// `Utopia\Telemetry\Adapter`: creates instruments.
+/// A metrics exporter: creates the instruments the server records into.
+///
+/// PHP: `Utopia\Telemetry\Adapter`.
 pub trait Telemetry: Send + Sync {
-    /// A histogram; `boundaries` are explicit bucket boundaries, when advised.
+    /// A histogram named `name`, measured in `unit`; `boundaries` are explicit
+    /// bucket boundaries, when advised.
     fn histogram(&self, name: &str, unit: &str, boundaries: Option<&[f64]>) -> Arc<dyn Histogram>;
+    /// An up-down counter named `name`, measured in `unit`.
     fn up_down_counter(&self, name: &str, unit: &str) -> Arc<dyn UpDownCounter>;
 }
 
-/// `Utopia\Telemetry\Adapter\None`: records nothing.
+/// An exporter that records nothing: the default of an application.
+///
+/// PHP: `Utopia\Telemetry\Adapter\None`.
 pub struct NoTelemetry;
 
 struct Nothing;
 
 impl Histogram for Nothing {
+    /// Discards the value.
     fn record(&self, _value: f64, _attributes: &Attributes) {}
 }
 
 impl UpDownCounter for Nothing {
+    /// Discards the value.
     fn add(&self, _value: i64, _attributes: &Attributes) {}
 }
 
 impl Telemetry for NoTelemetry {
+    /// A histogram that discards every value.
     fn histogram(&self, _name: &str, _unit: &str, _boundaries: Option<&[f64]>) -> Arc<dyn Histogram> {
         Arc::new(Nothing)
     }
 
+    /// A counter that discards every value.
     fn up_down_counter(&self, _name: &str, _unit: &str) -> Arc<dyn UpDownCounter> {
         Arc::new(Nothing)
     }
@@ -71,6 +92,7 @@ pub(crate) struct Instruments {
 }
 
 impl Instruments {
+    /// Creates the server's instruments from `telemetry`.
     pub fn new(telemetry: &dyn Telemetry) -> Self {
         Self {
             request_duration: telemetry.histogram("http.server.request.duration", "s", Some(&DURATION_BUCKETS)),

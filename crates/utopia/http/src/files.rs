@@ -1,5 +1,7 @@
-//! `Utopia\Http\Files`: static files loaded into memory and served by
-//! [`crate::Http::run`] for an exact URI match.
+//! Static files loaded into memory and served by [`crate::Http::run`] for an
+//! exact URI match.
+//!
+//! PHP: `Utopia\Http\Files`.
 
 use std::path::Path;
 
@@ -8,17 +10,23 @@ use indexmap::IndexMap;
 
 use crate::error::{Error, Result};
 
-/// MIME types by extension that override content sniffing (`Files::EXTENSIONS`).
+/// MIME types by extension that override content sniffing: CSS, JavaScript
+/// and SVG.
+///
+/// PHP: `Files::EXTENSIONS`.
 pub const EXTENSIONS: [(&str, &str); 3] = [("css", "text/css"), ("js", "text/javascript"), ("svg", "image/svg+xml")];
 
-/// A loaded file.
+/// A loaded file: its contents and MIME type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct File {
+    /// The file's bytes.
     pub contents: Bytes,
+    /// The MIME type, from [`EXTENSIONS`] or sniffed from the contents.
     pub mime: String,
 }
 
-/// Files loaded from directories, by URI (path relative to the load root).
+/// Files loaded from directories, by URI (the path relative to the load root,
+/// starting with `/`).
 #[derive(Debug, Clone, Default)]
 pub struct Files {
     loaded: IndexMap<String, File>,
@@ -27,34 +35,48 @@ pub struct Files {
 }
 
 impl Files {
+    /// An empty set of files.
     pub fn new() -> Self {
         Self::default()
     }
 
-    /// `addMimeType($mimeType)`.
+    /// Adds a MIME type to the registered list (it does not affect loading).
+    ///
+    /// PHP: `addMimeType($mimeType)`.
     pub fn add_mime_type(&mut self, mime: &str) {
         self.mime_types.insert(mime.to_owned(), true);
     }
 
-    /// `removeMimeType($mimeType)`.
+    /// Removes a MIME type from the registered list.
+    ///
+    /// PHP: `removeMimeType($mimeType)`.
     pub fn remove_mime_type(&mut self, mime: &str) {
         self.mime_types.shift_remove(mime);
     }
 
-    /// `getMimeTypes()`.
+    /// The registered MIME types, each mapped to `true`.
+    ///
+    /// PHP: `getMimeTypes()`.
     pub fn mime_types(&self) -> &IndexMap<String, bool> {
         &self.mime_types
     }
 
-    /// `getCount()`.
+    /// The number of files loaded.
+    ///
+    /// PHP: `getCount()`.
     pub fn count(&self) -> usize {
         self.count
     }
 
-    /// `load($directory, $root)`: loads every file under `directory`
-    /// (recursively), skipping dot files and `.php`/`.phtml` files. A file
-    /// already loaded under the same URI is kept. Reading stops at an entry
-    /// named `0` (PHP's `while ($path = readdir())`).
+    /// Loads every file under `directory`, recursively, keyed by its path
+    /// relative to `root` (by default `directory` itself).
+    ///
+    /// Dot files and `.php`/`.phtml` files are skipped, and a file already
+    /// loaded under the same URI is kept. Fails when `directory` cannot be
+    /// read.
+    ///
+    /// PHP: `load($directory, $root)`. Reading stops at an entry named `0`
+    /// (PHP's `while ($path = readdir())`).
     pub fn load(&mut self, directory: &str, root: Option<&str>) -> Result<()> {
         let dir = Path::new(directory);
         if std::fs::read_dir(dir).is_err() && std::fs::metadata(dir).is_err() {
@@ -104,17 +126,24 @@ impl Files {
         Ok(())
     }
 
-    /// `isFileLoaded($uri)`.
+    /// Whether a file is loaded under `uri`.
+    ///
+    /// PHP: `isFileLoaded($uri)`.
     pub fn is_loaded(&self, uri: &str) -> bool {
         self.loaded.contains_key(uri)
     }
 
-    /// `getFileContents($uri)` and `getFileMimeType($uri)`.
+    /// The file loaded under `uri`, or an [`Error::Generic`] when there is
+    /// none.
+    ///
+    /// PHP: `getFileContents($uri)` and `getFileMimeType($uri)`.
     pub fn get(&self, uri: &str) -> Result<&File> {
         self.loaded.get(uri).ok_or_else(|| Error::Generic(format!("File not found or not loaded: {uri}")))
     }
 
-    /// `reset()`.
+    /// Forgets every loaded file and registered MIME type.
+    ///
+    /// PHP: `reset()`.
     pub fn reset(&mut self) {
         self.count = 0;
         self.loaded.clear();
@@ -130,8 +159,12 @@ fn extension(name: &str) -> &str {
     }
 }
 
-/// `mime_content_type()` for the content types static assets have:
-/// signatures of common binary formats, HTML, JSON and text.
+/// Guesses the MIME type of file contents: signatures of common binary
+/// formats (PNG, GIF, JPEG, WebP, PDF, ZIP, gzip), HTML, JSON and text,
+/// else `application/octet-stream`.
+///
+/// PHP: stands in for `mime_content_type()` on the content types static
+/// assets have.
 pub fn sniff(contents: &[u8]) -> &'static str {
     if contents.is_empty() {
         return "application/x-empty";
