@@ -6,27 +6,228 @@ require_once __DIR__ . '/Capture.php';
 require_once __DIR__ . '/Getters.php';
 require_once __DIR__ . '/Harness.php';
 
+use Swoole\Http\Request as SwooleRequest;
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Compression\Compression;
 use Utopia\DI\Container;
 use Utopia\Http\Adapter\Swoole\Mode;
+use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Files;
 use Utopia\Http\Http;
+use Utopia\Http\Response;
 use Utopia\Http\Route;
 use Utopia\Http\Router;
 use Utopia\Http\TrustedHeaders;
 use Utopia\Http\View;
 use Utopia\Telemetry\Adapter\Test as TestTelemetry;
+use Utopia\Validator\Text;
 
 /**
  * Maps tests/compat/http/spec.json operations onto utopia-php/http.
  * Applications are built from their description and requests are parsed by
  * Swoole and dispatched in process (see Harness.php); glue only.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    /** Benchmark inputs, the same as in crates/tools/compat/src/libs/http.rs. */
+    private const array ROUTES = [
+        ['GET', '/v1/account'],
+        ['PATCH', '/v1/account/name'],
+        ['POST', '/v1/account/sessions/email'],
+        ['GET', '/v1/account/sessions'],
+        ['DELETE', '/v1/account/sessions/:sessionId'],
+        ['POST', '/v1/account/jwts'],
+        ['GET', '/v1/users'],
+        ['POST', '/v1/users'],
+        ['GET', '/v1/users/:userId'],
+        ['DELETE', '/v1/users/:userId'],
+        ['GET', '/v1/users/:userId/sessions'],
+        ['GET', '/v1/teams'],
+        ['POST', '/v1/teams'],
+        ['GET', '/v1/teams/:teamId'],
+        ['GET', '/v1/teams/:teamId/memberships'],
+        ['PATCH', '/v1/teams/:teamId/memberships/:membershipId/status'],
+        ['GET', '/v1/databases'],
+        ['POST', '/v1/databases'],
+        ['GET', '/v1/databases/:databaseId'],
+        ['GET', '/v1/databases/:databaseId/collections'],
+        ['POST', '/v1/databases/:databaseId/collections'],
+        ['GET', '/v1/databases/:databaseId/collections/:collectionId'],
+        ['GET', '/v1/databases/:databaseId/collections/:collectionId/attributes'],
+        ['POST', '/v1/databases/:databaseId/collections/:collectionId/attributes/string'],
+        ['GET', '/v1/databases/:databaseId/collections/:collectionId/documents'],
+        ['POST', '/v1/databases/:databaseId/collections/:collectionId/documents'],
+        ['GET', self::DOCUMENT_ROUTE],
+        ['PATCH', self::DOCUMENT_ROUTE],
+        ['DELETE', self::DOCUMENT_ROUTE],
+        ['GET', '/v1/storage/buckets'],
+        ['GET', '/v1/storage/buckets/:bucketId/files'],
+        ['POST', '/v1/storage/buckets/:bucketId/files'],
+        ['GET', '/v1/storage/buckets/:bucketId/files/:fileId'],
+        ['GET', '/v1/storage/buckets/:bucketId/files/:fileId/view'],
+        ['GET', '/v1/storage/buckets/:bucketId/files/:fileId/preview'],
+        ['GET', '/v1/functions'],
+        ['POST', '/v1/functions/:functionId/executions'],
+        ['GET', '/v1/functions/:functionId/executions/:executionId'],
+        ['GET', '/v1/health'],
+        ['GET', '/v1/locale'],
+    ];
+
+    private const string DOCUMENT_ROUTE = '/v1/databases/:databaseId/collections/:collectionId/documents/:documentId';
+
+    private const string DOCUMENT_PATH = '/v1/databases/main/collections/posts/documents/6650c1f2a4b3e9d7c812';
+
+    private const string SESSION = 'eyJpZCI6IjY2NTBjMWYyYTRiM2U5ZDdjODEyIiwic2VjcmV0IjoiNWYzYzlhMWU1ZjNjOWExZSJ9';
+
+    private const int NOW = 1700000000;
+
+    public function benchmarks(): array
+    {
+        return [
+            'match' => ['Match a document path with three params against a router of 40 API routes', function (Session $s) {
+                Router::reset();
+                foreach (self::ROUTES as [$method, $path]) {
+                    Router::addRoute(new Route($method, $path));
+                }
+
+                return fn () => Router::match('GET', self::DOCUMENT_PATH)?->params;
+            }],
+            'request' => ['Parse a JSON POST request (9 headers, a cookie, a query string) and read a header, the cookie, the query and the body params', function (Session $s) {
+                $raw = self::post();
+
+                return function () use ($raw) {
+                    $swoole = SwooleRequest::create();
+                    $swoole->parse($raw);
+                    $request = new Request($swoole);
+
+                    return [
+                        $request->getHeader('x-appwrite-project'),
+                        $request->getCookie('a_session_6650c0de'),
+                        $request->getQuery('project'),
+                        $request->getParams(),
+                    ];
+                };
+            }],
+            'response' => ['Build a 201 response with a header, a session cookie and a JSON user of 18 fields', function (Session $s) {
+                $user = self::user();
+
+                // Capture renders each Set-Cookie line as Swoole does.
+                return function () use ($user) {
+                    $response = new Capture();
+                    $response
+                        ->setStatusCode(201)
+                        ->addHeader('X-Appwrite-Request-Id', '6650c3b9d2e7f4a1c836')
+                        ->addCookie('a_session_6650c0de', self::SESSION, self::NOW + 31536000, '/', '.cloud.appwrite.io', true, true, 'None')
+                        ->json($user);
+
+                    return $response;
+                };
+            }],
+            'dispatch' => ['Run a GET request through an app of 40 routes: match, validate three path params, an init hook and a JSON action', function (Session $s) {
+                Http::reset();
+                $server = new TestServer(new Container());
+                $http = new Http($server, 'UTC');
+                Http::init()
+                    ->groups(['api'])
+                    ->inject('response')
+                    ->action(function (Response $response) {
+                        $response->addHeader('X-Content-Type-Options', 'nosniff');
+                    });
+                foreach (self::ROUTES as [$method, $path]) {
+                    $route = Http::addRoute($method, $path);
+                    if ($method === 'GET' && $path === self::DOCUMENT_ROUTE) {
+                        $route
+                            ->groups(['api', 'databases'])
+                            ->param('databaseId', '', new Text(36), '')
+                            ->param('collectionId', '', new Text(36), '')
+                            ->param('documentId', '', new Text(36), '')
+                            ->inject('response')
+                            ->action(function (string $databaseId, string $collectionId, string $documentId, Response $response) {
+                                $response->json([
+                                    '$id' => $documentId,
+                                    '$collectionId' => $collectionId,
+                                    '$databaseId' => $databaseId,
+                                    '$createdAt' => '2024-05-24T10:15:00.000+00:00',
+                                    '$updatedAt' => '2024-05-24T10:15:00.000+00:00',
+                                    '$permissions' => ['read("any")'],
+                                    'title' => 'Release notes',
+                                    'views' => 1024,
+                                ]);
+                            });
+                    }
+                }
+                $request = Harness::request(['method' => 'GET', 'uri' => self::DOCUMENT_PATH, 'headers' => [
+                    ['Host', 'cloud.appwrite.io'],
+                    ['Accept', 'application/json'],
+                    ['X-Appwrite-Project', '6650c0de'],
+                    ['X-Appwrite-Response-Format', '1.6.0'],
+                ]]);
+
+                return function () use ($http, $server, $request) {
+                    $server->begin();
+                    $response = new Capture();
+                    $http->run($request, $response);
+                    $server->finish();
+
+                    return $response;
+                };
+            }],
+        ];
+    }
+
+    /**
+     * A JSON POST as a browser SDK sends it.
+     */
+    private static function post(): string
+    {
+        $body = '{"documentId":"unique()","data":{"title":"Release notes","status":"published","views":1024,"tags":["rust","php"]},"permissions":["read(\"any\")","update(\"user:6650c1f2a4b3e9d7c812\")"]}';
+
+        return "POST /v1/databases/main/collections/posts/documents?project=6650c0de HTTP/1.1\r\n"
+            . "Host: cloud.appwrite.io\r\n"
+            . "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36\r\n"
+            . "Accept: application/json\r\n"
+            . "Content-Type: application/json\r\n"
+            . "Origin: https://app.example.com\r\n"
+            . "X-Appwrite-Project: 6650c0de\r\n"
+            . "X-Appwrite-Response-Format: 1.6.0\r\n"
+            . 'Cookie: a_session_6650c0de=' . self::SESSION . '; a_session_6650c0de_legacy=' . self::SESSION . "\r\n"
+            . 'Content-Length: ' . \strlen($body) . "\r\n"
+            . "\r\n"
+            . $body;
+    }
+
+    /**
+     * A user as the API returns it.
+     *
+     * @return array<string, mixed>
+     */
+    private static function user(): array
+    {
+        return [
+            '$id' => '6650c1f2a4b3e9d7c812',
+            '$createdAt' => '2024-05-24T10:15:00.000+00:00',
+            '$updatedAt' => '2024-05-24T10:15:00.000+00:00',
+            'name' => 'Ada Lovelace',
+            'registration' => '2024-05-24T10:15:00.000+00:00',
+            'status' => true,
+            'labels' => ['admin', 'beta'],
+            'passwordUpdate' => '2024-05-24T10:15:00.000+00:00',
+            'email' => 'ada@example.com',
+            'phone' => '+14155550100',
+            'emailVerification' => true,
+            'phoneVerification' => false,
+            'mfa' => false,
+            'prefs' => ['theme' => 'dark', 'language' => 'en'],
+            'targets' => [],
+            'accessedAt' => '2024-05-24T10:15:00.000+00:00',
+            'hash' => 'argon2',
+            'hashOptions' => ['type' => 'argon2', 'memoryCost' => 7168, 'timeCost' => 5, 'threads' => 1],
+        ];
+    }
+
     public function operations(): array
     {
         return [

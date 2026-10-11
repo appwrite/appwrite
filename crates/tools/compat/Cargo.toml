@@ -19,6 +19,7 @@ path = "src/bin/compat-driver.rs"
 base64.workspace = true
 bytes.workspace = true
 futures-util.workspace = true
+httparse.workspace = true
 indexmap.workspace = true
 p256 = { workspace = true, features = ["pem"] }
 proc-macro2.workspace = true

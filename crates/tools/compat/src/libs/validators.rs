@@ -37,13 +37,55 @@ pub const OPS: &[&str] = &[
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("text", "Validate a 33-character name against Text(128)"),
+    ("url", "Validate an OAuth2 callback URL with a query string against URL()"),
+    ("range", "Validate an integer page limit against Range(1, 5000)"),
+    ("json", "Validate a JSON document string of 221 bytes against JSON"),
+    ("list", "Validate a list of 8 permission strings against ArrayList(Text(256), 100)"),
+    ("any-of", "Validate an ID string against AnyOf(Integer, Text(36)), failing the first rule"),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("validators: no benchmark `{name}`")))
+/// A document as clients send it in a JSON string param.
+const DOCUMENT: &str = r#"{"title":"Release notes","status":"published","views":1024,"rating":4.5,"tags":["rust","php","benchmarks"],"author":{"id":"6650c1f2a4b3","name":"Ada Lovelace"},"published":true,"createdAt":"2024-05-24T10:15:00.000+00:00"}"#;
+
+pub async fn bench(name: &str, _session: &mut Session) -> Result<crate::bench::Bench, Fault> {
+    use std::hint::black_box;
+
+    use crate::bench::Bench;
+
+    fn run(validator: impl Validator + 'static, value: Value) -> Bench {
+        Bench::sync(move || {
+            black_box(validator.is_valid(black_box(&value)));
+        })
+    }
+
+    Ok(match name {
+        "text" => run(Text::new(128), json!("Production API for the mobile app")),
+        "url" => run(
+            Url::default(),
+            json!("https://cloud.appwrite.io/v1/account/sessions/oauth2/callback/github/console?code=4f2a9c&state=xyz"),
+        ),
+        "range" => run(Range::new(1, 5000), json!(25)),
+        "json" => run(Json, json!(DOCUMENT)),
+        "list" => run(
+            ArrayList::new(Text::new(256), 100),
+            json!([
+                "read(\"any\")",
+                "read(\"users\")",
+                "update(\"user:6650c1f2a4b3\")",
+                "delete(\"user:6650c1f2a4b3\")",
+                "read(\"team:5f9d2c1b/owner\")",
+                "update(\"team:5f9d2c1b/owner\")",
+                "read(\"label:admin\")",
+                "write(\"member:6650c1f2a4b3\")"
+            ]),
+        ),
+        "any-of" => {
+            run(AnyOf::new(vec![Box::new(Integer::default()), Box::new(Text::new(36))]), json!("6650c1f2a4b3e9d7c812"))
+        }
+        _ => return Err(Fault::new(format!("validators: no benchmark `{name}`"))),
+    })
 }
 
 type Shared = Arc<dyn Validator>;
