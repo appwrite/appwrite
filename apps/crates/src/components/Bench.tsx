@@ -74,16 +74,24 @@ export function Performance({ bench, id }: { bench: Bench | null; id?: string })
   )
 }
 
-/** A library's overall speedup over PHP, for cards and headers. */
+/** A library's overall speedup over PHP, for cards and headers, worded by direction. */
 export function SpeedupBadge({ bench }: { bench: { speedup: number; benchmarks: number } | null }) {
   if (!bench) return null
+  const x = bench.speedup
+  // At or above 1 Rust is faster; down to the gate's parity bound it is level; below it, slower.
+  const [label, tone] =
+    x >= 1
+      ? [`${times(x)} faster`, 'bg-ok-soft text-ok-ink']
+      : x >= 0.95
+        ? ['at parity', 'bg-muted text-muted-foreground']
+        : [`${times(1 / x)} slower`, 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300']
   return (
     <span
-      className="inline-flex items-center gap-1 rounded-full bg-ok-soft px-2 py-0.5 text-[11px] font-medium text-ok-ink"
-      title={`Geometric mean of ${bench.benchmarks} benchmark${bench.benchmarks === 1 ? '' : 's'} against PHP`}
+      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-medium ${tone}`}
+      title={`Geometric mean of ${bench.benchmarks} benchmark${bench.benchmarks === 1 ? '' : 's'} against PHP: ${x.toFixed(2)}x PHP's speed`}
     >
       <Gauge className="size-3" />
-      {times(bench.speedup)} faster
+      {label}
     </span>
   )
 }
