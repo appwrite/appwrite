@@ -318,9 +318,15 @@ class Create extends Action
             ]);
 
             try {
-                $membership = ($isPrivilegedUser || $isAppUser) ?
-                    $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
-                    $dbForProject->createDocument('memberships', $membership);
+                if ($isPrivilegedUser || $isAppUser) {
+                    $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team) {
+                        $created = $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership));
+                        $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+                        return $created;
+                    });
+                } else {
+                    $membership = $dbForProject->createDocument('memberships', $membership);
+                }
             } catch (Duplicate $th) {
                 if ($inviteeCreated) {
                     $membershipCount = $authorization->skip(
@@ -333,10 +339,6 @@ class Create extends Action
                     }
                 }
                 throw new Exception(Exception::MEMBERSHIP_ALREADY_EXISTS);
-            }
-
-            if ($isPrivilegedUser || $isAppUser) {
-                $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
             }
         } elseif ($membership->getAttribute('confirm') === false) {
             $secretHash = $proofForToken->hash($secret);
