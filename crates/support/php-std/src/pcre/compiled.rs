@@ -13,7 +13,7 @@
 
 use std::sync::Arc;
 
-use super::exec::{MatchData, UNSET};
+use super::ffi::UNSET;
 use super::{Call, CompileFailure, Regex, cached};
 
 /// The groups of one match of [`Regex::captures`], as `preg_match()` puts
@@ -21,7 +21,36 @@ use super::{Call, CompileFailure, Regex, cached};
 #[derive(Debug, Clone)]
 pub struct Captures<'s> {
     subject: &'s [u8],
-    md: MatchData,
+    ovector: Offsets,
+}
+
+/// The offset pairs of the groups a match set: inline for up to
+/// [`INLINE`] groups, which is most patterns.
+#[derive(Debug, Clone)]
+enum Offsets {
+    Inline { len: usize, pairs: [usize; 2 * INLINE] },
+    Heap(Vec<usize>),
+}
+
+const INLINE: usize = 6;
+
+impl Offsets {
+    fn new(ov: &[usize]) -> Self {
+        if ov.len() <= 2 * INLINE {
+            let mut pairs = [0; 2 * INLINE];
+            pairs[..ov.len()].copy_from_slice(ov);
+            Offsets::Inline { len: ov.len(), pairs }
+        } else {
+            Offsets::Heap(ov.to_vec())
+        }
+    }
+
+    fn as_slice(&self) -> &[usize] {
+        match self {
+            Offsets::Inline { len, pairs } => &pairs[..*len],
+            Offsets::Heap(v) => v,
+        }
+    }
 }
 
 impl<'s> Captures<'s> {
@@ -29,22 +58,20 @@ impl<'s> Captures<'s> {
     /// after the last one that took part in the match); an unset group
     /// before it is `""`.
     pub fn get(&self, group: usize) -> Option<&'s [u8]> {
-        if group >= self.md.count {
-            return None;
-        }
-        let (start, end) = (self.md.ovector[2 * group], self.md.ovector[2 * group + 1]);
+        let ov = self.ovector.as_slice();
+        let (start, end) = (*ov.get(2 * group)?, ov[2 * group + 1]);
         Some(if start == UNSET { &[] } else { &self.subject[start..end] })
     }
 
     /// `count($matches)` (without named groups): the whole match and every
     /// group up to the last one set.
     pub fn len(&self) -> usize {
-        self.md.count
+        self.ovector.as_slice().len() / 2
     }
 
     /// Always `false`: a match has at least the whole match.
     pub fn is_empty(&self) -> bool {
-        self.md.count == 0
+        self.ovector.as_slice().is_empty()
     }
 }
 
@@ -60,8 +87,12 @@ impl Regex {
     /// `preg_match($regex, $subject, $matches) === 1`: the groups of the
     /// first match, or `None` when there is none or the match fails.
     pub fn captures<'s>(&self, subject: &'s [u8]) -> Option<Captures<'s>> {
-        match self.call(subject, 0, self.first_call(subject.is_empty())) {
-            Ok(Some(md)) if md.ovector[1] >= md.ovector[0] => Some(Captures { subject, md }),
+        let mut session = self.session();
+        match self.call(&mut session, subject, 0, self.first_call(subject.is_empty())) {
+            Ok(Some(count)) => {
+                let ov = session.ovector(count);
+                (ov[1] >= ov[0]).then(|| Captures { subject, ovector: Offsets::new(ov) })
+            }
             _ => None,
         }
     }
@@ -70,8 +101,13 @@ impl Regex {
     /// retries an empty match at the same position (anchored, not empty at
     /// start), and a failure there makes the result `false`.
     pub fn is_match(&self, subject: &[u8]) -> bool {
-        match self.call(subject, 0, self.first_call(subject.is_empty())) {
-            Ok(Some(md)) => md.ovector[1] != md.ovector[0] || self.call(subject, md.ovector[1], Call::Retry).is_ok(),
+        let mut session = self.session();
+        match self.call(&mut session, subject, 0, self.first_call(subject.is_empty())) {
+            Ok(Some(count)) => {
+                let ov = session.ovector(count);
+                let (start, end) = (ov[0], ov[1]);
+                end != start || self.call(&mut session, subject, end, Call::Retry).is_ok()
+            }
             _ => false,
         }
     }

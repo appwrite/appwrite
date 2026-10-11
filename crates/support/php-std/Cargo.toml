@@ -28,5 +28,11 @@ sha3.workspace = true
 whirlpool.workspace = true
 xxhash-rust.workspace = true
 
+[build-dependencies]
+# PCRE2 10.44 with its JIT, from the sources PHP 8.5 bundles (pcre2/): the
+# preg_* functions run user patterns, which must behave exactly as in PHP, and
+# no Rust engine does (see src/pcre.rs).
+cc.workspace = true
+
 [package.metadata.utopia]
 category = "platform"

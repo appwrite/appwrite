@@ -55,6 +55,8 @@ base64 = "0.22"
 blowfish = { version = "0.9", features = ["bcrypt"] }
 brotli = { version = "8", default-features = false, features = ["std"] }
 bytes = "1"
+# Compiles the PCRE2 10.44 sources php-std vendors (crates/support/php-std/pcre2).
+cc = "1"
 chrono = { version = "0.4", default-features = false, features = ["clock", "std", "serde"] }
 crc32fast = "1"
 ctr = "0.9"

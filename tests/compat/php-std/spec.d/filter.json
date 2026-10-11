@@ -151,6 +151,30 @@
           }
         },
         {
+          "name": "email_tricky",
+          "iterations": 6000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "filter_email_tricky"
+              },
+              "filter": {
+                "gen": "const",
+                "value": 274
+              },
+              "options": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1048576
+                ]
+              }
+            }
+          }
+        },
+        {
           "name": "domain",
           "iterations": 2000,
           "args": {
@@ -2075,6 +2099,443 @@
             67108864,
             16777216,
             268435456
+          ]
+        }
+      ]
+    },
+    "filter_email_tricky": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "pick",
+                "from": [
+                  "a",
+                  "Z",
+                  "9",
+                  "x.y",
+                  "!#$%&'*+-/=?^_`{|}~",
+                  ".",
+                  "..",
+                  "\"",
+                  "\"\"",
+                  "\"\"\"",
+                  "\"a\"",
+                  "\"a b\"",
+                  "\"a\\\"b\"",
+                  "\"\\\\\"",
+                  "\\",
+                  "\\a",
+                  "\\\"",
+                  "\\",
+                  "\"\\\"",
+                  "\"\"",
+                  " ",
+                  "\n",
+                  "\t",
+                  "\u0000",
+                  "\"\\\u0000\"",
+                  "\"\\\n\"",
+                  "(",
+                  ")",
+                  ",",
+                  ":",
+                  ";",
+                  "<",
+                  "[",
+                  "]",
+                  "@",
+                  "é",
+                  "ü",
+                  "ß",
+                  "²",
+                  "K",
+                  "ſ",
+                  "\"\\K\"",
+                  "\"\\ſ\"",
+                  "\"\\é\"",
+                  "İ",
+                  "ı",
+                  "😀",
+                  "́",
+                  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                ]
+              },
+              "sep": "",
+              "min": 0,
+              "max": 8
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "pick",
+                "from": [
+                  "a",
+                  "\\a",
+                  "\"a\"",
+                  ".",
+                  "é"
+                ]
+              },
+              "sep": "",
+              "min": 60,
+              "max": 70
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "pick",
+                "from": [
+                  "\"a\"",
+                  "\"\"",
+                  "a"
+                ]
+              },
+              "sep": ".",
+              "min": 1,
+              "max": 6
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "@",
+            "@",
+            "@",
+            "@",
+            "\"@",
+            "@@",
+            ""
+          ]
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "pick",
+                "from": [
+                  "a",
+                  "b1",
+                  "1b",
+                  "a-b",
+                  "a--b",
+                  "-a",
+                  "a-",
+                  "xn--a",
+                  "XN--bcher-kva",
+                  "xn--",
+                  "COM",
+                  "cK",
+                  "ſ",
+                  "ü",
+                  "a_b",
+                  "",
+                  "1",
+                  "123",
+                  "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghij",
+                  "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijk",
+                  "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijkl",
+                  "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklm"
+                ]
+              },
+              "sep": ".",
+              "min": 1,
+              "max": 6
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "repeat",
+                  "part": {
+                    "gen": "pick",
+                    "from": [
+                      "a",
+                      "b1",
+                      "c-d"
+                    ]
+                  },
+                  "sep": ".",
+                  "min": 1,
+                  "max": 130
+                },
+                {
+                  "gen": "pick",
+                  "from": [
+                    ".com",
+                    ".c",
+                    ".1",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "gen": "concat",
+              "parts": [
+                {
+                  "gen": "pick",
+                  "from": [
+                    "[",
+                    "[",
+                    "["
+                  ]
+                },
+                {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "repeat",
+                      "part": {
+                        "gen": "pick",
+                        "from": [
+                          "0",
+                          "1",
+                          "01",
+                          "9",
+                          "10",
+                          "99",
+                          "100",
+                          "199",
+                          "200",
+                          "249",
+                          "250",
+                          "255",
+                          "256",
+                          "300",
+                          "1000",
+                          ""
+                        ]
+                      },
+                      "sep": ".",
+                      "min": 3,
+                      "max": 5
+                    },
+                    {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "IPv6:",
+                            "ipv6:",
+                            "IPV6:",
+                            "İPv6:",
+                            "IPv6"
+                          ]
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "1",
+                              "ff",
+                              "ABC",
+                              "beef",
+                              "12345",
+                              "g",
+                              "0",
+                              ""
+                            ]
+                          },
+                          "sep": ":",
+                          "min": 0,
+                          "max": 9
+                        }
+                      ]
+                    },
+                    {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "IPv6:",
+                            "ipv6:"
+                          ]
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "1",
+                              "ff",
+                              "ABC",
+                              "beef",
+                              "12345",
+                              "g",
+                              "0",
+                              ""
+                            ]
+                          },
+                          "sep": ":",
+                          "min": 0,
+                          "max": 9
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "::",
+                            ":",
+                            ""
+                          ]
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "1",
+                              "ff",
+                              "ABC",
+                              "beef",
+                              "12345",
+                              "g",
+                              "0",
+                              ""
+                            ]
+                          },
+                          "sep": ":",
+                          "min": 0,
+                          "max": 9
+                        }
+                      ]
+                    },
+                    {
+                      "gen": "concat",
+                      "parts": [
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "IPv6:",
+                            "ipv6:"
+                          ]
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "1",
+                              "ff",
+                              "ABC",
+                              "beef",
+                              "12345",
+                              "g",
+                              "0",
+                              ""
+                            ]
+                          },
+                          "sep": ":",
+                          "min": 0,
+                          "max": 9
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "::",
+                            ":",
+                            ""
+                          ]
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "1",
+                              "ff",
+                              "ABC",
+                              "beef",
+                              "12345",
+                              "g",
+                              "0",
+                              ""
+                            ]
+                          },
+                          "sep": ":",
+                          "min": 0,
+                          "max": 9
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            ":",
+                            "::",
+                            ""
+                          ]
+                        },
+                        {
+                          "gen": "repeat",
+                          "part": {
+                            "gen": "pick",
+                            "from": [
+                              "0",
+                              "1",
+                              "01",
+                              "9",
+                              "10",
+                              "99",
+                              "100",
+                              "199",
+                              "200",
+                              "249",
+                              "250",
+                              "255",
+                              "256",
+                              "300",
+                              "1000",
+                              ""
+                            ]
+                          },
+                          "sep": ".",
+                          "min": 3,
+                          "max": 5
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "pick",
+                  "from": [
+                    "]",
+                    "]",
+                    "]",
+                    "",
+                    "]\n",
+                    "]]"
+                  ]
+                }
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ab1-.[]:K",
+              "min": 0,
+              "max": 10
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "",
+            "",
+            "",
+            "\n",
+            ".",
+            " "
           ]
         }
       ]

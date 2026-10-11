@@ -1475,6 +1475,7 @@ dependencies = [
  "argon2",
  "blowfish",
  "bytes",
+ "cc",
  "getrandom 0.3.4",
  "gost94",
  "icu_normalizer",
