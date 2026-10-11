@@ -17,6 +17,19 @@ pub trait Codec: Send + Sync + 'static {
 
     /// The value `bytes` hold.
     fn decode(&self, bytes: &[u8]) -> Result<Value>;
+
+    /// The bytes stored for the [`Envelope`](crate::Envelope) record
+    /// `['time' => $time, 'data' => $data]`.
+    ///
+    /// The default builds the record, copying `data`, and encodes it;
+    /// override it to write the record around the borrowed data ([`Json`]
+    /// does).
+    fn encode_envelope(&self, time: i64, data: &Value) -> Result<Vec<u8>> {
+        let mut record = Array::with_capacity(2);
+        record.set(ArrayKey::from("time"), Value::Int(time));
+        record.set(ArrayKey::from("data"), data.clone());
+        self.encode(&Value::Array(record))
+    }
 }
 
 /// JSON, the format every adapter has always written.
@@ -51,6 +64,22 @@ impl Codec for Json {
             .map_err(|e| Error::Json(e.message().to_owned()))
     }
 
+    /// `{"time":<time>,"data":<data>}`: `json_encode()` of the record,
+    /// written around the encoded data. The data sits one level down, so it
+    /// is encoded with one level less of depth, failing exactly where the
+    /// record would.
+    fn encode_envelope(&self, time: i64, data: &Value) -> Result<Vec<u8>> {
+        let data = json::encode(data, Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH - 1)
+            .map_err(|e| Error::Json(e.message().to_owned()))?;
+        let mut out = Vec::with_capacity(data.len() + 40);
+        out.extend_from_slice(b"{\"time\":");
+        out.extend_from_slice(time.to_string().as_bytes());
+        out.extend_from_slice(b",\"data\":");
+        out.extend_from_slice(data.as_bytes());
+        out.push(b'}');
+        Ok(out)
+    }
+
     fn decode(&self, bytes: &[u8]) -> Result<Value> {
         let flags = Flags::THROW_ON_ERROR;
         let map = |e: json::Error| Error::Json(e.message().to_owned());
@@ -66,9 +95,13 @@ impl Codec for Json {
 /// No empty object (`{`, blanks, `}`) anywhere in the text, so the plain array
 /// decode keeps every value.
 ///
-/// PHP: `preg_match('/\{\s*\}/', $text) === 0`.
+/// PHP: `preg_match('/\{\s*\}/', $text) === 0`, scanned natively: `\s`
+/// without `/u` is space, `\t`, `\n`, `\v`, `\f` and `\r`.
 fn has_empty_object(text: &[u8]) -> bool {
-    !matches!(php_std::pcre::preg_match_bare(br"/\{\s*\}/", text).map(|p| p.value), Ok(php_std::pcre::Value::Int(0)))
+    text.iter().enumerate().any(|(i, &b)| {
+        b == b'{'
+            && text[i + 1..].iter().find(|c| !matches!(c, b' ' | b'\t' | b'\n' | 0x0b | 0x0c | b'\r')) == Some(&b'}')
+    })
 }
 
 /// Objects with properties become arrays (their names normalised to array
@@ -158,11 +191,46 @@ impl Codec for AnyCodec {
             AnyCodec::Igbinary => Igbinary.decode(bytes),
         }
     }
+
+    fn encode_envelope(&self, time: i64, data: &Value) -> Result<Vec<u8>> {
+        match self {
+            AnyCodec::Json => Json.encode_envelope(time, data),
+            AnyCodec::Igbinary => Igbinary.encode_envelope(time, data),
+        }
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The record `encode_envelope` writes is the one `encode` writes.
+    #[test]
+    fn json_envelopes_match_the_record() {
+        let nested =
+            |depth: usize| (1..depth).fold(Value::Array(Array::new()), |v, _| Value::Array(Array::from_list(vec![v])));
+        let values = [
+            Value::from("x"),
+            Value::Str(b"\xff".as_slice().into()),
+            Value::Array(Array::from_entries(
+                [("a/b".into(), Value::Float(0.1)), (ArrayKey::Int(3), Value::Null)],
+                None,
+            )),
+            Value::Array(Array::from_list(vec![Value::Object(Array::new()), Value::Float(f64::NAN)])),
+            nested(510),
+            nested(511),
+            nested(512),
+        ];
+        for value in values {
+            for time in [0, -5, 1_700_000_000, i64::MAX] {
+                let mut record = Array::with_capacity(2);
+                record.set(ArrayKey::from("time"), Value::Int(time));
+                record.set(ArrayKey::from("data"), value.clone());
+                let expected = Json.encode(&Value::Array(record)).map_err(|e| e.to_string());
+                assert_eq!(Json.encode_envelope(time, &value).map_err(|e| e.to_string()), expected);
+            }
+        }
+    }
 
     #[test]
     fn detects_empty_objects() {
