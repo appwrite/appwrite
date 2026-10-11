@@ -3190,6 +3190,191 @@
           ]
         }
       ]
+    },
+    {
+      "name": "a balancer changed after it joined a group changes in the group",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-1",
+              "cpu": 91,
+              "online": false
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "lon-1",
+              "cpu": 40,
+              "online": true
+            }
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.new",
+          "args": {
+            "name": "workers"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.get_options",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "o2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.get_options",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": [
+            {
+              "dataCenter": "fra-1",
+              "cpu": 91,
+              "online": false
+            },
+            {
+              "dataCenter": "lon-1",
+              "cpu": 40,
+              "online": true
+            }
+          ]
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "dataCenter": "fra-1",
+            "cpu": 91,
+            "online": false
+          }
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "filter": {
+              "key": "online",
+              "op": "===",
+              "value": true
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "dataCenter": "lon-1",
+            "cpu": 40,
+            "online": true
+          }
+        },
+        {
+          "op": "balancer.get_filtered_options",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": [
+            {
+              "dataCenter": "lon-1",
+              "cpu": 40,
+              "online": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }

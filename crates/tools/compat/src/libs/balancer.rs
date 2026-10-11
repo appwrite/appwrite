@@ -168,6 +168,17 @@ impl Algorithm<Shared> for Algo {
 }
 
 type Bal = Balancer<Shared, Algo>;
+type SharedGroup = Arc<Mutex<Group<Shared, Algo>>>;
+
+/// A balancer handle. PHP's `Group::add` keeps the same balancer object, so
+/// options and filters added to it later show in every group holding it; the
+/// Rust group owns its balancers, so changes are applied to each group's copy
+/// too (through `balancers_mut`). Options and the algorithm are shared
+/// already (both are `Arc`s).
+struct Linked {
+    own: Bal,
+    groups: Vec<(SharedGroup, usize)>,
+}
 
 fn lock<T>(m: &Arc<Mutex<T>>) -> std::sync::MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())
@@ -244,11 +255,10 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
     let a = Args(args);
     let option = |s: &Session, key: &str| -> Result<Shared, Fault> { s.get::<Shared>(a.value(key)?).cloned() };
     let algo = |s: &Session| -> Result<Algo, Fault> { s.get::<Algo>(a.value("algorithm")?).cloned() };
-    let bal =
-        |s: &Session| -> Result<Arc<Mutex<Bal>>, Fault> { s.get::<Arc<Mutex<Bal>>>(a.value("balancer")?).cloned() };
-    let group = |s: &Session| -> Result<Arc<Mutex<Group<Shared, Algo>>>, Fault> {
-        s.get::<Arc<Mutex<Group<Shared, Algo>>>>(a.value("group")?).cloned()
+    let bal = |s: &Session| -> Result<Arc<Mutex<Linked>>, Fault> {
+        s.get::<Arc<Mutex<Linked>>>(a.value("balancer")?).cloned()
     };
+    let group = |s: &Session| -> Result<SharedGroup, Fault> { s.get::<SharedGroup>(a.value("group")?).cloned() };
     let result = match op {
         "option.new" => {
             Outcome::Ok(session.handle::<Shared>(Arc::new(Mutex::new(Candidate::new(state(a.opt("state")))))))
@@ -313,25 +323,34 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         },
         "balancer.new" => {
             let b: Bal = Balancer::new(algo(session)?);
-            Outcome::Ok(session.handle(Arc::new(Mutex::new(b))))
+            Outcome::Ok(session.handle(Arc::new(Mutex::new(Linked { own: b, groups: Vec::new() }))))
         }
-        "balancer.get_algo" => Outcome::ok(lock(&bal(session)?).algorithm().name()),
+        "balancer.get_algo" => Outcome::ok(lock(&bal(session)?).own.algorithm().name()),
         "balancer.add_option" => {
             let o = option(session, "option")?;
-            lock(&bal(session)?).add_option(o);
+            let b = bal(session)?;
+            let mut b = lock(&b);
+            b.own.add_option(o.clone());
+            for (g, i) in &b.groups {
+                lock(g).balancers_mut()[*i].add_option(o.clone());
+            }
             Outcome::Ok(Value::Null)
         }
         "balancer.add_filter" => {
-            let f = filter(a.value("filter")?)?;
-            lock(&bal(session)?).add_filter(f);
+            let b = bal(session)?;
+            let mut b = lock(&b);
+            b.own.add_filter(filter(a.value("filter")?)?);
+            for (g, i) in &b.groups {
+                lock(g).balancers_mut()[*i].add_filter(filter(a.value("filter")?)?);
+            }
             Outcome::Ok(Value::Null)
         }
-        "balancer.get_options" => Outcome::Ok(states(lock(&bal(session)?).options())?),
-        "balancer.get_filtered_options" => Outcome::Ok(states(lock(&bal(session)?).filtered())?),
+        "balancer.get_options" => Outcome::Ok(states(lock(&bal(session)?).own.options())?),
+        "balancer.get_filtered_options" => Outcome::Ok(states(lock(&bal(session)?).own.filtered())?),
         "balancer.run" => {
             let b = bal(session)?;
             let mut b = lock(&b);
-            match b.run() {
+            match b.own.run() {
                 Ok(o) => Outcome::Ok(chosen(o)?),
                 Err(e) => err(e),
             }
@@ -358,8 +377,15 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             Outcome::Ok(session.handle(Arc::new(Mutex::new(g))))
         }
         "group.add" => {
-            let b = lock(&bal(session)?).clone();
-            lock(&group(session)?).add(b);
+            let b = bal(session)?;
+            let mut b = lock(&b);
+            let g = group(session)?;
+            let index = {
+                let mut g = lock(&g);
+                g.add(b.own.clone());
+                g.balancers().len() - 1
+            };
+            b.groups.push((g, index));
             Outcome::Ok(Value::Null)
         }
         "group.get_options" => Outcome::Ok(states(lock(&group(session)?).options())?),
