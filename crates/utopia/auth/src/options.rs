@@ -1,12 +1,17 @@
+//! The options document of a password hash: the settings stored with each
+//! hash so it can be rebuilt and verified later.
+
 use php_std::format::Arg;
 use php_std::{Array, ArrayKey, Str, Value};
 
-/// The options document of a [`Hash`](crate::Hash) (`Hash::getOptions()`).
+/// The options of a [`Hash`](crate::Hash): an ordered map of names to values.
 ///
 /// Appwrite persists it as a user's `hashOptions` and rebuilds the hash from
-/// it ([`crate::proofs::Password::create_hash`]), so it is a contract: an
-/// ordered map with PHP's array semantics (insertion order, `"7"` is key
-/// `7`, setting an existing key keeps its position) holding any PHP value.
+/// it ([`crate::proofs::Password::create_hash`]), so it is a contract: keys
+/// keep their insertion order, a numeric string such as `"7"` is the integer
+/// key `7`, and setting an existing key keeps its position.
+///
+/// PHP: `Hash::getOptions()`, a PHP array holding any PHP value.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Options(Array);
 
@@ -16,22 +21,30 @@ impl Options {
         Self::default()
     }
 
-    /// `setOption($key, $value)`.
+    /// Sets the option `key`, keeping its position when it already exists.
+    ///
+    /// PHP: `setOption($key, $value)`.
     pub fn set(&mut self, key: &str, value: impl OptionValue) {
         self.0.set(ArrayKey::from_bytes(key.as_bytes()), value.into_value());
     }
 
-    /// `$options[$key]`, including a stored `null`.
+    /// The option `key` as stored, including a null value.
+    ///
+    /// PHP: `$options[$key]`.
     pub fn raw(&self, key: &str) -> Option<&Value> {
         self.0.get(&ArrayKey::from_bytes(key.as_bytes()))
     }
 
-    /// `getOption($key)`: `$options[$key] ?? null` (a stored `null` is absent).
+    /// The option `key`, or `None` when it is missing or null.
+    ///
+    /// PHP: `getOption($key)`, which is `$options[$key] ?? null`.
     pub fn get(&self, key: &str) -> Option<&Value> {
         self.raw(key).filter(|v| !matches!(v, Value::Null))
     }
 
-    /// The document as a PHP array.
+    /// The options as an ordered array, to persist or inspect.
+    ///
+    /// PHP: the array `getOptions()` returns.
     pub fn as_array(&self) -> &Array {
         &self.0
     }
@@ -58,55 +71,64 @@ impl Options {
     }
 }
 
-/// A value an option can hold.
+/// A Rust value that can be stored as an option: strings, byte strings,
+/// integers, booleans and [`Value`].
 pub trait OptionValue {
-    /// The PHP value stored.
+    /// The value as stored in the options document.
     fn into_value(self) -> Value;
 }
 
 impl OptionValue for Value {
+    /// Stores the value as is.
     fn into_value(self) -> Value {
         self
     }
 }
 
 impl OptionValue for &str {
+    /// Stores the text as a string.
     fn into_value(self) -> Value {
         Value::Str(Str::copy_from(self.as_bytes()))
     }
 }
 
 impl OptionValue for String {
+    /// Stores the text as a string.
     fn into_value(self) -> Value {
         Value::Str(Str::from(self.into_bytes()))
     }
 }
 
 impl OptionValue for Vec<u8> {
+    /// Stores the bytes as a string.
     fn into_value(self) -> Value {
         Value::Str(Str::from(self))
     }
 }
 
 impl OptionValue for i64 {
+    /// Stores the integer.
     fn into_value(self) -> Value {
         Value::Int(self)
     }
 }
 
 impl OptionValue for i32 {
+    /// Stores the integer, widened to 64 bits.
     fn into_value(self) -> Value {
         Value::Int(i64::from(self))
     }
 }
 
 impl OptionValue for bool {
+    /// Stores the boolean.
     fn into_value(self) -> Value {
         Value::Bool(self)
     }
 }
 
 impl From<Array> for Options {
+    /// Options from an array, such as a user's stored `hashOptions`.
     fn from(array: Array) -> Self {
         Options(array)
     }

@@ -1,10 +1,10 @@
-//! cbor-php's default tags (`Decoder::DEFAULT_TAGS`): the checks each tag
-//! class makes on its content when it is decoded, and what it normalizes to.
-//! Unregistered tags are `GenericTag`s, which normalize to their content.
+//! The CBOR tags the passkey decoder knows: the checks each makes on its
+//! content and what it decodes to. Unknown tags decode to their content.
 //!
-//! The decimal fraction and big float tags (4, 5) need PHP's bcmath
-//! extension, which the reference runtime does not load: their constructor
-//! throws, so they never decode.
+//! PHP: cbor-php's default tags (`Decoder::DEFAULT_TAGS`); unregistered
+//! tags are `GenericTag`s. The decimal fraction and big float tags (4, 5)
+//! need PHP's bcmath extension, which the reference runtime does not load:
+//! their constructor throws, so they never decode.
 
 use std::collections::HashMap;
 

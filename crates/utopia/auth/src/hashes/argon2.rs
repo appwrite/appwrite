@@ -1,10 +1,14 @@
+//! The Argon2id password hash.
+
 use super::{hash_plumbing, password};
 use crate::{Error, Hash, Options};
 
-/// Argon2id through `password_hash()` (`Utopia\Auth\Hashes\Argon2`).
+/// The Argon2id password hash, in the standard `$argon2id$` format.
 ///
-/// Options: `type`, `memory_cost` (KiB), `time_cost`, `threads`; every
-/// option is passed to `password_hash()`, which reads the last three.
+/// Options: `type`, `memory_cost` (KiB), `time_cost` and `threads`.
+///
+/// PHP: `Utopia\Auth\Hashes\Argon2`, which passes every option to
+/// `password_hash()`; it reads the last three.
 ///
 /// ```
 /// use utopia_auth::Hash;
@@ -32,13 +36,16 @@ pub struct Argon2 {
 }
 
 impl Default for Argon2 {
+    /// The same as [`Argon2::new`].
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Argon2 {
-    /// `new Argon2()`: memory 65536 KiB, time 4, threads 3.
+    /// Argon2id with 65536 KiB of memory, a time cost of 4 and 3 threads.
+    ///
+    /// PHP: `new Argon2()`.
     pub fn new() -> Self {
         let mut options = Options::new();
         options.set("type", "argon2");
@@ -48,19 +55,26 @@ impl Argon2 {
         Self { options }
     }
 
-    /// `setMemoryCost()`, in KiB. Not validated until hashing, as in PHP.
+    /// Sets the memory cost, in KiB. It is not checked until hashing.
+    ///
+    /// PHP: `setMemoryCost()`.
     pub fn set_memory_cost(&mut self, cost: i64) -> &mut Self {
         self.options.set("memory_cost", cost);
         self
     }
 
-    /// `setTimeCost()`.
+    /// Sets the time cost: the number of passes over memory. It is not
+    /// checked until hashing.
+    ///
+    /// PHP: `setTimeCost()`.
     pub fn set_time_cost(&mut self, cost: i64) -> &mut Self {
         self.options.set("time_cost", cost);
         self
     }
 
-    /// `setThreads()`.
+    /// Sets the degree of parallelism. It is not checked until hashing.
+    ///
+    /// PHP: `setThreads()`.
     pub fn set_threads(&mut self, threads: i64) -> &mut Self {
         self.options.set("threads", threads);
         self
@@ -70,10 +84,15 @@ impl Argon2 {
 impl Hash for Argon2 {
     hash_plumbing!("argon2");
 
+    /// Hashes `value` with Argon2id and a random salt.
+    ///
+    /// Fails when a cost is out of the range Argon2 accepts.
     fn hash(&self, value: &[u8]) -> Result<Vec<u8>, Error> {
         password::hash_argon2id(value, &self.options)
     }
 
+    /// Whether `value` matches a stored password hash: Argon2i, Argon2id,
+    /// bcrypt or another standard crypt format.
     fn verify(&self, value: &[u8], hash: &[u8]) -> Result<bool, Error> {
         Ok(password::verify(value, hash))
     }

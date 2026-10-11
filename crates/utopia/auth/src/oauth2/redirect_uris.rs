@@ -1,3 +1,5 @@
+//! A client's registered redirect URIs and how a presented one matches.
+
 use php_std::Value;
 use php_std::string::strtolower;
 
@@ -5,9 +7,10 @@ use super::parse_url;
 
 const LOOPBACK_HOSTS: [&[u8]; 3] = [b"localhost", b"127.0.0.1", b"[::1]"];
 
-/// A client's registered redirect URIs (`Utopia\Auth\OAuth2\RedirectUris`):
-/// exact matching, plus RFC 8252 §7.3 port variance for http loopback URIs
-/// when asked for (public clients only).
+/// A client's registered redirect URIs: exact matching, plus any port on
+/// http loopback URIs when asked for (RFC 8252 §7.3, public clients only).
+///
+/// PHP: `Utopia\Auth\OAuth2\RedirectUris`.
 ///
 /// ```
 /// use utopia_auth::oauth2::RedirectUris;
@@ -58,7 +61,9 @@ fn loopback(uri: &[u8]) -> Option<Loopback> {
 }
 
 impl RedirectUris {
-    /// `RedirectUris::from($uris)`: the non-empty strings among stored values.
+    /// The registered URIs among stored values: every non-empty string.
+    ///
+    /// PHP: `RedirectUris::from($uris)`.
     pub fn from_values<'a>(uris: impl IntoIterator<Item = &'a Value>) -> Self {
         Self(
             uris.into_iter()
@@ -70,12 +75,19 @@ impl RedirectUris {
         )
     }
 
-    /// `RedirectUris::from($uris)` for string lists.
+    /// The registered URIs in a list of strings, skipping empty ones.
+    ///
+    /// PHP: `RedirectUris::from($uris)`.
     pub fn from_strings<'a>(uris: impl IntoIterator<Item = &'a [u8]>) -> Self {
         Self(uris.into_iter().filter(|u| !u.is_empty()).map(<[u8]>::to_vec).collect())
     }
 
-    /// `matches($presented, $allowLoopback)`.
+    /// Whether `presented` is a registered URI.
+    ///
+    /// With `allow_loopback`, an http URI on `localhost`, `127.0.0.1` or
+    /// `[::1]` also matches a registered one that differs only in its port.
+    ///
+    /// PHP: `matches($presented, $allowLoopback)`.
     pub fn matches(&self, presented: &[u8], allow_loopback: bool) -> bool {
         if presented.is_empty() {
             return false;
@@ -92,7 +104,9 @@ impl RedirectUris {
         self.0.iter().any(|registered| loopback(registered).as_ref() == Some(&parts))
     }
 
-    /// `toArray()`.
+    /// The registered URIs, in order.
+    ///
+    /// PHP: `toArray()`.
     pub fn to_vec(&self) -> &[Vec<u8>] {
         &self.0
     }

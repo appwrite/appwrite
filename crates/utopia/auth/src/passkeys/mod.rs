@@ -1,6 +1,8 @@
-//! WebAuthn passkeys for one relying party (`Utopia\Auth\Passkeys\*`):
-//! registration and sign-in ceremonies with discoverable credentials,
-//! required user verification and no attestation.
+//! WebAuthn passkeys for one relying party: registration and sign-in
+//! ceremonies with discoverable credentials, required user verification and
+//! no attestation.
+//!
+//! PHP: `Utopia\Auth\Passkeys\*`.
 
 mod cbor;
 mod ceremony;
@@ -14,8 +16,10 @@ pub use origin::Origin;
 
 use sha2::{Digest, Sha256};
 
-/// The relying party passkeys are bound to (`Utopia\Auth\Passkeys\RelyingParty`):
-/// its ID (a domain), display name and the exact origins allowed to run ceremonies.
+/// The relying party passkeys are bound to: its ID (a domain), display name
+/// and the exact origins allowed to run ceremonies.
+///
+/// PHP: `Utopia\Auth\Passkeys\RelyingParty`.
 ///
 /// ```
 /// use utopia_auth::passkeys::RelyingParty;
@@ -45,13 +49,18 @@ pub struct RelyingParty {
 }
 
 impl RelyingParty {
-    /// `new RelyingParty($id, $name, $origins)`.
+    /// A relying party with the ID `id`, shown to users as `name`, accepting
+    /// ceremonies from `origins`.
+    ///
+    /// PHP: `new RelyingParty($id, $name, $origins)`.
     pub fn new(id: impl Into<String>, name: impl Into<String>, origins: Vec<String>) -> Self {
         Self { id: id.into(), name: name.into(), origins }
     }
 
-    /// `getFingerprint()`: SHA-256 (hex) of the ID and the sorted origins, to
-    /// invalidate ceremonies started under another configuration.
+    /// A hex SHA-256 of the ID and the sorted origins, to invalidate
+    /// ceremonies started under another configuration.
+    ///
+    /// PHP: `getFingerprint()`.
     pub fn fingerprint(&self) -> String {
         let mut origins: php_std::Array = self.origins.iter().map(|o| php_std::Value::from(o.as_str())).collect();
         // `sort()` compares strings with `<=>`, which never fails.

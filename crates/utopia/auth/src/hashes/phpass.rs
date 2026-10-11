@@ -1,3 +1,5 @@
+//! The phpass password hash used by WordPress and phpBB.
+
 use md5::{Digest, Md5};
 use php_std::Value;
 use php_std::format::{dval_to_lval, str_to_float};
@@ -10,24 +12,30 @@ use crate::{Error, Hash, Options};
 
 const ITOA64: &[u8; 64] = b"./0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
 
-/// The Portable PHP password hashing framework, as WordPress and phpBB use
-/// it (`Utopia\Auth\Hashes\PHPass`): `$2a$` blowfish hashes, or `$P$`
-/// portable MD5 hashes when `portable_hashes` is set (or blowfish fails).
+/// The phpass password hash, as WordPress and phpBB use it: `$2a$` bcrypt
+/// hashes, or `$P$` portable MD5 hashes when `portable_hashes` is set (or
+/// bcrypt fails).
 ///
-/// Options: `type`, `iteration_count_log2`, `portable_hashes`, `random_state`.
+/// Options: `type`, `iteration_count_log2`, `portable_hashes` and `random_state`.
+///
+/// PHP: `Utopia\Auth\Hashes\PHPass`, a port of the Portable PHP password
+/// hashing framework.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PHPass {
     options: Options,
 }
 
 impl Default for PHPass {
+    /// The same as [`new`](Self::new).
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl PHPass {
-    /// `new PHPass()`: 2^8 iterations, blowfish, `random_state` from `microtime() . getmypid()`.
+    /// phpass with 2^8 iterations and bcrypt hashes.
+    ///
+    /// PHP: `new PHPass()`; `random_state` is `microtime() . getmypid()`.
     pub fn new() -> Self {
         let mut options = Options::new();
         options.set("type", "phpass");
@@ -37,7 +45,11 @@ impl PHPass {
         Self { options }
     }
 
-    /// `setIterationCount()`: log2 of the iterations, between 4 and 31.
+    /// Sets log2 of the number of iterations.
+    ///
+    /// Fails with [`Error::InvalidArgument`] unless it is between 4 and 31.
+    ///
+    /// PHP: `setIterationCount()`.
     pub fn set_iteration_count(&mut self, count: i64) -> Result<&mut Self, Error> {
         if !(4..=31).contains(&count) {
             return Err(Error::InvalidArgument("Iteration count must be between 4 and 31".into()));
@@ -46,7 +58,9 @@ impl PHPass {
         Ok(self)
     }
 
-    /// `setPortableHashes()`.
+    /// Chooses portable `$P$` MD5 hashes (`true`) over bcrypt (`false`).
+    ///
+    /// PHP: `setPortableHashes()`.
     pub fn set_portable_hashes(&mut self, portable: bool) -> &mut Self {
         self.options.set("portable_hashes", portable);
         self
@@ -226,6 +240,10 @@ fn crypt_private(password: &[u8], setting: &[u8]) -> Vec<u8> {
 impl Hash for PHPass {
     hash_plumbing!("phpass");
 
+    /// Hashes `value` with a random salt: bcrypt, or a portable `$P$` hash
+    /// when `portable_hashes` is set or bcrypt fails.
+    ///
+    /// Fails with [`Error::Type`] when `iteration_count_log2` is not a number.
     fn hash(&self, value: &[u8]) -> Result<Vec<u8>, Error> {
         let portable = self.options.raw("portable_hashes").is_some_and(truthy);
         let mut random = Vec::new();
@@ -247,6 +265,8 @@ impl Hash for PHPass {
         Ok(if hash.len() == 34 { hash } else { b"*".to_vec() })
     }
 
+    /// Whether `value` matches `hash`, a portable `$P$`/`$H$` hash or a
+    /// crypt hash such as bcrypt.
     fn verify(&self, value: &[u8], hash: &[u8]) -> Result<bool, Error> {
         let mut computed = crypt_private(value, hash);
         if computed.first() == Some(&b'*') {

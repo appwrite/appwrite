@@ -1,4 +1,8 @@
-//! OAuth2 / OpenID Connect authorization-server values (`Utopia\Auth\OAuth2\*`).
+//! Request values an OAuth2 / OpenID Connect authorization server parses and
+//! checks: prompts, redirect URIs, resource indicators, authorization
+//! details, pushed authorization requests and client metadata documents.
+//!
+//! PHP: `Utopia\Auth\OAuth2\*`.
 
 mod authorization_details;
 mod client_id_metadata_document;
@@ -16,7 +20,9 @@ pub use prompts::Prompts;
 pub use redirect_uris::RedirectUris;
 pub use resource_indicators::{ResourceIndicators, Resources};
 
-/// OpenID Connect `prompt` values (`Utopia\Auth\Enums\Prompt`).
+/// A value of the OpenID Connect `prompt` request parameter.
+///
+/// PHP: `Utopia\Auth\Enums\Prompt`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Prompt {
     /// `none`: no interaction.
@@ -33,7 +39,9 @@ impl Prompt {
     /// Every prompt, in declaration order.
     pub const ALL: [Prompt; 4] = [Prompt::None, Prompt::Login, Prompt::Consent, Prompt::SelectAccount];
 
-    /// The prompt value (the enum's backing value).
+    /// The value as it appears in a request (`"login"`, `"select_account"`, ...).
+    ///
+    /// PHP: the enum's backing value.
     pub fn as_str(self) -> &'static str {
         match self {
             Prompt::None => "none",
@@ -43,26 +51,30 @@ impl Prompt {
         }
     }
 
-    /// `Prompt::tryFrom($value)`.
+    /// The prompt with the value `name`, or `None` for any other value.
+    ///
+    /// PHP: `Prompt::tryFrom($value)`.
     pub fn from_name(name: &[u8]) -> Option<Prompt> {
         Self::ALL.into_iter().find(|p| p.as_str().as_bytes() == name)
     }
 }
 
-/// RFC 9396 common `authorization_details` fields (`Utopia\Auth\Enums\AuthorizationDetail`).
+/// A common field of an `authorization_details` entry (RFC 9396).
+///
+/// PHP: `Utopia\Auth\Enums\AuthorizationDetail`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum AuthorizationDetail {
-    /// `type`.
+    /// `type`: the kind of authorization the entry describes.
     Type,
-    /// `locations`.
+    /// `locations`: where the resource is.
     Locations,
-    /// `actions`.
+    /// `actions`: what may be done with the resource.
     Actions,
-    /// `datatypes`.
+    /// `datatypes`: the kinds of data requested.
     Datatypes,
-    /// `identifier`.
+    /// `identifier`: a specific resource.
     Identifier,
-    /// `privileges`.
+    /// `privileges`: the levels of access requested.
     Privileges,
 }
 
@@ -77,7 +89,9 @@ impl AuthorizationDetail {
         AuthorizationDetail::Privileges,
     ];
 
-    /// The field name (the enum's backing value).
+    /// The field's name in an entry (`"type"`, `"actions"`, ...).
+    ///
+    /// PHP: the enum's backing value.
     pub fn as_str(self) -> &'static str {
         match self {
             AuthorizationDetail::Type => "type",
@@ -89,7 +103,9 @@ impl AuthorizationDetail {
         }
     }
 
-    /// `AuthorizationDetail::tryFrom($value)`.
+    /// The field named `name`, or `None` for any other field.
+    ///
+    /// PHP: `AuthorizationDetail::tryFrom($value)`.
     pub fn from_name(name: &str) -> Option<AuthorizationDetail> {
         Self::ALL.into_iter().find(|d| d.as_str() == name)
     }

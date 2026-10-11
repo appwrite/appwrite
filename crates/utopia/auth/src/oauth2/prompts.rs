@@ -1,8 +1,12 @@
+//! The parsed OpenID Connect `prompt` request parameter.
+
 use super::Prompt;
 use crate::Error;
 
-/// The parsed OIDC `prompt` parameter (`Utopia\Auth\OAuth2\Prompts`):
-/// distinct values in first-seen order; `none` stands alone.
+/// The parsed OpenID Connect `prompt` parameter: distinct values in
+/// first-seen order, where `none` stands alone.
+///
+/// PHP: `Utopia\Auth\OAuth2\Prompts`.
 ///
 /// ```
 /// use utopia_auth::oauth2::{Prompt, Prompts};
@@ -26,7 +30,12 @@ use crate::Error;
 pub struct Prompts(Vec<Prompt>);
 
 impl Prompts {
-    /// `Prompts::fromString($prompt)`: space-delimited values (empty: none requested).
+    /// Parses space-delimited prompt values; an empty string requests none.
+    ///
+    /// Fails with [`Error::InvalidPrompt`] for an unknown value, or when
+    /// `none` is combined with another.
+    ///
+    /// PHP: `Prompts::fromString($prompt)`.
     pub fn from_string(prompt: &[u8]) -> Result<Self, Error> {
         let mut prompts = Vec::new();
         for value in prompt.split(|b| *b == b' ').filter(|v| !v.is_empty()) {
@@ -43,17 +52,23 @@ impl Prompts {
         Ok(Self(prompts))
     }
 
-    /// `contains($prompt)`.
+    /// Whether `prompt` was requested.
+    ///
+    /// PHP: `contains($prompt)`.
     pub fn contains(&self, prompt: Prompt) -> bool {
         self.0.contains(&prompt)
     }
 
-    /// `toArray()`.
+    /// The requested values, in first-seen order.
+    ///
+    /// PHP: `toArray()`.
     pub fn to_vec(&self) -> Vec<&'static str> {
         self.0.iter().map(|p| p.as_str()).collect()
     }
 
-    /// `toString()`.
+    /// The requested values, space-delimited, as a request carries them.
+    ///
+    /// PHP: `toString()`.
     pub fn to_string_value(&self) -> String {
         self.to_vec().join(" ")
     }

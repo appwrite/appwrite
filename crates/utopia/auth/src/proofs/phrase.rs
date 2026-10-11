@@ -1,3 +1,5 @@
+//! Two-word passphrases that are easy to read out and type.
+
 use super::{Proof, proof_hash};
 use crate::hash::random_int;
 use crate::hashes::Argon2;
@@ -242,7 +244,9 @@ const NOUNS: [&str; 104] = [
     "zipper",
 ];
 
-/// A two-word passphrase, "Adjective noun" (`Utopia\Auth\Proofs\Phrase`).
+/// A two-word passphrase, "Adjective noun", such as `Brave kangaroo`.
+///
+/// PHP: `Utopia\Auth\Proofs\Phrase`.
 ///
 /// ```
 /// use utopia_auth::proofs::{Phrase, Proof};
@@ -266,25 +270,31 @@ pub struct Phrase {
 }
 
 impl Default for Phrase {
+    /// The same as [`Phrase::new`].
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Phrase {
-    /// `new Phrase()`: hashed with Argon2.
+    /// Passphrases hashed with Argon2.
+    ///
+    /// PHP: `new Phrase()`.
     pub fn new() -> Self {
         Self { hash: Box::new(Argon2::new()) }
     }
 
-    /// `generate()`.
+    /// A new passphrase: a random adjective, a space and a random noun.
+    ///
+    /// PHP: `generate()`.
     pub fn phrase(&self) -> String {
         let adjective = ADJECTIVES[random_int(ADJECTIVES.len() as u64 - 1) as usize];
         let noun = NOUNS[random_int(NOUNS.len() as u64 - 1) as usize];
         format!("{adjective} {noun}")
     }
 
-    /// Every phrase `generate()` can return is one of these adjectives, a space and one of these nouns.
+    /// The adjectives and nouns passphrases are made of: every passphrase is
+    /// one of these adjectives, a space and one of these nouns.
     pub fn words() -> (&'static [&'static str], &'static [&'static str]) {
         (&ADJECTIVES, &NOUNS)
     }
@@ -293,6 +303,7 @@ impl Phrase {
 impl Proof for Phrase {
     proof_hash!();
 
+    /// A new passphrase as bytes, the same as [`Phrase::phrase`].
     fn generate(&self) -> Result<Vec<u8>, Error> {
         Ok(self.phrase().into_bytes())
     }

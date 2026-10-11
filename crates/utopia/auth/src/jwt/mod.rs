@@ -1,7 +1,11 @@
-//! Compact JWS tokens (RFC 7515): issuers (`Utopia\Auth\Issuer`,
-//! `Issuers\*`) and verifiers (`Utopia\Auth\Verifier`, `Verifiers\*`).
+//! Signed JSON Web Tokens (compact JWS, RFC 7515): issuers that sign
+//! claims with HS256 or RS256, and a verifier that checks the signature and
+//! the registered claims.
 //!
-//! Time is an argument (`now`, Unix seconds) wherever PHP calls `time()`.
+//! Time is an argument (`now`, Unix seconds), never read from the clock.
+//!
+//! PHP: issuers are `Utopia\Auth\Issuer` and `Issuers\*`, verifiers
+//! `Utopia\Auth\Verifier` and `Verifiers\*`; `now` replaces `time()`.
 
 mod issuer;
 pub(crate) mod key;
@@ -13,7 +17,9 @@ pub use verifier::{Audience, Hs256, Rs256, SignatureCheck, Verifier};
 
 use php_std::encoding::{base64_decode, base64_encode};
 
-/// JWT claim names (`Utopia\Auth\Enums\Claim`).
+/// A registered JWT claim name, such as `iss` or `exp`.
+///
+/// PHP: `Utopia\Auth\Enums\Claim`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Claim {
     /// `iss`: who issued the token.
@@ -62,7 +68,9 @@ impl Claim {
         Claim::CodeHash,
     ];
 
-    /// The claim name (the enum's backing value).
+    /// The claim's name in a token (`"iss"`, `"exp"`, ...).
+    ///
+    /// PHP: the enum's backing value.
     pub fn as_str(self) -> &'static str {
         match self {
             Claim::Issuer => "iss",
@@ -81,13 +89,17 @@ impl Claim {
         }
     }
 
-    /// `Claim::tryFrom($value)`.
+    /// The claim with the name `name`, or `None` for any other claim.
+    ///
+    /// PHP: `Claim::tryFrom($value)`.
     pub fn from_name(name: &str) -> Option<Claim> {
         Self::ALL.into_iter().find(|c| c.as_str() == name)
     }
 }
 
-/// JOSE header parameters (`Utopia\Auth\Enums\Header`).
+/// A JOSE header parameter of a JWT: `typ`, `alg` or `kid`.
+///
+/// PHP: `Utopia\Auth\Enums\Header`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Header {
     /// `typ`: the token type.
@@ -102,7 +114,9 @@ impl Header {
     /// Every header parameter, in declaration order.
     pub const ALL: [Header; 3] = [Header::Type, Header::Algorithm, Header::KeyId];
 
-    /// The parameter name (the enum's backing value).
+    /// The parameter's name in a token header (`"typ"`, `"alg"`, `"kid"`).
+    ///
+    /// PHP: the enum's backing value.
     pub fn as_str(self) -> &'static str {
         match self {
             Header::Type => "typ",
@@ -111,13 +125,17 @@ impl Header {
         }
     }
 
-    /// `Header::tryFrom($value)`.
+    /// The header parameter with the name `name`, or `None` for any other.
+    ///
+    /// PHP: `Header::tryFrom($value)`.
     pub fn from_name(name: &str) -> Option<Header> {
         Self::ALL.into_iter().find(|h| h.as_str() == name)
     }
 }
 
-/// The HS256 signature (`hash_hmac('sha256', $input, $secret, true)`).
+/// The HS256 signature of `input`: its HMAC-SHA256 under `secret`, as raw bytes.
+///
+/// PHP: `hash_hmac('sha256', $input, $secret, true)`.
 pub fn hs256(secret: &[u8], input: &[u8]) -> Vec<u8> {
     use hmac::Mac;
     let mut mac = hmac::Hmac::<sha2::Sha256>::new_from_slice(secret).expect("HMAC takes any key length");
@@ -125,8 +143,12 @@ pub fn hs256(secret: &[u8], input: &[u8]) -> Vec<u8> {
     mac.finalize().into_bytes().to_vec()
 }
 
-/// The RS256 signature (`openssl_sign($input, $signature, $privateKey, OPENSSL_ALGO_SHA256)`)
-/// with a PEM RSA private key.
+/// The RS256 signature of `input` with a PEM RSA private key, as raw bytes.
+///
+/// Fails with [`Error::Exception`](crate::Error::Exception) when the key
+/// cannot be read or cannot sign.
+///
+/// PHP: `openssl_sign($input, $signature, $privateKey, OPENSSL_ALGO_SHA256)`.
 pub fn rs256(private_key: &[u8], input: &[u8]) -> Result<Vec<u8>, crate::Error> {
     let key = key::private_key(private_key)?
         .ok_or_else(|| crate::Error::Exception("Unable to parse the private key".into()))?;

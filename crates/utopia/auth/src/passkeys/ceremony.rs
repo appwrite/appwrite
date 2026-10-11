@@ -1,7 +1,10 @@
-//! Registration and sign-in ceremonies (`Utopia\Auth\Passkeys\Ceremony`),
-//! with web-auth/webauthn-lib's verification steps, messages and formats:
-//! the ceremony state is its JSON options, a stored record its
-//! `CredentialRecord` JSON.
+//! Passkey registration and sign-in ceremonies: the options sent to the
+//! browser, the state kept in between, and the verification of what comes
+//! back.
+//!
+//! PHP: `Utopia\Auth\Passkeys\Ceremony`, with web-auth/webauthn-lib's
+//! verification steps, messages and formats: the ceremony state is its JSON
+//! options, a stored record its `CredentialRecord` JSON.
 
 use php_std::json::{self, Flags};
 use php_std::url::parse_url;
@@ -15,7 +18,9 @@ use super::origin::LOCALHOST;
 use crate::Error;
 use crate::hash::{hash_equals, random_bytes};
 
-/// Seconds a ceremony stays valid (`Ceremony::TIMEOUT`).
+/// Seconds a ceremony stays valid.
+///
+/// PHP: `Ceremony::TIMEOUT`.
 pub const TIMEOUT: i64 = 300;
 
 const FLAG_UP: u8 = 0x01;
@@ -25,18 +30,25 @@ const FLAG_BS: u8 = 0x10;
 const FLAG_AT: u8 = 0x40;
 const FLAG_ED: u8 = 0x80;
 
-/// A started ceremony (`Passkeys\Challenge`): options for the browser and
-/// the opaque state to keep until the credential comes back.
+/// A started ceremony: options for the browser and the opaque state to keep
+/// until the credential comes back.
+///
+/// PHP: `Passkeys\Challenge`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Challenge {
-    /// For `PublicKeyCredential.parseCreationOptionsFromJSON()` / `parseRequestOptionsFromJSON()`.
+    /// The options to send to the browser, for
+    /// `PublicKeyCredential.parseCreationOptionsFromJSON()` or
+    /// `parseRequestOptionsFromJSON()`.
     pub options: Array,
-    /// The state to keep until the ceremony is verified (`getState()`).
+    /// The state to keep until the ceremony is verified.
+    ///
+    /// PHP: `getState()`.
     pub state: String,
 }
 
-/// A verified passkey (`Passkeys\Credential`): the record to store and the
-/// identifier to find it by.
+/// A verified passkey: the record to store and the identifier to find it by.
+///
+/// PHP: `Passkeys\Credential`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Credential {
     /// The credential ID, base64url.
@@ -45,17 +57,27 @@ pub struct Credential {
     pub record: Array,
 }
 
-/// The counter policy (`Passkeys\Counter`): synced (backup-eligible) passkeys
-/// and authenticators without a counter (always 0) may not increase it.
+/// The signature counter policy: the counter must increase, except for
+/// synced (backup-eligible) passkeys and authenticators without a counter
+/// (always 0).
+///
+/// PHP: `Passkeys\Counter`.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Counter;
 
-/// The policy webauthn-lib applies without [`Counter`]: the counter must increase.
+/// The strict signature counter policy: the counter must always increase.
+///
+/// PHP: the policy webauthn-lib applies without [`Counter`].
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct StrictCounter;
 
 impl Counter {
-    /// `check($credentialRecord, $currentCounter)`.
+    /// Checks the `current` counter of a sign-in against the `stored` one.
+    ///
+    /// Passes when both are 0, the counter increased, or the passkey is
+    /// backup-eligible; fails with [`Error::Counter`] otherwise.
+    ///
+    /// PHP: `check($credentialRecord, $currentCounter)`.
     pub fn check(&self, stored: i64, backup_eligible: Option<bool>, current: i64) -> Result<(), Error> {
         if current == 0 && stored == 0 {
             return Ok(());
@@ -68,7 +90,11 @@ impl Counter {
 }
 
 impl StrictCounter {
-    /// `check($stored, $current)`: refuses a counter that did not increase.
+    /// Checks the `current` counter of a sign-in against the `stored` one.
+    ///
+    /// Fails with [`Error::Counter`] unless it increased.
+    ///
+    /// PHP: `check($stored, $current)`.
     pub fn check(&self, stored: i64, current: i64) -> Result<(), Error> {
         if current > stored { Ok(()) } else { Err(Error::Counter("Invalid counter.".into())) }
     }
@@ -808,8 +834,10 @@ fn decode_credential(credential: &Array) -> Result<(Vec<u8>, Response), Error> {
 // The ceremony
 // ---------------------------------------------------------------------------
 
-/// WebAuthn registration and sign-in for one relying party (`Passkeys\Ceremony`):
-/// discoverable credentials, required user verification, no attestation.
+/// WebAuthn registration and sign-in for one relying party: discoverable
+/// credentials, required user verification, no attestation.
+///
+/// PHP: `Passkeys\Ceremony`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ceremony {
     /// The relying party the ceremonies run for.
@@ -906,7 +934,9 @@ impl Origins {
 }
 
 impl Ceremony {
-    /// `new Ceremony($relyingParty)`.
+    /// Ceremonies for `relying_party`.
+    ///
+    /// PHP: `new Ceremony($relyingParty)`.
     pub fn new(relying_party: RelyingParty) -> Self {
         Self { relying_party }
     }
@@ -916,8 +946,13 @@ impl Ceremony {
         Ok(Challenge { options, state })
     }
 
-    /// `register($name, $displayName, $records)`: starts registering a passkey;
-    /// existing records are excluded and lend their user handle.
+    /// Starts registering a passkey for the user `name`, shown as
+    /// `display_name`.
+    ///
+    /// The user's existing `records` are excluded, so an authenticator is
+    /// not registered twice, and lend the new passkey their user handle.
+    ///
+    /// PHP: `register($name, $displayName, $records)`.
     pub fn register(&self, name: &[u8], display_name: &[u8], records: &[Array]) -> Result<Challenge, Error> {
         let existing = records.iter().map(Record::decode).collect::<Result<Vec<_>, _>>()?;
         let user_handle = existing.first().map(|r| r.user_handle.clone()).unwrap_or_else(random32);
@@ -953,7 +988,9 @@ impl Ceremony {
         ]))
     }
 
-    /// `authenticate()`: starts a usernameless sign-in.
+    /// Starts a usernameless sign-in.
+    ///
+    /// PHP: `authenticate()`.
     pub fn authenticate(&self) -> Result<Challenge, Error> {
         Self::start(object(vec![
             ("challenge", s(&encode(&random32()))),
@@ -964,12 +1001,21 @@ impl Ceremony {
         ]))
     }
 
-    /// `identify($credential)`: the identifier of the passkey a sign-in credential claims to be.
+    /// The identifier of the passkey a sign-in credential claims to be, to
+    /// look up its record before verifying.
+    ///
+    /// PHP: `identify($credential)`.
     pub fn identify(&self, credential: &Array) -> Result<String, Error> {
         Ok(identifier(&decode_credential(credential)?.0))
     }
 
-    /// `verifyRegistration($state, $credential)`.
+    /// Verifies the credential the browser returned for a registration
+    /// started with `state`, returning the passkey to store.
+    ///
+    /// Fails with [`Error::Passkey`] when any check fails: the challenge,
+    /// origin, relying party, user presence and verification, or the format.
+    ///
+    /// PHP: `verifyRegistration($state, $credential)`.
     pub fn verify_registration(&self, state: &[u8], credential: &Array) -> Result<Credential, Error> {
         let options = decode_state(state, true)?;
         let (_, response) = decode_credential(credential)?;
@@ -982,8 +1028,14 @@ impl Ceremony {
         Ok(Credential { identifier: identifier(&record.id), record: record.to_array() })
     }
 
-    /// `verifyAuthentication($state, $credential, $record)`: the record updated
-    /// (counter, backup state) to store back.
+    /// Verifies a sign-in started with `state` against the passkey's stored
+    /// `record`, returning the record updated (counter, backup state) to
+    /// store back.
+    ///
+    /// Fails with [`Error::Passkey`] when a check, the signature or the
+    /// counter fails, or the passkey's backup eligibility changed.
+    ///
+    /// PHP: `verifyAuthentication($state, $credential, $record)`.
     pub fn verify_authentication(&self, state: &[u8], credential: &Array, record: &Array) -> Result<Credential, Error> {
         let options = decode_state(state, false)?;
         let (_, response) = decode_credential(credential)?;

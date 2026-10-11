@@ -1,32 +1,38 @@
+//! Unsalted SHA-1, SHA-2 and SHA-3 digests, for imported legacy passwords.
+
 use super::hash_plumbing;
 use crate::hash::hash_equals;
 use crate::{Error, Hash, Options};
 
-/// The versions `Sha::setVersion()` accepts.
+/// A SHA algorithm a [`Sha`] hash can use.
+///
+/// PHP: the versions `Sha::setVersion()` accepts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ShaVersion {
-    /// `sha1`.
+    /// SHA-1, named `sha1`.
     Sha1,
-    /// `sha224`.
+    /// SHA-224, named `sha224`.
     Sha224,
-    /// `sha256`.
+    /// SHA-256, named `sha256`.
     Sha256,
-    /// `sha384`.
+    /// SHA-384, named `sha384`.
     Sha384,
-    /// `sha512`.
+    /// SHA-512, named `sha512`.
     Sha512,
-    /// `sha3-224`.
+    /// SHA3-224, named `sha3-224`.
     Sha3_224,
-    /// `sha3-256`.
+    /// SHA3-256, named `sha3-256`.
     Sha3_256,
-    /// `sha3-384`.
+    /// SHA3-384, named `sha3-384`.
     Sha3_384,
-    /// `sha3-512`.
+    /// SHA3-512, named `sha3-512`.
     Sha3_512,
 }
 
 impl ShaVersion {
-    /// Every version, in the order PHP lists them.
+    /// Every version, SHA-1 first, then SHA-2, then SHA-3.
+    ///
+    /// PHP: the order PHP lists them in.
     pub const ALL: [ShaVersion; 9] = [
         ShaVersion::Sha1,
         ShaVersion::Sha224,
@@ -39,7 +45,9 @@ impl ShaVersion {
         ShaVersion::Sha3_512,
     ];
 
-    /// The `hash()` algorithm name (`Sha::SHA256` is `"sha256"`).
+    /// The algorithm's name, as stored in the `version` option (`"sha256"`).
+    ///
+    /// PHP: the `hash()` algorithm name; `Sha::SHA256` is `"sha256"`.
     pub fn as_str(self) -> &'static str {
         match self {
             ShaVersion::Sha1 => "sha1",
@@ -54,15 +62,20 @@ impl ShaVersion {
         }
     }
 
-    /// The version named `name`, exactly as `setVersion()` accepts it.
+    /// The version named `name` (`sha256`, `sha3-512`, ...), or `None`.
+    ///
+    /// PHP: the names `setVersion()` accepts.
     pub fn from_name(name: &[u8]) -> Option<Self> {
         Self::ALL.into_iter().find(|v| v.as_str().as_bytes() == name)
     }
 }
 
-/// Unsalted SHA digests, lowercase hex (`Utopia\Auth\Hashes\Sha`).
+/// The unsalted SHA digest of a password, as lowercase hex.
 ///
-/// Its options hold only `version` (no `type`), the `hash()` algorithm.
+/// Its options hold only `version` (no `type`): the name of the algorithm.
+/// Weak: use it only to verify passwords imported from another system.
+///
+/// PHP: `Utopia\Auth\Hashes\Sha`; `version` is a `hash()` algorithm name.
 ///
 /// ```
 /// use utopia_auth::Hash;
@@ -87,26 +100,35 @@ pub struct Sha {
 }
 
 impl Default for Sha {
+    /// The same as [`Sha::new`].
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Sha {
-    /// `new Sha()`: SHA-256.
+    /// The SHA-256 hash.
+    ///
+    /// PHP: `new Sha()`.
     pub fn new() -> Self {
         let mut options = Options::new();
         options.set("version", "sha256");
         Self { options }
     }
 
-    /// `setVersion()` with one of [`ShaVersion`].
+    /// Sets the algorithm.
+    ///
+    /// PHP: `setVersion()` with one of the `SHA*` constants.
     pub fn set_version(&mut self, version: ShaVersion) -> &mut Self {
         self.options.set("version", version.as_str());
         self
     }
 
-    /// `setVersion()` with a name, rejected unless it is a [`ShaVersion`].
+    /// Sets the algorithm by name (`sha256`, `sha3-512`, ...).
+    ///
+    /// Fails with [`Error::InvalidArgument`] unless it names a [`ShaVersion`].
+    ///
+    /// PHP: `setVersion()` with a string.
     pub fn set_version_name(&mut self, version: &[u8]) -> Result<&mut Self, Error> {
         let version = ShaVersion::from_name(version).ok_or_else(|| {
             let names: Vec<&str> = ShaVersion::ALL.iter().map(|v| v.as_str()).collect();
@@ -126,6 +148,10 @@ fn digest(algo: &[u8], data: &[u8]) -> Result<String, Error> {
 impl Hash for Sha {
     hash_plumbing!("sha");
 
+    /// The digest of `value` as lowercase hex.
+    ///
+    /// Fails when the `version` option is not a string or names no known
+    /// algorithm.
     fn hash(&self, value: &[u8]) -> Result<Vec<u8>, Error> {
         let Some(version) = self.options.get("version").and_then(|_| self.options.string("version")) else {
             return Err(Error::Runtime("SHA version must be a string".into()));
@@ -133,6 +159,7 @@ impl Hash for Sha {
         Ok(digest(version, value)?.into_bytes())
     }
 
+    /// Whether the digest of `value` equals `hash`, compared in constant time.
     fn verify(&self, value: &[u8], hash: &[u8]) -> Result<bool, Error> {
         Ok(hash_equals(hash, &self.hash(value)?))
     }

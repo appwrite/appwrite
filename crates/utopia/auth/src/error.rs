@@ -1,60 +1,102 @@
-/// Every error the crate raises, one variant per PHP exception class.
+//! The error type every fallible operation in the crate returns.
+
+/// An error raised by this crate, with its message.
 ///
-/// The message is PHP's, byte for byte; [`Error::php_class`] names the class
-/// PHP throws for the same failure.
+/// Each variant is a kind of failure; [`Error::message`] gives the text and
+/// [`Error::oauth2_code`] the OAuth2 error code where there is one.
+///
+/// PHP: one variant per PHP exception class. The message is PHP's, byte for
+/// byte; [`Error::php_class`] names the class PHP throws for the same failure.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
-    /// `\Exception`.
+    /// A general failure: a missing key or secret, a key that cannot be read
+    /// or used to sign.
+    ///
+    /// PHP: `\Exception`.
     #[error("{0}")]
     Exception(String),
-    /// `\InvalidArgumentException`.
+    /// An argument out of range, such as a negative cost or an empty audience.
+    ///
+    /// PHP: `\InvalidArgumentException`.
     #[error("{0}")]
     InvalidArgument(String),
-    /// `\RuntimeException`.
+    /// A hash could not be computed, or an option has the wrong type.
+    ///
+    /// PHP: `\RuntimeException`.
     #[error("{0}")]
     Runtime(String),
-    /// `\UnexpectedValueException`.
+    /// A value had an unexpected shape. Nothing in this crate raises it yet.
+    ///
+    /// PHP: `\UnexpectedValueException`.
     #[error("{0}")]
     UnexpectedValue(String),
-    /// `\Error`: an extension raised an engine error (php-scrypt's argument checks).
+    /// A scrypt parameter was rejected by the algorithm's own argument checks.
+    ///
+    /// PHP: `\Error`, which the php-scrypt extension raises.
     #[error("{0}")]
     Engine(String),
-    /// `\ValueError`: an engine function rejected an argument.
+    /// A built-in operation rejected an argument, such as a key path
+    /// containing a NUL byte.
+    ///
+    /// PHP: `\ValueError`, raised by an engine function.
     #[error("{0}")]
     Value(String),
-    /// `\TypeError`: PHP arithmetic or a typed parameter rejected an option value.
+    /// An option value has a type the algorithm cannot use.
+    ///
+    /// PHP: `\TypeError`, raised by PHP arithmetic or a typed parameter.
     #[error("{0}")]
     Type(String),
-    /// `\JsonException`.
+    /// A value could not be encoded to or decoded from JSON.
+    ///
+    /// PHP: `\JsonException`.
     #[error("{0}")]
     Json(String),
-    /// `Utopia\Auth\Verifiers\VerificationException`.
+    /// A JWT failed verification: malformed, badly signed, expired or with
+    /// the wrong claims.
+    ///
+    /// PHP: `Utopia\Auth\Verifiers\VerificationException`.
     #[error("{0}")]
     Verification(String),
-    /// `Utopia\Auth\OAuth2\InvalidPromptException`. Its message quotes the
-    /// request's prompt value, which need not be UTF-8.
+    /// An OAuth2 `prompt` parameter is not valid. The message quotes the
+    /// request's value, which need not be UTF-8.
+    ///
+    /// PHP: `Utopia\Auth\OAuth2\InvalidPromptException`.
     #[error("{}", String::from_utf8_lossy(.0))]
     InvalidPrompt(Vec<u8>),
-    /// `Utopia\Auth\OAuth2\InvalidRequestUriException`.
+    /// An OAuth2 pushed authorization `request_uri` is not valid.
+    ///
+    /// PHP: `Utopia\Auth\OAuth2\InvalidRequestUriException`.
     #[error("{0}")]
     InvalidRequestUri(String),
-    /// `Utopia\Auth\OAuth2\InvalidResourceException`.
+    /// An OAuth2 `resource` indicator is not valid.
+    ///
+    /// PHP: `Utopia\Auth\OAuth2\InvalidResourceException`.
     #[error("{0}")]
     InvalidResource(String),
-    /// `Utopia\Auth\OAuth2\InvalidClientMetadataException`.
+    /// An OAuth2 client identifier URL or client metadata document is not valid.
+    ///
+    /// PHP: `Utopia\Auth\OAuth2\InvalidClientMetadataException`.
     #[error("{0}")]
     InvalidClientMetadata(String),
-    /// `Utopia\Auth\Passkeys\Exception`. Its message can quote CBOR text
-    /// from the client (map keys, the attestation format), which need not be UTF-8.
+    /// A passkey ceremony failed. The message can quote CBOR text from the
+    /// client (map keys, the attestation format), which need not be UTF-8.
+    ///
+    /// PHP: `Utopia\Auth\Passkeys\Exception`.
     #[error("{}", String::from_utf8_lossy(.0))]
     Passkey(Vec<u8>),
-    /// `Webauthn\Exception\CounterException`, raised by [`crate::passkeys::Counter::check`].
+    /// A passkey's signature counter did not increase, a sign of a cloned
+    /// authenticator; raised by [`crate::passkeys::Counter::check`].
+    ///
+    /// PHP: `Webauthn\Exception\CounterException`.
     #[error("{0}")]
     Counter(String),
 }
 
 impl Error {
-    /// The PHP exception class this error corresponds to.
+    /// The name of the exception class matching this error, such as
+    /// `InvalidArgumentException`, for callers that report errors by class.
+    ///
+    /// PHP: the class PHP throws for the same failure.
     pub fn php_class(&self) -> &'static str {
         match self {
             Error::Exception(_) => "Exception",
@@ -75,7 +117,11 @@ impl Error {
         }
     }
 
-    /// The OAuth2 `error` code of the OAuth2 exceptions (their `ERROR_CODE` constant).
+    /// The OAuth2 `error` code to answer with: `invalid_request` for a bad
+    /// prompt or request URI, `invalid_target` for a bad resource, `None`
+    /// for every other error.
+    ///
+    /// PHP: the `ERROR_CODE` constant of the OAuth2 exceptions.
     pub fn oauth2_code(&self) -> Option<&'static str> {
         match self {
             Error::InvalidPrompt(_) | Error::InvalidRequestUri(_) => Some("invalid_request"),
@@ -84,7 +130,10 @@ impl Error {
         }
     }
 
-    /// The message as PHP's `getMessage()` returns it (bytes: it can quote input).
+    /// The message as bytes, exactly as raised: it can quote input that is
+    /// not UTF-8.
+    ///
+    /// PHP: `getMessage()`.
     pub fn message_bytes(&self) -> &[u8] {
         match self {
             Error::InvalidPrompt(m) => m,
@@ -111,7 +160,10 @@ impl Error {
         }
     }
 
-    /// The message, as PHP's `getMessage()` (lossy where it quotes non-UTF-8 input).
+    /// The message as text, with any non-UTF-8 input it quotes replaced
+    /// lossily.
+    ///
+    /// PHP: `getMessage()`.
     pub fn message(&self) -> std::borrow::Cow<'_, str> {
         String::from_utf8_lossy(self.text())
     }

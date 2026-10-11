@@ -1,27 +1,33 @@
+//! The scrypt password hash.
+
 use php_std::encoding::bin2hex;
 
 use super::hash_plumbing;
 use crate::hash::{hash_equals, random_bytes};
 use crate::{Error, Hash, Options};
 
-/// Scrypt through php-scrypt's `scrypt()`, lowercase hex
-/// (`Utopia\Auth\Hashes\Scrypt`).
+/// The scrypt key derivation as a password hash, in lowercase hex.
 ///
 /// Options: `type`, `costCpu` (N), `costMemory` (r), `costParallel` (p),
 /// `length` (bytes) and `salt` (used as given, a random hex string by default).
+///
+/// PHP: `Utopia\Auth\Hashes\Scrypt`, through php-scrypt's `scrypt()`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scrypt {
     options: Options,
 }
 
 impl Default for Scrypt {
+    /// The same as [`Scrypt::new`].
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Scrypt {
-    /// `new Scrypt()`: N 8, r 14, p 1, 64 bytes, a random salt.
+    /// Scrypt with N 8, r 14, p 1, a 64-byte output and a random salt.
+    ///
+    /// PHP: `new Scrypt()`.
     pub fn new() -> Self {
         let mut salt = [0u8; 16];
         random_bytes(&mut salt);
@@ -35,7 +41,11 @@ impl Scrypt {
         Self { options }
     }
 
-    /// `setCpuCost()`: N, a power of 2 above 1.
+    /// Sets the CPU cost N.
+    ///
+    /// Fails with [`Error::InvalidArgument`] unless it is a power of 2 above 1.
+    ///
+    /// PHP: `setCpuCost()`.
     pub fn set_cpu_cost(&mut self, cost: i64) -> Result<&mut Self, Error> {
         if cost <= 1 || (cost & (cost - 1)) != 0 {
             return Err(Error::InvalidArgument("CPU cost must be > 1 and a power of 2".into()));
@@ -44,7 +54,11 @@ impl Scrypt {
         Ok(self)
     }
 
-    /// `setMemoryCost()`: r, at least 1.
+    /// Sets the block size r.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when it is below 1.
+    ///
+    /// PHP: `setMemoryCost()`.
     pub fn set_memory_cost(&mut self, cost: i64) -> Result<&mut Self, Error> {
         if cost < 1 {
             return Err(Error::InvalidArgument("Memory cost must be >= 1".into()));
@@ -53,7 +67,11 @@ impl Scrypt {
         Ok(self)
     }
 
-    /// `setParallelCost()`: p, at least 1.
+    /// Sets the parallelism p.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when it is below 1.
+    ///
+    /// PHP: `setParallelCost()`.
     pub fn set_parallel_cost(&mut self, cost: i64) -> Result<&mut Self, Error> {
         if cost < 1 {
             return Err(Error::InvalidArgument("Parallel cost must be >= 1".into()));
@@ -62,7 +80,11 @@ impl Scrypt {
         Ok(self)
     }
 
-    /// `setLength()`: at least 16 bytes.
+    /// Sets the length of the derived key, in bytes.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when it is below 16.
+    ///
+    /// PHP: `setLength()`.
     pub fn set_length(&mut self, length: i64) -> Result<&mut Self, Error> {
         if length < 16 {
             return Err(Error::InvalidArgument("Length must be >= 16 bytes".into()));
@@ -71,7 +93,11 @@ impl Scrypt {
         Ok(self)
     }
 
-    /// `setSalt()`: neither `""` nor `"0"`.
+    /// Sets the salt, used as given.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when it is empty or `"0"`.
+    ///
+    /// PHP: `setSalt()`.
     pub fn set_salt(&mut self, salt: &[u8]) -> Result<&mut Self, Error> {
         if salt.is_empty() || salt == b"0" {
             return Err(Error::InvalidArgument("Salt cannot be empty".into()));
@@ -210,6 +236,10 @@ fn romix(block: &mut [u8], n: usize, r: usize, v: &mut [u32], x: &mut [u32], y: 
 impl Hash for Scrypt {
     hash_plumbing!("scrypt");
 
+    /// Derives a key from `value` and the salt, as lowercase hex.
+    ///
+    /// Fails when the salt is not a string, a cost or the length is not an
+    /// integer, or scrypt rejects the parameters.
     fn hash(&self, value: &[u8]) -> Result<Vec<u8>, Error> {
         let o = &self.options;
         let salt = o.get("salt").and(o.string("salt"));
@@ -224,6 +254,7 @@ impl Hash for Scrypt {
         scrypt(value, salt, n, r, p, length)
     }
 
+    /// Whether hashing `value` gives `hash`, compared in constant time.
     fn verify(&self, value: &[u8], hash: &[u8]) -> Result<bool, Error> {
         Ok(hash_equals(hash, &self.hash(value)?))
     }

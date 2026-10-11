@@ -1,3 +1,6 @@
+//! JWT issuers: HS256 with a shared secret, RS256 with an RSA key pair,
+//! and the token kinds built on them.
+
 use hmac::{Hmac, Mac};
 use php_std::encoding::bin2hex;
 use php_std::json::{self, Flags};
@@ -84,7 +87,9 @@ fn check_issuer(issuer: &[u8]) -> Result<(), Error> {
     Ok(())
 }
 
-/// HS256 signing with a shared secret (`Utopia\Auth\Issuers\Symmetric`).
+/// Signs JWTs with HS256 and a shared secret.
+///
+/// PHP: `Utopia\Auth\Issuers\Symmetric`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Symmetric {
     secret: Vec<u8>,
@@ -93,7 +98,13 @@ pub struct Symmetric {
 }
 
 impl Symmetric {
-    /// `new Symmetric($secret, $issuer, $keyId)`.
+    /// An issuer named `issuer` (the `iss` claim) signing with `secret`,
+    /// with an optional `kid` header.
+    ///
+    /// Fails with [`Error::Exception`] when the issuer or the secret is
+    /// empty or `"0"`.
+    ///
+    /// PHP: `new Symmetric($secret, $issuer, $keyId)`.
     pub fn new(secret: &[u8], issuer: &[u8], key_id: Option<&[u8]>) -> Result<Self, Error> {
         check_issuer(issuer)?;
         if secret.is_empty() || secret == b"0" {
@@ -102,14 +113,18 @@ impl Symmetric {
         Ok(Self { secret: secret.to_vec(), issuer: issuer.to_vec(), key_id: key_id.map(<[u8]>::to_vec) })
     }
 
-    /// `Symmetric::generateSecret($bytes)`: random bytes as hex.
+    /// A new random secret of `bytes` bytes, as lowercase hex.
+    ///
+    /// PHP: `Symmetric::generateSecret($bytes)`.
     pub fn generate_secret(bytes: usize) -> String {
         let mut b = vec![0u8; bytes];
         random_bytes(&mut b);
         bin2hex(&b)
     }
 
-    /// `getKeyId()`.
+    /// The `kid` header, if one is set.
+    ///
+    /// PHP: `getKeyId()`.
     pub fn key_id(&self) -> Option<&[u8]> {
         self.key_id.as_deref()
     }
@@ -129,10 +144,12 @@ impl Symmetric {
     }
 }
 
-/// RS256 signing with an RSA key pair (`Utopia\Auth\Issuers\Asymmetric`).
+/// Signs JWTs with RS256 and an RSA key pair.
 ///
-/// The keys are PEM strings, parsed when used (PHP only checks they are
-/// not empty when constructing).
+/// The keys are PEM strings, parsed when used: construction only checks
+/// they are not empty.
+///
+/// PHP: `Utopia\Auth\Issuers\Asymmetric`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Asymmetric {
     private_key: Vec<u8>,
@@ -142,7 +159,13 @@ pub struct Asymmetric {
 }
 
 impl Asymmetric {
-    /// `new Asymmetric($privateKey, $publicKey, $issuer, $keyId)`.
+    /// An issuer named `issuer` (the `iss` claim) signing with a PEM key
+    /// pair, with an optional `kid` header.
+    ///
+    /// Fails with [`Error::Exception`] when the issuer or either key is
+    /// empty or `"0"`.
+    ///
+    /// PHP: `new Asymmetric($privateKey, $publicKey, $issuer, $keyId)`.
     pub fn new(private_key: &[u8], public_key: &[u8], issuer: &[u8], key_id: Option<&[u8]>) -> Result<Self, Error> {
         check_issuer(issuer)?;
         let missing = |k: &[u8]| k.is_empty() || k == b"0";
@@ -170,7 +193,12 @@ impl Asymmetric {
         }
     }
 
-    /// `getKeyId()`: the configured `kid`, else SHA-256 (hex) of the RSA modulus.
+    /// The `kid` header: the one configured, else the SHA-256 of the RSA
+    /// modulus as hex.
+    ///
+    /// Fails when the public key cannot be read or is not RSA.
+    ///
+    /// PHP: `getKeyId()`.
     pub fn key_id(&self) -> Result<Vec<u8>, Error> {
         match &self.key_id {
             Some(kid) => Ok(kid.clone()),
@@ -178,7 +206,12 @@ impl Asymmetric {
         }
     }
 
-    /// `getPublicJwk()`: `kty`, `use`, `alg`, `kid`, `n`, `e`.
+    /// The public key as JWK members, in order: `kty`, `use`, `alg`, `kid`,
+    /// `n` and `e`, for a JWKS endpoint.
+    ///
+    /// Fails when the public key cannot be read or is not RSA.
+    ///
+    /// PHP: `getPublicJwk()`.
     pub fn public_jwk(&self) -> Result<Vec<(&'static str, Vec<u8>)>, Error> {
         let (n, e) = self.modulus()?;
         let kid = match &self.key_id {
@@ -206,7 +239,9 @@ impl Asymmetric {
     }
 }
 
-/// Application-defined HS256 JWTs (`Utopia\Auth\Issuers\Symmetric\Jwt`).
+/// Issues general-purpose HS256 JWTs with application-defined claims.
+///
+/// PHP: `Utopia\Auth\Issuers\Symmetric\Jwt`.
 ///
 /// ```
 /// use php_std::Array;
@@ -230,8 +265,13 @@ impl Asymmetric {
 pub struct Jwt(pub Symmetric);
 
 impl Jwt {
-    /// `issue($audience, $duration, $claims)` at `now`: `claims` plus `iss`,
-    /// `aud`, `iat` and `exp` (`now + duration`), which `claims` cannot override.
+    /// A token for `audience` valid `duration` seconds from `now`: `claims`
+    /// plus `iss`, `aud`, `iat` and `exp`, which `claims` cannot override.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when `duration` is not positive
+    /// or the audience is empty.
+    ///
+    /// PHP: `issue($audience, $duration, $claims)`.
     pub fn issue(&self, audience: &Audience, duration: i64, claims: &Array, now: i64) -> Result<String, Error> {
         if duration < 1 {
             return Err(Error::InvalidArgument("Token duration must be greater than zero".into()));
@@ -262,12 +302,21 @@ impl Jwt {
     }
 }
 
-/// OAuth2 refresh tokens as HS256 JWTs (`Utopia\Auth\Issuers\Symmetric\RefreshToken`).
+/// Issues OAuth2 refresh tokens as HS256 JWTs.
+///
+/// PHP: `Utopia\Auth\Issuers\Symmetric\RefreshToken`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RefreshToken(pub Symmetric);
 
 impl RefreshToken {
-    /// `issue($subject, $audience, $clientId, $duration, $scopes, $jti, $claims)` at `now`.
+    /// A refresh token for `subject` and `client_id`, valid `duration` seconds
+    /// from `now`.
+    ///
+    /// It holds `claims` plus `iss`, `aud`, `sub`, `client_id`, `exp`, `iat`,
+    /// `jti` (random unless given) and `scope` (space-separated, when
+    /// `scopes` is not empty).
+    ///
+    /// PHP: `issue($subject, $audience, $clientId, $duration, $scopes, $jti, $claims)`.
     #[allow(clippy::too_many_arguments)]
     pub fn issue(
         &self,
@@ -295,7 +344,9 @@ impl RefreshToken {
     }
 }
 
-/// OAuth2 access tokens per RFC 9068, RS256 (`Utopia\Auth\Issuers\Asymmetric\AccessToken`).
+/// Issues OAuth2 access tokens as RS256 JWTs of type `at+jwt` (RFC 9068).
+///
+/// PHP: `Utopia\Auth\Issuers\Asymmetric\AccessToken`.
 ///
 /// ```
 /// use php_std::Array;
@@ -322,7 +373,15 @@ impl RefreshToken {
 pub struct AccessToken(pub Asymmetric);
 
 impl AccessToken {
-    /// `issue($subject, $audience, $clientId, $authTime, $duration, $scopes, $jti, $claims)` at `now`.
+    /// An access token for `subject` and `client_id`, for the resource
+    /// servers in `audience`, valid `duration` seconds from `now`.
+    ///
+    /// It holds `claims` plus `iss`, `aud`, `sub`, `client_id`, `exp`, `iat`,
+    /// `jti` (random unless given), `auth_time` and `scope` (space-separated,
+    /// when `scopes` is not empty). Fails with [`Error::InvalidArgument`]
+    /// unless `audience` is a non-empty list of non-empty identifiers.
+    ///
+    /// PHP: `issue($subject, $audience, $clientId, $authTime, $duration, $scopes, $jti, $claims)`.
     #[allow(clippy::too_many_arguments)]
     pub fn issue(
         &self,
@@ -363,12 +422,21 @@ impl AccessToken {
     }
 }
 
-/// OpenID Connect id_tokens, RS256 (`Utopia\Auth\Issuers\Asymmetric\IdToken`).
+/// Issues OpenID Connect ID tokens as RS256 JWTs.
+///
+/// PHP: `Utopia\Auth\Issuers\Asymmetric\IdToken`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct IdToken(pub Asymmetric);
 
 impl IdToken {
-    /// `issue($subject, $audience, $authTime, $duration, $nonce, $accessToken, $code, $claims)` at `now`.
+    /// An ID token for `subject` and the client `audience`, valid `duration`
+    /// seconds from `now`.
+    ///
+    /// It holds `claims` plus `iss`, `sub`, `aud`, `exp`, `iat` and
+    /// `auth_time`, and when given, `nonce`, `at_hash` (of `access_token`)
+    /// and `c_hash` (of `code`).
+    ///
+    /// PHP: `issue($subject, $audience, $authTime, $duration, $nonce, $accessToken, $code, $claims)`.
     #[allow(clippy::too_many_arguments)]
     pub fn issue(
         &self,

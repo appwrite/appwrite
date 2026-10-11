@@ -1,8 +1,13 @@
-//! CBOR as spomky-labs/cbor-php decodes and normalizes it for webauthn-lib:
-//! the same reads (so the same "Out of range" errors), the same head and
-//! indefinite-length checks, and the same normalization into PHP values
-//! (integers become decimal strings, map keys become array offsets).
-//! Errors are bytes: cbor-php quotes map keys, which need not be UTF-8.
+//! The CBOR decoder for passkey data: attestation objects, authenticator
+//! data and public keys, decoded into [`Value`]s.
+//!
+//! Integers become decimal strings and map keys become array keys. Errors
+//! are bytes: they quote map keys, which need not be UTF-8.
+//!
+//! PHP: CBOR as spomky-labs/cbor-php decodes and normalizes it for
+//! webauthn-lib, with the same reads (so the same "Out of range" errors),
+//! the same head and indefinite-length checks, and the same normalization
+//! into PHP values.
 
 use std::collections::{HashMap, HashSet};
 

@@ -1,45 +1,66 @@
+//! The password hash trait, and the constant-time comparison and secure
+//! randomness the hashes and proofs share.
+
 use std::fmt::Debug;
 
 use crate::{Error, Options};
 
-/// A password hashing algorithm (`Utopia\Auth\Hash`).
+/// A password hashing algorithm, with its options.
 ///
 /// The built-in algorithms live in [`crate::hashes`]; implement this trait
-/// to register another one (`Password::add_hash`). Hashing is CPU bound:
-/// async callers run it on the blocking pool.
+/// to register another one with [`Password::add_hash`](crate::proofs::Password::add_hash).
+/// Hashing is CPU bound: async callers run it on the blocking pool.
+///
+/// PHP: `Utopia\Auth\Hash`.
 pub trait Hash: Debug + Send + Sync {
-    /// `getName()`: the algorithm's stored name (`argon2`, `bcrypt`, ...).
+    /// The algorithm's stored name (`argon2`, `bcrypt`, ...).
+    ///
+    /// PHP: `getName()`.
     fn name(&self) -> &str;
 
-    /// `getOptions()`: the options document.
+    /// The options document.
+    ///
+    /// PHP: `getOptions()`.
     fn options(&self) -> &Options;
 
-    /// The options document, to change (`setOption()`, `setOptions()`).
+    /// The options document, to change.
+    ///
+    /// PHP: `setOption()`, `setOptions()`.
     fn options_mut(&mut self) -> &mut Options;
 
-    /// `hash($value)`.
+    /// Hashes `value`, returning the string to store.
+    ///
+    /// Fails when an option is out of range or has the wrong type.
     fn hash(&self, value: &[u8]) -> Result<Vec<u8>, Error>;
 
-    /// `verify($value, $hash)`.
+    /// Whether `value` matches a stored `hash`.
     fn verify(&self, value: &[u8], hash: &[u8]) -> Result<bool, Error>;
 
     /// A copy of this hash with its options.
     fn boxed_clone(&self) -> Box<dyn Hash>;
 
-    /// The concrete hash, to reach its typed setters (`getHashByName('bcrypt')->setCost()`).
+    /// The concrete hash, to downcast to its type.
+    ///
+    /// PHP: reaches the typed setters, as `getHashByName('bcrypt')->setCost()` does.
     fn as_any(&self) -> &dyn std::any::Any;
 
-    /// The concrete hash, to reach its typed setters.
+    /// The concrete hash, to downcast to its type and call its setters.
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
 
 impl Clone for Box<dyn Hash> {
+    /// A copy of the boxed hash with its options.
     fn clone(&self) -> Self {
         self.boxed_clone()
     }
 }
 
-/// `hash_equals($known, $user)`: constant-time byte comparison.
+/// Compares two byte strings in constant time, to check secrets without
+/// leaking how much of them matched.
+///
+/// Strings of different lengths are unequal at once.
+///
+/// PHP: `hash_equals($known, $user)`.
 pub fn hash_equals(known: &[u8], user: &[u8]) -> bool {
     if known.len() != user.len() {
         return false;
@@ -47,7 +68,11 @@ pub fn hash_equals(known: &[u8], user: &[u8]) -> bool {
     known.iter().zip(user).fold(0u8, |acc, (a, b)| acc | (a ^ b)) == 0
 }
 
-/// Fills `buf` with cryptographically secure random bytes (`random_bytes`).
+/// Fills `buf` with cryptographically secure random bytes.
+///
+/// Panics when the system random source is unavailable.
+///
+/// PHP: `random_bytes()`.
 pub fn random_bytes(buf: &mut [u8]) {
     getrandom::fill(buf).expect("system random source unavailable");
 }

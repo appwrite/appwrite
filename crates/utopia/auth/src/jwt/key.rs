@@ -1,6 +1,9 @@
-//! Keys as PHP's OpenSSL functions read and write them (PEM, inline or
-//! from a `file://` path), on OpenSSL itself: same key types, curves and
-//! limits as PHP, and constant-time private key operations.
+//! Signing keys: PEM keys read inline or from a `file://` path, RSA key
+//! pair generation, and signing on OpenSSL with constant-time private key
+//! operations.
+//!
+//! PHP: keys as PHP's OpenSSL functions read and write them, with the same
+//! key types, curves and limits.
 
 use std::borrow::Cow;
 
@@ -17,16 +20,22 @@ pub(crate) type RsaPublicKey = openssl::rsa::Rsa<openssl::pkey::Public>;
 /// An RSA private key.
 type RsaPrivateKey = openssl::rsa::Rsa<openssl::pkey::Private>;
 
-/// A PEM-encoded RSA key pair, as `Issuers\Asymmetric::generateKeyPair()` returns it.
+/// A PEM-encoded RSA key pair, for an [`Asymmetric`](super::Asymmetric) issuer.
+///
+/// PHP: the pair `Issuers\Asymmetric::generateKeyPair()` returns.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct KeyPair {
-    /// PKCS#8 `PRIVATE KEY` PEM.
+    /// The private key, as PKCS#8 `PRIVATE KEY` PEM.
     pub private_key: String,
-    /// SubjectPublicKeyInfo `PUBLIC KEY` PEM.
+    /// The public key, as SubjectPublicKeyInfo `PUBLIC KEY` PEM.
     pub public_key: String,
 }
 
-/// `Asymmetric::generateKeyPair($bits)`: a fresh RSA key pair.
+/// A fresh RSA key pair of `bits` bits.
+///
+/// Fails with [`Error::Exception`] below 512 bits or when generation fails.
+///
+/// PHP: `Asymmetric::generateKeyPair($bits)`.
 pub fn generate_key_pair(bits: i64) -> Result<KeyPair, Error> {
     let failed = || Error::Exception("Unable to generate an RSA key pair".into());
     // OpenSSL refuses keys below 512 bits (PHP warns and returns false).
@@ -213,7 +222,9 @@ fn private_pem(pem: &[u8]) -> Option<Private> {
     None
 }
 
-/// The raw RSA parameters PHP's `openssl_pkey_get_details()['rsa']` reports.
+/// The raw parameters of an RSA key, as published in a JWK.
+///
+/// PHP: the parameters `openssl_pkey_get_details()['rsa']` reports.
 pub struct Rsa;
 
 impl Rsa {
