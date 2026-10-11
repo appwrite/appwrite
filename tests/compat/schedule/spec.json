@@ -1,0 +1,777 @@
+{
+  "lib": "schedule",
+  "description": "utopia-php/schedule: cron, interval, one-shot and shifted triggers, the reconciling scheduler, and its claim stores (memory, Redis).",
+  "complete": false,
+  "php": {
+    "src": [
+      "packages/schedule/src"
+    ],
+    "tests": [
+      "packages/schedule/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/schedule"
+  },
+  "services": [
+    "redis"
+  ],
+  "state": [
+    "redis"
+  ],
+  "ops": {
+    "trigger.new": {
+      "doc": "build a trigger spec ({cron}, {interval, anchor?}, {at}, {in, from}, {shifted, seconds}): true, or the constructor's error",
+      "covers": [
+        "Utopia\\Schedule\\Trigger\\Cron::__construct",
+        "Utopia\\Schedule\\Trigger\\Interval::__construct",
+        "Utopia\\Schedule\\Trigger\\At::__construct",
+        "Utopia\\Schedule\\Trigger\\At::in",
+        "Utopia\\Schedule\\Trigger\\Shifted::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "cron",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "trigger": {
+                "gen": "object",
+                "fields": {
+                  "cron": {
+                    "gen": "ref",
+                    "name": "cron"
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "trigger.occurrences": {
+      "doc": "$trigger->occurrencesBetween(start, end or start->modify(window)), each formatted (format, default 'Y-m-d H:i:s.u T'); with `limit` {count, head: the first `limit`, digest: md5 of all}",
+      "covers": [
+        "Utopia\\Schedule\\Trigger\\Cron::occurrencesBetween",
+        "Utopia\\Schedule\\Trigger\\Interval::occurrencesBetween",
+        "Utopia\\Schedule\\Trigger\\At::occurrencesBetween",
+        "Utopia\\Schedule\\Trigger\\Shifted::occurrencesBetween"
+      ],
+      "fuzz": [
+        {
+          "name": "cron",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "trigger": {
+                "gen": "object",
+                "fields": {
+                  "cron": {
+                    "gen": "ref",
+                    "name": "cron"
+                  }
+                }
+              },
+              "start": {
+                "gen": "ref",
+                "name": "start"
+              },
+              "window": {
+                "gen": "ref",
+                "name": "window"
+              },
+              "limit": {
+                "gen": "const",
+                "value": 30
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "cron_zones",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "trigger": {
+                "gen": "object",
+                "fields": {
+                  "cron": {
+                    "gen": "ref",
+                    "name": "cron_valid"
+                  }
+                }
+              },
+              "start": {
+                "gen": "object",
+                "fields": {
+                  "time": {
+                    "gen": "ref",
+                    "name": "start"
+                  },
+                  "tz": {
+                    "gen": "ref",
+                    "name": "zone"
+                  }
+                }
+              },
+              "window": {
+                "gen": "ref",
+                "name": "window"
+              },
+              "limit": {
+                "gen": "const",
+                "value": 30
+              }
+            }
+          },
+          "iterations": 1000
+        },
+        {
+          "name": "interval",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "trigger": {
+                "gen": "object",
+                "optional": [
+                  "anchor"
+                ],
+                "fields": {
+                  "interval": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "int",
+                        "min": -2,
+                        "max": 100000
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          1,
+                          7,
+                          30,
+                          60,
+                          90,
+                          300,
+                          900,
+                          3600,
+                          86400
+                        ]
+                      }
+                    ]
+                  },
+                  "anchor": {
+                    "gen": "ref",
+                    "name": "start"
+                  }
+                }
+              },
+              "start": {
+                "gen": "ref",
+                "name": "start"
+              },
+              "window": {
+                "gen": "ref",
+                "name": "window_short"
+              },
+              "limit": {
+                "gen": "const",
+                "value": 30
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "shifted",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "trigger": {
+                "gen": "object",
+                "fields": {
+                  "shifted": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "object",
+                        "fields": {
+                          "cron": {
+                            "gen": "ref",
+                            "name": "cron_valid"
+                          }
+                        }
+                      },
+                      {
+                        "gen": "object",
+                        "fields": {
+                          "interval": {
+                            "gen": "pick",
+                            "from": [
+                              15,
+                              60,
+                              3600
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "gen": "object",
+                        "fields": {
+                          "at": {
+                            "gen": "ref",
+                            "name": "start"
+                          }
+                        }
+                      }
+                    ]
+                  },
+                  "seconds": {
+                    "gen": "int",
+                    "min": -200000,
+                    "max": 200000
+                  }
+                }
+              },
+              "start": {
+                "gen": "ref",
+                "name": "start"
+              },
+              "window": {
+                "gen": "ref",
+                "name": "window_medium"
+              },
+              "limit": {
+                "gen": "const",
+                "value": 30
+              }
+            }
+          },
+          "iterations": 1000
+        },
+        {
+          "name": "at",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "trigger": {
+                "gen": "object",
+                "fields": {
+                  "in": {
+                    "gen": "int",
+                    "min": -100000,
+                    "max": 100000
+                  },
+                  "from": {
+                    "gen": "ref",
+                    "name": "start"
+                  }
+                }
+              },
+              "start": {
+                "gen": "ref",
+                "name": "start"
+              },
+              "window": {
+                "gen": "ref",
+                "name": "window"
+              },
+              "limit": {
+                "gen": "const",
+                "value": 30
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "trigger.recurring": {
+      "doc": "$trigger->recurring()",
+      "covers": [
+        "Utopia\\Schedule\\Trigger\\Cron::recurring",
+        "Utopia\\Schedule\\Trigger\\Interval::recurring",
+        "Utopia\\Schedule\\Trigger\\At::recurring",
+        "Utopia\\Schedule\\Trigger\\Shifted::recurring"
+      ]
+    },
+    "clock.new": {
+      "doc": "new Clock\\Test(start)",
+      "covers": [
+        "Utopia\\Schedule\\Clock\\Test::__construct"
+      ]
+    },
+    "clock.now": {
+      "doc": "$clock->now(), formatted",
+      "covers": [
+        "Utopia\\Schedule\\Clock\\Test::now"
+      ]
+    },
+    "clock.advance": {
+      "doc": "$clock->advance(seconds)",
+      "covers": [
+        "Utopia\\Schedule\\Clock\\Test::advance"
+      ]
+    },
+    "clock.sleep": {
+      "doc": "$clock->sleep(seconds)",
+      "covers": [
+        "Utopia\\Schedule\\Clock\\Test::sleep"
+      ]
+    },
+    "store.memory": {
+      "doc": "new Store\\Memory()"
+    },
+    "store.redis": {
+      "doc": "new Store\\Redis($redis, key) on the redis service; `name` names its connection (CLIENT SETNAME)",
+      "covers": [
+        "Utopia\\Schedule\\Store\\Redis::__construct"
+      ]
+    },
+    "store.load": {
+      "doc": "$store->load(): {token, expiresAt, coveredUntil, syncedUntil} or null",
+      "covers": [
+        "Utopia\\Schedule\\Store\\Memory::load",
+        "Utopia\\Schedule\\Store\\Redis::load"
+      ]
+    },
+    "store.swap": {
+      "doc": "$store->swap(expected, new Claim(...claim))",
+      "covers": [
+        "Utopia\\Schedule\\Store\\Memory::swap",
+        "Utopia\\Schedule\\Store\\Redis::swap",
+        "Utopia\\Schedule\\Claim::__construct"
+      ]
+    },
+    "store.race": {
+      "doc": "RedisStoreTest::testOnlyOneOfManyContendersTakesAFreshClaim: `contenders` concurrent swaps on fresh keys `key:round`, `rounds` times; how many won"
+    },
+    "redis.ttl": {
+      "doc": "fixture: TTL key"
+    },
+    "redis.kill": {
+      "doc": "fixture: CLIENT KILL every connection named `name`; how many"
+    },
+    "source.new": {
+      "doc": "a scripted source: rows ({id, version, data?, active?, activeFrom?} or {prefix, count, version}), phases [{from, rows}], since (a change feed), fail {class, message, after}, poison {id: error}, triggers {id: trigger}, trigger, payload (id | data), steal {at, from, token, lease} with clock and store",
+      "covers": [
+        "Utopia\\Schedule\\Source\\Row::__construct",
+        "Utopia\\Schedule\\Source\\Entry::__construct"
+      ]
+    },
+    "source.set": {
+      "doc": "replace the source's rows, since, fail or phases"
+    },
+    "source.made": {
+      "doc": "how many times make() ran"
+    },
+    "scheduler.new": {
+      "doc": "new Scheduler(source, store ?? Memory, tick, sync, lead, snapshot, recover, lease, token, clock, telemetry: Test when `telemetry`, onError: recording when `errors`)",
+      "covers": [
+        "Utopia\\Schedule\\Scheduler::__construct"
+      ]
+    },
+    "scheduler.reconcile": {
+      "doc": "$scheduler->reconcile(full)",
+      "covers": [
+        "Utopia\\Schedule\\Scheduler::reconcile"
+      ]
+    },
+    "scheduler.tick": {
+      "doc": "$scheduler->tick(): [{id, due, payload, version, key}], or with `summary` {count, distinct keys, md5 of the keys}",
+      "covers": [
+        "Utopia\\Schedule\\Scheduler::tick",
+        "Utopia\\Schedule\\Occurrence::__construct"
+      ]
+    },
+    "scheduler.commit": {
+      "doc": "$scheduler->commit()",
+      "covers": [
+        "Utopia\\Schedule\\Scheduler::commit"
+      ]
+    },
+    "scheduler.count": {
+      "doc": "$scheduler->count()",
+      "covers": [
+        "Utopia\\Schedule\\Scheduler::count"
+      ]
+    },
+    "scheduler.is_current": {
+      "doc": "$scheduler->isCurrent(new Occurrence(id, due, null, version))",
+      "covers": [
+        "Utopia\\Schedule\\Scheduler::isCurrent"
+      ]
+    },
+    "scheduler.run": {
+      "doc": "$scheduler->run(handler): each hand-over {at, covered, occurrences}; the handler stops after `stop_after` occurrences or `stop_batches` hand-overs (default one), never with `never`, or throws `throw`",
+      "covers": [
+        "Utopia\\Schedule\\Scheduler::run"
+      ]
+    },
+    "scheduler.stop": {
+      "doc": "$scheduler->stop()",
+      "covers": [
+        "Utopia\\Schedule\\Scheduler::stop"
+      ]
+    },
+    "scheduler.errors": {
+      "doc": "what onError received: [class, message, row id, row data]"
+    },
+    "scheduler.telemetry": {
+      "doc": "what the Test telemetry recorded: counters, histograms (durations as counts) and gauges by name"
+    },
+    "occurrence.key": {
+      "doc": "(new Occurrence(id, due, payload))->key()",
+      "covers": [
+        "Utopia\\Schedule\\Occurrence::key"
+      ]
+    }
+  },
+  "generators": {
+    "cron_field": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "*",
+            "?",
+            "*/5",
+            "*/15",
+            "0",
+            "1",
+            "5",
+            "7",
+            "12",
+            "13",
+            "23",
+            "29",
+            "30",
+            "31",
+            "59",
+            "60",
+            "1-5",
+            "5-1",
+            "10-20/3",
+            "*/0",
+            "5/10",
+            "1,15,30",
+            "L",
+            "L-2",
+            "L-31",
+            "LW",
+            "15W",
+            "1W",
+            "31W",
+            "32W",
+            "5L",
+            "7L",
+            "FRI#3",
+            "1#5",
+            "1#6",
+            "MON-FRI",
+            "mon-Fri",
+            "JAN",
+            "feb-apr",
+            "SUN",
+            "sat",
+            "1,L",
+            "x",
+            "",
+            "-",
+            "1-",
+            "*/",
+            "0#1",
+            "#2",
+            "l-0",
+            "0w",
+            "99999999999999999999",
+            "L-99999999999999999999",
+            "1-2-3",
+            "*/2/3"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "0123456789*/-,LW#?",
+          "min": 1,
+          "max": 6
+        }
+      ]
+    },
+    "cron": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "cron_field"
+            },
+            {
+              "gen": "const",
+              "value": " "
+            },
+            {
+              "gen": "ref",
+              "name": "cron_field"
+            },
+            {
+              "gen": "const",
+              "value": " "
+            },
+            {
+              "gen": "ref",
+              "name": "cron_field"
+            },
+            {
+              "gen": "const",
+              "value": " "
+            },
+            {
+              "gen": "ref",
+              "name": "cron_field"
+            },
+            {
+              "gen": "const",
+              "value": " "
+            },
+            {
+              "gen": "ref",
+              "name": "cron_field"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "@yearly",
+            "@annually",
+            "@monthly",
+            "@weekly",
+            "@daily",
+            "@midnight",
+            "@hourly",
+            " @HOURLY ",
+            "@reboot",
+            "* * * *",
+            "* * * * * *",
+            "  *\t*\n* * *  ",
+            "\f* * * * *",
+            "* * * * *\u000b",
+            "0 0 31 2 *",
+            "0 0 30 2 *",
+            "0 12 29 2 *",
+            "0 0 L 2 *",
+            "0 0 ? * 7L",
+            "0 0 13 * 5",
+            "30 9 * AUG mon-Fri",
+            "not a cron"
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "ref",
+            "name": "cron_field"
+          },
+          "sep": " ",
+          "min": 3,
+          "max": 7
+        }
+      ]
+    },
+    "cron_valid": {
+      "gen": "pick",
+      "from": [
+        "* * * * *",
+        "*/5 * * * *",
+        "*/15 * * * *",
+        "0 * * * *",
+        "30 2 * * *",
+        "30 1 * * *",
+        "0 0 * * 0",
+        "0 0 1 * *",
+        "0 12 29 2 *",
+        "0 0 L * *",
+        "0 0 L-2 * *",
+        "0 0 LW * *",
+        "0 0 15W * *",
+        "0 0 1W * *",
+        "0 0 ? * 5L",
+        "0 0 ? * FRI#3",
+        "0 0 1,L * ?",
+        "0 0 13 * 5",
+        "15,45-50/2 8 * * *",
+        "30 9 * AUG mon-Fri",
+        "@daily",
+        "@weekly",
+        "0 3 * 3,11 SUN"
+      ]
+    },
+    "start": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "2026-08-17 16:00:00.000000",
+            "2026-08-17 15:59:59.941000",
+            "2026-08-18 03:00:59.500000",
+            "2026-01-01 00:00:00.000000",
+            "2026-03-08 01:00:00.000000",
+            "2026-10-31 23:00:00.000000",
+            "2028-02-28 23:59:59.999999",
+            "2026-12-31 23:59:30.000000",
+            "1969-12-31 23:59:58.500000",
+            "2026-03-29 00:30:00.000000"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "2026-",
+                "2027-",
+                "2028-"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "01",
+                "02",
+                "03",
+                "06",
+                "10",
+                "11",
+                "12"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "-01 ",
+                "-08 ",
+                "-15 ",
+                "-28 ",
+                "-29 ",
+                "-31 "
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "00",
+                "01",
+                "02",
+                "03",
+                "12",
+                "23"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "00",
+                "15",
+                "29",
+                "30",
+                "59"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": ":"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "00",
+                "01",
+                "30",
+                "59"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ".000000",
+                ".000001",
+                ".500000",
+                ".999999"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "zone": {
+      "gen": "pick",
+      "from": [
+        "UTC",
+        "America/New_York",
+        "Europe/London",
+        "Australia/Lord_Howe",
+        "Asia/Kolkata",
+        "+05:30",
+        "-03:00",
+        "Pacific/Chatham",
+        "America/Sao_Paulo"
+      ]
+    },
+    "window": {
+      "gen": "pick",
+      "from": [
+        "+1 minute",
+        "+59 seconds",
+        "+90 seconds",
+        "+1 hour",
+        "+6 hours",
+        "+1 day",
+        "+3 days",
+        "+35 days",
+        "-1 hour"
+      ]
+    },
+    "window_short": {
+      "gen": "pick",
+      "from": [
+        "+1 minute",
+        "+59 seconds",
+        "+90 seconds",
+        "+1 hour",
+        "+6 hours",
+        "-1 hour"
+      ]
+    },
+    "window_medium": {
+      "gen": "pick",
+      "from": [
+        "+1 minute",
+        "+90 seconds",
+        "+1 hour",
+        "+6 hours",
+        "+1 day",
+        "+3 days",
+        "-1 hour"
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Schedule\\Clock\\System::*": "the wall clock and a real sleep: cases must not depend on the time they run (the Rust SystemClock reads and sleeps on the same clock)"
+  },
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": []
+}

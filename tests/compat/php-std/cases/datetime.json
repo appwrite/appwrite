@@ -5818,6 +5818,238 @@
       }
     },
     {
+      "name": "setDate: plain",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "year": 2025,
+        "month": 6,
+        "day": 15,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2025-06-15 10:20:30.123456 Europe/Paris CEST +02:00 1749975630"
+    },
+    {
+      "name": "setDate: February 31 rolls into March",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2026-01-01 08:00:00",
+        "year": 2026,
+        "month": 2,
+        "day": 31,
+        "format": "Y-m-d N w t L z U"
+      },
+      "expect": "2026-03-03 2 2 31 0 61 1772524800"
+    },
+    {
+      "name": "setDate: month 13 and day 0",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2026-01-01 08:00:00",
+        "year": 2026,
+        "month": 13,
+        "day": 0,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-12-31 08:00:00.000000 UTC UTC +00:00 1798704000"
+    },
+    {
+      "name": "setDate: negative month and day",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2026-01-01 08:00:00",
+        "year": 2026,
+        "month": -1,
+        "day": -1,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2025-10-30 08:00:00.000000 UTC UTC +00:00 1761811200"
+    },
+    {
+      "name": "setDate: year 0",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2026-01-01 08:00:00",
+        "year": 0,
+        "month": 1,
+        "day": 1,
+        "format": "Y-m-d o-W N L U"
+      },
+      "expect": "0000-01-01 -1-52 6 1 -62167190400"
+    },
+    {
+      "name": "setDate: into the New York DST gap keeps the wall time",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2026-01-01 02:30:00",
+        "tz": "America/New_York",
+        "year": 2026,
+        "month": 3,
+        "day": 8,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-03-08 02:30:00.000000 America/New_York EDT -04:00 1772955000"
+    },
+    {
+      "name": "setDate: into the New York DST overlap",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2026-01-01 01:30:00",
+        "tz": "America/New_York",
+        "year": 2026,
+        "month": 11,
+        "day": 1,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-11-01 01:30:00.000000 America/New_York EST -05:00 1793514600"
+    },
+    {
+      "name": "setDate: offset zone",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2026-06-15 12:00:00 +05:30",
+        "year": 2026,
+        "month": 12,
+        "day": 31,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-12-31 12:00:00.000000 +05:30 GMT+0530 +05:30 1798698600"
+    },
+    {
+      "name": "setDate: Lord Howe half-hour DST",
+      "op": "datetime.set_date",
+      "args": {
+        "base": "2026-01-01 02:15:00",
+        "tz": "Australia/Lord_Howe",
+        "year": 2026,
+        "month": 10,
+        "day": 4,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-10-04 02:15:00.000000 Australia/Lord_Howe +11 +11:00 1791042300"
+    },
+    {
+      "name": "setTime: plain",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2024-01-31 10:20:30.123456 Europe/Paris",
+        "hour": 23,
+        "minute": 59,
+        "second": 59,
+        "microsecond": 999999,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2024-01-31 23:59:59.999999 Europe/Paris CET +01:00 1706741999"
+    },
+    {
+      "name": "setTime: hour 24 is the next midnight",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2026-01-31 10:00:00",
+        "hour": 24,
+        "minute": 0,
+        "second": 0,
+        "microsecond": 0,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-02-01 00:00:00.000000 UTC UTC +00:00 1769904000"
+    },
+    {
+      "name": "setTime: minute 60, second 60, negative values",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2026-01-31 10:00:00",
+        "hour": -1,
+        "minute": 60,
+        "second": 60,
+        "microsecond": -1,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-01-31 00:00:59.999999 UTC UTC +00:00 1769817659"
+    },
+    {
+      "name": "setTime: microsecond overflow",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2026-01-31 10:00:00",
+        "hour": 0,
+        "minute": 0,
+        "second": 0,
+        "microsecond": 1999999,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-01-31 00:00:01.999999 UTC UTC +00:00 1769817601"
+    },
+    {
+      "name": "setTime: into the New York DST gap moves past it",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2026-03-08 00:00:00",
+        "tz": "America/New_York",
+        "hour": 2,
+        "minute": 30,
+        "second": 0,
+        "microsecond": 0,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-03-08 03:30:00.000000 America/New_York EDT -04:00 1772955000"
+    },
+    {
+      "name": "setTime: into the New York DST overlap",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2026-11-01 00:00:00",
+        "tz": "America/New_York",
+        "hour": 1,
+        "minute": 30,
+        "second": 0,
+        "microsecond": 0,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-11-01 01:30:00.000000 America/New_York EDT -04:00 1793511000"
+    },
+    {
+      "name": "setTime: London DST gap",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2026-03-29 00:00:00",
+        "tz": "Europe/London",
+        "hour": 1,
+        "minute": 30,
+        "second": 0,
+        "microsecond": 0,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-03-29 02:30:00.000000 Europe/London BST +01:00 1774747800"
+    },
+    {
+      "name": "setTime: Lord Howe half-hour DST gap",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2026-10-04 00:00:00",
+        "tz": "Australia/Lord_Howe",
+        "hour": 2,
+        "minute": 15,
+        "second": 0,
+        "microsecond": 0,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-10-04 02:45:00.000000 Australia/Lord_Howe +11 +11:00 1791042300"
+    },
+    {
+      "name": "setTime: abbreviation zone",
+      "op": "datetime.set_time",
+      "args": {
+        "base": "2026-11-01 00:00:00 EDT",
+        "hour": 25,
+        "minute": 0,
+        "second": 0,
+        "microsecond": 0,
+        "format": "Y-m-d H:i:s.u e T P U"
+      },
+      "expect": "2026-11-02 01:00:00.000000 EDT EDT -04:00 1793595600"
+    },
+    {
       "name": "add: +10 seconds",
       "op": "datetime.add",
       "args": {

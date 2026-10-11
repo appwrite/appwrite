@@ -13,6 +13,8 @@
 //! | `DateTime::createFromFormat($f, $s, $tz)` | [`DateTime::from_format`] |
 //! | `->format($f)`, `date($f, $ts)`, `gmdate($f, $ts)` | [`DateTime::format`], [`date`], [`gmdate`] |
 //! | `->modify($s)` | [`DateTime::modify`] (`DateTime`), [`DateTime::modified`] (`DateTimeImmutable`) |
+//! | `->setDate($y, $m, $d)` | [`DateTime::set_date`] (`DateTime`), [`DateTime::with_date`] (`DateTimeImmutable`) |
+//! | `->setTime($h, $i, $s, $us)` | [`DateTime::set_time`] (`DateTime`), [`DateTime::with_time`] (`DateTimeImmutable`) |
 //! | `->setTimezone($tz)`, `->getTimezone()` | [`DateTime::set_timezone`], [`DateTime::timezone`] |
 //! | `->getTimestamp()`, `->getOffset()`, `->getMicrosecond()` | [`DateTime::timestamp`], [`DateTime::offset`], [`DateTime::microsecond`] |
 //! | `->add(DateInterval::createFromDateString($s))` | [`DateTime::add`], [`Interval::from_date_string`] |
@@ -31,9 +33,9 @@
 //! the system's, so results do not depend on the host.
 //!
 //! Not modelled: `DatePeriod`, `DateTime::diff()`, `DateTime::sub()`,
-//! intervals created from ISO 8601 durations, `setDate`/`setTime`/
-//! `setISODate`, `idate`, `mktime`, `strftime`, `getdate`, sunrise/sunset
-//! functions; `date_default_timezone_set` (pass the zone instead).
+//! intervals created from ISO 8601 durations, `setISODate`, `idate`,
+//! `mktime`, `strftime`, `getdate`, sunrise/sunset functions;
+//! `date_default_timezone_set` (pass the zone instead).
 
 mod abbreviations;
 mod format;
@@ -397,6 +399,52 @@ impl DateTime {
         let mut t = self.t.clone();
         modify(&mut t, modifier, "DateTimeImmutable::modify(): ")?;
         Ok(DateTime { t })
+    }
+
+    /// Sets the year, month and day, keeping the time of day and the zone.
+    ///
+    /// Out-of-range values roll over (month 13 is January of the next
+    /// year, day 0 the last day of the previous month) and the timestamp is
+    /// recomputed. As in PHP, the fields are not re-derived from the new
+    /// timestamp, so a wall time that falls in a DST gap still formats as set.
+    ///
+    /// PHP: `DateTime::setDate()` / `DateTimeImmutable::setDate()`.
+    pub fn set_date(&mut self, year: i64, month: i64, day: i64) {
+        (self.t.y, self.t.m, self.t.d) = (year, month, day);
+        self.t.update_ts(None);
+    }
+
+    /// [`DateTime::set_date`] on a copy.
+    ///
+    /// PHP: `DateTimeImmutable::setDate()`.
+    pub fn with_date(&self, year: i64, month: i64, day: i64) -> DateTime {
+        let mut d = self.clone();
+        d.set_date(year, month, day);
+        d
+    }
+
+    /// Sets the hour, minute, second and microsecond, keeping the date and
+    /// the zone.
+    ///
+    /// Out-of-range values roll over into the next larger unit (hour 24 is
+    /// midnight of the next day), and the fields are then re-derived from
+    /// the new timestamp, so a wall time in a DST gap moves past it.
+    ///
+    /// PHP: `DateTime::setTime()` / `DateTimeImmutable::setTime()`
+    /// (`$second` and `$microsecond` default to 0 there).
+    pub fn set_time(&mut self, hour: i64, minute: i64, second: i64, microsecond: i64) {
+        (self.t.h, self.t.i, self.t.s, self.t.us) = (hour, minute, second, microsecond);
+        self.t.update_ts(None);
+        self.t.update_from_sse();
+    }
+
+    /// [`DateTime::set_time`] on a copy.
+    ///
+    /// PHP: `DateTimeImmutable::setTime()`.
+    pub fn with_time(&self, hour: i64, minute: i64, second: i64, microsecond: i64) -> DateTime {
+        let mut d = self.clone();
+        d.set_time(hour, minute, second, microsecond);
+        d
     }
 
     /// `DateTime::add($interval)` for an interval made by

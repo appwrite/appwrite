@@ -448,6 +448,7 @@ dependencies = [
  "utopia-pools",
  "utopia-queue",
  "utopia-registry",
+ "utopia-schedule",
  "utopia-span",
  "utopia-system",
  "utopia-telemetry",
@@ -2905,6 +2906,19 @@ name = "utopia-registry"
 version = "0.1.0"
 dependencies = [
  "thiserror",
+]
+
+[[package]]
+name = "utopia-schedule"
+version = "0.1.0"
+dependencies = [
+ "getrandom 0.3.4",
+ "indexmap",
+ "php-std",
+ "redis",
+ "thiserror",
+ "tokio",
+ "utopia-telemetry",
 ]
 
 [[package]]

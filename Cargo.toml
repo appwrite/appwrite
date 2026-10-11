@@ -51,6 +51,7 @@ utopia-registry = { path = "crates/utopia/registry" }
 utopia-abuse = { path = "crates/utopia/abuse" }
 utopia-balancer = { path = "crates/utopia/balancer" }
 utopia-detector = { path = "crates/utopia/detector" }
+utopia-schedule = { path = "crates/utopia/schedule" }
 utopia-websocket = { path = "crates/utopia/websocket" }
 
 # Appwrite crates

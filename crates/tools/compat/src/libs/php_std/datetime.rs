@@ -21,6 +21,8 @@ pub const OPS: &[&str] = &[
     "datetime.format",
     "datetime.modify",
     "datetime.modify_mutable",
+    "datetime.set_date",
+    "datetime.set_time",
     "datetime.add",
     "datetime.create_from_format",
     "datetime.compare",
@@ -111,7 +113,9 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
                 Ok(bytes_value(&d.format(&format)))
             }))
         }
-        "datetime.modify" | "datetime.modify_mutable" | "datetime.add" if depends_on_now(&a.bytes("base")?) => {
+        "datetime.modify" | "datetime.modify_mutable" | "datetime.set_date" | "datetime.set_time" | "datetime.add"
+            if depends_on_now(&a.bytes("base")?) =>
+        {
             Outcome::ok(DEPENDS_ON_NOW)
         }
         "datetime.modify" => {
@@ -123,6 +127,24 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
             caught(parse("base")?.and_then(|mut d| {
                 d.modify(&s)?;
                 Ok(bytes_value(&d.format(&format)))
+            }))
+        }
+        "datetime.set_date" => {
+            let (year, month, day, format) = (a.i64("year")?, a.i64("month")?, a.i64("day")?, a.bytes("format")?);
+            let base = a.bytes("base")?;
+            caught(
+                zone(&a, "tz")?
+                    .and_then(|tz| DateTime::parse(&base, tz.as_ref(), &utc, NOW))
+                    .map(|d| bytes_value(&d.with_date(year, month, day).format(&format))),
+            )
+        }
+        "datetime.set_time" => {
+            let (hour, minute) = (a.i64("hour")?, a.i64("minute")?);
+            let (second, microsecond, format) = (a.i64("second")?, a.i64("microsecond")?, a.bytes("format")?);
+            let base = a.bytes("base")?;
+            caught(zone(&a, "tz")?.and_then(|tz| DateTime::parse(&base, tz.as_ref(), &utc, NOW)).map(|mut d| {
+                d.set_time(hour, minute, second, microsecond);
+                bytes_value(&d.format(&format))
             }))
         }
         "datetime.add" => {

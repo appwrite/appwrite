@@ -31,6 +31,7 @@ pub mod pools;
 pub mod query;
 pub mod queue;
 pub mod registry;
+pub mod schedule;
 pub mod span;
 pub mod system;
 pub mod telemetry;
@@ -60,6 +61,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("query", query::OPS),
     ("queue", queue::OPS),
     ("registry", registry::OPS),
+    ("schedule", schedule::OPS),
     ("span", span::OPS),
     ("system", system::OPS),
     ("telemetry", telemetry::OPS),
@@ -91,6 +93,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "query" => query::call(op, args, session).await,
         "queue" => queue::call(op, args, session).await,
         "registry" => registry::call(op, args, session).await,
+        "schedule" => schedule::call(op, args, session).await,
         "span" => span::call(op, args, session).await,
         "system" => system::call(op, args, session).await,
         "telemetry" => telemetry::call(op, args, session).await,
@@ -122,6 +125,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "pools" => pools::BENCHES,
         "queue" => queue::BENCHES,
         "registry" => registry::BENCHES,
+        "schedule" => schedule::BENCHES,
         "span" => span::BENCHES,
         "system" => system::BENCHES,
         "telemetry" => telemetry::BENCHES,
@@ -153,6 +157,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "pools" => pools::bench(name, session).await,
         "queue" => queue::bench(name, session).await,
         "registry" => registry::bench(name, session).await,
+        "schedule" => schedule::bench(name, session).await,
         "span" => span::bench(name, session).await,
         "system" => system::bench(name, session).await,
         "telemetry" => telemetry::bench(name, session).await,
