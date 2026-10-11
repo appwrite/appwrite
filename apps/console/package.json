@@ -45,7 +45,7 @@
     "generate:cover-manifest": "bun run scripts/generate-cover-manifest.ts",
     "generate:docs": "bun run scripts/generate-docs.ts",
     "generate:docs-exports": "bun run scripts/generate-docs-exports.ts",
-    "generate:github-stars": "node scripts/generate-github-stars.js",
+    "generate:github-stars": "bun run scripts/generate-github-stars.ts",
     "generate:public-icon-manifest": "bun run scripts/generate-public-icon-manifest.ts",
     "generate:routes": "tsr generate",
     "generate:sitemap": "bun run scripts/generate-sitemap.ts",
@@ -57,7 +57,7 @@
     "benchmark:init-memory": "bun run scripts/benchmark-init-memory.ts"
   },
   "dependencies": {
-    "@appwrite.io/console": "18.3.0-rc.2",
+    "@appwrite.io/console": "18.4.0-rc.1",
     "@appwrite.io/specs": "github:appwrite/specs#fcaf861efd0186d0e53dd82df6993f90eb66bd7b",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",

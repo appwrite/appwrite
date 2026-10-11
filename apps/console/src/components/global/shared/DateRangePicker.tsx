@@ -18,6 +18,8 @@ import {
   getUsageDateRangePresetByValue,
   USAGE_DATE_RANGE_PRESET_GROUPS,
   type UsageDateRangePreset,
+  type UsageDateRangePresetContext,
+  type UsageDateRangePresetGroup,
 } from '@/lib/usage/usage-date-range-presets'
 import { isFullCalendarDayRange, normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
 import {
@@ -41,14 +43,7 @@ import {
 
 export type DateRangePreset = UsageDateRangePreset
 
-const PRESET_GROUPS = USAGE_DATE_RANGE_PRESET_GROUPS
 const WIDE_LAYOUT_MIN_WIDTH = 820
-
-function findMatchingPreset(
-  range: DateRange | undefined,
-): UsageDateRangePreset | null {
-  return findMatchingUsageDateRangePreset(range)
-}
 
 interface DateRangePickerProps {
   dateRange: DateRange | undefined
@@ -67,6 +62,13 @@ interface DateRangePickerProps {
    * clamped on apply.
    */
   retentionHours?: number | null
+  /** Quick-select groups to show. Defaults to the Usage set. */
+  presetGroups?: UsageDateRangePresetGroup[]
+  /**
+   * Anchor for open-ended presets ("All time"). Presets that need it are
+   * hidden when it is missing.
+   */
+  presetContext?: UsageDateRangePresetContext
 }
 
 export function DateRangePicker({
@@ -76,8 +78,28 @@ export function DateRangePicker({
   popoverContentAlign = 'end',
   presetId = null,
   retentionHours = null,
+  presetGroups = USAGE_DATE_RANGE_PRESET_GROUPS,
+  presetContext,
 }: DateRangePickerProps) {
   const t = useT()
+  const since = presetContext?.since
+  const PRESET_GROUPS = React.useMemo(
+    () =>
+      presetGroups
+        .map((group) => ({
+          ...group,
+          presets: group.presets.filter(
+            (preset) => !preset.requiresSince || !!since,
+          ),
+        }))
+        .filter((group) => group.presets.length > 0),
+    [presetGroups, since],
+  )
+  const findMatchingPreset = React.useCallback(
+    (range: DateRange | undefined): UsageDateRangePreset | null =>
+      findMatchingUsageDateRangePreset(range, { since }),
+    [since],
+  )
   const { formatDate } = useLocalizedDateFormat()
   const isWideLayout = useMediaMinWidth(WIDE_LAYOUT_MIN_WIDTH)
   const retentionLimited =
@@ -135,11 +157,11 @@ export function DateRangePicker({
       return getUsageDateRangePresetByValue(presetId) ?? findMatchingPreset(dateRange)
     }
     return findMatchingPreset(dateRange)
-  }, [dateRange, presetId])
+  }, [dateRange, presetId, findMatchingPreset])
 
   const pendingMatchingPreset = React.useMemo(
     () => findMatchingPreset(pendingDateRange),
-    [pendingDateRange],
+    [pendingDateRange, findMatchingPreset],
   )
 
   const [selectedPreset, setSelectedPreset] = React.useState<string | null>(
@@ -156,7 +178,7 @@ export function DateRangePicker({
       // Refresh rolling presets to a live window so quick-select stays matched.
       if (presetId) {
         const preset = getUsageDateRangePresetByValue(presetId)
-        setPendingDateRange(preset ? preset.getRange() : dateRange)
+        setPendingDateRange(preset ? preset.getRange({ since }) : dateRange)
       } else {
         setPendingDateRange(dateRange)
       }
@@ -172,7 +194,7 @@ export function DateRangePicker({
 
   const handlePresetSelect = (preset: DateRangePreset) => {
     if (!isPresetEnabled(preset)) return
-    const range = preset.getRange()
+    const range = preset.getRange({ since })
     setPendingDateRange(range)
     setSelectedPreset(preset.value)
     emitDateRangeChange(range)

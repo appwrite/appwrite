@@ -200,6 +200,27 @@ readonly class Deployments
         $deployment->removeAttribute('status');
         $deployment = $this->upload($resource, $deployment);
 
+        // Refused before it is queued: the deployment is left failed with the
+        // reason, the active deployment stays live and no job is submitted.
+        try {
+            $this->admit($resource, $deployment);
+        } catch (\Throwable $error) {
+            $buildLogs = $error instanceof Exception && $error->getCode() < 500
+                ? "\n" . $error->getMessage() . "\n"
+                : "\nAn internal error occurred while building. Please try again, and contact support if the problem persists.\n";
+
+            $this->dbForProject->updateDocuments('deployments', new Document([
+                'status' => 'failed',
+                'buildLogs' => $buildLogs,
+                'buildEndedAt' => DateTime::now(),
+            ]), [
+                Query::equal('$id', [$deployment->getId()]),
+                Query::notEqual('status', 'canceled'),
+            ]);
+
+            throw $error;
+        }
+
         $queued = $this->dbForProject->updateDocuments('deployments', new Document([
             'status' => 'waiting',
             'buildPath' => static::buildPath($this->project->getId(), $deployment->getId()),
@@ -256,6 +277,16 @@ readonly class Deployments
         }
 
         return $deployment;
+    }
+
+    /**
+     * Decides whether a deployment may be built, called once it is persisted
+     * and before it is queued. Throw to refuse it: a refusal with a code under
+     * 500 is shown to the owner in the build logs. Every deployment passes
+     * here, from the API, VCS webhooks and the builds worker alike.
+     */
+    protected function admit(Document $resource, Document $deployment): void
+    {
     }
 
     /**

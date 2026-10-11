@@ -702,20 +702,24 @@ function createProfileFeatureFlagItem(
   key: keyof ConsoleProfileFeatures,
   profileId: ConsoleProfileId,
   currentValue: boolean,
-  options?: { disabled?: boolean; category?: string },
+  options?: { disabled?: boolean; category?: string; inverted?: boolean },
 ): MenuItem {
-  const defaultValue = getCanonicalProfileFeatures(profileId)[key]
+  const inverted = options?.inverted ?? false
+  const defaultValue = getCanonicalProfileFeatures(profileId)[key] !== inverted
 
   return {
     label,
     description,
     category: options?.category,
     variant: 'switch',
-    switchValue: currentValue,
+    switchValue: currentValue !== inverted,
     defaultValue,
     disabled: options?.disabled,
     switchOnChange: (checked: boolean) => {
-      setTimeout(() => setDebugProfileFeatureOverride(key, checked), 0)
+      setTimeout(
+        () => setDebugProfileFeatureOverride(key, checked !== inverted),
+        0,
+      )
     },
     onResetToDefault: () => {
       resetDebugProfileFeatureOverride(key)
@@ -1785,6 +1789,14 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
                 { category: 'Auth & security' },
               ),
               createProfileFeatureFlagItem(
+                'Passkeys',
+                'Project passkey policy and account passkeys. Off: only users with the Cloud flags-passkeys pref see them.',
+                'passkeysFlag',
+                profileId,
+                features.passkeysFlag,
+                { category: 'Auth & security', inverted: true },
+              ),
+              createProfileFeatureFlagItem(
                 'Console user verification',
                 'Require email verification after signup; redirect to verify-email page on cloud.',
                 'userVerification',
@@ -2089,6 +2101,9 @@ export function DebugMenu({ actions = [] }: DebugMenuProps) {
     features.analyticsTrafficFilter,
     features.nativeDbsMongo,
     features.databasePitrRestore,
+    features.databaseSpecifications,
+    features.accountApplications,
+    features.passkeysFlag,
     features.userVerification,
     features.extraVcsOAuth,
     features.cookieBanner,

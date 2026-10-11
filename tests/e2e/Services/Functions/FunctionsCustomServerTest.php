@@ -2229,6 +2229,7 @@ final class FunctionsCustomServerTest extends Scope
             $sync = $this->createExecution($functionId, ['async' => 'false']);
             $this->assertEquals(201, $sync['headers']['status-code']);
             $syncId = $sync['body']['$id'];
+            $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $sync['body']['$createdAt']));
 
             // The API stores the queued version and the worker the finished
             // one, so the two versions of an async execution can carry
@@ -2236,23 +2237,20 @@ final class FunctionsCustomServerTest extends Scope
             $async = $this->createExecution($functionId, ['async' => true]);
             $this->assertEquals(202, $async['headers']['status-code']);
             $asyncId = $async['body']['$id'];
-            // The 202 response carries $createdAt in the database format
-            // (2026-09-29 12:46:25.848) while reads return ISO 8601, so bring
-            // every timestamp to one format before comparing them as strings.
-            $iso = fn (string $value) => (new \DateTimeImmutable($value, new \DateTimeZone('UTC')))
-                ->setTimezone(new \DateTimeZone('UTC'))
-                ->format('Y-m-d\TH:i:s.vP');
-            $queuedAt = $iso($async['body']['$createdAt']);
+            // The 202 response and reads both return ISO 8601, so the
+            // timestamps compare as strings.
+            $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $async['body']['$createdAt']));
+            $queuedAt = $async['body']['$createdAt'];
 
             // Both executions reach the store through the executions queue,
             // so wait until each is stored in its final state.
             $createdAt = [];
-            $this->assertEventually(function () use ($functionId, $syncId, $asyncId, $iso, &$createdAt) {
+            $this->assertEventually(function () use ($functionId, $syncId, $asyncId, &$createdAt) {
                 foreach ([$syncId, $asyncId] as $executionId) {
                     $execution = $this->getExecution($functionId, $executionId);
                     $this->assertEquals(200, $execution['headers']['status-code']);
                     $this->assertEquals('completed', $execution['body']['status']);
-                    $createdAt[$executionId] = $iso($execution['body']['$createdAt']);
+                    $createdAt[$executionId] = $execution['body']['$createdAt'];
                 }
             }, 60000, 500);
             $syncCreatedAt = $createdAt[$syncId];
@@ -2324,6 +2322,9 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('http', (string) $execution['body']['responseBody']);
         $this->assertStringContainsString('Node.js', (string) $execution['body']['responseBody']);
         $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
+        // The synchronous execution is answered from memory, before any database read
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $execution['body']['$createdAt']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $execution['body']['$updatedAt']));
         // Duration is a sub-interval of the call the client just timed, so it can
         // never exceed it, and it must be the same order of magnitude -- the old
         // warm-runtime window was a small fraction of a cold-started request.

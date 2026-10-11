@@ -101,7 +101,7 @@ class Update extends Action
         Authorization $authorization,
     ): void {
         // Configuration changes invalidate outstanding challenges
-        $ceremony = Ceremony::fromProject($project) ?? throw new Exception(Exception::USER_INVALID_TOKEN);
+        $ceremony = Ceremony::fromProject($project, $request->getOrigin()) ?? throw new Exception(Exception::USER_INVALID_TOKEN);
         $credential = \array_intersect_key($credential, \array_flip(self::ALLOWED_KEYS));
 
         $state = (new Challenges($dbForProject, $authorization))->consume($challengeId, Ceremony::TYPE_AUTHENTICATION, $ceremony);

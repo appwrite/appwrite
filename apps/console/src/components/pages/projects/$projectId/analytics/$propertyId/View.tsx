@@ -5,16 +5,11 @@ import { AlertTriangle, Download } from 'lucide-react'
 import { ANALYTICS_PRODUCT_ICON } from '@/lib/analytics/product-icon'
 import { Button } from '@/components/ui/button'
 import { InstallTrackingDialog } from '../_components/InstallTrackingDialog'
-import {
-  ServiceHeader,
-  type Tab,
-} from '@/components/pages/projects/$projectId/shared/ServiceHeader'
-import { DetailResourceHeaderTitle } from '@/components/global/shared/ResourceTitleSwitcher'
+import { ServiceHeader } from '@/components/pages/projects/$projectId/shared/ServiceHeader'
 import { EmptyState } from '@/components/global/shared/EmptyState'
 import { FiltersPopover } from '@/components/global/shared/FiltersPopover'
 import { DateRangePicker } from '@/components/global/shared/DateRangePicker'
 import { UsageChartIntervalToggle } from '../../overview/UsageChartIntervalToggle'
-import { Badge } from '@/components/ui/badge'
 import { useT } from '@/lib/i18n/translate'
 import type { Models } from '@appwrite.io/console'
 import {
@@ -40,19 +35,20 @@ import {
 import { isUsageChartIntervalValidForRange } from '@/lib/usage/chart-interval'
 import { normalizeUsageDateRangeSelection } from '@/lib/usage/usage-date-range'
 import {
+  ANALYTICS_DATE_RANGE_PRESET_GROUPS,
   findMatchingUsageDateRangePreset,
   getUsageDateRangePresetByValue,
 } from '@/lib/usage/usage-date-range-presets'
 import { useConsoleProfile } from '@/hooks/use-console-profile'
 import { useAnalyticsChartPrefs } from '@/hooks/use-analytics-chart-prefs'
-import {
-  canCreateAnalyticsProperty,
-  canWriteRules,
-} from '@/lib/console-access-checks'
+import { canWriteRules } from '@/lib/console-access-checks'
 import { isCloudProfile } from '@/lib/console-profiles'
-import { PropertySettings } from '../_components/PropertySettings'
 import { AnalyticsOverview } from '../_components/AnalyticsOverview'
-import { LiveVisitors } from '../_components/LiveVisitors'
+import {
+  PropertyHeaderLive,
+  PropertyHeaderTitle,
+  usePropertyTabs,
+} from '../_components/PropertyHeader'
 import { ExportMenu } from '../_components/ExportMenu'
 import type { AnalyticsChartMetric } from '../_components/AnalyticsOverview'
 import {
@@ -127,15 +123,15 @@ export function View({
   onFilterQueryChange,
 }: ViewProps) {
   const t = useT()
-  const [activeTab, setActiveTab] = useState('analytics')
   const [installOpen, setInstallOpen] = useState(false)
+  // Settings is its own route (settings/View.tsx); this page is the Analytics tab.
+  const tabs = usePropertyTabs(projectId, propertyId)
 
   // Install nudge: unfiltered events in the last 24 hours, independent of
   // the selected range and filters. Shown only once that's known to be zero
   // (never while loading), and not for disabled properties.
   const last24h = useMemo(() => getLast24HoursAnalyticsRange(), [])
   const { stats: last24hStats } = useAnalyticsStats(projectId, propertyId, last24h)
-  const isAnalyticsTab = activeTab === 'analytics'
   const [filtersOpen, setFiltersOpen] = useState(false)
 
   // ── Filters ──
@@ -243,7 +239,20 @@ export function View({
   //
   // Both start from the user's saved analytics prefs (one setting for every
   // property, separate from the usage range) and are saved back on change.
-  const chartPrefs = useAnalyticsChartPrefs()
+  //
+  // "All time" starts on the day the property was created. The loader resolves
+  // a saved "All time" with the same date, so first-paint query keys match.
+  const { property: propertyFromHook, isLoading: propertyLoading } =
+    useAnalyticsProperty(projectId, propertyId)
+  const property = propertyFromHook ?? initialData?.property
+  const propertyCreatedAt = property?.$createdAt
+  const presetContext = useMemo(
+    () => ({
+      since: propertyCreatedAt ? new Date(propertyCreatedAt) : undefined,
+    }),
+    [propertyCreatedAt],
+  )
+  const chartPrefs = useAnalyticsChartPrefs(presetContext)
   const [dateSelection, setDateSelection] = useState<DateSelection>(() => ({
     dateRange: chartPrefs.initial.dateRange,
     presetId: chartPrefs.initial.presetId,
@@ -252,6 +261,17 @@ export function View({
     chartPrefs.initial.interval,
   )
   const { dateRange, presetId } = dateSelection
+
+  // A saved "All time" read before the property loaded falls back to today;
+  // re-anchor it once the creation date is known.
+  useEffect(() => {
+    if (presetId !== 'all' || !presetContext.since) return
+    const preset = getUsageDateRangePresetByValue('all')
+    if (!preset) return
+    const next = preset.getRange(presetContext)
+    if (next.from.getTime() === dateRange.from?.getTime()) return
+    setDateSelection({ dateRange: next, presetId })
+  }, [presetId, presetContext, dateRange.from])
 
   const savePrefs = chartPrefs.save
   useEffect(() => {
@@ -284,11 +304,13 @@ export function View({
       }
       setDateSelection({
         dateRange: nextRange,
-        presetId: findMatchingUsageDateRangePreset(nextRange)?.value ?? null,
+        presetId:
+          findMatchingUsageDateRangePreset(nextRange, presetContext)?.value ??
+          null,
       })
       setChartInterval(defaultIntervalForRange(nextRange))
     },
-    [range],
+    [range, presetContext],
   )
 
   // ── Comparison ──
@@ -346,7 +368,7 @@ export function View({
     // old keys as well would just be wasted requests.
     const preset = presetId ? getUsageDateRangePresetByValue(presetId) : null
     if (preset) {
-      const nextRange = preset.getRange()
+      const nextRange = preset.getRange(presetContext)
       const nextKey = toAnalyticsRange(nextRange)
       if (nextKey && analyticsRangeKey(nextKey) !== analyticsRangeKey(range)) {
         setDateSelection({ dateRange: nextRange, presetId })
@@ -354,12 +376,9 @@ export function View({
       }
     }
     void refresh()
-  }, [presetId, range, refresh])
+  }, [presetId, presetContext, range, refresh])
 
-  // ── Property + permissions ──
-  const { property: propertyFromHook, isLoading: propertyLoading } =
-    useAnalyticsProperty(projectId, propertyId)
-  const property = propertyFromHook ?? initialData?.property
+  // ── Permissions ──
   const showNoRecentEventsBanner =
     !!property &&
     property.enabled !== false &&
@@ -369,7 +388,6 @@ export function View({
   const { project } = useProject(projectId)
   const { features } = useConsoleProfile()
   const { access } = useOrganizationScopes(project?.teamId)
-  const canWrite = canCreateAnalyticsProperty(access, features)
 
   // "Create firewall rule" on values: only when the property's domain is
   // served by an Appwrite Site and the viewer can write firewall rules
@@ -416,11 +434,6 @@ export function View({
     return []
   }, [eventsFromHook, isDefaultRange, initialData])
 
-  const tabs: Tab[] = [
-    { id: 'analytics', label: t('Analytics') },
-    { id: 'settings', label: t('Settings') },
-  ]
-
   if (!property && !propertyLoading) {
     return (
       <div className="flex flex-col">
@@ -449,44 +462,28 @@ export function View({
     <AnalyticsValueMenuProvider value={valueMenuContext}>
     <div className="flex flex-col">
       <ServiceHeader
-        // Same title as every other detail view (functions, sites, topics,
-        // users): back, a switcher to jump between properties, and the ID.
         title={
-          <div className="flex min-w-0 items-center gap-2">
-            <DetailResourceHeaderTitle
-              kind="analyticsProperty"
-              label={property?.name || t('Property')}
-              resourceId={propertyId}
-              projectId={projectId}
-              back={
-                onBack
-                  ? { onClick: onBack, 'aria-label': t('Back to analytics') }
-                  : undefined
-              }
-            />
-            {property && !property.enabled && (
-              <Badge variant="warning" className="shrink-0 text-[10px]">
-                {t('Disabled')}
-              </Badge>
-            )}
-          </div>
-        }
-        titleRightContent={
-          <LiveVisitors
+          <PropertyHeaderTitle
             projectId={projectId}
             propertyId={propertyId}
-            enabled={property?.enabled !== false}
+            property={property}
+            onBack={onBack}
+          />
+        }
+        titleRightContent={
+          <PropertyHeaderLive
+            projectId={projectId}
+            propertyId={propertyId}
+            property={property}
           />
         }
         tabs={tabs}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
+        activeTab="analytics"
         // Analytics tab toolbar, laid out like the other detail views:
         // Filters on the start side; time controls before Refresh.
-        showFilters={isAnalyticsTab}
+        showFilters
         filterTrigger={
-          isAnalyticsTab ? (
-            <FiltersPopover
+          <FiltersPopover
               open={filtersOpen}
               onOpenChange={setFiltersOpen}
               columns={ANALYTICS_FILTER_COLUMNS}
@@ -499,10 +496,8 @@ export function View({
               onApplyQuery={filtersContext.onApplySavedFilterQuery}
               teamId={project?.teamId}
             />
-          ) : undefined
         }
         beforeRefreshButtons={
-          isAnalyticsTab ? (
             <>
               <UsageChartIntervalToggle
                 value={resolvedInterval}
@@ -517,6 +512,8 @@ export function View({
                 dateRange={dateRange}
                 onDateRangeChange={handleDateRangeChange}
                 presetId={presetId}
+                presetGroups={ANALYTICS_DATE_RANGE_PRESET_GROUPS}
+                presetContext={presetContext}
                 className="h-9 shrink-0"
               />
               <CompareControl
@@ -527,13 +524,11 @@ export function View({
                 comparisonRange={comparisonRange}
               />
             </>
-          ) : undefined
         }
-        showRefresh={isAnalyticsTab}
+        showRefresh
         onRefresh={handleRefresh}
         isRefreshing={isRefreshing}
         afterRefreshButtons={
-          isAnalyticsTab ? (
             <ExportMenu
               projectId={projectId}
               property={property}
@@ -544,15 +539,13 @@ export function View({
                 comparisonRange ? t(compareModeLabel(compareMode)) : null
               }
             />
-          ) : undefined
         }
-        showToolbarBottomBorder={isAnalyticsTab}
+        showToolbarBottomBorder
         fullWidthBorder
         fullWidth
       />
 
-      {activeTab === 'analytics' && (
-        <div className="flex-1">
+      <div className="flex-1">
           {/* No events in the last 24 hours: tracking is probably not (or no
               longer) installed. The install CTA lives here, not in the header. */}
           {showNoRecentEventsBanner ? (
@@ -593,6 +586,7 @@ export function View({
             activeSeries={activeSeries}
             onActiveSeriesChange={setActiveSeries}
             fallbackStats={isDefaultRange ? initialData?.stats : undefined}
+            fallbackSeries={isDefaultRange ? initialData?.series : undefined}
             compareMode={compareMode}
             comparisonRange={comparisonRange}
             onRefresh={handleRefresh}
@@ -654,17 +648,6 @@ export function View({
             </div>
           </div>
         </div>
-      )}
-
-      {activeTab === 'settings' && property && (
-        <div className="mx-auto w-full max-w-7xl flex-1">
-          <PropertySettings
-            projectId={projectId}
-            property={property}
-            canWrite={canWrite}
-          />
-        </div>
-      )}
 
       {property ? (
         <InstallTrackingDialog

@@ -18,6 +18,7 @@ import {
   type AnalyticsChartSelection,
 } from '@/lib/analytics/chart-prefs'
 import type { SerializedUsageChartDateRange } from '@/lib/usage/usage-date-range'
+import type { UsageDateRangePresetContext } from '@/lib/usage/usage-date-range-presets'
 
 const PERSIST_DEBOUNCE_MS = 400
 
@@ -32,13 +33,16 @@ type PendingWrite = {
  * (`console.analytics.dateRange` / `console.analytics.interval`): one setting
  * for every analytics property, separate from the usage chart range.
  */
-export function useAnalyticsChartPrefs() {
+export function useAnalyticsChartPrefs(context?: UsageDateRangePresetContext) {
   const { account } = useAuth()
   const queryClient = useQueryClient()
   const prefs = (account as Models.User | undefined)?.prefs as UserPrefs | undefined
 
   // Read once per mount: later pref updates are this page's own writes.
-  const [initial] = useState(() => resolveAnalyticsChartSelection(prefs))
+  // `context.since` anchors a saved "All time" to the property's start.
+  const [initial] = useState(() =>
+    resolveAnalyticsChartSelection(prefs, context),
+  )
 
   const lastWrittenRef = useRef(
     JSON.stringify([serializeAnalyticsChartSelection(initial), initial.interval]),

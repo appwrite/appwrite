@@ -973,18 +973,6 @@ parameters:
 			path: tests/E2E/KedaTest.php
 
 		-
-			message: '#^Access to an undefined property object\:\:\$armed\.$#'
-			identifier: property.notFound
-			count: 1
-			path: tests/E2E/NatsBrokerTest.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$stale\.$#'
-			identifier: property.notFound
-			count: 2
-			path: tests/E2E/NatsBrokerTest.php
-
-		-
 			message: '#^Anonymous function should return string but returns mixed\.$#'
 			identifier: return.type
 			count: 2

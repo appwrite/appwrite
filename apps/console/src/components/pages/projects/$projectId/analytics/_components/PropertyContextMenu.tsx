@@ -8,6 +8,7 @@ import {
   FileJson,
   Globe,
   Link2,
+  Settings,
   Square,
   Trash2,
 } from 'lucide-react'
@@ -38,8 +39,8 @@ import { useT } from '@/lib/i18n/translate'
  * table rows. Same shape as the other resource menus (Functions, Sites):
  * open, copy, open elsewhere, delete.
  *
- * Delete is handed back to the list, which owns the confirm dialog, so the
- * card's "..." menu and this one share it.
+ * This is the only actions menu on the list (no "..." trigger). Delete is
+ * handed back to the list, which owns the confirm dialog.
  */
 export function PropertyContextMenu({
   projectId,
@@ -74,6 +75,17 @@ export function PropertyContextMenu({
         >
           <ContextMenuIcon icon={ANALYTICS_PRODUCT_ICON} />
           {t('Analytics')}
+        </ContextMenuItem>
+        <ContextMenuItem
+          onSelect={() =>
+            navigate({
+              to: '/projects/$projectId/analytics/$propertyId/settings',
+              params: { projectId, propertyId: property.$id },
+            })
+          }
+        >
+          <ContextMenuIcon icon={Settings} />
+          {t('Settings')}
         </ContextMenuItem>
         {property.domain ? (
           <ContextMenuItem

@@ -2,6 +2,7 @@ name: Console
 
 on:
   pull_request:
+  merge_group:
   push:
     branches:
       - main
@@ -27,6 +28,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
+          persist-credentials: false
           fetch-depth: 0
 
       - name: Compute changes
@@ -36,7 +38,8 @@ jobs:
           REF: ${{ github.ref }}
           BASE_REF: ${{ github.base_ref }}
           BEFORE: ${{ github.event.before }}
-        run: bash .github/scripts/changes.sh
+          MERGE_BASE: ${{ github.event.merge_group.base_sha }}
+        run: node .github/scripts/changes.mjs
 
   checks:
     name: Console / Checks
@@ -54,6 +57,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Check deployment scripts
         working-directory: .github/scripts/console
@@ -109,6 +114,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Create console session
         id: create
@@ -186,6 +193,8 @@ jobs:
 
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
@@ -254,6 +263,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Delete console session
         env:
@@ -261,3 +272,22 @@ jobs:
           E2E_TEST_PASSWORD: ${{ secrets.CONSOLE_E2E_TEST_PASSWORD }}
           SESSION: ${{ needs.session.outputs.session }}
         run: bash .github/scripts/console/delete-session.sh
+
+  # The one required check: skipped jobs pass (change detection skips untouched
+  # areas), failed or cancelled ones fail.
+  gate:
+    name: Console
+    if: always()
+    needs: [changes, checks, session, e2e, session-cleanup]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Check results
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: |
+          jq -r 'to_entries[] | "\(.value.result)\t\(.key)"' <<< "$NEEDS"
+          failed=$(jq -r '[to_entries[] | select(.value.result == "failure" or .value.result == "cancelled") | .key] | join(", ")' <<< "$NEEDS")
+          if [ -n "$failed" ]; then
+            echo "::error::Jobs did not pass: $failed"
+            exit 1
+          fi

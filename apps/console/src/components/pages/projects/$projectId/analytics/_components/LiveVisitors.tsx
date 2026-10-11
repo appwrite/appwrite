@@ -38,6 +38,12 @@ type LiveVisitorsProps = {
   propertyId: string
   /** Disabled properties don't ingest, so there is nothing to poll. */
   enabled?: boolean
+  /**
+   * `pill` (default) is the standalone header control. `inline` drops the
+   * chrome (dot + count as plain text) for dense surfaces like the
+   * properties list, where a pill on every card or row reads as noise.
+   */
+  variant?: 'pill' | 'inline'
 }
 
 /**
@@ -49,6 +55,7 @@ export function LiveVisitors({
   projectId,
   propertyId,
   enabled = true,
+  variant = 'pill',
 }: LiveVisitorsProps) {
   const t = useT()
   const isDocumentVisible = useDocumentVisible()
@@ -78,28 +85,54 @@ export function LiveVisitors({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          className={cn(
-            'inline-flex h-7 shrink-0 items-center gap-2 rounded-full border px-2.5 text-[12px] transition-colors',
-            'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-            isLive
-              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300'
-              : 'border-border text-muted-foreground hover:bg-muted/50',
-          )}
-          aria-label={t('Visitors online now')}
-        >
-          <LiveDot active={isLive && polling} />
-          {hasValue ? (
-            <AnimatedCounter
-              value={count}
-              className="font-semibold tabular-nums"
-            />
-          ) : (
-            <span className="font-semibold">-</span>
-          )}
-          <span className="hidden sm:inline">{t('online')}</span>
-        </button>
+        {variant === 'inline' ? (
+          <button
+            type="button"
+            className={cn(
+              'group/live inline-flex h-6 shrink-0 items-center gap-1.5 rounded-md px-1.5 -mx-1.5 text-[12px] text-muted-foreground transition-colors',
+              'hover:bg-muted/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              open && 'bg-muted/60',
+            )}
+            aria-label={t('Visitors online now')}
+          >
+            <LiveDot active={isLive && polling} />
+            {hasValue ? (
+              <AnimatedCounter
+                value={count}
+                className={cn(
+                  'font-medium tabular-nums',
+                  isLive ? 'text-foreground' : 'text-muted-foreground',
+                )}
+              />
+            ) : (
+              <span>-</span>
+            )}
+            <span>{t('online')}</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={cn(
+              'inline-flex h-7 shrink-0 items-center gap-2 rounded-full border px-2.5 text-[12px] transition-colors',
+              'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+              isLive
+                ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-700 hover:bg-emerald-500/15 dark:text-emerald-300'
+                : 'border-border text-muted-foreground hover:bg-muted/50',
+            )}
+            aria-label={t('Visitors online now')}
+          >
+            <LiveDot active={isLive && polling} />
+            {hasValue ? (
+              <AnimatedCounter
+                value={count}
+                className="font-semibold tabular-nums"
+              />
+            ) : (
+              <span className="font-semibold">-</span>
+            )}
+            <span className="hidden sm:inline">{t('online')}</span>
+          </button>
+        )}
       </PopoverTrigger>
       <PopoverContent align="end" sideOffset={6} className="w-[300px] p-0">
         <div className="border-b border-border px-3 py-2.5">

@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\VCS\Http\GitHub;
 
 use Appwrite\Bus\Events\RuleCreated;
+use Appwrite\Deployment\GitAction;
 use Appwrite\Extend\Exception;
 use Appwrite\Filter\BranchDomain as BranchDomainFilter;
 use Appwrite\Vcs\Comment;
@@ -408,17 +409,33 @@ trait Deployment
 
                 // The Deployments service is built per repository: a webhook fans out to
                 // many tenant projects, each with its own database.
-                $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
-                    ->createFromVcs(
-                        $resource,
-                        $deployment,
-                        $timeout,
-                        $vcs,
-                        $providerRepositoryOwner,
-                        $providerRepositoryName,
-                        $providerCommitHash,
-                        $resource->getAttribute('providerRootDirectory', ''),
-                    ));
+                try {
+                    $deployment = $authorization->skip(fn () => $deploymentsFactory($dbForProject, $project)
+                        ->createFromVcs(
+                            $resource,
+                            $deployment,
+                            $timeout,
+                            $vcs,
+                            $providerRepositoryOwner,
+                            $providerRepositoryName,
+                            $providerCommitHash,
+                            $resource->getAttribute('providerRootDirectory', ''),
+                        ));
+                } catch (\Throwable $error) {
+                    // Deployments::submit() fails a deployment it refuses or cannot queue.
+                    // No build will report on it, so report the failure here, or the commit
+                    // status and the PR comment above stay waiting on a build that never runs.
+                    $failed = $authorization->skip(fn () => $dbForProject->getDocument('deployments', $deploymentId));
+                    if ($failed->getAttribute('status') === 'failed') {
+                        try {
+                            $authorization->skip(fn () => GitAction::run('failed', $vcs, $providerCommitHash, $owner, $repositoryName, $project, $resource, $failed, $dbForPlatform, $platform));
+                        } catch (\Throwable $report) {
+                            Console::warning("Failed to report deployment '{$deploymentId}' as failed: " . $report->getMessage());
+                        }
+                    }
+
+                    throw $error;
+                }
 
                 if ($resource->getCollection() === 'sites') {
                     $projectId = $project->getId();

@@ -1,6 +1,21 @@
 import githubStarsData from '@/lib/generated/github-stars.json'
+import type { GitHubStarHistoryPoint } from '@/lib/marketing/github-stars-history'
 
-export const GITHUB_STARS_COUNT: number = githubStarsData.stars
+type GithubStarsFile = {
+  stars: number
+  fetchedAt: string
+  history?: GitHubStarHistoryPoint[]
+}
+
+const githubStars = githubStarsData as GithubStarsFile
+
+export const GITHUB_STARS_COUNT: number = githubStars.stars
+
+export const GITHUB_STARS_HISTORY: GitHubStarHistoryPoint[] = Array.isArray(
+  githubStars.history,
+)
+  ? githubStars.history
+  : []
 
 function formatStars(count: number): string {
   if (count >= 1000) {

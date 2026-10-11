@@ -34,6 +34,8 @@ export const heMarketingDictionary: Record<string, string> = {
   'A complete development platform, backed by the open source community, built to keep teams efficient by cutting context switching and integration overhead. From auth, databases, storage, and functions to MCP servers, Skills, and agent integrations, everything lives in one place so Appwrite moves with you from ideation to scale.': // pragma: allowlist secret
     'פלטפורמת פיתוח שלמה, בגיבוי קהילת הקוד הפתוח, שנבנתה כדי לשמור על צוותים יעילים עם פחות מעברים בין כלים ופחות תקורת אינטגרציות. מאימות, מסדי נתונים, אחסון ופונקציות ועד שרתי MCP, Skills ואינטגרציות לסוכנים, הכול נמצא במקום אחד, כך ש-Appwrite מתקדמת איתכם מהרעיון ועד לצמיחה בקנה מידה מלא.', // pragma: allowlist secret
   'A customer completes checkout': 'לקוח משלים תשלום בקופה',
+  'A GitHub star is the easiest way to support the work we do in the open.':
+    'כוכב ב-GitHub הוא הדרך הקלה ביותר לתמוך בעבודה שאנחנו עושים בקוד פתוח.',
   'A great fit for passion projects and small applications.': 'התאמה מצוינת לפרויקטים אישיים ולאפליקציות קטנות.',
   'A major impact that Appwrite made was the amount of time and stress saved.':
     'ההשפעה המשמעותית של Appwrite הייתה כמות הזמן והלחץ שנחסכו.',
@@ -558,6 +560,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'GitHub and Origin': 'GitHub ו-Origin',
   'GitHub stars': 'כוכבי GitHub',
   'GitHub Stars': 'כוכבי GitHub',
+  'GitHub stars over time': 'כוכבי GitHub לאורך זמן',
   'GitLab, Bitbucket, Gitea, and more coming soon.': 'GitLab, Bitbucket, Gitea ועוד בקרוב.',
   'Global and remote-first': 'צוות גלובלי, remote-first',
   'Global CDN included. Transformed images cached in your project region before they reach the edge.':
@@ -1378,6 +1381,7 @@ export const heMarketingDictionary: Record<string, string> = {
   'Give your developers a complete backend platform so they can focus on product innovation instead of infrastructure glue code.':
     'תנו למפתחים שלכם פלטפורמת backend שלמה כדי שיוכלו להתמקד בחדשנות המוצר במקום בקוד תשתית מקשר.',
   'in case this is an issue for you.': 'אם זה מהווה בעיה עבורכם.',
+  'in the last year': 'בשנה האחרונה',
   'infinite value that I\u2019m still discovering today.':
     'ערך שאין לו גבול, שאני עדיין מגלה עד היום.',
   'landing page': 'הנחיתה',

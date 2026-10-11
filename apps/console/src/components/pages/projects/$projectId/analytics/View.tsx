@@ -17,15 +17,12 @@ import {
   LayoutGrid,
   List,
   MousePointerClick,
-  Trash2,
   Users,
 } from 'lucide-react'
 import { ServiceHeader } from '../shared/ServiceHeader'
 import { DateTooltip } from '@/components/global/shared/DateTooltip'
 import { Pagination } from '@/components/global/shared/Pagination'
 import { EmptyState } from '@/components/global/shared/EmptyState'
-import { RowActionsMenuTrigger } from '@/components/global/shared/RowActionsMenuTrigger'
-import { MenuItemContent } from '@/components/global/shared/ContextMenuIcon'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -36,13 +33,6 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
 import { useT } from '@/lib/i18n/translate'
 import { toast } from 'sonner'
 import type { Models } from '@appwrite.io/console'
@@ -63,6 +53,7 @@ import { canCreateAnalyticsProperty } from '@/lib/console-access-checks'
 import { DeleteProperty } from './_components/DeleteProperty'
 import { AnalyticsEmptyState } from './_components/AnalyticsEmptyState'
 import { PropertyContextMenu } from './_components/PropertyContextMenu'
+import { LiveVisitors } from './_components/LiveVisitors'
 import { ChangeBadge } from './_components/ChangeBadge'
 import { analyticsChangePercent } from './_components/chart-series'
 import {
@@ -334,8 +325,8 @@ export function View() {
                     }
                   >
                     {/* Header */}
-                    <div className="mb-4 flex items-start justify-between">
-                      <div className="flex items-start gap-3">
+                    <div className="mb-4 flex items-start justify-between gap-3">
+                      <div className="flex min-w-0 items-start gap-3">
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <h3 className="truncate text-[14px] font-medium text-foreground">
@@ -364,64 +355,22 @@ export function View() {
                           )}
                         </div>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <RowActionsMenuTrigger
-                            compact
-                            revealOnGroupHover
-                            onClick={(e) => e.stopPropagation()}
+                      {/* Disabled properties don't ingest, so there is no one
+                          to count. Actions live in the right-click menu. */}
+                      {property.enabled && (
+                        // The counter opens a popover; keep its clicks (which
+                        // bubble through the portal) from opening the property.
+                        <span
+                          className="shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <LiveVisitors
+                            projectId={projectId as string}
+                            propertyId={property.$id}
+                            variant="inline"
                           />
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              navigate({
-                                to: '/projects/$projectId/analytics/$propertyId',
-                                params: {
-                                  projectId: projectId as string,
-                                  propertyId: property.$id,
-                                },
-                              })
-                            }}
-                          >
-                            <MenuItemContent icon={ANALYTICS_PRODUCT_ICON}>
-                              {t('Analytics')}
-                            </MenuItemContent>
-                          </DropdownMenuItem>
-                          {property.domain && (
-                            <DropdownMenuItem
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                window.open(
-                                  `https://${property.domain}`,
-                                  '_blank',
-                                  'noopener,noreferrer',
-                                )
-                              }}
-                            >
-                              <MenuItemContent icon={ExternalLink}>
-                                {t('Visit')}
-                              </MenuItemContent>
-                            </DropdownMenuItem>
-                          )}
-                          {!noCreatePermission && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setPropertyToDelete(property)
-                                }}
-                              >
-                                <MenuItemContent icon={Trash2}>
-                                  {t('Delete')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        </span>
+                      )}
                     </div>
 
                     {/* Stats Grid */}
@@ -526,6 +475,9 @@ export function View() {
                       {t('Property')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
+                      {t('Online')}
+                    </TableHead>
+                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
                       {t('Visitors')}
                     </TableHead>
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[100px]">
@@ -540,7 +492,6 @@ export function View() {
                     <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider w-[120px]">
                       {t('Created')}
                     </TableHead>
-                    <TableHead className="px-4 py-3 text-[12px] font-semibold text-muted-foreground uppercase tracking-wider text-right w-[50px]" />
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -589,6 +540,22 @@ export function View() {
                               </div>
                             </div>
                           </Link>
+                        </TableCell>
+                        <TableCell
+                          className="px-4 py-3"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {property.enabled ? (
+                            <LiveVisitors
+                              projectId={projectId as string}
+                              propertyId={property.$id}
+                              variant="inline"
+                            />
+                          ) : (
+                            <span className="text-[13px] text-muted-foreground">
+                              -
+                            </span>
+                          )}
                         </TableCell>
                         <TableCell className="px-4 py-3">
                           <Link
@@ -645,62 +612,6 @@ export function View() {
                               className="text-[12px] text-muted-foreground"
                             />
                           </Link>
-                        </TableCell>
-                        <TableCell
-                          className="px-4 py-3 text-right"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <RowActionsMenuTrigger
-                                compact
-                                onClick={(e) => e.stopPropagation()}
-                              />
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  navigate({
-                                    to: '/projects/$projectId/analytics/$propertyId',
-                                    params: linkParams,
-                                  })
-                                }
-                              >
-                                <MenuItemContent icon={ANALYTICS_PRODUCT_ICON}>
-                                  {t('Analytics')}
-                                </MenuItemContent>
-                              </DropdownMenuItem>
-                              {property.domain && (
-                                <DropdownMenuItem
-                                  onClick={() =>
-                                    window.open(
-                                      `https://${property.domain}`,
-                                      '_blank',
-                                      'noopener,noreferrer',
-                                    )
-                                  }
-                                >
-                                  <MenuItemContent icon={ExternalLink}>
-                                    {t('Visit')}
-                                  </MenuItemContent>
-                                </DropdownMenuItem>
-                              )}
-                              {!noCreatePermission && (
-                                <>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      setPropertyToDelete(property)
-                                    }
-                                  >
-                                    <MenuItemContent icon={Trash2}>
-                                      {t('Delete')}
-                                    </MenuItemContent>
-                                  </DropdownMenuItem>
-                                </>
-                              )}
-                            </DropdownMenuContent>
-                          </DropdownMenu>
                         </TableCell>
                       </TableRow>
                       </PropertyContextMenu>
