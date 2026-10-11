@@ -391,6 +391,7 @@ dependencies = [
  "sha2 0.10.9",
  "syn 2.0.119",
  "tokio",
+ "utopia-abuse",
  "utopia-auth",
  "utopia-cache",
  "utopia-circuit-breaker",
@@ -2335,6 +2336,22 @@ name = "utf8_iter"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b6c140620e7ffbb22c2dee59cafe6084a59b5ffc27a8859a5f0d494b5d52b6be"
+
+[[package]]
+name = "utopia-abuse"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "http-body-util",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "php-std",
+ "redis",
+ "rustls",
+ "thiserror",
+ "tokio",
+]
 
 [[package]]
 name = "utopia-auth"

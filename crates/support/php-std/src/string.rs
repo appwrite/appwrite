@@ -845,6 +845,55 @@ pub fn strtr<'a>(s: &'a [u8], from: &[u8], to: &[u8]) -> Cow<'a, [u8]> {
     Cow::Owned(s.iter().map(|&b| table[b as usize]).collect())
 }
 
+/// Up to this many pairs, [`strtr_array`] compares keys in place instead of
+/// building a hash map.
+const STRTR_SMALL: usize = 8;
+
+/// [`strtr_array`] for a few pairs, without allocating a table: the pairs
+/// (the last of a repeated key) on the stack, and at each position the
+/// longest key that starts there.
+fn strtr_small<'a>(s: &'a [u8], pairs: &[(&[u8], &[u8])]) -> Cow<'a, [u8]> {
+    let mut table: [(&[u8], &[u8]); STRTR_SMALL] = [(&[], &[]); STRTR_SMALL];
+    let mut n = 0;
+    for &(k, v) in pairs {
+        if k.is_empty() || k.len() > s.len() {
+            continue;
+        }
+        match table[..n].iter_mut().find(|e| e.0 == k) {
+            Some(slot) => slot.1 = v,
+            None => {
+                table[n] = (k, v);
+                n += 1;
+            }
+        }
+    }
+    let table = &table[..n];
+    let Some(minlen) = table.iter().map(|e| e.0.len()).min() else { return Cow::Borrowed(s) };
+    let mut out: Option<Vec<u8>> = None;
+    let (mut pos, mut old) = (0, 0);
+    while pos + minlen <= s.len() {
+        let rest = &s[pos..];
+        let best = table.iter().filter(|e| rest.starts_with(e.0)).max_by_key(|e| e.0.len());
+        match best {
+            Some(&(k, v)) => {
+                let o = out.get_or_insert_with(|| Vec::with_capacity(s.len() + v.len()));
+                o.extend_from_slice(&s[old..pos]);
+                o.extend_from_slice(v);
+                pos += k.len();
+                old = pos;
+            }
+            None => pos += 1,
+        }
+    }
+    match out {
+        None => Cow::Borrowed(s),
+        Some(mut o) => {
+            o.extend_from_slice(&s[old..]);
+            Cow::Owned(o)
+        }
+    }
+}
+
 /// PHP `strtr($string, $replace_pairs)`: at each position replaces the
 /// longest key that matches, then continues after it; replaced text is never
 /// rescanned. Empty keys are ignored (PHP warns). `pairs` is the array in
@@ -853,6 +902,9 @@ pub fn strtr<'a>(s: &'a [u8], from: &[u8], to: &[u8]) -> Cow<'a, [u8]> {
 pub fn strtr_array<'a>(s: &'a [u8], pairs: &[(&[u8], &[u8])]) -> Cow<'a, [u8]> {
     if s.is_empty() || pairs.is_empty() {
         return Cow::Borrowed(s);
+    }
+    if pairs.len() <= STRTR_SMALL {
+        return strtr_small(s, pairs);
     }
     let mut map: std::collections::HashMap<&[u8], &[u8]> = std::collections::HashMap::with_capacity(pairs.len());
     let (mut minlen, mut maxlen) = (usize::MAX, 0);

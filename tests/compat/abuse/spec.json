@@ -1,0 +1,581 @@
+{
+  "lib": "abuse",
+  "description": "utopia-php/abuse: fixed windows (TimeLimit), sliding windows and token buckets over None, Redis, Redis Cluster, pooled connections, a document database and Appwrite tables; reCAPTCHA verification.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/abuse/src"
+    ],
+    "tests": [
+      "packages/abuse/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/abuse"
+  },
+  "services": [
+    "abuse-redis",
+    "abuse-redis-shared",
+    "abuse-redis-fuzz",
+    "abuse-cluster"
+  ],
+  "state": [
+    "redis@abuse-redis/3,4"
+  ],
+  "ops": {
+    "limit.new": {
+      "doc": "new <algo>\\<store>(key, limit|tokens, seconds|window|refill_rate, ttl?, connection) as a handle; `pool` stores read a Clock that check/peek/reset set from `now`",
+      "covers": [
+        "Utopia\\Abuse\\Adapter::__construct",
+        "Utopia\\Abuse\\Adapter\\TimeLimit::__construct",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow::__construct",
+        "Utopia\\Abuse\\Adapter\\TokenBucket::__construct",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\RedisBase::__construct",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Redis::__construct",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\RedisCluster::__construct",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\RedisPool::__construct",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Database::__construct",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Appwrite\\TablesDB::__construct",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\Redis::__construct",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\RedisCluster::__construct",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\RedisPool::__construct",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\Redis::__construct",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\RedisCluster::__construct",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\RedisPool::__construct"
+      ]
+    },
+    "limit.check": {
+      "doc": "$limit->check() at `now` (a clocked pool limit) or on the real clock, as {limited, limit, remaining, reset}",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit::check",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow::check",
+        "Utopia\\Abuse\\Adapter\\TokenBucket::check",
+        "Utopia\\Abuse\\Result::__construct"
+      ]
+    },
+    "limit.peek": {
+      "doc": "$limit->peek(), like limit.check",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit::peek",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow::peek",
+        "Utopia\\Abuse\\Adapter\\TokenBucket::peek"
+      ]
+    },
+    "limit.reset": {
+      "doc": "$limit->reset()",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit::reset",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow::reset",
+        "Utopia\\Abuse\\Adapter\\TokenBucket::reset"
+      ]
+    },
+    "limit.key": {
+      "doc": "$limit->key()",
+      "covers": [
+        "Utopia\\Abuse\\Adapter::key"
+      ]
+    },
+    "limit.with_params": {
+      "doc": "$limit->withParams(params) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Adapter::withParams"
+      ]
+    },
+    "limit.with_param": {
+      "doc": "$limit->withParam(name, value) as a handle",
+      "covers": [
+        "Utopia\\Abuse\\Adapter::withParam"
+      ]
+    },
+    "limit.logs": {
+      "doc": "$limit->getLogs(offset?, count?) with absent arguments left to their defaults; documents as {key, count}",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\None::getLogs",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\Redis::getLogs",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\RedisCluster::getLogs",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\RedisPool::getLogs",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Appwrite\\TablesDB::getLogs",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Database::getLogs",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\None::getLogs",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Redis::getLogs",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\RedisCluster::getLogs",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\RedisPool::getLogs",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\None::getLogs",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\Redis::getLogs",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\RedisCluster::getLogs",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\RedisPool::getLogs"
+      ]
+    },
+    "limit.cleanup": {
+      "doc": "$limit->cleanup(timestamp)",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\None::cleanup",
+        "Utopia\\Abuse\\Adapter\\SlidingWindow\\RedisBase::cleanup",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Appwrite\\TablesDB::cleanup",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Database::cleanup",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\None::cleanup",
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\RedisBase::cleanup",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\None::cleanup",
+        "Utopia\\Abuse\\Adapter\\TokenBucket\\RedisBase::cleanup"
+      ]
+    },
+    "limit.run": {
+      "doc": "fuzz: a clocked limit on `abuse-redis-fuzz`, its key prefixed with the namespace, withParams(params), reset(), then each step (check|peek) at `now`: {key, verdicts}",
+      "fuzz": [
+        {
+          "name": "time limit",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "const",
+                "value": "time_limit"
+              },
+              "store": {
+                "gen": "const",
+                "value": "pool"
+              },
+              "key": {
+                "gen": "ref",
+                "name": "key"
+              },
+              "params": {
+                "gen": "ref",
+                "name": "params"
+              },
+              "limit": {
+                "gen": "ref",
+                "name": "limit"
+              },
+              "seconds": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": 1,
+                    "max": 100000
+                  },
+                  {
+                    "gen": "int",
+                    "min": -2,
+                    "max": 2
+                  }
+                ]
+              },
+              "now": {
+                "gen": "ref",
+                "name": "now"
+              },
+              "steps": {
+                "gen": "ref",
+                "name": "steps"
+              }
+            }
+          },
+          "iterations": 300
+        },
+        {
+          "name": "sliding window",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "const",
+                "value": "sliding_window"
+              },
+              "store": {
+                "gen": "const",
+                "value": "pool"
+              },
+              "key": {
+                "gen": "ref",
+                "name": "key"
+              },
+              "params": {
+                "gen": "ref",
+                "name": "params"
+              },
+              "limit": {
+                "gen": "ref",
+                "name": "limit"
+              },
+              "window": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": 1,
+                    "max": 1000
+                  },
+                  {
+                    "gen": "int",
+                    "min": -1,
+                    "max": 3
+                  }
+                ]
+              },
+              "ttl": {
+                "gen": "int",
+                "min": -1,
+                "max": 3000
+              },
+              "now": {
+                "gen": "ref",
+                "name": "now"
+              },
+              "steps": {
+                "gen": "ref",
+                "name": "steps"
+              }
+            }
+          },
+          "iterations": 300
+        },
+        {
+          "name": "token bucket",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algo": {
+                "gen": "const",
+                "value": "token_bucket"
+              },
+              "store": {
+                "gen": "const",
+                "value": "pool"
+              },
+              "key": {
+                "gen": "ref",
+                "name": "key"
+              },
+              "params": {
+                "gen": "ref",
+                "name": "params"
+              },
+              "tokens": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": -2,
+                    "max": 20
+                  },
+                  {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 1000000
+                  }
+                ]
+              },
+              "refill_rate": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": 0.001,
+                    "max": 50
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0.0,
+                      0.1,
+                      0.3333333333333333,
+                      1.0,
+                      1e-09
+                    ]
+                  }
+                ]
+              },
+              "now": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "float",
+                    "min": 0,
+                    "max": 4000000000
+                  },
+                  {
+                    "gen": "float",
+                    "min": 1700000000,
+                    "max": 1700000100
+                  }
+                ]
+              },
+              "steps": {
+                "gen": "ref",
+                "name": "steps"
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "database.new": {
+      "doc": "a Utopia\\Database\\Database over the Memory adapter, its database created unless `exists` is false"
+    },
+    "database.setup": {
+      "doc": "$limit->setup() on a TimeLimit\\Database",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Database::setup"
+      ]
+    },
+    "tables.new": {
+      "doc": "a fake Appwrite TablesDB API in memory (`table`: none | bare | complete)"
+    },
+    "tables.setup": {
+      "doc": "$limit->setup() on a TimeLimit\\Appwrite\\TablesDB",
+      "covers": [
+        "Utopia\\Abuse\\Adapter\\TimeLimit\\Appwrite\\TablesDB::setup"
+      ]
+    },
+    "tables.calls": {
+      "doc": "the TablesDB calls the fake received, as method names"
+    },
+    "memory.new": {
+      "doc": "the PHP tests' TimeLimit\\Store double at `now`"
+    },
+    "memory.advance": {
+      "doc": "moves the double's clock by `seconds`"
+    },
+    "memory.state": {
+      "doc": "the double's {counts, calls}"
+    },
+    "recaptcha.verify": {
+      "doc": "new ReCaptcha(secret, a client answering `body`)->verify(response, ip, score?): {verdict, method, url, content_type, body} of the request sent",
+      "covers": [
+        "Utopia\\Abuse\\ReCaptcha::__construct",
+        "Utopia\\Abuse\\ReCaptcha::verify"
+      ]
+    },
+    "recaptcha.url": {
+      "doc": "ReCaptcha::URL"
+    },
+    "clock.wait_window": {
+      "doc": "sleeps until the next multiple of `seconds` (the PHP tests' waitForWindowStart)"
+    },
+    "clock.fresh_second": {
+      "doc": "sleeps until the second changes (the PHP tests' freshSecond)"
+    },
+    "clock.window_end": {
+      "doc": "time() - time() % seconds + seconds"
+    },
+    "clock.between": {
+      "doc": "time() + low <= value <= time() + high"
+    },
+    "compare.greater": {
+      "doc": "a > b"
+    },
+    "redis.set": {
+      "doc": "fixture: SET key value on `service` (abuse-redis)"
+    },
+    "redis.get": {
+      "doc": "fixture: GET key (false when missing)"
+    },
+    "redis.ttl": {
+      "doc": "fixture: whether TTL key is in (max - 3, max]"
+    },
+    "redis.clear": {
+      "doc": "fixture: DEL every abuse__* key of the database"
+    },
+    "cluster.set": {
+      "doc": "fixture: SET key value on the cluster"
+    },
+    "cluster.clear": {
+      "doc": "fixture: DEL every abuse__* key of every primary"
+    }
+  },
+  "generators": {
+    "key": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 24,
+          "alphabet": "ascii",
+          "tricky": 0.3
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "alphabet": "unicode"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "ip:",
+                "url:",
+                "{ip}:",
+                "{{ip}}-",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "{ip}",
+                "{url}",
+                "{{ip}}",
+                "{a}{b}",
+                "x"
+              ]
+            },
+            {
+              "gen": "string",
+              "min": 0,
+              "max": 6,
+              "alphabet": "alnum"
+            }
+          ]
+        }
+      ]
+    },
+    "params": {
+      "gen": "object",
+      "fields": {
+        "{ip}": {
+          "gen": "string",
+          "min": 0,
+          "max": 16,
+          "alphabet": "ascii",
+          "tricky": 0.2
+        },
+        "{url}": {
+          "gen": "string",
+          "min": 0,
+          "max": 16,
+          "alphabet": "url"
+        },
+        "{{ip}}": {
+          "gen": "string",
+          "min": 0,
+          "max": 8,
+          "alphabet": "unicode"
+        },
+        "{a}": {
+          "gen": "pick",
+          "from": [
+            "{b}",
+            "x",
+            ""
+          ]
+        },
+        "{b}": {
+          "gen": "string",
+          "min": 0,
+          "max": 4,
+          "alphabet": "lower"
+        }
+      },
+      "optional": [
+        "{ip}",
+        "{url}",
+        "{{ip}}",
+        "{a}",
+        "{b}"
+      ]
+    },
+    "limit": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -2,
+          "max": 12
+        },
+        {
+          "gen": "int",
+          "min": -9223372036854775808,
+          "max": 9223372036854775807
+        }
+      ]
+    },
+    "now": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 4000000000
+        },
+        {
+          "gen": "int",
+          "min": 1699999900,
+          "max": 1700000100
+        }
+      ]
+    },
+    "steps": {
+      "gen": "array",
+      "items": {
+        "gen": "pick",
+        "from": [
+          "check",
+          "peek"
+        ]
+      },
+      "min": 0,
+      "max": 8
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Abuse\\Adapter::withParams",
+      "description": "Params are merged with [...$this->params, ...$params]: a placeholder that is a canonical integer (\"7\") is an integer array key, which the spread renumbers from 0 on every merge, so it is then replaced as \"0\". Key::with_params keeps it.",
+      "case": "AdapterTest.json#integer placeholders are renumbered from 0 (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Abuse\\Adapter\\TimeLimit\\Redis::getLogs",
+      "description": "Scans once with COUNT $limit (none when it is null or 0; no logs when negative), ignores $offset and does not sort, unlike every other Redis store.",
+      "case": "RedisTest.json#getLogs scans once, without an offset"
+    },
+    {
+      "symbol": "Utopia\\Abuse\\Adapter\\TimeLimit\\RedisCluster::getLogs",
+      "description": "Stops scanning a primary once $offset + $limit keys are found, before sorting, so later keys of that primary can be missed (TimeLimit and SlidingWindow; the RedisPool cluster path scans everything).",
+      "case": "RedisClusterTest.json#getLogs of every primary"
+    },
+    {
+      "symbol": "Utopia\\Abuse\\Adapter\\TokenBucket::check",
+      "description": "Floats reach the Lua scripts as PHP's (string) prints them, with 14 significant digits, so a microtime like 1700000100.123456 is stored and refilled from as 1700000100.1235.",
+      "case": "FixedClock.json#token bucket: refill, balance and stored hash"
+    },
+    {
+      "symbol": "Utopia\\Abuse\\Adapter\\SlidingWindow::peek",
+      "description": "peek() weighs the previous bucket with the full-precision elapsed fraction while check()'s script gets it printed with 14 digits; both are kept.",
+      "case": "FixedClock.json#sliding window: weighted estimate across windows"
+    },
+    {
+      "symbol": "Utopia\\Abuse\\Adapter\\TokenBucket::__construct",
+      "description": "A negative capacity is accepted with a refill rate of 0, and the reset time then divides by zero (DivisionByZeroError).",
+      "case": "NoneTest.json#token bucket: negative capacity with no refill divides by zero"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Abuse\\Result::__construct",
+      "php": "A window end or remaining count past the 64-bit range is a float that Result's int properties reject with a TypeError whose message ends with ', called in <PHP file> on line <n>'.",
+      "reason": "Rust raises Error::Type (TypeError) with the same message up to that PHP source location, which it has no counterpart for; the cases compare the class and mask the message."
+    },
+    {
+      "symbol": "Utopia\\Abuse\\Adapter::key",
+      "php": "Keys and log keys are PHP byte strings and may hold bytes that are not UTF-8.",
+      "reason": "Key and the logs' keys and hash fields are Rust Strings: a key is built from UTF-8 parts, and key bytes Redis returns that are not UTF-8 are read lossily. Counter and hash values stay bytes."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "time_limit_redis": "A Redis round trip running the hit script, the same on both runtimes, dominates the call",
+      "sliding_window_redis": "A Redis round trip running the estimate script, the same on both runtimes, dominates the call",
+      "token_bucket_redis": "A Redis round trip running the refill script, the same on both runtimes, dominates the call",
+      "time_limit_pool": "A pool checkout and a Redis round trip running the hit script dominate the call"
+    }
+  }
+}

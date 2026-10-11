@@ -11,6 +11,7 @@ use serde_json::Value;
 use crate::adapter::{Fault, OpResult, Session};
 use crate::bench::Bench;
 
+pub mod abuse;
 pub mod auth;
 pub mod cache;
 pub mod circuit_breaker;
@@ -36,6 +37,7 @@ pub mod validators;
 
 /// Library ids (the `tests/compat/<lib>` directory names) and their operations.
 pub const LIBS: &[(&str, &[&str])] = &[
+    ("abuse", abuse::OPS),
     ("auth", auth::OPS),
     ("cache", cache::OPS),
     ("circuit-breaker", circuit_breaker::OPS),
@@ -63,6 +65,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
 /// Runs one operation of one library.
 pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> OpResult {
     match lib {
+        "abuse" => abuse::call(op, args, session).await,
         "auth" => auth::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
         "circuit-breaker" => circuit_breaker::call(op, args, session).await,
@@ -92,6 +95,8 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
 /// The benchmarks of a library: name and what it times.
 pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
     match lib {
+        "abuse" => abuse::BENCHES,
+        "dsn" => dsn::BENCHES,
         "auth" => auth::BENCHES,
         "cache" => cache::BENCHES,
         "circuit-breaker" => circuit_breaker::BENCHES,
@@ -118,6 +123,8 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
 /// Sets up one benchmark of one library and returns the closure to time.
 pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench, Fault> {
     match lib {
+        "abuse" => abuse::bench(name, session).await,
+        "dsn" => dsn::bench(name, session).await,
         "auth" => auth::bench(name, session).await,
         "cache" => cache::bench(name, session).await,
         "circuit-breaker" => circuit_breaker::bench(name, session).await,
