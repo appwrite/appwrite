@@ -351,6 +351,9 @@
     },
     {
       "name": "testCaseSensitivity",
+      "requires": [
+        "case-sensitive-files"
+      ],
       "steps": [
         {
           "op": "filesystem.new",
@@ -418,7 +421,7 @@
             "ttl": 7776000,
             "hash": "COLOR"
           },
-          "expect": "pink"
+          "expect": false
         },
         {
           "op": "cache.purge",

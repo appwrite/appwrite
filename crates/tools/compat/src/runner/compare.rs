@@ -39,6 +39,53 @@ pub fn mask(value: &mut Value, paths: &[String]) {
     }
 }
 
+/// Sorts the keys of the objects at `paths` (recursively below them), so key
+/// order no longer counts there.
+pub fn sort_keys(value: &mut Value, paths: &[String]) {
+    for path in paths {
+        let segments: Vec<&str> = path.split('/').skip(1).filter(|s| !s.is_empty()).collect();
+        sort_at(value, &segments);
+    }
+}
+
+fn sort_at(value: &mut Value, segments: &[&str]) {
+    match segments.split_first() {
+        None => sort_all(value),
+        Some((first, rest)) => match value {
+            Value::Object(o) => {
+                if *first == "*" {
+                    o.values_mut().for_each(|v| sort_at(v, rest));
+                } else if let Some(v) = o.get_mut(&unescape(first)) {
+                    sort_at(v, rest);
+                }
+            }
+            Value::Array(a) => {
+                if *first == "*" {
+                    a.iter_mut().for_each(|v| sort_at(v, rest));
+                } else if let Some(v) = first.parse::<usize>().ok().and_then(|i| a.get_mut(i)) {
+                    sort_at(v, rest);
+                }
+            }
+            _ => {}
+        },
+    }
+}
+
+fn sort_all(value: &mut Value) {
+    match value {
+        Value::Object(o) => {
+            let mut entries: Vec<(String, Value)> = std::mem::take(o).into_iter().collect();
+            entries.sort_by(|a, b| a.0.cmp(&b.0));
+            for (k, mut v) in entries {
+                sort_all(&mut v);
+                o.insert(k, v);
+            }
+        }
+        Value::Array(a) => a.iter_mut().for_each(sort_all),
+        _ => {}
+    }
+}
+
 fn mask_at(value: &mut Value, segments: &[&str]) {
     let Some((first, rest)) = segments.split_first() else {
         *value = Value::String("<masked>".into());
@@ -177,6 +224,15 @@ mod tests {
     fn ints_and_floats_differ() {
         assert!(diff(&json!(1), &json!(1.0)).is_some());
         assert!(diff(&json!(1.5), &json!(1.5)).is_none());
+    }
+
+    #[test]
+    fn sorted_keys_ignore_order() {
+        let mut a: Value = serde_json::from_str(r#"{"x":{"b":2,"a":1},"y":{"d":1,"c":2}}"#).unwrap();
+        sort_keys(&mut a, &["/x".to_owned()]);
+        assert_eq!(serde_json::to_string(&a).unwrap(), r#"{"x":{"a":1,"b":2},"y":{"d":1,"c":2}}"#);
+        sort_keys(&mut a, &["/".to_owned()]);
+        assert_eq!(serde_json::to_string(&a).unwrap(), r#"{"x":{"a":1,"b":2},"y":{"c":2,"d":1}}"#);
     }
 
     #[test]

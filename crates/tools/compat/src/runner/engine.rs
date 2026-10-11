@@ -7,7 +7,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 use serde_json::{Value, json};
 
 use super::cases::{self, Case, CaseFile, Step};
-use super::compare::{diff, mask, normalize, short, substitute};
+use super::compare::{diff, mask, normalize, short, sort_keys, substitute};
 use super::config::Config;
 use super::generate::{self, Rng};
 use super::process::Driver;
@@ -90,7 +90,11 @@ pub fn clip(v: &Value) -> Value {
 fn comparable(result: &Outcome, ns: &str, masks: &[&Mask]) -> Value {
     let mut v = normalize(&result.to_json(), ns);
     for m in masks {
-        mask(&mut v, &m.paths);
+        if m.order {
+            sort_keys(&mut v, &m.paths);
+        } else {
+            mask(&mut v, &m.paths);
+        }
     }
     v
 }
@@ -208,6 +212,10 @@ impl Engine {
             for case in &file.cases {
                 let name = label(lib, file, case);
                 if filter.is_some_and(|f| !name.contains(f)) {
+                    continue;
+                }
+                if let Some(why) = cases::unmet(&case.requires) {
+                    eprintln!("skip  {name}: {why}");
                     continue;
                 }
                 let r =
@@ -446,7 +454,7 @@ impl Engine {
             let mut results: Vec<Vec<Option<Value>>> = Vec::new();
             for case in &file.cases {
                 let name = label(lib, file, case);
-                if filter.is_some_and(|f| !name.contains(f)) {
+                if filter.is_some_and(|f| !name.contains(f)) || cases::unmet(&case.requires).is_some() {
                     results.push(vec![None; case.steps.len()]);
                     continue;
                 }
@@ -740,7 +748,7 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
     for file in &files {
         for case in &file.cases {
             let kinds = Engine::state_kinds(&spec, case);
-            if !kinds.is_empty() && !services {
+            if (!kinds.is_empty() && !services) || cases::unmet(&case.requires).is_some() {
                 continue;
             }
             counter += 1;

@@ -116,6 +116,11 @@ fn default_iterations() -> u64 {
 pub struct Mask {
     pub paths: Vec<String>,
     pub reason: String,
+    /// Instead of hiding the values at `paths`, compare the objects there
+    /// with their keys sorted: for an order neither runtime decides (a
+    /// service's hash iteration order).
+    #[serde(default)]
+    pub order: bool,
 }
 
 #[derive(Debug, Deserialize)]

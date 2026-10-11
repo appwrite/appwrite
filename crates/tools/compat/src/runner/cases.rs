@@ -9,6 +9,7 @@
 //!         { "op": "lock.new", "args": {"key": "${ns}:a"}, "bind": "l" },
 //!         { "op": "lock.acquire", "args": {"lock": {"$ref": "l"}} }
 //!     ]},
+//!     { "name": "case-sensitive keys", "requires": ["case-sensitive-files"], "steps": [...] },
 //!     { "name": "written by one runtime, read by the other", "interop": true, "steps": [
 //!         { "side": "a", "op": "cache.save", "args": {...} },
 //!         { "side": "b", "op": "cache.load", "args": {...} }
@@ -43,6 +44,32 @@ pub struct Case {
     pub state: Option<Vec<String>>,
     /// Written in the short single-step form.
     pub short: bool,
+    /// What the machine must provide for the case to mean anything
+    /// (`case-sensitive-files`); the case is skipped where it does not.
+    pub requires: Vec<String>,
+}
+
+/// Why this machine cannot run a case with these requirements, if it cannot.
+pub fn unmet(requires: &[String]) -> Option<String> {
+    requires.iter().find_map(|r| match r.as_str() {
+        "case-sensitive-files" => folds_case().then(|| "/tmp/compat-fs folds filename case".to_owned()),
+        other => Some(format!("unknown requirement `{other}`")),
+    })
+}
+
+/// Whether the shared files directory treats `a` and `A` as one name (the
+/// default on macOS), as PHP's tests check before relying on case.
+fn folds_case() -> bool {
+    static FOLDS: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *FOLDS.get_or_init(|| {
+        let dir = std::path::Path::new("/tmp/compat-fs");
+        let probe = dir.join(format!("case-probe-{}", std::process::id()));
+        let folds = std::fs::create_dir_all(dir).is_ok()
+            && std::fs::write(&probe, b"").is_ok()
+            && dir.join(format!("CASE-PROBE-{}", std::process::id())).exists();
+        let _ = std::fs::remove_file(&probe);
+        folds
+    })
 }
 
 pub struct Step {
@@ -105,7 +132,12 @@ pub fn load_file(path: &Path) -> Result<CaseFile, String> {
                 (Some(_), false) => return Err(at(format!("case `{name}`: `side` is only for interop cases"))),
             }
         }
-        cases.push(Case { name, steps, interop, state, short });
+        let requires = c
+            .get("requires")
+            .and_then(Value::as_array)
+            .map(|a| a.iter().filter_map(Value::as_str).map(str::to_owned).collect())
+            .unwrap_or_default();
+        cases.push(Case { name, steps, interop, state, short, requires });
     }
     Ok(CaseFile { path: path.to_path_buf(), raw, sources, cases })
 }
