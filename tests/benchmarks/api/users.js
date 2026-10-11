@@ -1,7 +1,7 @@
 // Users API benchmark: a scenario for every /v1/users endpoint, in a mix
 // modelled on server-side Users traffic (reads dominate). See README.md.
 
-import { define, HASHING, PASSWORD, SEED, pick, unique } from './lib.js';
+import { define, HASHING, PASSWORD, SEED, pick, unique, random } from './lib.js';
 
 const MD5 = '144fa7eaa4904e8ee120651997f70dcc';
 
@@ -85,7 +85,7 @@ const bench = define({
         },
         {
             name: 'users.search', route: 'GET /v1/users', weight: 4, note: 'full-text search',
-            run: (api) => api.call('GET', `/users?search=Seed+User+${Math.floor(Math.random() * 100)}`),
+            run: (api) => api.call('GET', `/users?search=Seed+User+${Math.floor(random() * 100)}`),
         },
         {
             name: 'users.create', route: 'POST /v1/users', weight: 2,
@@ -149,7 +149,7 @@ const bench = define({
         },
         {
             name: 'users.name.update', route: 'PATCH /v1/users/:userId/name', weight: 3,
-            run: (api, d) => api.call('PATCH', `/users/${pick(d.users)}/name`, { name: `Seed User ${Math.floor(Math.random() * 1000)}` }),
+            run: (api, d) => api.call('PATCH', `/users/${pick(d.users)}/name`, { name: `Seed User ${Math.floor(random() * 1000)}` }),
         },
         { name: 'users.passkeys.list', route: 'GET /v1/users/:userId/passkeys', run: (api, d) => api.call('GET', `/users/${pick(d.users)}/passkeys`) },
         { name: 'users.passkeys.get', route: 'GET /v1/users/:userId/passkeys/:passkeyId', note: NOT_FOUND, run: (api, d) => api.call('GET', `/users/${pick(d.users)}/passkeys/${unique('pk')}`, null, [404]) },
@@ -164,12 +164,12 @@ const bench = define({
         },
         {
             name: 'users.phone.update', route: 'PATCH /v1/users/:userId/phone',
-            run: (api, d) => api.call('PATCH', `/users/${pick(d.users)}/phone`, { number: `+1555${String(Math.floor(Math.random() * 1e7)).padStart(7, '0')}` }, [200, 409]),
+            run: (api, d) => api.call('PATCH', `/users/${pick(d.users)}/phone`, { number: `+1555${String(Math.floor(random() * 1e7)).padStart(7, '0')}` }, [200, 409]),
         },
         { name: 'users.prefs.get', route: 'GET /v1/users/:userId/prefs', weight: 3, run: (api, d) => api.call('GET', `/users/${pick(d.users)}/prefs`) },
         {
             name: 'users.prefs.update', route: 'PATCH /v1/users/:userId/prefs', weight: 4,
-            run: (api, d) => api.call('PATCH', `/users/${pick(d.users)}/prefs`, { prefs: { theme: pick(['dark', 'light']), n: Math.random() } }),
+            run: (api, d) => api.call('PATCH', `/users/${pick(d.users)}/prefs`, { prefs: { theme: pick(['dark', 'light']), n: random() } }),
         },
         { name: 'users.sessions.list', route: 'GET /v1/users/:userId/sessions', run: (api, d) => api.call('GET', `/users/${pick(d.users)}/sessions`) },
         {
@@ -222,7 +222,7 @@ const bench = define({
             name: 'users.targets.update', route: 'PATCH /v1/users/:userId/targets/:targetId',
             run(api, d) {
                 const [id, target] = pick(d.targets);
-                api.call('PATCH', `/users/${id}/targets/${target}`, { name: `Target ${Math.floor(Math.random() * 1000)}` });
+                api.call('PATCH', `/users/${id}/targets/${target}`, { name: `Target ${Math.floor(random() * 1000)}` });
             },
         },
         {

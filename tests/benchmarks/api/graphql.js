@@ -1,7 +1,7 @@
 // GraphQL API benchmark: the three /v1/graphql endpoints, each running a small
 // Users operation of the run's project through the GraphQL schema. See README.md.
 
-import { define, SEED, pick } from './lib.js';
+import { define, SEED, pick, random } from './lib.js';
 
 const LIST = 'query { usersList { total users { _id name email } } }';
 const GET = 'query Get($userId: String!) { usersGet(userId: $userId) { _id name email status labels } }';
@@ -47,7 +47,7 @@ const bench = define({
         {
             name: 'graphql.mutation', route: 'POST /v1/graphql/mutation', weight: 3, note: 'usersUpdateName with variables',
             run(api, d) {
-                ok(api, api.call('POST', '/graphql/mutation', { query: UPDATE, variables: { userId: pick(d.users), name: `GraphQL User ${Math.floor(Math.random() * 1000)}` } }));
+                ok(api, api.call('POST', '/graphql/mutation', { query: UPDATE, variables: { userId: pick(d.users), name: `GraphQL User ${Math.floor(random() * 1000)}` } }));
             },
         },
     ],

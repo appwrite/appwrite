@@ -20,7 +20,7 @@ import http from 'k6/http';
 import { sleep } from 'k6';
 import { hmac } from 'k6/crypto';
 import { b64decode, b64encode } from 'k6/encoding';
-import { CONTROL, ENDPOINT, PASSWORD, SEED, define, pick, unique } from './lib.js';
+import { CONTROL, ENDPOINT, PASSWORD, SEED, define, pick, unique, random } from './lib.js';
 
 const MAILS = __ENV.APPWRITE_BENCHMARK_MAILS || 'http://localhost:9503';
 const ORIGIN = 'http://localhost';
@@ -55,7 +55,7 @@ function guest(api, extra = {}) {
 }
 
 function phone() {
-    return `+1${String(2 + Math.floor(Math.random() * 8))}${String(Math.floor(Math.random() * 1e9)).padStart(9, '0')}`;
+    return `+1${String(2 + Math.floor(random() * 8))}${String(Math.floor(random() * 1e9)).padStart(9, '0')}`;
 }
 
 function email(prefix) {
@@ -491,7 +491,7 @@ const bench = define({
         },
         {
             name: 'account.name.update', route: 'PATCH /v1/account/name', weight: 3,
-            run: (api, d) => api.call('PATCH', '/account/name', { name: `Member ${Math.floor(Math.random() * 1000)}` }, [200], api.session(pick(d.members).secret)),
+            run: (api, d) => api.call('PATCH', '/account/name', { name: `Member ${Math.floor(random() * 1000)}` }, [200], api.session(pick(d.members).secret)),
         },
         {
             name: 'account.passkeys.list', route: 'GET /v1/account/passkeys', weight: 2,
@@ -521,7 +521,7 @@ const bench = define({
             name: 'account.passkeys.update', route: 'PATCH /v1/account/passkeys/:passkeyId',
             run: awaited(async (api) => {
                 const h = await passkeyHolder(api);
-                api.call('PATCH', `/account/passkeys/${h.passkey}`, { name: `Passkey ${Math.floor(Math.random() * 1000)}` }, [200], h.headers);
+                api.call('PATCH', `/account/passkeys/${h.passkey}`, { name: `Passkey ${Math.floor(random() * 1000)}` }, [200], h.headers);
             }),
         },
         {
@@ -554,7 +554,7 @@ const bench = define({
         { name: 'account.prefs.get', route: 'GET /v1/account/prefs', weight: 5, run: (api, d) => api.call('GET', '/account/prefs', null, [200], api.session(pick(d.members).secret)) },
         {
             name: 'account.prefs.update', route: 'PATCH /v1/account/prefs', weight: 4,
-            run: (api, d) => api.call('PATCH', '/account/prefs', { prefs: { theme: pick(['dark', 'light']), n: Math.random() } }, [200], api.session(pick(d.members).secret)),
+            run: (api, d) => api.call('PATCH', '/account/prefs', { prefs: { theme: pick(['dark', 'light']), n: random() } }, [200], api.session(pick(d.members).secret)),
         },
         {
             name: 'account.recovery.create', route: 'POST /v1/account/recovery', note: 'queues the recovery email',

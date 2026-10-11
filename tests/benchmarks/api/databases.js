@@ -5,7 +5,7 @@
 // database. See README.md.
 
 import { sleep } from 'k6';
-import { define, SEED, pick, unique } from './lib.js';
+import { define, SEED, pick, unique, random } from './lib.js';
 
 // The two APIs over the same engine: the names of their resources and params.
 const LEGACY = {
@@ -196,7 +196,7 @@ const ops = {
         }
     },
     getDatabase: (k) => (api, data) => api.call('GET', db(k, data[k.ns])),
-    updateDatabase: (k) => (api, data) => api.call('PUT', db(k, data[k.ns]), { name: `Bench ${Math.floor(Math.random() * 1000)}`, enabled: true }),
+    updateDatabase: (k) => (api, data) => api.call('PUT', db(k, data[k.ns]), { name: `Bench ${Math.floor(random() * 1000)}`, enabled: true }),
     deleteDatabase: (k) => (api) => {
         const id = api.prep('POST', k.root, { databaseId: 'unique()', name: 'Gone' }, [201]).json('$id');
         api.call('DELETE', `${k.root}/${id}`, null, [204]);
@@ -221,7 +221,7 @@ const ops = {
     getSet: (k) => (api, data) => api.call('GET', `${sets(k, data[k.ns])}/${data[k.ns].docs}`),
     updateSet: (k) => (api, data) => {
         const d = data[k.ns];
-        api.call('PUT', `${sets(k, d)}/${d.spare}`, { name: `Spare ${Math.floor(Math.random() * 1000)}`, [k.security]: false, enabled: true });
+        api.call('PUT', `${sets(k, d)}/${d.spare}`, { name: `Spare ${Math.floor(random() * 1000)}`, [k.security]: false, enabled: true });
     },
     deleteSet: (k) => (api, data) => {
         const d = data[k.ns];
@@ -267,18 +267,18 @@ const ops = {
     },
 
     // Documents (rows)
-    listItems: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}${qs(query('limit', undefined, [25]), query('offset', undefined, [Math.floor(Math.random() * 100)]))}`),
+    listItems: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}${qs(query('limit', undefined, [25]), query('offset', undefined, [Math.floor(random() * 100)]))}`),
     filterItems: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}${qs(
         query('equal', 'active', [true]),
-        query('greaterThan', 'count', [Math.floor(Math.random() * SEED * 4)]),
+        query('greaterThan', 'count', [Math.floor(random() * SEED * 4)]),
         query('orderAsc', 'count'),
         query('limit', undefined, [25]),
     )}`),
-    selectItems: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}${qs(query('select', undefined, ['name', 'count']), query('equal', 'name', [`Seed ${Math.floor(Math.random() * 100)}`]))}`),
+    selectItems: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}${qs(query('select', undefined, ['name', 'count']), query('equal', 'name', [`Seed ${Math.floor(random() * 100)}`]))}`),
     getItem: (k) => (api, data) => api.call('GET', `${items(k, data[k.ns])}/${pick(data[k.ns].items)}`),
     createItem: (k) => (api, data) => {
         const d = data[k.ns];
-        const res = api.call('POST', items(k, d), { [k.itemId]: 'unique()', data: record(Math.floor(Math.random() * 1000)) }, [201]);
+        const res = api.call('POST', items(k, d), { [k.itemId]: 'unique()', data: record(Math.floor(random() * 1000)) }, [201]);
         if (res.status === 201) {
             api.prep('DELETE', `${items(k, d)}/${res.json('$id')}`, null, [204]);
         }
@@ -301,7 +301,7 @@ const ops = {
         const d = data[k.ns];
         const tag = unique('bulk');
         batch(api, k, d, tag, 10);
-        api.call('PATCH', items(k, d), { data: { score: Math.random(), active: false }, queries: [query('equal', 'name', [tag])] });
+        api.call('PATCH', items(k, d), { data: { score: random(), active: false }, queries: [query('equal', 'name', [tag])] });
         sweep(api, k, d, tag);
     },
     deleteItems: (k) => (api, data) => {
@@ -323,7 +323,7 @@ const ops = {
     },
     updateItem: (k) => (api, data) => {
         const d = data[k.ns];
-        api.call('PATCH', `${items(k, d)}/${pick(d.items)}`, { data: { score: Math.random() * 100 } });
+        api.call('PATCH', `${items(k, d)}/${pick(d.items)}`, { data: { score: random() * 100 } });
     },
     deleteItem: (k) => (api, data) => {
         const d = data[k.ns];
@@ -355,7 +355,7 @@ const ops = {
         api.call('POST', `${k.root}/transactions/${txn}/operations`, {
             operations: [
                 { action: 'create', databaseId: d.db, [k.setId]: d.docs, [k.itemId]: unique('tx'), data: { name: 'Staged', count: 1, score: 1, active: true } },
-                { action: 'update', databaseId: d.db, [k.setId]: d.docs, [k.itemId]: pick(d.items), data: { score: Math.random() } },
+                { action: 'update', databaseId: d.db, [k.setId]: d.docs, [k.itemId]: pick(d.items), data: { score: random() } },
             ],
         }, [201]);
         api.prep('PATCH', `${k.root}/transactions/${txn}`, { rollback: true });

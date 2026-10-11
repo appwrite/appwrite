@@ -5,7 +5,7 @@
 // credentials (a provider record never contacts its service), and every message
 // is a draft, which the API stores without queueing it for the messaging worker.
 
-import { define, SEED, pick, unique } from './lib.js';
+import { define, SEED, pick, unique, random } from './lib.js';
 
 const SERVICE_ACCOUNT = {
     type: 'service_account',
@@ -20,11 +20,11 @@ const SERVICE_ACCOUNT = {
 const PROVIDERS = {
     apns: {
         create: { authKey: 'bench-auth-key', authKeyId: 'bench-key-id', teamId: 'bench-team', bundleId: 'io.example.bench', sandbox: true },
-        update: () => ({ bundleId: `io.example.bench${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ bundleId: `io.example.bench${Math.floor(random() * 1000)}` }),
     },
     appwrite: {
         create: { qos: 1, expiry: 3600 },
-        update: () => ({ qos: pick([0, 1]), expiry: 60 * Math.floor(1 + Math.random() * 60) }),
+        update: () => ({ qos: pick([0, 1]), expiry: 60 * Math.floor(1 + random() * 60) }),
     },
     fcm: {
         create: { serviceAccountJSON: SERVICE_ACCOUNT },
@@ -32,19 +32,19 @@ const PROVIDERS = {
     },
     mailgun: {
         create: { apiKey: 'bench-key', domain: 'example.com', isEuRegion: false, fromName: 'Bench', fromEmail: 'bench@example.com' },
-        update: () => ({ isEuRegion: pick([true, false]), fromName: `Bench ${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ isEuRegion: pick([true, false]), fromName: `Bench ${Math.floor(random() * 1000)}` }),
     },
     msg91: {
         create: { templateId: 'bench-template', senderId: 'bench-sender', authKey: 'bench-auth-key' },
-        update: () => ({ templateId: `bench-template-${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ templateId: `bench-template-${Math.floor(random() * 1000)}` }),
     },
     resend: {
         create: { apiKey: 'bench-key', fromName: 'Bench', fromEmail: 'bench@example.com' },
-        update: () => ({ fromName: `Bench ${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ fromName: `Bench ${Math.floor(random() * 1000)}` }),
     },
     sendgrid: {
         create: { apiKey: 'bench-key', fromName: 'Bench', fromEmail: 'bench@example.com' },
-        update: () => ({ fromName: `Bench ${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ fromName: `Bench ${Math.floor(random() * 1000)}` }),
     },
     ses: {
         create: { accessKey: 'bench-access-key', secretKey: 'bench-secret-key', region: 'us-east-1', fromName: 'Bench', fromEmail: 'bench@example.com' },
@@ -53,23 +53,23 @@ const PROVIDERS = {
     smtp: {
         // The dev stack's mail catcher, should a provider ever be enabled.
         create: { host: 'maildev', port: 1025, username: 'bench', password: 'bench-password', encryption: 'none', autoTLS: false, fromName: 'Bench', fromEmail: 'bench@example.com' },
-        update: () => ({ host: 'maildev', port: 1025, mailer: `bench-${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ host: 'maildev', port: 1025, mailer: `bench-${Math.floor(random() * 1000)}` }),
     },
     telesign: {
         create: { from: '+15555550100', customerId: 'bench-customer', apiKey: 'bench-key' },
-        update: () => ({ customerId: `bench-customer-${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ customerId: `bench-customer-${Math.floor(random() * 1000)}` }),
     },
     textmagic: {
         create: { from: '+15555550100', username: 'bench', apiKey: 'bench-key' },
-        update: () => ({ username: `bench-${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ username: `bench-${Math.floor(random() * 1000)}` }),
     },
     twilio: {
         create: { from: '+15555550100', accountSid: 'bench-account-sid', authToken: 'bench-auth-token' },
-        update: () => ({ accountSid: `bench-account-sid-${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ accountSid: `bench-account-sid-${Math.floor(random() * 1000)}` }),
     },
     vonage: {
         create: { from: '+15555550100', apiKey: 'bench-key', apiSecret: 'bench-secret' },
-        update: () => ({ apiKey: `bench-key-${Math.floor(Math.random() * 1000)}` }),
+        update: () => ({ apiKey: `bench-key-${Math.floor(random() * 1000)}` }),
     },
 };
 
@@ -109,7 +109,7 @@ const updateProvider = ({ type, route }) => ({
     name: `messaging.providers.${type}.update`,
     route,
     run: (api, d) => api.call('PATCH', `/messaging/providers/${type}/${pick(d.providers[type])}`, {
-        name: `Bench ${Math.floor(Math.random() * 1000)}`, enabled: false, ...PROVIDERS[type].update(),
+        name: `Bench ${Math.floor(random() * 1000)}`, enabled: false, ...PROVIDERS[type].update(),
     }),
 });
 
@@ -148,7 +148,7 @@ const bench = define({
             const userId = api.control('POST', '/users', { userId: 'unique()', name: `Bench Recipient ${i}` }, [201]).json('$id');
             const identifiers = {
                 email: `${unique('r')}@example.com`,
-                sms: `+1555${String(Math.floor(Math.random() * 1e7)).padStart(7, '0')}`,
+                sms: `+1555${String(Math.floor(random() * 1e7)).padStart(7, '0')}`,
                 push: unique('device-token'),
             };
             for (const type of Object.keys(targets)) {
@@ -194,15 +194,15 @@ const bench = define({
         createMessage({ type: 'sms', route: 'POST /v1/messaging/messages/sms' }),
         {
             name: 'messaging.messages.email.update', route: 'PATCH /v1/messaging/messages/email/:messageId', weight: 2, note: 'updates a draft',
-            run: (api, d) => api.call('PATCH', `/messaging/messages/email/${pick(d.messages.email)}`, { subject: `Bench subject ${Math.floor(Math.random() * 1000)}`, html: pick([true, false]) }),
+            run: (api, d) => api.call('PATCH', `/messaging/messages/email/${pick(d.messages.email)}`, { subject: `Bench subject ${Math.floor(random() * 1000)}`, html: pick([true, false]) }),
         },
         {
             name: 'messaging.messages.push.update', route: 'PATCH /v1/messaging/messages/push/:messageId', weight: 2, note: 'updates a draft',
-            run: (api, d) => api.call('PATCH', `/messaging/messages/push/${pick(d.messages.push)}`, { title: `Bench title ${Math.floor(Math.random() * 1000)}`, badge: Math.floor(Math.random() * 10) }),
+            run: (api, d) => api.call('PATCH', `/messaging/messages/push/${pick(d.messages.push)}`, { title: `Bench title ${Math.floor(random() * 1000)}`, badge: Math.floor(random() * 10) }),
         },
         {
             name: 'messaging.messages.sms.update', route: 'PATCH /v1/messaging/messages/sms/:messageId', weight: 2, note: 'updates a draft',
-            run: (api, d) => api.call('PATCH', `/messaging/messages/sms/${pick(d.messages.sms)}`, { content: `Bench content ${Math.floor(Math.random() * 1000)}` }),
+            run: (api, d) => api.call('PATCH', `/messaging/messages/sms/${pick(d.messages.sms)}`, { content: `Bench content ${Math.floor(random() * 1000)}` }),
         },
 
         // Providers
@@ -256,7 +256,7 @@ const bench = define({
         { name: 'messaging.topics.get', route: 'GET /v1/messaging/topics/:topicId', weight: 10, run: (api, d) => api.call('GET', `/messaging/topics/${pick(d.topics)}`) },
         {
             name: 'messaging.topics.update', route: 'PATCH /v1/messaging/topics/:topicId', weight: 2,
-            run: (api, d) => api.call('PATCH', `/messaging/topics/${pick(d.topics)}`, { name: `Bench Topic ${Math.floor(Math.random() * 1000)}` }),
+            run: (api, d) => api.call('PATCH', `/messaging/topics/${pick(d.topics)}`, { name: `Bench Topic ${Math.floor(random() * 1000)}` }),
         },
         { name: 'messaging.topics.delete', route: 'DELETE /v1/messaging/topics/:topicId', run: (api) => api.call('DELETE', `/messaging/topics/${topic(api, 'Gone')}`, null, [204]) },
 

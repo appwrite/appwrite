@@ -3,7 +3,7 @@
 //
 // A user has at most one presence: an upsert for a user who has one updates it.
 
-import { define, SEED, pick, unique } from './lib.js';
+import { define, SEED, pick, unique, random } from './lib.js';
 
 const LIMIT = '?queries[]=' + encodeURIComponent('{"method":"limit","values":[25]}');
 
@@ -47,7 +47,7 @@ const bench = define({
             name: 'presences.upsert', route: 'PUT /v1/presences/:presenceId', weight: 10, note: 'a heartbeat: updates the user\'s presence',
             run(api, d) {
                 const [userId, presenceId] = pick(d.presences);
-                api.call('PUT', `/presences/${presenceId}`, { userId, status: pick(['online', 'away', 'busy']), expiresAt: expiry(), metadata: { device: 'bench', n: Math.random() } });
+                api.call('PUT', `/presences/${presenceId}`, { userId, status: pick(['online', 'away', 'busy']), expiresAt: expiry(), metadata: { device: 'bench', n: random() } });
             },
         },
         {
@@ -63,7 +63,7 @@ const bench = define({
         },
         {
             name: 'presences.update', route: 'PATCH /v1/presences/:presenceId', weight: 5,
-            run: (api, d) => api.call('PATCH', `/presences/${pick(d.presences)[1]}`, { status: pick(['online', 'away', 'busy']), metadata: { device: 'bench', n: Math.random() } }),
+            run: (api, d) => api.call('PATCH', `/presences/${pick(d.presences)[1]}`, { status: pick(['online', 'away', 'busy']), metadata: { device: 'bench', n: random() } }),
         },
         {
             name: 'presences.delete', route: 'DELETE /v1/presences/:presenceId',

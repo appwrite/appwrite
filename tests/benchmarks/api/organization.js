@@ -4,12 +4,12 @@
 // creates are deleted after it; reads and updates act on the run's project.
 // See README.md.
 
-import { define, pick, unique } from './lib.js';
+import { define, pick, unique, random } from './lib.js';
 
 const SCOPES = ['users.read', 'teams.read', 'databases.read', 'files.read', 'functions.read'];
 
 function scopes() {
-    return SCOPES.filter(() => Math.random() < 0.6).concat('users.read').filter((s, i, all) => all.indexOf(s) === i);
+    return SCOPES.filter(() => random() < 0.6).concat('users.read').filter((s, i, all) => all.indexOf(s) === i);
 }
 
 const bench = define({
@@ -65,7 +65,7 @@ const bench = define({
             name: 'organization.projects.keys.update', route: 'PUT /v1/organization/projects/:projectId/keys/:keyId', weight: 2,
             run(api, d) {
                 const id = pick(d.keys);
-                api.call('PUT', `/organization/projects/${d.projectId}/keys/${id}`, { name: `Seed Key ${Math.floor(Math.random() * 1000)}`, scopes: SCOPES, expire: null }, [200], d.org);
+                api.call('PUT', `/organization/projects/${d.projectId}/keys/${id}`, { name: `Seed Key ${Math.floor(random() * 1000)}`, scopes: SCOPES, expire: null }, [200], d.org);
             },
         },
         {

@@ -10,7 +10,7 @@
 
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { SEED, define, pick, unique } from './lib.js';
+import { SEED, define, pick, unique, random } from './lib.js';
 
 const MAILDEV = __ENV.APPWRITE_MAILDEV_ENDPOINT || 'http://localhost:9503';
 const ROLES = ['member', 'admin', 'editor', 'viewer'];
@@ -81,7 +81,7 @@ const bench = define({
         },
         {
             name: 'teams.search', route: 'GET /v1/teams', weight: 3, note: 'full-text search',
-            run: (api) => api.call('GET', `/teams?search=Seed+Team+${Math.floor(Math.random() * 100)}`),
+            run: (api) => api.call('GET', `/teams?search=Seed+Team+${Math.floor(random() * 100)}`),
         },
         {
             name: 'teams.create', route: 'POST /v1/teams', weight: 2,
@@ -94,13 +94,13 @@ const bench = define({
         },
         {
             name: 'teams.name.update', route: 'PUT /v1/teams/:teamId', weight: 3,
-            run: (api, d) => api.call('PUT', `/teams/${pick(d.teams)}`, { name: `Seed Team ${Math.floor(Math.random() * 1000)}` }),
+            run: (api, d) => api.call('PUT', `/teams/${pick(d.teams)}`, { name: `Seed Team ${Math.floor(random() * 1000)}` }),
         },
         { name: 'teams.delete', route: 'DELETE /v1/teams/:teamId', run: (api) => api.call('DELETE', `/teams/${team(api, 'Gone')}`, null, [204]) },
         { name: 'teams.prefs.get', route: 'GET /v1/teams/:teamId/prefs', weight: 6, run: (api, d) => api.call('GET', `/teams/${pick(d.teams)}/prefs`) },
         {
             name: 'teams.prefs.update', route: 'PUT /v1/teams/:teamId/prefs', weight: 3,
-            run: (api, d) => api.call('PUT', `/teams/${pick(d.teams)}/prefs`, { prefs: { plan: pick(['free', 'pro']), seats: Math.floor(Math.random() * 100) } }),
+            run: (api, d) => api.call('PUT', `/teams/${pick(d.teams)}/prefs`, { prefs: { plan: pick(['free', 'pro']), seats: Math.floor(random() * 100) } }),
         },
         {
             name: 'teams.memberships.list', route: 'GET /v1/teams/:teamId/memberships', weight: 10,

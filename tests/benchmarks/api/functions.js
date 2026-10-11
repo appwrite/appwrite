@@ -9,7 +9,7 @@
 
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { define, SEED, pick, unique } from './lib.js';
+import { define, SEED, pick, unique, random } from './lib.js';
 import { archive } from './support/archive.js';
 
 const RUNTIME = __ENV.APPWRITE_BENCHMARK_RUNTIME || 'node-22';
@@ -112,7 +112,7 @@ const bench = define({
             name: 'functions.list', route: 'GET /v1/functions', weight: 6,
             run: (api) => api.call('GET', '/functions?queries[]=' + encodeURIComponent('{"method":"limit","values":[25]}')),
         },
-        { name: 'functions.search', route: 'GET /v1/functions', weight: 2, note: 'full-text search', run: (api) => api.call('GET', `/functions?search=Seed+Function+${Math.floor(Math.random() * 50)}`) },
+        { name: 'functions.search', route: 'GET /v1/functions', weight: 2, note: 'full-text search', run: (api) => api.call('GET', `/functions?search=Seed+Function+${Math.floor(random() * 50)}`) },
         {
             name: 'functions.create', route: 'POST /v1/functions', weight: 2,
             run(api) {
@@ -125,7 +125,7 @@ const bench = define({
         {
             name: 'functions.update', route: 'PUT /v1/functions/:functionId', weight: 2,
             run: (api, d) => api.call('PUT', `/functions/${pick(d.functions)}`, {
-                name: `Seed Function ${Math.floor(Math.random() * 1000)}`, runtime: RUNTIME, entrypoint: 'index.js', execute: ['any'],
+                name: `Seed Function ${Math.floor(random() * 1000)}`, runtime: RUNTIME, entrypoint: 'index.js', execute: ['any'],
             }),
         },
         { name: 'functions.delete', route: 'DELETE /v1/functions/:functionId', run: (api) => api.call('DELETE', `/functions/${fn(api, 'Gone')}`, null, [204]) },
@@ -222,7 +222,7 @@ const bench = define({
         { name: 'functions.variables.get', route: 'GET /v1/functions/:functionId/variables/:variableId', weight: 2, run: (api, d) => api.call('GET', `/functions/${d.live}/variables/${pick(d.variables)}`) },
         {
             name: 'functions.variables.update', route: 'PUT /v1/functions/:functionId/variables/:variableId',
-            run: (api, d) => api.call('PUT', `/functions/${d.live}/variables/${pick(d.variables)}`, { value: `value-${Math.floor(Math.random() * 1000)}` }),
+            run: (api, d) => api.call('PUT', `/functions/${d.live}/variables/${pick(d.variables)}`, { value: `value-${Math.floor(random() * 1000)}` }),
         },
         {
             name: 'functions.variables.delete', route: 'DELETE /v1/functions/:functionId/variables/:variableId',

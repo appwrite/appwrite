@@ -3,7 +3,7 @@
 // (the URL must be a public domain), so the webhooks worker never delivers one.
 // See README.md.
 
-import { define, SEED, pick, unique } from './lib.js';
+import { define, SEED, pick, unique, random } from './lib.js';
 
 const URL = 'https://example.com/webhook';
 
@@ -35,7 +35,7 @@ const bench = define({
         },
         {
             name: 'webhooks.update', route: 'PUT /v1/webhooks/:webhookId', weight: 3,
-            run: (api, d) => api.call('PUT', `/webhooks/${pick(d.webhooks)}`, body(`Seed Webhook ${Math.floor(Math.random() * 1000)}`)),
+            run: (api, d) => api.call('PUT', `/webhooks/${pick(d.webhooks)}`, body(`Seed Webhook ${Math.floor(random() * 1000)}`)),
         },
         { name: 'webhooks.delete', route: 'DELETE /v1/webhooks/:webhookId', weight: 2, run: (api) => api.call('DELETE', `/webhooks/${webhook(api)}`, null, [204]) },
         {

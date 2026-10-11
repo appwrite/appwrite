@@ -37,13 +37,20 @@ const ONLY = (__ENV.APPWRITE_BENCHMARK_ONLY || '').split(',').filter(Boolean);
 const duration = new Trend('appwrite_duration', true);
 const failures = new Counter('appwrite_failures');
 
+/** A uniform number in [0, 1) from the platform's CSPRNG (ids, emails and secrets derive from it). */
+export function random() {
+    // From bytes: k6 fills wider typed arrays with one byte per element.
+    const [a, b, c, d] = crypto.getRandomValues(new Uint8Array(4));
+    return (a * 16777216 + b * 65536 + c * 256 + d) / 4294967296;
+}
+
 export function unique(prefix) {
     const random = Array.from(crypto.getRandomValues(new Uint8Array(4)), (b) => b.toString(16).padStart(2, '0')).join('');
     return `${prefix}-${Date.now().toString(36)}-${random}`.slice(0, 36);
 }
 
 export function pick(list) {
-    return list[Math.floor(Math.random() * list.length)];
+    return list[Math.floor(random() * list.length)];
 }
 
 function send(base, method, path, body, headers, tag) {
@@ -206,7 +213,7 @@ export function define(spec) {
             return { headers: context.headers, run: context.run, data };
         },
         mix(state) {
-            let r = Math.random() * total;
+            let r = random() * total;
             const scenario = all.find((s) => (r -= s.weight ?? 1) < 0) || all[all.length - 1];
             scenario.run(new Api(scenario.name, state.headers), state.data, state.run);
         },

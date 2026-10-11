@@ -6,7 +6,7 @@
 // 5 MiB, uploads are chunked with Content-Range and X-Appwrite-ID).
 
 import http from 'k6/http';
-import { SEED, define, pick, unique } from './lib.js';
+import { SEED, define, pick, unique, random } from './lib.js';
 
 const LOGO = open('../../resources/logo.png', 'b'); // 47 KB PNG
 const KITTEN = open('../../resources/disk-a/kitten-2.jpg', 'b'); // 132 KB JPEG
@@ -73,7 +73,7 @@ const bench = define({
         },
         {
             name: 'storage.buckets.update', route: 'PUT /v1/storage/buckets/:bucketId', weight: 2,
-            run: (api, d) => api.call('PUT', `/storage/buckets/${pick(d.buckets)}`, { name: `Seed Bucket ${Math.floor(Math.random() * 1000)}` }),
+            run: (api, d) => api.call('PUT', `/storage/buckets/${pick(d.buckets)}`, { name: `Seed Bucket ${Math.floor(random() * 1000)}` }),
         },
         { name: 'storage.buckets.delete', route: 'DELETE /v1/storage/buckets/:bucketId', run: (api) => api.call('DELETE', `/storage/buckets/${bucket(api, 'Gone')}`, null, [204]) },
         {
@@ -84,7 +84,7 @@ const bench = define({
         {
             name: 'storage.files.create', route: 'POST /v1/storage/buckets/:bucketId/files', weight: 4, note: 'a 47 KB or 132 KB image',
             run(api, d) {
-                const res = upload(api, d.bucket, image(Math.floor(Math.random() * 2)), true);
+                const res = upload(api, d.bucket, image(Math.floor(random() * 2)), true);
                 if (res.status === 201) {
                     api.prep('DELETE', `/storage/buckets/${d.bucket}/files/${res.json('$id')}`, null, [204]);
                 }
@@ -121,7 +121,7 @@ const bench = define({
         },
         {
             name: 'storage.files.update', route: 'PUT /v1/storage/buckets/:bucketId/files/:fileId', weight: 3,
-            run: (api, d) => api.call('PUT', `/storage/buckets/${d.bucket}/files/${pick(d.images)}`, { name: `file-${Math.floor(Math.random() * 1000)}.png` }),
+            run: (api, d) => api.call('PUT', `/storage/buckets/${d.bucket}/files/${pick(d.images)}`, { name: `file-${Math.floor(random() * 1000)}.png` }),
         },
         {
             name: 'storage.files.delete', route: 'DELETE /v1/storage/buckets/:bucketId/files/:fileId', weight: 2,
@@ -152,10 +152,10 @@ const bench = define({
             note: 'a 600 KB JPEG resized, rounded and converted to WebP with unique parameters: rendered on every request (no cache hit)',
             run(api, d) {
                 const params = {
-                    width: 200 + Math.floor(Math.random() * 1000),
-                    height: 200 + Math.floor(Math.random() * 600),
-                    quality: 50 + Math.floor(Math.random() * 50),
-                    borderRadius: Math.floor(Math.random() * 32),
+                    width: 200 + Math.floor(random() * 1000),
+                    height: 200 + Math.floor(random() * 600),
+                    quality: 50 + Math.floor(random() * 50),
+                    borderRadius: Math.floor(random() * 32),
                     output: 'webp',
                 };
                 api.call('GET', `/storage/buckets/${d.bucket}/files/${d.photo}/preview?${query(params)}`);

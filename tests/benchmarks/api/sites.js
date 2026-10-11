@@ -9,7 +9,7 @@
 
 import http from 'k6/http';
 import { sleep } from 'k6';
-import { CONTROL, define, SEED, pick, unique } from './lib.js';
+import { CONTROL, define, SEED, pick, unique, random } from './lib.js';
 import { archive } from './support/archive.js';
 
 const RUNTIME = __ENV.APPWRITE_BENCHMARK_RUNTIME || 'node-22';
@@ -109,7 +109,7 @@ const bench = define({
             name: 'sites.list', route: 'GET /v1/sites', weight: 6,
             run: (api) => api.call('GET', '/sites?queries[]=' + encodeURIComponent('{"method":"limit","values":[25]}')),
         },
-        { name: 'sites.search', route: 'GET /v1/sites', weight: 2, note: 'full-text search', run: (api) => api.call('GET', `/sites?search=Seed+Site+${Math.floor(Math.random() * 50)}`) },
+        { name: 'sites.search', route: 'GET /v1/sites', weight: 2, note: 'full-text search', run: (api) => api.call('GET', `/sites?search=Seed+Site+${Math.floor(random() * 50)}`) },
         {
             name: 'sites.create', route: 'POST /v1/sites', weight: 2,
             run(api) {
@@ -121,7 +121,7 @@ const bench = define({
         },
         {
             name: 'sites.update', route: 'PUT /v1/sites/:siteId', weight: 2,
-            run: (api, d) => api.call('PUT', `/sites/${pick(d.sites)}`, { name: `Seed Site ${Math.floor(Math.random() * 1000)}`, ...SITE }),
+            run: (api, d) => api.call('PUT', `/sites/${pick(d.sites)}`, { name: `Seed Site ${Math.floor(random() * 1000)}`, ...SITE }),
         },
         { name: 'sites.delete', route: 'DELETE /v1/sites/:siteId', run: (api) => api.call('DELETE', `/sites/${site(api, 'Gone')}`, null, [204]) },
         {
@@ -197,7 +197,7 @@ const bench = define({
         { name: 'sites.variables.get', route: 'GET /v1/sites/:siteId/variables/:variableId', weight: 2, run: (api, d) => api.call('GET', `/sites/${d.live}/variables/${pick(d.variables)}`) },
         {
             name: 'sites.variables.update', route: 'PUT /v1/sites/:siteId/variables/:variableId',
-            run: (api, d) => api.call('PUT', `/sites/${d.live}/variables/${pick(d.variables)}`, { value: `value-${Math.floor(Math.random() * 1000)}` }),
+            run: (api, d) => api.call('PUT', `/sites/${d.live}/variables/${pick(d.variables)}`, { value: `value-${Math.floor(random() * 1000)}` }),
         },
         {
             name: 'sites.variables.delete', route: 'DELETE /v1/sites/:siteId/variables/:variableId',

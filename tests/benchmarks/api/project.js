@@ -8,7 +8,7 @@
 // Policies and other project-wide settings are always set to the values a new
 // project has, so every write is idempotent and the project stays as found.
 
-import { define, SEED, pick, unique } from './lib.js';
+import { define, SEED, pick, unique, random } from './lib.js';
 
 const REGION = __ENV._APP_REGION || 'default';
 
@@ -109,7 +109,7 @@ const OAUTH2 = [
 const RACE = 'a mock phone shares the project\'s `auths` with the policies, written read-modify-write: a concurrent policy update can drop the number first, then this answers 404';
 
 function phone() {
-    return `+1${2000000000 + Math.floor(Math.random() * 7999999999)}`;
+    return `+1${2000000000 + Math.floor(random() * 7999999999)}`;
 }
 
 function platform(api, type) {
@@ -173,7 +173,7 @@ const bench = define({
         },
         {
             name: 'project.keys.update', route: 'PUT /v1/project/keys/:keyId',
-            run: (api, d) => api.call('PUT', `/project/keys/${pick(d.keys)}`, { name: `Seed Key ${Math.floor(Math.random() * 1000)}`, scopes: ['users.read'], expire: null }),
+            run: (api, d) => api.call('PUT', `/project/keys/${pick(d.keys)}`, { name: `Seed Key ${Math.floor(random() * 1000)}`, scopes: ['users.read'], expire: null }),
         },
         {
             name: 'project.keys.delete', route: 'DELETE /v1/project/keys/:keyId',
@@ -244,7 +244,7 @@ const bench = define({
             name: `project.platforms.${type}.update`, route,
             run(api, d) {
                 const { field, value } = PLATFORMS[type];
-                api.call('PUT', `/project/platforms/${type}/${pick(d.platforms[type])}`, { name: `Bench ${type} ${Math.floor(Math.random() * 1000)}`, [field]: value });
+                api.call('PUT', `/project/platforms/${type}/${pick(d.platforms[type])}`, { name: `Bench ${type} ${Math.floor(random() * 1000)}`, [field]: value });
             },
         })),
 
@@ -293,7 +293,7 @@ const bench = define({
         },
         {
             name: 'project.variables.update', route: 'PUT /v1/project/variables/:variableId',
-            run: (api, d) => api.call('PUT', `/project/variables/${pick(d.variables)}`, { value: `bench-${Math.floor(Math.random() * 1000)}` }),
+            run: (api, d) => api.call('PUT', `/project/variables/${pick(d.variables)}`, { value: `bench-${Math.floor(random() * 1000)}` }),
         },
         { name: 'project.variables.delete', route: 'DELETE /v1/project/variables/:variableId', run: (api) => api.call('DELETE', `/project/variables/${variable(api)}`, null, [204]) },
     ],

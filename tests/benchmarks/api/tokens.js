@@ -2,7 +2,7 @@
 // tokens), against files the seed uploads through the PHP API. See README.md.
 
 import http from 'k6/http';
-import { CONTROL, SEED, define, pick } from './lib.js';
+import { CONTROL, SEED, define, pick, random } from './lib.js';
 
 const IMAGE = open('../../resources/logo.png', 'b');
 
@@ -57,7 +57,7 @@ const bench = define({
         },
         {
             name: 'tokens.update', route: 'PATCH /v1/tokens/:tokenId', weight: 4,
-            run: (api, d) => api.call('PATCH', `/tokens/${pick(d.tokens)}`, { expire: expire(30 + Math.floor(Math.random() * 30)) }),
+            run: (api, d) => api.call('PATCH', `/tokens/${pick(d.tokens)}`, { expire: expire(30 + Math.floor(random() * 30)) }),
         },
         {
             name: 'tokens.delete', route: 'DELETE /v1/tokens/:tokenId', weight: 2,
