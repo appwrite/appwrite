@@ -1,0 +1,640 @@
+{
+  "source": "message",
+  "cases": [
+    {
+      "name": "an envelope round trips through asArray",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": "p1",
+          "queue": "mails",
+          "timestamp": 1700000000,
+          "payload": {
+            "to": "ada"
+          }
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p1"
+          ],
+          [
+            "queue",
+            "mails"
+          ],
+          [
+            "timestamp",
+            1700000000
+          ],
+          [
+            "payload",
+            {
+              "$array": [
+                [
+                  "to",
+                  "ada"
+                ]
+              ]
+            }
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "attempts and sequence are read",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": "p1",
+          "queue": "mails",
+          "timestamp": 1700000000,
+          "payload": {
+            "to": "ada"
+          },
+          "attempts": 3,
+          "sequence": 42
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p1"
+          ],
+          [
+            "queue",
+            "mails"
+          ],
+          [
+            "timestamp",
+            1700000000
+          ],
+          [
+            "payload",
+            {
+              "$array": [
+                [
+                  "to",
+                  "ada"
+                ]
+              ]
+            }
+          ],
+          [
+            "attempts",
+            3
+          ],
+          [
+            "sequence",
+            42
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a missing payload is an empty array",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": "p",
+          "queue": "q",
+          "timestamp": 1
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p"
+          ],
+          [
+            "queue",
+            "q"
+          ],
+          [
+            "timestamp",
+            1
+          ],
+          [
+            "payload",
+            []
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a null payload is an empty array",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": "p",
+          "queue": "q",
+          "timestamp": 1,
+          "payload": null
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p"
+          ],
+          [
+            "queue",
+            "q"
+          ],
+          [
+            "timestamp",
+            1
+          ],
+          [
+            "payload",
+            []
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "an integer pid becomes a string",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": 7,
+          "queue": 1.5,
+          "timestamp": "12",
+          "attempts": true
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "7"
+          ],
+          [
+            "queue",
+            "1.5"
+          ],
+          [
+            "timestamp",
+            12
+          ],
+          [
+            "payload",
+            []
+          ],
+          [
+            "attempts",
+            1
+          ],
+          [
+            "sequence",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a fractional timestamp is truncated",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": "p",
+          "queue": "q",
+          "timestamp": 12.9
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p"
+          ],
+          [
+            "queue",
+            "q"
+          ],
+          [
+            "timestamp",
+            12
+          ],
+          [
+            "payload",
+            []
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a missing pid is a type error",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "queue": "q",
+          "timestamp": 1
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Cannot assign null to property Utopia\\Queue\\Message::$pid of type string"
+        }
+      }
+    },
+    {
+      "name": "an array pid is a type error",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": [
+            1
+          ],
+          "queue": "q",
+          "timestamp": 1
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Cannot assign array to property Utopia\\Queue\\Message::$pid of type string"
+        }
+      }
+    },
+    {
+      "name": "a non-numeric timestamp is a type error",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": "p",
+          "queue": "q",
+          "timestamp": "soon"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Cannot assign string to property Utopia\\Queue\\Message::$timestamp of type int"
+        }
+      }
+    },
+    {
+      "name": "a string payload is a type error",
+      "op": "message.new",
+      "args": {
+        "envelope": {
+          "pid": "p",
+          "queue": "q",
+          "timestamp": 1,
+          "payload": "x"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "TypeError",
+          "message": "Cannot assign string to property Utopia\\Queue\\Message::$payload of type array"
+        }
+      }
+    },
+    {
+      "name": "every setter and getter",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "p1",
+          "queue": "mails",
+          "timestamp": 1700000000,
+          "payload": {
+            "to": "ada"
+          }
+        },
+        "pid": "p2",
+        "queue": "other",
+        "timestamp": 5,
+        "payload": {
+          "a": [
+            1,
+            2
+          ]
+        },
+        "attempts": 4,
+        "sequence": 9,
+        "receipt": "token",
+        "terminal": true
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p2"
+          ],
+          [
+            "queue",
+            "other"
+          ],
+          [
+            "timestamp",
+            5
+          ],
+          [
+            "payload",
+            {
+              "$array": [
+                [
+                  "a",
+                  [
+                    1,
+                    2
+                  ]
+                ]
+              ]
+            }
+          ],
+          [
+            "attempts",
+            4
+          ],
+          [
+            "sequence",
+            9
+          ],
+          [
+            "receipt",
+            "token"
+          ],
+          [
+            "terminal",
+            true
+          ],
+          [
+            "array",
+            {
+              "$array": [
+                [
+                  "pid",
+                  "p2"
+                ],
+                [
+                  "queue",
+                  "other"
+                ],
+                [
+                  "timestamp",
+                  5
+                ],
+                [
+                  "payload",
+                  {
+                    "$array": [
+                      [
+                        "a",
+                        [
+                          1,
+                          2
+                        ]
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "attempts",
+                  4
+                ],
+                [
+                  "sequence",
+                  9
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "a cleared sequence and a lifted verdict",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "p1",
+          "queue": "mails",
+          "timestamp": 1700000000,
+          "payload": {
+            "to": "ada"
+          },
+          "sequence": 3
+        },
+        "sequence": null,
+        "terminal": false
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p1"
+          ],
+          [
+            "queue",
+            "mails"
+          ],
+          [
+            "timestamp",
+            1700000000
+          ],
+          [
+            "payload",
+            {
+              "$array": [
+                [
+                  "to",
+                  "ada"
+                ]
+              ]
+            }
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ],
+          [
+            "receipt",
+            null
+          ],
+          [
+            "terminal",
+            false
+          ],
+          [
+            "array",
+            {
+              "$array": [
+                [
+                  "pid",
+                  "p1"
+                ],
+                [
+                  "queue",
+                  "mails"
+                ],
+                [
+                  "timestamp",
+                  1700000000
+                ],
+                [
+                  "payload",
+                  {
+                    "$array": [
+                      [
+                        "to",
+                        "ada"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "attempts",
+                  0
+                ],
+                [
+                  "sequence",
+                  null
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "name": "defaults before any setter",
+      "op": "message.set",
+      "args": {
+        "envelope": {
+          "pid": "p1",
+          "queue": "mails",
+          "timestamp": 1700000000,
+          "payload": {
+            "to": "ada"
+          }
+        }
+      },
+      "expect": {
+        "$array": [
+          [
+            "pid",
+            "p1"
+          ],
+          [
+            "queue",
+            "mails"
+          ],
+          [
+            "timestamp",
+            1700000000
+          ],
+          [
+            "payload",
+            {
+              "$array": [
+                [
+                  "to",
+                  "ada"
+                ]
+              ]
+            }
+          ],
+          [
+            "attempts",
+            0
+          ],
+          [
+            "sequence",
+            null
+          ],
+          [
+            "receipt",
+            null
+          ],
+          [
+            "terminal",
+            false
+          ],
+          [
+            "array",
+            {
+              "$array": [
+                [
+                  "pid",
+                  "p1"
+                ],
+                [
+                  "queue",
+                  "mails"
+                ],
+                [
+                  "timestamp",
+                  1700000000
+                ],
+                [
+                  "payload",
+                  {
+                    "$array": [
+                      [
+                        "to",
+                        "ada"
+                      ]
+                    ]
+                  }
+                ],
+                [
+                  "attempts",
+                  0
+                ],
+                [
+                  "sequence",
+                  null
+                ]
+              ]
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

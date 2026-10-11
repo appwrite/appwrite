@@ -1,0 +1,735 @@
+{
+  "source": "packages/queue/tests/E2E/SwooleRedisClusterTest.php",
+  "cases": [
+    {
+      "name": "publish, receive, reject, retry and commit on a cluster",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "cluster"
+          },
+          "bind": "rc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "cluster"
+          },
+          "bind": "cc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "receive": {
+              "$ref": "rc"
+            },
+            "commands": {
+              "$ref": "cc"
+            },
+            "reap_after": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "timeout": 0,
+            "n": 2
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "timeout": 0
+          },
+          "bind": "r",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000060
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "messages": [
+              {
+                "$ref": "r",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.release",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "messages": [
+              {
+                "$ref": "r",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "timeout": 0
+          },
+          "bind": "r2",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000060
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303033"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "cc"
+            },
+            "method": "remove",
+            "args": [
+              "{${ns}}.claims.jobs.pid0003"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "timeout": 0
+          },
+          "bind": "r3",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000060
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    2
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303034"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "message": {
+              "$ref": "r3",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a worker drains a cluster queue",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "cluster"
+          },
+          "bind": "rc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "cluster"
+          },
+          "bind": "cc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "receive": {
+              "$ref": "rc"
+            },
+            "commands": {
+              "$ref": "cc"
+            },
+            "reap_after": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            },
+            "payloads": [
+              {
+                "name": "ada"
+              },
+              {
+                "name": "grace"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "b"
+            },
+            "namespace": "{${ns}}",
+            "jobs": [
+              {
+                "queue": "jobs",
+                "params": [
+                  {
+                    "key": "name"
+                  }
+                ],
+                "inject": [
+                  "message"
+                ]
+              }
+            ]
+          },
+          "expect": [
+            [
+              "job:jobs",
+              [
+                "ada",
+                "message:pid0001"
+              ]
+            ],
+            [
+              "job:jobs",
+              [
+                "grace",
+                "message:pid0002"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "{${ns}}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a namespace without a hash tag is refused before anything moves",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "cluster"
+          },
+          "bind": "rc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "cluster"
+          },
+          "bind": "cc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "receive": {
+              "$ref": "rc"
+            },
+            "commands": {
+              "$ref": "cc"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Atomic Redis queue operations require a shared hash tag in the queue namespace, for example {utopia-queue}. Migrate existing keys before changing the namespace."
+            }
+          }
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    }
+  ]
+}

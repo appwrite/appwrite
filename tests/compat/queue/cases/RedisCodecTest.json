@@ -1,0 +1,1801 @@
+{
+  "source": "packages/queue/tests/E2E/RedisCodecTest.php",
+  "cases": [
+    {
+      "name": "publish and receive round trip (json)",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "json"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "to": "a@example.com",
+              "attempt": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "to",
+                          "a@example.com"
+                        ],
+                        [
+                          "attempt",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "release preserves payload and attempts (json)",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "json"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "nested": {
+                "values": [
+                  1,
+                  null,
+                  false,
+                  "text"
+                ]
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "values",
+                                [
+                                  1,
+                                  null,
+                                  false,
+                                  "text"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.release",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "r",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "values",
+                                [
+                                  1,
+                                  null,
+                                  false,
+                                  "text"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "r",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "publish and receive round trip (compat)",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "compat"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "to": "a@example.com",
+              "attempt": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "to",
+                          "a@example.com"
+                        ],
+                        [
+                          "attempt",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "release preserves payload and attempts (compat)",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "compat"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "nested": {
+                "values": [
+                  1,
+                  null,
+                  false,
+                  "text"
+                ]
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "values",
+                                [
+                                  1,
+                                  null,
+                                  false,
+                                  "text"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.release",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "r",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "values",
+                                [
+                                  1,
+                                  null,
+                                  false,
+                                  "text"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "r",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "publish and receive round trip (igbinary)",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "igbinary"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "to": "a@example.com",
+              "attempt": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "to",
+                          "a@example.com"
+                        ],
+                        [
+                          "attempt",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "release preserves payload and attempts (igbinary)",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "igbinary"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "nested": {
+                "values": [
+                  1,
+                  null,
+                  false,
+                  "text"
+                ]
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "values",
+                                [
+                                  1,
+                                  null,
+                                  false,
+                                  "text"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.release",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "r",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "values",
+                                [
+                                  1,
+                                  null,
+                                  false,
+                                  "text"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "r",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "publish and receive round trip (compat-igbinary)",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "compat-igbinary"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "to": "a@example.com",
+              "attempt": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "to",
+                          "a@example.com"
+                        ],
+                        [
+                          "attempt",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "release preserves payload and attempts (compat-igbinary)",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "compat-igbinary"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "nested": {
+                "values": [
+                  1,
+                  null,
+                  false,
+                  "text"
+                ]
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "values",
+                                [
+                                  1,
+                                  null,
+                                  false,
+                                  "text"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.release",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "r",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "values",
+                                [
+                                  1,
+                                  null,
+                                  false,
+                                  "text"
+                                ]
+                              ]
+                            ]
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "r",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "compat reads a message an earlier release wrote",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "json"
+          },
+          "bind": "old",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "codec": "compat-igbinary"
+          },
+          "bind": "new",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "old"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "new"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "an unreadable message is parked and the queue keeps moving",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.queue.codec",
+              "{\"pid\":\"a\",\"queue\":\"codec\""
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.poison.codec",
+              0,
+              0
+            ]
+          },
+          "expect": [
+            "{\"pid\":\"a\",\"queue\":\"codec\""
+          ]
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a well-formed non-envelope is parked",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.queue.codec",
+              "{\"hello\":\"world\"}"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.poison.codec"
+            ]
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "an envelope whose payload is not an array is parked",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.queue.codec",
+              "{\"pid\":\"p\",\"queue\":\"codec\",\"timestamp\":1,\"payload\":\"text\"}"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.poison.codec"
+            ]
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "an envelope with a numeric string timestamp and integer pid is coerced",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.queue.codec",
+              "{\"pid\":12,\"queue\":\"codec\",\"timestamp\":\"17x\",\"payload\":{\"a\":1},\"attempts\":\"3\"}"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "codec",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "12"
+                  ],
+                  [
+                    "queue",
+                    "codec"
+                  ],
+                  [
+                    "timestamp",
+                    17
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "a",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    3
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

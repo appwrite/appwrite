@@ -1,0 +1,2438 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "one runtime publishes, the other consumes and commits (json)",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-",
+            "codec": "json"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-",
+            "codec": "json"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "to": "ada@example.com",
+              "n": 1
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "clock": "b-"
+          },
+          "bind": "m",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "to",
+                          "ada@example.com"
+                        ],
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "GET",
+              "${ns}.stats.interop.success"
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": "1"
+        }
+      ]
+    },
+    {
+      "name": "awkward payloads cross runtimes intact (json)",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-",
+            "codec": "json"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-",
+            "codec": "json"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "url": "https://a.io/x?y=1&z=<2>",
+                "uni": "Ünïcödé ✓ 🎉",
+                "f": 0.1,
+                "big": 1e+25,
+                "int": 9007199254740993,
+                "e": {},
+                "l": [],
+                "n": null,
+                "nested": {
+                  "list": [
+                    1,
+                    [
+                      2,
+                      [
+                        3,
+                        {
+                          "k": "v"
+                        }
+                      ]
+                    ]
+                  ],
+                  "7": "seven"
+                },
+                "bin": {
+                  "$bytes": "AAEC/w=="
+                }
+              },
+              {
+                "list": [
+                  "x",
+                  "y"
+                ]
+              },
+              {
+                "empty": ""
+              }
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 3,
+            "clock": "b-"
+          },
+          "bind": "m",
+          "side": "b",
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "one runtime publishes, the other consumes and commits (igbinary)",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-",
+            "codec": "igbinary"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-",
+            "codec": "igbinary"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "to": "ada@example.com",
+              "n": 1
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "clock": "b-"
+          },
+          "bind": "m",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "to",
+                          "ada@example.com"
+                        ],
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "GET",
+              "${ns}.stats.interop.success"
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": "1"
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "awkward payloads cross runtimes intact (igbinary)",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-",
+            "codec": "igbinary"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-",
+            "codec": "igbinary"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "url": "https://a.io/x?y=1&z=<2>",
+                "uni": "Ünïcödé ✓ 🎉",
+                "f": 0.1,
+                "big": 1e+25,
+                "int": 9007199254740993,
+                "e": {},
+                "l": [],
+                "n": null,
+                "nested": {
+                  "list": [
+                    1,
+                    [
+                      2,
+                      [
+                        3,
+                        {
+                          "k": "v"
+                        }
+                      ]
+                    ]
+                  ],
+                  "7": "seven"
+                },
+                "bin": {
+                  "$bytes": "AAEC/w=="
+                }
+              },
+              {
+                "list": [
+                  "x",
+                  "y"
+                ]
+              },
+              {
+                "empty": ""
+              }
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 3,
+            "clock": "b-"
+          },
+          "bind": "m",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "url",
+                          "https://a.io/x?y=1&z=<2>"
+                        ],
+                        [
+                          "uni",
+                          "Ünïcödé ✓ 🎉"
+                        ],
+                        [
+                          "f",
+                          0.1
+                        ],
+                        [
+                          "big",
+                          1e+25
+                        ],
+                        [
+                          "int",
+                          9007199254740993
+                        ],
+                        [
+                          "e",
+                          {
+                            "$object": []
+                          }
+                        ],
+                        [
+                          "l",
+                          []
+                        ],
+                        [
+                          "n",
+                          null
+                        ],
+                        [
+                          "nested",
+                          {
+                            "$array": [
+                              [
+                                "list",
+                                [
+                                  1,
+                                  [
+                                    2,
+                                    [
+                                      3,
+                                      {
+                                        "$array": [
+                                          [
+                                            "k",
+                                            "v"
+                                          ]
+                                        ]
+                                      }
+                                    ]
+                                  ]
+                                ]
+                              ],
+                              [
+                                7,
+                                "seven"
+                              ]
+                            ]
+                          }
+                        ],
+                        [
+                          "bin",
+                          {
+                            "$bytes": "AAEC/w=="
+                          }
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0002"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "list",
+                          [
+                            "x",
+                            "y"
+                          ]
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0003"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "empty",
+                          ""
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a rejected message is retried by the other runtime, attempts carried",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "clock": "b-"
+          },
+          "bind": "m",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060,
+            "prefix": "a-"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "clock": "b-"
+          },
+          "bind": "r",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0002"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000060
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "r",
+              "path": "/handles/0"
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a terminal reject by one runtime parks where the other's sweep can reach it",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "clock": "a-"
+          },
+          "bind": "m",
+          "side": "a",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            },
+            "terminal": true,
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060,
+            "prefix": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "max_attempts": 1,
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "clock": "b-"
+          },
+          "bind": "r",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "b-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000060
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a stranded claim of one runtime is reaped by the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.interop.a-0001"
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "b-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "work released by one runtime is delivered by the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 2,
+            "clock": "a-"
+          },
+          "bind": "m",
+          "side": "a",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0002"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.release",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              },
+              {
+                "$ref": "m",
+                "path": "/handles/1"
+              }
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 2,
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0002"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "one runtime's worker runs what the other published",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "name": "ada"
+              },
+              {
+                "name": "grace"
+              },
+              {
+                "name": 7
+              }
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "pb"
+            },
+            "namespace": "${ns}",
+            "jobs": [
+              {
+                "queue": "interop",
+                "params": [
+                  {
+                    "key": "name",
+                    "length": 10
+                  }
+                ],
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": [
+            [
+              "job:interop",
+              [
+                "ada",
+                "message:a-0001"
+              ]
+            ],
+            [
+              "job:interop",
+              [
+                "grace",
+                "message:a-0002"
+              ]
+            ],
+            [
+              "error0",
+              [
+                "error:Exception:Invalid name: Value must be a valid string and no longer than 10 chars",
+                "message:a-0003"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "failed": true,
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.failed.interop",
+              0,
+              -1
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": [
+            "a-0003"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the background publisher of one runtime feeds the other",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.new",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "capacity": 4,
+            "clock": "a-"
+          },
+          "bind": "bg",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "background.run",
+          "args": {
+            "background": {
+              "$ref": "bg"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              },
+              {
+                "n": 4
+              },
+              {
+                "n": 5
+              },
+              {
+                "n": 6
+              }
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 10,
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0002"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0003"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0004"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0005"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          5
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0006"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          6
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "compat reads what the other runtime wrote in either format",
+      "interop": true,
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-",
+            "codec": "json"
+          },
+          "bind": "json",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "a-",
+            "codec": "igbinary",
+            "continue": true
+          },
+          "bind": "ig",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "prefix": "b-",
+            "codec": "compat"
+          },
+          "bind": "compat",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "json"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "format": "json"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "ig"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "format": "igbinary"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "compat"
+            },
+            "queue": {
+              "name": "interop",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 2,
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "format",
+                          "json"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0002"
+                  ],
+                  [
+                    "queue",
+                    "interop"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "format",
+                          "igbinary"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

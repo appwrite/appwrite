@@ -1,0 +1,469 @@
+{
+  "source": "packages/queue/tests/KubernetesJobAdapterTest.php",
+  "cases": [
+    {
+      "name": "drains the queue then returns",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p2",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p3",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "hooks": {
+              "workerStart": [
+                {
+                  "inject": [
+                    "workerId"
+                  ]
+                }
+              ],
+              "workerStop": [
+                {
+                  "inject": [
+                    "workerId"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "workerStart0",
+              [
+                "0"
+              ]
+            ],
+            [
+              "job:work",
+              [
+                "message:p1"
+              ]
+            ],
+            [
+              "job:work",
+              [
+                "message:p2"
+              ]
+            ],
+            [
+              "job:work",
+              [
+                "message:p3"
+              ]
+            ],
+            [
+              "workerStop0",
+              [
+                "0"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:p1",
+            "receive:1",
+            "commit:p2",
+            "receive:1",
+            "commit:p3",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "returns immediately when the queue is empty",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": []
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work"
+              }
+            ],
+            "hooks": {
+              "workerStart": [
+                {
+                  "groups": [
+                    "*"
+                  ]
+                }
+              ],
+              "workerStop": [
+                {
+                  "groups": [
+                    "*"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "workerStart0",
+              []
+            ],
+            [
+              "workerStop0",
+              []
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a failed message is rejected and the drain continues",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p2",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work",
+                "params": [
+                  {
+                    "key": "n",
+                    "validator": "integer"
+                  }
+                ],
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "boom"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:work",
+              [
+                1
+              ]
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "message:p1"
+              ]
+            ],
+            [
+              "job:work",
+              [
+                1
+              ]
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:boom",
+                "message:p2"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "reject:p1:retry",
+            "receive:1",
+            "reject:p2:retry",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a receive failure ends the drain and reaches the error hooks",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ],
+            "fail": [
+              "receive"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "work"
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error"
+                  ]
+                }
+              ],
+              "workerStop": [
+                {
+                  "groups": [
+                    "*"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "workerStop0",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:RuntimeException:broker unreachable"
+              ]
+            ],
+            [
+              "start",
+              [
+                "error:RuntimeException:broker unreachable"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:failed",
+            "close"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "each queue is drained in turn",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "a1",
+                "queue": "first",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "b1",
+                "queue": "second",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "first",
+                "inject": [
+                  "message"
+                ]
+              },
+              {
+                "queue": "second",
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "shared": false
+          },
+          "expect": [
+            [
+              "job:first",
+              [
+                "message:a1"
+              ]
+            ],
+            [
+              "job:second",
+              [
+                "message:b1"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "memory.log",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            "receive:1",
+            "commit:a1",
+            "receive:1",
+            "commit:b1",
+            "close"
+          ]
+        }
+      ]
+    }
+  ]
+}

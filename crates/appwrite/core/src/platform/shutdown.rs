@@ -10,7 +10,7 @@ use serde_json::value::RawValue;
 use serde_json::{Map, Value};
 use utopia_database::sql::Builder;
 use utopia_database::{Param, datetime};
-use utopia_queue::Queue;
+use utopia_queue::{Publisher as _, Queue};
 
 use super::context::{Context, Mode};
 use super::{Route, State};
@@ -148,7 +148,11 @@ impl Job {
     }
 
     async fn publish<T: serde::Serialize>(&self, queue: &str, payload: &T) {
-        if let Err(e) = self.state.publisher.publish(&Queue::new(queue), payload).await {
+        let published = match (Queue::new(queue), utopia_queue::payload(payload)) {
+            (Ok(queue), Ok(payload)) => self.state.publisher.publish(&queue, payload).await.map(|_| ()),
+            (Err(e), _) | (_, Err(e)) => Err(e),
+        };
+        if let Err(e) = published {
             tracing::warn!(error = %e, queue, "queue publish failed");
         }
     }
@@ -157,7 +161,10 @@ impl Job {
         let Some(first) = events.first() else { return };
         let Some(target) = event::realtime_target(first) else { return };
         let message = event::realtime_message(&self.project.id, &target, user_id, events, payload);
-        if let Err(e) = self.state.publisher.broadcast("realtime", &message).await {
+        let mut pubsub = self.state.pubsub.clone();
+        let sent: Result<i64, _> =
+            utopia_cache::redis::cmd("PUBLISH").arg("realtime").arg(&message[..]).query_async(&mut pubsub).await;
+        if let Err(e) = sent {
             tracing::warn!(error = %e, "realtime publish failed");
         }
     }

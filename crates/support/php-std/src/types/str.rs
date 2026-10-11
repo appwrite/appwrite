@@ -49,7 +49,20 @@ impl Str {
     /// The bytes of `b` in `range`: shared, or copied inline when short
     /// (without touching `b`'s reference count).
     pub fn share(b: &Bytes, range: std::ops::Range<usize>) -> Self {
-        if range.len() <= INLINE { Self::inline(&b[range]) } else { Str(Repr::Shared(b.slice(range))) }
+        let len = range.len();
+        if len > INLINE {
+            return Str(Repr::Shared(b.slice(range)));
+        }
+        // A whole buffer's worth when the input has it: one fixed-size copy
+        // rather than a variable one (bytes past `len` are never read).
+        match b.get(range.start..range.start + INLINE) {
+            Some(window) if range.end <= b.len() => {
+                let mut buf = [0u8; INLINE];
+                buf.copy_from_slice(window);
+                Str(Repr::Inline { len: len as u8, buf })
+            }
+            _ => Self::inline(&b[range]),
+        }
     }
 
     /// Copies `b`.

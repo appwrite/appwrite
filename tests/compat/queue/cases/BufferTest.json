@@ -1,0 +1,757 @@
+{
+  "source": "packages/queue/tests/BufferTest.php",
+  "cases": [
+    {
+      "name": "pending settlements coalesce and keep independent results",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 0
+              },
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              },
+              {
+                "n": 4
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 5
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          0
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0005"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.owners.buffered.pid0003"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.owners.buffered.pid0003",
+              "invalid"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.commit_all",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              },
+              {
+                "$ref": "m",
+                "path": "/handles/1"
+              },
+              {
+                "$ref": "m",
+                "path": "/handles/2"
+              },
+              {
+                "$ref": "m",
+                "path": "/handles/3"
+              },
+              {
+                "$ref": "m",
+                "path": "/handles/4"
+              }
+            ]
+          },
+          "expect": [
+            true,
+            true,
+            {
+              "$error": {
+                "class": "RedisException",
+                "message": "Queue settlement failed"
+              }
+            },
+            true,
+            true
+          ]
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "GET",
+              "${ns}.stats.buffered.success"
+            ]
+          },
+          "expect": "4"
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.buffered"
+            ]
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "confirmed results survive a later failure",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 0
+              },
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 3
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          0
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "SET",
+              "${ns}.stats.buffered.processing",
+              "not-a-number"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.commit_all",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/1"
+              },
+              {
+                "$ref": "m",
+                "path": "/handles/2"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$error": {
+                "class": "RedisException",
+                "message": "Invalid queue counter"
+              }
+            },
+            {
+              "$error": {
+                "class": "RedisException",
+                "message": "Invalid queue counter"
+              }
+            }
+          ]
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "GET",
+              "${ns}.stats.buffered.success"
+            ]
+          },
+          "expect": "1"
+        }
+      ]
+    },
+    {
+      "name": "a settlement nothing answers for fails",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "buffered"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.owners.buffered.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.commit_all",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "buffered",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$error": {
+                "class": "RuntimeException",
+                "message": "Queue delivery is no longer owned by this consumer"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

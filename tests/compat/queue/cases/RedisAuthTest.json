@@ -1,0 +1,307 @@
+{
+  "source": "packages/queue/tests/E2E/RedisAuthTest.php",
+  "cases": [
+    {
+      "name": "a password authenticates the default user",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "service": "queue-redis-auth",
+            "kind": "redis",
+            "password": "secretpw"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.auth",
+              "payload"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPop",
+            "args": [
+              "${ns}.auth",
+              1
+            ]
+          },
+          "expect": "payload"
+        }
+      ]
+    },
+    {
+      "name": "a user and password authenticate an ACL user",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "service": "queue-redis-auth",
+            "kind": "redis",
+            "user": "worker",
+            "password": "workerpw"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.auth",
+              "payload"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPop",
+            "args": [
+              "${ns}.auth",
+              1
+            ]
+          },
+          "expect": "payload"
+        }
+      ]
+    },
+    {
+      "name": "missing credentials are rejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "service": "queue-redis-auth",
+            "kind": "redis"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.auth",
+              "payload"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "NOAUTH Authentication required."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a wrong password is rejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "service": "queue-redis-auth",
+            "kind": "redis",
+            "user": "worker",
+            "password": "not-the-password"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.auth",
+              "payload"
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "the message names the host, which differs between the runtimes' networks"
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a DSN password authenticates the default user",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "service": "queue-redis-auth",
+            "kind": "redis-dsn",
+            "dsn": "redis://:secretpw@{host}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.auth",
+              "payload"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPop",
+            "args": [
+              "${ns}.auth",
+              1
+            ]
+          },
+          "expect": "payload"
+        }
+      ]
+    },
+    {
+      "name": "a DSN user and encoded password authenticate an ACL user",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "service": "queue-redis-auth",
+            "kind": "redis-dsn",
+            "dsn": "redis://encoded:p%40ss%3Aw%2Frd%2B@{host}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.auth",
+              "payload"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPop",
+            "args": [
+              "${ns}.auth",
+              1
+            ]
+          },
+          "expect": "payload"
+        }
+      ]
+    },
+    {
+      "name": "a DSN without credentials is rejected",
+      "state": [],
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "service": "queue-redis-auth",
+            "kind": "redis-dsn",
+            "dsn": "redis://{host}"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "rightPush",
+            "args": [
+              "${ns}.auth",
+              "payload"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RedisException",
+              "message": "NOAUTH Authentication required."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

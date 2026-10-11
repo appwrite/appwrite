@@ -10,6 +10,7 @@
 //! | `float` | `min`, `max`, `integral` (bool) | a float |
 //! | `bool` / `null` | | |
 //! | `string` | `min`, `max`, `alphabet`, `tricky` (0..1) | a string; `tricky` is the chance of a known-awkward string |
+//! | `bytes` | `min`, `max` | a binary string of random bytes, as `{"$bytes": "<base64>"}` |
 //! | `concat` | `parts: [gen...]` | the parts' string forms joined |
 //! | `repeat` | `part`, `sep`, `min`, `max` | `part` repeated, joined by `sep` |
 //! | `array` | `items`, `min`, `max` | a list |
@@ -268,6 +269,14 @@ fn gen_depth(spec: &Value, named: &BTreeMap<String, Value>, rng: &mut Rng, depth
             }
             let len = min + rng.below(max - min + 1);
             Value::String((0..len).map(|_| *rng.pick(&chars)).collect())
+        }
+        "bytes" => {
+            use base64::Engine as _;
+            let min = num(spec, "min").unwrap_or(0).max(0) as u64;
+            let max = num(spec, "max").unwrap_or(32).max(min as i64) as u64;
+            let len = min + rng.below(max - min + 1);
+            let bytes: Vec<u8> = (0..len).map(|_| rng.next_u64() as u8).collect();
+            serde_json::json!({ "$bytes": base64::engine::general_purpose::STANDARD.encode(bytes) })
         }
         "concat" => {
             let parts = spec.get("parts").and_then(Value::as_array).ok_or("`concat` needs `parts`")?;

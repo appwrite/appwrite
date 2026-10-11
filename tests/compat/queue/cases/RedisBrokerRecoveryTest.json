@@ -1,0 +1,6631 @@
+{
+  "source": "packages/queue/tests/E2E/RedisBrokerRecoveryTest.php",
+  "cases": [
+    {
+      "name": "reap requeues a stranded claim",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "reap leaves claims younger than the cutoff",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 3600
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "reap drops legacy claims whose payload expired",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.processing.recovery",
+              "expired-legacy-pid"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "reap parks exhausted claims on the dead queue",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0002"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    2
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303033"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0003"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "max_attempts": 2
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.dead.recovery",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "pid0003"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "retry requeues a rejected message with its attempt count",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 1
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000060
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "retry parks exhausted messages on the dead queue",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.jobs.recovery.pid0001",
+              "{\"pid\":\"pid0001\",\"queue\":\"recovery\",\"timestamp\":1700000000,\"payload\":{\"n\":1},\"attempts\":3,\"sequence\":null}"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "max_attempts": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "retry skips entries whose payload expired",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "first",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "second",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "first",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "second",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.jobs.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000060
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303033"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "retry parks entries older than the age gate",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700003600
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "newer_than": 600
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "retry stops at a message this sweep already requeued",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "limit": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "retry honours its limit",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 3
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "limit": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "reap parks claims older than the age gate",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700003600
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "newer_than": 600
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a claim settled before the sweep is not requeued",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a heartbeated claim is never reaped",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700003600
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "extend renews the heartbeat while still owned",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700003600
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.failed.recovery"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "extend skips a claim another consumer took over",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "SET",
+              "${ns}.owners.recovery.pid0001",
+              "someone-else"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "EXISTS",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Queue delivery is no longer owned by this consumer"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "maintain reaps the queues this broker served",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "reap_after": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "the reap lock admits one sweep per interval",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "reap_after": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.reap-lock.recovery"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303033"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "maintain sweeps nothing before the first consume",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "reap_after": 0,
+            "continue": true
+          },
+          "bind": "fresh",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "fresh"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "fresh"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "fresh"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "fresh"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303033"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "bounded reap recovers oldest claims first",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 4
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 5
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 6
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 6
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0005"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          5
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0006"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          6
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001",
+              "${ns}.claims.recovery.pid0002",
+              "${ns}.claims.recovery.pid0003",
+              "${ns}.claims.recovery.pid0004",
+              "${ns}.claims.recovery.pid0005",
+              "${ns}.claims.recovery.pid0006"
+            ]
+          },
+          "expect": 6
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "limit": 2,
+            "scan": 4
+          },
+          "expect": 2
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 6
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0007"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0008"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "GET",
+              "${ns}.reap-cursor.recovery"
+            ]
+          },
+          "expect": "0:4"
+        }
+      ]
+    },
+    {
+      "name": "maintain tracks distinct dotted queue identities",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "reap_after": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "c",
+              "namespace": "${ns}.a.b"
+            },
+            "payload": {
+              "queue": "c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "c",
+              "namespace": "${ns}.a.b"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "c"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "queue",
+                          "c"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "b.c",
+              "namespace": "${ns}.a"
+            },
+            "payload": {
+              "queue": "b.c"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "b.c",
+              "namespace": "${ns}.a"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "b.c"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "queue",
+                          "b.c"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.a.b.claims.c.pid0001",
+              "${ns}.a.claims.b.c.pid0002"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "c",
+              "namespace": "${ns}.a.b"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "c"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "queue",
+                          "c"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303033"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "b.c",
+              "namespace": "${ns}.a"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "b.c"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "queue",
+                          "b.c"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303034"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "pooled maintenance recovers an expired claim",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.pool",
+          "args": {
+            "time": 1700000000,
+            "size": 1,
+            "reap_after": 0,
+            "publisher": false,
+            "continue": true
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 1
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "bounded reap advances past live claims across brokers",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 4
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 5
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 5
+          },
+          "bind": "claims",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0005"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          5
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "claims",
+                "path": "/handles/0"
+              },
+              {
+                "$ref": "claims",
+                "path": "/handles/1"
+              },
+              {
+                "$ref": "claims",
+                "path": "/handles/2"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0004",
+              "${ns}.claims.recovery.pid0005"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "continue": true
+          },
+          "bind": "b1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b1"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "limit": 1,
+            "scan": 2
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "continue": true
+          },
+          "bind": "b2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b2"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "limit": 1,
+            "scan": 2
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "continue": true
+          },
+          "bind": "b3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b3"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "limit": 1,
+            "scan": 2
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 5
+          },
+          "bind": "again",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0006"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0007"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          5
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "again",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "again",
+              "path": "/handles/1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001",
+              "${ns}.claims.recovery.pid0002",
+              "${ns}.claims.recovery.pid0003"
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "scan": 2
+          },
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "a growing queue does not prevent revisiting expired claims",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 4
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 4
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "scan": 2
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.recovery.pid0001",
+              "${ns}.claims.recovery.pid0002",
+              "${ns}.claims.recovery.pid0003",
+              "${ns}.claims.recovery.pid0004"
+            ]
+          },
+          "expect": 4
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "new": 5
+              },
+              {
+                "new": 6
+              },
+              {
+                "new": 7
+              },
+              {
+                "new": 8
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 4
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0005"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          5
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0006"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          6
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0007"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          7
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0008"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          8
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "continue": true
+          },
+          "bind": "r1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "r1"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "scan": 2
+          },
+          "expect": 2
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "r1"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 4
+          },
+          "bind": "got1",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0009"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303033"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0010"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303033"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "new": 9
+              },
+              {
+                "new": 10
+              },
+              {
+                "new": 11
+              },
+              {
+                "new": 12
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 4
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0011"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          9
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303034"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0012"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          10
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303034"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0013"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          11
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303034"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0014"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          12
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303034"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "continue": true
+          },
+          "bind": "r2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "r2"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "scan": 2
+          },
+          "expect": 2
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "r2"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 4
+          },
+          "bind": "got2",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0015"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303035"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0016"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303035"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "new": 13
+              },
+              {
+                "new": 14
+              },
+              {
+                "new": 15
+              },
+              {
+                "new": 16
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 4
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0017"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          13
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303036"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0018"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          14
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303036"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0019"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          15
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303036"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0020"
+                  ],
+                  [
+                    "queue",
+                    "recovery"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "new",
+                          16
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303036"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "continue": true
+          },
+          "bind": "r3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "r3"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "older_than": 0,
+            "scan": 2
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "r3"
+            },
+            "queue": {
+              "name": "recovery",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 4
+          },
+          "bind": "got3",
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    }
+  ]
+}

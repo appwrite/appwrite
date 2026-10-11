@@ -7,7 +7,6 @@ use std::time::Duration;
 use utopia_cache::Cache;
 use utopia_cache::redis::aio::ConnectionManager;
 use utopia_database::{Pool, PoolOptions};
-use utopia_queue::Publisher;
 
 use super::Hooks;
 use super::pwned::Pwned;
@@ -23,7 +22,10 @@ pub struct State {
     pub databases: Databases,
     pub projects: ProjectStore,
     pub cache: Arc<Cache>,
-    pub publisher: Publisher,
+    /// Publishes onto the Redis queues PHP workers consume.
+    pub publisher: Arc<utopia_queue::broker::Redis>,
+    /// Redis pub/sub for realtime fan-out (`PUBLISH realtime`).
+    pub pubsub: ConnectionManager,
     pub lock: crate::locking::Locking,
     pub translations: Translations,
     pub dictionary: HashSet<String>,
@@ -44,7 +46,8 @@ impl State {
             redis.push(ConnectionManager::new(client.clone()).await?);
         }
         let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::Redis::new(redis[0].clone()))));
-        let publisher = Publisher::new(redis[redis.len() - 1].clone());
+        let pubsub = redis[redis.len() - 1].clone();
+        let publisher = Arc::new(utopia_queue::broker::Redis::new(Arc::new(pubsub.clone()), Arc::new(pubsub.clone())));
         let lock = crate::locking::Locking::new(redis[0].clone());
 
         // PostgreSQL pools, de-duplicated by server so that `console` and
@@ -103,6 +106,7 @@ impl State {
             projects: ProjectStore::new(&config.region),
             cache,
             publisher,
+            pubsub,
             lock,
             translations,
             dictionary,
