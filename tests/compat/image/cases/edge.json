@@ -1,0 +1,1574 @@
+{
+  "cases": [
+    {
+      "name": "gravity types",
+      "steps": [
+        {
+          "op": "image.gravity_types",
+          "args": {},
+          "expect": [
+            "center",
+            "top-left",
+            "top",
+            "top-right",
+            "left",
+            "right",
+            "bottom-left",
+            "bottom",
+            "bottom-right"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resource limit",
+      "steps": [
+        {
+          "op": "image.set_resource_limit",
+          "args": {
+            "type": "area",
+            "value": 512000000
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "size by fixed height and width",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.size_by_fixed_height",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "height": 100
+          },
+          "expect": 95
+        },
+        {
+          "op": "image.size_by_fixed_width",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100
+          },
+          "expect": 104
+        }
+      ]
+    },
+    {
+      "name": "empty blob",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "Zero size image string passed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "unknown format",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": "garbage"
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "no decode delegate for this image format `' @ error/blob.c/BlobToImage/479"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid output type",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "bmp"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid output type given"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "output type is case sensitive",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "JPG"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid output type given"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "save: directory cannot be created",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/proc/nope/x.png",
+            "type": "png"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Can't create directory /proc/nope"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "save: empty path",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "",
+            "type": "png"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Can't create directory "
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "save: invalid type (Rust parses it before creating the directory)",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/nested/dir/x.png",
+            "type": "bmp"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Invalid output type given"
+            }
+          }
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "save: the extension decides the format",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/x.png",
+            "type": "jpg",
+            "quality": 90
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/x.png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/y.jpg",
+            "type": "png",
+            "quality": 90
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/y.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/z.unknownext",
+            "type": "gif",
+            "quality": 90
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/z.unknownext"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "border: unrecognized colour",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "color": "notacolor"
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "Unrecognized color string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "border: empty colour is white",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "color": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 10,
+            "height": 6,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "x": 0,
+            "y": 0
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "background: unrecognized colour",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_background",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "color": "bad"
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "Unrecognized color string"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "crop: zero width follows the aspect ratio",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 0,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 95,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "crop: zero height follows the aspect ratio",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 100,
+            "height": 104,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "crop: zero height with a gravity divides by zero",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 1,
+            "height": 0,
+            "gravity": "top"
+          },
+          "expect": {
+            "$error": {
+              "class": "DivisionByZeroError",
+              "message": "Division by zero"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "crop: same size is a no-op",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 6,
+            "height": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "crop: gravity keeps the scaled canvas for a background (quirk)",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.set_background",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "color": "#000000"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "crop: past the pixel limit",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100000,
+            "height": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "width or height exceeds limit `' (100000x33333) > (50000x50000) @ error/cache.c/OpenPixelCache/3805"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "opacity: one changes nothing, zero and NaN are transparent",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_opacity",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "opacity": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.set_opacity",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "opacity": {
+              "$float": "NAN"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "rotation: quarter turns",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "degree": -90
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 6,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "degree": 360
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 6,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "degree": 180
+          },
+          "expect": null
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "x": 0,
+            "y": 5
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "rotation: best-fit canvas",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAACgAAAAUAQMAAADFiO34AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURQAAAACA/7PmzgkAAAACdFJOUwCZ/0Dm2AAAABRJREFUCNdjYMAL2P///0cZiQMAAGHfISK5nO6aAAAAAElFTkSuQmCC"
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "degree": 30
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 46,
+            "height": 40,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "degree": 1000000
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 50,
+            "height": 54,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "exif orientation 3",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "/9j/4QAiRXhpZgAASUkqAAgAAAABABIBAwABAAAAAwAAAAAAAAD/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAAKABQDAREAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAcJ/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AnRDGqYAAAAD/2Q=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 20,
+            "height": 10,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 20,
+            "height": 10,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "exif orientation 6",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "/9j/4QAiRXhpZgAASUkqAAgAAAABABIBAwABAAAABgAAAAAAAAD/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAAKABQDAREAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAcJ/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AnRDGqYAAAAD/2Q=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 10,
+            "height": 20,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 10,
+            "height": 20,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "exif orientation 8",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "/9j/4QAiRXhpZgAASUkqAAgAAAABABIBAwABAAAACAAAAAAAAAD/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAAKABQDAREAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAcJ/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AnRDGqYAAAAD/2Q=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 10,
+            "height": 20,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 10,
+            "height": 20,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "multi-frame: operations after a crop apply to the last frame (quirk)",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "R0lGODlhKAAoAPAAAP8AAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAIAAAP8AAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQA7"
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 10,
+            "height": 10
+          },
+          "expect": null
+        },
+        {
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "color": "#ffffff"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 10,
+            "height": 10,
+            "frames": 3,
+            "delay": 120
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "gif",
+            "frame": 2,
+            "x": 1,
+            "y": 1
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "multi-frame: without a crop the first frame is the current one (quirk)",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "R0lGODlhKAAoAPAAAP8AAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAIAAAP8AAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQA7"
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "degree": 90
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "webp"
+          },
+          "expect": {
+            "format": "WEBP",
+            "width": 40,
+            "height": 40,
+            "frames": 2,
+            "delay": 120
+          }
+        }
+      ]
+    },
+    {
+      "name": "multi-frame: png writes the first frame",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "R0lGODlhKAAoAPAAAP8AAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAIAAAP8AAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQA7"
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 40,
+            "height": 40,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "multi-frame: a background flattens",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "R0lGODlhKAAoAPAAAP8AAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAIAAAP8AAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQA7"
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_background",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "color": "#00ff00"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 40,
+            "height": 40,
+            "frames": 1,
+            "delay": 40
+          }
+        }
+      ]
+    },
+    {
+      "name": "radius: a border is stroked and cut to the crop size",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAACgAAAAUAQMAAADFiO34AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURQAAAACA/7PmzgkAAAACdFJOUwCZ/0Dm2AAAABRJREFUCNdjYMAL2P///0cZiQMAAGHfISK5nO6aAAAAAElFTkSuQmCC"
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 3,
+            "color": "#0000ff"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "radius": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 40,
+            "height": 20,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "x": 0,
+            "y": 0
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "radius: no alpha channel turns corners black",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "radius": 50
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "x": 0,
+            "y": 0
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "quality: webp above 100",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "webp",
+            "quality": 101
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "Failed to get the image contents (empty or invalid image?)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "quality: png out of range",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 1000
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": -1
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 6,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "decode: a fixture and garbage",
+      "steps": [
+        {
+          "op": "image.decode",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "expect": {
+            "width": 6,
+            "height": 2
+          }
+        },
+        {
+          "op": "image.decode",
+          "args": {
+            "magic": "GIF89a",
+            "blob": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "image.decode",
+          "args": {
+            "magic": "",
+            "blob": "not an image"
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "pipeline: every setter",
+      "steps": [
+        {
+          "op": "pipeline",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.jpg",
+            "width": 80,
+            "height": 40,
+            "gravity": "bottom",
+            "border": 3,
+            "color": "#ff0000",
+            "radius": 10,
+            "opacity": 0.7,
+            "rotation": 15,
+            "background": "#00ff00",
+            "type": "png",
+            "quality": 90
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 90,
+            "height": 62,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    }
+  ]
+}

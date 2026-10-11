@@ -1,0 +1,1942 @@
+{
+  "cases": [
+    {
+      "name": "thumbnail crop",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-thumbnail-crop.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-thumbnail-crop.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "thumbnail crop, jpeg",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 80
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-thumbnail-crop-jpeg.jpg",
+            "type": "jpg",
+            "quality": 90
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 80
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "jpg",
+            "quality": 90,
+            "path": "/tmp/compat-fs/${ns}/interop-thumbnail-crop-jpeg.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gravity top-left",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "top-left"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-top-left.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "top-left"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-top-left.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gravity top",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "top"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-top.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "top"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-top.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gravity top-right",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "top-right"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-top-right.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "top-right"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-top-right.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gravity left",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "left"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-left.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "left"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-left.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gravity right",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "right"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-right.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "right"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-right.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gravity bottom-left",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "bottom-left"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-bottom-left.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "bottom-left"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-bottom-left.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gravity bottom",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "bottom"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-bottom.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "bottom"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-bottom.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gravity bottom-right",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "bottom-right"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-bottom-right.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 120,
+            "height": 60,
+            "gravity": "bottom-right"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gravity-bottom-right.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "focal point",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 80,
+            "height": 160,
+            "x": 0.2,
+            "y": 0.8
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-focal-point.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 80,
+            "height": 160,
+            "x": 0.2,
+            "y": 0.8
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-focal-point.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "border",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 6,
+            "color": "rgba(255,0,0,0.5)"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-border.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 6,
+            "color": "rgba(255,0,0,0.5)"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-border.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "border radius",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "radius": 30
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-border-radius.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "radius": 30
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-border-radius.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "border radius with alpha",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAACgAAAAUAQMAAADFiO34AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURQAAAACA/7PmzgkAAAACdFJOUwCZ/0Dm2AAAABRJREFUCNdjYMAL2P///0cZiQMAAGHfISK5nO6aAAAAAElFTkSuQmCC"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "radius": 8
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-border-radius-with-alpha.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAACgAAAAUAQMAAADFiO34AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURQAAAACA/7PmzgkAAAACdFJOUwCZ/0Dm2AAAABRJREFUCNdjYMAL2P///0cZiQMAAGHfISK5nO6aAAAAAElFTkSuQmCC"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "radius": 8
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-border-radius-with-alpha.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "border then radius",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 4,
+            "color": "#00ff00"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "radius": 20
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-border-then-radius.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 4,
+            "color": "#00ff00"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "radius": 20
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-border-then-radius.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "opacity",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.set_opacity",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "opacity": 0.3
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-opacity.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.set_opacity",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "opacity": 0.3
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-opacity.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "rotation 30",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "degree": 30
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-rotation-30.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "degree": 30
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-rotation-30.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "rotation 90",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/200x70_S.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "degree": 90
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-rotation-90.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/200x70_S.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "degree": 90
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-rotation-90.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "background over alpha",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAACgAAAAUAQMAAADFiO34AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURQAAAACA/7PmzgkAAAACdFJOUwCZ/0Dm2AAAABRJREFUCNdjYMAL2P///0cZiQMAAGHfISK5nO6aAAAAAElFTkSuQmCC"
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.set_background",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "color": "#ffcc00"
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-background-over-alpha.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAACgAAAAUAQMAAADFiO34AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURQAAAACA/7PmzgkAAAACdFJOUwCZ/0Dm2AAAABRJREFUCNdjYMAL2P///0cZiQMAAGHfISK5nO6aAAAAAElFTkSuQmCC"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.set_background",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "color": "#ffcc00"
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-background-over-alpha.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "exif orientation 6",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "/9j/4QAiRXhpZgAASUkqAAgAAAABABIBAwABAAAABgAAAAAAAAD/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAAKABQDAREAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAcJ/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AnRDGqYAAAAD/2Q=="
+            }
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-exif-orientation-6.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "/9j/4QAiRXhpZgAASUkqAAgAAAABABIBAwABAAAABgAAAAAAAAD/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAAKABQDAREAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAcJ/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AnRDGqYAAAAD/2Q=="
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "png",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-exif-orientation-6.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "animated gif crop",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-3.gif"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 60,
+            "height": 60
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-animated-gif-crop.gif",
+            "type": "gif",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-3.gif"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 60,
+            "height": 60
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "gif",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-animated-gif-crop.gif"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "animated webp crop",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/anim-delta.webp"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "width": 32,
+            "height": 32
+          },
+          "expect": null
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-animated-webp-crop.webp",
+            "type": "webp",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/anim-delta.webp"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "width": 32,
+            "height": 32
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "webp",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-animated-webp-crop.webp"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "webp",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.jpg"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-webp.webp",
+            "type": "webp",
+            "quality": 90
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.jpg"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "webp",
+            "quality": 90,
+            "path": "/tmp/compat-fs/${ns}/interop-webp.webp"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "gif",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/interop-gif.gif",
+            "type": "gif",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "side": "b",
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "image.compare",
+          "args": {
+            "image": {
+              "$ref": "b"
+            },
+            "type": "gif",
+            "quality": 100,
+            "path": "/tmp/compat-fs/${ns}/interop-gif.gif"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -49,6 +49,7 @@ utopia-span = { path = "crates/utopia/span" }
 utopia-di = { path = "crates/utopia/di" }
 utopia-registry = { path = "crates/utopia/registry" }
 utopia-abuse = { path = "crates/utopia/abuse" }
+utopia-image = { path = "crates/utopia/image" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -76,6 +77,9 @@ crc32fast = "1"
 ctr = "0.9"
 deadpool-postgres = "0.14"
 fancy-regex = "0.14"
+# SIMD resampling (utopia-image: thumbnails with Lanczos3, scales with the box
+# filter ImageMagick's scaleImage uses); pure Rust.
+fast_image_resize = { version = "6", default-features = false, features = ["std"] }
 flate2 = "1"
 # Fast hashing for php-std's array tables (IndexMap's default SipHash dominates
 # small-key lookups); pure Rust, maintained, randomly seeded per map.
@@ -83,6 +87,9 @@ foldhash = "0.2"
 form_urlencoded = "1"
 futures-util = { version = "0.3", default-features = false, features = ["std", "async-await-macro"] }
 getrandom = "0.3"
+# GIF frames with their delays, disposal and transparency (utopia-image);
+# pure Rust, the decoder and encoder the image crate uses.
+gif = "0.14"
 # GOST R 34.11-94, MD2, RIPEMD and Whirlpool for php-std hash(); RustCrypto, pure Rust.
 gost94 = "0.10"
 hex = "0.4"
@@ -94,7 +101,17 @@ httparse = "1"
 hyper = { version = "1", features = ["server", "http1"] }
 hyper-util = { version = "0.1", features = ["tokio"] }
 hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
+# Image codecs for utopia-image, pure Rust only: JPEG (zune-jpeg), PNG, GIF,
+# WebP, and AVIF encoding (ravif/rav1e, without its nasm assembly). AVIF
+# decoding (`avif-native`) would link the dav1d C library, so it stays off.
+image = { version = "0.25.10", default-features = false, features = ["jpeg", "png", "gif", "webp", "avif", "rayon"] }
+# WebP frames and the lossless encoder (utopia-image writes animated WebP
+# containers around it); pure Rust, the WebP codec of the image crate.
+image-webp = "0.2"
 indexmap = "2"
+# EXIF orientation of JPEG, PNG and WebP images (utopia-image, as Imagick's
+# exif:Orientation property); pure Rust.
+kamadak-exif = "0.6"
 # UTS #46 mapping and Unicode properties at the Unicode version of PHP's ICU
 # (php-std's idn_to_ascii/idn_to_utf8); pure Rust, from the ICU project.
 icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
@@ -117,7 +134,10 @@ num-integer = { version = "0.1", default-features = false, features = ["std"] }
 mimalloc = { version = "0.1", default-features = false }
 # Rust source parsing for `compat report` (crates/tools/compat): doc comments
 # and line numbers of each crate's public items.
-proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
+# PNG encoding with an explicit zlib level and filter (utopia-image maps
+# Imagick's PNG quality onto them); pure Rust, the PNG codec of the image crate.
+png = "0.18"
+proc-macro2 ={ version = "1", default-features = false, features = ["span-locations"] }
 quote = { version = "1", default-features = false }
 # Thread-local CSPRNG (ChaCha12 keyed from the OS, rekeyed every 64 KiB) for
 # utopia-auth tokens and salts; pure Rust, already in the tree.
@@ -157,4 +177,9 @@ panic = "abort"
 strip = "symbols"
 
 [profile.dev.package."*"]
+opt-level = 2
+
+# Per-pixel loops (rotation, masks, borders) on multi-megapixel images take
+# seconds unoptimised; compat runs and tests use the dev profile.
+[profile.dev.package.utopia-image]
 opt-level = 2
