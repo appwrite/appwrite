@@ -1,0 +1,1630 @@
+{
+  "service": "users",
+  "file": "tests/benchmarks/results/users.json",
+  "workload": {
+    "script": "tests/benchmarks/users.js",
+    "duration": "60s",
+    "hashing": false,
+    "users": 200,
+    "run": "users-bench"
+  },
+  "environment": {
+    "date": "2026-10-11T19:48:58Z",
+    "commit": "91833eec4a",
+    "branch": "feat/rust-utopia-conversion",
+    "machine": {
+      "os": "Darwin",
+      "arch": "arm64",
+      "cpu": "Apple M4 Max",
+      "cores": 16,
+      "memory_gib": 128
+    },
+    "docker": "28.5.1",
+    "k6": "k6 v1.7.1",
+    "cpu_source": "docker stats",
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": {
+      "container": "appwrite-rust",
+      "image": "appwrite-rust-dev",
+      "id": "b0b46302463d",
+      "created": "2026-10-11T19:37:06.64190413Z"
+    },
+    "database": {
+      "container": "appwrite-postgresql",
+      "image": "appwrite/postgres:0.1.0",
+      "id": "77156232a16d",
+      "created": "2026-10-09T08:32:40.317530502Z"
+    },
+    "endpoint": {
+      "php": "http://localhost:9501/v1",
+      "rust": "http://localhost:9530/v1"
+    }
+  },
+  "steps": [
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 200,
+      "rps": 220.0,
+      "requests": 13199,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 6.377,
+        "p50": 6.009,
+        "p90": 10.096,
+        "p95": 11.133,
+        "p99": 16.212,
+        "max": 369.015
+      },
+      "cpu_ms_per_request": 4.071,
+      "db_cpu_ms_per_request": 1.801,
+      "memory_mib": {
+        "baseline": 1011.0,
+        "avg": 1732.8,
+        "peak": 2075.6
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 4196,
+          "rps": 69.93,
+          "avg": 3.643,
+          "p50": 2.596,
+          "p90": 5.817,
+          "p95": 6.364,
+          "p99": 8.797,
+          "max": 333.637
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 2340,
+          "rps": 39.0,
+          "avg": 6.641,
+          "p50": 6.229,
+          "p90": 7.253,
+          "p95": 7.963,
+          "p99": 11.648,
+          "max": 369.015
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 989,
+          "rps": 16.48,
+          "avg": 10.389,
+          "p50": 9.861,
+          "p90": 11.091,
+          "p95": 11.969,
+          "p99": 22.533,
+          "max": 153.038
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 635,
+          "rps": 10.58,
+          "avg": 3.515,
+          "p50": 2.541,
+          "p90": 5.908,
+          "p95": 6.327,
+          "p99": 7.333,
+          "max": 26.241
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 945,
+          "rps": 15.75,
+          "avg": 9.565,
+          "p50": 9.042,
+          "p90": 12.401,
+          "p95": 13.494,
+          "p99": 19.088,
+          "max": 31.917
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 620,
+          "rps": 10.33,
+          "avg": 11.016,
+          "p50": 9.079,
+          "p90": 12.836,
+          "p95": 14.269,
+          "p99": 31.831,
+          "max": 366.366
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 591,
+          "rps": 9.85,
+          "avg": 4.357,
+          "p50": 3.503,
+          "p90": 6.534,
+          "p95": 7.079,
+          "p99": 8.637,
+          "max": 40.161
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 590,
+          "rps": 9.83,
+          "avg": 8.692,
+          "p50": 8.124,
+          "p90": 10.243,
+          "p95": 11.4,
+          "p99": 26.907,
+          "max": 56.465
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 590,
+          "rps": 9.83,
+          "avg": 12.016,
+          "p50": 9.858,
+          "p90": 12.221,
+          "p95": 13.788,
+          "p99": 32.434,
+          "max": 335.181
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 609,
+          "rps": 10.15,
+          "avg": 5.557,
+          "p50": 4.645,
+          "p90": 7.828,
+          "p95": 8.655,
+          "p99": 18.553,
+          "max": 27.14
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 609,
+          "rps": 10.15,
+          "avg": 7.04,
+          "p50": 6.643,
+          "p90": 8.136,
+          "p95": 8.684,
+          "p99": 12.451,
+          "max": 53.054
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 485,
+          "rps": 8.08,
+          "avg": 5.148,
+          "p50": 3.968,
+          "p90": 7.31,
+          "p95": 8.14,
+          "p99": 12.373,
+          "max": 149.943
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 50,
+      "rps": 55.1,
+      "requests": 3307,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 7.725,
+        "p50": 7.21,
+        "p90": 12.11,
+        "p95": 13.794,
+        "p99": 21.673,
+        "max": 60.33
+      },
+      "cpu_ms_per_request": 4.926,
+      "db_cpu_ms_per_request": 2.391,
+      "memory_mib": {
+        "baseline": 485.9,
+        "avg": 807.5,
+        "peak": 1014.0
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 1013,
+          "rps": 16.88,
+          "avg": 4.939,
+          "p50": 3.666,
+          "p90": 7.459,
+          "p95": 8.266,
+          "p99": 18.302,
+          "max": 60.33
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 620,
+          "rps": 10.33,
+          "avg": 7.835,
+          "p50": 7.358,
+          "p90": 9.282,
+          "p95": 11.289,
+          "p99": 16.571,
+          "max": 23.77
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 214,
+          "rps": 3.57,
+          "avg": 11.783,
+          "p50": 11.315,
+          "p90": 13.174,
+          "p95": 14.998,
+          "p99": 26.139,
+          "max": 29.174
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 147,
+          "rps": 2.45,
+          "avg": 4.865,
+          "p50": 3.536,
+          "p90": 7.277,
+          "p95": 8.088,
+          "p99": 18.623,
+          "max": 21.675
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 246,
+          "rps": 4.1,
+          "avg": 12.153,
+          "p50": 11.434,
+          "p90": 15.279,
+          "p95": 16.791,
+          "p99": 27.222,
+          "max": 36.293
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 165,
+          "rps": 2.75,
+          "avg": 12.625,
+          "p50": 11.392,
+          "p90": 16.539,
+          "p95": 20.355,
+          "p99": 32.725,
+          "max": 33.429
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 174,
+          "rps": 2.9,
+          "avg": 5.691,
+          "p50": 4.776,
+          "p90": 8.092,
+          "p95": 8.563,
+          "p99": 12.708,
+          "max": 19.639
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 154,
+          "rps": 2.57,
+          "avg": 11.01,
+          "p50": 9.992,
+          "p90": 14.04,
+          "p95": 15.108,
+          "p99": 31.518,
+          "max": 48.806
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 154,
+          "rps": 2.57,
+          "avg": 10.672,
+          "p50": 9.936,
+          "p90": 12.922,
+          "p95": 14.966,
+          "p99": 23.521,
+          "max": 30.931
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 152,
+          "rps": 2.53,
+          "avg": 7.087,
+          "p50": 6.267,
+          "p90": 9.935,
+          "p95": 10.607,
+          "p99": 13.492,
+          "max": 29.957
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 152,
+          "rps": 2.53,
+          "avg": 7.552,
+          "p50": 7.217,
+          "p90": 9.378,
+          "p95": 10.103,
+          "p99": 11.423,
+          "max": 11.88
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 116,
+          "rps": 1.93,
+          "avg": 7.081,
+          "p50": 5.783,
+          "p90": 10.325,
+          "p95": 13.307,
+          "p99": 22.847,
+          "max": 23.957
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "rate",
+      "level": 500,
+      "rps": 548.5,
+      "requests": 32911,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 6.389,
+        "p50": 5.998,
+        "p90": 10.364,
+        "p95": 11.556,
+        "p99": 14.349,
+        "max": 640.327
+      },
+      "cpu_ms_per_request": 4.134,
+      "db_cpu_ms_per_request": 1.754,
+      "memory_mib": {
+        "baseline": 2069.5,
+        "avg": 2265.1,
+        "peak": 2316.3
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 10651,
+          "rps": 177.52,
+          "avg": 3.421,
+          "p50": 2.469,
+          "p90": 5.753,
+          "p95": 6.24,
+          "p99": 7.744,
+          "max": 83.589
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 6058,
+          "rps": 100.97,
+          "avg": 6.625,
+          "p50": 6.208,
+          "p90": 7.201,
+          "p95": 7.798,
+          "p99": 9.78,
+          "max": 640.327
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 2356,
+          "rps": 39.27,
+          "avg": 10.24,
+          "p50": 9.846,
+          "p90": 10.941,
+          "p95": 11.468,
+          "p99": 12.975,
+          "max": 503.297
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 1485,
+          "rps": 24.75,
+          "avg": 3.383,
+          "p50": 2.505,
+          "p90": 5.649,
+          "p95": 6.16,
+          "p99": 7.405,
+          "max": 25.039
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 2439,
+          "rps": 40.65,
+          "avg": 10.671,
+          "p50": 9.296,
+          "p90": 12.673,
+          "p95": 13.785,
+          "p99": 20.76,
+          "max": 492.291
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 1460,
+          "rps": 24.33,
+          "avg": 10.433,
+          "p50": 9.482,
+          "p90": 12.773,
+          "p95": 13.848,
+          "p99": 20.76,
+          "max": 250.915
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 1437,
+          "rps": 23.95,
+          "avg": 4.417,
+          "p50": 3.348,
+          "p90": 6.57,
+          "p95": 7.006,
+          "p99": 8.263,
+          "max": 334.548
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 1454,
+          "rps": 24.23,
+          "avg": 8.938,
+          "p50": 8.223,
+          "p90": 9.701,
+          "p95": 10.665,
+          "p99": 14.195,
+          "max": 458.276
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 1454,
+          "rps": 24.23,
+          "avg": 12.384,
+          "p50": 11.188,
+          "p90": 13.486,
+          "p95": 14.457,
+          "p99": 20.576,
+          "max": 559.435
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 1457,
+          "rps": 24.28,
+          "avg": 5.31,
+          "p50": 4.245,
+          "p90": 7.614,
+          "p95": 8.211,
+          "p99": 12.766,
+          "max": 91.846
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 1457,
+          "rps": 24.28,
+          "avg": 7.814,
+          "p50": 7.505,
+          "p90": 9.033,
+          "p95": 9.737,
+          "p99": 14.134,
+          "max": 52.067
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 1203,
+          "rps": 20.05,
+          "avg": 5.683,
+          "p50": 3.766,
+          "p90": 7.21,
+          "p95": 7.911,
+          "p99": 15.544,
+          "max": 590.056
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 200,
+      "rps": 501.8,
+      "requests": 30109,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 399.78,
+        "p50": 372.641,
+        "p90": 750.771,
+        "p95": 881.757,
+        "p99": 1193.359,
+        "max": 2340.043
+      },
+      "cpu_ms_per_request": 16.202,
+      "db_cpu_ms_per_request": 5.378,
+      "memory_mib": {
+        "baseline": 2320.4,
+        "avg": 2333.4,
+        "peak": 2336.8
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 9573,
+          "rps": 159.55,
+          "avg": 251.938,
+          "p50": 177.441,
+          "p90": 537.096,
+          "p95": 614.943,
+          "p99": 820.582,
+          "max": 1339.249
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 5431,
+          "rps": 90.52,
+          "avg": 382.572,
+          "p50": 349.538,
+          "p90": 688.394,
+          "p95": 841.901,
+          "p99": 1142.554,
+          "max": 1762.879
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 2106,
+          "rps": 35.1,
+          "avg": 482.57,
+          "p50": 457.407,
+          "p90": 792.153,
+          "p95": 928.847,
+          "p99": 1314.289,
+          "max": 1842.618
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 1358,
+          "rps": 22.63,
+          "avg": 251.592,
+          "p50": 173.132,
+          "p90": 533.096,
+          "p95": 633.297,
+          "p99": 848.008,
+          "max": 1104.365
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 2207,
+          "rps": 36.78,
+          "avg": 642.482,
+          "p50": 609.023,
+          "p90": 956.623,
+          "p95": 1092.625,
+          "p99": 1433.141,
+          "max": 2340.043
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 1337,
+          "rps": 22.28,
+          "avg": 655.48,
+          "p50": 621.785,
+          "p90": 967.871,
+          "p95": 1109.042,
+          "p99": 1478.766,
+          "max": 1892.307
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 1378,
+          "rps": 22.97,
+          "avg": 348.537,
+          "p50": 303.663,
+          "p90": 624.82,
+          "p95": 733.015,
+          "p99": 1021.76,
+          "max": 1355.029
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 1432,
+          "rps": 23.87,
+          "avg": 550.315,
+          "p50": 534.13,
+          "p90": 776.037,
+          "p95": 898.846,
+          "p99": 1107.95,
+          "max": 1705.39
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 1432,
+          "rps": 23.87,
+          "avg": 755.285,
+          "p50": 715.769,
+          "p90": 1038.236,
+          "p95": 1216.152,
+          "p99": 1538.672,
+          "max": 1993.325
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 1363,
+          "rps": 22.72,
+          "avg": 325.458,
+          "p50": 266.226,
+          "p90": 617.467,
+          "p95": 715.645,
+          "p99": 970.795,
+          "max": 1231.347
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 1363,
+          "rps": 22.72,
+          "avg": 533.851,
+          "p50": 511.454,
+          "p90": 783.454,
+          "p95": 902.838,
+          "p99": 1098.4,
+          "max": 1456.568
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 1129,
+          "rps": 18.82,
+          "avg": 331.271,
+          "p50": 262.921,
+          "p90": 631.41,
+          "p95": 715.535,
+          "p99": 966.752,
+          "max": 1599.401
+        }
+      }
+    },
+    {
+      "target": "php",
+      "mode": "vus",
+      "level": 50,
+      "rps": 1575.5,
+      "requests": 94529,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 31.603,
+        "p50": 27.447,
+        "p90": 58.161,
+        "p95": 69.349,
+        "p99": 96.064,
+        "max": 237.003
+      },
+      "cpu_ms_per_request": 5.735,
+      "db_cpu_ms_per_request": 2.059,
+      "memory_mib": {
+        "baseline": 2311.2,
+        "avg": 2319.8,
+        "peak": 2323.5
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 30084,
+          "rps": 501.4,
+          "avg": 19.273,
+          "p50": 15.68,
+          "p90": 36.094,
+          "p95": 43.36,
+          "p99": 59.359,
+          "max": 154.719
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 17294,
+          "rps": 288.23,
+          "avg": 30.151,
+          "p50": 27.643,
+          "p90": 48.531,
+          "p95": 55.89,
+          "p99": 75.832,
+          "max": 169.509
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 6849,
+          "rps": 114.15,
+          "avg": 36.522,
+          "p50": 33.965,
+          "p90": 56.128,
+          "p95": 64.012,
+          "p99": 81.853,
+          "max": 138.45
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 4213,
+          "rps": 70.22,
+          "avg": 19.243,
+          "p50": 15.643,
+          "p90": 35.799,
+          "p95": 43.362,
+          "p99": 59.603,
+          "max": 88.809
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 6849,
+          "rps": 114.15,
+          "avg": 53.575,
+          "p50": 49.727,
+          "p90": 80.805,
+          "p95": 93.732,
+          "p99": 121.787,
+          "max": 237.003
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 4273,
+          "rps": 71.22,
+          "avg": 53.676,
+          "p50": 50.162,
+          "p90": 81.02,
+          "p95": 94.207,
+          "p99": 118.308,
+          "max": 169.591
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 4279,
+          "rps": 71.32,
+          "avg": 23.155,
+          "p50": 19.758,
+          "p90": 40.501,
+          "p95": 48.951,
+          "p99": 68.33,
+          "max": 116.029
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 4358,
+          "rps": 72.63,
+          "avg": 43.175,
+          "p50": 40.708,
+          "p90": 63.191,
+          "p95": 72.715,
+          "p99": 96.753,
+          "max": 144.039
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 4358,
+          "rps": 72.63,
+          "avg": 61.876,
+          "p50": 58.694,
+          "p90": 87.675,
+          "p95": 101.248,
+          "p99": 130.424,
+          "max": 204.503
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 4294,
+          "rps": 71.57,
+          "avg": 28.105,
+          "p50": 25.198,
+          "p90": 46.316,
+          "p95": 54.582,
+          "p99": 72.674,
+          "max": 120.878
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 4294,
+          "rps": 71.57,
+          "avg": 44.685,
+          "p50": 42.453,
+          "p90": 64.471,
+          "p95": 72.73,
+          "p99": 94.284,
+          "max": 143.725
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 3384,
+          "rps": 56.4,
+          "avg": 26.354,
+          "p50": 23.069,
+          "p90": 44.38,
+          "p95": 51.428,
+          "p99": 73.387,
+          "max": 130.685
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "rate",
+      "level": 200,
+      "rps": 220.9,
+      "requests": 13255,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 2.473,
+        "p50": 1.317,
+        "p90": 3.019,
+        "p95": 3.627,
+        "p99": 10.416,
+        "max": 359.134
+      },
+      "cpu_ms_per_request": 0.392,
+      "db_cpu_ms_per_request": 1.151,
+      "memory_mib": {
+        "baseline": 47.1,
+        "avg": 62.1,
+        "peak": 66.8
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 4151,
+          "rps": 69.18,
+          "avg": 0.999,
+          "p50": 0.889,
+          "p90": 1.301,
+          "p95": 1.594,
+          "p99": 3.012,
+          "max": 24.972
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 2401,
+          "rps": 40.02,
+          "avg": 1.514,
+          "p50": 1.377,
+          "p90": 1.919,
+          "p95": 2.301,
+          "p99": 4.033,
+          "max": 8.426
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 965,
+          "rps": 16.08,
+          "avg": 3.551,
+          "p50": 3.402,
+          "p90": 4.257,
+          "p95": 4.579,
+          "p99": 5.783,
+          "max": 33.379
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 622,
+          "rps": 10.37,
+          "avg": 0.843,
+          "p50": 0.758,
+          "p90": 1.115,
+          "p95": 1.38,
+          "p99": 2.353,
+          "max": 5.862
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 935,
+          "rps": 15.58,
+          "avg": 2.956,
+          "p50": 1.481,
+          "p90": 2.297,
+          "p95": 3.592,
+          "p99": 42.535,
+          "max": 147.566
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 618,
+          "rps": 10.3,
+          "avg": 3.135,
+          "p50": 1.483,
+          "p90": 2.211,
+          "p95": 2.849,
+          "p99": 45.669,
+          "max": 200.013
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 578,
+          "rps": 9.63,
+          "avg": 1.206,
+          "p50": 1.106,
+          "p90": 1.575,
+          "p95": 1.786,
+          "p99": 3.103,
+          "max": 7.401
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 629,
+          "rps": 10.48,
+          "avg": 8.536,
+          "p50": 2.369,
+          "p90": 3.411,
+          "p95": 5.374,
+          "p99": 299.41,
+          "max": 343.317
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 629,
+          "rps": 10.48,
+          "avg": 6.409,
+          "p50": 2.438,
+          "p90": 3.68,
+          "p95": 5.126,
+          "p99": 214.405,
+          "max": 359.134
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 626,
+          "rps": 10.43,
+          "avg": 4.089,
+          "p50": 1.744,
+          "p90": 2.625,
+          "p95": 3.935,
+          "p99": 89.584,
+          "max": 160.487
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 626,
+          "rps": 10.43,
+          "avg": 3.736,
+          "p50": 1.411,
+          "p90": 2.046,
+          "p95": 3.127,
+          "p99": 51.944,
+          "max": 176.104
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 475,
+          "rps": 7.92,
+          "avg": 2.857,
+          "p50": 1.494,
+          "p90": 2.328,
+          "p95": 3.449,
+          "p99": 48.685,
+          "max": 110.485
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "rate",
+      "level": 50,
+      "rps": 54.7,
+      "requests": 3280,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 2.432,
+        "p50": 1.929,
+        "p90": 3.886,
+        "p95": 4.711,
+        "p99": 6.976,
+        "max": 108.906
+      },
+      "cpu_ms_per_request": 0.667,
+      "db_cpu_ms_per_request": 1.866,
+      "memory_mib": {
+        "baseline": 26.2,
+        "avg": 43.5,
+        "peak": 45.2
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 1059,
+          "rps": 17.65,
+          "avg": 1.568,
+          "p50": 1.435,
+          "p90": 2.183,
+          "p95": 2.43,
+          "p99": 3.326,
+          "max": 6.98
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 587,
+          "rps": 9.78,
+          "avg": 2.371,
+          "p50": 1.935,
+          "p90": 2.976,
+          "p95": 3.25,
+          "p99": 5.351,
+          "max": 77.822
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 238,
+          "rps": 3.97,
+          "avg": 4.569,
+          "p50": 4.195,
+          "p90": 5.743,
+          "p95": 6.446,
+          "p99": 7.728,
+          "max": 49.063
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 154,
+          "rps": 2.57,
+          "avg": 1.354,
+          "p50": 1.218,
+          "p90": 1.89,
+          "p95": 2.173,
+          "p99": 3.208,
+          "max": 3.416
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 242,
+          "rps": 4.03,
+          "avg": 2.77,
+          "p50": 2.364,
+          "p90": 3.538,
+          "p95": 4.353,
+          "p99": 9.006,
+          "max": 40.697
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 177,
+          "rps": 2.95,
+          "avg": 3.054,
+          "p50": 2.362,
+          "p90": 3.999,
+          "p95": 5.337,
+          "p99": 16.49,
+          "max": 24.031
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 139,
+          "rps": 2.32,
+          "avg": 1.827,
+          "p50": 1.632,
+          "p90": 2.403,
+          "p95": 3.073,
+          "p99": 4.255,
+          "max": 4.859
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 135,
+          "rps": 2.25,
+          "avg": 4.114,
+          "p50": 3.648,
+          "p90": 5.648,
+          "p95": 6.928,
+          "p99": 10.22,
+          "max": 24.698
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 135,
+          "rps": 2.25,
+          "avg": 3.376,
+          "p50": 3.122,
+          "p90": 4.568,
+          "p95": 5.118,
+          "p99": 6.831,
+          "max": 9.979
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 145,
+          "rps": 2.42,
+          "avg": 3.786,
+          "p50": 2.746,
+          "p90": 4.276,
+          "p95": 4.647,
+          "p99": 13.726,
+          "max": 108.906
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 145,
+          "rps": 2.42,
+          "avg": 1.999,
+          "p50": 1.769,
+          "p90": 2.746,
+          "p95": 3.358,
+          "p99": 5.139,
+          "max": 6.757
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 124,
+          "rps": 2.07,
+          "avg": 2.524,
+          "p50": 2.383,
+          "p90": 3.465,
+          "p95": 4.291,
+          "p99": 4.919,
+          "max": 5.197
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "rate",
+      "level": 500,
+      "rps": 551.2,
+      "requests": 33074,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 1.391,
+        "p50": 1.062,
+        "p90": 2.391,
+        "p95": 2.923,
+        "p99": 4.45,
+        "max": 115.654
+      },
+      "cpu_ms_per_request": 0.313,
+      "db_cpu_ms_per_request": 0.907,
+      "memory_mib": {
+        "baseline": 63.8,
+        "avg": 73.3,
+        "peak": 77.9
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 10406,
+          "rps": 173.43,
+          "avg": 0.815,
+          "p50": 0.694,
+          "p90": 0.91,
+          "p95": 1.076,
+          "p99": 2.35,
+          "max": 107.319
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 6081,
+          "rps": 101.35,
+          "avg": 1.315,
+          "p50": 1.111,
+          "p90": 1.39,
+          "p95": 1.602,
+          "p99": 3.251,
+          "max": 109.727
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 2353,
+          "rps": 39.22,
+          "avg": 3.157,
+          "p50": 2.913,
+          "p90": 3.335,
+          "p95": 3.591,
+          "p99": 5.899,
+          "max": 68.274
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 1516,
+          "rps": 25.27,
+          "avg": 0.704,
+          "p50": 0.58,
+          "p90": 0.797,
+          "p95": 0.952,
+          "p99": 1.811,
+          "max": 42.034
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 2423,
+          "rps": 40.38,
+          "avg": 1.578,
+          "p50": 1.142,
+          "p90": 1.554,
+          "p95": 1.868,
+          "p99": 6.451,
+          "max": 97.743
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 1461,
+          "rps": 24.35,
+          "avg": 1.522,
+          "p50": 1.167,
+          "p90": 1.583,
+          "p95": 1.985,
+          "p99": 5.515,
+          "max": 96.219
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 1442,
+          "rps": 24.03,
+          "avg": 1.099,
+          "p50": 0.851,
+          "p90": 1.094,
+          "p95": 1.287,
+          "p99": 2.657,
+          "max": 109.839
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 1519,
+          "rps": 25.32,
+          "avg": 2.253,
+          "p50": 1.823,
+          "p90": 2.388,
+          "p95": 2.792,
+          "p99": 6.596,
+          "max": 111.339
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 1519,
+          "rps": 25.32,
+          "avg": 2.287,
+          "p50": 2.103,
+          "p90": 2.6,
+          "p95": 2.978,
+          "p99": 6.522,
+          "max": 20.857
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 1554,
+          "rps": 25.9,
+          "avg": 1.735,
+          "p50": 1.326,
+          "p90": 1.784,
+          "p95": 2.111,
+          "p99": 6.45,
+          "max": 115.654
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 1554,
+          "rps": 25.9,
+          "avg": 1.354,
+          "p50": 1.21,
+          "p90": 1.607,
+          "p95": 1.807,
+          "p99": 4.667,
+          "max": 12.086
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 1246,
+          "rps": 20.77,
+          "avg": 1.374,
+          "p50": 1.127,
+          "p90": 1.595,
+          "p95": 1.901,
+          "p99": 6.034,
+          "max": 51.43
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "vus",
+      "level": 200,
+      "rps": 4118.5,
+      "requests": 247110,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 48.486,
+        "p50": 38.755,
+        "p90": 95.045,
+        "p95": 115.554,
+        "p99": 160.568,
+        "max": 372.81
+      },
+      "cpu_ms_per_request": 0.552,
+      "db_cpu_ms_per_request": 2.231,
+      "memory_mib": {
+        "baseline": 92.1,
+        "avg": 115.5,
+        "peak": 119.2
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 79067,
+          "rps": 1317.78,
+          "avg": 23.661,
+          "p50": 20.923,
+          "p90": 37.211,
+          "p95": 45.478,
+          "p99": 69.373,
+          "max": 232.179
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 44707,
+          "rps": 745.12,
+          "avg": 39.771,
+          "p50": 36.391,
+          "p90": 61.779,
+          "p95": 72.665,
+          "p99": 99.64,
+          "max": 343.676
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 17896,
+          "rps": 298.27,
+          "avg": 75.554,
+          "p50": 69.312,
+          "p90": 124.827,
+          "p95": 145.728,
+          "p99": 194.543,
+          "max": 372.81
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 11162,
+          "rps": 186.03,
+          "avg": 22.786,
+          "p50": 20.337,
+          "p90": 35.626,
+          "p95": 43.301,
+          "p99": 65.094,
+          "max": 258.685
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 18051,
+          "rps": 300.85,
+          "avg": 60.472,
+          "p50": 55.769,
+          "p90": 91.769,
+          "p95": 107.394,
+          "p99": 148.171,
+          "max": 293.684
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 11240,
+          "rps": 187.33,
+          "avg": 60.808,
+          "p50": 56.047,
+          "p90": 92.653,
+          "p95": 106.992,
+          "p99": 151.183,
+          "max": 346.977
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 11371,
+          "rps": 189.52,
+          "avg": 42.209,
+          "p50": 39.191,
+          "p90": 66.224,
+          "p95": 77.351,
+          "p99": 103.165,
+          "max": 214.975
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 11192,
+          "rps": 186.53,
+          "avg": 100.312,
+          "p50": 95.704,
+          "p90": 142.352,
+          "p95": 162.589,
+          "p99": 218.351,
+          "max": 360.134
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 11192,
+          "rps": 186.53,
+          "avg": 106.825,
+          "p50": 102.506,
+          "p90": 152.71,
+          "p95": 171.584,
+          "p99": 220.444,
+          "max": 361.88
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 11181,
+          "rps": 186.35,
+          "avg": 65.763,
+          "p50": 61.841,
+          "p90": 97.461,
+          "p95": 111.584,
+          "p99": 148.492,
+          "max": 273.006
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 11181,
+          "rps": 186.35,
+          "avg": 76.474,
+          "p50": 72.844,
+          "p90": 111.614,
+          "p95": 126.733,
+          "p99": 163.743,
+          "max": 299.613
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 8870,
+          "rps": 147.83,
+          "avg": 63.408,
+          "p50": 59.55,
+          "p90": 93.347,
+          "p95": 105.646,
+          "p99": 138.877,
+          "max": 244.077
+        }
+      }
+    },
+    {
+      "target": "rust",
+      "mode": "vus",
+      "level": 50,
+      "rps": 5201.7,
+      "requests": 312102,
+      "failures": 0,
+      "dropped": 0,
+      "latency": {
+        "avg": 9.55,
+        "p50": 7.681,
+        "p90": 18.171,
+        "p95": 22.394,
+        "p99": 32.443,
+        "max": 175.88
+      },
+      "cpu_ms_per_request": 0.392,
+      "db_cpu_ms_per_request": 1.437,
+      "memory_mib": {
+        "baseline": 72.8,
+        "avg": 92.0,
+        "peak": 94.9
+      },
+      "endpoints": {
+        "users.get": {
+          "route": "GET /v1/users/:userId",
+          "count": 99535,
+          "rps": 1658.92,
+          "avg": 5.106,
+          "p50": 4.556,
+          "p90": 8.172,
+          "p95": 9.742,
+          "p99": 13.878,
+          "max": 63.941
+        },
+        "users.list": {
+          "route": "GET /v1/users",
+          "count": 57017,
+          "rps": 950.28,
+          "avg": 7.659,
+          "p50": 6.91,
+          "p90": 12.047,
+          "p95": 14.148,
+          "p99": 19.3,
+          "max": 84.189
+        },
+        "users.search": {
+          "route": "GET /v1/users",
+          "count": 22428,
+          "rps": 373.8,
+          "avg": 13.747,
+          "p50": 12.026,
+          "p90": 22.486,
+          "p95": 26.843,
+          "p99": 38.179,
+          "max": 94.371
+        },
+        "users.prefs.get": {
+          "route": "GET /v1/users/:userId/prefs",
+          "count": 14207,
+          "rps": 236.78,
+          "avg": 4.814,
+          "p50": 4.301,
+          "p90": 7.779,
+          "p95": 9.251,
+          "p99": 13.086,
+          "max": 39.117
+        },
+        "users.prefs.update": {
+          "route": "PATCH /v1/users/:userId/prefs",
+          "count": 22568,
+          "rps": 376.13,
+          "avg": 11.778,
+          "p50": 10.649,
+          "p90": 17.953,
+          "p95": 20.894,
+          "p99": 29.255,
+          "max": 145.584
+        },
+        "users.name.update": {
+          "route": "PATCH /v1/users/:userId/name",
+          "count": 14109,
+          "rps": 235.15,
+          "avg": 11.845,
+          "p50": 10.737,
+          "p90": 18.065,
+          "p95": 21.139,
+          "p99": 29.757,
+          "max": 134.217
+        },
+        "users.targets.list": {
+          "route": "GET /v1/users/:userId/targets",
+          "count": 14295,
+          "rps": 238.25,
+          "avg": 7.536,
+          "p50": 6.726,
+          "p90": 12.103,
+          "p95": 14.32,
+          "p99": 20.266,
+          "max": 60.614
+        },
+        "users.create": {
+          "route": "POST /v1/users",
+          "count": 14043,
+          "rps": 234.05,
+          "avg": 19.993,
+          "p50": 18.489,
+          "p90": 29.386,
+          "p95": 33.735,
+          "p99": 43.782,
+          "max": 175.88
+        },
+        "users.delete": {
+          "route": "DELETE /v1/users/:userId",
+          "count": 14043,
+          "rps": 234.05,
+          "avg": 20.632,
+          "p50": 18.984,
+          "p90": 30.872,
+          "p95": 35.263,
+          "p99": 47.079,
+          "max": 149.179
+        },
+        "users.sessions.create": {
+          "route": "POST /v1/users/:userId/sessions",
+          "count": 14153,
+          "rps": 235.88,
+          "avg": 13.449,
+          "p50": 12.29,
+          "p90": 20.031,
+          "p95": 23.219,
+          "p99": 31.634,
+          "max": 136.363
+        },
+        "users.sessions.delete": {
+          "route": "DELETE /v1/users/:userId/sessions/:sessionId",
+          "count": 14153,
+          "rps": 235.88,
+          "avg": 14.709,
+          "p50": 13.527,
+          "p90": 22.198,
+          "p95": 25.825,
+          "p99": 33.728,
+          "max": 94.511
+        },
+        "users.tokens.create": {
+          "route": "POST /v1/users/:userId/tokens",
+          "count": 11551,
+          "rps": 192.52,
+          "avg": 12.92,
+          "p50": 11.868,
+          "p90": 19.429,
+          "p95": 22.39,
+          "p99": 29.889,
+          "max": 131.666
+        }
+      }
+    }
+  ]
+}
