@@ -9,6 +9,9 @@ mod client;
 mod device;
 mod os;
 
+#[cfg(test)]
+mod equivalence;
+
 pub use bot::bot;
 pub use client::client;
 pub use device::device;

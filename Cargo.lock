@@ -2478,6 +2478,8 @@ dependencies = [
 name = "utopia-user-agent"
 version = "0.1.0"
 dependencies = [
+ "aho-corasick",
+ "memchr",
  "php-std",
 ]
 

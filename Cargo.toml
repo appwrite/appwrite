@@ -47,6 +47,9 @@ appwrite-core = { path = "crates/appwrite/core" }
 appwrite-users = { path = "crates/appwrite/users" }
 
 # Third party
+# Multi-needle substring search (utopia-user-agent: the bot table, in one
+# case-insensitive pass); pure Rust, already a dependency of regex.
+aho-corasick = "1"
 aes = "0.8"
 aes-gcm = "0.10"
 argon2 = { version = "0.5", features = ["std"] }
@@ -82,6 +85,9 @@ icu_normalizer = { version = "2.3", default-features = false, features = ["compi
 icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
 md-5 = "0.10"
 md2 = "0.10"
+# Byte search (utopia-user-agent: case-insensitive token scans); pure Rust,
+# already a dependency of regex.
+memchr = "2"
 # RSA keys and PKCS#1 v1.5 signatures (RS256 JWTs and passkeys, utopia-auth) on
 # the system OpenSSL, the library PHP's openssl_* functions call: same key limits,
 # constant-time private key operations (the `rsa` crate is open to RUSTSEC-2023-0071).

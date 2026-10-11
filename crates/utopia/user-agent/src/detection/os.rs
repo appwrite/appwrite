@@ -1,13 +1,15 @@
 //! Operating system detection: the system's code, name and version.
 //!
-//! PHP: `Utopia\UserAgent\Detection\OperatingSystemDetector`.
+//! PHP: `Utopia\UserAgent\Detection\OperatingSystemDetector`. Its patterns
+//! are plain token and version scans, run natively (see `crate::scan`);
+//! each rule names the pattern it implements.
 
 use std::borrow::Cow;
-use std::sync::{Arc, LazyLock};
 
-use php_std::pcre::Regex;
-
-use crate::pattern::{around, contains_ci, group, pattern};
+use crate::scan::{
+    contains_any_ci, contains_ci, contains_word_ci, digit, dotted, dotted_underscored, find_ci, prefixed_word_ci, run,
+    underscored, version_after,
+};
 use crate::values::{OperatingSystem, Text, text};
 use crate::version;
 
@@ -47,28 +49,6 @@ const LINUX_DISTROS: [(&str, &str, &str); 18] = [
     ("ORA", "Oracle Linux", "Oracle"),
 ];
 
-/// Tokens whose version `token()` reads, besides the distributions'.
-#[derive(Clone, Copy)]
-enum Token {
-    OpenHarmony,
-    HarmonyOS,
-    TvOS,
-    WatchOS,
-    WatchOSSpaced,
-}
-
-const TOKENS: [&str; 5] = ["OpenHarmony", "HarmonyOS", "tvOS", "WatchOS", "Watch OS"];
-
-/// `token()`: `/<token>[ \/]([0-9][0-9._]*)/i` for the named tokens
-/// followed by the distributions'.
-static TOKEN_PATTERNS: LazyLock<Vec<Arc<Regex>>> = LazyLock::new(|| {
-    TOKENS
-        .iter()
-        .chain(LINUX_DISTROS.iter().map(|(_, _, token)| token))
-        .map(|token| around("/", token, r"[ \/]([0-9][0-9._]*)/i"))
-        .collect()
-});
-
 fn os<'a>(code: &'static str, name: &'static str, version: Option<Text<'a>>) -> OperatingSystem<'a> {
     OperatingSystem { code: text(code), name: text(name), version }
 }
@@ -85,10 +65,14 @@ pub fn operating_system(user_agent: &[u8]) -> OperatingSystem<'_> {
     if ua.is_empty() {
         return OperatingSystem::default();
     }
-    if let Some(v) = group(pattern!(r"/Windows Phone(?: OS)?[ \/]([0-9._]+)/i"), ua) {
+    // `/Windows Phone(?: OS)?[ \/]([0-9._]+)/i`
+    let phone =
+        version_after(ua, &["Windows Phone OS", "Windows Phone"], b" /", dotted_underscored, dotted_underscored);
+    if let Some(v) = phone {
         return os("WPH", "Windows Phone", Some(version::normalize(v)));
     }
-    if let Some(v) = group(pattern!(r"/Windows NT[ \/]([0-9.]+)/i"), ua) {
+    // `/Windows NT[ \/]([0-9.]+)/i`
+    if let Some(v) = version_after(ua, &["Windows NT"], b" /", dotted, dotted) {
         let release = WINDOWS_VERSIONS
             .iter()
             .find(|(nt, _)| nt.as_bytes() == v)
@@ -96,10 +80,10 @@ pub fn operating_system(user_agent: &[u8]) -> OperatingSystem<'_> {
         return os("WIN", "Windows", Some(release));
     }
     if contains_ci(ua, "OpenHarmony") {
-        return os("OHS", "OpenHarmony", token(ua, Token::OpenHarmony as usize));
+        return os("OHS", "OpenHarmony", token(ua, "OpenHarmony"));
     }
     if contains_ci(ua, "HarmonyOS") {
-        return os("HAR", "HarmonyOS", token(ua, Token::HarmonyOS as usize));
+        return os("HAR", "HarmonyOS", token(ua, "HarmonyOS"));
     }
     if let Some(apple) = apple(ua) {
         return apple;
@@ -108,32 +92,39 @@ pub fn operating_system(user_agent: &[u8]) -> OperatingSystem<'_> {
     if is_fire_os(ua) {
         return os("FIR", "Fire OS", None);
     }
-    if let Some(v) = group(pattern!(r"/Android(?: |\/)([0-9][0-9._-]*)/i"), ua) {
+    // `/Android(?: |\/)([0-9][0-9._-]*)/i`
+    if let Some(v) = version_after(ua, &["Android"], b" /", digit, |b| dotted_underscored(b) || b == b'-') {
         return os("AND", "Android", Some(version::normalize(v)));
     }
     if contains_ci(ua, "Android") {
         return os("AND", "Android", None);
     }
-    if let Some(v) = group(pattern!(r"/KaiOS[ \/]([0-9.]+)/i"), ua) {
+    // `/KaiOS[ \/]([0-9.]+)/i`
+    if let Some(v) = version_after(ua, &["KaiOS"], b" /", dotted, dotted) {
         return os("KOS", "KaiOS", Some(version::normalize(v)));
     }
-    if let Some(v) = group(pattern!(r"/Tizen[ \/]([0-9.]+)/i"), ua) {
+    // `/Tizen[ \/]([0-9.]+)/i`
+    if let Some(v) = version_after(ua, &["Tizen"], b" /", dotted, dotted) {
         return os("TIZ", "Tizen", Some(version::normalize(v)));
     }
-    if let Some(v) = group(pattern!(r"/CrOS [^ )]+ ([0-9.]+)/i"), ua) {
+    if let Some(v) = chrome_os_version(ua) {
         return os("COS", "Chrome OS", Some(version::normalize(v)));
     }
     if contains_ci(ua, "web0S") || contains_ci(ua, "webOS") {
-        let v = group(pattern!(r"/(?:web0S|webOS)[ \/]([0-9.]+)/i"), ua).map(version::normalize);
+        // `/(?:web0S|webOS)[ \/]([0-9.]+)/i`
+        let v = version_after(ua, &["web0S", "webOS"], b" /", dotted, dotted).map(version::normalize);
         return os("WOS", "webOS", v);
     }
     if contains_ci(ua, "Sailfish") {
         return os("SAF", "Sailfish OS", None);
     }
-    if pattern!(r"/(?:BlackBerry|BB10|RIM Tablet OS)/i").is_match(ua) {
+    // `/(?:BlackBerry|BB10|RIM Tablet OS)/i`
+    if contains_any_ci(ua, &["BlackBerry", "BB10", "RIM Tablet OS"]) {
         return os("BLB", "BlackBerry OS", None);
     }
-    if pattern!(r"/Nintendo (?:Switch|Wii ?U?|3DS)/i").is_match(ua) {
+    // `/Nintendo (?:Switch|Wii ?U?|3DS)/i`: the optional ` ?U?` never
+    // decides whether it matches.
+    if contains_any_ci(ua, &["Nintendo Switch", "Nintendo Wii", "Nintendo 3DS"]) {
         return os("WII", "Nintendo", None);
     }
     if contains_ci(ua, "PlayStation") {
@@ -143,7 +134,8 @@ pub fn operating_system(user_agent: &[u8]) -> OperatingSystem<'_> {
         return distro;
     }
     if contains_ci(ua, "Mac OS X") && !contains_ci(ua, "like Mac OS X") {
-        let v = group(pattern!(r"/Mac OS X[ \/]([0-9_\.]+)/i"), ua).map(version::display);
+        // `/Mac OS X[ \/]([0-9_\.]+)/i`
+        let v = version_after(ua, &["Mac OS X"], b" /", dotted_underscored, dotted_underscored).map(version::display);
         return os("MAC", "Mac", v);
     }
     if contains_ci(ua, "Linux") || contains_ci(ua, "X11") {
@@ -155,44 +147,71 @@ pub fn operating_system(user_agent: &[u8]) -> OperatingSystem<'_> {
 /// The Apple family: tvOS, watchOS, iPadOS and iOS.
 fn apple(ua: &[u8]) -> Option<OperatingSystem<'_>> {
     if contains_ci(ua, "AppleTV") || contains_ci(ua, "tvOS") {
-        return Some(os("ATV", "tvOS", token(ua, Token::TvOS as usize)));
+        return Some(os("ATV", "tvOS", token(ua, "tvOS")));
     }
     if contains_ci(ua, "Watch OS") || contains_ci(ua, "WatchOS") {
-        let v = token(ua, Token::WatchOS as usize).or_else(|| token(ua, Token::WatchOSSpaced as usize));
+        let v = token(ua, "WatchOS").or_else(|| token(ua, "Watch OS"));
         return Some(os("WAS", "watchOS", v));
     }
     if contains_ci(ua, "iPad") {
         return Some(os("IPA", "iPadOS", apple_version(ua)));
     }
-    if pattern!(r"/(?:iPhone|iPod)/i").is_match(ua)
-        || pattern!(r"/(?:CPU (?:iPhone )?OS|iPhone OS)[ \/]([0-9_]+)/i").is_match(ua)
+    // `/(?:iPhone|iPod)/i` or `/(?:CPU (?:iPhone )?OS|iPhone OS)[ \/]([0-9_]+)/i`
+    // (the optional `iPhone ` is tried first, as two tokens in order).
+    if contains_any_ci(ua, &["iPhone", "iPod"])
+        || version_after(ua, &["CPU iPhone OS", "CPU OS", "iPhone OS"], b" /", underscored, underscored).is_some()
     {
         return Some(os("IOS", "iOS", apple_version(ua)));
     }
     None
 }
 
+/// `/(?:CPU (?:iPhone )?OS|iPhone OS|OS)[ \/]([0-9_]+)/i`
 fn apple_version(ua: &[u8]) -> Option<Text<'_>> {
-    group(pattern!(r"/(?:CPU (?:iPhone )?OS|iPhone OS|OS)[ \/]([0-9_]+)/i"), ua).map(version::normalize)
+    version_after(ua, &["CPU iPhone OS", "CPU OS", "iPhone OS", "OS"], b" /", underscored, underscored)
+        .map(version::normalize)
 }
 
-fn is_fire_os(ua: &[u8]) -> bool {
-    contains_ci(ua, "Android") && pattern!(r"/Silk\/|\bKF[A-Z0-9]{2,}\b|\bAFT[A-Z0-9]+\b/i").is_match(ua)
+/// `/CrOS [^ )]+ ([0-9.]+)/i`: the greedy `[^ )]+` stops at the first space
+/// or `)`, and only a space may follow it, so backtracking never helps.
+pub(super) fn chrome_os_version(ua: &[u8]) -> Option<&[u8]> {
+    let mut from = 0;
+    while let Some(at) = find_ci(ua, b"CrOS ", from) {
+        from = at + 1;
+        let build = at + 5;
+        let space = build + run(ua, build, |b| b != b' ' && b != b')');
+        if space == build || ua.get(space) != Some(&b' ') {
+            continue;
+        }
+        let len = run(ua, space + 1, dotted);
+        if len > 0 {
+            return Some(&ua[space + 1..space + 1 + len]);
+        }
+    }
+    None
 }
 
+/// An Android string with `/Silk\/|\bKF[A-Z0-9]{2,}\b|\bAFT[A-Z0-9]+\b/i`.
+pub(super) fn is_fire_os(ua: &[u8]) -> bool {
+    contains_ci(ua, "Android")
+        && (contains_ci(ua, "Silk/")
+            || prefixed_word_ci(ua, "KF", 2).is_some()
+            || prefixed_word_ci(ua, "AFT", 1).is_some())
+}
+
+/// The first distribution whose token is a word of the string
+/// (`/\b<token>\b/i`).
 fn linux_distro(ua: &[u8]) -> Option<OperatingSystem<'_>> {
-    static WORDS: LazyLock<Vec<Arc<Regex>>> =
-        LazyLock::new(|| LINUX_DISTROS.iter().map(|(_, _, token)| around(r"/\b", token, r"\b/i")).collect());
     if !contains_ci(ua, "Linux") && !contains_ci(ua, "X11") {
         return None;
     }
-    let (i, (code, name, _)) = LINUX_DISTROS.iter().enumerate().find(|&(i, _)| WORDS[i].is_match(ua))?;
-    Some(os(code, name, token(ua, TOKENS.len() + i)))
+    let (code, name, distro) = LINUX_DISTROS.iter().find(|(_, _, distro)| contains_word_ci(ua, distro))?;
+    Some(os(code, name, token(ua, distro)))
 }
 
 /// `token()`: a numeric version right after a token, separated by a space
-/// or a slash (`Ubuntu/22.04`, `OpenHarmony 5.0`). `index` is into
-/// [`TOKEN_PATTERNS`].
-fn token(ua: &[u8], index: usize) -> Option<Text<'_>> {
-    group(&TOKEN_PATTERNS[index], ua).map(version::normalize)
+/// or a slash (`Ubuntu/22.04`, `OpenHarmony 5.0`):
+/// `/<token>[ \/]([0-9][0-9._]*)/i`.
+fn token<'a>(ua: &'a [u8], token: &str) -> Option<Text<'a>> {
+    version_after(ua, &[token], b" /", digit, dotted_underscored).map(version::normalize)
 }

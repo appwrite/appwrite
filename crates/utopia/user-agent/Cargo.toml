@@ -8,6 +8,8 @@ license.workspace = true
 publish.workspace = true
 
 [dependencies]
+aho-corasick.workspace = true
+memchr.workspace = true
 php-std.workspace = true
 
 [package.metadata.utopia]

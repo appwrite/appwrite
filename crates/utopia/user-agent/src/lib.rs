@@ -13,13 +13,18 @@
 //! assert!(!agent.is_bot());
 //! ```
 //!
-//! Detection runs on every request, so each regular expression is compiled
-//! once per process, on first use.
+//! Detection runs on every request, so it avoids regular expressions where
+//! native code does the same job: case-insensitive substring, word and
+//! `<token>/<version>` scans that never allocate, and one pass over the
+//! string for the whole bot table. The few patterns left (device models
+//! and brands, Internet Explorer, the generic bot rule) are compiled once
+//! per process, and run only when the string holds a literal they need.
 //!
 //! PHP: the port of `utopia-php/user-agent` (`packages/user-agent`), with
-//! identical results for every input. Patterns are the PHP library's, run by
-//! [`php_std::pcre`] (a port of the PCRE2 PHP uses), so matching, limits
-//! included, is PHP's.
+//! identical results for every input. The remaining patterns are the PHP
+//! library's, run by [`php_std::pcre`] (a port of the PCRE2 PHP uses); each
+//! native scan names the pattern it replaces, and the crate's tests check
+//! every one, and every prefilter, against that pattern.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -45,6 +50,7 @@
 mod agent;
 pub mod detection;
 mod pattern;
+mod scan;
 mod values;
 mod version;
 
