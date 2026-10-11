@@ -197,7 +197,8 @@ fn safari(ua: &[u8]) -> Option<Client<'_>> {
 
 fn internet_explorer(ua: &[u8]) -> Option<Client<'_>> {
     // The pattern needs `MSIE ` or `Trident/` and then `rv:`.
-    if !contains_ci(ua, "MSIE ") && !(contains_ci(ua, "Trident/") && contains_ci(ua, "rv:")) {
+    let literals = contains_ci(ua, "MSIE ") || (contains_ci(ua, "Trident/") && contains_ci(ua, "rv:"));
+    if !literals {
         return None;
     }
     let version = group(pattern!(r"/(?:MSIE |Trident\/.*?rv:)([0-9.]+)/i"), ua)?;
