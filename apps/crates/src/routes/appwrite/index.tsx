@@ -1,7 +1,7 @@
 import { Link, createFileRoute, notFound } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
 import { useState } from 'react'
-import { Bar, BenchSteps, BenchEnvironment, HookRow, MigrationGate, ServiceBadge, SourceLink, Stat } from '@/components/Appwrite'
+import { Bar, BenchSteps, BenchEnvironment, HookRow, MigrationGate, ServiceBadge, ServiceSpeed, SourceLink, Stat } from '@/components/Appwrite'
 import { MigrationCard } from '@/components/Migration'
 import { PageHeader, Section } from '@/components/Page'
 import { HOOK_STATUS, KIND_LABEL, SERVICE_STATUS, loadMigration, percent, type Hook, type ServiceStatus } from '@/lib/appwrite'
@@ -106,6 +106,7 @@ function Overview() {
                   <th className="w-[26%] px-3 py-2 font-semibold">Endpoints in Rust</th>
                   <th className="px-3 py-2 text-right font-semibold">SDK</th>
                   <th className="px-3 py-2 text-right font-semibold">E2E test methods</th>
+                  <th className="px-3 py-2 font-semibold">Rust vs PHP</th>
                 </tr>
               </thead>
               <tbody>
@@ -150,6 +151,9 @@ function Overview() {
                         ) : (
                           <span className="text-muted-foreground">–</span>
                         )}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <ServiceSpeed bench={m.benchmarks.find((b) => b.service === x.id)} />
                       </td>
                     </tr>
                   ))}

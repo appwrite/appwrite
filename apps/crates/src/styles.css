@@ -67,6 +67,9 @@
   --planned-ink: var(--zinc-600);
   /* Migration cards: the design system's warning callout. */
   --migration: #fefce8;
+  /* The two runtimes in comparisons: PHP's elephant blue-violet, Rust's orange. */
+  --php: #7b85bd;
+  --rust: #d4692a;
   --migration-border: #fef08a;
   --migration-ink: #713f12;
 
@@ -102,6 +105,8 @@
   --planned-soft: var(--zinc-700);
   --planned-ink: var(--zinc-400);
   --migration: rgba(66, 32, 6, 0.3);
+  --php: #9aa3d6;
+  --rust: #ec8a4d;
   --migration-border: #713f12;
   --migration-ink: #fef9c3;
   color-scheme: dark;
@@ -141,6 +146,8 @@
   --color-planned-soft: var(--planned-soft);
   --color-planned-ink: var(--planned-ink);
   --color-migration: var(--migration);
+  --color-php: var(--php);
+  --color-rust: var(--rust);
   --color-migration-border: var(--migration-border);
   --color-migration-ink: var(--migration-ink);
   --font-display: var(--font-display);

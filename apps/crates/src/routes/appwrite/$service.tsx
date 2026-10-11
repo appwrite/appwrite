@@ -3,9 +3,10 @@ import { Search } from 'lucide-react'
 import { useState } from 'react'
 import {
   Bar,
-  BenchEndpoints,
   BenchEnvironment,
   BenchSteps,
+  DuelLegend,
+  EndpointBench,
   HookRow,
   MethodBadge,
   MigrationGate,
@@ -14,6 +15,8 @@ import {
   ServiceBadge,
   SourceLink,
   Stat,
+  StepPicker,
+  useBenchStep,
 } from '@/components/Appwrite'
 import { MigrationCard, MigrationOnly } from '@/components/Migration'
 import { PageHeader, Section } from '@/components/Page'
@@ -56,6 +59,7 @@ function ServicePage() {
       (!term || [e.method, e.path, e.desc, ...e.sdk.map((m) => m.method), ...e.scopes, ...e.aliases.map((a) => a.path)].join(' ').toLowerCase().includes(term)),
   )
   const crates = [...new Set(d.endpoints.map((e) => e.rust_file?.split('/src/')[0]).filter(Boolean))] as string[]
+  const bench = useBenchStep(d.benchmarks[0])
   const runs = [...d.results].sort((a, b) => (a.runtime === b.runtime ? b.date.localeCompare(a.date) : a.runtime === 'rust' ? -1 : 1))
   return (
     <div className="mx-auto grid max-w-[1100px] grid-cols-[minmax(0,1fr)] gap-10">
@@ -112,7 +116,7 @@ function ServicePage() {
           </div>
         </MigrationCard>
 
-        <Section id="endpoints" title="Endpoints" description="Every route the PHP code declares, read from its action classes and controllers, and whether the Rust API serves it.">
+        <Section id="endpoints" title="Endpoints" description="Every route the PHP code declares, whether the Rust API serves it, and how the two compare under the same load.">
           <div className="flex flex-wrap items-center gap-2">
             <label className="flex h-8 min-w-0 flex-[1_1_260px] items-center gap-2 rounded-md border border-border bg-card px-3 text-muted-foreground focus-within:border-ring">
               <Search className="size-3.5 flex-none" />
@@ -134,21 +138,25 @@ function ServicePage() {
               </button>
             ))}
           </div>
+          {bench.step ? (
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <StepPicker rows={bench.rows} at={bench.at} setAt={bench.setAt} />
+              <DuelLegend />
+            </div>
+          ) : null}
           <div className="min-w-0 overflow-x-auto rounded-lg border border-border bg-card">
             <table className="w-full border-collapse text-[13px]">
               <thead>
                 <tr className="border-b border-border text-left text-[11px] tracking-wider text-muted-foreground uppercase">
-                  <th className="px-3 py-2 font-semibold">Route</th>
-                  <th className="px-3 py-2 font-semibold">SDK</th>
-                  <th className="px-3 py-2 font-semibold">Scope</th>
-                  <th className="px-3 py-2 font-semibold">Groups</th>
-                  <th className="px-3 py-2 font-semibold">Served by</th>
+                  <th className="px-3 py-2 font-semibold">Endpoint</th>
+                  <th className="px-3 py-2 font-semibold">Status</th>
+                  <th className="px-3 py-2 font-semibold">{bench.step ? 'PHP vs Rust' : 'Benchmark'}</th>
                 </tr>
               </thead>
               <tbody>
                 {endpoints.map((e) => (
                   <tr key={`${e.method} ${e.path}`} className="border-b border-border align-top last:border-b-0">
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2.5">
                       <div className="flex items-start gap-2">
                         <MethodBadge method={e.method} />
                         <div className="grid min-w-0 gap-0.5">
@@ -157,32 +165,29 @@ function ServicePage() {
                             target="_blank"
                             rel="noopener"
                             className="font-mono text-[12.5px] [overflow-wrap:anywhere] hover:underline"
-                            title={e.desc}
+                            title="The PHP action"
                           >
                             {e.path}
                           </a>
+                          {e.desc ? <span className="text-[12px]">{e.desc}</span> : null}
+                          <span className="flex flex-wrap gap-x-3 gap-y-0.5 font-mono text-[11px] text-muted-foreground">
+                            {e.sdk.map((m) => (
+                              <span key={m.method} title={m.visibility === 'visible' ? 'SDK method' : `SDK visibility: ${m.visibility}`}>
+                                {m.method}
+                                {m.deprecated ? ' (deprecated)' : ''}
+                              </span>
+                            ))}
+                            {e.scopes.length ? <span title="Scope">{e.scopes.join(', ')}</span> : null}
+                          </span>
                           {e.aliases.map((a) => (
                             <span key={a.path} className="font-mono text-[11px] [overflow-wrap:anywhere] text-muted-foreground" title="Alias">
                               alias {a.path}
                             </span>
                           ))}
-                          {e.desc ? <span className="text-[11.5px] text-muted-foreground">{e.desc}</span> : null}
                         </div>
                       </div>
                     </td>
-                    <td className="px-3 py-2 font-mono text-[12px]">
-                      {e.sdk.length
-                        ? e.sdk.map((m) => (
-                            <div key={m.method} className={m.visibility === 'hidden' ? 'text-muted-foreground' : ''} title={m.visibility === 'visible' ? undefined : `SDK visibility: ${m.visibility}`}>
-                              {m.method}
-                              {m.deprecated ? <span className="pl-1 font-sans text-[11px] text-muted-foreground">deprecated</span> : null}
-                            </div>
-                          ))
-                        : <span className="text-muted-foreground">–</span>}
-                    </td>
-                    <td className="px-3 py-2 font-mono text-[11.5px] text-muted-foreground">{e.scopes.join(', ') || '–'}</td>
-                    <td className="px-3 py-2 font-mono text-[11.5px] text-muted-foreground">{e.groups.join(', ') || '–'}</td>
-                    <td className="px-3 py-2">
+                    <td className="px-3 py-2.5">
                       <RouteStatusLabel status={e.rust} />
                       {e.rust_file ? (
                         <div>
@@ -191,6 +196,13 @@ function ServicePage() {
                           </SourceLink>
                         </div>
                       ) : null}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      {bench.step ? (
+                        <EndpointBench step={bench.step} route={`${e.method} ${e.path}`} />
+                      ) : (
+                        <span className="text-[12px] text-muted-foreground">{e.rust === 'served' ? 'Not benchmarked yet' : '–'}</span>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -252,14 +264,10 @@ function ServicePage() {
         </Section>
 
         {d.benchmarks.length ? (
-          <Section id="benchmarks" title="Benchmarks" description="The same k6 workload against PHP and Rust on one stack, at fixed rates and closed loop.">
+          <Section id="benchmarks" title="Benchmarks" description="The same k6 workload against PHP and Rust on one stack: at fixed request rates (equal load: compare latency, CPU and memory) and closed loop (as fast as each can: compare throughput). Per endpoint results are in the Endpoints table.">
             {d.benchmarks.map((b) => (
               <div key={b.file} className="grid min-w-0 gap-4">
                 <BenchSteps bench={b} />
-                <div className="grid gap-1">
-                  <h3 className="text-[14px]">Per endpoint</h3>
-                  <BenchEndpoints bench={b} />
-                </div>
                 <BenchEnvironment bench={b} />
               </div>
             ))}

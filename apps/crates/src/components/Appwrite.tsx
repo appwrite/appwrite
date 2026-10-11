@@ -8,9 +8,9 @@ import {
   ROUTE_STATUS,
   SERVICE_STATUS,
   load,
-  ms,
   pairs,
   type Benchmark,
+  type BenchStep,
   type Hook,
   type HookStatus,
   type RouteStatus,
@@ -185,124 +185,173 @@ export function RunCard({ run }: { run: Run }) {
   )
 }
 
-const th = 'px-3 py-2 font-semibold'
-const td = 'px-3 py-2 tabular-nums'
 
-/** `x` in favour of Rust: how many times PHP's value Rust's is, or the inverse for throughput. */
-function Ratio({ php, rust, higher = false }: { php?: number; rust?: number; higher?: boolean }) {
-  if (!php || !rust) return <span className="text-muted-foreground">–</span>
-  const x = higher ? rust / php : php / rust
-  const good = x >= 1
-  return <span className={good ? 'text-ok-ink' : 'text-red-700 dark:text-red-300'}>{x >= 10 ? Math.round(x) : x.toFixed(1)}×</span>
+/** How many times better Rust is than PHP on a value (lower is better unless `higher`). */
+function advantage(php: number, rust: number, higher: boolean) {
+  return higher ? rust / php : php / rust
 }
 
-/** PHP and Rust side by side for every step of the load ladder. */
-export function BenchSteps({ bench }: { bench: Benchmark }) {
-  const rows = pairs(bench)
+/** `3.7× faster` / `1.2× slower`, coloured by direction. */
+export function Verdict({ x, word = ['faster', 'slower'] }: { x: number; word?: [string, string] }) {
+  const good = x >= 1
+  const v = good ? x : 1 / x
+  const n = v >= 10 ? Math.round(v) : v.toFixed(1)
   return (
-    <div className="min-w-0 overflow-x-auto rounded-lg border border-border bg-card">
-      <table className="w-full border-collapse text-[12.5px]">
-        <thead>
-          <tr className="border-b border-border text-left text-[11px] tracking-wider text-muted-foreground uppercase">
-            <th className={th}>Load</th>
-            <th className={`${th} text-right`} title="Requests per second, PHP / Rust">Req/s</th>
-            <th className={`${th} text-right`} title="Median latency in ms, PHP / Rust">p50 ms</th>
-            <th className={`${th} text-right`} title="99th percentile latency in ms, PHP / Rust">p99 ms</th>
-            <th className={`${th} text-right`} title="API container CPU time per request, PHP / Rust">CPU ms/req</th>
-            <th className={`${th} text-right`} title="Peak memory of the API container, PHP / Rust">Peak MiB</th>
-            <th className={`${th} text-right`} title="Failed requests, PHP / Rust">Failures</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={`${r.mode}${r.level}`} className="border-b border-border last:border-b-0">
-              <td className="px-3 py-2 whitespace-nowrap">{load(r.mode, r.level)}</td>
-              <td className={`${td} text-right whitespace-nowrap`}>
-                {Math.round(r.php?.rps ?? 0)} / {Math.round(r.rust?.rps ?? 0)} <span className="pl-1 text-[11.5px]"><Ratio php={r.php?.rps} rust={r.rust?.rps} higher /></span>
-              </td>
-              <td className={`${td} text-right whitespace-nowrap`}>
-                {ms(r.php?.latency.p50)} / {ms(r.rust?.latency.p50)} <span className="pl-1 text-[11.5px]"><Ratio php={r.php?.latency.p50} rust={r.rust?.latency.p50} /></span>
-              </td>
-              <td className={`${td} text-right whitespace-nowrap`}>
-                {ms(r.php?.latency.p99)} / {ms(r.rust?.latency.p99)} <span className="pl-1 text-[11.5px]"><Ratio php={r.php?.latency.p99} rust={r.rust?.latency.p99} /></span>
-              </td>
-              <td className={`${td} text-right whitespace-nowrap`}>
-                {ms(r.php?.cpu_ms_per_request)} / {ms(r.rust?.cpu_ms_per_request)}{' '}
-                <span className="pl-1 text-[11.5px]"><Ratio php={r.php?.cpu_ms_per_request} rust={r.rust?.cpu_ms_per_request} /></span>
-              </td>
-              <td className={`${td} text-right whitespace-nowrap`}>
-                {Math.round(r.php?.memory_mib.peak ?? 0)} / {Math.round(r.rust?.memory_mib.peak ?? 0)}
-              </td>
-              <td className={`${td} text-right whitespace-nowrap ${(r.php?.failures ?? 0) + (r.rust?.failures ?? 0) ? 'text-red-700 dark:text-red-300' : 'text-muted-foreground'}`}>
-                {r.php?.failures ?? 0} / {r.rust?.failures ?? 0}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <span className={`inline-flex items-center rounded-full px-1.5 py-px text-[11px] font-semibold whitespace-nowrap tabular-nums ${good ? 'bg-ok-soft text-ok-ink' : 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300'}`}>
+      {n}× {good ? word[0] : word[1]}
+    </span>
+  )
+}
+
+/** The legend for every PHP vs Rust comparison on the page. */
+export function DuelLegend() {
+  return (
+    <span className="inline-flex items-center gap-3 text-[11.5px] text-muted-foreground">
+      <span className="inline-flex items-center gap-1.5">
+        <span className="inline-block h-2 w-3 rounded-sm bg-php" /> PHP
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <span className="inline-block h-2 w-3 rounded-sm bg-rust" /> Rust
+      </span>
+    </span>
+  )
+}
+
+/**
+ * One measure of PHP against Rust: two bars on one scale with their values,
+ * and how many times better Rust is. `higher`: more is better (throughput).
+ */
+export function Duel({
+  label,
+  php,
+  rust,
+  format,
+  higher = false,
+  compact = false,
+}: {
+  label?: string
+  php?: number | null
+  rust?: number | null
+  format: (v: number) => string
+  higher?: boolean
+  compact?: boolean
+}) {
+  if (php == null || rust == null || !php || !rust) return <span className="text-[12px] text-muted-foreground">–</span>
+  const max = Math.max(php, rust)
+  const row = (who: 'PHP' | 'Rust', v: number, color: string) => (
+    <div className="grid grid-cols-[2.6rem_minmax(0,1fr)_auto] items-center gap-2">
+      <span className="text-[11px] text-muted-foreground">{who}</span>
+      <div className="h-2 overflow-hidden rounded-full bg-muted">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${Math.max(2, (v / max) * 100)}%` }} />
+      </div>
+      <span className="min-w-[4.2rem] text-right font-mono text-[11.5px] tabular-nums">{format(v)}</span>
+    </div>
+  )
+  return (
+    <div className={`grid min-w-0 ${compact ? 'gap-0.5' : 'gap-1'}`}>
+      {label || !compact ? (
+        <div className="flex items-center justify-between gap-2">
+          {label ? <span className="text-[11px] tracking-wide text-muted-foreground uppercase">{label}</span> : <span />}
+          <Verdict x={advantage(php, rust, higher)} word={higher ? ['more', 'less'] : ['faster', 'slower']} />
+        </div>
+      ) : null}
+      {row('PHP', php, 'bg-php')}
+      {row('Rust', rust, 'bg-rust')}
     </div>
   )
 }
 
-/** Per endpoint latency and throughput at one step, PHP against Rust. */
-export function BenchEndpoints({ bench }: { bench: Benchmark }) {
+const num = (v: number) => (v >= 100 ? Math.round(v).toLocaleString('en') : v.toFixed(v >= 10 ? 1 : 2))
+const millis = (v: number) => `${num(v)} ms`
+const reqs = (v: number) => `${num(v)}/s`
+const mib = (v: number) => `${Math.round(v)} MiB`
+
+/** PHP against Rust at every step of the load ladder, as paired bars. */
+export function BenchSteps({ bench }: { bench: Benchmark }) {
   const rows = pairs(bench).filter((r) => r.php && r.rust)
-  const [at, setAt] = useState(Math.max(0, rows.findIndex((r) => r.mode === 'vus')))
-  const step = rows[at]
-  if (!step?.php || !step.rust) return null
-  const names = Object.keys(step.rust.endpoints)
   return (
-    <div className="grid min-w-0 gap-2">
-      <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
-        At
-        <select value={at} onChange={(e) => setAt(Number(e.target.value))} className="h-8 rounded-md border border-border bg-card px-2 text-[12.5px] text-foreground">
-          {rows.map((r, i) => (
-            <option key={i} value={i}>
-              {load(r.mode, r.level)}
-            </option>
-          ))}
-        </select>
-      </label>
-      <div className="min-w-0 overflow-x-auto rounded-lg border border-border bg-card">
-        <table className="w-full border-collapse text-[12.5px]">
-          <thead>
-            <tr className="border-b border-border text-left text-[11px] tracking-wider text-muted-foreground uppercase">
-              <th className={th}>Call</th>
-              <th className={`${th} text-right`}>Req/s</th>
-              <th className={`${th} text-right`}>p50 ms</th>
-              <th className={`${th} text-right`}>p95 ms</th>
-              <th className={`${th} text-right`}>p99 ms</th>
-            </tr>
-          </thead>
-          <tbody>
-            {names.map((n) => {
-              const p = step.php?.endpoints[n]
-              const r = step.rust?.endpoints[n]
-              return (
-                <tr key={n} className="border-b border-border last:border-b-0">
-                  <td className="px-3 py-2">
-                    <div className="font-mono text-[12px]">{n}</div>
-                    {r?.route ? <div className="font-mono text-[11px] text-muted-foreground">{r.route}</div> : null}
-                  </td>
-                  <td className={`${td} text-right whitespace-nowrap`}>
-                    {p?.rps ?? '–'} / {r?.rps ?? '–'}
-                  </td>
-                  <td className={`${td} text-right whitespace-nowrap`}>
-                    {ms(p?.p50)} / {ms(r?.p50)} <span className="pl-1 text-[11.5px]"><Ratio php={p?.p50} rust={r?.p50} /></span>
-                  </td>
-                  <td className={`${td} text-right whitespace-nowrap`}>
-                    {ms(p?.p95)} / {ms(r?.p95)}
-                  </td>
-                  <td className={`${td} text-right whitespace-nowrap`}>
-                    {ms(p?.p99)} / {ms(r?.p99)} <span className="pl-1 text-[11.5px]"><Ratio php={p?.p99} rust={r?.p99} /></span>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-      <p className="m-0 text-[11.5px] text-muted-foreground">Each cell reads PHP / Rust; the ratio is how many times faster Rust is.</p>
+    <div className="grid min-w-0 gap-3">
+      <DuelLegend />
+      {rows.map((r) => {
+        const failures = (r.php?.failures ?? 0) + (r.rust?.failures ?? 0)
+        return (
+          <div key={`${r.mode}${r.level}`} className="grid min-w-0 gap-3 rounded-lg border border-border bg-card p-3">
+            <div className="flex flex-wrap items-baseline justify-between gap-2">
+              <span className="text-[13.5px] font-medium">{load(r.mode, r.level)}</span>
+              <span className={`text-[11.5px] ${failures ? 'text-red-700 dark:text-red-300' : 'text-muted-foreground'}`}>
+                {failures ? `${r.php?.failures ?? 0} / ${r.rust?.failures ?? 0} failed requests` : 'No failed requests'}
+              </span>
+            </div>
+            <div className="grid grid-cols-[repeat(auto-fit,minmax(210px,1fr))] gap-x-6 gap-y-4">
+              <Duel label="Throughput" php={r.php?.rps} rust={r.rust?.rps} format={reqs} higher />
+              <Duel label="Median latency" php={r.php?.latency.p50} rust={r.rust?.latency.p50} format={millis} />
+              <Duel label="p99 latency" php={r.php?.latency.p99} rust={r.rust?.latency.p99} format={millis} />
+              <Duel label="CPU per request" php={r.php?.cpu_ms_per_request} rust={r.rust?.cpu_ms_per_request} format={millis} />
+              <Duel label="Peak memory" php={r.php?.memory_mib.peak} rust={r.rust?.memory_mib.peak} format={mib} />
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** The benchmark steps a page can show per endpoint, and the chosen one. */
+export function useBenchStep(bench: Benchmark | undefined) {
+  const rows = bench ? pairs(bench).filter((r) => r.php && r.rust) : []
+  const [at, setAt] = useState(Math.max(0, rows.findIndex((r) => r.mode === 'vus')))
+  return { rows, step: rows[at], at, setAt }
+}
+
+/** Picks the load step the endpoint benchmarks show. */
+export function StepPicker({ rows, at, setAt }: { rows: ReturnType<typeof pairs>; at: number; setAt: (i: number) => void }) {
+  return (
+    <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
+      Benchmark at
+      <select value={at} onChange={(e) => setAt(Number(e.target.value))} className="h-8 rounded-md border border-border bg-card px-2 text-[12.5px] text-foreground">
+        {rows.map((r, i) => (
+          <option key={i} value={i}>
+            {load(r.mode, r.level)}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+/** One endpoint's benchmark at a step: median latency and throughput, PHP against Rust. */
+export function EndpointBench({ step, route }: { step: ReturnType<typeof pairs>[number] | undefined; route: string }) {
+  const find = (s: BenchStep | undefined) => (s ? Object.values(s.endpoints).find((e) => e.route === route) : undefined)
+  const p = find(step?.php)
+  const r = find(step?.rust)
+  if (!p || !r) return <span className="text-[12px] text-muted-foreground">Not benchmarked</span>
+  return (
+    <div className="grid min-w-[220px] gap-2">
+      <Duel label="Median" php={p.p50} rust={r.p50} format={millis} compact />
+      <Duel label="p99" php={p.p99} rust={r.p99} format={millis} compact />
+    </div>
+  )
+}
+
+/** A service's benchmark at a glance: throughput under the heaviest closed-loop
+ * load, and CPU per request at the highest fixed rate. */
+export function ServiceSpeed({ bench }: { bench: Benchmark | undefined }) {
+  if (!bench) return <span className="text-[12px] text-muted-foreground">–</span>
+  const rows = pairs(bench).filter((r) => r.php && r.rust)
+  const loop = rows.filter((r) => r.mode === 'vus').at(-1)
+  const rate = rows.filter((r) => r.mode === 'rate').at(-1)
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {loop?.php?.rps && loop.rust?.rps ? (
+        <span title={`Throughput at ${load(loop.mode, loop.level)}: ${Math.round(loop.php.rps)} vs ${Math.round(loop.rust.rps)} req/s`}>
+          <Verdict x={loop.rust.rps / loop.php.rps} word={['throughput', 'throughput']} />
+        </span>
+      ) : null}
+      {rate?.php?.cpu_ms_per_request && rate.rust?.cpu_ms_per_request ? (
+        <span title={`CPU per request at ${load(rate.mode, rate.level)}: ${rate.php.cpu_ms_per_request} vs ${rate.rust.cpu_ms_per_request} ms`}>
+          <Verdict x={rate.php.cpu_ms_per_request / rate.rust.cpu_ms_per_request} word={['less CPU', 'more CPU']} />
+        </span>
+      ) : null}
     </div>
   )
 }
