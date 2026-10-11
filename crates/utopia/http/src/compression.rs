@@ -1,12 +1,14 @@
 //! Response compression: choosing an algorithm from the client's
 //! `Accept-Encoding` header, and compressing bodies with it.
 //!
+//! The algorithms and the negotiation are `utopia-compression`'s; this
+//! module adds what `Response::send()` decides on top: the levels, and which
+//! content types are compressed.
+//!
 //! PHP: `Utopia\Compression\Compression::fromAcceptEncoding` and the
-//! algorithms `Utopia\Http\Response::send()` uses. `utopia-php/compression`
-//! has no crate of its own yet; the part of it the HTTP layer needs lives
-//! here.
+//! algorithms `Utopia\Http\Response::send()` uses.
 
-use std::io::{Read, Write};
+use utopia_compression::{Algorithm as _, Brotli, Compression as Codec, Deflate, Gzip, Lz4, Snappy, Xz, Zstd};
 
 /// Response compression settings of an application.
 ///
@@ -31,7 +33,7 @@ impl Default for Compression {
     }
 }
 
-/// A compression algorithm.
+/// A compression algorithm a response can be encoded with.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Algorithm {
     /// Zstandard (`zstd`).
@@ -42,6 +44,12 @@ pub enum Algorithm {
     Gzip,
     /// Raw deflate (`deflate`).
     Deflate,
+    /// LZ4 (`lz4`), when the supported list offers it.
+    Lz4,
+    /// Snappy (`snappy`), when the supported list offers it.
+    Snappy,
+    /// XZ (`xz`), when the supported list offers it.
+    Xz,
 }
 
 impl Algorithm {
@@ -50,12 +58,39 @@ impl Algorithm {
     ///
     /// PHP: `Compression::fromName($name)`.
     pub fn from_name(name: &str) -> Option<Self> {
-        match name.to_ascii_lowercase().as_str() {
-            "brotli" | "br" => Some(Algorithm::Brotli),
-            "deflate" => Some(Algorithm::Deflate),
-            "gzip" => Some(Algorithm::Gzip),
-            "zstd" => Some(Algorithm::Zstd),
-            _ => None,
+        Codec::from_name(name).map(Self::from_codec)
+    }
+
+    fn from_codec(codec: Codec) -> Self {
+        match codec {
+            Codec::Brotli(_) => Algorithm::Brotli,
+            Codec::Deflate(_) => Algorithm::Deflate,
+            Codec::Gzip(_) => Algorithm::Gzip,
+            Codec::Lz4(_) => Algorithm::Lz4,
+            Codec::Snappy(_) => Algorithm::Snappy,
+            Codec::Xz(_) => Algorithm::Xz,
+            Codec::Zstd(_) => Algorithm::Zstd,
+        }
+    }
+
+    /// The algorithm at the level responses use: zstd level 3, Brotli
+    /// quality 4, the others at their defaults.
+    ///
+    /// PHP: the levels `Response::send()` sets.
+    fn codec(self) -> Codec {
+        match self {
+            Algorithm::Zstd => Codec::Zstd(Zstd::with_level(crate::COMPRESSION_ZSTD_LEVEL_DEFAULT.into())),
+            Algorithm::Brotli => {
+                let mut brotli = Brotli::new();
+                // The level is within 0..=11.
+                let _ = brotli.set_level(crate::COMPRESSION_BROTLI_LEVEL_DEFAULT.into());
+                Codec::Brotli(brotli)
+            }
+            Algorithm::Gzip => Codec::Gzip(Gzip::new()),
+            Algorithm::Deflate => Codec::Deflate(Deflate::new()),
+            Algorithm::Lz4 => Codec::Lz4(Lz4::new()),
+            Algorithm::Snappy => Codec::Snappy(Snappy::new()),
+            Algorithm::Xz => Codec::Xz(Xz::new()),
         }
     }
 
@@ -68,6 +103,9 @@ impl Algorithm {
             Algorithm::Brotli => "br",
             Algorithm::Gzip => "gzip",
             Algorithm::Deflate => "deflate",
+            Algorithm::Lz4 => "lz4",
+            Algorithm::Snappy => "snappy",
+            Algorithm::Xz => "xz",
         }
     }
 
@@ -75,51 +113,15 @@ impl Algorithm {
     /// quality 4, gzip and deflate level 6. Returns an empty buffer if
     /// compression fails.
     ///
-    /// PHP: the levels `Response::send()` uses.
+    /// PHP: the levels `Response::send()` uses; a failed compress returns
+    /// an empty string there too.
     pub fn compress(self, data: &[u8]) -> Vec<u8> {
-        match self {
-            Algorithm::Zstd => zstd::bulk::compress(data, crate::COMPRESSION_ZSTD_LEVEL_DEFAULT).unwrap_or_default(),
-            Algorithm::Brotli => {
-                let mut out = Vec::with_capacity(data.len() / 2 + 16);
-                {
-                    let mut writer = brotli::CompressorWriter::new(
-                        &mut out,
-                        4096,
-                        crate::COMPRESSION_BROTLI_LEVEL_DEFAULT as u32,
-                        22,
-                    );
-                    let _ = writer.write_all(data);
-                }
-                out
-            }
-            Algorithm::Gzip => {
-                let mut enc = flate2::GzBuilder::new()
-                    .operating_system(3)
-                    .write(Vec::with_capacity(data.len() / 2 + 32), flate2::Compression::new(6));
-                let _ = enc.write_all(data);
-                enc.finish().unwrap_or_default()
-            }
-            Algorithm::Deflate => {
-                let mut enc = flate2::write::DeflateEncoder::new(
-                    Vec::with_capacity(data.len() / 2 + 16),
-                    flate2::Compression::new(6),
-                );
-                let _ = enc.write_all(data);
-                enc.finish().unwrap_or_default()
-            }
-        }
+        self.codec().compress(data).unwrap_or_default()
     }
 
     /// Decompresses `data`; `None` when it is not valid.
     pub fn decompress(self, data: &[u8]) -> Option<Vec<u8>> {
-        let mut out = Vec::new();
-        match self {
-            Algorithm::Zstd => return zstd::stream::decode_all(data).ok(),
-            Algorithm::Brotli => brotli::Decompressor::new(data, 4096).read_to_end(&mut out).ok()?,
-            Algorithm::Gzip => flate2::read::GzDecoder::new(data).read_to_end(&mut out).ok()?,
-            Algorithm::Deflate => flate2::read::DeflateDecoder::new(data).read_to_end(&mut out).ok()?,
-        };
-        Some(out)
+        self.codec().decompress(data).ok()
     }
 }
 
@@ -132,36 +134,7 @@ impl Algorithm {
 ///
 /// PHP: `Compression::fromAcceptEncoding($acceptEncoding, $supported)`.
 pub fn from_accept_encoding(accept: &str, supported: &[String]) -> Option<Algorithm> {
-    if accept.is_empty() || accept == "0" {
-        return None;
-    }
-    let is_supported = |name: &str| {
-        if supported.is_empty() {
-            matches!(name, "zstd" | "brotli" | "gzip" | "deflate" | "none" | "identity")
-        } else {
-            supported.iter().any(|s| s == name)
-        }
-    };
-    let mut best: Option<(f64, String)> = None;
-    for encoding in accept.split(',') {
-        let encoding = php_std::string::trim(encoding.as_bytes(), b" \t\n\r\0\x0B").to_ascii_lowercase();
-        let encoding = String::from_utf8_lossy(&encoding).into_owned();
-        let mut parts = encoding.split(';');
-        let name = parts.next().unwrap_or("");
-        let name = if name == "br" { "brotli" } else { name };
-        let quality = match parts.next() {
-            Some(q) => php_std::format::str_to_float(q.replace("q=", "").as_bytes()),
-            None => 1.0,
-        };
-        if !is_supported(name) {
-            continue;
-        }
-        // usort is stable: the first of equal qualities wins.
-        if best.as_ref().is_none_or(|(q, _)| quality > *q) {
-            best = Some((quality, name.to_owned()));
-        }
-    }
-    best.and_then(|(_, name)| Algorithm::from_name(&name))
+    Codec::from_accept_encoding(accept, supported).map(Algorithm::from_codec)
 }
 
 /// Whether responses of a content type are compressed: text, scripts, JSON,

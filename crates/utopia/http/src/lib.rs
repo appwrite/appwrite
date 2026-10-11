@@ -44,8 +44,9 @@
 //! `deviations` in `tests/compat/http/spec.json`; PHP behaviour kept on
 //! purpose is under `quirks` there.
 //!
-//! `utopia-php/compression` and `utopia-php/telemetry` have no crates yet:
-//! [`compression`] and [`telemetry`] hold the parts of them this crate uses.
+//! Response compression is `utopia-compression`'s ([`compression`] adds the
+//! levels and content types `Response::send()` uses). `utopia-php/telemetry`
+//! has no crate yet: [`telemetry`] holds the part of it this crate uses.
 //! `Utopia\Servers\Hook` (from `utopia-php/servers`) is [`Hook`].
 
 #![warn(missing_docs)]

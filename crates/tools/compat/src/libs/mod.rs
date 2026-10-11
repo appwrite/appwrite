@@ -15,6 +15,7 @@ pub mod abuse;
 pub mod auth;
 pub mod cache;
 pub mod circuit_breaker;
+pub mod compression;
 pub mod config;
 pub mod database;
 pub mod di;
@@ -42,6 +43,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("auth", auth::OPS),
     ("cache", cache::OPS),
     ("circuit-breaker", circuit_breaker::OPS),
+    ("compression", compression::OPS),
     ("config", config::OPS),
     ("database", database::OPS),
     ("di", di::OPS),
@@ -71,6 +73,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "auth" => auth::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
         "circuit-breaker" => circuit_breaker::call(op, args, session).await,
+        "compression" => compression::call(op, args, session).await,
         "config" => config::call(op, args, session).await,
         "database" => database::call(op, args, session).await,
         "di" => di::call(op, args, session).await,
@@ -102,6 +105,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "auth" => auth::BENCHES,
         "cache" => cache::BENCHES,
         "circuit-breaker" => circuit_breaker::BENCHES,
+        "compression" => compression::BENCHES,
         "config" => config::BENCHES,
         "di" => di::BENCHES,
         "domains" => domains::BENCHES,
@@ -131,6 +135,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "auth" => auth::bench(name, session).await,
         "cache" => cache::bench(name, session).await,
         "circuit-breaker" => circuit_breaker::bench(name, session).await,
+        "compression" => compression::bench(name, session).await,
         "config" => config::bench(name, session).await,
         "di" => di::bench(name, session).await,
         "domains" => domains::bench(name, session).await,
