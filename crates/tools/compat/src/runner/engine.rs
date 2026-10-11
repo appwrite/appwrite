@@ -528,9 +528,33 @@ impl Engine {
                     for _ in 0..n {
                         batch.push((op_name.clone(), generate::generate(&profile.args, &spec.generators, &mut rng)?));
                     }
-                    let (php, rust) = self.drivers()?;
-                    let rp = php.batch(lib, &batch)?;
-                    let rr = rust.batch(lib, &batch)?;
+                    // COMPAT_FUZZ_DUMP=<file>: every generated input, as JSON lines, to replay a crash.
+                    if let Ok(path) = std::env::var("COMPAT_FUZZ_DUMP") {
+                        use std::io::Write as _;
+                        if let Ok(mut f) = std::fs::OpenOptions::new().create(true).append(true).open(path) {
+                            for (op, args) in &batch {
+                                let _ = writeln!(f, "{}", json!({ "title": title, "op": op, "args": args }));
+                            }
+                        }
+                    }
+                    // A driver that dies on a batch is replayed input by
+                    // input to name the one that kills it.
+                    let rp = self.driver("php")?.batch(lib, &batch);
+                    let rp = match rp {
+                        Ok(rp) => rp,
+                        Err(e) => {
+                            report.faults.push(self.killer("php", &ns_p, &ns_r, lib, &title, done, &batch, &e));
+                            break;
+                        }
+                    };
+                    let rr = self.driver("rust")?.batch(lib, &batch);
+                    let rr = match rr {
+                        Ok(rr) => rr,
+                        Err(e) => {
+                            report.faults.push(self.killer("rust", &ns_p, &ns_r, lib, &title, done, &batch, &e));
+                            break;
+                        }
+                    };
                     for (k, ((_, args), (p, r))) in batch.iter().zip(rp.into_iter().zip(rr)).enumerate() {
                         let (p, r) = match (p, r) {
                             (Ok(p), Ok(r)) => (p, r),
@@ -628,6 +652,53 @@ impl Engine {
             break;
         }
         Ok((args, outs.0, outs.1))
+    }
+
+    /// After `side`'s driver died on a fuzz batch: restarts the drivers and
+    /// replays the batch on `side` one input at a time, naming the input that
+    /// kills it again (the drivers are restarted after it as well). A driver
+    /// whose heap an earlier input corrupted dies on a later, harmless one:
+    /// `COMPAT_FUZZ_DUMP` keeps the inputs to replay them one by one.
+    #[allow(clippy::too_many_arguments)]
+    fn killer(
+        &mut self,
+        side: &'static str,
+        ns_p: &str,
+        ns_r: &str,
+        lib: &str,
+        title: &str,
+        done: u64,
+        batch: &[(String, Value)],
+        error: &str,
+    ) -> String {
+        let reset = |e: &mut Self| {
+            e.restart();
+            e.configure("php", ns_p).and_then(|()| e.configure("rust", ns_r))
+        };
+        let mut found = None;
+        if reset(self).is_ok() {
+            for (k, (op, args)) in batch.iter().enumerate() {
+                let died = match self.driver(side) {
+                    Ok(d) => d.call(lib, op, args).is_err(),
+                    Err(_) => true,
+                };
+                if died {
+                    found = Some((k, args.clone()));
+                    break;
+                }
+            }
+        }
+        let _ = reset(self);
+        match found {
+            Some((k, args)) => format!(
+                "{lib} fuzz {title} input {}: the {side} driver dies at it, after the inputs before it in the batch ({error})\n      args: {}",
+                done + k as u64 + 1,
+                short(&args)
+            ),
+            None => format!(
+                "{lib} fuzz {title}: the {side} driver died on a batch ({error}), but no single input of it kills it again"
+            ),
+        }
     }
 
     /// Runs one operation on the chosen runtimes and returns their results.

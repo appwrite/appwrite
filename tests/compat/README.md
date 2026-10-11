@@ -47,7 +47,7 @@ bin/compat bench <lib>... [--write]  # time each library's benchmarks on PHP and
 
 `cargo test -p compat` replays every recorded expectation against Rust without PHP (cases needing Redis or a database only with `COMPAT_SERVICES=1`), so the workspace test run guards compatibility too.
 
-Environment: `COMPAT_PHP` / `COMPAT_RUST` override the driver commands, `COMPAT_TIMEOUT` the seconds to wait for a reply (60), `COMPAT_SEED` the fuzz seed, `COMPAT_IMAGE` / `COMPAT_NETWORK` the PHP driver's image and network. Service endpoints for each runtime and for the runner are in `compat.json` (`${VAR}` reads the environment, then `.env`): `php` on the dev stack's network, `rust` and `runner` through the host's forwarded ports, and optionally `rust-container`, where a Rust driver in a container on the network reaches the service (`compat bench`; see [Benchmarks](#benchmarks)).
+Environment: `COMPAT_PHP` / `COMPAT_RUST` override the driver commands, `COMPAT_TIMEOUT` the seconds to wait for a reply (60), `COMPAT_SEED` the fuzz seed, `COMPAT_FUZZ_DUMP` a file to append every generated fuzz input to (JSON lines, to replay a driver crash input by input), `COMPAT_IMAGE` / `COMPAT_NETWORK` the PHP driver's image and network. Service endpoints for each runtime and for the runner are in `compat.json` (`${VAR}` reads the environment, then `.env`): `php` on the dev stack's network, `rust` and `runner` through the host's forwarded ports, and optionally `rust-container`, where a Rust driver in a container on the network reaches the service (`compat bench`; see [Benchmarks](#benchmarks)).
 
 The dev stack must be running (`docker compose up -d`) for the PHP driver image and the services.
 
