@@ -1,0 +1,119 @@
+{
+  "lib": "detector",
+  "environment": {
+    "date": "2026-10-11T19:33:03Z",
+    "commit": "e2c3406452",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "framework",
+      "description": "Score 15 frameworks on 10 file names and a package.json",
+      "php": {
+        "ns": 13529.319482288829,
+        "min": 13475.505449591281,
+        "max": 13653.837193460491,
+        "samples": 15,
+        "calls": 1468
+      },
+      "rust": {
+        "ns": 1767.0514449315558,
+        "min": 1716.2700187885837,
+        "max": 2251.763263845397,
+        "samples": 15,
+        "calls": 11177,
+        "allocations": 39.00000596462974,
+        "bytes": 5034.000715755569
+      },
+      "speedup": 7.656437802699552,
+      "bound": null
+    },
+    {
+      "name": "runtime",
+      "description": "Find the runtime of 10 file names by extension among 11 runtimes",
+      "php": {
+        "ns": 2931.2882977133463,
+        "min": 2912.45075474518,
+        "max": 3017.7477208190107,
+        "samples": 15,
+        "calls": 6691
+      },
+      "rust": {
+        "ns": 261.18537233014086,
+        "min": 257.77004086157336,
+        "max": 272.6929968161487,
+        "samples": 15,
+        "calls": 77579,
+        "allocations": 18.00000085933908,
+        "bytes": 1401.0001031206898
+      },
+      "speedup": 11.223018622988462,
+      "bound": null
+    },
+    {
+      "name": "rendering",
+      "description": "Tell the rendering of a 6-file Next.js build",
+      "php": {
+        "ns": 1567.9878755116224,
+        "min": 1543.758205266816,
+        "max": 1595.5382655031276,
+        "samples": 15,
+        "calls": 12949
+      },
+      "rust": {
+        "ns": 182.34042649604407,
+        "min": 180.84430991200009,
+        "max": 193.8868326370071,
+        "samples": 15,
+        "calls": 110341,
+        "allocations": 13.000000604187624,
+        "bytes": 560.000072502515
+      },
+      "speedup": 8.59923334415169,
+      "bound": null
+    },
+    {
+      "name": "adapter",
+      "description": "Read the rendering adapter of a TanStack Start vite.config.ts",
+      "php": {
+        "ns": 198.7566153309461,
+        "min": 194.9239711480254,
+        "max": 206.21458399597796,
+        "samples": 15,
+        "calls": 97463
+      },
+      "rust": {
+        "ns": 232.1919436191529,
+        "min": 227.22915083258482,
+        "max": 243.0003800179645,
+        "samples": 15,
+        "calls": 86838,
+        "allocations": 2.0000007677130593,
+        "bytes": 183.00009212556714
+      },
+      "speedup": 0.8560013419628018,
+      "bound": null
+    }
+  ]
+}

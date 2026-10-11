@@ -1,0 +1,141 @@
+{
+  "lib": "balancer",
+  "environment": {
+    "date": "2026-10-11T19:33:03Z",
+    "commit": "e2c3406452",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "round_robin",
+      "description": "Choose the next of 8 options with RoundRobin",
+      "php": {
+        "ns": 91.03701711286843,
+        "min": 90.06720222831902,
+        "max": 167.1488335395485,
+        "samples": 15,
+        "calls": 167301
+      },
+      "rust": {
+        "ns": 45.16685813408517,
+        "min": 44.10558703452821,
+        "max": 55.76593451356596,
+        "samples": 15,
+        "calls": 436976,
+        "allocations": 3.00000015256368,
+        "bytes": 160.0000183076416
+      },
+      "speedup": 2.015571170405748,
+      "bound": null
+    },
+    {
+      "name": "filtered",
+      "description": "Choose the first of 8 options passing two filters (online, cpu < 50)",
+      "php": {
+        "ns": 891.7066089040464,
+        "min": 881.5405567333395,
+        "max": 936.28445017974,
+        "samples": 15,
+        "calls": 21698
+      },
+      "rust": {
+        "ns": 90.55042884649046,
+        "min": 89.4248862244005,
+        "max": 93.3275336950814,
+        "samples": 15,
+        "calls": 228520,
+        "allocations": 2.0000002917323063,
+        "bytes": 64.00003500787678
+      },
+      "speedup": 9.847624359855333,
+      "bound": null
+    },
+    {
+      "name": "random",
+      "description": "Choose a random one of 8 options",
+      "php": {
+        "ns": 89.76382599748597,
+        "min": 88.79254815742345,
+        "max": 95.82344462078304,
+        "samples": 15,
+        "calls": 206043
+      },
+      "rust": {
+        "ns": 45.41044417331513,
+        "min": 29.699052508878477,
+        "max": 46.741741768982706,
+        "samples": 15,
+        "calls": 440954,
+        "allocations": 3.0000001511873498,
+        "bytes": 160.000018142482
+      },
+      "speedup": 1.9767220433891846,
+      "bound": null
+    },
+    {
+      "name": "group",
+      "description": "Run a group of a filtered balancer that chooses nothing and a RoundRobin fallback",
+      "php": {
+        "ns": 1159.7674067185865,
+        "min": 1139.8567360223178,
+        "max": 1213.8328490061606,
+        "samples": 15,
+        "calls": 17206
+      },
+      "rust": {
+        "ns": 146.55379268773675,
+        "min": 144.21769350409667,
+        "max": 151.66533707405284,
+        "samples": 15,
+        "calls": 134377,
+        "allocations": 3.000000496116647,
+        "bytes": 160.00005953399764
+      },
+      "speedup": 7.91359531165264,
+      "bound": null
+    },
+    {
+      "name": "option_state",
+      "description": "Read a state value of an option with three values",
+      "php": {
+        "ns": 33.68885855227343,
+        "min": 33.17197175903049,
+        "max": 34.89683168482676,
+        "samples": 15,
+        "calls": 597005
+      },
+      "rust": {
+        "ns": 5.2024561268699765,
+        "min": 5.077008237790681,
+        "max": 5.2732886531959595,
+        "samples": 15,
+        "calls": 3800048,
+        "allocations": 1.7543638045273814e-8,
+        "bytes": 2.1052365654328577e-6
+      },
+      "speedup": 6.475568026085808,
+      "bound": null
+    }
+  ]
+}
