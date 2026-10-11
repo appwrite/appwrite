@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace Tests\Unit\Platform\Modules\Installer\Validator;
+namespace Utopia\Validator\Tests;
 
-use Appwrite\Platform\Installer\Validator\Port;
 use Iterator;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Utopia\Validator\Port;
 
 final class PortTest extends TestCase
 {
@@ -36,7 +36,7 @@ final class PortTest extends TestCase
     #[DataProvider('validProvider')]
     public function testValid(mixed $value): void
     {
-        $this->assertTrue((new Port())->isValid($value));
+        $this->assertTrue(new Port()->isValid($value));
     }
 
     /**
@@ -65,6 +65,6 @@ final class PortTest extends TestCase
     #[DataProvider('invalidProvider')]
     public function testInvalid(mixed $value): void
     {
-        $this->assertFalse((new Port())->isValid($value));
+        $this->assertFalse(new Port()->isValid($value));
     }
 }

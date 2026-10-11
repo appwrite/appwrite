@@ -13,7 +13,6 @@ use Appwrite\Migration\Infrastructure\Migration as InfrastructureMigration;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server as InstallerServer;
 use Appwrite\Platform\Installer\Validator\AppDomain;
-use Appwrite\Platform\Installer\Validator\Port;
 use Appwrite\Utopia\View;
 use Swoole\Coroutine;
 use Utopia\Auth\Proofs\Password;
@@ -28,6 +27,7 @@ use Utopia\Psr7\Method;
 use Utopia\Psr7\Request\Factory as RequestFactory;
 use Utopia\System\System;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 

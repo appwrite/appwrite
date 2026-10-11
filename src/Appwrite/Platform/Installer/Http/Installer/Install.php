@@ -9,13 +9,13 @@ use Appwrite\Platform\Installer\Runtime\Config;
 use Appwrite\Platform\Installer\Runtime\State;
 use Appwrite\Platform\Installer\Server;
 use Appwrite\Platform\Installer\Validator\AppDomain;
-use Appwrite\Platform\Installer\Validator\Port;
 use Swoole\Http\Response as SwooleResponse;
 use Utopia\Emails\Validator\Email;
 use Utopia\Http\Adapter\Swoole\Request;
 use Utopia\Http\Adapter\Swoole\Response;
 use Utopia\Platform\Action;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 

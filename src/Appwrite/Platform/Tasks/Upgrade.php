@@ -5,9 +5,9 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\Docker\Compose;
 use Appwrite\Docker\Env;
 use Appwrite\Platform\Installer\Validator\AppDomain;
-use Appwrite\Platform\Installer\Validator\Port;
 use Utopia\Console\Console;
 use Utopia\Validator\Boolean;
+use Utopia\Validator\Port;
 use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 

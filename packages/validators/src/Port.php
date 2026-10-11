@@ -1,8 +1,8 @@
 <?php
 
-namespace Appwrite\Platform\Installer\Validator;
+declare(strict_types=1);
 
-use Utopia\Validator\Validator;
+namespace Utopia\Validator;
 
 /**
  * Port
