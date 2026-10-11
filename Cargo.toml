@@ -41,6 +41,7 @@ utopia-emails = { path = "crates/utopia/emails" }
 utopia-locale = { path = "crates/utopia/locale" }
 utopia-user-agent = { path = "crates/utopia/user-agent" }
 utopia-dsn = { path = "crates/utopia/dsn" }
+utopia-abuse = { path = "crates/utopia/abuse" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }

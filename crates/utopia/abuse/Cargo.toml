@@ -1,0 +1,35 @@
+[package]
+name = "utopia-abuse"
+description = "Rate limits: fixed windows, sliding windows and token buckets over Redis, Redis Cluster, pooled connections, document stores and Appwrite tables, and reCAPTCHA verification."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = ["redis", "recaptcha"]
+# Redis (redis-rs connections) and pooled Redis connections.
+redis = ["dep:redis"]
+# Redis Cluster (redis-rs cluster client), directly and in pools.
+redis-cluster = ["redis", "redis/cluster-async"]
+# reCAPTCHA verification over HTTPS (hyper and rustls).
+recaptcha = ["dep:bytes", "dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:rustls"]
+
+[dependencies]
+bytes = { workspace = true, optional = true }
+http-body-util = { workspace = true, optional = true }
+hyper = { workspace = true, features = ["client", "http1"], optional = true }
+hyper-rustls = { workspace = true, optional = true }
+hyper-util = { workspace = true, features = ["client-legacy", "http1", "tokio"], optional = true }
+php-std.workspace = true
+redis = { workspace = true, optional = true }
+rustls = { workspace = true, optional = true }
+thiserror.workspace = true
+tokio = { workspace = true, features = ["sync", "time"] }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "sync"] }
+
+[package.metadata.utopia]
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

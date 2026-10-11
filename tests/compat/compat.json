@@ -66,6 +66,27 @@
       "php": "redis://redis:6379/14",
       "rust": "redis://localhost:9513/9",
       "runner": "redis://localhost:9513"
+    },
+    "abuse-redis": {
+      "php": "redis://redis:6379/3",
+      "rust": "redis://localhost:9513/4",
+      "runner": "redis://localhost:9513"
+    },
+    "abuse-redis-shared": {
+      "php": "redis://redis:6379/5",
+      "rust": "redis://localhost:9513/5",
+      "runner": "redis://localhost:9513/5"
+    },
+    "abuse-redis-fuzz": {
+      "php": "redis://redis:6379/1",
+      "rust": "redis://localhost:9513/2",
+      "runner": "redis://localhost:9513/1"
+    },
+    "abuse-cluster": {
+      "php": "redis-cluster://compat-abuse-cluster-php:17400,compat-abuse-cluster-php:17401,compat-abuse-cluster-php:17402",
+      "rust": "redis-cluster://127.0.0.1:17500,127.0.0.1:17501,127.0.0.1:17502",
+      "rust-container": "redis-cluster://compat-abuse-cluster-php:17400,compat-abuse-cluster-php:17401,compat-abuse-cluster-php:17402",
+      "runner": "redis-cluster://127.0.0.1:17500,127.0.0.1:17501,127.0.0.1:17502"
     }
   }
 }
