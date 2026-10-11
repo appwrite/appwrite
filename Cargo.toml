@@ -49,6 +49,7 @@ utopia-span = { path = "crates/utopia/span" }
 utopia-di = { path = "crates/utopia/di" }
 utopia-registry = { path = "crates/utopia/registry" }
 utopia-abuse = { path = "crates/utopia/abuse" }
+utopia-websocket = { path = "crates/utopia/websocket" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -136,6 +137,9 @@ sha3 = "0.10"
 syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }
+# The WebSocket protocol on tokio (utopia-websocket: the Tokio server adapter
+# and the client); pure Rust, TLS for wss through the workspace's rustls (ring).
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "handshake", "rustls-tls-webpki-roots"] }
 tokio-postgres = { version = "0.7.12", features = ["with-chrono-0_4", "with-serde_json-1"] }
 # The connector trait hyper-rustls implements, to open single connections
 # (utopia-telemetry's OTLP transport keeps its own pool); already in the tree.

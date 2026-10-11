@@ -1,0 +1,532 @@
+{
+  "lib": "websocket",
+  "description": "utopia-php/websocket: a WebSocket server over adapters (Swoole, Workerman; Rust: Tokio, Memory) with hooks and error stages, and a WebSocket client.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/websocket/src"
+    ],
+    "tests": [
+      "packages/websocket/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/websocket"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "server.new": {
+      "doc": "new Server(new Memory()): a server on the in-process adapter (tests/compat/websocket/Memory.php), with a log of what its hooks see",
+      "covers": [
+        "Utopia\\WebSocket\\Server::__construct",
+        "Utopia\\WebSocket\\Adapter::__construct"
+      ]
+    },
+    "server.on": {
+      "doc": "$server->on{Start,WorkerStart,WorkerStop,Open,Message,Close,Request}(recording hook); the message hook answers the E2E fixture's commands (ping, pong, broadcast, disconnect) and echo:<x>",
+      "covers": [
+        "Utopia\\WebSocket\\Server::onStart",
+        "Utopia\\WebSocket\\Server::onWorkerStart",
+        "Utopia\\WebSocket\\Server::onWorkerStop",
+        "Utopia\\WebSocket\\Server::onOpen",
+        "Utopia\\WebSocket\\Server::onMessage",
+        "Utopia\\WebSocket\\Server::onClose",
+        "Utopia\\WebSocket\\Server::onRequest"
+      ]
+    },
+    "server.error": {
+      "doc": "$server->error(callback logging [error, index, class, message, stage])",
+      "covers": [
+        "Utopia\\WebSocket\\Server::error"
+      ]
+    },
+    "server.start": {
+      "doc": "$server->start()",
+      "covers": [
+        "Utopia\\WebSocket\\Server::start"
+      ]
+    },
+    "server.shutdown": {
+      "doc": "$server->shutdown()",
+      "covers": [
+        "Utopia\\WebSocket\\Server::shutdown"
+      ]
+    },
+    "server.send": {
+      "doc": "$server->send(connections, message)",
+      "covers": [
+        "Utopia\\WebSocket\\Server::send"
+      ]
+    },
+    "server.close": {
+      "doc": "$server->close(connection, code)",
+      "covers": [
+        "Utopia\\WebSocket\\Server::close"
+      ]
+    },
+    "server.log": {
+      "doc": "what the hooks and error callbacks recorded, oldest first"
+    },
+    "server.dispatch": {
+      "doc": "a server with every hook and an error callback; connections 1 and 2 open, then each message is delivered from connection 1: {log, state}",
+      "fuzz": [
+        {
+          "name": "messages",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "messages": {
+                "gen": "array",
+                "min": 0,
+                "max": 6,
+                "items": {
+                  "gen": "ref",
+                  "name": "message"
+                }
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "memory.fail": {
+      "doc": "Memory::fail(stage, message): the adapter method behind the stage throws \\Exception(message)"
+    },
+    "memory.config": {
+      "doc": "Memory setPackageMaxLength / setCompressionEnabled / setWorkerNumber for the fields given; returns the settings"
+    },
+    "memory.open": {
+      "doc": "Memory::open(connection, request {method, uri, headers, body}): a client connects"
+    },
+    "memory.message": {
+      "doc": "Memory::message(connection, data): a client sends a message; whether the hook ran"
+    },
+    "memory.disconnect": {
+      "doc": "Memory::disconnect(connection): a client disconnects; whether it was open"
+    },
+    "memory.request": {
+      "doc": "Memory::request(request): a plain HTTP request; {status, body}"
+    },
+    "memory.state": {
+      "doc": "{started, connections, frames: [[connection, data]], closed: [[connection, code]]}"
+    },
+    "client.new": {
+      "doc": "new Client(url, options?): {client, host, port, path, headers, timeout} (private state read by reflection, as ClientTest does)",
+      "covers": [
+        "Utopia\\WebSocket\\Client::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "urls",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "url": {
+                "gen": "ref",
+                "name": "url"
+              }
+            }
+          },
+          "iterations": 1000
+        },
+        {
+          "name": "options",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "url": {
+                "gen": "ref",
+                "name": "url"
+              },
+              "options": {
+                "gen": "object",
+                "fields": {
+                  "headers": {
+                    "gen": "array",
+                    "min": 0,
+                    "max": 3,
+                    "items": {
+                      "gen": "array",
+                      "min": 2,
+                      "max": 2,
+                      "items": {
+                        "gen": "string",
+                        "alphabet": "alnum",
+                        "min": 1,
+                        "max": 8
+                      }
+                    }
+                  },
+                  "timeout": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "float",
+                        "min": 0,
+                        "max": 600,
+                        "integral": true
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          0.001,
+                          0.25,
+                          2.5,
+                          30.125,
+                          59.999999999,
+                          1e-09
+                        ]
+                      },
+                      {
+                        "gen": "int",
+                        "min": 0,
+                        "max": 3600
+                      }
+                    ]
+                  }
+                },
+                "optional": [
+                  "headers",
+                  "timeout"
+                ]
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "client.hooks": {
+      "doc": "$client->on{Message,Close,Error,Open,Ping,Pong}(recording hook) === $client, for each",
+      "covers": [
+        "Utopia\\WebSocket\\Client::onMessage",
+        "Utopia\\WebSocket\\Client::onClose",
+        "Utopia\\WebSocket\\Client::onError",
+        "Utopia\\WebSocket\\Client::onOpen",
+        "Utopia\\WebSocket\\Client::onPing",
+        "Utopia\\WebSocket\\Client::onPong"
+      ]
+    },
+    "client.attach": {
+      "doc": "connects the client to a scripted connection, as ClientTest does: script items {opcode, data} (a frame), {code, message} (recv() fails with that errCode and errMsg) or {} (recv() returns an empty string), then NO_CONNECTION; push() fails with push_fail [code, message]"
+    },
+    "client.script": {
+      "doc": "a client with recording hooks attached to a script, then listen(): {log, connected}",
+      "fuzz": [
+        {
+          "name": "frames",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "script": {
+                "gen": "array",
+                "min": 0,
+                "max": 6,
+                "items": {
+                  "gen": "ref",
+                  "name": "received"
+                }
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "client.connect": {
+      "doc": "$client->connect() (in a coroutine)",
+      "covers": [
+        "Utopia\\WebSocket\\Client::connect"
+      ]
+    },
+    "client.listen": {
+      "doc": "$client->listen()",
+      "covers": [
+        "Utopia\\WebSocket\\Client::listen"
+      ]
+    },
+    "client.receive": {
+      "doc": "$client->receive()",
+      "covers": [
+        "Utopia\\WebSocket\\Client::receive"
+      ]
+    },
+    "client.send": {
+      "doc": "$client->send(data)",
+      "covers": [
+        "Utopia\\WebSocket\\Client::send"
+      ]
+    },
+    "client.close": {
+      "doc": "$client->close()",
+      "covers": [
+        "Utopia\\WebSocket\\Client::close"
+      ]
+    },
+    "client.is_connected": {
+      "doc": "$client->isConnected()",
+      "covers": [
+        "Utopia\\WebSocket\\Client::isConnected"
+      ]
+    },
+    "client.log": {
+      "doc": "what the client's hooks and its scripted connection recorded, oldest first"
+    },
+    "swoole.config": {
+      "doc": "new Swoole('127.0.0.1', 0, send_timeout?) with the setters given, in a separate process (Swoole allows one server per process): the settings start() passes to Swoole (Rust: Tokio::config)",
+      "covers": [
+        "Utopia\\WebSocket\\Adapter\\Swoole::__construct",
+        "Utopia\\WebSocket\\Adapter\\Swoole::setPackageMaxLength",
+        "Utopia\\WebSocket\\Adapter\\Swoole::setCompressionEnabled",
+        "Utopia\\WebSocket\\Adapter\\Swoole::setWorkerNumber"
+      ]
+    },
+    "e2e.run": {
+      "doc": "starts tests/compat/websocket/server.php (the E2E fixture) on the Swoole adapter (Rust: the same handlers on Tokio) and runs steps against it with clients: connect, send, receive, close, connected, http, batch, wait_batches, drain, slow (raw socket with a 1 KiB receive buffer), probe, drop",
+      "covers": [
+        "Utopia\\WebSocket\\Adapter\\Swoole::start",
+        "Utopia\\WebSocket\\Adapter\\Swoole::shutdown",
+        "Utopia\\WebSocket\\Adapter\\Swoole::send",
+        "Utopia\\WebSocket\\Adapter\\Swoole::close",
+        "Utopia\\WebSocket\\Adapter\\Swoole::onStart",
+        "Utopia\\WebSocket\\Adapter\\Swoole::onWorkerStart",
+        "Utopia\\WebSocket\\Adapter\\Swoole::onWorkerStop",
+        "Utopia\\WebSocket\\Adapter\\Swoole::onOpen",
+        "Utopia\\WebSocket\\Adapter\\Swoole::onMessage",
+        "Utopia\\WebSocket\\Adapter\\Swoole::onClose",
+        "Utopia\\WebSocket\\Adapter\\Swoole::onRequest"
+      ]
+    }
+  },
+  "generators": {
+    "url": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "url",
+          "min": 0,
+          "max": 40,
+          "tricky": 0.3
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "ws://",
+                "wss://",
+                "http://",
+                "WSS://",
+                "//",
+                "",
+                "ws:/",
+                "wss:"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "user:pass@",
+                "@",
+                "u@"
+              ]
+            },
+            {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "string",
+                  "alphabet": "hostname",
+                  "min": 0,
+                  "max": 12
+                },
+                {
+                  "gen": "pick",
+                  "from": [
+                    "localhost",
+                    "127.0.0.1",
+                    "[::1]",
+                    "realtime.example.com",
+                    ""
+                  ]
+                }
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ":80",
+                ":443",
+                ":0",
+                ":65535",
+                ":65536",
+                ":-1",
+                ":8080",
+                ":",
+                ":abc"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "/",
+                "/v1/realtime",
+                "/a b",
+                "/x/../y",
+                "?",
+                "?project=p&channels[]=a",
+                "#frag",
+                "/p?q=1#f",
+                "/\u0001"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "message": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "ping",
+            "pong",
+            "broadcast",
+            "disconnect",
+            "echo:",
+            "PING",
+            "ping "
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "echo:"
+            },
+            {
+              "gen": "string",
+              "min": 0,
+              "max": 20,
+              "tricky": 0.3
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 20
+        },
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 16
+        }
+      ]
+    },
+    "received": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "opcode": {
+              "gen": "pick",
+              "from": [
+                0,
+                1,
+                2,
+                8,
+                9,
+                10,
+                1,
+                1
+              ]
+            },
+            "data": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "string",
+                  "min": 0,
+                  "max": 12,
+                  "tricky": 0.3
+                },
+                {
+                  "gen": "bytes",
+                  "min": 0,
+                  "max": 8
+                }
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "code": {
+              "gen": "pick",
+              "from": [
+                5001,
+                110,
+                1,
+                104
+              ]
+            },
+            "message": {
+              "gen": "pick",
+              "from": [
+                "",
+                "Test error",
+                "Connection reset by peer"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {}
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\WebSocket\\Adapter\\Swoole::getNative": "PHP runtime plumbing: returns the Swoole\\WebSocket\\Server object (the fixture uses it to set a Swoole port option); Rust exposes what callers read from it as Tokio::config, Tokio::local_addr and Tokio::connections",
+    "Utopia\\WebSocket\\Adapter\\Workerman::*": "PHP runtime plumbing: the Workerman server adapter (workerman/workerman is not installed in the PHP runtime, and pcntl worker processes have no Rust counterpart). Its behaviour (serving WebSockets, fan-out send, close, onRequest routing, no-op packageMaxLength and compression setters) is converted in the Tokio adapter and exercised by the e2e.run cases"
+  },
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\WebSocket\\Adapter\\Swoole::close",
+      "description": "The close code is ignored: Swoole's close($fd) writes the queued output and ends the TCP connection without a WebSocket close frame, so a client sees the connection end (Swoole's client: one empty receive, then no connection) rather than a close with the code. The Tokio adapter does the same.",
+      "case": "AdapterTest.json#a client closed by the server (no close frame): receive returns the last message, then nothing, then the client closes"
+    },
+    {
+      "symbol": "Utopia\\WebSocket\\Client::listen",
+      "description": "A ping is answered with an empty pong (RFC 6455 asks for the ping's payload), in listen() and receive().",
+      "case": "ClientTest.json#listen answers pings and reports pongs; binary and other opcodes are ignored"
+    },
+    {
+      "symbol": "Utopia\\WebSocket\\Client::listen",
+      "description": "Binary frames are dropped: listen() calls no hook for them and receive() returns null.",
+      "case": "ClientTest.json#receive returns text and null for everything else"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\WebSocket\\Client::__construct",
+      "php": "The `timeout` option is any float of seconds, kept as given (a negative one makes Swoole wait without a limit; NaN is passed through to Swoole).",
+      "reason": "utopia_websocket::client::Options::timeout is a std::time::Duration: non-negative, finite and kept to the nanosecond (77.50365458691728 s is 77.503654587 s). The fuzz generates timeouts Duration represents exactly."
+    }
+  ]
+}
