@@ -31,13 +31,238 @@ pub const OPS: &[&str] = &[
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("match", "Match a document path with three params against a router of 40 API routes"),
+    (
+        "request",
+        "Parse a JSON POST request (9 headers, a cookie, a query string) and read a header, the cookie, the query and the body params",
+    ),
+    ("response", "Build a 201 response with a header, a session cookie and a JSON user of 18 fields"),
+    (
+        "dispatch",
+        "Run a GET request through an app of 40 routes: match, validate three path params, an init hook and a JSON action",
+    ),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("http: no benchmark `{name}`")))
+/// Benchmark inputs, the same as in Adapter.php.
+mod fixture {
+    use serde_json::{Value, json};
+
+    /// An API's routes (method and path).
+    pub const ROUTES: [(&str, &str); 40] = [
+        ("GET", "/v1/account"),
+        ("PATCH", "/v1/account/name"),
+        ("POST", "/v1/account/sessions/email"),
+        ("GET", "/v1/account/sessions"),
+        ("DELETE", "/v1/account/sessions/:sessionId"),
+        ("POST", "/v1/account/jwts"),
+        ("GET", "/v1/users"),
+        ("POST", "/v1/users"),
+        ("GET", "/v1/users/:userId"),
+        ("DELETE", "/v1/users/:userId"),
+        ("GET", "/v1/users/:userId/sessions"),
+        ("GET", "/v1/teams"),
+        ("POST", "/v1/teams"),
+        ("GET", "/v1/teams/:teamId"),
+        ("GET", "/v1/teams/:teamId/memberships"),
+        ("PATCH", "/v1/teams/:teamId/memberships/:membershipId/status"),
+        ("GET", "/v1/databases"),
+        ("POST", "/v1/databases"),
+        ("GET", "/v1/databases/:databaseId"),
+        ("GET", "/v1/databases/:databaseId/collections"),
+        ("POST", "/v1/databases/:databaseId/collections"),
+        ("GET", "/v1/databases/:databaseId/collections/:collectionId"),
+        ("GET", "/v1/databases/:databaseId/collections/:collectionId/attributes"),
+        ("POST", "/v1/databases/:databaseId/collections/:collectionId/attributes/string"),
+        ("GET", "/v1/databases/:databaseId/collections/:collectionId/documents"),
+        ("POST", "/v1/databases/:databaseId/collections/:collectionId/documents"),
+        ("GET", DOCUMENT_ROUTE),
+        ("PATCH", DOCUMENT_ROUTE),
+        ("DELETE", DOCUMENT_ROUTE),
+        ("GET", "/v1/storage/buckets"),
+        ("GET", "/v1/storage/buckets/:bucketId/files"),
+        ("POST", "/v1/storage/buckets/:bucketId/files"),
+        ("GET", "/v1/storage/buckets/:bucketId/files/:fileId"),
+        ("GET", "/v1/storage/buckets/:bucketId/files/:fileId/view"),
+        ("GET", "/v1/storage/buckets/:bucketId/files/:fileId/preview"),
+        ("GET", "/v1/functions"),
+        ("POST", "/v1/functions/:functionId/executions"),
+        ("GET", "/v1/functions/:functionId/executions/:executionId"),
+        ("GET", "/v1/health"),
+        ("GET", "/v1/locale"),
+    ];
+    pub const DOCUMENT_ROUTE: &str = "/v1/databases/:databaseId/collections/:collectionId/documents/:documentId";
+    pub const DOCUMENT_PATH: &str = "/v1/databases/main/collections/posts/documents/6650c1f2a4b3e9d7c812";
+    pub const SESSION: &str = "eyJpZCI6IjY2NTBjMWYyYTRiM2U5ZDdjODEyIiwic2VjcmV0IjoiNWYzYzlhMWU1ZjNjOWExZSJ9";
+    pub const NOW: i64 = 1_700_000_000;
+
+    /// A JSON POST as a browser SDK sends it.
+    pub fn post() -> String {
+        let body = r#"{"documentId":"unique()","data":{"title":"Release notes","status":"published","views":1024,"tags":["rust","php"]},"permissions":["read(\"any\")","update(\"user:6650c1f2a4b3e9d7c812\")"]}"#;
+        format!(
+            "POST /v1/databases/main/collections/posts/documents?project=6650c0de HTTP/1.1\r\n\
+             Host: cloud.appwrite.io\r\n\
+             User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36\r\n\
+             Accept: application/json\r\n\
+             Content-Type: application/json\r\n\
+             Origin: https://app.example.com\r\n\
+             X-Appwrite-Project: 6650c0de\r\n\
+             X-Appwrite-Response-Format: 1.6.0\r\n\
+             Cookie: a_session_6650c0de={SESSION}; a_session_6650c0de_legacy={SESSION}\r\n\
+             Content-Length: {}\r\n\
+             \r\n\
+             {body}",
+            body.len()
+        )
+    }
+
+    /// A user as the API returns it.
+    pub fn user() -> Value {
+        json!({
+            "$id": "6650c1f2a4b3e9d7c812",
+            "$createdAt": "2024-05-24T10:15:00.000+00:00",
+            "$updatedAt": "2024-05-24T10:15:00.000+00:00",
+            "name": "Ada Lovelace",
+            "registration": "2024-05-24T10:15:00.000+00:00",
+            "status": true,
+            "labels": ["admin", "beta"],
+            "passwordUpdate": "2024-05-24T10:15:00.000+00:00",
+            "email": "ada@example.com",
+            "phone": "+14155550100",
+            "emailVerification": true,
+            "phoneVerification": false,
+            "mfa": false,
+            "prefs": {"theme": "dark", "language": "en"},
+            "targets": [],
+            "accessedAt": "2024-05-24T10:15:00.000+00:00",
+            "hash": "argon2",
+            "hashOptions": {"type": "argon2", "memoryCost": 7168, "timeCost": 5, "threads": 1},
+        })
+    }
+}
+
+pub async fn bench(name: &str, _session: &mut crate::adapter::Session) -> Result<crate::bench::Bench, Fault> {
+    use std::hint::black_box;
+    use std::rc::Rc;
+
+    use crate::bench::Bench;
+    use fixture::*;
+
+    let failed = |e: Error| Fault::new(e.to_string());
+    Ok(match name {
+        "match" => {
+            let mut router = Router::new();
+            for (i, (method, path)) in ROUTES.iter().enumerate() {
+                router.insert(&[method], path, i).map_err(failed)?;
+            }
+            Bench::sync(move || {
+                black_box(router.find(black_box("GET"), black_box(DOCUMENT_PATH)).map(|m| m.params));
+            })
+        }
+        "request" => {
+            let raw = post().into_bytes();
+            Bench::sync(move || {
+                let mut headers = [httparse::EMPTY_HEADER; 16];
+                let mut parsed = httparse::Request::new(&mut headers);
+                let Ok(httparse::Status::Complete(head)) = parsed.parse(black_box(&raw)) else { return };
+                let request = Request::new(
+                    parsed.method.unwrap_or("GET"),
+                    parsed.path.unwrap_or("/"),
+                    parsed.headers.iter().map(|h| (h.name, std::str::from_utf8(h.value).unwrap_or(""))),
+                    utopia_http::Bytes::copy_from_slice(&raw[head..]),
+                );
+                black_box(request.header_values("x-appwrite-project"));
+                black_box(request.cookie("a_session_6650c0de"));
+                black_box(request.query("project"));
+                black_box(request.params());
+            })
+        }
+        "response" => {
+            let user = user();
+            Bench::sync(move || {
+                let mut response = Response::new();
+                let _ = response.set_status_code(201);
+                response.add_header("X-Appwrite-Request-Id", "6650c3b9d2e7f4a1c836");
+                response.add_cookie(Cookie {
+                    name: "a_session_6650c0de".to_owned(),
+                    value: Some(SESSION.to_owned()),
+                    expire: Some(NOW + 31_536_000),
+                    path: Some("/".to_owned()),
+                    domain: Some(".cloud.appwrite.io".to_owned()),
+                    secure: Some(true),
+                    http_only: Some(true),
+                    same_site: Some("None".to_owned()),
+                });
+                let _ = response.json(black_box(&user));
+                // The server renders each Set-Cookie line (Swoole does on PHP).
+                for cookie in &response.wire().cookies {
+                    black_box(cookie.header(NOW));
+                }
+                black_box(response);
+            })
+        }
+        "dispatch" => {
+            fn nosniff(scope: Scope<'_>) -> utopia_http::BoxFuture<'_, utopia_http::Result<()>> {
+                Box::pin(async move {
+                    scope.response.add_header("X-Content-Type-Options", "nosniff");
+                    Ok(())
+                })
+            }
+            fn document(scope: Scope<'_>) -> utopia_http::BoxFuture<'_, utopia_http::Result<()>> {
+                Box::pin(async move {
+                    let param = |key: &str| scope.param(key).cloned().unwrap_or(Value::Null);
+                    let body = json!({
+                        "$id": param("documentId"),
+                        "$collectionId": param("collectionId"),
+                        "$databaseId": param("databaseId"),
+                        "$createdAt": "2024-05-24T10:15:00.000+00:00",
+                        "$updatedAt": "2024-05-24T10:15:00.000+00:00",
+                        "$permissions": ["read(\"any\")"],
+                        "title": "Release notes",
+                        "views": 1024,
+                    });
+                    scope.response.json(&body)
+                })
+            }
+            let mut http = Http::new("UTC");
+            http.init().groups(&["api"]).inject("response").action(nosniff);
+            for (method, path) in ROUTES {
+                let route = http.add_route(method, path).map_err(failed)?;
+                if method == "GET" && path == DOCUMENT_ROUTE {
+                    let id = || utopia_http::Param::new(json!(""), utopia_validators::Text::new(36), "");
+                    route
+                        .groups(&["api", "databases"])
+                        .param("databaseId", id())
+                        .param("collectionId", id())
+                        .param("documentId", id())
+                        .inject("response")
+                        .action(document);
+                }
+            }
+            let request = Request::new(
+                "GET",
+                DOCUMENT_PATH,
+                [
+                    ("Host", "cloud.appwrite.io"),
+                    ("Accept", "application/json"),
+                    ("X-Appwrite-Project", "6650c0de"),
+                    ("X-Appwrite-Response-Format", "1.6.0"),
+                ],
+                utopia_http::Bytes::new(),
+            );
+            let (http, request) = (Rc::new(http), Rc::new(request));
+            Bench::future(move || {
+                let (http, request) = (http.clone(), request.clone());
+                async move {
+                    let context = http.context();
+                    let mut response = Response::new();
+                    black_box(http.run(&request, &mut response, &context).await.ok());
+                    black_box(response);
+                }
+            })
+        }
+        _ => return Err(Fault::new(format!("http: no benchmark `{name}`"))),
+    })
 }
 
 /// Values emitted by actions of the current dispatch.

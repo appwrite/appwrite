@@ -105,13 +105,97 @@ pub const OPS: &[&str] = &[
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("password", "Verify a password against its Argon2id hash at Appwrite's cost (7 MiB, 5 passes, 1 lane)"),
+    ("sha", "Verify a 256-character session secret against its SHA-256 hash"),
+    ("token", "Generate a 256-character token secret"),
+    ("jwt-issue", "Issue an HS256 JWT with a user and a session claim"),
+    ("jwt-verify", "Verify an HS256 JWT's signature, type, issuer, audience and expiry"),
+    ("session", "Decode a session cookie (base64 JSON of an id and a secret) and read its id"),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("auth: no benchmark `{name}`")))
+/// Benchmark inputs, the same as in Adapter.php.
+mod fixture {
+    pub const PASSWORD: &[u8] = b"correct-horse-battery-staple-42";
+    pub const SECRET: &[u8] = b"9f8e7d6c5b4a39281706f5e4d3c2b1a0ffeeddccbbaa99887766554433221100";
+    pub const ISSUER: &[u8] = b"https://cloud.appwrite.io/v1";
+    pub const AUDIENCE: &[u8] = b"console";
+    pub const USER: &str = "6650c1f2a4b3e9d7c812";
+    pub const SESSION: &str = "6650c2a7f1e4b8d3a905";
+    pub const NOW: i64 = 1_700_000_000;
+
+    /// A 256-character session secret.
+    pub fn token() -> String {
+        "5f3c9a1e".repeat(32)
+    }
+}
+
+pub async fn bench(name: &str, _session: &mut Session) -> Result<crate::bench::Bench, Fault> {
+    use std::hint::black_box;
+
+    use crate::bench::Bench;
+    use fixture::*;
+
+    let fault = |e: Error| Fault::new(e.to_string());
+    let claims = || {
+        let mut claims = Array::new();
+        claims.set(ArrayKey::Str(Str::from("userId")), Php::from(USER));
+        claims.set(ArrayKey::Str(Str::from("sessionId")), Php::from(SESSION));
+        claims
+    };
+    let jwt = || Symmetric::new(SECRET, ISSUER, None).map(Jwt).map_err(fault);
+    Ok(match name {
+        "password" => {
+            let mut argon2 = Argon2::new();
+            argon2.set_memory_cost(7168).set_time_cost(5).set_threads(1);
+            let hash = argon2.hash(PASSWORD).map_err(fault)?;
+            Bench::sync(move || {
+                black_box(argon2.verify(black_box(PASSWORD), &hash).ok());
+            })
+        }
+        "sha" => {
+            let sha = Sha::new();
+            let token = token().into_bytes();
+            let hash = sha.hash(&token).map_err(fault)?;
+            Bench::sync(move || {
+                black_box(sha.verify(black_box(&token), &hash).ok());
+            })
+        }
+        "token" => {
+            let proof = Token::default();
+            Bench::sync(move || {
+                black_box(proof.generate().ok());
+            })
+        }
+        "jwt-issue" => {
+            let (jwt, claims) = (jwt()?, claims());
+            let audience = Audience::One(AUDIENCE.to_vec());
+            Bench::sync(move || {
+                black_box(jwt.issue(&audience, 900, black_box(&claims), NOW).ok());
+            })
+        }
+        "jwt-verify" => {
+            let audience = Audience::One(AUDIENCE.to_vec());
+            let token = jwt()?.issue(&audience, 900, &claims(), NOW).map_err(fault)?;
+            let check = Hs256::new(SECRET).map_err(fault)?;
+            let verifier =
+                Verifier::new(check, Some(ISSUER), Some(&audience), Some(b"JWT"), false, 0).map_err(fault)?;
+            Bench::sync(move || {
+                black_box(verifier.verify(black_box(token.as_bytes()), NOW).ok());
+            })
+        }
+        "session" => {
+            let mut store = Store::new();
+            store.set_property(b"id", Php::from(USER)).set_property(b"secret", Php::from(token().as_str()));
+            let cookie = store.encode().map_err(fault)?.into_bytes();
+            Bench::sync(move || {
+                let mut store = Store::new();
+                store.decode(black_box(&cookie));
+                black_box(store.property(b"id"));
+            })
+        }
+        _ => return Err(Fault::new(format!("auth: no benchmark `{name}`"))),
+    })
 }
 
 // ---------------------------------------------------------------------------

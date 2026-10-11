@@ -378,6 +378,7 @@ dependencies = [
  "base64",
  "bytes",
  "futures-util",
+ "httparse",
  "indexmap",
  "p256",
  "php-std",

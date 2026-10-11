@@ -3,16 +3,20 @@
 namespace Tests\Compat\Validators;
 
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Domain;
 use Utopia\Validator\Integer;
+use Utopia\Validator\JSON;
 use Utopia\Validator\Multiple;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Phone;
 use Utopia\Validator\Range;
+use Utopia\Validator\Text;
+use Utopia\Validator\URL;
 use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
@@ -24,8 +28,40 @@ use Utopia\Validator\WhiteList;
  * `validators` and `rules` hold validators (handles or specs). A value `{"$object": {...}}`
  * is a stdClass with those properties.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    /** A document as clients send it in a JSON string param. */
+    private const string DOCUMENT = '{"title":"Release notes","status":"published","views":1024,"rating":4.5,"tags":["rust","php","benchmarks"],"author":{"id":"6650c1f2a4b3","name":"Ada Lovelace"},"published":true,"createdAt":"2024-05-24T10:15:00.000+00:00"}';
+
+    public function benchmarks(): array
+    {
+        $run = fn (Validator $validator, mixed $value) => fn () => $validator->isValid($value);
+
+        return [
+            'text' => ['Validate a 33-character name against Text(128)', fn (Session $s) => $run(new Text(128), 'Production API for the mobile app')],
+            'url' => ['Validate an OAuth2 callback URL with a query string against URL()', fn (Session $s) => $run(
+                new URL(),
+                'https://cloud.appwrite.io/v1/account/sessions/oauth2/callback/github/console?code=4f2a9c&state=xyz',
+            )],
+            'range' => ['Validate an integer page limit against Range(1, 5000)', fn (Session $s) => $run(new Range(1, 5000), 25)],
+            'json' => ['Validate a JSON document string of 221 bytes against JSON', fn (Session $s) => $run(new JSON(), self::DOCUMENT)],
+            'list' => ['Validate a list of 8 permission strings against ArrayList(Text(256), 100)', fn (Session $s) => $run(new ArrayList(new Text(256), 100), [
+                'read("any")',
+                'read("users")',
+                'update("user:6650c1f2a4b3")',
+                'delete("user:6650c1f2a4b3")',
+                'read("team:5f9d2c1b/owner")',
+                'update("team:5f9d2c1b/owner")',
+                'read("label:admin")',
+                'write("member:6650c1f2a4b3")',
+            ])],
+            'any-of' => ['Validate an ID string against AnyOf(Integer, Text(36)), failing the first rule', fn (Session $s) => $run(
+                new AnyOf([new Integer(), new Text(36)]),
+                '6650c1f2a4b3e9d7c812',
+            )],
+        ];
+    }
+
     public function operations(): array
     {
         return [

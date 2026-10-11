@@ -3,6 +3,7 @@
 namespace Tests\Compat\Auth;
 
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Auth\Enums\Prompt;
@@ -50,10 +51,70 @@ require_once __DIR__ . '/Authenticator.php';
 /**
  * Maps tests/compat/auth/spec.json operations onto utopia-php/auth. Glue only.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
     /** Where `issuer.sign_once` writes the key files its fuzzed inputs name. */
     private const string FUZZ_DIR = '/tmp/compat-fs/auth-fuzz';
+
+    /** Benchmark inputs, the same as in crates/tools/compat/src/libs/auth.rs. */
+    private const string PASSWORD = 'correct-horse-battery-staple-42';
+
+    private const string SECRET = '9f8e7d6c5b4a39281706f5e4d3c2b1a0ffeeddccbbaa99887766554433221100';
+
+    private const string ISSUER = 'https://cloud.appwrite.io/v1';
+
+    private const string AUDIENCE = 'console';
+
+    private const string USER = '6650c1f2a4b3e9d7c812';
+
+    private const string SESSION = '6650c2a7f1e4b8d3a905';
+
+    private const int NOW = 1700000000;
+
+    public function benchmarks(): array
+    {
+        // A 256-character session secret.
+        $token = str_repeat('5f3c9a1e', 32);
+        $claims = ['userId' => self::USER, 'sessionId' => self::SESSION];
+
+        return [
+            'password' => ["Verify a password against its Argon2id hash at Appwrite's cost (7 MiB, 5 passes, 1 lane)", function (Session $s) {
+                $argon2 = (new Argon2())->setMemoryCost(7168)->setTimeCost(5)->setThreads(1);
+                $hash = $argon2->hash(self::PASSWORD);
+
+                return fn () => $argon2->verify(self::PASSWORD, $hash);
+            }],
+            'sha' => ['Verify a 256-character session secret against its SHA-256 hash', function (Session $s) use ($token) {
+                $sha = new Sha();
+                $hash = $sha->hash($token);
+
+                return fn () => $sha->verify($token, $hash);
+            }],
+            'token' => ['Generate a 256-character token secret', function (Session $s) {
+                $proof = new Token();
+
+                return fn () => $proof->generate();
+            }],
+            'jwt-issue' => ['Issue an HS256 JWT with a user and a session claim', function (Session $s) use ($claims) {
+                Clock::$now = self::NOW;
+                $jwt = new Jwt(self::SECRET, self::ISSUER);
+
+                return fn () => $jwt->issue(self::AUDIENCE, 900, $claims);
+            }],
+            'jwt-verify' => ["Verify an HS256 JWT's signature, type, issuer, audience and expiry", function (Session $s) use ($claims) {
+                Clock::$now = self::NOW;
+                $token = (new Jwt(self::SECRET, self::ISSUER))->issue(self::AUDIENCE, 900, $claims);
+                $verifier = new SymmetricVerifier(self::SECRET, self::ISSUER, self::AUDIENCE, 'JWT');
+
+                return fn () => $verifier->verify($token);
+            }],
+            'session' => ['Decode a session cookie (base64 JSON of an id and a secret) and read its id', function (Session $s) use ($token) {
+                $cookie = (new Store())->setProperty('id', self::USER)->setProperty('secret', $token)->encode();
+
+                return fn () => (new Store())->decode($cookie)->getProperty('id');
+            }],
+        ];
+    }
 
     public function operations(): array
     {
