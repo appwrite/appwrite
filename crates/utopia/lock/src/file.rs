@@ -1,3 +1,5 @@
+//! Advisory locks on files, shared between processes on one machine.
+
 use std::path::Path;
 use std::time::{Duration, Instant};
 
@@ -5,10 +7,15 @@ use rustix::fs::{Access, FlockOperation};
 
 use crate::{Error, Lock, Wait};
 
-/// `flock(2)` mode: PHP's `LOCK_EX` or `LOCK_SH`.
+/// Whether a [`File`] lock excludes every other holder or only exclusive
+/// ones.
+///
+/// PHP: the `flock(2)` mode, `LOCK_EX` or `LOCK_SH`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Mode {
+    /// One holder at a time.
     Exclusive,
+    /// Any number of shared holders, while no one holds it exclusively.
     Shared,
 }
 
@@ -21,10 +28,17 @@ pub struct File {
 }
 
 impl File {
+    /// A lock on the file at `path`, taken in `mode`.
+    ///
+    /// Nothing is opened until the first acquisition, which creates the file
+    /// if needed. It fails with [`Error::Lock`] when the directory is missing
+    /// or not writable, and with [`Error::Runtime`] when the file cannot be
+    /// opened.
     pub fn new(path: impl Into<String>, mode: Mode) -> Self {
         Self { path: path.into(), mode, handle: std::sync::Mutex::new(None) }
     }
 
+    /// The path of the lock file.
     pub fn path(&self) -> &str {
         &self.path
     }
@@ -53,6 +67,8 @@ impl File {
 }
 
 impl Lock for File {
+    /// Retries with a growing delay (10 ms doubling up to 250 ms) until the
+    /// lock is taken or the wait runs out. [`Wait::Forever`] tries once.
     async fn acquire(&self, wait: Wait) -> Result<bool, Error> {
         self.open()?;
         let Wait::For(timeout) = wait else { return self.try_acquire().await };
@@ -71,6 +87,7 @@ impl Lock for File {
         }
     }
 
+    /// Opens the file if needed and tries once to lock it, without blocking.
     async fn try_acquire(&self) -> Result<bool, Error> {
         self.open()?;
         let handle = self.handle.lock().unwrap_or_else(|e| e.into_inner());
@@ -82,6 +99,7 @@ impl Lock for File {
         Ok(rustix::fs::flock(file, operation).is_ok())
     }
 
+    /// Unlocks and closes the file; the next acquisition reopens it.
     async fn release(&self) -> Result<(), Error> {
         let mut handle = self.handle.lock().unwrap_or_else(|e| e.into_inner());
         if let Some(file) = handle.take() {
@@ -90,6 +108,7 @@ impl Lock for File {
         Ok(())
     }
 
+    /// [`Error::Contention`] naming the lock file.
     fn contention(&self) -> Error {
         Error::Contention(format!("Failed to acquire file lock on {} within timeout", self.path))
     }

@@ -1,3 +1,6 @@
+//! In-process locks: a [`Semaphore`] for a bounded number of holders and a
+//! [`Mutex`] for one.
+
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 use crate::{Error, Lock, Wait};
@@ -11,7 +14,11 @@ pub struct Semaphore {
 }
 
 impl Semaphore {
-    /// Fails like PHP when `permits` is below 1.
+    /// A semaphore with `permits` holders at most.
+    ///
+    /// Fails with [`Error::InvalidArgument`] when `permits` is below 1.
+    ///
+    /// PHP: fails like PHP for fewer than one permit.
     pub fn new(permits: i64) -> Result<Self, Error> {
         if permits < 1 {
             return Err(Error::InvalidArgument("Permits must be at least 1".into()));
@@ -20,6 +27,7 @@ impl Semaphore {
         Ok(Self { permits, inner: tokio::sync::Semaphore::new(permits), held: AtomicUsize::new(0) })
     }
 
+    /// The number of holders allowed at a time.
     pub fn permits(&self) -> usize {
         self.permits
     }
@@ -49,19 +57,24 @@ impl Semaphore {
 }
 
 impl Lock for Semaphore {
+    /// Takes a permit, waiting for one to be released as long as `wait`
+    /// allows.
     async fn acquire(&self, wait: Wait) -> Result<bool, Error> {
         Ok(self.acquire_inner(wait).await)
     }
 
+    /// Takes a permit if one is free.
     async fn try_acquire(&self) -> Result<bool, Error> {
         Ok(self.acquire_inner(Wait::None).await)
     }
 
+    /// Returns a permit. Releasing more often than acquiring adds none.
     async fn release(&self) -> Result<(), Error> {
         self.release_inner();
         Ok(())
     }
 
+    /// [`Error::Contention`]: no permit was free in time.
     fn contention(&self) -> Error {
         Error::Contention("Failed to acquire semaphore within timeout".into())
     }
@@ -71,31 +84,38 @@ impl Lock for Semaphore {
 pub struct Mutex(Semaphore);
 
 impl Default for Mutex {
+    /// An unlocked mutex; the same as [`Mutex::new`].
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Mutex {
+    /// An unlocked mutex.
     pub fn new() -> Self {
         Self(Semaphore { permits: 1, inner: tokio::sync::Semaphore::new(1), held: AtomicUsize::new(0) })
     }
 }
 
 impl Lock for Mutex {
+    /// Locks the mutex, waiting for the holder to release it as long as
+    /// `wait` allows.
     async fn acquire(&self, wait: Wait) -> Result<bool, Error> {
         Ok(self.0.acquire_inner(wait).await)
     }
 
+    /// Locks the mutex if no one holds it.
     async fn try_acquire(&self) -> Result<bool, Error> {
         Ok(self.0.acquire_inner(Wait::None).await)
     }
 
+    /// Unlocks the mutex. Releasing an unlocked mutex does nothing.
     async fn release(&self) -> Result<(), Error> {
         self.0.release_inner();
         Ok(())
     }
 
+    /// [`Error::Contention`]: the mutex stayed held for the whole wait.
     fn contention(&self) -> Error {
         Error::Contention("Failed to acquire mutex within timeout".into())
     }

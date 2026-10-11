@@ -1,9 +1,14 @@
-//! Translations with the semantics of `utopia-php/locale`.
+//! Translate text into the user's language, with a fallback language and
+//! `{{placeholder}}` substitution.
 //!
-//! PHP keeps every language, and whether missing keys throw, in static
-//! state shared by all `Locale` objects. Here that state is a value,
-//! [`Languages`], which [`Locale`]s borrow: load the languages once, then
-//! create a `Locale` per request.
+//! Register every language once in a [`Languages`] value, from maps or JSON
+//! files, then create a [`Locale`] per request that borrows it and looks up
+//! texts with [`Locale::text`]. Whether a missing language or key is an
+//! error is a setting of the [`Languages`].
+//!
+//! PHP: ports `utopia-php/locale`. PHP keeps every language, and whether
+//! missing keys throw, in static state shared by all `Locale` objects; here
+//! that state is the [`Languages`] value.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -20,11 +25,13 @@
 //! | `$locale->getTranslations()` | [`Locale::translations`] |
 //! | `\Exception`, `\TypeError` | [`Error::Exception`], [`Error::Type`] |
 //!
-//! Translations are strings. PHP stores whatever `json_decode` returns for a
+//! PHP: translations are strings. PHP stores whatever `json_decode` returns for a
 //! translation file; a file that is not JSON (or is unreadable) becomes a
 //! language PHP cannot use, and so it is here: lookups in it fail with the
 //! same `TypeError` (see [`Error::Type`]). A file whose values are not all
 //! strings is refused ([`Error::Unsupported`]), a recorded deviation.
+
+#![warn(missing_docs)]
 
 use std::borrow::Cow;
 use std::path::Path;
@@ -39,33 +46,48 @@ use php_std::types::KeyRef;
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
 
-/// `Locale::DEFAULT_DYNAMIC_KEY`: as a [`Missing::Text`], it means
-/// [`Missing::Key`].
+/// A marker text that, passed as [`Missing::Text`], means [`Missing::Key`].
+///
+/// PHP: `Locale::DEFAULT_DYNAMIC_KEY`.
 pub const DEFAULT_DYNAMIC_KEY: &str = "[[defaultDynamicKey]]";
 
 /// Translations of one language, in file order.
 pub type Translations = IndexMap<String, String>;
 
-/// Why an operation failed, by the PHP exception class it corresponds to.
+/// Why a lookup or a language registration failed.
+///
+/// PHP: each variant matches the exception class PHP throws, given by
+/// [`Error::php_class`].
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
-    /// `\Exception`: an unknown locale, a missing translation file or key
-    /// (only while [`Languages::exceptions`] is on).
+    /// An unknown language, a missing translation file or a missing key,
+    /// reported only while [`Languages::exceptions`] is on.
+    ///
+    /// PHP: `\Exception`.
     #[error("{0}")]
     Exception(String),
-    /// `\TypeError`: a lookup in a language PHP stored as something other
-    /// than an array (an unreadable or invalid file, a JSON scalar, or an
-    /// unknown default locale while exceptions are off).
+    /// A lookup in a language that holds no translations: one loaded from
+    /// an unreadable or invalid file or from a JSON scalar, or an unknown
+    /// default language while exceptions are off.
+    ///
+    /// PHP: `\TypeError`, raised on a language PHP stored as something
+    /// other than an array.
     #[error("{0}")]
     Type(String),
-    /// A translation file whose values are not all strings. PHP stores it
-    /// and returns the non-string values; Rust refuses it (a deviation).
+    /// A translation file whose values are not all strings.
+    ///
+    /// PHP stores such a file and returns the non-string values; Rust
+    /// refuses it (a deviation).
     #[error("{0}")]
     Unsupported(String),
 }
 
 impl Error {
-    /// The PHP exception class this error corresponds to.
+    /// The name of the exception class this error matches: `Exception` or
+    /// `TypeError`.
+    ///
+    /// PHP: the class of the exception `utopia-php/locale` throws for the
+    /// same call.
     pub fn php_class(&self) -> &'static str {
         match self {
             Error::Exception(_) | Error::Unsupported(_) => "Exception",
@@ -74,11 +96,14 @@ impl Error {
     }
 }
 
-/// What [`Locale::text`] returns for a key no language has (PHP's
-/// `$default`).
+/// What [`Locale::text`] returns for a key no language has.
+///
+/// PHP: the `$default` argument of `getText()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Missing<'a> {
-    /// `{{key}}` (PHP's default, [`DEFAULT_DYNAMIC_KEY`]).
+    /// The key in double braces, `{{key}}`.
+    ///
+    /// PHP: the default, [`DEFAULT_DYNAMIC_KEY`].
     #[default]
     Key,
     /// This text.
@@ -96,7 +121,10 @@ enum Language {
     Unusable(&'static str),
 }
 
-/// Every language, and whether lookups throw (PHP's static state).
+/// Every registered language, and whether missing languages and keys are
+/// errors.
+///
+/// PHP: the static state of `Locale`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Languages {
     languages: IndexMap<String, Language>,
@@ -104,28 +132,38 @@ pub struct Languages {
 }
 
 impl Default for Languages {
+    /// No languages, with exceptions on; the same as [`Languages::new`].
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Languages {
-    /// No languages; exceptions on, as in PHP.
+    /// No languages, with exceptions on.
+    ///
+    /// PHP: exceptions are on by default, as in PHP.
     pub fn new() -> Self {
         Self { languages: IndexMap::new(), exceptions: true }
     }
 
-    /// `Locale::$exceptions`.
+    /// Whether an unknown language or a missing key or file is an error.
+    ///
+    /// PHP: `Locale::$exceptions`.
     pub fn exceptions(&self) -> bool {
         self.exceptions
     }
 
-    /// `Locale::$exceptions = $on`.
+    /// Turns errors for unknown languages and missing keys or files on or
+    /// off.
+    ///
+    /// PHP: `Locale::$exceptions = $on`.
     pub fn set_exceptions(&mut self, on: bool) {
         self.exceptions = on;
     }
 
-    /// `Locale::getLanguages()`: names in registration order.
+    /// The names of the registered languages, in registration order.
+    ///
+    /// PHP: `Locale::getLanguages()`.
     pub fn names(&self) -> impl Iterator<Item = &str> {
         self.languages.keys().map(String::as_str)
     }
@@ -135,18 +173,21 @@ impl Languages {
         self.languages.contains_key(name)
     }
 
-    /// `Locale::setLanguageFromArray($name, $translations)`: registers or
-    /// replaces a language (a replaced one keeps its position).
+    /// Registers or replaces a language; a replaced one keeps its position.
+    ///
+    /// PHP: `Locale::setLanguageFromArray($name, $translations)`.
     pub fn insert(&mut self, name: impl Into<String>, translations: Translations) {
         self.languages.insert(name.into(), Language::Texts(translations));
     }
 
-    /// `Locale::setLanguageFromJSON($name, $path)`.
+    /// Registers a language from a JSON translation file.
     ///
     /// With exceptions on, a path that does not exist fails with
     /// `Translation file not found.`. Otherwise an unreadable file registers
-    /// a language PHP cannot use, as does content that is not a JSON object
-    /// or list (see [`Languages::insert_json`]).
+    /// a language that holds no translations, as does content that is not a
+    /// JSON object or list (see [`Languages::insert_json`]).
+    ///
+    /// PHP: `Locale::setLanguageFromJSON($name, $path)`.
     pub async fn load(&mut self, name: impl Into<String>, path: &Path) -> Result<(), Error> {
         if self.exceptions && tokio::fs::metadata(path).await.is_err() {
             return Err(Error::Exception("Translation file not found.".into()));
@@ -155,10 +196,15 @@ impl Languages {
         self.insert_json(name, &content)
     }
 
-    /// The decoding half of [`Languages::load`]: registers `json` the way
-    /// `json_decode($json, true)` reads it. Invalid JSON and scalars give an
-    /// unusable language, as in PHP; an object or list must hold strings
-    /// only ([`Error::Unsupported`] otherwise).
+    /// Registers a language from JSON text: the decoding half of
+    /// [`Languages::load`].
+    ///
+    /// Invalid JSON and scalars register a language that holds no
+    /// translations, so lookups in it fail with [`Error::Type`]. An object or
+    /// list must hold strings only ([`Error::Unsupported`] otherwise); a list
+    /// is keyed by position.
+    ///
+    /// PHP: reads `json` the way `json_decode($json, true)` does.
     pub fn insert_json(&mut self, name: impl Into<String>, json: &[u8]) -> Result<(), Error> {
         let language = match json::decode(json, Some(true), 512, Flags::NONE) {
             Err(_) | Ok(Value::Null) => Language::Unusable("null"),
@@ -219,45 +265,64 @@ pub struct Locale<'a> {
 }
 
 impl<'a> Locale<'a> {
-    /// `new Locale($default)`: fails with `Locale not found` for an unknown
-    /// language while exceptions are on.
+    /// A locale reading the `default` language, with no fallback.
+    ///
+    /// Fails with `Locale not found` for an unknown language while
+    /// exceptions are on.
+    ///
+    /// PHP: `new Locale($default)`.
     pub fn new(languages: &'a Languages, default: &str) -> Result<Self, Error> {
         languages.check(default)?;
         Ok(Self { languages, default: default.to_owned(), fallback: None })
     }
 
-    /// A locale with these languages, as assigning PHP's public `$default`
-    /// and `$fallback` properties does: no check.
+    /// A locale with this default and fallback language, without checking
+    /// that they are registered.
+    ///
+    /// PHP: assigning the public `$default` and `$fallback` properties.
     pub fn with(languages: &'a Languages, default: String, fallback: Option<String>) -> Self {
         Self { languages, default, fallback }
     }
 
-    /// `$locale->default`.
+    /// The name of the language texts are read from first.
+    ///
+    /// PHP: `$locale->default`.
     pub fn default(&self) -> &str {
         &self.default
     }
 
-    /// `$locale->fallback`.
+    /// The name of the language read for keys the default one lacks.
+    ///
+    /// PHP: `$locale->fallback`.
     pub fn fallback(&self) -> Option<&str> {
         self.fallback.as_deref()
     }
 
-    /// `$locale->setDefault($name)`.
+    /// Switches the default language.
+    ///
+    /// Fails with `Locale not found` for an unknown language while
+    /// exceptions are on.
+    ///
+    /// PHP: `$locale->setDefault($name)`.
     pub fn set_default(&mut self, name: &str) -> Result<&mut Self, Error> {
         self.languages.check(name)?;
         self.default = name.to_owned();
         Ok(self)
     }
 
-    /// `$locale->setFallback($name)`: the language read for keys the
-    /// default one lacks.
+    /// Sets the language read for keys the default one lacks.
+    ///
+    /// Fails with `Locale not found` for an unknown language while
+    /// exceptions are on.
+    ///
+    /// PHP: `$locale->setFallback($name)`.
     pub fn set_fallback(&mut self, name: &str) -> Result<&mut Self, Error> {
         self.languages.check(name)?;
         self.fallback = Some(name.to_owned());
         Ok(self)
     }
 
-    /// `$locale->getText($key, $default, $placeholders)`.
+    /// The translation of `key`, with its placeholders filled in.
     ///
     /// The default language's text, else the fallback's, else `missing`
     /// (with exceptions on, a key neither has fails with
@@ -265,8 +330,10 @@ impl<'a> Locale<'a> {
     /// then replaced in turn, so a value can itself hold a later
     /// placeholder. `Ok(None)` only for [`Missing::Null`].
     ///
-    /// Without a fallback, PHP reads the language named `""` as the
-    /// fallback; so does this.
+    /// Without a fallback, the language named `""` serves as the fallback.
+    ///
+    /// PHP: `$locale->getText($key, $default, $placeholders)`. PHP reads the
+    /// language named `""` without a fallback, and so does this.
     pub fn text<'s>(
         &'s self,
         key: &str,
@@ -302,7 +369,12 @@ impl<'a> Locale<'a> {
         Ok(Some(text))
     }
 
-    /// `$locale->getTranslations()`: every text of the default language.
+    /// Every text of the default language.
+    ///
+    /// Fails with [`Error::Type`] when the default language is unknown or
+    /// holds no translations.
+    ///
+    /// PHP: `$locale->getTranslations()`.
     pub fn translations(&self) -> Result<&'a Translations, Error> {
         match self.languages.languages.get(&self.default) {
             Some(Language::Texts(t)) => Ok(t),

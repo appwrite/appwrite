@@ -1,22 +1,33 @@
+//! Host names checked against an allow list, alone or as the host of a
+//! URL.
+
 use php_std::mb;
 use php_std::url::parse_url;
 
 use crate::{Error, Input, Type, Url, Validator, Verdict, is_valid_via_validate};
 
-/// `Utopia\Validator\Hostname`: hostname matched against an allow list.
+/// A host name allowed by a list of names and patterns.
 ///
-/// An empty list allows everything; `*` allows everything; `*.example.com`
-/// allows any subdomain of `example.com` (but not the apex).
+/// The value must be a non-empty string of at most 253 characters, without a
+/// path (`/`), port or scheme (`:`); `"0"` is refused. An empty list allows
+/// every such name. A pattern starting with `*` allows any name ending with
+/// the rest: `*` allows everything, and `*.example.com` any subdomain of
+/// `example.com` (but not the apex).
+///
+/// PHP: `Utopia\Validator\Hostname`.
 #[derive(Debug, Clone, Default)]
 pub struct Hostname {
+    /// The allowed names and patterns.
     pub allow_list: Vec<String>,
 }
 
 impl Hostname {
+    /// A validator allowing the names and patterns of `allow_list`.
     pub fn new(allow_list: Vec<String>) -> Self {
         Self { allow_list }
     }
 
+    /// Whether `value` is a host name the list allows.
     pub fn matches(&self, value: &str) -> bool {
         self.matches_bytes(value.as_bytes())
     }
@@ -45,41 +56,50 @@ fn allowed(allow_list: &[String], value: &[u8]) -> bool {
 }
 
 impl Validator for Hostname {
+    /// Returns "Value must be a valid hostname without path, port and protocol.".
     fn description(&self) -> String {
         "Value must be a valid hostname without path, port and protocol.".to_owned()
     }
 
     is_valid_via_validate!();
 
+    /// Valid for a string the list allows ([`Hostname::matches`]).
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(value.as_str().is_some_and(|s| self.matches_bytes(s))))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }
 }
 
-/// `Utopia\Validator\Host`: a URL whose host is allowed by a [`Hostname`]
-/// allow list.
+/// A URL whose host is allowed by a list of names and patterns, matched as
+/// [`Hostname`] matches them.
+///
+/// PHP: `Utopia\Validator\Host`.
 #[derive(Debug, Clone, Default)]
 pub struct Host {
+    /// The allowed host names and patterns.
     pub whitelist: Vec<String>,
 }
 
 impl Host {
+    /// A validator allowing URLs whose host matches `whitelist`.
     pub fn new(whitelist: Vec<String>) -> Self {
         Self { whitelist }
     }
 }
 
 impl Validator for Host {
+    /// Lists the allowed hosts: `URL host must be one of: a, b`.
     fn description(&self) -> String {
         format!("URL host must be one of: {}", self.whitelist.join(", "))
     }
 
     is_valid_via_validate!();
 
+    /// Valid for a URL (as [`Url`] checks it by default) whose host the list allows.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         if !Url::default().validate(value)?.valid {
             return Ok(Verdict::INVALID);
@@ -89,6 +109,7 @@ impl Validator for Host {
         Ok(Verdict::of(host.is_some_and(|h| allowed(&self.whitelist, &h))))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }

@@ -1,3 +1,5 @@
+//! Strings of bounded length, and identifiers.
+
 use std::borrow::Cow;
 
 use php_std::value::numeric_str;
@@ -11,23 +13,32 @@ pub(crate) fn preg_matches(pattern: &[u8], subject: &[u8]) -> bool {
     matches!(pcre::preg_match_bare(pattern, subject), Ok(p) if p.value == pcre::Value::Int(1))
 }
 
-/// `Utopia\Validator\Text`: a string of `min..=length` characters
-/// (`length` 0 is unlimited), optionally made only of the bytes in
-/// `allow_list` and not blank.
+/// A string of `min` to `length` characters (`length` 0 is unlimited),
+/// optionally made only of the characters in `allow_list`, and optionally not
+/// blank.
+///
+/// PHP: `Utopia\Validator\Text`.
 #[derive(Debug, Clone)]
 pub struct Text {
+    /// The most characters allowed; 0 for no limit.
     pub length: usize,
+    /// The fewest characters allowed.
     pub min: usize,
+    /// The only characters allowed, compared byte by byte; empty allows any.
     pub allow_list: Vec<Cow<'static, str>>,
+    /// Whether values made only of whitespace, separators and format characters are refused.
     pub require_non_blank: bool,
 }
 
 impl Text {
+    /// The digits `0` to `9`, for [`Text::with_allow_list`].
     pub const NUMBERS: [&'static str; 10] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    /// The letters `A` to `Z`, for [`Text::with_allow_list`].
     pub const ALPHABET_UPPER: [&'static str; 26] = [
         "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V",
         "W", "X", "Y", "Z",
     ];
+    /// The letters `a` to `z`, for [`Text::with_allow_list`].
     pub const ALPHABET_LOWER: [&'static str; 26] = [
         "a", "b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r", "s", "t", "u", "v",
         "w", "x", "y", "z",
@@ -38,11 +49,15 @@ impl Text {
         Self::with_min(length, 1)
     }
 
+    /// Text of at least `min` and at most `length` characters (`length` 0 is unlimited).
     pub const fn with_min(length: usize, min: usize) -> Self {
         Self { length, min, allow_list: Vec::new(), require_non_blank: false }
     }
 
-    /// Only these characters (compared byte by byte, loosely, as PHP's `in_array`).
+    /// Allows only these characters, compared byte by byte; a digit also matches
+    /// an entry of the same numeric value.
+    ///
+    /// PHP: compared loosely, as PHP's `in_array` does.
     pub fn with_allow_list<I, S>(mut self, list: I) -> Self
     where
         I: IntoIterator<Item = S>,
@@ -78,6 +93,7 @@ impl Text {
 }
 
 impl Validator for Text {
+    /// `Value must be a valid string`, followed by the length, character and blank limits that apply.
     fn description(&self) -> String {
         let mut message = String::from("Value must be a valid string");
         if self.min == self.length {
@@ -101,30 +117,37 @@ impl Validator for Text {
 
     is_valid_via_validate!();
 
+    /// Valid for a string within the limits; length counts UTF-8 characters.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(value.as_str().is_some_and(|s| self.accepts(s))))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }
 }
 
-/// `Utopia\Validator\Identifier`: a C-style identifier (letters, digits and
-/// underscores, not starting with a digit) of at most `length` characters
-/// (0 = unlimited).
+/// An identifier: ASCII letters, digits and underscores, not starting with a
+/// digit, of at most `length` characters (0 for no limit).
+///
+/// PHP: `Utopia\Validator\Identifier`.
 #[derive(Debug, Clone, Copy, Default)]
 pub struct Identifier {
+    /// The most characters allowed; 0 for no limit.
     pub length: usize,
 }
 
 impl Identifier {
+    /// An identifier of at most `length` characters (0 for no limit).
     pub const fn new(length: usize) -> Self {
         Self { length }
     }
 }
 
 impl Validator for Identifier {
+    /// `Value must contain only letters, digits and underscores and must not start
+    /// with a digit`, with the length limit when there is one.
     fn description(&self) -> String {
         let mut description =
             String::from("Value must contain only letters, digits and underscores and must not start with a digit");
@@ -137,6 +160,7 @@ impl Validator for Identifier {
 
     is_valid_via_validate!();
 
+    /// Valid for a non-empty identifier within the length limit.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
         Ok(Verdict::of(
             value
@@ -145,6 +169,7 @@ impl Validator for Identifier {
         ))
     }
 
+    /// Expects a string ([`Type::String`]).
     fn kind(&self) -> Type {
         Type::String
     }

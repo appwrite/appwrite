@@ -1,5 +1,15 @@
-//! Environment variables and machine facts with the semantics of
-//! `utopia-php/system`.
+//! Read environment variables, and measure the machine a server runs on:
+//! its operating system, architecture, CPUs, memory, disks and network.
+//!
+//! [`env`] and [`env_or`] read configuration from the environment. A
+//! [`System`] answers questions about the machine through a [`Host`]:
+//! [`Machine`] is the real one, and any other host (a fixture, a remote
+//! probe) can be plugged in. The parsers ([`count_processors`],
+//! [`count_cpu_list`], [`meminfo`], [`proc_stat_total`], [`diskstats`]) read
+//! the content of Linux's `/proc` and `/sys` files, so they can be used on
+//! their own.
+//!
+//! PHP: ports `utopia-php/system`.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -14,15 +24,13 @@
 //! | `getIOUsage($duration)`, `getNetworkUsage($duration)` | [`System::io_usage`], [`System::network_usage`] |
 //! | `\Exception`, `\DivisionByZeroError` | [`Error::Exception`], [`Error::DivisionByZero`] |
 //!
-//! Reading is separated from parsing. Everything PHP reads from the machine
-//! (`php_uname`, files under `/proc` and `/sys`, `shell_exec('sysctl …')`,
-//! `scandir`, `disk_*_space`, `sleep`) goes through a [`Host`]; [`Machine`]
-//! is the real one, and any other host (a fixture, a remote probe) can be
-//! plugged in. The parsers ([`count_processors`], [`count_cpu_list`],
-//! [`meminfo`], [`proc_stat_total`], [`diskstats`]) take the content and
-//! keep PHP's exact semantics, including integer arithmetic that overflows
-//! into floats and results that are integers or floats depending on the
-//! division ([`Number`]).
+//! PHP: everything PHP reads from the machine (`php_uname`, files under
+//! `/proc` and `/sys`, `shell_exec('sysctl …')`, `scandir`, `disk_*_space`,
+//! `sleep`) goes through a [`Host`]. The parsers keep PHP's exact semantics,
+//! including integer arithmetic that overflows into floats and results that
+//! are integers or floats depending on the division ([`Number`]).
+
+#![warn(missing_docs)]
 
 use std::future::Future;
 use std::time::Duration;
@@ -36,24 +44,37 @@ pub use php_std::value::Number;
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
 
-/// Why a measurement failed, by the PHP exception class it corresponds to.
+/// Why a measurement failed.
+///
+/// PHP: each variant matches the exception class PHP throws, given by
+/// [`Error::php_class`].
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum Error {
-    /// `\Exception`: an unsupported OS, an unreadable source, or no data.
+    /// An unsupported operating system, an unreadable source, or no data.
+    ///
+    /// PHP: `\Exception`.
     #[error("{0}")]
     Exception(String),
-    /// `\DivisionByZeroError`: no CPU time passed between the two samples of
+    /// No CPU time passed between the two samples of
     /// [`System::cpu_usage`].
+    ///
+    /// PHP: `\DivisionByZeroError`.
     #[error("Division by zero")]
     DivisionByZero,
-    /// `\TypeError`: a cpuset list counting more CPUs than an `int` holds
+    /// A CPU list counting more CPUs than an `i64` holds
     /// ([`count_cpu_list`]).
+    ///
+    /// PHP: `\TypeError`, from the `int` return type of `countCpuList()`.
     #[error("{0}")]
     Type(String),
 }
 
 impl Error {
-    /// The PHP exception class this error corresponds to.
+    /// The name of the exception class this error matches, such as
+    /// `DivisionByZeroError`.
+    ///
+    /// PHP: the class of the exception `utopia-php/system` throws in the
+    /// same case.
     pub fn php_class(&self) -> &'static str {
         match self {
             Error::Exception(_) => "Exception",
@@ -71,23 +92,34 @@ fn exception(message: impl Into<String>) -> Error {
 // Environment
 // ---------------------------------------------------------------------------
 
-/// `System::getEnv($name)`: the variable, or `None` when it is unset, empty
-/// or `"0"` (PHP's `getenv($name) ?: null`).
+/// An environment variable, or `None` when it is unset, empty or `"0"`.
+///
+/// A variable that is not valid Unicode counts as unset.
+///
+/// PHP: `System::getEnv($name)`, which is `getenv($name) ?: null`.
 pub fn env(name: &str) -> Option<String> {
     env_value(std::env::var(name).ok())
 }
 
-/// `System::getEnv($name, $default)`.
+/// An environment variable, or `default` when it is unset, empty or `"0"`.
+///
+/// PHP: `System::getEnv($name, $default)`.
 pub fn env_or(name: &str, default: &str) -> String {
     env(name).unwrap_or_else(|| default.to_owned())
 }
 
-/// PHP `getenv($name)`: the variable as it is (empty strings included).
+/// An environment variable as it is, empty strings and `"0"` included;
+/// `None` only when it is unset (or not valid Unicode).
+///
+/// PHP: `getenv($name)`.
 pub fn env_raw(name: &str) -> Option<String> {
     std::env::var(name).ok()
 }
 
-/// The `?:` of `getEnv`: a value that is empty or `"0"` is no value.
+/// The rule [`env`] applies to a raw value: one that is empty or `"0"` is
+/// no value.
+///
+/// PHP: the `?:` of `getEnv()`.
 pub fn env_value(raw: Option<String>) -> Option<String> {
     raw.filter(|v| !v.is_empty() && v != "0")
 }
@@ -96,21 +128,32 @@ pub fn env_value(raw: Option<String>) -> Option<String> {
 // Architectures
 // ---------------------------------------------------------------------------
 
-/// A processor architecture family (`System::X86`, ...).
+/// A processor architecture family.
+///
+/// PHP: the `System::X86`, `PPC`, `ARM64`, `ARMV7` and `ARMV8` constants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Arch {
+    /// Intel and AMD: `x86_64`, `i386`, `i686`.
     X86,
+    /// PowerPC: `ppc64`, `ppc64le`.
     Ppc,
+    /// 64-bit ARM: `arm64`, `aarch64`.
     Arm64,
+    /// 32-bit ARMv7: `armv7l`.
     ArmV7,
+    /// ARMv8 reported as such: `armv8l`.
     ArmV8,
 }
 
 impl Arch {
-    /// Detection order of `getArchEnum()`.
+    /// Every family, in the order [`Arch::detect`] tries them.
+    ///
+    /// PHP: the detection order of `getArchEnum()`.
     pub const ALL: [Arch; 5] = [Arch::X86, Arch::Ppc, Arch::Arm64, Arch::ArmV7, Arch::ArmV8];
 
-    /// The PHP constant's value (`x86`, `ppc`, `arm64`, `armv7`, `armv8`).
+    /// The family's short name: `x86`, `ppc`, `arm64`, `armv7` or `armv8`.
+    ///
+    /// PHP: the value of the matching `System` constant.
     pub fn name(self) -> &'static str {
         match self {
             Arch::X86 => "x86",
@@ -121,15 +164,24 @@ impl Arch {
         }
     }
 
-    /// The architecture a PHP constant's value names (exactly).
+    /// The family a short name ([`Arch::name`]) names, matched exactly.
+    ///
+    /// PHP: reads the value of a `System` constant.
     pub fn from_name(name: &str) -> Option<Arch> {
         Arch::ALL.into_iter().find(|a| a.name() == name)
     }
 
-    /// Whether a machine name (`php_uname('m')`) belongs to this family:
-    /// PHP's patterns `/(x86*|i386|i686)/`, `/(ppc*)/`, `/(arm64|aarch64)/`,
-    /// `/(armv7)/` and `/(armv8)/`, which are substring tests (`x86*` is
-    /// `x8` followed by any number of `6`, so any `x8`; `ppc*` any `pp`).
+    /// Whether a machine name, such as `x86_64` or `aarch64`, belongs to
+    /// this family.
+    ///
+    /// The test is by substring: x86 matches any name containing `x8`,
+    /// `i386` or `i686`; PowerPC any containing `pp`; ARM64 `arm64` or
+    /// `aarch64`; ARMv7 `armv7`; ARMv8 `armv8`.
+    ///
+    /// PHP: the machine name is `php_uname('m')`, tested against PHP's
+    /// patterns `/(x86*|i386|i686)/`, `/(ppc*)/`, `/(arm64|aarch64)/`,
+    /// `/(armv7)/` and `/(armv8)/` (`x86*` is `x8` followed by any number of
+    /// `6`, so any `x8`; `ppc*` any `pp`).
     pub fn matches(self, machine: &str) -> bool {
         match self {
             Arch::X86 => machine.contains("x8") || machine.contains("i386") || machine.contains("i686"),
@@ -140,7 +192,10 @@ impl Arch {
         }
     }
 
-    /// `getArchEnum()` for a machine name: the first family that matches.
+    /// The family of a machine name: the first in [`Arch::ALL`] that
+    /// matches, or `None`.
+    ///
+    /// PHP: `getArchEnum()` for a machine name.
     pub fn detect(machine: &str) -> Option<Arch> {
         Arch::ALL.into_iter().find(|a| a.matches(machine))
     }
@@ -150,34 +205,67 @@ impl Arch {
 // Hosts
 // ---------------------------------------------------------------------------
 
-/// A field of `php_uname($mode)`.
+/// A field of the system's identity, as [`Host::uname`] reports it.
+///
+/// PHP: a mode of `php_uname($mode)`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Uname {
-    /// `'s'`: the operating system (`Linux`, `Darwin`).
+    /// The operating system (`Linux`, `Darwin`).
+    ///
+    /// PHP: mode `'s'`.
     Os,
-    /// `'m'`: the machine (`x86_64`, `aarch64`, `arm64`).
+    /// The machine (`x86_64`, `aarch64`, `arm64`).
+    ///
+    /// PHP: mode `'m'`.
     Machine,
-    /// `'n'`: the host name.
+    /// The host name.
+    ///
+    /// PHP: mode `'n'`.
     Host,
 }
 
-/// Where [`System`] reads the machine from: the PHP functions it calls.
+/// Where a [`System`] reads the machine from: identity, files, commands,
+/// directories, disk space and the clock.
+///
+/// PHP: one method per PHP function `utopia-php/system` calls.
 pub trait Host {
-    /// `php_uname($mode)`.
+    /// One field of the system's identity.
+    ///
+    /// PHP: `php_uname($mode)`.
     fn uname(&self, field: Uname) -> String;
-    /// `file_get_contents($path)`: `None` where PHP returns `false`.
+    /// The content of a file, or `None` when it cannot be read.
+    ///
+    /// PHP: `file_get_contents($path)`, with `None` where PHP returns
+    /// `false`.
     fn read(&self, path: &str) -> Option<Vec<u8>>;
-    /// `is_readable($path)`.
+    /// Whether a file exists and can be read.
+    ///
+    /// PHP: `is_readable($path)`.
     fn is_readable(&self, path: &str) -> bool;
-    /// `shell_exec($command)`: `None` where PHP returns `null` or `false`.
+    /// The standard output of a shell command, or `None` when it fails or
+    /// prints nothing.
+    ///
+    /// PHP: `shell_exec($command)`, with `None` where PHP returns `null` or
+    /// `false`.
     fn exec(&self, command: &str) -> Option<Vec<u8>>;
-    /// `scandir($dir, SCANDIR_SORT_NONE)`: `None` where PHP returns `false`.
+    /// The names in a directory, `.` and `..` included, unsorted; `None`
+    /// when it cannot be read.
+    ///
+    /// PHP: `scandir($dir, SCANDIR_SORT_NONE)`, with `None` where PHP
+    /// returns `false`.
     fn scandir(&self, dir: &str) -> Option<Vec<String>>;
-    /// `disk_total_space($dir)`: `None` where PHP returns `false`.
+    /// The size in bytes of the file system holding `dir`.
+    ///
+    /// PHP: `disk_total_space($dir)`, with `None` where PHP returns `false`.
     fn disk_total_space(&self, dir: &str) -> Option<f64>;
-    /// `disk_free_space($dir)`: `None` where PHP returns `false`.
+    /// The bytes available to unprivileged users on the file system holding
+    /// `dir`.
+    ///
+    /// PHP: `disk_free_space($dir)`, with `None` where PHP returns `false`.
     fn disk_free_space(&self, dir: &str) -> Option<f64>;
-    /// `sleep($seconds)`.
+    /// Waits `seconds` between two samples of a measurement.
+    ///
+    /// PHP: `sleep($seconds)`.
     fn sleep(&self, seconds: u64) -> impl Future<Output = ()> + Send;
 }
 
@@ -188,6 +276,7 @@ pub trait Host {
 pub struct Machine;
 
 impl Host for Machine {
+    /// Reads the field from `uname(2)`.
     fn uname(&self, field: Uname) -> String {
         let uname = rustix::system::uname();
         let value = match field {
@@ -198,19 +287,23 @@ impl Host for Machine {
         value.to_string_lossy().into_owned()
     }
 
+    /// Reads the whole file.
     fn read(&self, path: &str) -> Option<Vec<u8>> {
         std::fs::read(path).ok()
     }
 
+    /// Checks read permission with `access(2)`.
     fn is_readable(&self, path: &str) -> bool {
         rustix::fs::access(path, rustix::fs::Access::READ_OK).is_ok()
     }
 
+    /// Runs the command with `sh -c` and collects its standard output.
     fn exec(&self, command: &str) -> Option<Vec<u8>> {
         let output = std::process::Command::new("sh").arg("-c").arg(command).output().ok()?;
         Some(output.stdout).filter(|o| !o.is_empty())
     }
 
+    /// Lists the directory, `.` and `..` first.
     fn scandir(&self, dir: &str) -> Option<Vec<String>> {
         let entries = std::fs::read_dir(dir).ok()?;
         let mut names = vec![".".to_owned(), "..".to_owned()];
@@ -218,18 +311,23 @@ impl Host for Machine {
         Some(names)
     }
 
+    /// The file system's block count times its block size, from
+    /// `statvfs(3)`.
     fn disk_total_space(&self, dir: &str) -> Option<f64> {
         let s = rustix::fs::statvfs(dir).ok()?;
         let unit = if s.f_frsize != 0 { s.f_frsize } else { s.f_bsize };
         Some(s.f_blocks as f64 * unit as f64)
     }
 
+    /// The blocks available to unprivileged users times the block size,
+    /// from `statvfs(3)`.
     fn disk_free_space(&self, dir: &str) -> Option<f64> {
         let s = rustix::fs::statvfs(dir).ok()?;
         let unit = if s.f_frsize != 0 { s.f_frsize } else { s.f_bsize };
         Some(s.f_bavail as f64 * unit as f64)
     }
 
+    /// Sleeps on the async runtime's timer.
     async fn sleep(&self, seconds: u64) {
         tokio::time::sleep(Duration::from_secs(seconds)).await;
     }
@@ -270,8 +368,10 @@ fn intval_read(s: Option<&[u8]>) -> i64 {
     s.map_or(0, format::str_to_int)
 }
 
-/// `preg_match_all('/^processor/m', $cpuinfo)`: lines starting with
-/// `processor`.
+/// The number of processors in `/proc/cpuinfo` content: lines starting
+/// with `processor`.
+///
+/// PHP: `preg_match_all('/^processor/m', $cpuinfo)`.
 pub fn count_processors(cpuinfo: &[u8]) -> usize {
     let mut count = usize::from(cpuinfo.starts_with(b"processor"));
     for (i, &b) in cpuinfo.iter().enumerate() {
@@ -282,10 +382,13 @@ pub fn count_processors(cpuinfo: &[u8]) -> usize {
     count
 }
 
-/// `System::countCpuList()`: CPUs in a Linux cpu list such as `0-3,5,7-8`.
+/// The number of CPUs in a Linux CPU list such as `0-3,5,7-8`.
+///
 /// Ranges whose bounds are not numeric or are reversed count nothing. A
-/// count beyond `i64` is a float in PHP, which the method's `int` return
-/// type refuses: [`Error::Type`].
+/// count beyond `i64` fails with [`Error::Type`].
+///
+/// PHP: `System::countCpuList()`. A count beyond `i64` is a float in PHP,
+/// which the method's `int` return type refuses.
 pub fn count_cpu_list(list: &[u8]) -> Result<i64, Error> {
     let overflow = || {
         Error::Type("Utopia\\System\\System::countCpuList(): Return value must be of type int, float returned".into())
@@ -311,9 +414,14 @@ pub fn count_cpu_list(list: &[u8]) -> Result<i64, Error> {
     Ok(count)
 }
 
-/// `System::getProcMemoryInfo($field)` on `/proc/meminfo` content: the
-/// first `<field>:` followed by whitespace and digits
-/// (`/<field>:\s+(\d+)/`), in MiB (`intval(intval($kb) / 1024)`).
+/// A field of `/proc/meminfo` content, such as `MemTotal`, in MiB rounded
+/// down; `None` when it is missing.
+///
+/// The value is the first `<field>:` followed by whitespace and digits, read
+/// as KiB.
+///
+/// PHP: `System::getProcMemoryInfo($field)`, matching
+/// `/<field>:\s+(\d+)/` and returning `intval(intval($kb) / 1024)`.
 pub fn meminfo(content: &[u8], field: &str) -> Option<i64> {
     let needle = [field.as_bytes(), b":"].concat();
     let mut from = 0;
@@ -334,25 +442,41 @@ fn find(haystack: &[u8], needle: &[u8]) -> Option<usize> {
     haystack.windows(needle.len()).position(|w| w == needle)
 }
 
-/// The `total` row of `System::getProcStatData()`: the sum, over every
-/// `cpuN` line of `/proc/stat` (the aggregate `cpu` line does not match
-/// PHP's `/^cpu[0-999]/`), of each field's `intval()`. Fields are split on
-/// single spaces; a later line for the same CPU replaces an earlier one.
+/// Time spent by all CPUs in each state since boot, in clock ticks, summed
+/// over the per-CPU lines of `/proc/stat`.
+///
+/// Only `cpuN` lines count, not the aggregate `cpu` line. Fields are split
+/// on single spaces, and a later line for the same CPU replaces an earlier
+/// one.
+///
+/// PHP: the `total` row of `System::getProcStatData()`: the sum of each
+/// field's `intval()` over the lines matching PHP's `/^cpu[0-999]/`.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct CpuTimes {
+    /// Running user code.
     pub user: Number,
+    /// Running user code at a lowered priority.
     pub nice: Number,
+    /// Running kernel code.
     pub system: Number,
+    /// Idle.
     pub idle: Number,
+    /// Idle while waiting for I/O.
     pub iowait: Number,
+    /// Serving hardware interrupts.
     pub irq: Number,
+    /// Serving software interrupts.
     pub softirq: Number,
+    /// Stolen by the hypervisor for other virtual machines.
     pub steal: Number,
+    /// Running guest virtual machines.
     pub guest: Number,
 }
 
-/// [`CpuTimes`] of `/proc/stat` content; `None` where PHP throws
-/// `Unable to read /proc/stat` (content that is empty or `"0"`).
+/// The [`CpuTimes`] of `/proc/stat` content; `None` when the content is
+/// empty or `"0"`.
+///
+/// PHP: `None` where PHP throws `Unable to read /proc/stat`.
 pub fn proc_stat_total(content: &[u8]) -> Option<CpuTimes> {
     if !truthy(content) {
         return None;
@@ -380,10 +504,16 @@ pub fn proc_stat_total(content: &[u8]) -> Option<CpuTimes> {
     Some(CpuTimes { user, nice, system, idle, iowait, irq, softirq, steal, guest })
 }
 
-/// `System::getDiskStats()` on `/proc/diskstats` content: each non-empty
-/// line, trimmed, tabs runs made one space, split on single spaces, keyed
-/// by its third field (`""` when it has none; a later line replaces an
-/// earlier one). `None` where PHP throws `Unable to read /proc/diskstats`.
+/// The lines of `/proc/diskstats` content, split into fields and keyed by
+/// disk name; `None` when the content is empty or `"0"`.
+///
+/// Each non-empty line is trimmed, each run of tabs becomes one space, and
+/// the line is split on single spaces. The key is the third field (`""` when
+/// there is none), and a later line replaces an earlier one with the same
+/// key.
+///
+/// PHP: `System::getDiskStats()`, with `None` where PHP throws
+/// `Unable to read /proc/diskstats`.
 pub fn diskstats(content: &[u8]) -> Option<IndexMap<String, Vec<Vec<u8>>>> {
     if !truthy(content) {
         return None;
@@ -421,11 +551,14 @@ const INVALID_DISKS: [&str; 2] = ["loop", "ram"];
 /// Network interfaces `getNetworkUsage()` skips (substring match).
 const INVALID_NET_INTERFACES: [&str; 7] = ["veth", "docker", "lo", "tun", "vboxnet", ".", "bonding_masters"];
 
-/// Read and write volume of a disk, in MiB (an integer when the division is
-/// exact, as in PHP).
+/// Read and write volume of a disk over a sampling period, in MiB.
+///
+/// Each volume is an integer when the division is exact, a float otherwise.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Io {
+    /// MiB read.
     pub read: Number,
+    /// MiB written.
     pub write: Number,
 }
 
@@ -433,11 +566,15 @@ pub struct Io {
 /// two decimals.
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Traffic {
+    /// MiB received.
     pub download: Number,
+    /// MiB sent.
     pub upload: Number,
 }
 
-/// `Utopia\System\System` on a [`Host`].
+/// Facts and measurements of a machine, read through a [`Host`].
+///
+/// PHP: `Utopia\System\System`.
 #[derive(Debug, Clone, Default)]
 pub struct System<H: Host = Machine> {
     host: H,
@@ -451,56 +588,89 @@ impl System<Machine> {
 }
 
 impl<H: Host> System<H> {
+    /// A system reading the machine through `host`.
     pub fn with_host(host: H) -> Self {
         Self { host }
     }
 
+    /// The host this system reads from.
     pub fn host(&self) -> &H {
         &self.host
     }
 
-    /// `getOS()`.
+    /// The operating system's name, such as `Linux` or `Darwin`.
+    ///
+    /// PHP: `getOS()`.
     pub fn os(&self) -> String {
         self.host.uname(Uname::Os)
     }
 
-    /// `getArch()`.
+    /// The machine name, such as `x86_64` or `aarch64`.
+    ///
+    /// PHP: `getArch()`.
     pub fn arch(&self) -> String {
         self.host.uname(Uname::Machine)
     }
 
-    /// `getHostname()`.
+    /// The host name.
+    ///
+    /// PHP: `getHostname()`.
     pub fn hostname(&self) -> String {
         self.host.uname(Uname::Host)
     }
 
-    /// `getArchEnum()`.
+    /// The architecture family of this machine.
+    ///
+    /// Fails with [`Error::Exception`] when no family matches the machine
+    /// name.
+    ///
+    /// PHP: `getArchEnum()`.
     pub fn arch_enum(&self) -> Result<Arch, Error> {
         let arch = self.arch();
         Arch::detect(&arch).ok_or_else(|| exception(format!("'{arch}' enum not found.")))
     }
 
+    /// Whether this is an x86 machine.
+    ///
+    /// PHP: `isX86()`.
     pub fn is_x86(&self) -> bool {
         Arch::X86.matches(&self.arch())
     }
 
+    /// Whether this is a PowerPC machine.
+    ///
+    /// PHP: `isPPC()`.
     pub fn is_ppc(&self) -> bool {
         Arch::Ppc.matches(&self.arch())
     }
 
+    /// Whether this is a 64-bit ARM machine.
+    ///
+    /// PHP: `isArm64()`.
     pub fn is_arm64(&self) -> bool {
         Arch::Arm64.matches(&self.arch())
     }
 
+    /// Whether this is an ARMv7 machine.
+    ///
+    /// PHP: `isArmV7()`.
     pub fn is_armv7(&self) -> bool {
         Arch::ArmV7.matches(&self.arch())
     }
 
+    /// Whether this is an ARMv8 machine.
+    ///
+    /// PHP: `isArmV8()`.
     pub fn is_armv8(&self) -> bool {
         Arch::ArmV8.matches(&self.arch())
     }
 
-    /// `isArch($arch)`: `$arch` is a PHP constant's value ([`Arch::name`]).
+    /// Whether this machine belongs to the family named `arch`
+    /// ([`Arch::name`]).
+    ///
+    /// Fails with [`Error::Exception`] for a name that is no family.
+    ///
+    /// PHP: `isArch($arch)`, where `$arch` is a `System` constant's value.
     pub fn is_arch(&self, arch: &str) -> Result<bool, Error> {
         match Arch::from_name(arch) {
             Some(a) => Ok(a.matches(&self.arch())),
@@ -512,7 +682,13 @@ impl<H: Host> System<H> {
         exception(format!("{os} not supported."))
     }
 
-    /// `getCPUCores()` (deprecated in PHP for [`System::cpu`]).
+    /// The number of processors the machine has, ignoring container limits;
+    /// prefer [`System::cpu`].
+    ///
+    /// Reads `/proc/cpuinfo` on Linux (0 when unreadable), `sysctl` on macOS
+    /// and `wmic` on Windows; other systems fail with [`Error::Exception`].
+    ///
+    /// PHP: `getCPUCores()`, deprecated in PHP for `getCPU()`.
     pub fn cpu_cores(&self) -> Result<i64, Error> {
         match self.os().as_str() {
             "Linux" => Ok(match self.host.read("/proc/cpuinfo") {
@@ -525,8 +701,13 @@ impl<H: Host> System<H> {
         }
     }
 
-    /// `getCPU()`: the CPUs available to this process, honouring cgroup
-    /// quotas and cpusets on Linux.
+    /// The CPUs available to this process, honouring cgroup quotas and
+    /// cpusets on Linux; a fraction when a quota allows part of a CPU.
+    ///
+    /// Fails with [`Error::Exception`] when the count cannot be determined or
+    /// the system is not Linux, macOS or Windows.
+    ///
+    /// PHP: `getCPU()`.
     pub fn cpu(&self) -> Result<f64, Error> {
         match self.os().as_str() {
             "Linux" => {
@@ -636,8 +817,14 @@ impl<H: Host> System<H> {
             .ok_or_else(|| exception("Unable to read /proc/stat"))
     }
 
-    /// `getCPUUsage($duration)`: the busy share of CPU time between two
-    /// samples `seconds` apart, as a percentage (Linux only).
+    /// The busy share of CPU time between two samples `seconds` apart, as a
+    /// percentage (Linux only).
+    ///
+    /// Fails with [`Error::DivisionByZero`] when no CPU time passed between
+    /// the samples, and with [`Error::Exception`] off Linux or when
+    /// `/proc/stat` cannot be read.
+    ///
+    /// PHP: `getCPUUsage($duration)`.
     pub async fn cpu_usage(&self, seconds: u64) -> Result<f64, Error> {
         let os = self.os();
         if os != "Linux" {
@@ -668,7 +855,9 @@ impl<H: Host> System<H> {
         mib.map_or(0, intval)
     }
 
-    /// `getMemoryTotal()`: RAM in MiB.
+    /// The machine's RAM in MiB (Linux and macOS).
+    ///
+    /// PHP: `getMemoryTotal()`.
     pub fn memory_total(&self) -> Result<i64, Error> {
         match self.os().as_str() {
             "Linux" => self.proc_memory_info("MemTotal"),
@@ -677,8 +866,10 @@ impl<H: Host> System<H> {
         }
     }
 
-    /// `getMemory()`: RAM in MiB available to this process (the cgroup
-    /// memory limit on Linux, capped at the total).
+    /// The RAM in MiB available to this process: the cgroup memory limit on
+    /// Linux, capped at the total.
+    ///
+    /// PHP: `getMemory()`.
     pub fn memory(&self) -> Result<i64, Error> {
         let total = self.memory_total()?;
         if self.os() != "Linux" {
@@ -717,7 +908,9 @@ impl<H: Host> System<H> {
         None
     }
 
-    /// `getMemoryFree()`: free RAM in MiB.
+    /// The free RAM in MiB (Linux and macOS).
+    ///
+    /// PHP: `getMemoryFree()`.
     pub fn memory_free(&self) -> Result<i64, Error> {
         match self.os().as_str() {
             "Linux" => self.proc_memory_info("MemFree"),
@@ -726,7 +919,10 @@ impl<H: Host> System<H> {
         }
     }
 
-    /// `getMemoryAvailable()`: available RAM in MiB (Linux only).
+    /// The RAM in MiB available for new processes without swapping (Linux
+    /// only).
+    ///
+    /// PHP: `getMemoryAvailable()`.
     pub fn memory_available(&self) -> Result<i64, Error> {
         match self.os().as_str() {
             "Linux" => self.proc_memory_info("MemAvailable"),
@@ -734,15 +930,18 @@ impl<H: Host> System<H> {
         }
     }
 
-    /// `getDiskTotal($directory)`: size in MiB of the file system holding
-    /// `directory` (PHP defaults to the library's own directory; Rust
-    /// takes it explicitly).
+    /// The size in MiB of the file system holding `directory`.
+    ///
+    /// PHP: `getDiskTotal($directory)`. PHP defaults to the library's own
+    /// directory; Rust takes it explicitly.
     pub fn disk_total(&self, directory: &str) -> Result<i64, Error> {
         let bytes = self.host.disk_total_space(directory).ok_or_else(|| exception("Unable to get disk space"))?;
         Ok(format::dval_to_lval(bytes / 1024.0 / 1024.0))
     }
 
-    /// `getDiskFree($directory)`: free space in MiB.
+    /// The free space in MiB on the file system holding `directory`.
+    ///
+    /// PHP: `getDiskFree($directory)`.
     pub fn disk_free(&self, directory: &str) -> Result<i64, Error> {
         let bytes = self.host.disk_free_space(directory).ok_or_else(|| exception("Unable to get free disk space"))?;
         Ok(format::dval_to_lval(bytes / 1024.0 / 1024.0))
@@ -759,8 +958,12 @@ impl<H: Host> System<H> {
         Ok(disks)
     }
 
-    /// `getIOUsage($duration)`: MiB read and written per disk over
-    /// `seconds`, plus a `total` row.
+    /// The MiB read and written per disk over `seconds`, plus a `total` row.
+    ///
+    /// Loop and RAM disks are skipped. Fails with [`Error::Exception`] when
+    /// `/proc/diskstats` cannot be read.
+    ///
+    /// PHP: `getIOUsage($duration)`.
     pub async fn io_usage(&self, seconds: u64) -> Result<IndexMap<String, Io>, Error> {
         let first = self.disk_stats()?;
         self.host.sleep(seconds).await;
@@ -785,9 +988,15 @@ impl<H: Host> System<H> {
             .collect())
     }
 
-    /// `getNetworkUsage($duration)`: MiB downloaded and uploaded per
-    /// interface over `seconds` (each interface is sampled in turn), plus a
-    /// `total` row.
+    /// The MiB downloaded and uploaded per network interface over `seconds`,
+    /// plus a `total` row.
+    ///
+    /// Each interface is sampled in turn, so the call takes `seconds` per
+    /// interface. Interfaces whose names contain `veth`, `docker`, `lo`,
+    /// `tun`, `vboxnet` or `.` are skipped. Fails with [`Error::Exception`] when `/sys/class/net` cannot
+    /// be read.
+    ///
+    /// PHP: `getNetworkUsage($duration)`.
     pub async fn network_usage(&self, seconds: u64) -> Result<IndexMap<String, Traffic>, Error> {
         let interfaces = self
             .host

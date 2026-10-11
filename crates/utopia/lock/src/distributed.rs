@@ -1,3 +1,6 @@
+//! A lock shared between servers: a lease on a Redis key that only its
+//! holder can refresh or release.
+
 use std::time::{Duration, Instant};
 
 use redis::aio::{ConnectionLike, ConnectionManager};
@@ -44,7 +47,9 @@ fn reply<T>(result: redis::RedisResult<T>) -> Result<Option<T>, Error> {
 }
 
 impl<C: ConnectionLike + Clone + Send + Sync> Distributed<C> {
-    /// A lock on `key` whose lease expires after `ttl` seconds (PHP's default is 600).
+    /// A lock on `key` whose lease expires after `ttl` seconds.
+    ///
+    /// PHP: the default `ttl` is 600.
     pub fn new(conn: C, key: impl Into<String>, ttl: i64) -> Self {
         Self { conn, key: key.into(), ttl, token: std::sync::Mutex::new(None), logger: None }
     }
@@ -55,6 +60,7 @@ impl<C: ConnectionLike + Clone + Send + Sync> Distributed<C> {
         self
     }
 
+    /// The Redis key that holds the lease.
     pub fn key(&self) -> &str {
         &self.key
     }
@@ -136,6 +142,10 @@ impl<C: ConnectionLike + Clone + Send + Sync> Distributed<C> {
 }
 
 impl<C: ConnectionLike + Clone + Send + Sync> Lock for Distributed<C> {
+    /// Tries once, then, for a [`Wait::For`], retries with a growing,
+    /// jittered delay (50 ms doubling up to 1 s) until the wait runs out.
+    /// [`Wait::Forever`] tries once. Contention and timeouts go to the
+    /// logger.
     async fn acquire(&self, wait: Wait) -> Result<bool, Error> {
         if self.try_acquire().await? {
             return Ok(true);
@@ -163,6 +173,8 @@ impl<C: ConnectionLike + Clone + Send + Sync> Lock for Distributed<C> {
         Ok(false)
     }
 
+    /// Writes a fresh token to the key if no one holds it, with the lease's
+    /// expiry.
     async fn try_acquire(&self) -> Result<bool, Error> {
         let token = Self::generate_token();
         let mut conn = self.conn.clone();
@@ -176,6 +188,8 @@ impl<C: ConnectionLike + Clone + Send + Sync> Lock for Distributed<C> {
         Ok(false)
     }
 
+    /// Deletes the key if it still holds this instance's token, then forgets
+    /// the token. Only connection failures are errors.
     async fn release(&self) -> Result<(), Error> {
         let Some(token) = self.token() else { return Ok(()) };
         let mut conn = self.conn.clone();
@@ -185,6 +199,7 @@ impl<C: ConnectionLike + Clone + Send + Sync> Lock for Distributed<C> {
         Ok(())
     }
 
+    /// [`Error::Contention`] naming the key.
     fn contention(&self) -> Error {
         Error::Contention(format!("Failed to acquire distributed lock: {}", self.key))
     }
