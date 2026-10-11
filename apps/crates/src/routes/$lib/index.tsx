@@ -5,6 +5,7 @@ import { Markdown } from '@/components/Markdown'
 import { PageHeader, Section, WithToc } from '@/components/Page'
 import { StatusBadge } from '@/components/Status'
 import { SyncBadge, SyncPanel } from '@/components/Sync'
+import { Performance, SpeedupBadge } from '@/components/Bench'
 import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, slug, summary, type Status } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
@@ -30,6 +31,7 @@ export const Route = createFileRoute('/$lib/')({
       overview_notes: lib.overview_notes,
       guide: lib.guide,
       sync: lib.sync,
+      bench: lib.bench,
       examples: lib.examples,
       modules: lib.modules
         .filter((m) => m.path)
@@ -77,6 +79,7 @@ function LibraryPage() {
   const category = index?.categories.find((c) => c.id === l.category)
   const toc = [
     ...(migration ? [{ id: 'migration', label: 'Conversion status' }] : []),
+    ...(migration && d.bench?.results.length ? [{ id: 'performance', label: 'Performance' }] : []),
     ...(l.rust ? [{ id: 'install', label: 'Install' }] : []),
     ...(d.guide.length ? [{ id: 'getting-started', label: 'Getting started' }, ...guideHeadings(d.guide).map((h) => ({ id: slug(h), label: h, depth: 1 }))] : []),
     ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: d.guide.length ? 'Reference' : 'Overview' }] : []),
@@ -110,6 +113,7 @@ function LibraryPage() {
           <MigrationOnly>
             <StatusBadge status={l.status} />
             <SyncBadge sync={l.sync} />
+            <SpeedupBadge bench={l.bench} />
           </MigrationOnly>
         }
       >
@@ -136,6 +140,8 @@ function LibraryPage() {
         </div>
         <SyncPanel slug={l.slug} sync={d.sync} />
       </MigrationCard>
+
+      <Performance id="performance" bench={d.bench} />
 
       {d.install.cargo ? (
         <Section id="install" title="Install" description="The crate lives in the Appwrite repository; depend on it from Git.">

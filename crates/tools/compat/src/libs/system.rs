@@ -17,6 +17,16 @@ use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, float_value
 /// Operations this adapter implements (must match `spec.json`).
 pub const OPS: &[&str] = &["system.env", "system.fixture", "system.machine"];
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("system: no benchmark `{name}`")))
+}
+
 /// A machine described by a case (see `Fixture.php` for the format).
 struct Fixture {
     machine: Value,

@@ -36,6 +36,16 @@ pub const OPS: &[&str] = &[
     "provider.supported_domains",
 ];
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("emails: no benchmark `{name}`")))
+}
+
 fn err(e: &Error) -> Outcome {
     Outcome::err_bytes(e.php_class(), e.message())
 }

@@ -3,10 +3,37 @@
 use serde_json::{Value, json};
 use utopia_dsn::{Dsn, Error};
 
+use std::hint::black_box;
+
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes_value};
+use crate::bench::Bench;
 
 /// Operations this adapter implements (must match `spec.json`).
 pub const OPS: &[&str] = &["dsn.new", "dsn.parse", "dsn.get", "dsn.param", "dsn.refusal_printed"];
+
+/// A connection string as services configure them.
+const DSN: &str = "redis://appwrite:s3cret@cache.internal:6379/2?timeout=5&pool=16&tls=true";
+
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[
+    ("parse", "Parse a Redis connection string with credentials, a path and three parameters"),
+    ("param", "Read one query parameter of a parsed connection string"),
+];
+
+pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
+    Ok(match name {
+        "parse" => Bench::sync(|| {
+            black_box(Dsn::parse(black_box(DSN)).ok());
+        }),
+        "param" => {
+            let dsn = Dsn::parse(DSN).map_err(|e| Fault::new(e.to_string()))?;
+            Bench::sync(move || {
+                black_box(dsn.param_or(black_box("pool"), b"").ok());
+            })
+        }
+        _ => return Err(Fault::new(format!("dsn: no benchmark `{name}`"))),
+    })
+}
 
 fn err(e: Error) -> Outcome {
     Outcome::err(e.php_class(), e.to_string())

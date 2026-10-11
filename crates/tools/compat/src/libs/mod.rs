@@ -2,11 +2,14 @@
 //!
 //! Each module exposes `OPS` (the operations it implements) and
 //! `call(op, args, session)`. Add a library by adding its module here and to
-//! [`LIBS`] and [`call`].
+//! [`LIBS`] and [`call`]. A module with benchmarks also exposes `BENCHES`
+//! (name and description of each) and `bench(name, session)`, listed in
+//! [`benches`] and [`bench`].
 
 use serde_json::Value;
 
 use crate::adapter::{Fault, OpResult, Session};
+use crate::bench::Bench;
 
 pub mod auth;
 pub mod cache;
@@ -62,5 +65,43 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "user-agent" => user_agent::call(op, args, session).await,
         "validators" => validators::call(op, args, session).await,
         _ => Err(Fault::new(format!("unknown library `{lib}`"))),
+    }
+}
+
+/// The benchmarks of a library: name and what it times.
+pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
+    match lib {
+        "dsn" => dsn::BENCHES,
+        "auth" => auth::BENCHES,
+        "cache" => cache::BENCHES,
+        "domains" => domains::BENCHES,
+        "emails" => emails::BENCHES,
+        "http" => http::BENCHES,
+        "locale" => locale::BENCHES,
+        "lock" => lock::BENCHES,
+        "php-std" => php_std::BENCHES,
+        "system" => system::BENCHES,
+        "user-agent" => user_agent::BENCHES,
+        "validators" => validators::BENCHES,
+        _ => &[],
+    }
+}
+
+/// Sets up one benchmark of one library and returns the closure to time.
+pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench, Fault> {
+    match lib {
+        "dsn" => dsn::bench(name, session).await,
+        "auth" => auth::bench(name, session).await,
+        "cache" => cache::bench(name, session).await,
+        "domains" => domains::bench(name, session).await,
+        "emails" => emails::bench(name, session).await,
+        "http" => http::bench(name, session).await,
+        "locale" => locale::bench(name, session).await,
+        "lock" => lock::bench(name, session).await,
+        "php-std" => php_std::bench(name, session).await,
+        "system" => system::bench(name, session).await,
+        "user-agent" => user_agent::bench(name, session).await,
+        "validators" => validators::bench(name, session).await,
+        _ => Err(Fault::new(format!("{lib}: no benchmarks"))),
     }
 }

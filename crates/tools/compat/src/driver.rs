@@ -7,8 +7,10 @@
 //!           `{"id": 7, "fault": "<harness problem>"}`
 //!
 //! Control operations: `$hello` (runtime and the operations of every library),
-//! `$config` (`{"ns": ..., "services": {...}}`, resets handles), `$reset`
-//! and `$equal` (`{"a": ..., "b": ...}`, compares two values).
+//! `$config` (`{"ns": ..., "services": {...}}`, resets handles), `$reset`,
+//! `$equal` (`{"a": ..., "b": ...}`, compares two values) and `$bench`
+//! (`{}` lists the library's benchmarks, `{"name": ...}` times one; see
+//! [`crate::bench`]).
 
 use std::panic::AssertUnwindSafe;
 
@@ -43,6 +45,15 @@ pub async fn handle(request: &Value, session: &mut Session) -> OpResult {
             session.reset();
             Ok(Outcome::Ok(Value::Bool(true)))
         }
+        "$bench" => match args.get("name").and_then(Value::as_str) {
+            None => Ok(Outcome::Ok(Value::Object(
+                libs::benches(lib).iter().map(|(n, d)| ((*n).to_owned(), json!(d))).collect(),
+            ))),
+            Some(name) => {
+                let bench = libs::bench(lib, name, session).await?;
+                Ok(Outcome::Ok(crate::bench::measure(bench).await))
+            }
+        },
         _ => match AssertUnwindSafe(libs::call(lib, op, args, session)).catch_unwind().await {
             Ok(result) => result,
             // A panic is a behaviour difference (PHP would not panic), not a harness fault.

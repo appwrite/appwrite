@@ -35,6 +35,16 @@ pub const OPS: &[&str] = &[
     "redis.ttl",
 ];
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("lock: no benchmark `{name}`")))
+}
+
 async fn connection(session: &Session) -> Result<ConnectionManager, Fault> {
     let url = session.service("redis")?.to_owned();
     redis::Client::open(url.as_str())

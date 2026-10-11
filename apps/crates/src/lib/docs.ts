@@ -43,6 +43,8 @@ export interface LibrarySummary {
   compat: { complete: boolean; operations: number; cases: number; summary: string } | null
   sync: { state: SyncState; estimated: boolean | null; behind: number | null; releases: number; upstream: number | null }
   counts: { items: number; documented: number; examples: number; guide: boolean; php_symbols: number; linked: number }
+  /** Geometric mean of the benchmark speedups (PHP time / Rust time). */
+  bench: { speedup: number; benchmarks: number } | null
 }
 
 export interface Category {
@@ -120,8 +122,42 @@ export interface PhpSymbol {
 
 export type GuideBlock = { text: string } | { example: Example }
 
+/** One runtime's timing of a benchmark (`compat bench`): nanoseconds per call. */
+export interface Timing {
+  ns: number
+  min: number
+  max: number
+  samples: number
+  calls: number
+  allocations?: number
+  bytes?: number
+}
+
+export interface Bench {
+  lib: string
+  environment: {
+    date: string
+    commit: string
+    machine: { os: string; arch: string; cpu: string }
+    php: { version: string; opcache: boolean; jit: string; runs: string }
+    rust: { version: string; profile: string }
+  }
+  results: { name: string; description: string | null; php: Timing; rust: Timing; speedup: number }[]
+}
+
+/** `1234.5` ns → `1.23 µs`. */
+export function duration(ns: number) {
+  if (ns >= 1e6) return `${(ns / 1e6).toFixed(2)} ms`
+  if (ns >= 1e3) return `${(ns / 1e3).toFixed(2)} µs`
+  return `${ns.toFixed(ns < 10 ? 1 : 0)} ns`
+}
+
+/** `2.167` → `2.2×`. */
+export const times = (x: number) => `${x >= 10 ? Math.round(x) : x.toFixed(1)}×`
+
 export interface Library {
   library: LibrarySummary
+  bench: Bench | null
   install: { cargo: string | null; composer: string | null }
   overview: string
   overview_notes: string

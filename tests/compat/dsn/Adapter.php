@@ -3,6 +3,7 @@
 namespace Tests\Compat\Dsn;
 
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\DSN\DSN;
@@ -10,8 +11,23 @@ use Utopia\DSN\DSN;
 /**
  * Maps tests/compat/dsn/spec.json operations onto utopia-php/dsn. Glue only: no logic.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    /** A connection string as services configure them. */
+    private const DSN = 'redis://appwrite:s3cret@cache.internal:6379/2?timeout=5&pool=16&tls=true';
+
+    public function benchmarks(): array
+    {
+        return [
+            'parse' => ['Parse a Redis connection string with credentials, a path and three parameters', fn (Session $s) => fn () => new DSN(self::DSN)],
+            'param' => ['Read one query parameter of a parsed connection string', function (Session $s) {
+                $dsn = new DSN(self::DSN);
+
+                return fn () => $dsn->getParam('pool');
+            }],
+        ];
+    }
+
     public function operations(): array
     {
         return [

@@ -26,6 +26,7 @@ Everything is generated from each library's own data and metadata; nothing is wr
 | Libraries | `packages/*`, the `utopia-php/*` packages in `composer.lock`, `crates/utopia/*` and `crates/support/*` |
 | Category | `extra.utopia.category` in the package's `composer.json` (or `[package.metadata.utopia]` in a Rust-only crate's `Cargo.toml`); category titles and descriptions in [`crates/categories.json`](../../crates/categories.json) |
 | Status | converted (`tests/compat/<lib>` is complete), in progress (a compat spec), started (a crate) or planned |
+| Performance | `tests/compat/<lib>/bench.json`, written by `bin/compat bench <lib> --write` (migration mode) |
 | Sync with PHP | git history of `packages/<lib>/src` since the commit in the crate's `php-sync` marker (below) |
 | Getting started | `guide.md` next to the crate's `Cargo.toml` (below) |
 | Overview | the crate's `//!` docs, else the PHP README |

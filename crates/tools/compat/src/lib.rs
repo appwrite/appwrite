@@ -4,10 +4,12 @@
 //!
 //! - [`adapter`] and [`libs`]: the Rust side of every library's operations.
 //! - [`driver`]: the Rust driver process (`compat-driver`).
+//! - [`bench`]: benchmarks of a library's hot paths, timed by each driver.
 //! - [`runner`]: the `compat` command, which drives the PHP and Rust drivers
 //!   with the same cases and generated inputs and compares everything.
 
 pub mod adapter;
+pub mod bench;
 pub mod driver;
 pub mod libs;
 pub mod runner;

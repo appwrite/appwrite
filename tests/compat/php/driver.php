@@ -7,17 +7,22 @@
 
 require __DIR__ . '/../../../vendor/autoload.php';
 require_once __DIR__ . '/Adapter.php';
+require_once __DIR__ . '/Bench.php';
+require_once __DIR__ . '/Benchmarks.php';
 require_once __DIR__ . '/Codec.php';
 require_once __DIR__ . '/Fault.php';
 require_once __DIR__ . '/Inventory.php';
 require_once __DIR__ . '/Session.php';
 
+use Tests\Compat\Bench;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Codec;
 use Tests\Compat\Fault;
 use Tests\Compat\Inventory;
 use Tests\Compat\Session;
 
 $operations = [];
+$benchmarks = [];
 foreach (glob(\dirname(__DIR__) . '/*/Adapter.php') ?: [] as $file) {
     $lib = basename(\dirname($file));
     if ($lib === 'php') {
@@ -25,7 +30,9 @@ foreach (glob(\dirname(__DIR__) . '/*/Adapter.php') ?: [] as $file) {
     }
     require_once $file;
     $class = 'Tests\\Compat\\' . str_replace(' ', '', ucwords(str_replace(['-', '_'], ' ', $lib))) . '\\Adapter';
-    $operations[$lib] = (new $class())->operations();
+    $adapter = new $class();
+    $operations[$lib] = $adapter->operations();
+    $benchmarks[$lib] = $adapter instanceof Benchmarks ? $adapter->benchmarks() : [];
 }
 
 $session = new Session();
@@ -51,6 +58,8 @@ while (($line = fgets(STDIN)) !== false) {
             '$hello' => [
                 'runtime' => 'php',
                 'version' => PHP_VERSION,
+                'opcache' => (bool) ini_get('opcache.enable_cli'),
+                'jit' => (string) ini_get('opcache.jit'),
                 'libs' => array_map(static fn (array $ops) => array_keys($ops), $operations),
             ],
             '$config' => (function () use (&$session, $args) {
@@ -66,6 +75,10 @@ while (($line = fgets(STDIN)) !== false) {
             '$inventory' => Inventory::take(array_values((array) ($args['src'] ?? []))),
             '$docs' => Inventory::docs(array_values(array_map(strval(...), (array) ($args['symbols'] ?? [])))),
             '$equal' => ($args['a'] ?? null) === ($args['b'] ?? null),
+            // Lists a library's benchmarks, or times one (see Bench.php).
+            '$bench' => isset($args['name'])
+                ? Bench::measure((($benchmarks[$lib][$args['name']] ?? throw new Fault("{$lib}: no benchmark `{$args['name']}`"))[1])($session))
+                : array_map(static fn (array $b) => $b[0], $benchmarks[$lib] ?? []),
             default => ($operations[$lib][$op] ?? throw new Fault("{$lib}: unknown operation `{$op}`"))($args, $session),
         };
         $reply = ['id' => $id, 'ok' => Codec::encode($result)];

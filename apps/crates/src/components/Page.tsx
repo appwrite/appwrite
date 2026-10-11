@@ -6,6 +6,7 @@ import { useMigration } from '@/lib/prefs'
 import { MigrationOnly } from './Migration'
 import { StatusBadge } from './Status'
 import { SyncBadge } from './Sync'
+import { SpeedupBadge } from './Bench'
 
 /** Page title block in the console's style. */
 export function PageHeader({ eyebrow, title, mono, children, aside }: { eyebrow?: ReactNode; title: ReactNode; mono?: boolean; children?: ReactNode; aside?: ReactNode }) {
@@ -46,6 +47,7 @@ export function LibraryCard({ lib }: { lib: LibrarySummary }) {
           <div className="grid justify-items-end gap-1">
             <StatusBadge status={lib.status} />
             <SyncBadge sync={lib.sync} />
+            <SpeedupBadge bench={lib.bench} />
           </div>
         </MigrationOnly>
       </div>

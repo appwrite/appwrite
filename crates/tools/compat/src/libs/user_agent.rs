@@ -22,6 +22,16 @@ pub const OPS: &[&str] = &[
     "bot.new",
 ];
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("user-agent: no benchmark `{name}`")))
+}
+
 fn text(value: &Option<Text<'_>>) -> Value {
     value.as_deref().map_or(Value::Null, bytes_value)
 }

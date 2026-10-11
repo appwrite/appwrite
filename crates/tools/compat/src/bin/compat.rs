@@ -33,6 +33,8 @@ const USAGE: &str = "usage: compat <command> [args]
   crates [--out <dir>]                           every Utopia library's docs (Rust API, PHP API by
                                                  reflection, examples, status) as JSON for apps/crates
                                                  (default apps/crates/data)
+  bench <lib>... [--write]                       time each library's benchmarks on PHP and on a release
+                                                 build of Rust; --write stores tests/compat/<lib>/bench.json
   call <lib> <op> [<args json>] [--side php|rust]  run one operation and print both results
   new <lib>                                      scaffold tests/compat/<lib>
 
@@ -294,6 +296,11 @@ fn real_main(args: &[String]) -> Result<bool, String> {
                 eprintln!("{lib}: synced with PHP at {}", &commit[..10.min(commit.len())]);
             }
             Ok(ok)
+        }
+        "bench" => {
+            let libs = need_lib(&cli)?;
+            compat::runner::bench::use_release_driver(&mut engine, &root)?;
+            compat::runner::bench::run(&mut engine, &root, &libs, cli.write)
         }
         "crates" => {
             let out = cli.out.as_deref().map(PathBuf::from).unwrap_or_else(|| root.join("apps/crates/data"));

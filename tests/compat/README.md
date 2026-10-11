@@ -40,6 +40,7 @@ bin/compat report [<lib>...] [--iterations <n>] [--out <dir>]   # data for apps/
 bin/compat crates [--out <dir>]  # data for apps/crates, the docs of every library
 bin/compat examples [<crate dir>...]  # run every doc example: Rust doctests and their PHP twins
 bin/compat sync <lib>... [--force]  # after `run <lib>` passes, record the PHP commit the crate matches
+bin/compat bench <lib>... [--write]  # time each library's benchmarks on PHP and on a release build of Rust
 ```
 
 `bin/compat report` runs every case and fuzz profile (200 inputs each by default) with both runtimes' results kept, compares every public PHP method's signature with its Rust counterpart's, maps each PHP symbol to the Rust items whose docs name it, and writes the JSON [`apps/compat`](../../apps/compat) renders. `bin/compat crates` writes the documentation of every Utopia library, converted or not, for [`apps/crates`](../../apps/crates), reading PHP signatures through the PHP driver. `bin/compat examples` runs every example in the crates' docs: the Rust doctests and the PHP twin written after each one (see [`apps/crates/README.md`](../../apps/crates/README.md#writing-examples)).
@@ -128,6 +129,22 @@ A fuzz profile with `"isolate": true` runs in fresh PHP and Rust driver processe
 3. Implement them in `Adapter.php` and `src/libs/<lib>.rs`, port every PHP test class to a case file, add interop cases for shared formats and fuzz profiles for pure operations.
 4. Converge: `bin/compat run`, `fuzz`, `coverage`. A difference is a Rust bug, a PHP quirk to keep and record, or a missing case. Never loosen a comparison to make it pass.
 5. `bin/compat record <lib>`, set `"complete": true` once `bin/compat check <lib>` passes, and `bin/compat status --write`.
+
+## Benchmarks
+
+A converted library's hot paths are benchmarked against PHP ([CONVERSION.md](../../crates/CONVERSION.md) §2 rule 7). Each benchmark is a name both adapters declare: `BENCHES` and `bench(name, session)` in `crates/tools/compat/src/libs/<lib>.rs` (listed in `libs::benches` and `libs::bench`), and `benchmarks()` in `Adapter.php` (implementing `Tests\Compat\Benchmarks`). It is a setup that returns the closure to time, so only the library call is measured, not argument decoding:
+
+```php
+'parse' => ['Parse a Redis connection string', fn (Session $s) => fn () => new DSN(self::DSN)],
+```
+
+```rust
+"parse" => Bench::sync(|| { black_box(Dsn::parse(black_box(DSN)).ok()); }),
+```
+
+Both drivers time a benchmark the same way (`crates/tools/compat/src/bench.rs`, `php/Bench.php`): warm up, size samples to about 20 ms, take 15, report the median time per call with the fastest and slowest sample. The Rust driver is built in release mode for this and counts heap allocations per call; PHP runs as the dev image configures it (opcache and the tracing JIT). Pick what a request does many times: parsing, validation, a cache read, a route match. Benchmark async or networked work with `Bench::future` against the same services the cases use.
+
+`bin/compat bench <lib> --write` stores the results with the commit, machine and runtime versions in `tests/compat/<lib>/bench.json`, which the docs site shows in migration mode. Run it on a quiet machine, one library at a time, never alongside other benchmarks or builds: timings from different machines are not comparable, so a file always holds one run of both runtimes. The command fails when a benchmark is slower in Rust, or exists on one side only.
 
 ## Snapshots
 

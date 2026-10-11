@@ -666,6 +666,30 @@ impl Engine {
         }
     }
 
+    /// `$bench` on one runtime: `{}` lists `lib`'s benchmarks, `{"name": ...}` times one.
+    pub fn bench(&mut self, side: &'static str, lib: &str, args: &Value) -> Result<Value, String> {
+        let ns = self.ns(side.chars().next().unwrap_or('x'));
+        self.configure(side, &ns)?;
+        match self.driver(side)?.call(lib, "$bench", args)? {
+            Ok(Outcome::Ok(v)) => Ok(v),
+            Ok(Outcome::Err { class, message }) => Err(format!("{side} {lib} $bench: {class}: {message}")),
+            Err(f) => Err(format!("{side} {lib} $bench: {}", f.0)),
+        }
+    }
+
+    /// What a driver reports about itself (`$hello` without the operations).
+    pub fn hello_info(&mut self, side: &'static str) -> Result<Value, String> {
+        match self.driver(side)?.call("", "$hello", &json!({}))? {
+            Ok(Outcome::Ok(mut v)) => {
+                if let Some(o) = v.as_object_mut() {
+                    o.remove("libs");
+                }
+                Ok(v)
+            }
+            other => Err(format!("{side} $hello failed: {other:?}")),
+        }
+    }
+
     /// Operations each driver implements for `lib`.
     pub fn hello(&mut self, side: &'static str, lib: &str) -> Result<Vec<String>, String> {
         match self.driver(side)?.call("", "$hello", &json!({}))? {

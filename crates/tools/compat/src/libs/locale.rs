@@ -31,6 +31,16 @@ pub const OPS: &[&str] = &[
     "locale.lookup",
 ];
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("locale: no benchmark `{name}`")))
+}
+
 static LANGUAGES: Mutex<Option<Languages>> = Mutex::new(None);
 
 fn languages() -> MutexGuard<'static, Option<Languages>> {

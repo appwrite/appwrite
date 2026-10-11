@@ -94,6 +94,16 @@ pub const OPS: &[&str] = &[
     "adapter.save_with_lease",
 ];
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("cache: no benchmark `{name}`")))
+}
+
 /// An adapter handle: the adapter, and what the operations read back from
 /// its concrete type.
 #[derive(Clone)]

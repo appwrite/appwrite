@@ -293,6 +293,15 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             lib.rust.as_ref().map(|r| r.dir.as_str()),
             lib.php.as_ref().is_some_and(|p| p.source == "monorepo"),
         );
+        // `compat bench --write` results; the summary keeps the geometric mean of the speedups.
+        let bench = read_json(&root.join("tests/compat").join(&lib.slug).join("bench.json"));
+        let speedups: Vec<f64> = bench
+            .as_ref()
+            .and_then(|b| b["results"].as_array())
+            .map(|r| r.iter().filter_map(|x| x["speedup"].as_f64()).filter(|x| *x > 0.0).collect())
+            .unwrap_or_default();
+        let speedup = (!speedups.is_empty())
+            .then(|| (speedups.iter().map(|x| x.ln()).sum::<f64>() / speedups.len() as f64).exp());
         let summary = json!({
             "slug": lib.slug,
             "title": title(&lib.slug),
@@ -310,6 +319,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "releases": sync["releases"].as_array().map(Vec::len).unwrap_or(0),
                 "upstream": sync["upstream"]["commits"],
             },
+            "bench": speedup.map(|x| json!({ "speedup": x, "benchmarks": speedups.len() })),
             "counts": {
                 "items": items.len(),
                 "documented": documented,
@@ -329,6 +339,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             "overview": overview,
             "overview_notes": overview_notes,
             "sync": sync,
+            "bench": bench,
             "guide": guide.iter().map(examples::Block::to_json).collect::<Vec<_>>(),
             "examples": overview_examples.iter().map(examples::Example::to_json).collect::<Vec<_>>(),
             "modules": modules.iter().map(|m| {

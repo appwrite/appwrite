@@ -46,6 +46,16 @@ const AREAS: &[&[&str]] = &[
 /// Every operation of every area.
 pub const OPS: &[&str] = &concat_ops();
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("php-std: no benchmark `{name}`")))
+}
+
 const fn ops_len() -> usize {
     let mut n = 0;
     let mut i = 0;
@@ -58,6 +68,7 @@ const fn ops_len() -> usize {
 
 const fn concat_ops() -> [&'static str; ops_len()] {
     let mut out = [""; ops_len()];
+
     let mut k = 0;
     let mut i = 0;
     while i < AREAS.len() {

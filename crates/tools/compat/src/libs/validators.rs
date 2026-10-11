@@ -36,6 +36,16 @@ pub const OPS: &[&str] = &[
     "phone.normalize",
 ];
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("validators: no benchmark `{name}`")))
+}
+
 type Shared = Arc<dyn Validator>;
 
 /// What a getter returns.

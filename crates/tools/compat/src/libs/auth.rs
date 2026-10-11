@@ -104,6 +104,16 @@ pub const OPS: &[&str] = &[
     "issuer.sign_once",
 ];
 
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[];
+
+pub async fn bench(
+    name: &str,
+    _session: &mut crate::adapter::Session,
+) -> Result<crate::bench::Bench, crate::adapter::Fault> {
+    Err(crate::adapter::Fault::new(format!("auth: no benchmark `{name}`")))
+}
+
 // ---------------------------------------------------------------------------
 // Values: the PHP driver's Codec on the Rust side
 // ---------------------------------------------------------------------------

@@ -1,0 +1,66 @@
+{
+  "lib": "dsn",
+  "environment": {
+    "date": "2026-10-11T00:02:34Z",
+    "commit": "809d2819d7",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)"
+    },
+    "rust": {
+      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
+      "profile": "release"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a Redis connection string with credentials, a path and three parameters",
+      "php": {
+        "ns": 575.5006127093424,
+        "min": 557.7660909143957,
+        "max": 619.2752815545311,
+        "samples": 15,
+        "calls": 34274
+      },
+      "rust": {
+        "ns": 265.50576493579007,
+        "min": 250.57056113902848,
+        "max": 277.59049413735346,
+        "samples": 15,
+        "calls": 71640,
+        "allocations": 6.00000093057882,
+        "bytes": 60.000111669458406
+      },
+      "speedup": 2.1675635286055708
+    },
+    {
+      "name": "param",
+      "description": "Read one query parameter of a parsed connection string",
+      "php": {
+        "ns": 37.021717441550955,
+        "min": 36.80963679154052,
+        "max": 37.97823468471315,
+        "samples": 15,
+        "calls": 522207
+      },
+      "rust": {
+        "ns": 13.341587360562267,
+        "min": 13.162407055534128,
+        "max": 13.682981546060137,
+        "samples": 15,
+        "calls": 1485699,
+        "allocations": 4.487225653828041e-8,
+        "bytes": 5.384670784593649e-6
+      },
+      "speedup": 2.7749109937987706
+    }
+  ]
+}
