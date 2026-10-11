@@ -41,13 +41,50 @@ pub const OPS: &[&str] = &[
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("parse", "Parse a domain on a multi-label suffix and read its suffix, registrable domain and subdomain"),
+    ("parse_many", "Read the registrable domain of five typical hostnames"),
+    ("public", "Validate a public domain"),
+    ("apex", "Validate an apex domain on a multi-label suffix"),
+    ("registrable", "Validate a registrable domain"),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("domains: no benchmark `{name}`")))
+/// Hostnames as requests carry them: a plain .com, a ccTLD second level, a
+/// private suffix, a deep subdomain and a wildcard rule.
+const HOSTS: [&str; 5] =
+    ["example.com", "blog.example.co.uk", "my-app.appspot.com", "api.eu.staging.acme.io", "shop.example.ck"];
+
+pub async fn bench(name: &str, _session: &mut Session) -> Result<crate::bench::Bench, Fault> {
+    use std::hint::black_box;
+
+    use crate::bench::Bench;
+
+    // Reads the public suffix list, as the first parse in a process does.
+    let _ = Domain::new("example.com").map(|d| d.is_known());
+    let validate = |validator: Box<dyn Validator>, value: &str| {
+        let value = Value::String(value.to_owned());
+        Bench::sync(move || {
+            black_box(validator.is_valid(black_box(&value)));
+        })
+    };
+    Ok(match name {
+        "parse" => Bench::sync(|| {
+            if let Ok(d) = Domain::new(black_box("blog.example.co.uk")) {
+                black_box((d.suffix(), d.registerable(), d.sub()));
+            }
+        }),
+        "parse_many" => Bench::sync(|| {
+            for host in HOSTS {
+                if let Ok(d) = Domain::new(black_box(host)) {
+                    black_box(d.registerable());
+                }
+            }
+        }),
+        "public" => validate(Box::new(PublicDomain), "blog.example.co.uk"),
+        "apex" => validate(Box::new(ApexDomain), "example.co.uk"),
+        "registrable" => validate(Box::new(RegistrableDomain), "example.com"),
+        _ => return Err(Fault::new(format!("domains: no benchmark `{name}`"))),
+    })
 }
 
 fn err(e: &Error) -> Outcome {

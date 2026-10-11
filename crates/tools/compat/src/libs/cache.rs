@@ -94,14 +94,97 @@ pub const OPS: &[&str] = &[
     "adapter.save_with_lease",
 ];
 
-/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+/// A user document as Appwrite caches it: system attributes, permissions,
+/// nested preferences, targets and memberships (about 2 KB of JSON).
+const DOCUMENT: &str = r#"{"$id":"6650f2b1c3a4e5d6f7a8","$sequence":48213,"$createdAt":"2026-05-24T10:15:30.123+00:00","$updatedAt":"2026-09-30T08:02:11.456+00:00","$permissions":["read(\"user:6650f2b1c3a4e5d6f7a8\")","update(\"user:6650f2b1c3a4e5d6f7a8\")","delete(\"user:6650f2b1c3a4e5d6f7a8\")"],"name":"Ada Lovelace","email":"ada.lovelace@example.com","phone":"+14155550123","status":true,"labels":["admin","beta"],"passwordUpdate":"2026-05-24T10:15:30.123+00:00","registration":"2026-05-24T10:15:30.123+00:00","emailVerification":true,"phoneVerification":false,"mfa":false,"accessedAt":"2026-10-10T19:44:02.000+00:00","prefs":{"theme":"dark","language":"en-GB","timezone":"Europe/London","notifications":{"email":true,"push":false,"digest":"weekly"},"dashboard":{"pinned":["functions","databases","storage"],"density":0.75}},"targets":[{"$id":"6650f2b1d4e5f6a7b8c9","$createdAt":"2026-05-24T10:15:30.123+00:00","$updatedAt":"2026-05-24T10:15:30.123+00:00","name":"","userId":"6650f2b1c3a4e5d6f7a8","providerId":null,"providerType":"email","identifier":"ada.lovelace@example.com","expired":false},{"$id":"6650f2b1e5f6a7b8c9d0","$createdAt":"2026-06-02T14:20:00.000+00:00","$updatedAt":"2026-06-02T14:20:00.000+00:00","name":"Pixel 9","userId":"6650f2b1c3a4e5d6f7a8","providerId":"fcm","providerType":"push","identifier":"dGhpcyBpcyBhIGZha2UgZmNtIHRva2VuIGZvciBiZW5jaG1hcmtz","expired":false}],"memberships":[{"teamId":"team_core","roles":["owner"],"confirm":true},{"teamId":"team_docs","roles":["developer","reviewer"],"confirm":true}],"quota":{"storage":1073741824,"used":52428800,"ratio":0.048828125}}"#;
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("cache: no benchmark `{name}`")))
+/// The key the in-process benchmarks cache the document under.
+const KEY: &str = "user:6650f2b1c3a4e5d6f7a8";
+
+/// The instant the envelope benchmark writes at, so both runtimes encode the same bytes.
+const TIME: i64 = 1_790_000_000;
+
+/// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
+pub const BENCHES: &[(&str, &str)] = &[
+    ("memory_load", "Load a cached user document from the in-memory adapter through the cache facade"),
+    ("memory_save", "Save a user document to the in-memory adapter through the cache facade"),
+    ("redis_load", "Load a cached user document from Redis: one HGET and the JSON envelope decoded"),
+    ("redis_miss", "Load a key Redis does not hold: one HGET, nothing to decode"),
+    ("redis_save", "Save a user document to Redis: the JSON envelope encoded and one HSET"),
+    ("envelope", "Encode a user document into a JSON cache envelope and decode it back"),
+];
+
+pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Bench, Fault> {
+    use std::hint::black_box;
+    use std::rc::Rc;
+
+    use crate::bench::Bench;
+
+    // The document as `json_decode($json, true)` returns it.
+    let doc = php_std::json::decode(
+        DOCUMENT.as_bytes(),
+        Some(true),
+        php_std::json::DEFAULT_DEPTH,
+        php_std::json::Flags::NONE,
+    )
+    .map_err(fault)?;
+    Ok(match name {
+        "memory_load" => {
+            let cache = Cache::new(Memory::new());
+            cache.save(KEY, &doc, "", 0).await.map_err(fault)?;
+            let cache = Rc::new(cache);
+            Bench::future(move || {
+                let cache = cache.clone();
+                async move {
+                    black_box(cache.load(black_box(KEY), 3600, "").await.ok());
+                }
+            })
+        }
+        "memory_save" => {
+            let state = Rc::new((Cache::new(Memory::new()), doc));
+            Bench::future(move || {
+                let state = state.clone();
+                async move {
+                    black_box(state.0.save(black_box(KEY), &state.1, "", 0).await.ok());
+                }
+            })
+        }
+        "redis_load" | "redis_miss" | "redis_save" => {
+            // The `cache-redis` service as the cases use it, a key in this
+            // run's namespace. The setup saves it with a TTL, which the
+            // timed HSETs keep, so Redis drops it after the run.
+            let client = redis::Client::open(redis_url(session, &Args(&json!({})))?).map_err(fault)?;
+            let cache = Cache::new(Redis::new(client.get_connection_manager().await.map_err(fault)?));
+            let key = format!("{}:bench:{name}", session.ns);
+            if name != "redis_miss" {
+                cache.save(&key, &doc, "", 600).await.map_err(fault)?;
+            }
+            let state = Rc::new((cache, key, doc));
+            if name == "redis_save" {
+                Bench::future(move || {
+                    let state = state.clone();
+                    async move {
+                        black_box(state.0.save(&state.1, &state.2, "", 0).await.ok());
+                    }
+                })
+            } else {
+                Bench::future(move || {
+                    let state = state.clone();
+                    async move {
+                        black_box(state.0.load(&state.1, 3600, "").await.ok());
+                    }
+                })
+            }
+        }
+        "envelope" => {
+            let envelope = Envelope::new(AnyCodec::Json);
+            Bench::sync(move || {
+                let stored = envelope.encode(black_box(&doc), TIME).unwrap_or_default();
+                black_box(envelope.decode(&stored, 3600, TIME));
+            })
+        }
+        _ => return Err(Fault::new(format!("cache: no benchmark `{name}`"))),
+    })
 }
 
 /// An adapter handle: the adapter, and what the operations read back from

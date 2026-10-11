@@ -3,6 +3,7 @@
 namespace Tests\Compat\Domains;
 
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Cache\Adapter\Memory;
@@ -36,8 +37,37 @@ require_once __DIR__ . '/Bare.php';
  * Registrar adapters that call an API get a recorded Transport: cases give
  * the responses, and every call reports the requests the adapter sent.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    /**
+     * Hostnames as requests carry them: a plain .com, a ccTLD second level, a
+     * private suffix, a deep subdomain and a wildcard rule.
+     */
+    private const HOSTS = ['example.com', 'blog.example.co.uk', 'my-app.appspot.com', 'api.eu.staging.acme.io', 'shop.example.ck'];
+
+    public function benchmarks(): array
+    {
+        // Reads the public suffix list, as the first parse in a process does.
+        (new Domain('example.com'))->isKnown();
+        $validate = static fn (Validator $validator, string $value) => static fn () => $validator->isValid($value);
+
+        return [
+            'parse' => ['Parse a domain on a multi-label suffix and read its suffix, registrable domain and subdomain', fn (Session $s) => function () {
+                $domain = new Domain('blog.example.co.uk');
+
+                return [$domain->getSuffix(), $domain->getRegisterable(), $domain->getSub()];
+            }],
+            'parse_many' => ['Read the registrable domain of five typical hostnames', fn (Session $s) => function () {
+                foreach (self::HOSTS as $host) {
+                    (new Domain($host))->getRegisterable();
+                }
+            }],
+            'public' => ['Validate a public domain', fn (Session $s) => $validate(new PublicDomain(), 'blog.example.co.uk')],
+            'apex' => ['Validate an apex domain on a multi-label suffix', fn (Session $s) => $validate(new ApexDomain(), 'example.co.uk')],
+            'registrable' => ['Validate a registrable domain', fn (Session $s) => $validate(new RegistrableDomain(), 'example.com')],
+        ];
+    }
+
     public function operations(): array
     {
         return [

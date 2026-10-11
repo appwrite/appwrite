@@ -5,6 +5,7 @@ namespace Tests\Compat\Lock;
 use Swoole\Coroutine;
 use Swoole\Coroutine\WaitGroup;
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Lock\Distributed;
@@ -17,8 +18,30 @@ use Utopia\Lock\Semaphore;
 /**
  * Maps tests/compat/lock/spec.json operations onto utopia-php/lock. Glue only.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    public function benchmarks(): array
+    {
+        // Acquires (without waiting) and releases $lock once.
+        $cycle = static fn (Lock $lock) => static function () use ($lock): void {
+            $lock->acquire(0.0);
+            $lock->release();
+        };
+
+        return [
+            'mutex' => ['Acquire and release an uncontended in-process mutex', fn (Session $s) => $cycle(new Mutex())],
+            'semaphore' => ['Acquire and release one permit of an in-process semaphore of four', fn (Session $s) => $cycle(new Semaphore(4))],
+            'with_lock' => ['Run a section under an uncontended in-process mutex', function (Session $s) {
+                $lock = new Mutex();
+
+                return fn () => $lock->withLock(fn () => 1, 0.0);
+            }],
+            // The `redis` service as the cases use it, a key in this run's
+            // namespace; every call releases (deletes) it.
+            'distributed' => ['Acquire and release an uncontended Redis lock: SET NX EX, then the release script', fn (Session $s) => $cycle(new Distributed(self::redis($s), "{$s->ns}:bench:lock", 600))],
+        ];
+    }
+
     public function operations(): array
     {
         return [

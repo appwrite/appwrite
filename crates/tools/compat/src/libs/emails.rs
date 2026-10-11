@@ -37,13 +37,62 @@ pub const OPS: &[&str] = &[
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("parse", "Parse a mixed-case address with a plus tag"),
+    ("validate", "Validate an address with the email validator"),
+    ("canonical_gmail", "Canonicalise a parsed Gmail address with dots and a plus tag"),
+    ("canonical_outlook", "Canonicalise a parsed Outlook address with a plus tag"),
+    ("disposable", "Check a parsed corporate address against the disposable domain list"),
+    ("free", "Check a parsed Gmail address against the free and disposable domain lists"),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("emails: no benchmark `{name}`")))
+pub async fn bench(name: &str, _session: &mut crate::adapter::Session) -> Result<crate::bench::Bench, Fault> {
+    use std::hint::black_box;
+
+    use crate::bench::Bench;
+
+    let parsed = |address: &str| -> Result<Email, Fault> {
+        let email = Email::new(address).map_err(|e| Fault::new(String::from_utf8_lossy(e.message()).into_owned()))?;
+        // Reads the domain lists, as the first check in a process does.
+        black_box((email.is_disposable(), email.is_free()));
+        Ok(email)
+    };
+    Ok(match name {
+        "parse" => Bench::sync(|| {
+            black_box(Email::new(black_box("  John.Doe+News@Example.COM ")).ok());
+        }),
+        "validate" => {
+            let validator = EmailValidator::new(false);
+            Bench::sync(move || {
+                black_box(validator.is_valid_address(black_box("john.doe+news@example.com")));
+            })
+        }
+        "canonical_gmail" => {
+            let email = parsed("John.Doe+newsletter@googlemail.com")?;
+            Bench::sync(move || {
+                black_box(email.canonical().ok());
+            })
+        }
+        "canonical_outlook" => {
+            let email = parsed("jane.doe+promo@hotmail.com")?;
+            Bench::sync(move || {
+                black_box(email.canonical().ok());
+            })
+        }
+        "disposable" => {
+            let email = parsed("jane@acme-robotics.com")?;
+            Bench::sync(move || {
+                black_box(email.is_disposable());
+            })
+        }
+        "free" => {
+            let email = parsed("john.doe@gmail.com")?;
+            Bench::sync(move || {
+                black_box(email.is_free());
+            })
+        }
+        _ => return Err(Fault::new(format!("emails: no benchmark `{name}`"))),
+    })
 }
 
 fn err(e: &Error) -> Outcome {

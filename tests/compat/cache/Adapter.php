@@ -3,6 +3,7 @@
 namespace Tests\Compat\Cache;
 
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\PhpStd\Typed;
 use Tests\Compat\Session;
@@ -45,8 +46,70 @@ require_once __DIR__ . '/../php-std/Typed.php';
 /**
  * Maps tests/compat/cache/spec.json operations onto utopia-php/cache. Glue only.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    /** A user document as Appwrite caches it: system attributes, permissions, nested preferences, targets and memberships (about 2 KB of JSON). */
+    private const DOCUMENT = <<<'JSON'
+        {"$id":"6650f2b1c3a4e5d6f7a8","$sequence":48213,"$createdAt":"2026-05-24T10:15:30.123+00:00","$updatedAt":"2026-09-30T08:02:11.456+00:00","$permissions":["read(\"user:6650f2b1c3a4e5d6f7a8\")","update(\"user:6650f2b1c3a4e5d6f7a8\")","delete(\"user:6650f2b1c3a4e5d6f7a8\")"],"name":"Ada Lovelace","email":"ada.lovelace@example.com","phone":"+14155550123","status":true,"labels":["admin","beta"],"passwordUpdate":"2026-05-24T10:15:30.123+00:00","registration":"2026-05-24T10:15:30.123+00:00","emailVerification":true,"phoneVerification":false,"mfa":false,"accessedAt":"2026-10-10T19:44:02.000+00:00","prefs":{"theme":"dark","language":"en-GB","timezone":"Europe/London","notifications":{"email":true,"push":false,"digest":"weekly"},"dashboard":{"pinned":["functions","databases","storage"],"density":0.75}},"targets":[{"$id":"6650f2b1d4e5f6a7b8c9","$createdAt":"2026-05-24T10:15:30.123+00:00","$updatedAt":"2026-05-24T10:15:30.123+00:00","name":"","userId":"6650f2b1c3a4e5d6f7a8","providerId":null,"providerType":"email","identifier":"ada.lovelace@example.com","expired":false},{"$id":"6650f2b1e5f6a7b8c9d0","$createdAt":"2026-06-02T14:20:00.000+00:00","$updatedAt":"2026-06-02T14:20:00.000+00:00","name":"Pixel 9","userId":"6650f2b1c3a4e5d6f7a8","providerId":"fcm","providerType":"push","identifier":"dGhpcyBpcyBhIGZha2UgZmNtIHRva2VuIGZvciBiZW5jaG1hcmtz","expired":false}],"memberships":[{"teamId":"team_core","roles":["owner"],"confirm":true},{"teamId":"team_docs","roles":["developer","reviewer"],"confirm":true}],"quota":{"storage":1073741824,"used":52428800,"ratio":0.048828125}}
+        JSON;
+
+    /** The key the in-process benchmarks cache the document under. */
+    private const KEY = 'user:6650f2b1c3a4e5d6f7a8';
+
+    /** The instant the envelope benchmark writes at, so both runtimes encode the same bytes. */
+    private const TIME = 1_790_000_000;
+
+    public function benchmarks(): array
+    {
+        $doc = json_decode(self::DOCUMENT, true, flags: JSON_THROW_ON_ERROR);
+        // The `cache-redis` service as the cases use it, a key in this run's
+        // namespace. The setup saves it with a TTL, which the timed HSETs
+        // keep, so Redis drops it after the run.
+        $redis = function (string $name, Session $s, bool $seed) use ($doc): array {
+            $cache = new Cache(new Redis(self::raw([], $s)));
+            $key = "{$s->ns}:bench:{$name}";
+            if ($seed) {
+                $cache->save($key, $doc, '', 600);
+            }
+
+            return [$cache, $key];
+        };
+
+        return [
+            'memory_load' => ['Load a cached user document from the in-memory adapter through the cache facade', function (Session $s) use ($doc) {
+                $cache = new Cache(new Memory());
+                $cache->save(self::KEY, $doc);
+
+                return fn () => $cache->load(self::KEY, 3600);
+            }],
+            'memory_save' => ['Save a user document to the in-memory adapter through the cache facade', function (Session $s) use ($doc) {
+                $cache = new Cache(new Memory());
+
+                return fn () => $cache->save(self::KEY, $doc);
+            }],
+            'redis_load' => ['Load a cached user document from Redis: one HGET and the JSON envelope decoded', function (Session $s) use ($redis) {
+                [$cache, $key] = $redis('redis_load', $s, true);
+
+                return fn () => $cache->load($key, 3600);
+            }],
+            'redis_miss' => ['Load a key Redis does not hold: one HGET, nothing to decode', function (Session $s) use ($redis) {
+                [$cache, $key] = $redis('redis_miss', $s, false);
+
+                return fn () => $cache->load($key, 3600);
+            }],
+            'redis_save' => ['Save a user document to Redis: the JSON envelope encoded and one HSET', function (Session $s) use ($redis, $doc) {
+                [$cache, $key] = $redis('redis_save', $s, true);
+
+                return fn () => $cache->save($key, $doc);
+            }],
+            'envelope' => ['Encode a user document into a JSON cache envelope and decode it back', function (Session $s) use ($doc) {
+                $envelope = new Envelope(new Json());
+
+                return fn () => $envelope->decode($envelope->encode($doc, self::TIME), 3600, self::TIME);
+            }],
+        ];
+    }
+
     public function operations(): array
     {
         $ops = [
