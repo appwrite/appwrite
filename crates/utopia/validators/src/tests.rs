@@ -130,7 +130,13 @@ fn composites_describe_the_deciding_rule() {
     let any = AnyOf::new(vec![Box::new(Integer::default()), Box::new(Text::new(2))]);
     let v = any.validate(Input::Json(&json!("ab"))).unwrap();
     assert!(v.valid);
-    assert_eq!(v.description.as_deref(), Some(Text::new(2).description().as_str()));
+    // The deciding rule is described on demand.
+    assert_eq!((v.description.as_deref(), v.rule), (None, Some(1)));
+    assert_eq!(v.describe(&any), Text::new(2).description());
+    let nested = AllOf::new(vec![Box::new(any)]);
+    let v = nested.validate(Input::Json(&json!(["x"]))).unwrap();
+    assert_eq!((v.valid, v.rule), (false, Some(0)));
+    assert_eq!(v.describe(&nested), Text::new(2).description());
     let mut multiple = Multiple::new(vec![Box::new(Text::new(3))]);
     multiple.add_rule(Box::new(HexColor));
     assert_eq!(

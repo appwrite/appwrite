@@ -297,6 +297,12 @@ impl Validator for Url {
         if !private && filter(value, FILTER_VALIDATE_URL, 0).is_none() {
             return Ok(Verdict::INVALID);
         }
+        // Only the scheme, fragment and transport limits read the URL's parts
+        // (PHP calls `parse_url((string) $value)` only for them).
+        let transport = self.https_or_loopback && !private;
+        if self.allowed_schemes.is_empty() && self.allow_fragments && !transport {
+            return Ok(Verdict::VALID);
+        }
         let url = value.to_bytes()?;
         let parsed = parse_url(&url);
         let component = |get: fn(&php_std::url::Url<'_>) -> Option<Component<'static>>| match &parsed {
@@ -309,7 +315,7 @@ impl Validator for Url {
         if !self.allow_fragments && !matches!(component(|u| u.fragment().map(owned)), Component::Null) {
             return Ok(Verdict::INVALID);
         }
-        if self.https_or_loopback && !private {
+        if transport {
             let scheme = component(|u| u.scheme().map(owned));
             let scheme = strtolower(scheme.bytes());
             if scheme.as_ref() == b"http" {
