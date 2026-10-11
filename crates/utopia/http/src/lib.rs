@@ -1,4 +1,6 @@
-//! Utopia HTTP for Rust: the port of `utopia-php/http` on hyper.
+//! Utopia HTTP: a small web framework on hyper, with routes, hooks,
+//! validated parameters, dependency injection, requests, responses and a
+//! server.
 //!
 //! An [`Http`] application holds routes (methods, path templates with
 //! `:params`, aliases, `*` wildcards, a catch-all wildcard), hooks by group
@@ -6,10 +8,13 @@
 //! request is matched, its params are resolved (path, query or body, aliases,
 //! defaults, validators) together with the injected resources, and the
 //! route's action runs between its hooks. [`Request`] parses headers,
-//! cookies, query strings, form and multipart bodies with the semantics of
-//! the Swoole adapter Appwrite serves with, and JSON bodies with the
-//! empty-object rule; [`Response`] sends status, headers, cookies and the
-//! body once, compressed when the client accepts it, or in chunks.
+//! cookies, query strings, form and multipart bodies, and JSON bodies (an
+//! empty JSON object stays an object); [`Response`] sends status, headers,
+//! cookies and the body once, compressed when the client accepts it, or in
+//! chunks. [`serve`] runs an application on a TCP socket.
+//!
+//! PHP: the port of `utopia-php/http`. Requests are parsed with the semantics
+//! of the Swoole adapter Appwrite serves with.
 //!
 //! | PHP | Rust |
 //! |---|---|
@@ -42,6 +47,8 @@
 //! `utopia-php/compression` and `utopia-php/telemetry` have no crates yet:
 //! [`compression`] and [`telemetry`] hold the parts of them this crate uses.
 //! `Utopia\Servers\Hook` (from `utopia-php/servers`) is [`Hook`].
+
+#![warn(missing_docs)]
 
 pub mod compression;
 mod error;
@@ -85,9 +92,16 @@ pub use bytes::Bytes;
 #[doc = include_str!("../guide.md")]
 pub struct GettingStarted;
 
-/// `Http::COMPRESSION_MIN_SIZE_DEFAULT`.
+/// The default minimum body size for compression, in bytes: only larger
+/// bodies are compressed.
+///
+/// PHP: `Http::COMPRESSION_MIN_SIZE_DEFAULT`.
 pub const COMPRESSION_MIN_SIZE_DEFAULT: usize = 1024;
-/// `Http::COMPRESSION_BROTLI_LEVEL_DEFAULT`.
+/// The Brotli quality responses are compressed with.
+///
+/// PHP: `Http::COMPRESSION_BROTLI_LEVEL_DEFAULT`.
 pub const COMPRESSION_BROTLI_LEVEL_DEFAULT: i32 = 4;
-/// `Http::COMPRESSION_ZSTD_LEVEL_DEFAULT`.
+/// The Zstandard level responses are compressed with.
+///
+/// PHP: `Http::COMPRESSION_ZSTD_LEVEL_DEFAULT`.
 pub const COMPRESSION_ZSTD_LEVEL_DEFAULT: i32 = 3;

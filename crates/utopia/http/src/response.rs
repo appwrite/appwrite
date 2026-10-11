@@ -1,6 +1,10 @@
-//! `Utopia\Http\Response`: status, headers and cookies set by the
+//! The outgoing response: status, headers and cookies set by the
 //! application, sent once through [`Response::send`] (or streamed with
-//! [`Response::chunk`]) to the server adapter's [`Wire`].
+//! [`Response::chunk`]); what reaches the connection is recorded as a
+//! [`Wire`].
+//!
+//! PHP: `Utopia\Http\Response`; the [`Wire`] stands for the server
+//! adapter's output.
 
 use std::time::{Instant, SystemTime, UNIX_EPOCH};
 
@@ -12,37 +16,64 @@ use crate::compression::{self, Compression};
 use crate::error::{Error, Result};
 use crate::headers::Headers;
 
-/// `Response::CHUNK_SIZE`: bodies larger than this are written in chunks.
+/// Bodies larger than this many bytes are written in chunks.
+///
+/// PHP: `Response::CHUNK_SIZE`.
 pub const CHUNK_SIZE: usize = 2_000_000;
 
-/// HTTP content types (`Response::CONTENT_TYPE_*`).
+/// Common content types.
+///
+/// PHP: `Response::CONTENT_TYPE_*`.
 pub mod content_type {
+    /// `text/plain`.
     pub const TEXT: &str = "text/plain";
+    /// `text/html`.
     pub const HTML: &str = "text/html";
+    /// `application/json`.
     pub const JSON: &str = "application/json";
+    /// `text/xml`.
     pub const XML: &str = "text/xml";
+    /// `text/javascript`.
     pub const JAVASCRIPT: &str = "text/javascript";
+    /// `image/*`: any image.
     pub const IMAGE: &str = "image/*";
+    /// `image/jpeg`.
     pub const IMAGE_JPEG: &str = "image/jpeg";
+    /// `image/png`.
     pub const IMAGE_PNG: &str = "image/png";
+    /// `image/gif`.
     pub const IMAGE_GIF: &str = "image/gif";
+    /// `image/svg+xml`.
     pub const IMAGE_SVG: &str = "image/svg+xml";
+    /// `image/webp`.
     pub const IMAGE_WEBP: &str = "image/webp";
+    /// `image/x-icon`.
     pub const IMAGE_ICON: &str = "image/x-icon";
+    /// `image/bmp`.
     pub const IMAGE_BMP: &str = "image/bmp";
 }
 
-/// `Response::CHARSET_UTF8`.
+/// The UTF-8 charset name, for [`Response::set_content_type`].
+///
+/// PHP: `Response::CHARSET_UTF8`.
 pub const CHARSET_UTF8: &str = "UTF-8";
 
-/// `SameSite` values (`Response::COOKIE_SAMESITE_*`).
+/// The `SameSite` values of a cookie.
+///
+/// PHP: `Response::COOKIE_SAMESITE_*`.
 pub mod same_site {
+    /// `None`: sent with cross-site requests.
     pub const NONE: &str = "None";
+    /// `Strict`: sent with same-site requests only.
     pub const STRICT: &str = "Strict";
+    /// `Lax`: sent with same-site requests and top-level navigations.
     pub const LAX: &str = "Lax";
 }
 
-/// The reason phrase of every status code `setStatusCode()` accepts.
+/// The reason phrase of a status code, or `None` for a code the response
+/// does not accept.
+///
+/// PHP: every status code `setStatusCode()` accepts.
 pub fn reason(code: u16) -> Option<&'static str> {
     Some(match code {
         100 => "Continue",
@@ -115,19 +146,33 @@ pub fn reason(code: u16) -> Option<&'static str> {
 /// A cookie added with [`Response::add_cookie`]. `None` means not given.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Cookie {
+    /// The cookie name.
     pub name: String,
+    /// The value; empty or `None` deletes the cookie.
     pub value: Option<String>,
+    /// The expiry, in Unix seconds.
     pub expire: Option<i64>,
+    /// The `path` attribute.
     pub path: Option<String>,
+    /// The `domain` attribute.
     pub domain: Option<String>,
+    /// Whether the cookie is sent over HTTPS only.
     pub secure: Option<bool>,
+    /// Whether scripts are denied access to the cookie.
     pub http_only: Option<bool>,
+    /// The `SameSite` attribute (see [`same_site`]).
     pub same_site: Option<String>,
 }
 
 impl Cookie {
-    /// The `Set-Cookie` header value Swoole sends for this cookie at `now`
-    /// (Unix seconds), or `None` when Swoole refuses the name.
+    /// The `Set-Cookie` header value for this cookie at `now` (Unix
+    /// seconds), or `None` when the cookie is refused: an empty name, a name
+    /// with `=`, a name, path or domain with separators or whitespace, or an
+    /// expiry past the year 9999.
+    ///
+    /// The value is URL-encoded; an empty value deletes the cookie.
+    ///
+    /// PHP: the header Swoole sends for the cookie.
     pub fn header(&self, now: i64) -> Option<String> {
         let name = &self.name;
         let forbidden =
@@ -213,8 +258,11 @@ pub(crate) fn civil(days: i64) -> (i64, i64, i64) {
     (if m <= 2 { y + 1 } else { y }, m, d)
 }
 
-/// What the server adapter was asked to send (`sendStatus`, `sendHeader`,
-/// `sendCookie`, `write`, `end`): the response on the wire.
+/// The response on the wire: the status, headers, cookies and body bytes
+/// the response has sent so far.
+///
+/// PHP: what the server adapter was asked to send (`sendStatus`,
+/// `sendHeader`, `sendCookie`, `write`, `end`).
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Wire {
     /// The status sent, if any.
@@ -276,10 +324,13 @@ pub(crate) struct Stream {
     pub body: Option<tokio::sync::mpsc::UnboundedSender<Bytes>>,
 }
 
-/// A response body: a buffer, or the frames a streamed response sends.
+/// A hyper response body: a buffer, or the frames a streamed response sends.
 pub type Body = http_body_util::combinators::BoxBody<Bytes, std::convert::Infallible>;
 
 /// An outgoing response.
+///
+/// The application sets the status, headers and cookies, then sends the
+/// body once (or in chunks); later sends are ignored.
 #[derive(Debug)]
 pub struct Response {
     status: u16,
@@ -327,18 +378,24 @@ impl Clone for Response {
 }
 
 impl Default for Response {
+    /// A `200` response started now.
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl Response {
-    /// `new Response()`: status 200, started now.
+    /// A `200` response started now.
+    ///
+    /// PHP: `new Response()`.
     pub fn new() -> Self {
         Self::started_at(Instant::now())
     }
 
-    /// `new Response($time)`: the start time `X-Debug-Speed` measures from.
+    /// A `200` response started at `start`, the time the `X-Debug-Speed`
+    /// header measures from.
+    ///
+    /// PHP: `new Response($time)`.
     pub fn started_at(start: Instant) -> Self {
         Self {
             status: 200,
@@ -414,25 +471,35 @@ impl Response {
 
     // -- compression -------------------------------------------------------
 
-    /// `setAcceptEncoding($acceptEncoding)`.
+    /// Sets the client's `Accept-Encoding` header, which picks the
+    /// compression algorithm; empty disables compression.
+    ///
+    /// PHP: `setAcceptEncoding($acceptEncoding)`.
     pub fn set_accept_encoding(&mut self, accept: impl Into<String>) -> &mut Self {
         self.accept_encoding = accept.into();
         self
     }
 
-    /// `setCompressionMinSize($size)`.
+    /// Sets the size a body must exceed, in bytes, to be compressed.
+    ///
+    /// PHP: `setCompressionMinSize($size)`.
     pub fn set_compression_min_size(&mut self, size: usize) -> &mut Self {
         self.compression_min_size = size;
         self
     }
 
-    /// `setCompressionSupported($supported)`.
+    /// Sets the algorithm names the response may use; empty means every
+    /// supported one.
+    ///
+    /// PHP: `setCompressionSupported($supported)`.
     pub fn set_compression_supported(&mut self, supported: Vec<String>) -> &mut Self {
         self.compression_supported = supported;
         self
     }
 
-    /// Applies an application's compression settings (`Http::run`).
+    /// Applies an application's compression settings with the client's
+    /// `Accept-Encoding` header; does nothing when they are disabled.
+    /// [`Http::run`](crate::Http::run) calls it.
     pub fn set_compression(&mut self, accept: &str, settings: &Compression) -> &mut Self {
         if settings.enabled {
             self.accept_encoding = accept.to_owned();
@@ -444,24 +511,35 @@ impl Response {
 
     // -- status and content type -------------------------------------------
 
-    /// `setContentType($type, $charset)`.
+    /// Sets the content type, with `; charset=<charset>` appended unless
+    /// `charset` is empty.
+    ///
+    /// PHP: `setContentType($type, $charset)`; a charset of `0` counts as
+    /// empty.
     pub fn set_content_type(&mut self, kind: &str, charset: &str) -> &mut Self {
         self.content_type =
             if charset.is_empty() || charset == "0" { kind.to_owned() } else { format!("{kind}; charset={charset}") };
         self
     }
 
-    /// `getContentType()`.
+    /// The content type, with its charset (empty until set).
+    ///
+    /// PHP: `getContentType()`.
     pub fn content_type(&self) -> &str {
         &self.content_type
     }
 
-    /// `isSent()`.
+    /// Whether the response has been sent.
+    ///
+    /// PHP: `isSent()`.
     pub fn is_sent(&self) -> bool {
         self.sent
     }
 
-    /// `setStatusCode($code)`: fails for a code without a reason phrase.
+    /// Sets the status code; fails with an [`Error::Http`] for a code
+    /// without a reason phrase (see [`reason`]).
+    ///
+    /// PHP: `setStatusCode($code)`.
     pub fn set_status_code(&mut self, code: i64) -> Result<&mut Self> {
         match u16::try_from(code).ok().filter(|c| reason(*c).is_some()) {
             Some(c) => {
@@ -478,7 +556,9 @@ impl Response {
         self
     }
 
-    /// `getStatusCode()`.
+    /// The status code.
+    ///
+    /// PHP: `getStatusCode()`.
     pub fn status_code(&self) -> u16 {
         self.status
     }
@@ -488,18 +568,25 @@ impl Response {
         StatusCode::from_u16(self.status).unwrap_or(StatusCode::OK)
     }
 
-    /// `getSize()`: header and body bytes sent.
+    /// The bytes sent: header lines and body.
+    ///
+    /// PHP: `getSize()`.
     pub fn size(&self) -> usize {
         self.size
     }
 
-    /// `disablePayload()`.
+    /// Suppresses the body: the response sends its status and headers only
+    /// (as for `HEAD`).
+    ///
+    /// PHP: `disablePayload()`.
     pub fn disable_payload(&mut self) -> &mut Self {
         self.disable_payload = true;
         self
     }
 
-    /// `enablePayload()`.
+    /// Lets the response send a body again.
+    ///
+    /// PHP: `enablePayload()`.
     pub fn enable_payload(&mut self) -> &mut Self {
         self.disable_payload = false;
         self
@@ -512,13 +599,17 @@ impl Response {
 
     // -- headers -----------------------------------------------------------
 
-    /// `setHeader($key, $value)`.
+    /// Sets a header to one value, replacing the others.
+    ///
+    /// PHP: `setHeader($key, $value)`.
     pub fn set_header(&mut self, name: &str, value: impl Into<String>) -> &mut Self {
         self.headers.set(name, value);
         self
     }
 
-    /// `addHeader($key, $value)`.
+    /// Appends a value to a header.
+    ///
+    /// PHP: `addHeader($key, $value)`.
     pub fn add_header(&mut self, name: &str, value: impl Into<String>) -> &mut Self {
         self.headers.add(name, value);
         self
@@ -536,35 +627,48 @@ impl Response {
         self
     }
 
-    /// `removeHeader($key)`.
+    /// Removes a header.
+    ///
+    /// PHP: `removeHeader($key)`.
     pub fn remove_header(&mut self, name: &str) -> &mut Self {
         self.headers.remove(name);
         self
     }
 
-    /// `hasHeader($key)`.
+    /// Whether a header is set.
+    ///
+    /// PHP: `hasHeader($key)`.
     pub fn has_header(&self, name: &str) -> bool {
         self.headers.has(name)
     }
 
-    /// `getHeader($key)`.
+    /// Every value of a header (empty when it is not set).
+    ///
+    /// PHP: `getHeader($key)`.
     pub fn header(&self, name: &str) -> &[String] {
         self.headers.get(name).unwrap_or(&[])
     }
 
-    /// `getHeaderLine($key, $default)`.
+    /// The values of a header joined with `", "`, or `None` when it is not
+    /// set.
+    ///
+    /// PHP: `getHeaderLine($key, $default)`.
     pub fn header_line(&self, name: &str) -> Option<String> {
         self.headers.line(name)
     }
 
-    /// `getHeaders()`.
+    /// Every header set.
+    ///
+    /// PHP: `getHeaders()`.
     pub fn headers(&self) -> &Headers {
         &self.headers
     }
 
     // -- cookies -----------------------------------------------------------
 
-    /// `addCookie($name, ...)`: the name is lowercased.
+    /// Adds a cookie to send; its name is lowercased.
+    ///
+    /// PHP: `addCookie($name, ...)`.
     pub fn add_cookie(&mut self, mut cookie: Cookie) -> &mut Self {
         cookie.name = cookie.name.to_ascii_lowercase();
         self.cookies.push((self.next_cookie, cookie));
@@ -572,13 +676,19 @@ impl Response {
         self
     }
 
-    /// `removeCookie($name)` (exact name).
+    /// Removes the cookies named exactly `name`.
+    ///
+    /// PHP: `removeCookie($name)`.
     pub fn remove_cookie(&mut self, name: &str) -> &mut Self {
         self.cookies.retain(|(_, c)| c.name != name);
         self
     }
 
-    /// `getCookies()`: each cookie with its position in the PHP array.
+    /// The cookies to send, each with the position it was added at
+    /// (positions of removed cookies are not reused).
+    ///
+    /// PHP: `getCookies()`; the position is the cookie's key in the PHP
+    /// array.
     pub fn cookies(&self) -> &[(usize, Cookie)] {
         &self.cookies
     }
@@ -657,7 +767,7 @@ impl Response {
         self.out_end(None);
     }
 
-    /// What has been sent to the adapter.
+    /// What has been sent so far.
     pub fn wire(&self) -> &Wire {
         &self.wire
     }
@@ -693,8 +803,14 @@ impl Response {
         }
     }
 
-    /// `send($body)`: sends the status, headers, cookies and body once,
-    /// compressing the body when the client accepts it.
+    /// Sends the status, headers, cookies and body, compressing the body when
+    /// the client accepts it, its type is compressible and it is large
+    /// enough. Only the first send counts; later ones are ignored.
+    ///
+    /// Adds an `X-Debug-Speed` header with the seconds since the response
+    /// started.
+    ///
+    /// PHP: `send($body)`.
     pub fn send(&mut self, body: &[u8]) {
         if self.sent {
             return;
@@ -751,7 +867,10 @@ impl Response {
         self.disable_payload = true;
     }
 
-    /// `chunk($body, $end)`: streams a part of the body; headers go with the first.
+    /// Streams a part of the body, uncompressed; the status, headers and
+    /// cookies go with the first chunk, and `end` closes the response.
+    ///
+    /// PHP: `chunk($body, $end)`.
     pub fn chunk(&mut self, body: &[u8], end: bool) {
         if self.sent {
             return;
@@ -776,7 +895,10 @@ impl Response {
         }
     }
 
-    /// `redirect($url, $statusCode)`.
+    /// Sends an empty redirect to `url` with `status` (such as 301 or 302);
+    /// fails, without sending, for an unknown status.
+    ///
+    /// PHP: `redirect($url, $statusCode)`.
     pub fn redirect(&mut self, url: &str, status: i64) -> Result<()> {
         self.add_header("Location", url);
         self.set_status_code(status)?;
@@ -784,19 +906,28 @@ impl Response {
         Ok(())
     }
 
-    /// `html($data)`.
+    /// Sends `data` as `text/html; charset=UTF-8`.
+    ///
+    /// PHP: `html($data)`.
     pub fn html(&mut self, data: &str) {
         self.set_content_type(content_type::HTML, CHARSET_UTF8);
         self.send(data.as_bytes());
     }
 
-    /// `text($data)`.
+    /// Sends `data` as `text/plain; charset=UTF-8`.
+    ///
+    /// PHP: `text($data)`.
     pub fn text(&mut self, data: &str) {
         self.set_content_type(content_type::TEXT, CHARSET_UTF8);
         self.send(data.as_bytes());
     }
 
-    /// `json($data)`: `$data` must be an array or object.
+    /// Sends `data` encoded as JSON (`application/json; charset=UTF-8`),
+    /// with Unicode left unescaped. Fails, without sending, unless `data` is
+    /// an array or an object.
+    ///
+    /// PHP: `json($data)`; the body is `json_encode($data,
+    /// JSON_UNESCAPED_UNICODE)`.
     pub fn json(&mut self, data: &Value) -> Result<()> {
         if !matches!(data, Value::Array(_) | Value::Object(_)) {
             return Err(Error::Generic("Invalid JSON input var".to_owned()));
@@ -812,7 +943,10 @@ impl Response {
         Ok(())
     }
 
-    /// `jsonp($callback, $data)`.
+    /// Sends `data` as a JSONP script, `parent.<callback>(<json>);`, as
+    /// `text/javascript`.
+    ///
+    /// PHP: `jsonp($callback, $data)`.
     pub fn jsonp(&mut self, callback: &str, data: &Value) {
         let json = php_std::json::encode(
             &php_std::Value::<php_std::Never>::from_json(data),
@@ -824,7 +958,10 @@ impl Response {
         self.send(format!("parent.{callback}({json});").as_bytes());
     }
 
-    /// `iframe($callback, $data)`.
+    /// Sends an HTML page whose script calls `window.parent.<callback>` with
+    /// `data` as JSON.
+    ///
+    /// PHP: `iframe($callback, $data)`.
     pub fn iframe(&mut self, callback: &str, data: &Value) {
         let json = php_std::json::encode(
             &php_std::Value::<php_std::Never>::from_json(data),
@@ -836,7 +973,9 @@ impl Response {
         self.send(format!("<script type=\"text/javascript\">window.parent.{callback}({json});</script>").as_bytes());
     }
 
-    /// `noContent()`.
+    /// Sends an empty `204 No Content` response.
+    ///
+    /// PHP: `noContent()`.
     pub fn no_content(&mut self) {
         self.status = 204;
         self.send(b"");

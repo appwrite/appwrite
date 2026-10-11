@@ -1,32 +1,48 @@
-//! Request parameters in the request model: `serde_json::Value`s where PHP
-//! lists are arrays, other PHP arrays are objects and an empty `stdClass`
-//! is an empty object (see [`php_std::Value::from_json`]).
+//! Request parameters as JSON values: parsing query strings, form bodies and
+//! JSON bodies into [`Params`].
 //!
-//! Query strings and form bodies are parsed by PHP's own rules
-//! ([`php_std::encoding::parse_str`]), JSON bodies by
+//! Lists are arrays, maps with other keys are objects, and an empty JSON
+//! object stays an empty object.
+//!
+//! PHP: the values model PHP arrays (lists are arrays, other arrays are
+//! objects, an empty `stdClass` is an empty object; see
+//! [`php_std::Value::from_json`]). Query strings and form bodies are parsed
+//! by PHP's own rules ([`php_std::encoding::parse_str`]), JSON bodies by
 //! [`decode_payload`] (`Utopia\Http\Request::decodePayload`).
 
 use php_std::types::KeyRef;
 use php_std::{Array, ArrayKey, Str};
 use serde_json::{Map, Value};
 
-/// Decoded request parameters.
+/// Decoded request parameters, by name.
 pub type Params = Map<String, Value>;
 
-/// Parses an `application/x-www-form-urlencoded` string (query string or
-/// form body) like PHP's `parse_str`.
+/// Parses an `application/x-www-form-urlencoded` string (a query string or a
+/// form body) into params.
+///
+/// Bracketed names build nested values: `a[]=x&a[]=y` is the array
+/// `["x", "y"]` and `b[k]=v` the object `{"k": "v"}`. Dots and spaces in
+/// names become underscores.
+///
+/// PHP: parses like `parse_str()`.
 pub fn parse_query(input: &str) -> Params {
     parse_query_bytes(input.as_bytes())
 }
 
-/// [`parse_query`] over bytes.
+/// Parses an `application/x-www-form-urlencoded` byte string into params,
+/// like [`parse_query`].
 pub fn parse_query_bytes(input: &[u8]) -> Params {
     array_to_params(&php_std::encoding::parse_str(input))
 }
 
-/// `Request::decodePayload($raw)`: a JSON body as params. Objects become
-/// associative arrays except empty ones, which stay objects; anything that is
-/// not an array or object (or not JSON) is no params.
+/// Decodes a JSON body into params.
+///
+/// A top-level object or array gives its members; objects whose keys are
+/// `0..n` become arrays, and empty objects stay objects. Anything else (a
+/// scalar, an empty object, invalid JSON) gives no params.
+///
+/// PHP: `Request::decodePayload($raw)`: objects decode to associative arrays
+/// except empty ones, which stay objects.
 pub fn decode_payload(raw: &[u8]) -> Params {
     // PHP decodes into objects only when the body can hold an empty object
     // (`/\{\s*\}/`); the two modes differ for property names PHP objects reject.
@@ -60,7 +76,9 @@ fn object_to_array(object: &Array) -> Array {
         .collect()
 }
 
-/// A PHP array as params (keys as strings, in order).
+/// Converts a [`php_std::Array`] into params, with keys as strings, in order.
+///
+/// PHP: a PHP array as params.
 pub fn array_to_params(array: &Array) -> Params {
     let mut map = Map::with_capacity(array.len());
     for (k, v) in array.iter() {
@@ -69,8 +87,10 @@ pub fn array_to_params(array: &Array) -> Params {
     map
 }
 
-/// The request-model value of a PHP value. Binary strings are decoded
-/// lossily (the model holds UTF-8 only); non-finite floats become `null`.
+/// Converts a [`php_std::Value`] into a JSON value.
+///
+/// Lists become arrays and other arrays objects. Binary strings are decoded
+/// lossily (params hold UTF-8 only); non-finite floats become `null`.
 pub fn value_to_json(value: &php_std::Value) -> Value {
     use php_std::Value as Php;
     match value {
@@ -95,7 +115,10 @@ fn key_string(key: KeyRef<'_>) -> String {
     }
 }
 
-/// Params as the PHP array they model: a list when the keys are `0..n`.
+/// Params as a single JSON value: an array when the keys are `0..n` (or there
+/// are none), an object otherwise.
+///
+/// PHP: the PHP array the params model.
 pub fn params_value(params: &Params) -> Value {
     if !params.is_empty()
         && params.keys().enumerate().all(|(i, k)| php_std::types::numeric_key(k.as_bytes()) == Some(i as i64))

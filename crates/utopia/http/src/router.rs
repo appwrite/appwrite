@@ -1,13 +1,16 @@
-//! `Utopia\Http\Router`: routes by method and path template.
+//! The routing table: routes by HTTP method and path template, matched
+//! against request paths.
 //!
 //! A path `/users/:id` is stored as the template `users/:::` with the param
 //! `id` at segment 1. Matching tries the request's segments with
-//! placeholders substituted at every combination of param positions, in the
-//! order PHP's generator yields them (deepest positions first), so a static
-//! segment wins over a placeholder at the leftmost position where two
-//! templates differ. A route can be registered under several methods and
-//! alias paths; `*` templates match a path prefix; a method-agnostic
-//! wildcard catches everything else.
+//! placeholders substituted at every combination of param positions,
+//! deepest positions first, so a static segment wins over a placeholder at
+//! the leftmost position where two templates differ. A route can be
+//! registered under several methods and alias paths; `*` templates match a
+//! path prefix; a method-agnostic wildcard catches everything else.
+//!
+//! PHP: `Utopia\Http\Router`; combinations are tried in the order PHP's
+//! generator yields them.
 
 use std::collections::HashMap;
 
@@ -15,9 +18,14 @@ use indexmap::IndexMap;
 
 use crate::error::{Error, Result};
 
-/// `Router::PLACEHOLDER_TOKEN`.
+/// The segment that stands for a param in a stored template.
+///
+/// PHP: `Router::PLACEHOLDER_TOKEN`.
 pub const PLACEHOLDER: &str = ":::";
-/// `Router::WILDCARD_TOKEN`.
+/// The path segment that matches any path suffix (`/assets/*`) or, alone,
+/// any path.
+///
+/// PHP: `Router::WILDCARD_TOKEN`.
 pub const WILDCARD: &str = "*";
 
 /// The methods a route can be registered under.
@@ -26,12 +34,16 @@ pub const METHODS: [&str; 5] = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 /// Path params parsed from a request path, by name.
 pub type PathParams = Vec<(String, String)>;
 
-/// A matched route and its path params (`RouteMatch`).
+/// A matched route and its path params.
+///
+/// PHP: `RouteMatch`.
 #[derive(Debug)]
 pub struct Match<'a, T> {
+    /// The matched route's value.
     pub route: &'a T,
     /// The route's id in the router.
     pub id: usize,
+    /// The path params, by name.
     pub params: PathParams,
 }
 
@@ -41,7 +53,8 @@ struct Entry<T> {
     params: IndexMap<String, IndexMap<String, usize>>,
 }
 
-/// The routing table.
+/// The routing table: values of type `T` (an application stores [`Route`](crate::Route)s)
+/// by method and path template, each with a stable id.
 pub struct Router<T> {
     entries: Vec<Entry<T>>,
     /// Method -> template -> entry.
@@ -53,12 +66,14 @@ pub struct Router<T> {
 }
 
 impl<T> Default for Router<T> {
+    /// An empty router.
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl<T> Router<T> {
+    /// An empty router that refuses to override routes.
     pub fn new() -> Self {
         Self {
             entries: Vec::new(),
@@ -69,17 +84,24 @@ impl<T> Router<T> {
         }
     }
 
-    /// `Router::reset()`.
+    /// Removes every route and resets the settings.
+    ///
+    /// PHP: `Router::reset()`.
     pub fn reset(&mut self) {
         *self = Self::new();
     }
 
-    /// `getAllowOverride()`.
+    /// Whether registering a route for an already registered method and
+    /// template replaces it instead of failing.
+    ///
+    /// PHP: `getAllowOverride()`.
     pub fn allow_override(&self) -> bool {
         self.allow_override
     }
 
-    /// `setAllowOverride($value)`.
+    /// Sets whether a registration may replace an existing route.
+    ///
+    /// PHP: `setAllowOverride($value)`.
     pub fn set_allow_override(&mut self, allow: bool) {
         self.allow_override = allow;
     }
@@ -88,8 +110,12 @@ impl<T> Router<T> {
         METHODS.iter().find(|m| **m == method).copied()
     }
 
-    /// `preparePath($path)`: the template and its params. Records the param
-    /// positions (even when registration then fails, as PHP does).
+    /// The template of a path and its params by segment index: `/users/:id`
+    /// gives `users/:::` and `{id: 1}`. Records the param positions for
+    /// matching.
+    ///
+    /// PHP: `preparePath($path)`. Positions are recorded even when
+    /// registration then fails, as PHP does.
     pub fn prepare(&mut self, path: &str) -> (String, IndexMap<String, usize>) {
         let mut template = String::with_capacity(path.len());
         let mut params = IndexMap::new();
@@ -119,8 +145,13 @@ impl<T> Router<T> {
         self.entries.len() - 1
     }
 
-    /// `Router::addRoute($route)`: registers `value` for `path` under every
-    /// method of `methods` (the first is the primary one).
+    /// Registers `value` for `path` under every method of `methods` (the
+    /// first is the primary one) and returns its id.
+    ///
+    /// Fails when a method is not one of [`METHODS`], or when the template
+    /// is already registered for a method and overriding is not allowed.
+    ///
+    /// PHP: `Router::addRoute($route)`.
     pub fn insert(&mut self, methods: &[&str], path: &str, value: T) -> Result<usize> {
         let (template, params) = self.prepare(path);
         let primary = methods.first().copied().unwrap_or("");
@@ -156,8 +187,10 @@ impl<T> Router<T> {
         Ok(id)
     }
 
-    /// `Router::addRouteAlias($path, $route)`: also registers route `id` for
-    /// `path` under its methods.
+    /// Also registers route `id` for `path` under `methods`, with the same
+    /// errors as [`Router::insert`].
+    ///
+    /// PHP: `Router::addRouteAlias($path, $route)`.
     pub fn alias(&mut self, id: usize, methods: &[&str], path: &str) -> Result<()> {
         let (template, params) = self.prepare(path);
         let mut resolved = Vec::with_capacity(methods.len());
@@ -179,7 +212,9 @@ impl<T> Router<T> {
         Ok(())
     }
 
-    /// `setWildcard($route)`: the route used when nothing else matches.
+    /// Sets the route used when nothing else matches, for any method.
+    ///
+    /// PHP: `setWildcard($route)`.
     pub fn set_wildcard(&mut self, id: Option<usize>) {
         self.wildcard = id;
     }
@@ -194,7 +229,10 @@ impl<T> Router<T> {
         self.entries.get_mut(id).map(|e| &mut e.value)
     }
 
-    /// `getRoutes()`: method -> template -> route id.
+    /// The templates registered for `method`, each with its route id; `None`
+    /// for a method outside [`METHODS`].
+    ///
+    /// PHP: `getRoutes()`.
     pub fn routes(&self, method: &str) -> Option<&IndexMap<String, usize>> {
         Self::method(method).and_then(|m| self.routes.get(m))
     }
@@ -203,7 +241,14 @@ impl<T> Router<T> {
         Match { route: &self.entries[id].value, id, params }
     }
 
-    /// `Router::match($method, $path)`.
+    /// The route for `method` and `path`, with its path params.
+    ///
+    /// Templates are tried first, static segments preferred over params;
+    /// then a `/*` route for the method, then `prefix/*` routes from the
+    /// shortest prefix to the longest, and finally the wildcard route. A
+    /// method outside [`METHODS`] only matches the wildcard route.
+    ///
+    /// PHP: `Router::match($method, $path)`.
     pub fn find(&self, method: &str, path: &str) -> Option<Match<'_, T>> {
         let Some(table) = Self::method(method).and_then(|m| self.routes.get(m)) else {
             return self.wildcard.map(|id| self.found(id, Vec::new()));
@@ -247,8 +292,11 @@ impl<T> Router<T> {
         self.wildcard.map(|id| self.found(id, Vec::new()))
     }
 
-    /// `Route::resolveParams($url, $template)`: the params of route `id` in
-    /// `url` (segments counted without dropping empty ones).
+    /// The path params of route `id` in `url`, read at the segment positions
+    /// recorded for `template`. Segments are counted without dropping empty
+    /// ones.
+    ///
+    /// PHP: `Route::resolveParams($url, $template)`.
     pub fn resolve(&self, id: usize, url: &str, template: &str) -> PathParams {
         let entry = &self.entries[id];
         let params = if template.is_empty() {
@@ -261,8 +309,13 @@ impl<T> Router<T> {
         params.iter().filter_map(|(name, &index)| parts.get(index).map(|v| (name.clone(), (*v).to_owned()))).collect()
     }
 
-    /// Legacy registration for applications that build routes at startup:
-    /// panics when the route is already registered.
+    /// Registers `value` for one method and `path`, for applications that
+    /// build routes at startup.
+    ///
+    /// # Panics
+    ///
+    /// When [`Router::insert`] fails, such as for a route already
+    /// registered.
     pub fn add(&mut self, method: http::Method, path: &str, value: T) {
         if let Err(e) = self.insert(&[method.as_str()], path, value) {
             panic!("{e}");

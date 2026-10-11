@@ -1,8 +1,11 @@
-//! `Utopia\Http\Http`: the application. Routes, hooks by group, request
-//! dispatch with params, validators and injections, static files.
+//! The application: routes, hooks by group, request dispatch with params,
+//! validators and injections, and static files.
 //!
-//! PHP keeps routes, hooks and the mode in static properties; here they
-//! belong to an [`Http`] value, built once and shared by every request.
+//! Routes, hooks and the mode belong to an [`Http`] value, built once and
+//! shared by every request.
+//!
+//! PHP: `Utopia\Http\Http`, which keeps routes, hooks and the mode in
+//! static properties.
 
 use std::sync::Arc;
 
@@ -18,17 +21,24 @@ use crate::response::Response;
 use crate::router::{Match, PathParams, Router};
 use crate::telemetry::{Attribute, Instruments, NoTelemetry, Telemetry};
 
-/// The running mode (`Http::MODE_TYPE_*`).
+/// The names of the modes an application can run in (see [`Http::set_mode`]).
+///
+/// PHP: `Http::MODE_TYPE_*`.
 pub mod mode {
+    /// Development mode.
     pub const DEVELOPMENT: &str = "development";
+    /// Staging mode.
     pub const STAGE: &str = "stage";
+    /// Production mode.
     pub const PRODUCTION: &str = "production";
 }
 
 /// A request's match: the route's id and its path params.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RouteMatch {
+    /// The route's id (see [`Http::route`]).
     pub id: usize,
+    /// The path params, by name.
     pub params: PathParams,
 }
 
@@ -40,7 +50,10 @@ struct At<'a> {
     params: &'a Params,
 }
 
-/// The application.
+/// A web application: its routes, hooks, static files, settings and shared
+/// resources.
+///
+/// Build it once, then dispatch each request with [`Http::run`].
 pub struct Http {
     router: Router<Route>,
     counter: usize,
@@ -59,12 +72,14 @@ pub struct Http {
 }
 
 impl Default for Http {
+    /// An application in the `UTC` time zone.
     fn default() -> Self {
         Self::new("UTC")
     }
 }
 
-/// A route being configured (`Http::get()` and friends return it).
+/// A route being configured: [`Http::get`] and the other route methods
+/// return it, and its setters chain.
 pub struct RouteBuilder<'h> {
     http: &'h mut Http,
     id: usize,
@@ -80,49 +95,68 @@ impl RouteBuilder<'_> {
         self.id
     }
 
-    /// `desc($desc)`.
+    /// Sets the route's description.
+    ///
+    /// PHP: `desc($desc)`.
     pub fn desc(mut self, desc: &str) -> Self {
         self.route().desc(desc);
         self
     }
 
-    /// `groups($groups)`.
+    /// Sets the route's groups: the init, shutdown, options and error hooks
+    /// of these groups run for it.
+    ///
+    /// PHP: `groups($groups)`.
     pub fn groups(mut self, groups: &[&str]) -> Self {
         self.route().groups(groups);
         self
     }
 
-    /// `label($key, $value)`.
+    /// Sets a label: free-form metadata under `key`.
+    ///
+    /// PHP: `label($key, $value)`.
     pub fn label(mut self, key: &str, value: Value) -> Self {
         self.route().label(key, value);
         self
     }
 
-    /// `param($key, ...)`.
+    /// Declares a param under `key`.
+    ///
+    /// PHP: `param($key, ...)`.
     pub fn param(mut self, key: &str, param: crate::hook::Param) -> Self {
         self.route().param(key, param);
         self
     }
 
-    /// `inject($name)`.
+    /// Declares a resource to inject by name.
+    ///
+    /// PHP: `inject($name)`.
     pub fn inject(mut self, name: &str) -> Self {
         self.route().inject(name);
         self
     }
 
-    /// `hook($hook)`: whether global init and shutdown hooks run.
+    /// Sets whether the global (`*`) init and shutdown hooks run around the
+    /// route.
+    ///
+    /// PHP: `hook($hook)`.
     pub fn hook(mut self, hooks: bool) -> Self {
         self.route().set_hooks(hooks);
         self
     }
 
-    /// `path($path)`: changes the reported path.
+    /// Changes the path the route reports (not the one it matches).
+    ///
+    /// PHP: `path($path)`.
     pub fn path(mut self, path: &str) -> Self {
         self.route().set_path(path);
         self
     }
 
-    /// `action($callback)`.
+    /// Sets the route's callback, an async closure that receives the call's
+    /// [`Scope`].
+    ///
+    /// PHP: `action($callback)`.
     pub fn action<F>(mut self, f: F) -> Self
     where
         F: for<'a> Fn(Scope<'a>) -> BoxFuture<'a, Result<()>> + Send + Sync + 'static,
@@ -137,7 +171,10 @@ impl RouteBuilder<'_> {
         self
     }
 
-    /// `alias($path)`: also registers the route for `path`.
+    /// Also registers the route for `path`, under the same methods. Fails
+    /// like [`Router::insert`] when `path` is taken.
+    ///
+    /// PHP: `alias($path)`.
     pub fn alias(&mut self, path: &str) -> Result<&mut Self> {
         let methods: Vec<String> = self.route().methods().to_vec();
         let methods: Vec<&str> = methods.iter().map(String::as_str).collect();
@@ -147,15 +184,17 @@ impl RouteBuilder<'_> {
         Ok(self)
     }
 
-    /// The route.
+    /// The route being configured.
     pub fn get(&mut self) -> &mut Route {
         self.route()
     }
 }
 
 impl Http {
-    /// `new Http($adapter, $timezone)`: `timezone` is the zone of the static
-    /// files' `Expires` header.
+    /// An empty application; `timezone` is the zone of the static files'
+    /// `Expires` header.
+    ///
+    /// PHP: `new Http($adapter, $timezone)`.
     pub fn new(timezone: &str) -> Self {
         Self {
             router: Router::new(),
@@ -177,69 +216,98 @@ impl Http {
 
     // -- settings ------------------------------------------------------------
 
-    /// `setCompression($enabled)`, `setCompressionMinSize()`, `setCompressionSupported()`.
+    /// Sets the response compression settings; `None` (the default) turns
+    /// compression off.
+    ///
+    /// PHP: `setCompression($enabled)`, `setCompressionMinSize()`,
+    /// `setCompressionSupported()`.
     pub fn set_compression(&mut self, compression: Option<Compression>) {
         self.compression = compression;
     }
 
-    /// `setTelemetry($telemetry)`: where the server metrics go.
+    /// Sets where the server metrics go: request duration, requests in
+    /// flight, and request and response body sizes.
+    ///
+    /// PHP: `setTelemetry($telemetry)`.
     pub fn set_telemetry(&mut self, telemetry: &dyn Telemetry) {
         self.instruments = Instruments::new(telemetry);
     }
 
-    /// The compression settings, when enabled.
+    /// The compression settings, when set.
     pub fn compression(&self) -> Option<&Compression> {
         self.compression.as_ref()
     }
 
-    /// `getMode()`.
+    /// The running mode, one of the [`mode`](crate::mode) names (empty until
+    /// set).
+    ///
+    /// PHP: `getMode()`.
     pub fn mode(&self) -> &str {
         &self.mode
     }
 
-    /// `setMode($value)`.
+    /// Sets the running mode.
+    ///
+    /// PHP: `setMode($value)`.
     pub fn set_mode(&mut self, mode: &str) {
         self.mode = mode.to_owned();
     }
 
-    /// `isProduction()`.
+    /// Whether the mode is [`mode::PRODUCTION`].
+    ///
+    /// PHP: `isProduction()`.
     pub fn is_production(&self) -> bool {
         self.mode == mode::PRODUCTION
     }
 
-    /// `isDevelopment()`.
+    /// Whether the mode is [`mode::DEVELOPMENT`].
+    ///
+    /// PHP: `isDevelopment()`.
     pub fn is_development(&self) -> bool {
         self.mode == mode::DEVELOPMENT
     }
 
-    /// `isStage()`.
+    /// Whether the mode is [`mode::STAGE`].
+    ///
+    /// PHP: `isStage()`.
     pub fn is_stage(&self) -> bool {
         self.mode == mode::STAGE
     }
 
-    /// `getAllowOverride()`.
+    /// Whether a route may replace one registered for the same method and
+    /// path.
+    ///
+    /// PHP: `getAllowOverride()`.
     pub fn allow_override(&self) -> bool {
         self.router.allow_override()
     }
 
-    /// `setAllowOverride($value)`.
+    /// Sets whether a route may replace one registered for the same method
+    /// and path.
+    ///
+    /// PHP: `setAllowOverride($value)`.
     pub fn set_allow_override(&mut self, allow: bool) {
         self.router.set_allow_override(allow);
     }
 
-    /// `resources()`: resources shared by every request.
+    /// The resources shared by every request: the parent of each request's
+    /// context.
+    ///
+    /// PHP: `resources()`.
     pub fn resources(&self) -> &Arc<Resources> {
         &self.resources
     }
 
-    /// `getEnv($key, $default)`: a server variable (the environment).
+    /// An environment variable, or `None` when it is unset or not UTF-8.
+    ///
+    /// PHP: `getEnv($key, $default)`, a server variable.
     pub fn env(key: &str) -> Option<String> {
         std::env::var(key).ok()
     }
 
     // -- routes --------------------------------------------------------------
 
-    /// The router.
+    /// The routing table.
     pub fn router(&self) -> &Router<Route> {
         &self.router
     }
@@ -249,7 +317,12 @@ impl Http {
         self.router.get(id)
     }
 
-    /// `Http::routes($methods, $url)`: one route for several methods.
+    /// Adds one route for several methods (duplicates ignored).
+    ///
+    /// Fails when `methods` is empty, names a method outside
+    /// [`METHODS`](crate::METHODS), or the path is already registered.
+    ///
+    /// PHP: `Http::routes($methods, $url)`.
     pub fn routes(&mut self, methods: &[&str], path: &str) -> Result<RouteBuilder<'_>> {
         let mut unique: Vec<&str> = Vec::with_capacity(methods.len());
         for m in methods {
@@ -266,12 +339,19 @@ impl Http {
         self.insert(&unique, path)
     }
 
-    /// `Http::addRoute($method, $url)`.
+    /// Adds a route for one method. Fails when the method is not supported
+    /// or the path is already registered.
+    ///
+    /// PHP: `Http::addRoute($method, $url)`.
     pub fn add_route(&mut self, method: &str, path: &str) -> Result<RouteBuilder<'_>> {
         self.insert(&[method], path)
     }
 
-    /// `Router::addRoute(new Route($methods, $path))`: no method validation before the router's own.
+    /// Adds a route for `methods` and `path` without the checks of
+    /// [`Http::routes`] (duplicates, an empty list); the router still
+    /// rejects unsupported methods and taken paths.
+    ///
+    /// PHP: `Router::addRoute(new Route($methods, $path))`.
     pub fn insert(&mut self, methods: &[&str], path: &str) -> Result<RouteBuilder<'_>> {
         self.counter += 1;
         let route = Route::new(methods, path, self.counter);
@@ -279,32 +359,45 @@ impl Http {
         Ok(RouteBuilder { http: self, id })
     }
 
-    /// `Http::get($url)`.
+    /// Adds a `GET` route (which also answers `HEAD`).
+    ///
+    /// PHP: `Http::get($url)`.
     pub fn get(&mut self, path: &str) -> Result<RouteBuilder<'_>> {
         self.routes(&["GET"], path)
     }
 
-    /// `Http::post($url)`.
+    /// Adds a `POST` route.
+    ///
+    /// PHP: `Http::post($url)`.
     pub fn post(&mut self, path: &str) -> Result<RouteBuilder<'_>> {
         self.routes(&["POST"], path)
     }
 
-    /// `Http::put($url)`.
+    /// Adds a `PUT` route.
+    ///
+    /// PHP: `Http::put($url)`.
     pub fn put(&mut self, path: &str) -> Result<RouteBuilder<'_>> {
         self.routes(&["PUT"], path)
     }
 
-    /// `Http::patch($url)`.
+    /// Adds a `PATCH` route.
+    ///
+    /// PHP: `Http::patch($url)`.
     pub fn patch(&mut self, path: &str) -> Result<RouteBuilder<'_>> {
         self.routes(&["PATCH"], path)
     }
 
-    /// `Http::delete($url)`.
+    /// Adds a `DELETE` route.
+    ///
+    /// PHP: `Http::delete($url)`.
     pub fn delete(&mut self, path: &str) -> Result<RouteBuilder<'_>> {
         self.routes(&["DELETE"], path)
     }
 
-    /// `Http::wildcard()`: the route for requests nothing else matches.
+    /// Sets the route for requests nothing else matches, whatever their
+    /// method; a second call replaces the first.
+    ///
+    /// PHP: `Http::wildcard()`.
     pub fn wildcard(&mut self) -> RouteBuilder<'_> {
         self.counter += 1;
         let id = self.router.push(Route::new(&[""], "", self.counter));
@@ -314,37 +407,56 @@ impl Http {
 
     // -- hooks ---------------------------------------------------------------
 
-    /// `Http::init()`: runs before routes of its groups (`*`: every route).
+    /// Adds a hook that runs before the routes of its groups (by default
+    /// `*`: every route).
+    ///
+    /// PHP: `Http::init()`.
     pub fn init(&mut self) -> &mut Hook {
         self.init.push(Hook::with_groups(&["*"]));
         self.init.last_mut().unwrap_or_else(|| unreachable!())
     }
 
-    /// `Http::shutdown()`: runs after routes of its groups.
+    /// Adds a hook that runs after the routes of its groups (by default `*`:
+    /// every route).
+    ///
+    /// PHP: `Http::shutdown()`.
     pub fn shutdown(&mut self) -> &mut Hook {
         self.shutdown.push(Hook::with_groups(&["*"]));
         self.shutdown.last_mut().unwrap_or_else(|| unreachable!())
     }
 
-    /// `Http::options()`: runs for `OPTIONS` requests.
+    /// Adds a hook that answers `OPTIONS` requests for the routes of its
+    /// groups (by default `*`: every request).
+    ///
+    /// PHP: `Http::options()`.
     pub fn options(&mut self) -> &mut Hook {
         self.options.push(Hook::with_groups(&["*"]));
         self.options.last_mut().unwrap_or_else(|| unreachable!())
     }
 
-    /// `Http::error()`: runs when a route or hook fails, or nothing matches.
+    /// Adds a hook that runs when a route or hook fails, or nothing matches
+    /// (with a 404 [`Error::Http`]); the failure is its `error` resource
+    /// (see [`Scope::error`]).
+    ///
+    /// PHP: `Http::error()`.
     pub fn error(&mut self) -> &mut Hook {
         self.errors.push(Hook::with_groups(&["*"]));
         self.errors.last_mut().unwrap_or_else(|| unreachable!())
     }
 
-    /// `Http::onStart()`: runs when the server starts.
+    /// Adds a hook that runs once when the server starts (see
+    /// [`Http::start`]).
+    ///
+    /// PHP: `Http::onStart()`.
     pub fn on_start(&mut self) -> &mut Hook {
         self.start.push(Hook::new());
         self.start.last_mut().unwrap_or_else(|| unreachable!())
     }
 
-    /// `Http::onRequest()`: runs first for every request.
+    /// Adds a hook that runs first for every request, before static files
+    /// and routing.
+    ///
+    /// PHP: `Http::onRequest()`.
     pub fn on_request(&mut self) -> &mut Hook {
         self.request.push(Hook::new());
         self.request.last_mut().unwrap_or_else(|| unreachable!())
@@ -352,7 +464,10 @@ impl Http {
 
     // -- files ---------------------------------------------------------------
 
-    /// `loadFiles($directory, $root)`.
+    /// Loads the files under `directory` to serve as static files (see
+    /// [`Files::load`]).
+    ///
+    /// PHP: `loadFiles($directory, $root)`.
     pub fn load_files(&mut self, directory: &str, root: Option<&str>) -> Result<()> {
         self.files.load(directory, root)
     }
@@ -364,8 +479,10 @@ impl Http {
 
     // -- dispatch ------------------------------------------------------------
 
-    /// `match($request)`: the route for the request's method (HEAD as GET)
-    /// and path.
+    /// The route for the request's method (`HEAD` as `GET`) and path, with
+    /// its path params.
+    ///
+    /// PHP: `match($request)`.
     pub fn find(&self, request: &Request) -> Option<Match<'_, Route>> {
         let path = request.route_path();
         let method = if request.method() == "HEAD" { "GET" } else { request.method() };
@@ -392,13 +509,19 @@ impl Http {
         action(scope).await
     }
 
-    /// `execute($request, $response)`: matches the request and runs the
-    /// route with its init, shutdown and error hooks. HEAD runs as GET without
-    /// a body; OPTIONS runs the options hooks only; a request nothing matches
-    /// runs the global error hooks with a 404.
+    /// Matches the request and runs the route between its init and shutdown
+    /// hooks. `HEAD` runs as `GET` without a body; `OPTIONS` runs the options
+    /// hooks only; a request nothing matches runs the global error hooks with
+    /// a 404.
+    ///
+    /// A failure is handed to the error hooks of the route's groups, then to
+    /// the global ones; an error is returned only when an error hook itself
+    /// fails.
     ///
     /// Re-entrant: an action can dispatch a sub-request with its own request
     /// and response.
+    ///
+    /// PHP: `execute($request, $response)`.
     pub fn execute<'a>(
         &'a self,
         request: &'a Request,
@@ -503,10 +626,13 @@ impl Http {
         })
     }
 
-    /// `run($request, $response)`: the top-level request lifecycle:
-    /// compression settings, request hooks, static files, then
-    /// [`Http::execute`]. `context` is the request's context (a child of
-    /// [`Http::resources`]).
+    /// Dispatches a request through the whole lifecycle: compression
+    /// settings, request hooks, static files, then [`Http::execute`], and
+    /// records the server metrics.
+    ///
+    /// `context` is the request's context, from [`Http::context`].
+    ///
+    /// PHP: `run($request, $response)`.
     pub async fn run(&self, request: &Request, response: &mut Response, context: &Arc<Resources>) -> Result<()> {
         let method = Attribute::Str(request.method().to_owned());
         let scheme = Attribute::Str(request.protocol());
@@ -577,8 +703,11 @@ impl Http {
         self.execute(request, response, context).await
     }
 
-    /// `start()`: runs the start hooks with the server as the `server`
-    /// resource; a failing hook runs the global error hooks.
+    /// Runs the start hooks, with `server` registered as the `server`
+    /// resource. A failing hook stops the others and runs the global error
+    /// hooks.
+    ///
+    /// PHP: `start()`.
     pub async fn start(&self, server: crate::hook::Resource) -> Result<()> {
         self.resources.set("server", server);
         let mut request = Request::new("GET", "/", std::iter::empty(), bytes::Bytes::new());
@@ -612,7 +741,10 @@ impl Http {
         Ok(())
     }
 
-    /// A request context: a child of the static resources.
+    /// A new request context: a resource container whose parent is
+    /// [`Http::resources`].
+    ///
+    /// PHP: `context()`.
     pub fn context(&self) -> Arc<Resources> {
         Arc::new(Resources::child(self.resources.clone()))
     }

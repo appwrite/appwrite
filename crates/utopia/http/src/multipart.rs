@@ -1,5 +1,7 @@
-//! `multipart/form-data` bodies, parsed the way Swoole fills
-//! `$request->post` and `$request->files`.
+//! Parsing of `multipart/form-data` bodies into form fields and uploaded
+//! files.
+//!
+//! PHP: parsed the way Swoole fills `$request->post` and `$request->files`.
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};

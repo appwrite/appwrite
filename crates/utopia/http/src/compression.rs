@@ -1,23 +1,31 @@
-//! Response compression: `Utopia\Compression\Compression::fromAcceptEncoding`
-//! and the algorithms `Utopia\Http\Response::send()` uses.
+//! Response compression: choosing an algorithm from the client's
+//! `Accept-Encoding` header, and compressing bodies with it.
 //!
-//! `utopia-php/compression` has no crate of its own yet; the part of it the
-//! HTTP layer needs lives here.
+//! PHP: `Utopia\Compression\Compression::fromAcceptEncoding` and the
+//! algorithms `Utopia\Http\Response::send()` uses. `utopia-php/compression`
+//! has no crate of its own yet; the part of it the HTTP layer needs lives
+//! here.
 
 use std::io::{Read, Write};
 
-/// Response compression settings (`Http::setCompression*`).
+/// Response compression settings of an application.
+///
+/// PHP: `Http::setCompression()`, `setCompressionMinSize()`,
+/// `setCompressionSupported()`.
 #[derive(Debug, Clone)]
 pub struct Compression {
+    /// Whether responses are compressed.
     pub enabled: bool,
-    /// Bodies strictly larger than this are compressed (`COMPRESSION_MIN_SIZE_DEFAULT`).
+    /// Bodies strictly larger than this many bytes are compressed
+    /// ([`COMPRESSION_MIN_SIZE_DEFAULT`](crate::COMPRESSION_MIN_SIZE_DEFAULT) by default).
     pub min_size: usize,
-    /// Algorithms offered (`setCompressionSupported`); empty means every
-    /// supported one (`zstd`, `brotli`, `gzip`, `deflate`, `none`, `identity`).
+    /// Algorithm names offered; empty means every supported one (`zstd`,
+    /// `brotli`, `gzip`, `deflate`, `none`, `identity`).
     pub supported: Vec<String>,
 }
 
 impl Default for Compression {
+    /// Enabled, for bodies over 1024 bytes, with every supported algorithm.
     fn default() -> Self {
         Self { enabled: true, min_size: crate::COMPRESSION_MIN_SIZE_DEFAULT, supported: Vec::new() }
     }
@@ -26,14 +34,21 @@ impl Default for Compression {
 /// A compression algorithm.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Algorithm {
+    /// Zstandard (`zstd`).
     Zstd,
+    /// Brotli (`br`).
     Brotli,
+    /// Gzip (`gzip`).
     Gzip,
+    /// Raw deflate (`deflate`).
     Deflate,
 }
 
 impl Algorithm {
-    /// `Compression::fromName($name)`: `None` for `none`, `identity` and unknown names.
+    /// The algorithm named `name` (case-insensitive; `br` and `brotli` are
+    /// both Brotli), or `None` for `none`, `identity` and unknown names.
+    ///
+    /// PHP: `Compression::fromName($name)`.
     pub fn from_name(name: &str) -> Option<Self> {
         match name.to_ascii_lowercase().as_str() {
             "brotli" | "br" => Some(Algorithm::Brotli),
@@ -44,7 +59,9 @@ impl Algorithm {
         }
     }
 
-    /// `getContentEncoding()`.
+    /// The `Content-Encoding` header value of the algorithm.
+    ///
+    /// PHP: `getContentEncoding()`.
     pub fn content_encoding(self) -> &'static str {
         match self {
             Algorithm::Zstd => "zstd",
@@ -54,7 +71,11 @@ impl Algorithm {
         }
     }
 
-    /// Compresses `data` at the level `Response::send()` uses.
+    /// Compresses `data` at the level responses use: zstd level 3, Brotli
+    /// quality 4, gzip and deflate level 6. Returns an empty buffer if
+    /// compression fails.
+    ///
+    /// PHP: the levels `Response::send()` uses.
     pub fn compress(self, data: &[u8]) -> Vec<u8> {
         match self {
             Algorithm::Zstd => zstd::bulk::compress(data, crate::COMPRESSION_ZSTD_LEVEL_DEFAULT).unwrap_or_default(),
@@ -102,9 +123,14 @@ impl Algorithm {
     }
 }
 
-/// `Compression::fromAcceptEncoding($acceptEncoding, $supported)`: the
-/// accepted algorithm with the highest `q` (header order on ties) among the
-/// supported ones. `none` and `identity` can win, and mean no compression.
+/// The algorithm to compress with for an `Accept-Encoding` header: the
+/// accepted one with the highest `q` (header order on ties) among
+/// `supported` (every algorithm when empty).
+///
+/// `none` and `identity` can win, and mean no compression; `None` is also
+/// returned when nothing supported is accepted.
+///
+/// PHP: `Compression::fromAcceptEncoding($acceptEncoding, $supported)`.
 pub fn from_accept_encoding(accept: &str, supported: &[String]) -> Option<Algorithm> {
     if accept.is_empty() || accept == "0" {
         return None;
@@ -138,7 +164,11 @@ pub fn from_accept_encoding(accept: &str, supported: &[String]) -> Option<Algori
     best.and_then(|(_, name)| Algorithm::from_name(&name))
 }
 
-/// Content types `Response::send()` compresses (parameters stripped, case-insensitive).
+/// Whether responses of a content type are compressed: text, scripts, JSON,
+/// XML, fonts, SVG and similar. Parameters are ignored and the match is
+/// case-insensitive.
+///
+/// PHP: the content types `Response::send()` compresses.
 pub fn compressible(content_type: &str) -> bool {
     let ct = content_type.split(';').next().unwrap_or("");
     let ct = php_std::string::trim(ct.as_bytes(), b" \t\n\r\0\x0B").to_ascii_lowercase();
