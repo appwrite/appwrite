@@ -99,6 +99,7 @@ class Maintenance extends Action
             $this->notifyDeleteCache($cacheRetention, $publisherForDeletes);
             $this->notifyDeleteSchedules($schedulesDeletionRetention, $publisherForDeletes);
             $this->notifyDeleteCSVExports($publisherForDeletes);
+            $this->notifyDeleteVideoTmp($publisherForDeletes);
         };
 
         if ($type === 'loop') {
@@ -123,6 +124,11 @@ class Maintenance extends Action
     private function notifyDeleteCSVExports(DeletePublisher $publisherForDeletes): void
     {
         $publisherForDeletes->enqueue(new DeleteMessage(type: DELETE_TYPE_CSV_EXPORTS));
+    }
+
+    private function notifyDeleteVideoTmp(DeletePublisher $publisherForDeletes): void
+    {
+        $publisherForDeletes->enqueue(new DeleteMessage(type: DELETE_TYPE_VIDEOS_TMP));
     }
 
     private function renewCertificates(Database $dbForPlatform, Certificate $publisherForCertificate, Certificates $certificateIssuer): void

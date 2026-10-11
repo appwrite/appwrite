@@ -26,6 +26,7 @@ use Appwrite\Platform\Modules\Tokens;
 use Appwrite\Platform\Modules\Usage;
 use Appwrite\Platform\Modules\Users;
 use Appwrite\Platform\Modules\VCS;
+use Appwrite\Platform\Modules\Videos;
 use Appwrite\Platform\Modules\Webhooks;
 use Utopia\Platform\Platform;
 
@@ -58,5 +59,6 @@ class Appwrite extends Platform
         $this->addModule(new Organization\Module());
         $this->addModule(new Project\Module());
         $this->addModule(new Advisor\Module());
+        $this->addModule(new Videos\Module());
     }
 }

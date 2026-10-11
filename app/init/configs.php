@@ -45,6 +45,8 @@ Config::setParam('storage-mimes', include __DIR__ . '/../config/storage/mimes.ph
 Config::setParam('storage-inputs', include __DIR__ . '/../config/storage/inputs.php');
 Config::setParam('storage-outputs', include __DIR__ . '/../config/storage/outputs.php');
 Config::setParam('storage-formats', include __DIR__ . '/../config/storage/formats.php');
+Config::setParam('videos-profiles', include __DIR__ . '/../config/videos-profiles.php');
+Config::setParam('videos-codecs', include __DIR__ . '/../config/videos-codecs.php');
 Config::setParam('specifications', include __DIR__ . '/../config/specifications.php');
 Config::setParam('templates-function', include __DIR__ . '/../config/templates/function.php');
 Config::setParam('templates-site', include __DIR__ . '/../config/templates/site.php');

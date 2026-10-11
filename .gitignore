@@ -4,6 +4,7 @@
 /tests/resources/storage/
 /tests/resources/functions/**/code.tar.gz
 /tests/resources/sites/**/code.tar.gz
+/tests/tmp/
 /app/sdks/*
 /.idea/
 !/.idea/workspace.xml

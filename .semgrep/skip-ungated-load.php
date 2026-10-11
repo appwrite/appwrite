@@ -58,3 +58,14 @@ $transaction = ($isAPIKey || $isPrivilegedUser)
     : $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
         return $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
     });
+
+// Video child / profile collections (no per-document ACL; parent is gated first).
+// ok: php.appwrite.skip-ungated-load
+$profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
+
+// ok: php.appwrite.skip-ungated-load
+$rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
+
+// Bare videos without a privileged/API-key gate stays an error.
+// ruleid: php.appwrite.skip-ungated-load
+$video = $authorization->skip(fn () => $dbForProject->getDocument('videos', $videoId));

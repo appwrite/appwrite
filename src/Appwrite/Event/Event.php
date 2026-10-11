@@ -45,6 +45,9 @@ class Event
 
     public const MIGRATIONS_QUEUE_NAME = 'v1-migrations';
 
+    public const VIDEOS_QUEUE_NAME = 'v1-videos';
+    public const VIDEOS_CLASS_NAME = 'VideosV1';
+
     protected string $queue = '';
     protected string $class = '';
     protected string $event = '';
