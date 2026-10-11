@@ -11,9 +11,12 @@ cd "$(dirname "$0")/.."
 mkdir -p /tmp/compat-fs
 # As the invoking user, so files on the shared /tmp/compat-fs mount belong to
 # the same user as the runner's and the Rust driver's (as root, a directory
-# PHP created first was not writable for them on a Linux host).
+# PHP created first was not writable for them on a Linux host), and with
+# host.docker.internal defined on Linux as Docker Desktop defines it on macOS
+# (cases reach the host's published ports through it).
 exec docker run --rm -i \
     --user "$(id -u):$(id -g)" \
+    --add-host=host.docker.internal:host-gateway \
     --network "${COMPAT_NETWORK:-appwrite}" \
     -v "$PWD/tests:/usr/src/code/tests" \
     -v "$PWD/packages:/usr/src/code/packages" \

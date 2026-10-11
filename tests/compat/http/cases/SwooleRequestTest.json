@@ -1141,6 +1141,214 @@
         "",
         []
       ]
+    },
+    {
+      "name": "cookies: the first of two plain names wins",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "uri": "/",
+          "headers": [
+            {
+              "n": "Cookie",
+              "v": "ab"
+            },
+            {
+              "n": "Cookie",
+              "v": "ab=+"
+            }
+          ],
+          "remote_addr": "",
+          "trusted": {
+            "ip": [],
+            "proto": []
+          }
+        },
+        "steps": [
+          {
+            "get": "cookies"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "ab": ""
+        }
+      ]
+    },
+    {
+      "name": "cookies: a mangled name overwrites (the raw name is never a key)",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "uri": "/",
+          "headers": [
+            {
+              "n": "Cookie",
+              "v": "."
+            },
+            {
+              "n": "Cookie",
+              "v": ".=+"
+            }
+          ],
+          "remote_addr": "",
+          "trusted": {
+            "ip": [],
+            "proto": []
+          }
+        },
+        "steps": [
+          {
+            "get": "cookies"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "_": "+"
+        }
+      ]
+    },
+    {
+      "name": "cookies: a dotted name overwrites its mangled form",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "uri": "/",
+          "headers": [
+            {
+              "n": "Cookie",
+              "v": "_"
+            },
+            {
+              "n": "Cookie",
+              "v": ".=1"
+            }
+          ],
+          "remote_addr": "",
+          "trusted": {
+            "ip": [],
+            "proto": []
+          }
+        },
+        "steps": [
+          {
+            "get": "cookies"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "_": "1"
+        }
+      ]
+    },
+    {
+      "name": "cookies: bracketed names merge",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "uri": "/",
+          "headers": [
+            {
+              "n": "Cookie",
+              "v": "a[b]=1"
+            },
+            {
+              "n": "Cookie",
+              "v": "a[b]=2"
+            }
+          ],
+          "remote_addr": "",
+          "trusted": {
+            "ip": [],
+            "proto": []
+          }
+        },
+        "steps": [
+          {
+            "get": "cookies"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "a": {
+            "b": "2"
+          }
+        }
+      ]
+    },
+    {
+      "name": "cookies: a numeric name keeps the first",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "uri": "/",
+          "headers": [
+            {
+              "n": "Cookie",
+              "v": "1=x"
+            },
+            {
+              "n": "Cookie",
+              "v": "1=y"
+            }
+          ],
+          "remote_addr": "",
+          "trusted": {
+            "ip": [],
+            "proto": []
+          }
+        },
+        "steps": [
+          {
+            "get": "cookies"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "1": "x"
+        }
+      ]
+    },
+    {
+      "name": "cookies: a dotted array name and its mangled flat name",
+      "op": "request.inspect",
+      "args": {
+        "request": {
+          "uri": "/",
+          "headers": [
+            {
+              "n": "Cookie",
+              "v": "a.b[c]=1"
+            },
+            {
+              "n": "Cookie",
+              "v": "a_b=2"
+            }
+          ],
+          "remote_addr": "",
+          "trusted": {
+            "ip": [],
+            "proto": []
+          }
+        },
+        "steps": [
+          {
+            "get": "cookies"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "a_b": {
+            "c": "1"
+          }
+        }
+      ]
     }
   ]
 }

@@ -5556,7 +5556,7 @@
             "request": {
               "method": "POST",
               "uri": "http://${http}/echo?digest=1",
-              "file": "/tmp/compat-fs/client-certs/ca.pem"
+              "file": "/tmp/compat-fs/client-upload.txt"
             }
           },
           "expect": {
@@ -5577,7 +5577,7 @@
                 ]
               ]
             ],
-            "body": "{\"method\":\"POST\",\"target\":\"/echo?digest=1\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"],[\"Content-Length\",\"1155\"]],\"length\":1155,\"sha256\":\"29cfb99023e542654124d59c7c27fb2d122481b0a92876ce01adf335af97dde2\"}"
+            "body": "{\"method\":\"POST\",\"target\":\"/echo?digest=1\",\"protocol\":\"HTTP/1.1\",\"headers\":[[\"Host\",\"${http}\"],[\"Accept\",\"*/*\"],[\"Accept-Encoding\",\"deflate, gzip, br, zstd\"],[\"Content-Length\",\"1296\"]],\"length\":1296,\"sha256\":\"85fbc246be53f46782e859b09c34cf8bbe0187ef9718a7b5d666c47b88f3c928\"}"
           }
         }
       ]

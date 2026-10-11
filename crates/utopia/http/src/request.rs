@@ -551,15 +551,23 @@ impl Request {
     // -- cookies -----------------------------------------------------------
 
     /// Every cookie, parsed from the `Cookie` headers (values URL-decoded;
-    /// the first of two cookies with the same name wins).
+    /// of two cookies with the same name, the first wins).
     ///
-    /// PHP: `getCookieParams()`.
+    /// PHP: `getCookieParams()`. Swoole skips a cookie whose name, as sent,
+    /// is already a key, then registers it the way PHP does (`.` and ` `
+    /// becoming `_`): so `a` then `a=1` keeps the first, but `a.b` then
+    /// `a.b=1` keeps the second, since the first was stored as `a_b`.
     pub fn cookies(&self) -> &Params {
         self.cookies.get_or_init(|| {
             // Straight into params while every name is flat (no `[`).
             let mut cookies = Map::new();
             let mut count = 0;
-            let mut flat = |name: &[u8], value| params::register_flat(&mut cookies, name, value, true);
+            let mut flat = |name: &[u8], value| {
+                if std::str::from_utf8(name).is_ok_and(|raw| cookies.contains_key(raw)) {
+                    return Some(());
+                }
+                params::register_flat(&mut cookies, name, value, false)
+            };
             if self
                 .cookie_lines
                 .iter()
@@ -571,7 +579,10 @@ impl Request {
             let mut array = Array::new();
             let mut count = 0;
             let mut register = |name: &[u8], value: Vec<u8>| {
-                php_std::encoding::register_variable(&mut array, name, Php::Str(value.into()), true);
+                let raw = php_std::types::ArrayKey::normalize(php_std::types::Str::copy_from(name));
+                if array.get(&raw).is_none() {
+                    php_std::encoding::register_variable(&mut array, name, Php::Str(value.into()), false);
+                }
                 Some(())
             };
             for line in &self.cookie_lines {

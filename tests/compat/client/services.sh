@@ -24,6 +24,8 @@ openssl() {
 case "${1:-up}" in
 up)
     mkdir -p "$certs"
+    # A fixed body for the upload cases, at a path both drivers see.
+    cp tests/compat/client/fixtures/upload.txt /tmp/compat-fs/client-upload.txt
     if [ ! -f "$certs/server.pem" ]; then
         openssl req -x509 -newkey rsa:2048 -nodes -days 3650 -subj "/CN=compat-client CA" \
             -addext "basicConstraints=critical,CA:TRUE" -addext "keyUsage=critical,keyCertSign,cRLSign" \
