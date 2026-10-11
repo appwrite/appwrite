@@ -49,11 +49,15 @@ pub struct Case {
     pub requires: Vec<String>,
 }
 
+/// The requirements a case may list. Anything else is an error in the case
+/// file, so a misspelt requirement cannot quietly skip a case everywhere.
+const REQUIREMENTS: &[&str] = &["case-sensitive-files"];
+
 /// Why this machine cannot run a case with these requirements, if it cannot.
 pub fn unmet(requires: &[String]) -> Option<String> {
     requires.iter().find_map(|r| match r.as_str() {
         "case-sensitive-files" => folds_case().then(|| "/tmp/compat-fs folds filename case".to_owned()),
-        other => Some(format!("unknown requirement `{other}`")),
+        _ => None,
     })
 }
 
@@ -132,11 +136,14 @@ pub fn load_file(path: &Path) -> Result<CaseFile, String> {
                 (Some(_), false) => return Err(at(format!("case `{name}`: `side` is only for interop cases"))),
             }
         }
-        let requires = c
+        let requires: Vec<String> = c
             .get("requires")
             .and_then(Value::as_array)
             .map(|a| a.iter().filter_map(Value::as_str).map(str::to_owned).collect())
             .unwrap_or_default();
+        if let Some(r) = requires.iter().find(|r| !REQUIREMENTS.contains(&r.as_str())) {
+            return Err(at(format!("case `{name}`: unknown requirement `{r}` (known: {})", REQUIREMENTS.join(", "))));
+        }
         cases.push(Case { name, steps, interop, state, short, requires });
     }
     Ok(CaseFile { path: path.to_path_buf(), raw, sources, cases })
@@ -192,5 +199,23 @@ pub fn write_expectations(file: &CaseFile, results: &[Vec<Option<Value>>]) -> Re
 fn set_expect(target: &mut Value, v: Value) {
     if let Value::Object(o) = target {
         o.insert("expect".into(), v);
+    }
+}
+
+#[cfg(test)]
+mod requirement_tests {
+    use super::*;
+
+    #[test]
+    fn unknown_requirements_are_rejected() {
+        let dir = std::env::temp_dir().join(format!("compat-cases-{}", std::process::id()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("t.json");
+        let case = |r: &str| format!(r#"{{"cases":[{{"name":"c","requires":["{r}"],"op":"x","args":{{}}}}]}}"#);
+        std::fs::write(&path, case("case-sensitive-file")).unwrap();
+        assert!(load_file(&path).err().is_some_and(|e| e.contains("unknown requirement `case-sensitive-file`")));
+        std::fs::write(&path, case("case-sensitive-files")).unwrap();
+        assert_eq!(load_file(&path).unwrap().cases[0].requires, ["case-sensitive-files"]);
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

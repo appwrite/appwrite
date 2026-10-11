@@ -118,7 +118,7 @@
       ]
     },
     "datetime.strtotime": {
-      "doc": "strtotime($s, $base) in UTC: relative formats against a fixed base",
+      "doc": "strtotime($s, $base) in UTC: relative formats against a fixed base. Fuzzed bases stop short of the int64 limits: there, applying a zone offset overflows timelib's signed 64-bit arithmetic, which C leaves undefined, so PHP's result differs between platforms (arm64 and x86_64 builds disagree) and no port can match it",
       "fuzz": [
         {
           "name": "strings",
@@ -131,7 +131,7 @@
               },
               "base": {
                 "gen": "ref",
-                "name": "dt_ts"
+                "name": "dt_ts_bounded"
               }
             },
             "optional": []
@@ -158,7 +158,7 @@
               },
               "base": {
                 "gen": "ref",
-                "name": "dt_ts"
+                "name": "dt_ts_bounded"
               }
             },
             "optional": []
@@ -4545,6 +4545,53 @@
             253402300800,
             9223372036854775807,
             -9223372036854775808,
+            4102444800,
+            32503680000,
+            -30610224000
+          ]
+        }
+      ]
+    },
+    "dt_ts_bounded": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -62135596800,
+          "max": 253402300799
+        },
+        {
+          "gen": "int",
+          "min": -4000000000,
+          "max": 4000000000
+        },
+        {
+          "gen": "int",
+          "min": 1700000000,
+          "max": 1800000000
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            -1,
+            1,
+            86399,
+            86400,
+            -86400,
+            2147483647,
+            2147483648,
+            -2147483648,
+            951782400,
+            1711846800,
+            1711843200,
+            1729990800,
+            1729987200,
+            1710054000,
+            1730613600,
+            -62167219200,
+            -62167219201,
+            253402300800,
             4102444800,
             32503680000,
             -30610224000
