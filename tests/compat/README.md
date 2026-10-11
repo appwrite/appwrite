@@ -51,6 +51,14 @@ Environment: `COMPAT_PHP` / `COMPAT_RUST` override the driver commands, `COMPAT_
 
 The dev stack must be running (`docker compose up -d`) for the PHP driver image and the services.
 
+A library that needs services beyond the dev stack's Redis and PostgreSQL ships `tests/compat/<lib>/services.sh up|down`, which starts them as throwaway containers on the dev stack's network (named `compat-<lib>-*`, removed when stopped) and waits until they answer. CI runs every library's script before `bin/compat ci`. Cache's also builds `compat-cache-php`, the dev image plus the Memcached extension, which CI runs the PHP driver in:
+
+```bash
+for s in tests/compat/*/services.sh; do "$s" up; done
+COMPAT_IMAGE=compat-cache-php bin/compat ci
+for s in tests/compat/*/services.sh; do "$s" down; done
+```
+
 ## A library's files
 
 | File | Holds |

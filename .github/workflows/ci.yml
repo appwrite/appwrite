@@ -1059,7 +1059,7 @@ jobs:
     name: Tests / Compat / PHP and Rust Utopia libraries
     needs: [build]
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
       RUST_VERSION: '1.88'
       COMPOSE_PROFILES: postgresql
@@ -1095,10 +1095,26 @@ jobs:
             sudo apt-get install -y -qq --no-install-recommends pkg-config libssl-dev
           fi
 
+      # Services a library needs beyond Redis and PostgreSQL (Memcached,
+      # Hazelcast, Redis Cluster, fixture servers): each library's
+      # tests/compat/<lib>/services.sh. Cache's also builds compat-cache-php,
+      # the Appwrite image plus the Memcached extension, which every step
+      # below runs the PHP driver in.
+      - name: Start library services
+        timeout-minutes: 10
+        env:
+          COMPAT_BASE_IMAGE: ${{ env.IMAGE }}
+        run: |
+          for script in tests/compat/*/services.sh; do
+            echo "::group::${script}"
+            "${script}" up
+            echo "::endgroup::"
+          done
+
       - name: Run compat
         env:
           COMPAT_SEED: ${{ github.run_number }}
-          COMPAT_IMAGE: ${{ env.IMAGE }}
+          COMPAT_IMAGE: compat-cache-php
         run: bin/compat ci
 
       - name: Replay recorded results with services
@@ -1108,8 +1124,15 @@ jobs:
 
       - name: Run documentation examples
         env:
-          COMPAT_IMAGE: ${{ env.IMAGE }}
+          COMPAT_IMAGE: compat-cache-php
         run: bin/compat examples
+
+      - name: Stop library services
+        if: always()
+        run: |
+          for script in tests/compat/*/services.sh; do
+            "${script}" down || true
+          done
 
   benchmark:
     name: Benchmark
