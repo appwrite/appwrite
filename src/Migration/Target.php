@@ -2,8 +2,25 @@
 
 namespace Utopia\Migration;
 
+use Psr\Http\Client\ClientExceptionInterface;
+use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
+use Utopia\Client\Client;
+use Utopia\Psr7\ContentType;
+use Utopia\Psr7\Request\Factory as RequestFactory;
+
 abstract class Target
 {
+    /**
+     * Seconds to wait for a remote to accept the connection.
+     */
+    public const int CONNECT_TIMEOUT = 10;
+
+    /**
+     * Seconds a request may take in total. Requests are single API pages and
+     * file chunks, so a remote that has stopped answering fails within this.
+     */
+    public const int REQUEST_TIMEOUT = 30;
+
     /**
      * Global Headers
      *
@@ -30,6 +47,8 @@ abstract class Target
     public array $warnings = [];
 
     protected string $endpoint = '';
+
+    private ?Client $client = null;
 
     protected string $rootResourceId = '';
 
@@ -88,101 +107,59 @@ abstract class Target
         array &$responseHeaders = []
     ): array|string {
         $headers = \array_merge($this->headers, $headers);
-        $ch = \curl_init((
-            \str_contains($path, 'http')
-            ? $path.(($method == 'GET' && ! empty($params)) ? '?'.\http_build_query($params) : '')
-            : $this->endpoint.$path.(
-                ($method == 'GET' && ! empty($params))
-                ? '?'.\http_build_query($params)
-                : ''
-            )
-        ));
+        $contentType = $headers['Content-Type'] ?? '';
+        unset($headers['Content-Type']);
 
-        $query = match ($headers['Content-Type']) {
-            'application/json' => \json_encode($params),
-            'multipart/form-data' => $this->flatten($params),
-            default => \http_build_query($params),
+        // An empty value has always meant "do not send this header".
+        $headers = \array_filter($headers, fn (string $value) => $value !== '');
+        $headers['User-Agent'] = \php_uname('s').'-'.\php_uname('r').':php-'.\phpversion();
+
+        $uri = \str_contains($path, 'http') ? $path : $this->endpoint.$path;
+        $requests = new RequestFactory();
+
+        $request = match (true) {
+            $method === 'GET' || $method === 'HEAD' => $requests->query($method, $uri, $params, $headers),
+            $contentType === ContentType::JSON => $requests->json($method, $uri, $params, $headers),
+            default => $requests->form($method, $uri, $params, $headers),
         };
 
-        foreach ($headers as $i => $header) {
-            $headers[] = $i.':'.$header;
-            unset($headers[$i]);
+        try {
+            $response = $this->client()->sendRequest($request);
+        } catch (ClientExceptionInterface $error) {
+            throw new \Exception($error->getMessage(), Exception::CODE_INTERNAL, $error);
         }
 
-        if ($method === 'HEAD') {
-            \curl_setopt($ch, CURLOPT_NOBODY, true);
-        } else {
-            \curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $method);
-        }
-        \curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        \curl_setopt($ch, CURLOPT_USERAGENT, php_uname('s').'-'.php_uname('r').':php-'.phpversion());
-        \curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-        \curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-        \curl_setopt($ch, CURLOPT_HEADERFUNCTION, function ($curl, $header) use (&$responseHeaders) {
-            $len = strlen($header);
-            $header = explode(':', strtolower($header), 2);
-
-            if (\count($header) < 2) { // ignore invalid headers
-                return $len;
-            }
-
-            $responseHeaders[\strtolower(\trim($header[0]))] = \trim($header[1]);
-
-            return $len;
-        });
-
-        if ($method != 'GET') {
-            \curl_setopt($ch, CURLOPT_POSTFIELDS, $query);
+        foreach (\array_keys($response->getHeaders()) as $name) {
+            $responseHeaders[\strtolower($name)] = $response->getHeaderLine($name);
         }
 
-        $responseBody = curl_exec($ch);
+        $responseBody = (string) $response->getBody();
+        $responseStatus = $response->getStatusCode();
 
-        $responseType = $responseHeaders['Content-Type'] ?? $responseHeaders['content-type'] ?? '';
-        $responseStatus = \curl_getinfo($ch, CURLINFO_HTTP_CODE);
-
-        switch (\substr($responseType, 0, \strpos($responseType, ';'))) {
-            case 'application/json':
-                $responseBody = \json_decode($responseBody, true);
-                break;
+        if (\str_starts_with(\strtolower($response->getHeaderLine('Content-Type')), ContentType::JSON)) {
+            $responseBody = \json_decode($responseBody, true);
         }
-
-        if (\curl_errno($ch)) {
-            throw new \Exception(\curl_error($ch), Exception::CODE_INTERNAL);
-        }
-
 
         if ($responseStatus >= 400) {
             if (\is_array($responseBody)) {
                 throw new \Exception(\json_encode($responseBody), $responseStatus);
-            } else {
-                throw new \Exception($responseStatus.': '.$responseBody, $responseStatus);
             }
+
+            throw new \Exception($responseStatus.': '.$responseBody, $responseStatus);
         }
 
         return $responseBody;
     }
 
     /**
-     * Flatten params array to PHP multiple format
-     *
-     * @param  array<string, mixed>  $data
-     * @return array<string, mixed>
+     * The HTTP client for {@see call()}, built once per target so connections are reused.
      */
-    protected function flatten(array $data, string $prefix = ''): array
+    protected function client(): Client
     {
-        $output = [];
-
-        foreach ($data as $key => $value) {
-            $finalKey = $prefix ? "{$prefix}[{$key}]" : $key;
-
-            if (\is_array($value)) {
-                $output += $this->flatten($value, $finalKey);
-            } else {
-                $output[$finalKey] = $value;
-            }
-        }
-
-        return $output;
+        return $this->client ??= (new Client(new CurlAdapter()))
+            ->withFollowRedirects()
+            ->withConnectTimeout(static::CONNECT_TIMEOUT)
+            ->withTimeout(static::REQUEST_TIMEOUT);
     }
 
     /**
