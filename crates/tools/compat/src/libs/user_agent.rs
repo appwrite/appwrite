@@ -3,11 +3,13 @@
 //! from the public fields.
 
 use std::borrow::Cow;
+use std::hint::black_box;
 
 use serde_json::{Value, json};
 use utopia_user_agent::{Bot, Client, Device, OperatingSystem, Text, UserAgent, detection};
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, bytes_value};
+use crate::bench::Bench;
 
 /// Operations this adapter implements (must match `spec.json`).
 pub const OPS: &[&str] = &[
@@ -23,13 +25,41 @@ pub const OPS: &[&str] = &[
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("chrome", "Detect the OS, client, device and bot of a desktop Chrome on Windows"),
+    ("safari", "Detect the OS, client, device and bot of a mobile Safari on iPhone"),
+    ("bot", "Detect the OS, client, device and bot of Googlebot"),
+    ("client", "Detect the client of a desktop Chrome on Windows"),
+    ("is_bot", "Tell whether a desktop Chrome on Windows is a bot"),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("user-agent: no benchmark `{name}`")))
+const CHROME: &str =
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
+const SAFARI: &str = "Mozilla/5.0 (iPhone; CPU iPhone OS 17_4_1 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4.1 Mobile/15E148 Safari/604.1";
+const GOOGLEBOT: &str = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
+
+/// Everything a request reads of a user agent.
+fn detect(value: &str) {
+    let agent = UserAgent::parse(black_box(value));
+    black_box(agent.operating_system());
+    black_box(agent.client());
+    black_box(agent.device());
+    black_box(agent.bot());
+}
+
+pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
+    Ok(match name {
+        "chrome" => Bench::sync(|| detect(CHROME)),
+        "safari" => Bench::sync(|| detect(SAFARI)),
+        "bot" => Bench::sync(|| detect(GOOGLEBOT)),
+        "client" => Bench::sync(|| {
+            black_box(detection::client(black_box(CHROME.as_bytes())));
+        }),
+        "is_bot" => Bench::sync(|| {
+            black_box(UserAgent::parse(black_box(CHROME)).is_bot());
+        }),
+        _ => return Err(Fault::new(format!("user-agent: no benchmark `{name}`"))),
+    })
 }
 
 fn text(value: &Option<Text<'_>>) -> Value {

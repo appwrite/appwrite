@@ -3,6 +3,7 @@
 namespace Tests\Compat\Locale;
 
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Locale\Locale;
@@ -14,8 +15,61 @@ use Utopia\Locale\Locale;
  * Rust crate models as a `Languages` value: `locale.reset` starts a fresh
  * one (every case begins with it).
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    public function benchmarks(): array
+    {
+        return [
+            'new' => ['Create a request locale for German with an English fallback', function (Session $s) {
+                self::languages();
+                [$default, $fallback] = ['de', 'en'];
+
+                return fn () => (new Locale($default))->setFallback($fallback);
+            }],
+            'text' => ['Translate a key of a 313-key language', function (Session $s) {
+                $locale = self::languages('de');
+                $key = 'countries.de';
+
+                return fn () => $locale->getText($key);
+            }],
+            'placeholders' => ['Translate a session alert email line with six placeholders', function (Session $s) {
+                $locale = self::languages('en');
+                $key = 'emails.sessionAlert.body';
+                $placeholders = [
+                    'b' => '<strong>',
+                    '/b' => '</strong>',
+                    'project' => 'Appwrite Cloud',
+                    'date' => 'November 2',
+                    'year' => '2024',
+                    'time' => '08:41:57',
+                ];
+
+                return fn () => $locale->getText($key, placeholders: $placeholders);
+            }],
+            'fallback' => ['Translate a key the default language lacks from the English fallback', function (Session $s) {
+                $locale = self::languages('ar-ma');
+                $key = 'emails.sessionAlert.subject';
+
+                return fn () => $locale->getText($key);
+            }],
+        ];
+    }
+
+    /**
+     * Appwrite's translations: English, German and Moroccan Arabic (which
+     * lacks most email keys); with a default, a locale for it with an
+     * English fallback.
+     */
+    private static function languages(?string $default = null): ?Locale
+    {
+        Languages::reset();
+        foreach (['en', 'de', 'ar-ma'] as $name) {
+            Locale::setLanguageFromJSON($name, __DIR__ . "/../../../app/config/locale/translations/{$name}.json");
+        }
+
+        return $default === null ? null : (new Locale($default))->setFallback('en');
+    }
+
     public function operations(): array
     {
         return [

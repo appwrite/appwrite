@@ -7,34 +7,78 @@
 
 use std::collections::HashMap;
 use std::future::Future;
-use std::sync::Mutex;
+use std::hint::black_box;
+use std::sync::{Arc, Mutex};
 
 use serde_json::{Map, Value, json};
 use utopia_system::{Error, Host, Io, Machine, Number, System, Traffic, Uname};
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, float_value};
+use crate::bench::Bench;
 
 /// Operations this adapter implements (must match `spec.json`).
 pub const OPS: &[&str] = &["system.env", "system.fixture", "system.machine"];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("env", "Read a set environment variable"),
+    ("env_default", "Read an unset environment variable with a default"),
+    ("memory", "Read the memory capacity from a 51-line /proc/meminfo and a cgroup v2 limit"),
+    ("cpu", "Read the CPUs available from a cgroup v2 quota, a cpuset and an 8-core /proc/cpuinfo"),
+    ("cpu_usage", "Measure CPU usage from two readings of an 8-core /proc/stat"),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("system: no benchmark `{name}`")))
+/// The machine `benchmarks()` in Adapter.php describes, from the same file.
+const MACHINE: &str = include_str!("../../../../../tests/compat/system/benchmarks/machine.json");
+
+pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
+    let machine: Arc<Value> =
+        Arc::new(serde_json::from_str(MACHINE).map_err(|e| Fault::new(format!("system: bench machine: {e}")))?);
+    Ok(match name {
+        "env" | "env_default" => {
+            // SAFETY: the driver is single-threaded; nothing reads the
+            // environment while it changes (PHP's adapter calls putenv()).
+            unsafe { std::env::set_var("_APP_BENCH_ENV", "production") };
+            unsafe { std::env::remove_var("_APP_BENCH_UNSET") };
+            if name == "env" {
+                Bench::sync(|| {
+                    black_box(utopia_system::env(black_box("_APP_BENCH_ENV")));
+                })
+            } else {
+                Bench::sync(|| {
+                    black_box(utopia_system::env_or(black_box("_APP_BENCH_UNSET"), black_box("development")));
+                })
+            }
+        }
+        // Each call reads a fresh machine, as each PHP call does.
+        "memory" => Bench::sync(move || {
+            black_box(System::with_host(Fixture::new(machine.clone())).memory().ok());
+        }),
+        "cpu" => Bench::sync(move || {
+            black_box(System::with_host(Fixture::new(machine.clone())).cpu().ok());
+        }),
+        "cpu_usage" => Bench::future(move || {
+            let system = System::with_host(Fixture::new(machine.clone()));
+            async move {
+                black_box(system.cpu_usage(1).await.ok());
+            }
+        }),
+        _ => return Err(Fault::new(format!("system: no benchmark `{name}`"))),
+    })
 }
 
 /// A machine described by a case (see `Fixture.php` for the format).
 struct Fixture {
-    machine: Value,
+    machine: Arc<Value>,
     reads: Mutex<HashMap<String, usize>>,
     sleeps: Mutex<Vec<u64>>,
 }
 
 impl Fixture {
+    fn new(machine: Arc<Value>) -> Self {
+        Fixture { machine, reads: Mutex::new(HashMap::new()), sleeps: Mutex::new(Vec::new()) }
+    }
+
     fn get(&self, section: &str, key: &str) -> Option<&Value> {
         self.machine.get(section).and_then(|s| s.get(key)).filter(|v| !v.is_null())
     }
@@ -217,11 +261,7 @@ pub async fn call_op(op: &str, args: &Value) -> OpResult {
             })
         }
         "system.fixture" => {
-            let fixture = Fixture {
-                machine: a.value("machine")?.clone(),
-                reads: Mutex::new(HashMap::new()),
-                sleeps: Mutex::new(Vec::new()),
-            };
+            let fixture = Fixture::new(Arc::new(a.value("machine")?.clone()));
             let system = System::with_host(fixture);
             match run(&system, &a).await? {
                 Ok(returned) => {

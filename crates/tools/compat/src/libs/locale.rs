@@ -6,6 +6,7 @@
 //! `$default` and `$fallback` names; each operation views the languages
 //! through them ([`Locale::with`]).
 
+use std::hint::black_box;
 use std::path::{Path, PathBuf};
 use std::sync::{Mutex, MutexGuard};
 
@@ -14,6 +15,7 @@ use serde_json::{Map, Value, json};
 use utopia_locale::{Error, Languages, Locale, Missing, Translations};
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session};
+use crate::bench::Bench;
 
 /// Operations this adapter implements (must match `spec.json`).
 pub const OPS: &[&str] = &[
@@ -32,13 +34,72 @@ pub const OPS: &[&str] = &[
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("new", "Create a request locale for German with an English fallback"),
+    ("text", "Translate a key of a 313-key language"),
+    ("placeholders", "Translate a session alert email line with six placeholders"),
+    ("fallback", "Translate a key the default language lacks from the English fallback"),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("locale: no benchmark `{name}`")))
+/// Appwrite's translations: English, German and Moroccan Arabic (which
+/// lacks most email keys).
+async fn bench_languages() -> Result<&'static Languages, Fault> {
+    let mut languages = Languages::new();
+    for name in ["en", "de", "ar-ma"] {
+        languages
+            .load(name, &path(&format!("app/config/locale/translations/{name}.json")))
+            .await
+            .map_err(|e| Fault::new(format!("locale: bench languages: {e}")))?;
+    }
+    // Lives as long as the driver, as the PHP languages are static.
+    Ok(Box::leak(Box::new(languages)))
+}
+
+fn bench_locale(languages: &'static Languages, default: &str) -> Result<Locale<'static>, Fault> {
+    let mut locale = Locale::new(languages, default).map_err(|e| Fault::new(e.to_string()))?;
+    locale.set_fallback("en").map_err(|e| Fault::new(e.to_string()))?;
+    Ok(locale)
+}
+
+pub async fn bench(name: &str, _session: &mut Session) -> Result<Bench, Fault> {
+    let languages = bench_languages().await?;
+    Ok(match name {
+        "new" => Bench::sync(move || {
+            if let Ok(mut locale) = Locale::new(black_box(languages), black_box("de")) {
+                black_box(locale.set_fallback(black_box("en")).is_ok());
+                black_box(locale);
+            }
+        }),
+        "text" => {
+            let locale = bench_locale(languages, "de")?;
+            Bench::sync(move || {
+                black_box(locale.text(black_box("countries.de"), Missing::Key, &[]).ok());
+            })
+        }
+        "placeholders" => {
+            let locale = bench_locale(languages, "en")?;
+            let placeholders: [(&str, &str); 6] = [
+                ("b", "<strong>"),
+                ("/b", "</strong>"),
+                ("project", "Appwrite Cloud"),
+                ("date", "November 2"),
+                ("year", "2024"),
+                ("time", "08:41:57"),
+            ];
+            Bench::sync(move || {
+                black_box(
+                    locale.text(black_box("emails.sessionAlert.body"), Missing::Key, black_box(&placeholders)).ok(),
+                );
+            })
+        }
+        "fallback" => {
+            let locale = bench_locale(languages, "ar-ma")?;
+            Bench::sync(move || {
+                black_box(locale.text(black_box("emails.sessionAlert.subject"), Missing::Key, &[]).ok());
+            })
+        }
+        _ => return Err(Fault::new(format!("locale: no benchmark `{name}`"))),
+    })
 }
 
 static LANGUAGES: Mutex<Option<Languages>> = Mutex::new(None);
