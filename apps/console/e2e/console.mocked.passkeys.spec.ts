@@ -574,6 +574,35 @@ test.describe('passkeys (mocked API)', () => {
     ).toHaveCount(0)
   })
 
+  test('suggestions follow the public suffix list', async ({ page }) => {
+    await mockAppwriteApi(page, {
+      rpId: '',
+      platforms: [
+        webPlatform('app.example.ne.jp'),
+        webPlatform('user.github.io'),
+      ],
+    })
+    await openAuthSettings(page)
+    await page.locator(`#${PASSKEY_ID}`).click()
+
+    const dialog = page.getByTestId('enable-passkeys-dialog')
+    await expect(dialog.getByRole('radio')).toHaveCount(4)
+    for (const domain of [
+      'example.ne.jp',
+      'app.example.ne.jp',
+      'user.github.io',
+    ]) {
+      await expect(
+        dialog.getByRole('radio', { name: domain, exact: true }),
+      ).toBeVisible()
+    }
+    for (const suffix of ['ne.jp', 'github.io']) {
+      await expect(
+        dialog.getByRole('radio', { name: suffix, exact: true }),
+      ).toHaveCount(0)
+    }
+  })
+
   test('a localhost platform turns passkeys on before a domain is chosen', async ({
     page,
   }) => {

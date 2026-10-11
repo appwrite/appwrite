@@ -1,4 +1,5 @@
 import { PlatformType, type Models } from '@appwrite.io/console'
+import { parse } from 'tldts'
 
 /** The server rejects a longer relying party ID (the maximum length of a domain name). */
 export const MAX_PASSKEY_RP_ID_LENGTH = 253
@@ -25,9 +26,6 @@ export function parsePasskeyPolicy(
 export type PasskeyPlatform = Models.PlatformList['platforms'][number]
 
 const LOCALHOST = 'localhost'
-
-/** Second-level labels that sit under a country code, like co.uk or com.au. */
-const SUFFIX_LABELS = new Set(['co', 'com', 'net', 'org', 'gov', 'edu', 'ac'])
 
 function webHostnames(platforms: PasskeyPlatform[]): string[] {
   return platforms.flatMap((platform) =>
@@ -75,9 +73,11 @@ export function platformPasskeyOrigins(
 }
 
 /**
- * Relying party IDs to offer, from the project's web platforms: each parent
- * domain first, since it also covers its subdomains, then the hostname itself.
- * Hostnames under a shared domain such as the Sites domain only offer themselves.
+ * Relying party IDs to offer, from the project's web platforms: each
+ * registrable domain first, since it also covers its subdomains, then the
+ * hostname itself. Like the server, public suffixes (including private ones
+ * such as github.io) are never offered, and hostnames under a shared domain
+ * such as the Sites domain only offer themselves.
  */
 export function suggestPasskeyRpIds(
   platforms: PasskeyPlatform[],
@@ -88,25 +88,18 @@ export function suggestPasskeyRpIds(
   for (const raw of webHostnames(platforms)) {
     const hostname = raw.startsWith('*.') ? raw.slice(2) : raw
     if (hostname.includes('*') || passkeyRpIdError(hostname) !== null) continue
-    if (hostname === LOCALHOST) continue
+    const { domain, isIcann, isPrivate } = parse(hostname, {
+      allowPrivateDomains: true,
+    })
+    if (!domain || !(isIcann || isPrivate)) continue
     hosts.push(hostname)
     const shared = sharedDomains.some(
-      (domain) => domain && hostname.endsWith(`.${domain}`),
+      (shared) => shared && hostname.endsWith(`.${shared}`),
     )
-    const labels = hostname.split('.')
-    if (shared || labels.length < 3) continue
-    const parent = labels.slice(-2).join('.')
-    const suffix =
-      labels.length >= 3 && SUFFIX_LABELS.has(labels[labels.length - 2])
-    parents.push(suffix ? labels.slice(-3).join('.') : parent)
+    if (!shared && domain !== hostname) parents.push(domain)
   }
   return [...new Set([...parents, ...hosts])].filter(
-    (domain) =>
-      !sharedDomains.includes(domain) &&
-      !(
-        domain.split('.').length === 2 &&
-        SUFFIX_LABELS.has(domain.split('.')[0])
-      ),
+    (domain) => !sharedDomains.includes(domain),
   )
 }
 
