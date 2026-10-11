@@ -264,16 +264,19 @@ pub fn write(root: &Path, out: &Path) -> Result<String, String> {
     ))
 }
 
-/// Endpoints a benchmark must cover and does not: every endpoint Rust
-/// serves, and every endpoint of a service that has a benchmark script
-/// (unless the script skips it with a reason); plus scenarios whose route is
-/// no endpoint of their service.
+/// Endpoints a benchmark must cover and does not: every endpoint of every
+/// service has a scenario in `tests/benchmarks/api/<service>.js`, or the
+/// script skips it with a reason; plus scenarios whose route is no endpoint
+/// of their service.
 pub fn benchmark_gaps(root: &Path) -> Vec<String> {
     let (doc, warnings) = document(root);
     let mut gaps: Vec<String> = warnings.into_iter().filter(|w| w.starts_with("tests/benchmarks/")).collect();
     for service in doc["services"].as_array().into_iter().flatten() {
         let id = service["id"].as_str().unwrap_or_default();
-        let scripted = !service["bench_script"].is_null();
+        if service["bench_script"].is_null() {
+            gaps.push(format!("{id}: no benchmark script (tests/benchmarks/api/{id}.js)"));
+            continue;
+        }
         for e in doc["details"][id]["endpoints"].as_array().into_iter().flatten() {
             let route =
                 format!("{} {}", e["method"].as_str().unwrap_or_default(), e["path"].as_str().unwrap_or_default());
@@ -281,11 +284,7 @@ pub fn benchmark_gaps(root: &Path) -> Vec<String> {
                 Some("covered") => {}
                 Some("skipped") if e["bench"]["reason"].as_str().is_some_and(|r| !r.trim().is_empty()) => {}
                 Some("skipped") => gaps.push(format!("{id}: `{route}` is skipped without a reason")),
-                _ if e["rust"] == "served" => {
-                    gaps.push(format!("{id}: `{route}` is served by Rust and has no benchmark scenario"))
-                }
-                _ if scripted => gaps.push(format!("{id}: `{route}` has no scenario in tests/benchmarks/api/{id}.js")),
-                _ => {}
+                _ => gaps.push(format!("{id}: `{route}` has no scenario in tests/benchmarks/api/{id}.js")),
             }
         }
     }

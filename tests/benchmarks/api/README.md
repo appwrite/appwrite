@@ -76,6 +76,9 @@ export const handleSummary = bench.handleSummary;
   to another service through the PHP API, which serves them all (the Rust API
   serves only migrated services). `api.form(method, path, fields, codes, { headers, measure })`
   sends a multipart request (uploads: `fields` holds `http.file(...)` values).
+  `api.request(method, url, body, codes, params)` is a measured request to any
+  URL with k6 params as given (routes outside /v1 via `ROOT`, signed requests,
+  `redirects: 0` to measure a redirect itself).
   `api.session(secret)` gives the headers of a
   client request with a session; pass headers as the last argument of any call.
   `context.admin` (in `seed`) holds the console session's headers, for console
@@ -94,7 +97,10 @@ export const handleSummary = bench.handleSummary;
 - **Weights** model the service's traffic (reads dominate); every scenario
   runs often enough to measure (weight 1 is about 1% of a mix of 50 scenarios).
 
-`cargo test -p compat --test benchmarks` (run in CI) fails when an endpoint of
-a service with a script has no scenario and is not skipped with a reason, when
-an endpoint the Rust API serves has no scenario, or when a scenario's route is
-not an endpoint of its service.
+`cargo test -p compat --test benchmarks` (run in CI) fails when a service has
+no script, when an endpoint has no scenario and is not skipped with a reason,
+or when a scenario's route is not an endpoint of its service. A new endpoint
+needs a scenario in the same change.
+
+Shared code for several scripts goes in `support/`: every `.js` file directly
+in this directory is a service's script.

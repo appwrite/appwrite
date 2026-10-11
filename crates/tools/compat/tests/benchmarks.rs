@@ -1,6 +1,5 @@
-//! Every Appwrite endpoint a benchmark must cover has a scenario: each one
-//! the Rust API serves, and each one of a service with a benchmark script in
-//! `tests/benchmarks/api` (or the script skips it, with a reason).
+//! Every Appwrite endpoint has a benchmark scenario in its service's script
+//! in `tests/benchmarks/api`, or the script skips it with a reason.
 
 use std::path::Path;
 

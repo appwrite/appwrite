@@ -22,6 +22,8 @@ import { Counter, Trend } from 'k6/metrics';
 
 export const ENDPOINT = __ENV.APPWRITE_ENDPOINT || 'http://localhost:9501/v1';
 export const CONTROL = __ENV.APPWRITE_CONTROL_ENDPOINT || 'http://localhost:9501/v1';
+/** The API's host, for routes outside /v1 (`/versions`, `/robots.txt`, console redirects). */
+export const ROOT = ENDPOINT.endsWith('/v1') ? ENDPOINT.slice(0, -3) : ENDPOINT;
 export const HASHING = __ENV.APPWRITE_BENCHMARK_HASHING === 'true';
 export const SEED = parseInt(__ENV.APPWRITE_BENCHMARK_SEED || '200', 10);
 export const PASSWORD = 'benchmark-password';
@@ -81,6 +83,20 @@ class Api {
             duration.add(res.timings.duration, { name: this.name });
         }
         return this.expect(res, codes, measure ? this.name : `${this.name} prep ${method} ${path}`);
+    }
+
+    /**
+     * A request `call()` cannot express: any `url` (routes outside /v1, signed
+     * S3 requests), the body as given, and k6 `params` as given (`headers`,
+     * `redirects: 0` to measure a redirect itself). Measured unless
+     * `measure: false`.
+     */
+    request(method, url, body, codes = [200], { measure = true, ...params } = {}) {
+        const res = http.request(method, url, body, { ...params, tags: { name: measure ? this.name : 'prep' } });
+        if (measure) {
+            duration.add(res.timings.duration, { name: this.name });
+        }
+        return this.expect(res, codes, measure ? this.name : `${this.name} prep ${method} ${url}`);
     }
 
     prep(method, path, body = null, codes = [200, 201, 204], headers = this.headers) {
