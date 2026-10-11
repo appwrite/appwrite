@@ -13,5 +13,11 @@
   "generators": {},
   "waivers": {},
   "tests_waived": {},
-  "quirks": []
+  "quirks": [],
+  "bench": {
+    "compat": {
+      "unserialize": "PHP's serialize() format, read only where PHP wrote the value (PHP-shared cache entries, Memcached's serialized values); no Rust hot path decodes it, as Rust's own caches use the native codec",
+      "igbinary_unserialize": "PHP's igbinary format, kept for entries shared with PHP; Rust's own caches use the native codec"
+    }
+  }
 }

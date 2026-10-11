@@ -236,4 +236,30 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         }
         Ok(true)
     }
+
+    async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
+        if blank(key) {
+            return Ok(None);
+        }
+        self.hget(key, field(key, hash)).await
+    }
+
+    async fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> Result<bool> {
+        if blank(key) {
+            return Ok(false);
+        }
+        // As `save`: a failed write is not stored, not an error.
+        if self.execute(redis::cmd("HSET").arg(key).arg(field(key, hash)).arg(bytes)).await.is_err() {
+            return Ok(false);
+        }
+        if ttl > 0 && self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl)).await.is_err() {
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    /// No leases on a cluster: a plain save, as `save_with_lease`.
+    async fn save_bytes_with_lease(&self, key: &str, bytes: &[u8], hash: &str, _generation: &str) -> Result<bool> {
+        self.save_bytes(key, bytes, hash, 0).await
+    }
 }

@@ -1058,7 +1058,8 @@
     "bound": {
       "redis_load": "A Redis round trip, the same on both runtimes, dominates the call",
       "redis_miss": "A Redis round trip, the same on both runtimes, dominates the call",
-      "redis_save": "A Redis round trip, the same on both runtimes, dominates the call"
+      "redis_save": "A Redis round trip, the same on both runtimes, dominates the call",
+      "native_redis_load": "A Redis round trip, the same on both runtimes, dominates the call"
     }
   }
 }

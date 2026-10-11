@@ -148,8 +148,29 @@ pub(crate) async fn save_with_lease<T: Transport, C: Codec>(
         return Ok(false);
     }
     let Ok(value) = envelope.encode(&data, crate::adapter::now()) else { return Ok(false) };
+    save_bytes_with_lease(transport, grace_ms, key, &value, hash, generation).await
+}
+
+/// Stores `bytes` as they are when the lease holds; the stored form of
+/// [`save_with_lease`], and the leased save of entries in bytes.
+#[cfg_attr(not(feature = "redis"), allow(dead_code))]
+pub(crate) async fn save_bytes_with_lease<T: Transport>(
+    transport: &T,
+    grace_ms: i64,
+    key: &str,
+    bytes: &[u8],
+    hash: &str,
+    generation: &str,
+) -> Result<bool> {
+    if crate::adapter::blank(key) {
+        return Ok(false);
+    }
+    let hash = crate::adapter::field(key, hash);
+    if is_reserved(hash) {
+        return Ok(false);
+    }
     let window = grace_ms.to_string();
-    let args: [&[u8]; 4] = [hash.as_bytes(), &value, generation.as_bytes(), window.as_bytes()];
+    let args: [&[u8]; 4] = [hash.as_bytes(), bytes, generation.as_bytes(), window.as_bytes()];
     Ok(matches!(run(transport, LUA_SAVE_WITH_LEASE, key, &args).await, Ok(reply) if reply.truthy()))
 }
 

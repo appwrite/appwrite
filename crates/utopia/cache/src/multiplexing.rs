@@ -619,6 +619,39 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         lease::save_with_lease(self, &self.envelope, self.grace_ms, key, data, hash, generation).await
     }
 
+    async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
+        let hash = field(key, hash);
+        if blank(key) || is_reserved(hash) {
+            return Ok(None);
+        }
+        Transport::hget(self, key, hash).await
+    }
+
+    async fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> Result<bool> {
+        let hash = field(key, hash);
+        if blank(key) || is_reserved(hash) {
+            return Ok(false);
+        }
+        // As `save`: a failed write is not stored, not an error.
+        if self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), bytes]).await.is_err() {
+            return Ok(false);
+        }
+        if ttl > 0 && self.command(&[b"EXPIRE", key.as_bytes(), ttl.to_string().as_bytes()]).await.is_err() {
+            return Ok(false);
+        }
+        Ok(true)
+    }
+
+    fn save_bytes_with_lease(
+        &self,
+        key: &str,
+        bytes: &[u8],
+        hash: &str,
+        generation: &str,
+    ) -> impl Future<Output = Result<bool>> + Send {
+        lease::save_bytes_with_lease(self, self.grace_ms, key, bytes, hash, generation)
+    }
+
     fn set_telemetry(&self, telemetry: Arc<dyn Telemetry>) {
         *self.shared.telemetry.lock().unwrap_or_else(|e| e.into_inner()) = telemetry;
         *self.shared.depth.lock().unwrap_or_else(|e| e.into_inner()) = None;

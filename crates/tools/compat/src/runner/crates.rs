@@ -294,11 +294,29 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             lib.php.as_ref().is_some_and(|p| p.source == "monorepo"),
         );
         // `compat bench --write` results; the summary keeps the geometric mean of the speedups.
-        let bench = read_json(&root.join("tests/compat").join(&lib.slug).join("bench.json"));
+        // Each benchmark's `compat` reason comes from the spec (as `bench` writes it), so a
+        // file timed before the benchmark was listed there shows it too; the mean leaves
+        // compat benchmarks out, as no Rust hot path runs them.
+        let mut bench = read_json(&root.join("tests/compat").join(&lib.slug).join("bench.json"));
+        let compat_benches = super::bench::spec_benchmarks(root, &lib.slug, "compat");
+        if let Some(results) = bench.as_mut().and_then(|b| b["results"].as_array_mut()) {
+            for result in results.iter_mut() {
+                let reason = result["name"].as_str().and_then(|n| compat_benches.get(n)).cloned();
+                if let (Some(reason), Some(result)) = (reason, result.as_object_mut()) {
+                    result.insert("compat".into(), reason);
+                }
+            }
+        }
         let speedups: Vec<f64> = bench
             .as_ref()
             .and_then(|b| b["results"].as_array())
-            .map(|r| r.iter().filter_map(|x| x["speedup"].as_f64()).filter(|x| *x > 0.0).collect())
+            .map(|r| {
+                r.iter()
+                    .filter(|x| x["compat"].is_null())
+                    .filter_map(|x| x["speedup"].as_f64())
+                    .filter(|x| *x > 0.0)
+                    .collect()
+            })
             .unwrap_or_default();
         let speedup = (!speedups.is_empty())
             .then(|| (speedups.iter().map(|x| x.ln()).sum::<f64>() / speedups.len() as f64).exp());

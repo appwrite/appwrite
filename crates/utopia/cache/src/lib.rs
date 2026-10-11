@@ -17,6 +17,15 @@
 //! PHP: values are PHP values, encoded byte for byte as the PHP library
 //! writes them, so both runtimes read each other's entries.
 //!
+//! **Which codec.** A cache shared with a PHP runtime keeps PHP's codec; a
+//! cache only Rust reads uses the native codec. Entries PHP may read go
+//! through [`Cache::load`] and [`Cache::save`] with the codec the PHP side
+//! configures (Appwrite: [`Igbinary`]). Entries only Rust reads (its own
+//! fields, such as the project store's) go through [`Cache::load_native`]
+//! and [`Cache::save_native`]: typed Rust values in the [`Native`] format,
+//! with the same TTL, generation leases and purge tombstones, and no PHP
+//! values built on the way.
+//!
 //! | PHP | Rust |
 //! |---|---|
 //! | `Utopia\Cache\Cache` | [`Cache`] (`getSize` is [`Cache::size`], `getGeneration` [`Cache::generation`]) |
@@ -37,6 +46,7 @@
 //! | `Adapter\CircuitBreaker` (over `Utopia\CircuitBreaker\CircuitBreaker`) | [`CircuitBreaker`] over a [`utopia_circuit_breaker::CircuitBreaker`] |
 //! | `Codec`, `Codec\Json`, `Codec\Igbinary` | [`Codec`], [`Json`], [`Igbinary`] |
 //! | `Envelope` | [`Envelope`] |
+//! | (Rust only) | [`Native`], [`Cache::load_native`], [`Cache::save_native`], [`Cache::save_native_with_lease`], [`Adapter::load_bytes`], [`Adapter::save_bytes`], [`Adapter::save_bytes_with_lease`] |
 //! | `Utopia\Telemetry\Adapter` | [`telemetry::Telemetry`] (the `utopia-telemetry` crate) |
 //!
 //! PHP's `load` returns `false` on a miss; Rust returns `None`. `save`
@@ -65,6 +75,7 @@ mod memcached;
 mod memory;
 #[cfg(feature = "redis")]
 mod multiplexing;
+mod native;
 mod none;
 mod pool;
 #[cfg(feature = "redis")]
@@ -89,6 +100,7 @@ pub use memcached::{Hazelcast, Memcached, MemcachedClient};
 pub use memory::Memory;
 #[cfg(feature = "redis")]
 pub use multiplexing::{Multiplexing, MultiplexingOptions};
+pub use native::Native;
 pub use none::None;
 pub use pool::Pool;
 #[cfg(feature = "redis")]

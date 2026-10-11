@@ -6,6 +6,12 @@
 //! runtimes they ran on in `tests/compat/<lib>/bench.json`, which
 //! `compat crates` publishes on the docs site. Timings depend on the machine:
 //! compare runtimes within one file, not files from different machines.
+//!
+//! A library's `spec.json` sorts out benchmarks that are not plain hot paths:
+//! `bench.bound` ones are bound by work both runtimes wait on equally and
+//! must reach parity; `bench.compat` ones time a PHP-compatibility codec no
+//! Rust hot path uses, and are reported and published with their reason but
+//! never fail the run.
 
 use std::path::Path;
 use std::process::Command;
@@ -71,7 +77,8 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
             eprintln!("{lib}: benchmark `{name}` exists in Rust only");
             ok = false;
         }
-        let bound = bound_benchmarks(root, lib);
+        let bound = spec_benchmarks(root, lib, "bound");
+        let compat = spec_benchmarks(root, lib, "compat");
         let mut results = Vec::new();
         for name in names.into_iter().filter(|n| php.contains_key(*n)) {
             let args = json!({ "name": name });
@@ -89,10 +96,14 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
                 r["allocations"].as_f64().unwrap_or(0.0)
             );
             // A benchmark bound by something both runtimes wait on equally (a
-            // service round trip, a fixed-cost algorithm) must reach parity;
+            // service round trip, a fixed-cost algorithm) must reach parity; a
+            // PHP-compatibility codec no Rust hot path uses is only reported;
             // every other must be faster.
             let bound = bound.get(name.as_str());
-            if speedup < if bound.is_some() { PARITY } else { 1.0 } {
+            let compat = compat.get(name.as_str());
+            if let Some(reason) = compat.and_then(Value::as_str) {
+                println!("{lib}: `{name}` is a compat benchmark, not gated: {reason}");
+            } else if speedup < if bound.is_some() { PARITY } else { 1.0 } {
                 eprintln!("{lib}: `{name}` is slower in Rust");
                 ok = false;
             }
@@ -103,6 +114,7 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
                 "rust": r,
                 "speedup": speedup,
                 "bound": bound,
+                "compat": compat,
             }));
         }
         if results.is_empty() {
@@ -127,13 +139,14 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
 /// How close to PHP a bound benchmark must come.
 const PARITY: f64 = 0.95;
 
-/// `bench.bound` in the library's spec.json: benchmarks bound by something
-/// both runtimes wait on equally, each with the reason.
-fn bound_benchmarks(root: &Path, lib: &str) -> Map<String, Value> {
+/// `bench.<kind>` in the library's spec.json, each benchmark with its reason:
+/// `bound` (bound by something both runtimes wait on equally) or `compat` (a
+/// PHP-compatibility codec no Rust hot path uses).
+pub(crate) fn spec_benchmarks(root: &Path, lib: &str, kind: &str) -> Map<String, Value> {
     std::fs::read_to_string(spec::lib_dir(root, lib).join("spec.json"))
         .ok()
         .and_then(|t| serde_json::from_str::<Value>(&t).ok())
-        .and_then(|s| s["bench"]["bound"].as_object().cloned())
+        .and_then(|s| s["bench"][kind].as_object().cloned())
         .unwrap_or_default()
 }
 

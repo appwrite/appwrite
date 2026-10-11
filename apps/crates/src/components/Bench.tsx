@@ -2,6 +2,9 @@ import { Gauge } from 'lucide-react'
 import { duration, times, type Bench } from '@/lib/docs'
 import { MigrationCard } from './Migration'
 
+/** Whether a benchmark meets its gate: parity when bound, faster otherwise. Compat benchmarks have none. */
+const gated = (r: Bench['results'][number]) => r.speedup >= (r.bound ? 0.95 : 1)
+
 /** The library's benchmarks against PHP (`compat bench`), with where they ran. */
 export function Performance({ bench, id }: { bench: Bench | null; id?: string }) {
   if (!bench?.results.length) return null
@@ -42,6 +45,11 @@ export function Performance({ bench, id }: { bench: Bench | null; id?: string })
                       <span className="rounded bg-muted px-1 py-px text-[10.5px] font-medium">bound</span> {r.bound}
                     </div>
                   ) : null}
+                  {r.compat ? (
+                    <div className="mt-0.5 text-[11.5px] text-muted-foreground" title="Compat benchmarks time a PHP-compatibility codec no Rust hot path uses: published, not gated">
+                      <span className="rounded bg-muted px-1 py-px text-[10.5px] font-medium">compat</span> {r.compat}
+                    </div>
+                  ) : null}
                 </td>
                 <td className="px-3 py-2.5 text-right font-mono text-[12.5px] whitespace-nowrap tabular-nums" title={`${duration(r.php.min)} – ${duration(r.php.max)}`}>
                   {duration(r.php.ns)}
@@ -52,9 +60,9 @@ export function Performance({ bench, id }: { bench: Bench | null; id?: string })
                 <td className="px-3 py-2.5">
                   <div className="flex items-center gap-2">
                     <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
-                      <div className={`h-full rounded-full ${r.speedup >= (r.bound ? 0.95 : 1) ? 'bg-ok' : 'bg-red-500'}`} style={{ width: `${Math.max(4, (Math.log1p(r.speedup) / Math.log1p(top)) * 100)}%` }} />
+                      <div className={`h-full rounded-full ${gated(r) ? 'bg-ok' : r.compat ? 'bg-muted-foreground/40' : 'bg-red-500'}`} style={{ width: `${Math.max(4, (Math.log1p(r.speedup) / Math.log1p(top)) * 100)}%` }} />
                     </div>
-                    <span className={`w-12 text-right font-mono text-[12.5px] tabular-nums ${r.speedup >= (r.bound ? 0.95 : 1) ? '' : 'text-red-600 dark:text-red-400'}`}>{times(r.speedup)}</span>
+                    <span className={`w-12 text-right font-mono text-[12.5px] tabular-nums ${gated(r) || r.compat ? '' : 'text-red-600 dark:text-red-400'}`}>{times(r.speedup)}</span>
                   </div>
                 </td>
                 <td className="px-3 py-2.5 text-right font-mono text-[12.5px] tabular-nums text-muted-foreground">

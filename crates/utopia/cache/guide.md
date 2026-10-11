@@ -134,6 +134,33 @@ echo $cache->load('guide:profile', 60), "\n"; // Ada
 $cache->purge('guide:profile');
 ```
 
+## Cache Rust-only data natively
+
+A cache shared with a PHP runtime keeps PHP's codec; a cache only Rust reads uses the native codec. `save_native` and `load_native` store any `serde` type as a compact binary entry, with the same TTL, leases and purges as other entries, and without building PHP values. Keep such entries in fields PHP never reads (a purge of the key still drops them), and change the field when the type changes: the format carries no field names.
+
+The native format is [postcard](https://docs.rs/postcard) behind a three-byte header (`0xF5`, `N`, the format version) and the save time. Postcard was picked on numbers: on a user document it encodes about six times and decodes about twice as fast as PHP's igbinary, and its entries are smaller. It is maintained, pure Rust, has a documented stable wire format, and fails cleanly on truncated or hostile input: every length is checked against the bytes left, so a corrupt entry is a miss, never a panic or an oversized allocation. bincode is no longer maintained, bitcode's derive cannot encode recursive types such as JSON trees, and rkyv needs its own derives and an aligned copy of each entry before reading it.
+
+```
+use serde::{Deserialize, Serialize};
+use utopia_cache::{Cache, Memory};
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+struct Events {
+    names: Vec<String>,
+}
+
+let cache = Cache::new(Memory::new());
+
+tokio::runtime::Runtime::new()?.block_on(async {
+    let events = Events { names: vec!["users.*.create".into()] };
+    let generation = cache.generation("project:1").await?;
+    assert!(cache.save_native_with_lease("project:1", &events, "rust:events:v1", &generation).await?);
+    assert_eq!(cache.load_native::<Events>("project:1", 3600, "rust:events:v1").await?, Some(events));
+    Ok::<_, utopia_cache::Error>(())
+})?;
+# Ok::<(), Box<dyn std::error::Error>>(())
+```
+
 ## Store several fields under one key
 
 Hash-based adapters keep many fields under one key. `save_many` writes them in one round trip and `load_many` reads some or all of them; a TTL greater than 0 also gives the whole key an expiry.

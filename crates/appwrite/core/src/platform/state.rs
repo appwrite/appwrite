@@ -45,7 +45,12 @@ impl State {
         for _ in 0..config.redis_connections.max(1) {
             redis.push(ConnectionManager::new(client.clone()).await?);
         }
-        let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::Redis::new(redis[0].clone()))));
+        // PHP's codec (app/init/registers.php): entries PHP shares are igbinary.
+        // Rust-only entries use the native codec (`Cache::save_native`).
+        let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::Redis::with_codec(
+            redis[0].clone(),
+            utopia_cache::Igbinary,
+        ))));
         let pubsub = redis[redis.len() - 1].clone();
         let publisher = Arc::new(utopia_queue::broker::Redis::new(Arc::new(pubsub.clone()), Arc::new(pubsub.clone())));
         let lock = crate::locking::Locking::new(redis[0].clone());

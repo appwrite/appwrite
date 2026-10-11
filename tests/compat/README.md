@@ -160,6 +160,12 @@ Both drivers run in Linux containers on the dev stack's network, so they share a
 "bench": { "bound": { "redis_load": "A Redis round trip, the same on both runtimes, dominates the call" } }
 ```
 
+A benchmark of a PHP-compatibility codec that no Rust hot path uses (PHP's `serialize` or igbinary formats, kept for data shared with PHP, while Rust's own caches use the native codec) is listed with its reason under `bench.compat`. It still runs, is printed with its reason and published with a `compat` label, but never fails the command, and the docs site leaves it out of the library's average speedup:
+
+```json
+"bench": { "compat": { "igbinary_unserialize": "PHP's igbinary format, kept for entries shared with PHP; Rust's own caches use the native codec" } }
+```
+
 ## Snapshots
 
 The runner snapshots shared state itself after each case, per namespace, for the kinds in `state` (see `crates/tools/compat/src/runner/snapshot.rs`):

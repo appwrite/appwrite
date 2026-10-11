@@ -176,6 +176,24 @@ impl<A: Adapter + Resource, S: Idle<A>> Adapter for Pool<A, S> {
         let r = c.save_with_lease(key, data, hash, generation).await;
         self.done(c, r).await
     }
+
+    async fn load_bytes(&self, key: &str, hash: &str) -> Result<Option<Vec<u8>>> {
+        let c = self.pop().await?;
+        let r = c.load_bytes(key, hash).await;
+        self.done(c, r).await
+    }
+
+    async fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> Result<bool> {
+        let c = self.pop().await?;
+        let r = c.save_bytes(key, bytes, hash, ttl).await;
+        self.done(c, r).await
+    }
+
+    async fn save_bytes_with_lease(&self, key: &str, bytes: &[u8], hash: &str, generation: &str) -> Result<bool> {
+        let c = self.pop().await?;
+        let r = c.save_bytes_with_lease(key, bytes, hash, generation).await;
+        self.done(c, r).await
+    }
 }
 
 /// A cache adapter in a pool: no recovery hook, so one whose operation
