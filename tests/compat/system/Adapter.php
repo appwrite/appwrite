@@ -6,6 +6,7 @@ require_once __DIR__ . '/Fixture.php';
 require_once __DIR__ . '/overrides.php';
 
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\System\System;
@@ -19,8 +20,53 @@ use Utopia\System\System;
  * shape of the result, since the PHP driver runs in a Linux container and
  * the Rust driver on the host.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    public function benchmarks(): array
+    {
+        $machine = fn (): array => json_decode((string) file_get_contents(__DIR__ . '/benchmarks/machine.json'), true);
+
+        return [
+            'env' => ['Read a set environment variable', function (Session $s) {
+                putenv('_APP_BENCH_ENV=production');
+                putenv('_APP_BENCH_UNSET');
+                $name = '_APP_BENCH_ENV';
+
+                return fn () => System::getEnv($name);
+            }],
+            'env_default' => ['Read an unset environment variable with a default', function (Session $s) {
+                putenv('_APP_BENCH_ENV=production');
+                putenv('_APP_BENCH_UNSET');
+                [$name, $default] = ['_APP_BENCH_UNSET', 'development'];
+
+                return fn () => System::getEnv($name, $default);
+            }],
+            // Each call reads a fresh machine, as each Rust call does.
+            'memory' => ['Read the memory capacity from a 51-line /proc/meminfo and a cgroup v2 limit', fn (Session $s) => self::on($machine(), fn () => System::getMemory())],
+            'cpu' => ['Read the CPUs available from a cgroup v2 quota, a cpuset and an 8-core /proc/cpuinfo', fn (Session $s) => self::on($machine(), fn () => System::getCPU())],
+            'cpu_usage' => ['Measure CPU usage from two readings of an 8-core /proc/stat', fn (Session $s) => self::on($machine(), fn () => System::getCPUUsage(1))],
+        ];
+    }
+
+    /**
+     * A benchmark running `$call` on a fresh Fixture of `$machine`.
+     *
+     * @param array<string, mixed> $machine
+     * @param callable(): mixed $call
+     * @return callable(): mixed
+     */
+    private static function on(array $machine, callable $call): callable
+    {
+        return function () use ($machine, $call) {
+            Fixture::$active = new Fixture($machine);
+            try {
+                return $call();
+            } finally {
+                Fixture::$active = null;
+            }
+        };
+    }
+
     public function operations(): array
     {
         return [

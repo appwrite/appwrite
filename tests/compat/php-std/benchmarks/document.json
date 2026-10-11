@@ -1,0 +1,49 @@
+{
+    "$id": "65f1c0d2a8e4b7c3d9f0",
+    "$sequence": 48213,
+    "$collection": "users",
+    "$databaseId": "main",
+    "$createdAt": "2024-03-13T14:22:10.512+00:00",
+    "$updatedAt": "2024-11-02T08:41:57.093+00:00",
+    "$permissions": [
+        "read(\"user:65f1c0d2a8e4b7c3d9f0\")",
+        "update(\"user:65f1c0d2a8e4b7c3d9f0\")",
+        "delete(\"user:65f1c0d2a8e4b7c3d9f0\")",
+        "read(\"team:6601aa7e33c1/owner\")"
+    ],
+    "name": "Zoë Müller-Łukasiewicz",
+    "email": "zoe.mueller@example.com",
+    "phone": "+14155552671",
+    "status": true,
+    "emailVerification": true,
+    "phoneVerification": false,
+    "mfa": false,
+    "labels": ["beta", "vip", "europe"],
+    "passwordUpdate": "2024-03-13T14:22:10.512+00:00",
+    "registration": "2024-03-13T14:22:10.512+00:00",
+    "accessedAt": "2024-11-02T08:41:57.093+00:00",
+    "hash": "argon2",
+    "hashOptions": {"type": "argon2", "memoryCost": 65536, "timeCost": 4, "threads": 3},
+    "prefs": {
+        "theme": "dark",
+        "language": "de",
+        "timezone": "Europe/Berlin",
+        "notifications": {"email": true, "push": false, "digest": "weekly"},
+        "dashboard": ["projects", "usage", "billing"]
+    },
+    "targets": [
+        {"$id": "6601ab0c99d2", "providerType": "email", "identifier": "zoe.mueller@example.com", "expired": false},
+        {"$id": "6601ab0c99d3", "providerType": "sms", "identifier": "+14155552671", "expired": false},
+        {"$id": "6601ab0c99d4", "providerType": "push", "identifier": "fcm:d7Hq2LkP9xVb", "expired": true}
+    ],
+    "memberships": 4,
+    "storageUsed": 157286400,
+    "bandwidth": 2.75,
+    "score": 98.6,
+    "rating": -0.125,
+    "search": "65f1c0d2a8e4b7c3d9f0 zoe.mueller@example.com Zoë Müller-Łukasiewicz +14155552671",
+    "bio": "Product engineer in Berlin. Builds realtime dashboards, writes about édge cases & ünicode — and keeps a cat named 🐈 Pixel.",
+    "website": "https://zoe.example.com/about?ref=appwrite&lang=de",
+    "avatar": null,
+    "deletedAt": null
+}
