@@ -1,0 +1,500 @@
+{
+  "source": "packages/queue/tests/E2E/RedisRejectTest.php",
+  "cases": [
+    {
+      "name": "an ordinary failure is parked for the retry sweep",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "task": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "audits"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "task",
+                          "a"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.audits"
+            ]
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "a terminal failure stays where the sweep can reach it",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "task": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "audits"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "task",
+                          "a"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            },
+            "terminal": true
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.failed_count",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.failed.audits",
+              0,
+              9
+            ]
+          },
+          "expect": [
+            "pid0001"
+          ]
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.audits"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "a type error out of a handler stays where the sweep can reach it",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "task": "a",
+              "project": "not-an-array"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "b"
+            },
+            "namespace": "${ns}",
+            "jobs": [
+              {
+                "queue": "audits",
+                "fail": {
+                  "class": "TypeError",
+                  "message": "project must be of type array, string given"
+                }
+              }
+            ],
+            "hooks": {
+              "error": [
+                {
+                  "inject": [
+                    "error",
+                    "message"
+                  ]
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "job:audits",
+              []
+            ],
+            [
+              "error0",
+              [
+                "error:TypeError:project must be of type array, string given",
+                "message:pid0001"
+              ]
+            ]
+          ]
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.dead.audits"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.failed.audits",
+              0,
+              9
+            ]
+          },
+          "expect": [
+            "pid0001"
+          ]
+        },
+        {
+          "op": "clock.set",
+          "args": {
+            "time": 1700000060
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "audits",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    }
+  ]
+}

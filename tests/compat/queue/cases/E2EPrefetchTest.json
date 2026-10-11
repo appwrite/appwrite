@@ -1,0 +1,1102 @@
+{
+  "source": "packages/queue/tests/E2E/PrefetchTest.php",
+  "cases": [
+    {
+      "name": "prefetch of one hundred with one coroutine",
+      "state": [],
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "prefetch",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              },
+              {
+                "n": 4
+              },
+              {
+                "n": 5
+              },
+              {
+                "n": 6
+              },
+              {
+                "n": 7
+              },
+              {
+                "n": 8
+              },
+              {
+                "n": 9
+              },
+              {
+                "n": 10
+              },
+              {
+                "n": 11
+              },
+              {
+                "n": 12
+              },
+              {
+                "n": 13
+              },
+              {
+                "n": 14
+              },
+              {
+                "n": 15
+              },
+              {
+                "n": 16
+              },
+              {
+                "n": 17
+              },
+              {
+                "n": 18
+              },
+              {
+                "n": 19
+              },
+              {
+                "n": 20
+              },
+              {
+                "n": 21
+              },
+              {
+                "n": 22
+              },
+              {
+                "n": 23
+              },
+              {
+                "n": 24
+              },
+              {
+                "n": 25
+              },
+              {
+                "n": 26
+              },
+              {
+                "n": 27
+              },
+              {
+                "n": 28
+              },
+              {
+                "n": 29
+              },
+              {
+                "n": 30
+              },
+              {
+                "n": 31
+              },
+              {
+                "n": 32
+              },
+              {
+                "n": 33
+              },
+              {
+                "n": 34
+              },
+              {
+                "n": 35
+              },
+              {
+                "n": 36
+              },
+              {
+                "n": 37
+              },
+              {
+                "n": 38
+              },
+              {
+                "n": 39
+              },
+              {
+                "n": 40
+              },
+              {
+                "n": 41
+              },
+              {
+                "n": 42
+              },
+              {
+                "n": 43
+              },
+              {
+                "n": 44
+              },
+              {
+                "n": 45
+              },
+              {
+                "n": 46
+              },
+              {
+                "n": 47
+              },
+              {
+                "n": 48
+              },
+              {
+                "n": 49
+              },
+              {
+                "n": 50
+              },
+              {
+                "n": 51
+              },
+              {
+                "n": 52
+              },
+              {
+                "n": 53
+              },
+              {
+                "n": 54
+              },
+              {
+                "n": 55
+              },
+              {
+                "n": 56
+              },
+              {
+                "n": 57
+              },
+              {
+                "n": 58
+              },
+              {
+                "n": 59
+              },
+              {
+                "n": 60
+              },
+              {
+                "n": 61
+              },
+              {
+                "n": 62
+              },
+              {
+                "n": 63
+              },
+              {
+                "n": 64
+              },
+              {
+                "n": 65
+              },
+              {
+                "n": 66
+              },
+              {
+                "n": 67
+              },
+              {
+                "n": 68
+              },
+              {
+                "n": 69
+              },
+              {
+                "n": 70
+              },
+              {
+                "n": 71
+              },
+              {
+                "n": 72
+              },
+              {
+                "n": 73
+              },
+              {
+                "n": 74
+              },
+              {
+                "n": 75
+              },
+              {
+                "n": 76
+              },
+              {
+                "n": 77
+              },
+              {
+                "n": 78
+              },
+              {
+                "n": 79
+              },
+              {
+                "n": 80
+              },
+              {
+                "n": 81
+              },
+              {
+                "n": 82
+              },
+              {
+                "n": 83
+              },
+              {
+                "n": 84
+              },
+              {
+                "n": 85
+              },
+              {
+                "n": 86
+              },
+              {
+                "n": 87
+              },
+              {
+                "n": 88
+              },
+              {
+                "n": 89
+              },
+              {
+                "n": 90
+              },
+              {
+                "n": 91
+              },
+              {
+                "n": 92
+              },
+              {
+                "n": 93
+              },
+              {
+                "n": 94
+              },
+              {
+                "n": 95
+              },
+              {
+                "n": 96
+              },
+              {
+                "n": 97
+              },
+              {
+                "n": 98
+              },
+              {
+                "n": 99
+              },
+              {
+                "n": 100
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.consume",
+          "args": {
+            "consumer": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "prefetch",
+              "namespace": "${ns}"
+            },
+            "coroutines": 1,
+            "prefetch": 100,
+            "stop_after": 100
+          },
+          "expect": {
+            "handled": [
+              "pid0001",
+              "pid0002",
+              "pid0003",
+              "pid0004",
+              "pid0005",
+              "pid0006",
+              "pid0007",
+              "pid0008",
+              "pid0009",
+              "pid0010",
+              "pid0011",
+              "pid0012",
+              "pid0013",
+              "pid0014",
+              "pid0015",
+              "pid0016",
+              "pid0017",
+              "pid0018",
+              "pid0019",
+              "pid0020",
+              "pid0021",
+              "pid0022",
+              "pid0023",
+              "pid0024",
+              "pid0025",
+              "pid0026",
+              "pid0027",
+              "pid0028",
+              "pid0029",
+              "pid0030",
+              "pid0031",
+              "pid0032",
+              "pid0033",
+              "pid0034",
+              "pid0035",
+              "pid0036",
+              "pid0037",
+              "pid0038",
+              "pid0039",
+              "pid0040",
+              "pid0041",
+              "pid0042",
+              "pid0043",
+              "pid0044",
+              "pid0045",
+              "pid0046",
+              "pid0047",
+              "pid0048",
+              "pid0049",
+              "pid0050",
+              "pid0051",
+              "pid0052",
+              "pid0053",
+              "pid0054",
+              "pid0055",
+              "pid0056",
+              "pid0057",
+              "pid0058",
+              "pid0059",
+              "pid0060",
+              "pid0061",
+              "pid0062",
+              "pid0063",
+              "pid0064",
+              "pid0065",
+              "pid0066",
+              "pid0067",
+              "pid0068",
+              "pid0069",
+              "pid0070",
+              "pid0071",
+              "pid0072",
+              "pid0073",
+              "pid0074",
+              "pid0075",
+              "pid0076",
+              "pid0077",
+              "pid0078",
+              "pid0079",
+              "pid0080",
+              "pid0081",
+              "pid0082",
+              "pid0083",
+              "pid0084",
+              "pid0085",
+              "pid0086",
+              "pid0087",
+              "pid0088",
+              "pid0089",
+              "pid0090",
+              "pid0091",
+              "pid0092",
+              "pid0093",
+              "pid0094",
+              "pid0095",
+              "pid0096",
+              "pid0097",
+              "pid0098",
+              "pid0099",
+              "pid0100"
+            ],
+            "succeeded": [
+              "pid0001",
+              "pid0002",
+              "pid0003",
+              "pid0004",
+              "pid0005",
+              "pid0006",
+              "pid0007",
+              "pid0008",
+              "pid0009",
+              "pid0010",
+              "pid0011",
+              "pid0012",
+              "pid0013",
+              "pid0014",
+              "pid0015",
+              "pid0016",
+              "pid0017",
+              "pid0018",
+              "pid0019",
+              "pid0020",
+              "pid0021",
+              "pid0022",
+              "pid0023",
+              "pid0024",
+              "pid0025",
+              "pid0026",
+              "pid0027",
+              "pid0028",
+              "pid0029",
+              "pid0030",
+              "pid0031",
+              "pid0032",
+              "pid0033",
+              "pid0034",
+              "pid0035",
+              "pid0036",
+              "pid0037",
+              "pid0038",
+              "pid0039",
+              "pid0040",
+              "pid0041",
+              "pid0042",
+              "pid0043",
+              "pid0044",
+              "pid0045",
+              "pid0046",
+              "pid0047",
+              "pid0048",
+              "pid0049",
+              "pid0050",
+              "pid0051",
+              "pid0052",
+              "pid0053",
+              "pid0054",
+              "pid0055",
+              "pid0056",
+              "pid0057",
+              "pid0058",
+              "pid0059",
+              "pid0060",
+              "pid0061",
+              "pid0062",
+              "pid0063",
+              "pid0064",
+              "pid0065",
+              "pid0066",
+              "pid0067",
+              "pid0068",
+              "pid0069",
+              "pid0070",
+              "pid0071",
+              "pid0072",
+              "pid0073",
+              "pid0074",
+              "pid0075",
+              "pid0076",
+              "pid0077",
+              "pid0078",
+              "pid0079",
+              "pid0080",
+              "pid0081",
+              "pid0082",
+              "pid0083",
+              "pid0084",
+              "pid0085",
+              "pid0086",
+              "pid0087",
+              "pid0088",
+              "pid0089",
+              "pid0090",
+              "pid0091",
+              "pid0092",
+              "pid0093",
+              "pid0094",
+              "pid0095",
+              "pid0096",
+              "pid0097",
+              "pid0098",
+              "pid0099",
+              "pid0100"
+            ],
+            "errors": [],
+            "max": 1
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "prefetch",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 100
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.prefetch"
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "GET",
+              "${ns}.stats.prefetch.success"
+            ]
+          },
+          "expect": "100"
+        }
+      ]
+    },
+    {
+      "name": "shutdown returns work that never started",
+      "state": [],
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "prefetch",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              },
+              {
+                "n": 3
+              },
+              {
+                "n": 4
+              },
+              {
+                "n": 5
+              },
+              {
+                "n": 6
+              },
+              {
+                "n": 7
+              },
+              {
+                "n": 8
+              },
+              {
+                "n": 9
+              },
+              {
+                "n": 10
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.consume",
+          "args": {
+            "consumer": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "prefetch",
+              "namespace": "${ns}"
+            },
+            "coroutines": 1,
+            "prefetch": 10,
+            "stop_after": 1
+          },
+          "expect": {
+            "handled": [
+              "pid0001"
+            ],
+            "succeeded": [
+              "pid0001"
+            ],
+            "errors": [],
+            "max": 1
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "prefetch",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 100
+          },
+          "bind": "rest",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0005"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          5
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0006"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          6
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0007"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          7
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0008"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          8
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0009"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          9
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0010"
+                  ],
+                  [
+                    "queue",
+                    "prefetch"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          10
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LLEN",
+              "${ns}.processing.prefetch"
+            ]
+          },
+          "expect": 9
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "GET",
+              "${ns}.stats.prefetch.failed"
+            ]
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

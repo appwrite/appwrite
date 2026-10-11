@@ -82,24 +82,90 @@ pub const MAX_DEPTH: usize = 4096;
 
 /// `igbinary_serialize($value)`.
 pub fn serialize<X: Extension>(value: &Value<X>) -> Vec<u8> {
-    let mut s =
-        Serializer { out: Vec::with_capacity(64), strings: HashMap::default(), references: 0, empty_array: None };
+    let mut s = Serializer {
+        out: Vec::with_capacity(512),
+        strings: HashMap::with_capacity_and_hasher(32, Default::default()),
+        references: 0,
+        empty_array: None,
+    };
     s.out.extend_from_slice(&[0, 0, 0, 2]);
-    s.value(value);
+    s.value(value, Borrowed);
     s.out
 }
 
-struct Serializer {
+/// A string of the table: borrowed from the value being serialized, or
+/// owned when it comes from a temporary (an extension's array form).
+/// Hashes and compares as its bytes, so the table is queried with `&[u8]`.
+enum Entry<'v> {
+    Borrowed(&'v [u8]),
+    Owned(Str),
+}
+
+impl Entry<'_> {
+    fn bytes(&self) -> &[u8] {
+        match self {
+            Entry::Borrowed(b) => b,
+            Entry::Owned(s) => s.as_bytes(),
+        }
+    }
+}
+
+impl PartialEq for Entry<'_> {
+    fn eq(&self, other: &Self) -> bool {
+        self.bytes() == other.bytes()
+    }
+}
+
+impl Eq for Entry<'_> {}
+
+impl std::hash::Hash for Entry<'_> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.bytes().hash(state);
+    }
+}
+
+impl std::borrow::Borrow<[u8]> for Entry<'_> {
+    fn borrow(&self) -> &[u8] {
+        self.bytes()
+    }
+}
+
+/// How a string of a value of lifetime `'x` enters a table of lifetime `'v`.
+trait Keep<'x, 'v>: Copy {
+    fn keep(self, s: &'x [u8]) -> Entry<'v>;
+}
+
+/// The value outlives the table: strings are borrowed.
+#[derive(Clone, Copy)]
+struct Borrowed;
+
+impl<'x: 'v, 'v> Keep<'x, 'v> for Borrowed {
+    fn keep(self, s: &'x [u8]) -> Entry<'v> {
+        Entry::Borrowed(s)
+    }
+}
+
+/// A temporary: strings are copied.
+#[derive(Clone, Copy)]
+struct Owned;
+
+impl<'v> Keep<'_, 'v> for Owned {
+    fn keep(self, s: &[u8]) -> Entry<'v> {
+        Entry::Owned(Str::copy_from(s))
+    }
+}
+
+struct Serializer<'v> {
     out: Vec<u8>,
     /// The string table: each non-empty string's index.
-    strings: HashMap<Str, u32, foldhash::fast::RandomState>,
+    strings: HashMap<Entry<'v>, u32, foldhash::fast::RandomState>,
     /// Reference ids handed out (arrays and objects, in pre-order).
     references: u32,
     /// The id of the shared empty array, once written.
     empty_array: Option<u32>,
 }
 
-impl Serializer {
+impl<'v> Serializer<'v> {
     fn sized(&mut self, n: u64, t8: u8, t16: u8, t32: u8) {
         if n <= 0xff {
             self.out.extend_from_slice(&[t8, n as u8]);
@@ -124,18 +190,23 @@ impl Serializer {
 
     /// `igbinary_serialize_string`: the empty string, an index into the
     /// table, or the bytes (which join the table).
-    fn string(&mut self, s: &[u8], owned: impl FnOnce() -> Str) {
+    fn string<'x, K: Keep<'x, 'v>>(&mut self, s: &'x [u8], keep: K) {
         if s.is_empty() {
             self.out.push(STRING_EMPTY);
             return;
         }
-        if let Some(&id) = self.strings.get(s) {
-            self.sized(u64::from(id), STRING_ID8, STRING_ID16, STRING_ID32);
-            return;
+        // One hash per string, found or added.
+        let next = self.strings.len() as u32;
+        match self.strings.entry(keep.keep(s)) {
+            std::collections::hash_map::Entry::Occupied(e) => {
+                let id = *e.get();
+                self.sized(u64::from(id), STRING_ID8, STRING_ID16, STRING_ID32);
+            }
+            std::collections::hash_map::Entry::Vacant(e) => {
+                e.insert(next);
+                self.chararray(s, STRING8, STRING16, STRING32);
+            }
         }
-        let id = self.strings.len() as u32;
-        self.strings.insert(owned(), id);
-        self.chararray(s, STRING8, STRING16, STRING32);
     }
 
     fn chararray(&mut self, s: &[u8], t8: u8, t16: u8, t32: u8) {
@@ -143,7 +214,7 @@ impl Serializer {
         self.out.extend_from_slice(s);
     }
 
-    fn value<X: Extension>(&mut self, value: &Value<X>) {
+    fn value<'x, X: Extension, K: Keep<'x, 'v>>(&mut self, value: &'x Value<X>, keep: K) {
         match value {
             Value::Null => self.out.push(NULL),
             Value::Bool(b) => self.out.push(if *b { TRUE } else { FALSE }),
@@ -152,9 +223,9 @@ impl Serializer {
                 self.out.push(DOUBLE);
                 self.out.extend_from_slice(&f.to_bits().to_be_bytes());
             }
-            Value::Str(s) => self.string(s, || s.clone()),
-            Value::Array(a) => self.array(a),
-            Value::Ext(x) => self.array(&x.to_array()),
+            Value::Str(s) => self.string(s.as_bytes(), keep),
+            Value::Array(a) => self.array(a, keep),
+            Value::Ext(x) => self.array(&x.to_array(), Owned),
             Value::Object(props) => {
                 self.references += 1;
                 const STD_CLASS: &[u8] = b"stdClass";
@@ -162,16 +233,16 @@ impl Serializer {
                     Some(&id) => self.sized(u64::from(id), OBJECT_ID8, OBJECT_ID16, OBJECT_ID32),
                     None => {
                         let id = self.strings.len() as u32;
-                        self.strings.insert(Str::from_static_bytes(STD_CLASS), id);
+                        self.strings.insert(Entry::Borrowed(STD_CLASS), id);
                         self.chararray(STD_CLASS, OBJECT8, OBJECT16, OBJECT32);
                     }
                 }
-                self.entries(props);
+                self.entries(props, keep);
             }
         }
     }
 
-    fn array<X: Extension>(&mut self, a: &Array<X>) {
+    fn array<'x, X: Extension, K: Keep<'x, 'v>>(&mut self, a: &'x Array<X>, keep: K) {
         if a.is_empty() {
             if let Some(id) = self.empty_array {
                 self.sized(u64::from(id), REF8, REF16, REF32);
@@ -180,17 +251,17 @@ impl Serializer {
             self.empty_array = Some(self.references);
         }
         self.references += 1;
-        self.entries(a);
+        self.entries(a, keep);
     }
 
-    fn entries<X: Extension>(&mut self, a: &Array<X>) {
+    fn entries<'x, X: Extension, K: Keep<'x, 'v>>(&mut self, a: &'x Array<X>, keep: K) {
         self.sized(a.len() as u64, ARRAY8, ARRAY16, ARRAY32);
         for (k, v) in a.iter() {
             match k {
                 KeyRef::Int(i) => self.long(i),
-                KeyRef::Str(s) => self.string(s, || Str::copy_from(s)),
+                KeyRef::Str(s) => self.string(s, keep),
             }
-            self.value(v);
+            self.value(v, keep);
         }
     }
 }
@@ -273,16 +344,23 @@ fn header(b: &[u8]) -> Result<(), Error> {
 }
 
 /// A slot of the reference table.
+#[derive(Clone)]
 enum Slot {
     /// A container still being read.
     Open,
+    /// A container read: where it starts (its type byte), and the strings
+    /// and slots before it, so a back-reference reads it again from there
+    /// (rare, so cheaper than keeping a copy of every container).
+    At { pos: usize, strings: usize, slot: usize },
+    /// A scalar that follows a `REF` marker.
     Value(Value),
 }
 
 struct Unserializer<'a> {
     input: &'a Bytes,
     pos: usize,
-    strings: Vec<Str>,
+    /// The string table: where each string is in the input.
+    strings: Vec<(usize, usize)>,
     references: Vec<Slot>,
     /// The pairs of the arrays being read, innermost last.
     entries: Vec<(ArrayKey, Value)>,
@@ -299,7 +377,7 @@ impl<'a> Unserializer<'a> {
             input,
             pos: 4,
             // Room for what typical data holds, without growing.
-            strings: Vec::with_capacity((input.len() / 16).min(64)),
+            strings: Vec::with_capacity((input.len() / 8).min(256)),
             references: Vec::with_capacity((input.len() / 64).min(16)),
             entries: Vec::with_capacity((input.len() / 8).min(64)),
             depth: 0,
@@ -322,6 +400,10 @@ impl<'a> Unserializer<'a> {
     fn uint(&mut self, n: usize, func: &str) -> Result<u64, Error> {
         if self.remaining() < n {
             return invalid(format!("{func}: end-of-data"));
+        }
+        if n == 1 {
+            self.pos += 1;
+            return Ok(u64::from(self.input[self.pos - 1]));
         }
         let mut v = 0u64;
         for &b in &self.input[self.pos..self.pos + n] {
@@ -364,18 +446,17 @@ impl<'a> Unserializer<'a> {
         if (self.remaining() as u64) < len {
             return invalid("igbinary_unserialize_chararray: end-of-data");
         }
-        let end = self.pos + len as usize;
-        let s = Str::share(self.input, self.pos..end);
+        let (start, end) = (self.pos, self.pos + len as usize);
         self.pos = end;
-        self.strings.push(s.clone());
-        Ok(s)
+        self.strings.push((start, end));
+        Ok(Str::share(self.input, start..end))
     }
 
     /// `igbinary_unserialize_string`: a string from the table.
     fn string_id(&mut self, n: usize) -> Result<Str, Error> {
         let id = self.uint(n, "igbinary_unserialize_string")? as usize;
         match self.strings.get(id) {
-            Some(s) => Ok(s.clone()),
+            Some(&(start, end)) => Ok(Str::share(self.input, start..end)),
             None => invalid("igbinary_unserialize_string: string index is out-of-bounds"),
         }
     }
@@ -406,10 +487,15 @@ impl<'a> Unserializer<'a> {
         self.references.len() - 1
     }
 
-    /// Closes a slot: keeps the value for back-references (arrays are
-    /// copy-on-write, so this shares them).
+    /// Closes a scalar's slot, keeping its value for back-references.
     fn close(&mut self, id: usize, value: &Value) {
         self.references[id] = Slot::Value(value.clone());
+    }
+
+    /// Closes a container's slot: `start` is where it began (its type byte)
+    /// and the size of the string table there.
+    fn close_at(&mut self, id: usize, (pos, strings): (usize, usize)) {
+        self.references[id] = Slot::At { pos, strings, slot: id };
     }
 
     /// `igbinary_unserialize_ref`: a copy of the value at a reference id.
@@ -419,12 +505,25 @@ impl<'a> Unserializer<'a> {
             None => invalid(format!("igbinary_unserialize_ref: invalid reference {id} >= {}", self.references.len())),
             Some(Slot::Open) => Err(Error::Unsupported("a reference to a container that is still being read")),
             Some(Slot::Value(v)) => Ok(v.clone()),
+            Some(&Slot::At { pos, strings, slot }) => {
+                // Read again with the tables as they stood: the same value.
+                let mut again = Unserializer {
+                    input: self.input,
+                    pos,
+                    strings: self.strings[..strings].to_vec(),
+                    references: self.references[..slot].to_vec(),
+                    entries: Vec::new(),
+                    depth: self.depth,
+                };
+                again.value(false)
+            }
         }
     }
 
     /// `igbinary_unserialize_zval`. `referenced`: the value follows a `REF`
     /// marker, so a scalar gets a reference slot.
     fn value(&mut self, referenced: bool) -> Result<Value, Error> {
+        let start = (self.pos, self.strings.len());
         let t = self.byte("igbinary_unserialize_zval")?;
         let scalar = |u: &mut Self, v: Value| {
             if referenced {
@@ -455,9 +554,8 @@ impl<'a> Unserializer<'a> {
             ARRAY8 | ARRAY16 | ARRAY32 => {
                 let id = self.open();
                 let a = self.entries(t, false)?;
-                let v = Value::Array(a);
-                self.close(id, &v);
-                Ok(v)
+                self.close_at(id, start);
+                Ok(Value::Array(a))
             }
             OBJECT8 | OBJECT16 | OBJECT32 | OBJECT_ID8 | OBJECT_ID16 | OBJECT_ID32 => {
                 let class = match t {
@@ -476,9 +574,8 @@ impl<'a> Unserializer<'a> {
                 if !class.eq_ignore_ascii_case(b"stdClass") {
                     return Err(Error::Unsupported("an object of a class other than stdClass"));
                 }
-                let v = Value::Object(props);
-                self.close(id, &v);
-                Ok(v)
+                self.close_at(id, start);
+                Ok(Value::Object(props))
             }
             _ => invalid(format!("igbinary_unserialize_zval: unknown type '{t:02x}', position {}", self.pos)),
         }
@@ -534,6 +631,19 @@ mod tests {
 
     fn hex(b: &[u8]) -> String {
         b.iter().map(|b| format!("{b:02x}")).collect()
+    }
+
+    #[test]
+    fn back_references_read_the_container_again() {
+        // [['s' => <30 bytes>, 'e' => []], <ref 1>, <ref 2: the empty array>]
+        let mut b = vec![0, 0, 0, 2, 0x14, 3, 0x06, 0, 0x14, 2, 0x11, 1, b's', 0x11, 30];
+        b.extend_from_slice(b"abcdefghijklmnopqrstuvwxyz0123");
+        b.extend_from_slice(&[0x11, 1, b'e', 0x14, 0, 0x06, 1, 0x01, 1, 0x06, 2, 0x01, 2]);
+        let inner = json!({"s": "abcdefghijklmnopqrstuvwxyz0123", "e": []});
+        assert_eq!(unserialize(&Bytes::from(b)).unwrap().to_json(), json!([inner, inner, []]));
+        // A reference to a container still being read.
+        let b = Bytes::from_static(&[0, 0, 0, 2, 0x14, 1, 0x06, 0, 0x01, 0]);
+        assert!(matches!(unserialize(&b), Err(Error::Unsupported(_))));
     }
 
     fn ser(j: serde_json::Value) -> String {

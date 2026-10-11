@@ -1,0 +1,332 @@
+{
+  "source": "packages/queue/tests/E2E/RedisExpiryTest.php",
+  "cases": [
+    {
+      "name": "missing and expired keys return null and claims are recovered",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "kind": "redis"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.value"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.value",
+              ""
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.value"
+            ]
+          },
+          "expect": ""
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.value",
+              "temporary"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.value"
+            ]
+          },
+          "expect": "temporary"
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "set",
+            "args": [
+              "${ns}.value",
+              "temporary",
+              30
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "TTL",
+              "${ns}.value"
+            ]
+          },
+          "expect": 30
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "PEXPIRE",
+              "${ns}.value",
+              1
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000,
+            "reap_after": 0
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "${ns}"
+            },
+            "timeout": 1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.jobs.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "get",
+            "args": [
+              "${ns}.value"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.maintain",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "${ns}"
+            },
+            "timeout": 1
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    1
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "jobs",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.call",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "method": "close"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

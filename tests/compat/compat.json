@@ -66,6 +66,22 @@
       "php": "redis://redis:6379/14",
       "rust": "redis://localhost:9513/9",
       "runner": "redis://localhost:9513"
+    },
+    "queue-redis-auth": {
+      "php": "redis://compat-queue-redis-auth:6379",
+      "rust": "redis://localhost:16480",
+      "runner": "redis://localhost:16480"
+    },
+    "queue-redis-cluster": {
+      "php": "redis-cluster://compat-queue-cluster-php:17000,compat-queue-cluster-php:17001,compat-queue-cluster-php:17002",
+      "rust": "redis-cluster://127.0.0.1:17200,127.0.0.1:17201,127.0.0.1:17202",
+      "rust-container": "redis-cluster://compat-queue-cluster-php:17000,compat-queue-cluster-php:17001,compat-queue-cluster-php:17002",
+      "runner": "redis-cluster://127.0.0.1:17200,127.0.0.1:17201,127.0.0.1:17202"
+    },
+    "queue-nats": {
+      "php": "nats://compat-queue-nats:4222",
+      "rust": "nats://localhost:14422",
+      "runner": "nats://localhost:14422"
     }
   }
 }

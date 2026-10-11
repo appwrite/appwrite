@@ -44,6 +44,7 @@ utopia-http.workspace = true
 utopia-locale.workspace = true
 utopia-lock.workspace = true
 utopia-queue.workspace = true
+async-nats.workspace = true
 utopia-system.workspace = true
 utopia-user-agent.workspace = true
 utopia-validators.workspace = true

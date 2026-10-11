@@ -1,0 +1,391 @@
+{
+  "source": "packages/queue/tests/ServerTelemetryTest.php",
+  "cases": [
+    {
+      "name": "job wait time stays non-negative when the publisher's clock runs ahead",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "skewed-pid",
+                "queue": "emails",
+                "timestamp": 9999999999,
+                "payload": []
+              },
+              {
+                "pid": "normal-pid",
+                "queue": "emails",
+                "timestamp": 1,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "emails",
+                "inject": [
+                  "message"
+                ]
+              }
+            ],
+            "telemetry": true
+          },
+          "expect": [
+            [
+              "job:emails",
+              [
+                "message:skewed-pid"
+              ]
+            ],
+            [
+              "job:emails",
+              [
+                "message:normal-pid"
+              ]
+            ],
+            [
+              "telemetry",
+              {
+                "messaging.process.wait.duration": {
+                  "count": 2,
+                  "non_negative": true
+                },
+                "messaging.process.duration": {
+                  "count": 2,
+                  "non_negative": true
+                },
+                "messaging.queue.depth": [],
+                "messaging.queue.failed.depth": []
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "queue depth is reported per registered queue",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "emails",
+              "namespace": "${ns}"
+            },
+            "payloads": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "b"
+            },
+            "jobs": [
+              {
+                "queue": "emails",
+                "fail": {
+                  "class": "RuntimeException",
+                  "message": "boom"
+                }
+              }
+            ],
+            "namespace": "${ns}",
+            "telemetry": true
+          },
+          "expect": [
+            [
+              "job:emails",
+              []
+            ],
+            [
+              "job:emails",
+              []
+            ],
+            [
+              "telemetry",
+              {
+                "messaging.process.wait.duration": {
+                  "count": 2,
+                  "non_negative": true
+                },
+                "messaging.process.duration": {
+                  "count": 2,
+                  "non_negative": true
+                },
+                "messaging.queue.depth": [
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ],
+                  [
+                    0,
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
+                ],
+                "messaging.queue.failed.depth": [
+                  [
+                    2,
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ],
+                  [
+                    2,
+                    {
+                      "messaging.destination.name": "emails",
+                      "messaging.destination.namespace": "${ns}"
+                    }
+                  ]
+                ]
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "queue depth is skipped when the consumer cannot report sizes",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p1",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "emails"
+              }
+            ],
+            "telemetry": true
+          },
+          "expect": [
+            [
+              "job:emails",
+              []
+            ],
+            [
+              "telemetry",
+              {
+                "messaging.process.wait.duration": {
+                  "count": 1,
+                  "non_negative": true
+                },
+                "messaging.process.duration": {
+                  "count": 1,
+                  "non_negative": true
+                },
+                "messaging.queue.depth": [],
+                "messaging.queue.failed.depth": []
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resources and context are injected",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "test-pid",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "emails",
+                "inject": [
+                  "message",
+                  "greeting",
+                  "contextValue"
+                ]
+              }
+            ],
+            "hooks": {
+              "init": [
+                {
+                  "inject": [
+                    "message"
+                  ],
+                  "context": "contextValue"
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "init0",
+              [
+                "message:test-pid"
+              ]
+            ],
+            [
+              "job:emails",
+              [
+                "message:test-pid",
+                "hello",
+                "test-pid"
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "context does not leak between messages",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "first-pid",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              },
+              {
+                "pid": "second-pid",
+                "queue": "emails",
+                "timestamp": 1700000000,
+                "payload": []
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.run",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "jobs": [
+              {
+                "queue": "emails",
+                "has": "contextValue"
+              }
+            ],
+            "hooks": {
+              "init": [
+                {
+                  "inject": [
+                    "message"
+                  ],
+                  "context": "contextValue",
+                  "when": "first-pid"
+                }
+              ]
+            }
+          },
+          "expect": [
+            [
+              "init0",
+              [
+                "message:first-pid"
+              ]
+            ],
+            [
+              "job:emails",
+              [
+                "first-pid"
+              ]
+            ],
+            [
+              "init0",
+              [
+                "message:second-pid"
+              ]
+            ],
+            [
+              "job:emails",
+              [
+                null
+              ]
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

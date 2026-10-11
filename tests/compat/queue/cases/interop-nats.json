@@ -1,0 +1,608 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "NATS: one runtime publishes, the other consumes",
+      "interop": true,
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3,
+            "prefix": "a-"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3,
+            "prefix": "b-"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish_many",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payloads": [
+              {
+                "task": "x",
+                "uni": "é ✓"
+              },
+              {
+                "task": "y",
+                "n": [
+                  1,
+                  {
+                    "k": null
+                  }
+                ]
+              }
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "timeout": 2,
+            "n": 2,
+            "clock": "b-"
+          },
+          "bind": "m",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "${ns}-jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "task",
+                          "x"
+                        ],
+                        [
+                          "uni",
+                          "é ✓"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    1
+                  ],
+                  [
+                    "receipt",
+                    null
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0002"
+                  ],
+                  [
+                    "queue",
+                    "${ns}-jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "task",
+                          "y"
+                        ],
+                        [
+                          "n",
+                          [
+                            1,
+                            {
+                              "$array": [
+                                [
+                                  "k",
+                                  null
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    2
+                  ],
+                  [
+                    "receipt",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/0"
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "message": {
+              "$ref": "m",
+              "path": "/handles/1"
+            },
+            "terminal": true,
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "failed": true,
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "broker.retry",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "timeout": 2,
+            "n": 1,
+            "clock": "b-"
+          },
+          "bind": "r",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0002"
+                  ],
+                  [
+                    "queue",
+                    "${ns}-jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "task",
+                          "y"
+                        ],
+                        [
+                          "n",
+                          [
+                            1,
+                            {
+                              "$array": [
+                                [
+                                  "k",
+                                  null
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    3
+                  ],
+                  [
+                    "receipt",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "message": {
+              "$ref": "r",
+              "path": "/handles/0"
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-jobs"
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "NATS: a message released by one runtime is delivered by the other",
+      "interop": true,
+      "state": [],
+      "steps": [
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3,
+            "prefix": "a-"
+          },
+          "bind": "pa",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "nats.broker",
+          "args": {
+            "time": 1700000000,
+            "ack_wait": 2.0,
+            "max_deliver": 3,
+            "prefix": "b-"
+          },
+          "bind": "pb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "payload": {
+              "task": "x"
+            },
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "timeout": 2,
+            "n": 1,
+            "clock": "a-"
+          },
+          "bind": "m",
+          "side": "a",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "${ns}-jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "task",
+                          "x"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    1
+                  ],
+                  [
+                    "receipt",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.release",
+          "args": {
+            "broker": {
+              "$ref": "pa"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "timeout": 2,
+            "n": 1,
+            "clock": "b-"
+          },
+          "bind": "r",
+          "side": "b",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "a-0001"
+                  ],
+                  [
+                    "queue",
+                    "${ns}-jobs"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "task",
+                          "x"
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    2
+                  ],
+                  [
+                    "receipt",
+                    null
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "pb"
+            },
+            "queue": {
+              "name": "${ns}-jobs",
+              "namespace": "utopia-queue"
+            },
+            "message": {
+              "$ref": "r",
+              "path": "/handles/0"
+            },
+            "clock": "b-"
+          },
+          "side": "b",
+          "expect": null
+        },
+        {
+          "op": "nats.delete",
+          "args": {
+            "queues": [
+              "${ns}-jobs"
+            ],
+            "clock": "a-"
+          },
+          "side": "a",
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

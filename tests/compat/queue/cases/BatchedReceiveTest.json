@@ -1,0 +1,1849 @@
+{
+  "source": "packages/queue/tests/E2E/BatchedReceiveTest.php",
+  "cases": [
+    {
+      "name": "claims up to the requested maximum",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 4
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 5
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 6
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 7
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 8
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 9
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 10
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 4
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 6
+        }
+      ]
+    },
+    {
+      "name": "returns what is there rather than waiting for the batch to fill",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 16
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "an empty queue yields an empty batch",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 8
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "receive defaults to one",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "every message in the batch is claimed",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 4
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 5
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 5
+          },
+          "bind": "batch",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0005"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          5
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.reject",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "batch",
+              "path": "/handles/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "batch",
+              "path": "/handles/1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "batch",
+              "path": "/handles/2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "batch",
+              "path": "/handles/3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.commit",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "message": {
+              "$ref": "batch",
+              "path": "/handles/4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "failed": true
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.reap",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "older_than": 0
+          },
+          "expect": 0
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 5
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "non-positive counts receive one and closed consumers return nothing",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 0
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          0
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": -1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": -1
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          -1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.close",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "broker.queue_size",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "pooled consumers honor default and explicit counts",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.pool",
+          "args": {
+            "time": 1700000000,
+            "size": 1,
+            "publisher": false
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.pool",
+          "args": {
+            "time": 1700000000,
+            "size": 1,
+            "publisher": false,
+            "consumer": false
+          },
+          "bind": "none",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 2
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 4
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 3
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          2
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0003"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0004"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          4
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303032"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "none"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [],
+            "messages": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "one poison message does not take the batch with it",
+      "steps": [
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LPUSH",
+              "${ns}.queue.batched",
+              "{\"truncated\""
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 3
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            },
+            "queue": {
+              "name": "batched",
+              "namespace": "${ns}"
+            },
+            "timeout": 0,
+            "n": 8
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              },
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              },
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0002"
+                  ],
+                  [
+                    "queue",
+                    "batched"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          3
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "LRANGE",
+              "${ns}.poison.batched",
+              0,
+              -1
+            ]
+          },
+          "expect": [
+            "{\"truncated\""
+          ]
+        }
+      ]
+    }
+  ]
+}

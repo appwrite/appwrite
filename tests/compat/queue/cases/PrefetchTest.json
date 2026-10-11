@@ -1,0 +1,246 @@
+{
+  "source": "packages/queue/tests/PrefetchTest.php",
+  "cases": [
+    {
+      "name": "unconfirmed messages count against prefetch",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "messages": [
+              {
+                "pid": "p01",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p02",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p03",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p04",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p05",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p06",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p07",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p08",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p09",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p10",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p11",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p12",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p13",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p14",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p15",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p16",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p17",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p18",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p19",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              },
+              {
+                "pid": "p20",
+                "queue": "work",
+                "timestamp": 1700000000,
+                "payload": {
+                  "n": 1
+                }
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.consume",
+          "args": {
+            "consumer": {
+              "$ref": "c"
+            },
+            "queue": {
+              "name": "work",
+              "namespace": "${ns}"
+            },
+            "coroutines": 2,
+            "prefetch": 4,
+            "stop_after": 20,
+            "hold_ms": 5,
+            "sort": true
+          },
+          "expect": {
+            "handled": [
+              "p01",
+              "p02",
+              "p03",
+              "p04",
+              "p05",
+              "p06",
+              "p07",
+              "p08",
+              "p09",
+              "p10",
+              "p11",
+              "p12",
+              "p13",
+              "p14",
+              "p15",
+              "p16",
+              "p17",
+              "p18",
+              "p19",
+              "p20"
+            ],
+            "succeeded": [
+              "p01",
+              "p02",
+              "p03",
+              "p04",
+              "p05",
+              "p06",
+              "p07",
+              "p08",
+              "p09",
+              "p10",
+              "p11",
+              "p12",
+              "p13",
+              "p14",
+              "p15",
+              "p16",
+              "p17",
+              "p18",
+              "p19",
+              "p20"
+            ],
+            "errors": [],
+            "max": 2
+          }
+        }
+      ]
+    }
+  ]
+}

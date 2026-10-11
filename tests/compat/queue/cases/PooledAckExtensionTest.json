@@ -1,0 +1,361 @@
+{
+  "source": "packages/queue/tests/PooledAckExtensionTest.php",
+  "cases": [
+    {
+      "name": "extend reaches the broker in the pool",
+      "steps": [
+        {
+          "op": "broker.pool",
+          "args": {
+            "time": 1700000000,
+            "size": 1
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "bind": "m",
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "pool"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "DEL",
+              "${ns}.claims.pool.pid0001"
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "messages": [
+              {
+                "$ref": "m",
+                "path": "/handles/0"
+              }
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "redis.cmd",
+          "args": {
+            "args": [
+              "EXISTS",
+              "${ns}.claims.pool.pid0001"
+            ]
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "the extend interval is the broker's own cadence",
+      "steps": [
+        {
+          "op": "broker.pool",
+          "args": {
+            "time": 1700000000,
+            "size": 1
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.extend_interval",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            }
+          },
+          "expect": 30.0
+        },
+        {
+          "op": "broker.redis",
+          "args": {
+            "time": 1700000000
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.extend_interval",
+          "args": {
+            "broker": {
+              "$ref": "b"
+            }
+          },
+          "expect": 30.0
+        }
+      ]
+    },
+    {
+      "name": "with no consumer pool there is no interval to report",
+      "steps": [
+        {
+          "op": "broker.pool",
+          "args": {
+            "time": 1700000000,
+            "consumer": false
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.extend_interval",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "messages": []
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "extending does not strand the pool's one resource",
+      "steps": [
+        {
+          "op": "broker.pool",
+          "args": {
+            "time": 1700000000,
+            "size": 1
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "messages": []
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.extend",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "messages": []
+          },
+          "expect": null
+        },
+        {
+          "op": "broker.publish",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "payload": {
+              "n": 1
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "broker.receive",
+          "args": {
+            "broker": {
+              "$ref": "p"
+            },
+            "queue": {
+              "name": "pool",
+              "namespace": "${ns}"
+            },
+            "timeout": 0
+          },
+          "expect": {
+            "handles": [
+              {
+                "$handle": "*"
+              }
+            ],
+            "messages": [
+              {
+                "$array": [
+                  [
+                    "pid",
+                    "pid0001"
+                  ],
+                  [
+                    "queue",
+                    "pool"
+                  ],
+                  [
+                    "timestamp",
+                    1700000000
+                  ],
+                  [
+                    "payload",
+                    {
+                      "$array": [
+                        [
+                          "n",
+                          1
+                        ]
+                      ]
+                    }
+                  ],
+                  [
+                    "attempts",
+                    0
+                  ],
+                  [
+                    "sequence",
+                    null
+                  ],
+                  [
+                    "receipt",
+                    "30303030303030303030303030303031"
+                  ]
+                ]
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

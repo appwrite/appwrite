@@ -1,0 +1,888 @@
+{
+  "lib": "queue",
+  "description": "utopia-php/queue: messages and codecs, the Redis and NATS JetStream brokers, pooled and background publishers, and the worker server with its hooks.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/queue/src"
+    ],
+    "tests": [
+      "packages/queue/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/queue"
+  },
+  "services": [
+    "redis"
+  ],
+  "state": [
+    "redis"
+  ],
+  "ops": {
+    "clock.set": {
+      "doc": "fixture: move the pinned clock to `time`, keeping its counters"
+    },
+    "queue.new": {
+      "doc": "new Queue(name, namespace?, jobTtl?) → [name, namespace, jobTtl]",
+      "covers": [
+        "Utopia\\Queue\\Queue::__construct"
+      ]
+    },
+    "message.new": {
+      "doc": "new Message(envelope)->asArray()",
+      "covers": [
+        "Utopia\\Queue\\Message::__construct",
+        "Utopia\\Queue\\Message::asArray"
+      ],
+      "fuzz": [
+        {
+          "name": "envelopes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "envelope": {
+                "gen": "object",
+                "fields": {
+                  "pid": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  "queue": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  "timestamp": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  "payload": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "ref",
+                        "name": "payload_array"
+                      },
+                      {
+                        "gen": "ref",
+                        "name": "scalar"
+                      }
+                    ]
+                  },
+                  "attempts": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  "sequence": {
+                    "gen": "ref",
+                    "name": "scalar"
+                  }
+                },
+                "optional": [
+                  "payload",
+                  "attempts",
+                  "sequence"
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "message.set": {
+      "doc": "every setter given, then every getter",
+      "covers": [
+        "Utopia\\Queue\\Message::setPid",
+        "Utopia\\Queue\\Message::setQueue",
+        "Utopia\\Queue\\Message::setTimestamp",
+        "Utopia\\Queue\\Message::setPayload",
+        "Utopia\\Queue\\Message::setAttempts",
+        "Utopia\\Queue\\Message::setSequence",
+        "Utopia\\Queue\\Message::setReceipt",
+        "Utopia\\Queue\\Message::terminal",
+        "Utopia\\Queue\\Message::getPid",
+        "Utopia\\Queue\\Message::getQueue",
+        "Utopia\\Queue\\Message::getTimestamp",
+        "Utopia\\Queue\\Message::getPayload",
+        "Utopia\\Queue\\Message::getAttempts",
+        "Utopia\\Queue\\Message::getSequence",
+        "Utopia\\Queue\\Message::getReceipt",
+        "Utopia\\Queue\\Message::isTerminal"
+      ]
+    },
+    "codec.encode": {
+      "doc": "$codec->encode(value) (json, igbinary, compat, compat-igbinary)",
+      "covers": [
+        "Utopia\\Queue\\Codec\\Json::encode",
+        "Utopia\\Queue\\Codec\\Igbinary::__construct",
+        "Utopia\\Queue\\Codec\\Igbinary::encode",
+        "Utopia\\Queue\\Codec\\Compat::__construct",
+        "Utopia\\Queue\\Codec\\Compat::encode"
+      ]
+    },
+    "codec.decode": {
+      "doc": "$codec->decode(bytes)",
+      "covers": [
+        "Utopia\\Queue\\Codec\\Json::decode",
+        "Utopia\\Queue\\Codec\\Igbinary::decode",
+        "Utopia\\Queue\\Codec\\Compat::decode"
+      ]
+    },
+    "codec.content_type": {
+      "doc": "$codec->contentType()",
+      "covers": [
+        "Utopia\\Queue\\Codec\\Json::contentType",
+        "Utopia\\Queue\\Codec\\Igbinary::contentType",
+        "Utopia\\Queue\\Codec\\Compat::contentType"
+      ]
+    },
+    "codec.round_trip": {
+      "doc": "bytes = encode(value), then decode(bytes)",
+      "fuzz": [
+        {
+          "name": "json-payloads",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codec": {
+                "gen": "const",
+                "value": "json"
+              },
+              "value": {
+                "gen": "ref",
+                "name": "payload"
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "igbinary-payloads",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codec": {
+                "gen": "const",
+                "value": "igbinary"
+              },
+              "value": {
+                "gen": "ref",
+                "name": "payload"
+              }
+            }
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "compat-payloads",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codec": {
+                "gen": "const",
+                "value": "compat-igbinary"
+              },
+              "value": {
+                "gen": "ref",
+                "name": "payload"
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "connection.new": {
+      "doc": "new Connection\\Redis / Locking / RedisCluster, or ::fromDSN",
+      "covers": [
+        "Utopia\\Queue\\Connection\\Redis::__construct",
+        "Utopia\\Queue\\Connection\\Redis::fromDSN",
+        "Utopia\\Queue\\Connection\\RedisCluster::__construct",
+        "Utopia\\Queue\\Connection\\RedisCluster::fromDSN",
+        "Utopia\\Queue\\Connection\\Locking::__construct"
+      ]
+    },
+    "connection.call": {
+      "doc": "$connection->{method}(...args)",
+      "covers": [
+        "Utopia\\Queue\\Connection\\Redis::execute",
+        "Utopia\\Queue\\Connection\\Redis::rightPushArray",
+        "Utopia\\Queue\\Connection\\Redis::rightPushMany",
+        "Utopia\\Queue\\Connection\\Redis::rightPopArray",
+        "Utopia\\Queue\\Connection\\Redis::rightPopLeftPushArray",
+        "Utopia\\Queue\\Connection\\Redis::leftPushArray",
+        "Utopia\\Queue\\Connection\\Redis::leftPushMany",
+        "Utopia\\Queue\\Connection\\Redis::leftPopArray",
+        "Utopia\\Queue\\Connection\\Redis::rightPush",
+        "Utopia\\Queue\\Connection\\Redis::rightPop",
+        "Utopia\\Queue\\Connection\\Redis::rightPopMany",
+        "Utopia\\Queue\\Connection\\Redis::rightPopLeftPush",
+        "Utopia\\Queue\\Connection\\Redis::leftPush",
+        "Utopia\\Queue\\Connection\\Redis::leftPop",
+        "Utopia\\Queue\\Connection\\Redis::listRemove",
+        "Utopia\\Queue\\Connection\\Redis::listSize",
+        "Utopia\\Queue\\Connection\\Redis::listRange",
+        "Utopia\\Queue\\Connection\\Redis::remove",
+        "Utopia\\Queue\\Connection\\Redis::set",
+        "Utopia\\Queue\\Connection\\Redis::setNotExists",
+        "Utopia\\Queue\\Connection\\Redis::get",
+        "Utopia\\Queue\\Connection\\Redis::setArray",
+        "Utopia\\Queue\\Connection\\Redis::increment",
+        "Utopia\\Queue\\Connection\\Redis::incrementBy",
+        "Utopia\\Queue\\Connection\\Redis::decrement",
+        "Utopia\\Queue\\Connection\\Redis::ping",
+        "Utopia\\Queue\\Connection\\Redis::close",
+        "Utopia\\Queue\\Connection\\RedisCluster::execute",
+        "Utopia\\Queue\\Connection\\RedisCluster::rightPushArray",
+        "Utopia\\Queue\\Connection\\RedisCluster::rightPushMany",
+        "Utopia\\Queue\\Connection\\RedisCluster::rightPopArray",
+        "Utopia\\Queue\\Connection\\RedisCluster::rightPopLeftPushArray",
+        "Utopia\\Queue\\Connection\\RedisCluster::leftPushArray",
+        "Utopia\\Queue\\Connection\\RedisCluster::leftPushMany",
+        "Utopia\\Queue\\Connection\\RedisCluster::leftPopArray",
+        "Utopia\\Queue\\Connection\\RedisCluster::rightPush",
+        "Utopia\\Queue\\Connection\\RedisCluster::rightPop",
+        "Utopia\\Queue\\Connection\\RedisCluster::rightPopMany",
+        "Utopia\\Queue\\Connection\\RedisCluster::rightPopLeftPush",
+        "Utopia\\Queue\\Connection\\RedisCluster::leftPush",
+        "Utopia\\Queue\\Connection\\RedisCluster::leftPop",
+        "Utopia\\Queue\\Connection\\RedisCluster::listRemove",
+        "Utopia\\Queue\\Connection\\RedisCluster::listSize",
+        "Utopia\\Queue\\Connection\\RedisCluster::listRange",
+        "Utopia\\Queue\\Connection\\RedisCluster::remove",
+        "Utopia\\Queue\\Connection\\RedisCluster::set",
+        "Utopia\\Queue\\Connection\\RedisCluster::setNotExists",
+        "Utopia\\Queue\\Connection\\RedisCluster::get",
+        "Utopia\\Queue\\Connection\\RedisCluster::setArray",
+        "Utopia\\Queue\\Connection\\RedisCluster::increment",
+        "Utopia\\Queue\\Connection\\RedisCluster::incrementBy",
+        "Utopia\\Queue\\Connection\\RedisCluster::decrement",
+        "Utopia\\Queue\\Connection\\RedisCluster::ping",
+        "Utopia\\Queue\\Connection\\RedisCluster::close",
+        "Utopia\\Queue\\Connection\\Locking::execute",
+        "Utopia\\Queue\\Connection\\Locking::rightPushArray",
+        "Utopia\\Queue\\Connection\\Locking::rightPushMany",
+        "Utopia\\Queue\\Connection\\Locking::rightPopArray",
+        "Utopia\\Queue\\Connection\\Locking::rightPopLeftPushArray",
+        "Utopia\\Queue\\Connection\\Locking::leftPushArray",
+        "Utopia\\Queue\\Connection\\Locking::leftPushMany",
+        "Utopia\\Queue\\Connection\\Locking::leftPopArray",
+        "Utopia\\Queue\\Connection\\Locking::rightPush",
+        "Utopia\\Queue\\Connection\\Locking::rightPop",
+        "Utopia\\Queue\\Connection\\Locking::rightPopMany",
+        "Utopia\\Queue\\Connection\\Locking::rightPopLeftPush",
+        "Utopia\\Queue\\Connection\\Locking::leftPush",
+        "Utopia\\Queue\\Connection\\Locking::leftPop",
+        "Utopia\\Queue\\Connection\\Locking::listRemove",
+        "Utopia\\Queue\\Connection\\Locking::listSize",
+        "Utopia\\Queue\\Connection\\Locking::listRange",
+        "Utopia\\Queue\\Connection\\Locking::remove",
+        "Utopia\\Queue\\Connection\\Locking::set",
+        "Utopia\\Queue\\Connection\\Locking::setNotExists",
+        "Utopia\\Queue\\Connection\\Locking::get",
+        "Utopia\\Queue\\Connection\\Locking::setArray",
+        "Utopia\\Queue\\Connection\\Locking::increment",
+        "Utopia\\Queue\\Connection\\Locking::incrementBy",
+        "Utopia\\Queue\\Connection\\Locking::decrement",
+        "Utopia\\Queue\\Connection\\Locking::ping",
+        "Utopia\\Queue\\Connection\\Locking::close"
+      ]
+    },
+    "redis.cmd": {
+      "doc": "fixture: a raw Redis command (nil is null)"
+    },
+    "broker.redis": {
+      "doc": "new Broker\\Redis(receive, commands (Locking), codec, reapAfter); `time` pins the clock (time(), counted uniqid() and random_bytes())",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::__construct"
+      ]
+    },
+    "broker.pool": {
+      "doc": "new Broker\\Pool over a Utopia pool of Redis brokers",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Pool::__construct"
+      ]
+    },
+    "broker.publish": {
+      "doc": "$broker->publish(queue, payload)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::publish",
+        "Utopia\\Queue\\Broker\\Pool::publish",
+        "Utopia\\Queue\\Broker\\Nats::publish"
+      ]
+    },
+    "broker.publish_many": {
+      "doc": "$broker->publishMany(queue, payloads)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::publishMany",
+        "Utopia\\Queue\\Broker\\Pool::publishMany",
+        "Utopia\\Queue\\Broker\\Nats::publishMany"
+      ]
+    },
+    "broker.receive": {
+      "doc": "$broker->receive(queue, timeout, n): message handles and arrays (with receipt)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::receive",
+        "Utopia\\Queue\\Broker\\Pool::receive",
+        "Utopia\\Queue\\Broker\\Nats::receive"
+      ]
+    },
+    "broker.commit": {
+      "doc": "$broker->commit(queue, message)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::commit",
+        "Utopia\\Queue\\Broker\\Pool::commit",
+        "Utopia\\Queue\\Broker\\Nats::commit"
+      ]
+    },
+    "broker.reject": {
+      "doc": "$broker->reject(queue, message), marked terminal first when asked",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::reject",
+        "Utopia\\Queue\\Broker\\Pool::reject",
+        "Utopia\\Queue\\Broker\\Nats::reject"
+      ]
+    },
+    "broker.release": {
+      "doc": "$broker->release(queue, ...messages)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::release",
+        "Utopia\\Queue\\Broker\\Pool::release",
+        "Utopia\\Queue\\Broker\\Nats::release"
+      ]
+    },
+    "broker.extend": {
+      "doc": "$broker->extend(queue, ...messages)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::extend",
+        "Utopia\\Queue\\Broker\\Pool::extend",
+        "Utopia\\Queue\\Broker\\Nats::extend"
+      ]
+    },
+    "broker.extend_interval": {
+      "doc": "$broker->extendInterval()",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::extendInterval",
+        "Utopia\\Queue\\Broker\\Pool::extendInterval",
+        "Utopia\\Queue\\Broker\\Nats::extendInterval"
+      ]
+    },
+    "broker.maintain": {
+      "doc": "$broker->maintain()",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::maintain",
+        "Utopia\\Queue\\Broker\\Redis::tick",
+        "Utopia\\Queue\\Broker\\Pool::maintain",
+        "Utopia\\Queue\\Broker\\Nats::maintain"
+      ]
+    },
+    "broker.retry": {
+      "doc": "$broker->retry(queue, limit, maxAttempts, newerThan)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::retry",
+        "Utopia\\Queue\\Broker\\Pool::retry",
+        "Utopia\\Queue\\Broker\\Nats::retry"
+      ]
+    },
+    "broker.reap": {
+      "doc": "$broker->reap(queue, olderThan, limit, maxAttempts, newerThan, scan)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::reap",
+        "Utopia\\Queue\\Broker\\Pool::reap",
+        "Utopia\\Queue\\Broker\\Nats::reap"
+      ]
+    },
+    "broker.queue_size": {
+      "doc": "$broker->getQueueSize(queue, failedJobs)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::getQueueSize",
+        "Utopia\\Queue\\Broker\\Pool::getQueueSize",
+        "Utopia\\Queue\\Broker\\Nats::getQueueSize"
+      ]
+    },
+    "broker.failed_count": {
+      "doc": "$broker->getFailedCount(queue)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::getFailedCount",
+        "Utopia\\Queue\\Broker\\Pool::getFailedCount",
+        "Utopia\\Queue\\Broker\\Nats::getFailedCount"
+      ]
+    },
+    "broker.in_flight_ceiling": {
+      "doc": "$broker->inFlightCeiling()",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Pool::inFlightCeiling",
+        "Utopia\\Queue\\Broker\\Nats::inFlightCeiling"
+      ]
+    },
+    "broker.close": {
+      "doc": "$broker->close()",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::close",
+        "Utopia\\Queue\\Broker\\Pool::close",
+        "Utopia\\Queue\\Broker\\Nats::close"
+      ]
+    },
+    "broker.reconnects": {
+      "doc": "receive `times` times on a broker whose Redis is unreachable, recording the reconnect callbacks",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Redis::setReconnectCallback",
+        "Utopia\\Queue\\Broker\\Redis::setReconnectSuccessCallback"
+      ]
+    },
+    "background.new": {
+      "doc": "new Background(broker, capacity, coroutines, timeout, maxBatchInterval, maxBatchSize)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Background::__construct"
+      ]
+    },
+    "background.run": {
+      "doc": "start (unless start: false), enqueue each payload, shutdown",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Background::start",
+        "Utopia\\Queue\\Broker\\Background::enqueue",
+        "Utopia\\Queue\\Broker\\Background::shutdown"
+      ]
+    },
+    "background.size": {
+      "doc": "$background->getQueueSize(queue, failed)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Background::getQueueSize"
+      ]
+    },
+    "background.failed_count": {
+      "doc": "$background->getFailedCount(queue)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Background::getFailedCount"
+      ]
+    },
+    "background.retry": {
+      "doc": "$background->retry(queue, limit)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Background::retry"
+      ]
+    },
+    "background.publish": {
+      "doc": "$background->publish(queue, payload)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Background::publish"
+      ]
+    },
+    "background.publish_many": {
+      "doc": "$background->publishMany(queue, payloads)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Background::publishMany"
+      ]
+    },
+    "memory.new": {
+      "doc": "fixture: a consumer over envelopes that logs what the worker does (Memory.php)"
+    },
+    "memory.log": {
+      "doc": "fixture: the memory consumer's log"
+    },
+    "server.configure": {
+      "doc": "register jobs, read coroutines()/prefetch()/jobs(), optionally start() on a memory consumer",
+      "covers": [
+        "Utopia\\Queue\\Server::__construct",
+        "Utopia\\Queue\\Server::job",
+        "Utopia\\Queue\\Server::jobs",
+        "Utopia\\Queue\\Server::coroutines",
+        "Utopia\\Queue\\Server::prefetch",
+        "Utopia\\Queue\\Server::consumer",
+        "Utopia\\Queue\\Adapter::__construct",
+        "Utopia\\Queue\\Adapter::createConsumer",
+        "Utopia\\Queue\\Adapter::sharesConsumer"
+      ]
+    },
+    "server.run": {
+      "doc": "a KubernetesJob worker with recording hooks and jobs, run to completion: the events in order",
+      "covers": [
+        "Utopia\\Queue\\Server::start",
+        "Utopia\\Queue\\Server::init",
+        "Utopia\\Queue\\Server::shutdown",
+        "Utopia\\Queue\\Server::error",
+        "Utopia\\Queue\\Server::workerStart",
+        "Utopia\\Queue\\Server::workerStop",
+        "Utopia\\Queue\\Server::getWorkerStart",
+        "Utopia\\Queue\\Server::getWorkerStop",
+        "Utopia\\Queue\\Server::resources",
+        "Utopia\\Queue\\Server::context",
+        "Utopia\\Queue\\Server::stop",
+        "Utopia\\Queue\\Server::setTelemetry",
+        "Utopia\\Queue\\Job::hook",
+        "Utopia\\Queue\\Job::getHook",
+        "Utopia\\Queue\\Adapter::consume",
+        "Utopia\\Queue\\Adapter::context",
+        "Utopia\\Queue\\Adapter::resources",
+        "Utopia\\Queue\\Adapter\\KubernetesJob::consume",
+        "Utopia\\Queue\\Adapter\\KubernetesJob::start",
+        "Utopia\\Queue\\Adapter\\KubernetesJob::stop",
+        "Utopia\\Queue\\Adapter\\KubernetesJob::workerStart",
+        "Utopia\\Queue\\Adapter\\KubernetesJob::workerStop"
+      ]
+    },
+    "adapter.maintain": {
+      "doc": "$adapter->maintain(report) for each consumer: the reports",
+      "covers": [
+        "Utopia\\Queue\\Adapter::maintain"
+      ]
+    },
+    "nats.broker": {
+      "doc": "new Broker\\Nats(connection factory, or a live connection, and every setting); `time` pins the clock",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Nats::__construct"
+      ]
+    },
+    "nats.provision": {
+      "doc": "$broker->provision(queue)",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Nats::provision"
+      ]
+    },
+    "nats.duplicates": {
+      "doc": "$broker->duplicates()",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Nats::duplicates"
+      ]
+    },
+    "nats.reconnect": {
+      "doc": "$broker->reconnect()",
+      "covers": [
+        "Utopia\\Queue\\Broker\\Nats::reconnect"
+      ]
+    },
+    "nats.reports": {
+      "doc": "fixture: what the broker reported through onError"
+    },
+    "nats.stream": {
+      "doc": "fixture: a queue's work (or dead) stream configuration and size, null when absent"
+    },
+    "nats.consumer": {
+      "doc": "fixture: a durable consumer's configuration and pending count, null when absent"
+    },
+    "nats.message": {
+      "doc": "fixture: one stored message: subject, bytes, Content-Type and Nats-Msg-Id"
+    },
+    "nats.delete": {
+      "doc": "fixture: delete the queues' streams"
+    },
+    "adapter.consume": {
+      "doc": "Adapter\\Swoole::consume() over one queue until `stop_after` messages ran: handled, succeeded, reported, peak concurrency",
+      "covers": [
+        "Utopia\\Queue\\Adapter\\Swoole::__construct",
+        "Utopia\\Queue\\Adapter\\Swoole::consume",
+        "Utopia\\Queue\\Adapter\\Swoole::context"
+      ]
+    },
+    "broker.round_trip": {
+      "doc": "fixture: publish one payload on a pinned clock, read the stored bytes, receive and commit it",
+      "fuzz": [
+        {
+          "name": "json-envelopes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codec": {
+                "gen": "const",
+                "value": "json"
+              },
+              "payload": {
+                "gen": "ref",
+                "name": "payload_array"
+              }
+            }
+          },
+          "iterations": 300
+        },
+        {
+          "name": "igbinary-envelopes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "codec": {
+                "gen": "const",
+                "value": "igbinary"
+              },
+              "payload": {
+                "gen": "ref",
+                "name": "payload_array"
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "broker.commit_all": {
+      "doc": "commit every message at once (a coroutine or task each): each outcome, in order"
+    }
+  },
+  "generators": {
+    "payload": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "any",
+            "depth": 4
+          },
+          "max": 8
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "string",
+            "alphabet": "unicode",
+            "max": 4000
+          },
+          "max": 3
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "string",
+                "tricky": 0.6
+              },
+              {
+                "gen": "int"
+              },
+              {
+                "gen": "float"
+              },
+              {
+                "gen": "bool"
+              },
+              {
+                "gen": "null"
+              }
+            ]
+          },
+          "max": 6
+        },
+        {
+          "gen": "any",
+          "depth": 3
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "bin": {
+              "gen": "bytes",
+              "max": 64
+            },
+            "list": {
+              "gen": "array",
+              "items": {
+                "gen": "bytes",
+                "max": 16
+              },
+              "max": 4
+            },
+            "text": {
+              "gen": "string",
+              "tricky": 0.5
+            }
+          },
+          "optional": [
+            "list",
+            "text"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "blob": {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 50000,
+              "max": 200000
+            },
+            "rows": {
+              "gen": "array",
+              "items": {
+                "gen": "any",
+                "depth": 2
+              },
+              "min": 20,
+              "max": 200
+            }
+          }
+        }
+      ]
+    },
+    "payload_array": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "any",
+            "depth": 4
+          },
+          "max": 8
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "string",
+            "alphabet": "unicode",
+            "max": 3000
+          },
+          "max": 3
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "string",
+                "tricky": 0.6
+              },
+              {
+                "gen": "int"
+              },
+              {
+                "gen": "float"
+              },
+              {
+                "gen": "bool"
+              },
+              {
+                "gen": "null"
+              }
+            ]
+          },
+          "max": 6
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "to": {
+              "gen": "string",
+              "tricky": 0.5
+            },
+            "n": {
+              "gen": "int"
+            },
+            "nested": {
+              "gen": "any",
+              "depth": 3
+            }
+          },
+          "optional": [
+            "n",
+            "nested"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "bin": {
+              "gen": "bytes",
+              "max": 64
+            },
+            "list": {
+              "gen": "array",
+              "items": {
+                "gen": "bytes",
+                "max": 16
+              },
+              "max": 4
+            },
+            "text": {
+              "gen": "string",
+              "tricky": 0.5
+            }
+          },
+          "optional": [
+            "list",
+            "text"
+          ]
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "blob": {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 50000,
+              "max": 200000
+            },
+            "rows": {
+              "gen": "array",
+              "items": {
+                "gen": "any",
+                "depth": 2
+              },
+              "min": 20,
+              "max": 200
+            }
+          }
+        }
+      ]
+    },
+    "scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "tricky": 0.4
+        },
+        {
+          "gen": "int"
+        },
+        {
+          "gen": "float"
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "12",
+            " 7 ",
+            "1.5",
+            "12abc",
+            "",
+            "1e3",
+            "-0",
+            "0x1A"
+          ]
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\Queue\\Internal\\*": "@internal: settlement and acknowledgement coalescing, not public API; every broker.commit/reject/release case goes through it",
+    "Utopia\\Queue\\Adapter\\Workerman::*": "Workerman process supervisor: PHP runtime plumbing with no Rust counterpart (Rust workers are tokio tasks: adapter::Runtime::Workers)",
+    "Utopia\\Queue\\Adapter\\Swoole::start": "Swoole process supervisor (forks and respawns worker processes): PHP runtime plumbing; Rust runs workers as tokio tasks (Server::start with Runtime::Workers)",
+    "Utopia\\Queue\\Adapter\\Swoole::stop": "signals the forked worker processes: PHP runtime plumbing; Rust stops through adapter::Stopper, which adapter.consume exercises",
+    "Utopia\\Queue\\Adapter\\Swoole::workerStart": "registers a forked-process callback: PHP runtime plumbing; Server::worker_start hooks are covered by server.run",
+    "Utopia\\Queue\\Adapter\\Swoole::workerStop": "registers a forked-process callback: PHP runtime plumbing; Server::worker_stop hooks are covered by server.run",
+    "Utopia\\Queue\\Broker\\Nats::tick": "reads the socket to answer the server's pings, which async-nats does on its own task; Consumer::maintain (covered) is the sweep"
+  },
+  "tests_waived": {
+    "packages/queue/tests/E2E/KedaTest.php": "deploys the worker image to a Kubernetes cluster and lets KEDA scale Jobs from the queue depth: infrastructure, not library behaviour; the run-to-completion drain those Jobs run is ported (KubernetesJobAdapterTest.json) and the depth they scale on is ported (RedisQueueSizeTest.json, ServerTelemetryTest.json)",
+    "packages/queue/tests/E2E/WorkermanTest.php": "drives the Workerman process supervisor (Adapter\\Workerman, waived as PHP runtime plumbing); the publish, events, aliases and retry assertions it shares with every worker test are ported in E2EPoolTest.json, SwooleTest.json and NatsServerTest.json",
+    "packages/queue/tests/E2E/ShutdownTest.php": "asserts the Swoole supervisor SIGKILLs a forked worker that ignores SIGTERM past shutdownTimeout: process supervision (Adapter\\Swoole::start/stop, waived); Rust workers are tokio tasks stopped through adapter::Stopper, whose draining is ported in E2EPrefetchTest.json",
+    "packages/queue/tests/E2E/SwooleRestartTest.php": "asserts the Swoole supervisor re-forks worker processes that exit: process supervision (Adapter\\Swoole::start, waived); the drain-on-stop assertion is ported in E2EPrefetchTest.json (shutdown returns work that never started)"
+  },
+  "quirks": [],
+  "deviations": [],
+  "bench": {
+    "bound": {
+      "publish": "One Redis round trip (LPUSH), the same on both runtimes, dominates the call",
+      "consume": "Four Redis round trips (LPUSH and the reserve, claim and settle scripts), the same on both runtimes, dominate the call"
+    }
+  }
+}
