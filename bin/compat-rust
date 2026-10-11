@@ -41,7 +41,9 @@ image)
     echo "$image"
     ;;
 *)
+    # As the invoking user, like bin/compat-php: shared files keep one owner.
     exec docker run --rm -i \
+        --user "$(id -u):$(id -g)" \
         --network "${COMPAT_NETWORK:-appwrite}" \
         -v "$PWD:/usr/src/code" \
         -v /tmp/compat-fs:/tmp/compat-fs \

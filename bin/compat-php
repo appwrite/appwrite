@@ -9,7 +9,11 @@ cd "$(dirname "$0")/.."
 # Shared with the Rust driver and the runner: files cases create live under
 # /tmp/compat-fs/${ns} on both sides (the `files` snapshot kind).
 mkdir -p /tmp/compat-fs
+# As the invoking user, so files on the shared /tmp/compat-fs mount belong to
+# the same user as the runner's and the Rust driver's (as root, a directory
+# PHP created first was not writable for them on a Linux host).
 exec docker run --rm -i \
+    --user "$(id -u):$(id -g)" \
     --network "${COMPAT_NETWORK:-appwrite}" \
     -v "$PWD/tests:/usr/src/code/tests" \
     -v "$PWD/packages:/usr/src/code/packages" \
