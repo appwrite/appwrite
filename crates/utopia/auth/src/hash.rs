@@ -3,6 +3,8 @@
 
 use std::fmt::Debug;
 
+use rand::Rng;
+
 use crate::{Error, Options};
 
 /// A password hashing algorithm, with its options.
@@ -70,11 +72,24 @@ pub fn hash_equals(known: &[u8], user: &[u8]) -> bool {
 
 /// Fills `buf` with cryptographically secure random bytes.
 ///
+/// The bytes come from the thread's CSPRNG ([`rand::rng`]): ChaCha12
+/// keyed with 256 bits from the operating system's random source, and
+/// rekeyed from it after every 64 KiB of output. ChaCha with 12 rounds
+/// has no known attack better than brute force on its 256-bit key, so its
+/// output is indistinguishable from the OS source's to any feasible
+/// adversary; rekeying limits a leaked state to 64 KiB of output. The
+/// OS source is itself a generator of this kind, seeded by the kernel;
+/// reading it once per 64 KiB instead of once per call removes
+/// a system call from every token, the same trade OpenBSD and macOS make
+/// in `arc4random_buf()`. The generator is per thread, never shared, and
+/// never copied; a forked child must not keep using its parent's thread
+/// (servers here never fork after start).
+///
 /// Panics when the system random source is unavailable.
 ///
-/// PHP: `random_bytes()`.
+/// PHP: `random_bytes()`, which reads the OS source on every call.
 pub fn random_bytes(buf: &mut [u8]) {
-    getrandom::fill(buf).expect("system random source unavailable");
+    rand::rng().fill_bytes(buf);
 }
 
 /// `random_int(0, max)`: a uniform integer in `0..=max`.

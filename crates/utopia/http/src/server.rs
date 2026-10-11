@@ -253,7 +253,7 @@ impl Default for ServerOptions {
             header_read_timeout: Duration::from_secs(30),
             shutdown_grace: Duration::from_secs(30),
             max_concurrency: 1_000,
-            trusted: Arc::new(TrustedHeaders::default()),
+            trusted: TrustedHeaders::shared_default(),
         }
     }
 }

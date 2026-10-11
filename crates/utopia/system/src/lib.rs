@@ -103,9 +103,15 @@ pub fn env(name: &str) -> Option<String> {
 
 /// An environment variable, or `default` when it is unset, empty or `"0"`.
 ///
+/// The default is borrowed, not copied: compare the result as it is, or
+/// call [`Cow::into_owned`] to keep it.
+///
 /// PHP: `System::getEnv($name, $default)`.
-pub fn env_or(name: &str, default: &str) -> String {
-    env(name).unwrap_or_else(|| default.to_owned())
+pub fn env_or<'a>(name: &str, default: &'a str) -> std::borrow::Cow<'a, str> {
+    match env(name) {
+        Some(value) => std::borrow::Cow::Owned(value),
+        None => std::borrow::Cow::Borrowed(default),
+    }
 }
 
 /// An environment variable as it is, empty strings and `"0"` included;

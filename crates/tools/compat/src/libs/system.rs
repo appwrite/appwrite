@@ -256,7 +256,7 @@ pub async fn call_op(op: &str, args: &Value) -> OpResult {
             Outcome::Ok(match args.get("default") {
                 None => utopia_system::env(name).map_or(Value::Null, Value::String),
                 Some(Value::Null) => utopia_system::env(name).map_or(Value::Null, Value::String),
-                Some(Value::String(default)) => Value::String(utopia_system::env_or(name, default)),
+                Some(Value::String(default)) => Value::String(utopia_system::env_or(name, default).into_owned()),
                 Some(_) => return Err(Fault::new("default must be a string or null")),
             })
         }

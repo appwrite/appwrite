@@ -36,10 +36,18 @@ use crate::Error;
 /// echo $decoded->getProperty('id'), "\n";           // u1
 /// var_dump($decoded->getProperty('missing'));       // NULL
 /// ```
-#[derive(Debug, Clone, Default, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Store {
-    data: Array,
+    /// The properties: always an array, held as a value so encoding borrows it.
+    data: Value,
     key: Option<Vec<u8>>,
+}
+
+impl Default for Store {
+    /// An empty store: no properties, no key.
+    fn default() -> Self {
+        Self { data: Value::Array(Array::new()), key: None }
+    }
 }
 
 impl Store {
@@ -54,20 +62,30 @@ impl Store {
     ///
     /// PHP: `getProperty($key, $default)`, which is `$data[$key] ?? $default`.
     pub fn property(&self, key: &[u8]) -> Option<&Value> {
-        self.data.get(&ArrayKey::from_bytes(key)).filter(|v| !matches!(v, Value::Null))
+        self.properties().get(&ArrayKey::from_bytes(key)).filter(|v| !matches!(v, Value::Null))
     }
 
     /// Sets the property named `key`, keeping its position when it already exists.
     ///
     /// PHP: `setProperty($key, $value)`.
     pub fn set_property(&mut self, key: &[u8], value: Value) -> &mut Self {
-        self.data.set(ArrayKey::from_bytes(key), value);
+        self.properties_mut().set(ArrayKey::from_bytes(key), value);
         self
     }
 
     /// The properties, in insertion order.
     pub fn properties(&self) -> &Array {
-        &self.data
+        match &self.data {
+            Value::Array(data) => data,
+            _ => unreachable!("a store holds an array"),
+        }
+    }
+
+    fn properties_mut(&mut self) -> &mut Array {
+        match &mut self.data {
+            Value::Array(data) => data,
+            _ => unreachable!("a store holds an array"),
+        }
     }
 
     /// The key naming this store, if one is set.
@@ -92,8 +110,7 @@ impl Store {
     ///
     /// PHP: `encode()`, which is `base64_encode(json_encode($data))`.
     pub fn encode(&self) -> Result<String, Error> {
-        let json = json::encode(&Value::Array(self.data.clone()), Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH)
-            .map_err(Error::json)?;
+        let json = json::encode(&self.data, Flags::THROW_ON_ERROR, json::DEFAULT_DEPTH).map_err(Error::json)?;
         Ok(base64_encode(json.as_bytes()))
     }
 
@@ -108,8 +125,10 @@ impl Store {
         };
         if let Ok(Value::Array(values)) = json::decode(&decoded, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
         {
-            for (key, value) in values.iter() {
-                self.data.set(key.to_owned(), value.clone());
+            // The decoded keys and values move in, uncopied.
+            let properties = self.properties_mut();
+            for (key, value) in values {
+                properties.set(key, value);
             }
         }
         self

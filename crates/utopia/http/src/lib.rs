@@ -51,6 +51,7 @@
 #![warn(missing_docs)]
 
 pub mod compression;
+mod encode;
 mod error;
 mod files;
 mod headers;

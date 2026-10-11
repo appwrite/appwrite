@@ -13,6 +13,19 @@ pub(crate) fn preg_matches(pattern: &[u8], subject: &[u8]) -> bool {
     matches!(pcre::preg_match_bare(pattern, subject), Ok(p) if p.value == pcre::Value::Int(1))
 }
 
+/// What an anchored `/^...$/` pattern (without `/D`) must match whole when
+/// its classes exclude `\n`: the subject, without the one final newline
+/// before which `$` also matches.
+pub(crate) fn dollar_body(subject: &[u8]) -> &[u8] {
+    subject.strip_suffix(b"\n").unwrap_or(subject)
+}
+
+/// `/^[1-9]\d{6,14}$/` on [`dollar_body`]: 7 to 15 ASCII digits, the first
+/// not 0.
+pub(crate) fn is_e164_digits(body: &[u8]) -> bool {
+    (7..=15).contains(&body.len()) && body[0] != b'0' && body.iter().all(u8::is_ascii_digit)
+}
+
 /// A string of `min` to `length` characters (`length` 0 is unlimited),
 /// optionally made only of the characters in `allow_list`, and optionally not
 /// blank.
@@ -145,6 +158,13 @@ impl Identifier {
     }
 }
 
+/// `/^[A-Za-z_]\w*$/D`: `\w` is ASCII without `/u`, and `/D` takes no final
+/// newline.
+pub(crate) fn is_identifier(s: &[u8]) -> bool {
+    s.first().is_some_and(|&b| b.is_ascii_alphabetic() || b == b'_')
+        && s.iter().all(|&b| b.is_ascii_alphanumeric() || b == b'_')
+}
+
 impl Validator for Identifier {
     /// `Value must contain only letters, digits and underscores and must not start
     /// with a digit`, with the length limit when there is one.
@@ -162,11 +182,7 @@ impl Validator for Identifier {
 
     /// Valid for a non-empty identifier within the length limit.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(
-            value
-                .as_str()
-                .is_some_and(|s| Text::with_min(self.length, 1).accepts(s) && preg_matches(br"/^[A-Za-z_]\w*$/D", s)),
-        ))
+        Ok(Verdict::of(value.as_str().is_some_and(|s| Text::with_min(self.length, 1).accepts(s) && is_identifier(s))))
     }
 
     /// Expects a string ([`Type::String`]).

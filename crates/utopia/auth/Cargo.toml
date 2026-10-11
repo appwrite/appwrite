@@ -10,7 +10,7 @@ publish.workspace = true
 [dependencies]
 aes.workspace = true
 ctr.workspace = true
-getrandom.workspace = true
+rand.workspace = true
 hex.workspace = true
 hmac.workspace = true
 indexmap.workspace = true

@@ -161,8 +161,8 @@ impl<V: Validator> ArrayList<V> {
             None => Verdict::of(valid),
             Some(inner) => Verdict {
                 valid,
-                description: inner.description.map(|d| Cow::Owned(self.describe(&d))),
                 decided: inner.decided,
+                description: inner.into_description(&self.inner).map(|d| Cow::Owned(self.describe(&d))),
                 rule: None,
             },
         }
@@ -304,7 +304,9 @@ impl<V: Validator> Validator for Nullable<V> {
             return Ok(Verdict::VALID);
         }
         let v = self.0.validate(value)?;
-        Ok(Verdict { description: v.description.map(|d| Cow::Owned(format!("{d} or null"))), ..v })
+        let (valid, decided, rule) = (v.valid, v.decided, v.rule);
+        let description = v.into_description(&self.0).map(|d| Cow::Owned(format!("{d} or null")));
+        Ok(Verdict { valid, description, decided, rule })
     }
 
     /// The inner validator's type.

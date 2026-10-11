@@ -25,6 +25,13 @@ impl Default for TrustedHeaders {
 }
 
 impl TrustedHeaders {
+    /// The default, shared: a request that keeps it allocates nothing.
+    pub(crate) fn shared_default() -> std::sync::Arc<Self> {
+        static DEFAULT: std::sync::LazyLock<std::sync::Arc<TrustedHeaders>> =
+            std::sync::LazyLock::new(|| std::sync::Arc::new(TrustedHeaders::default()));
+        DEFAULT.clone()
+    }
+
     /// Trusts the headers `ip` for the client address and `proto` for the
     /// scheme. Names are lowercased and trimmed; empty names and `0` are
     /// dropped.

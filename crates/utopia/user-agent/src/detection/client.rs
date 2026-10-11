@@ -1,15 +1,19 @@
 //! Client detection: browsers and their engines, HTTP libraries and native
 //! apps.
 //!
-//! PHP: `Utopia\UserAgent\Detection\ClientDetector`.
+//! PHP: `Utopia\UserAgent\Detection\ClientDetector`. Its `<token>/<version>`
+//! patterns run natively (see `crate::scan`); each rule names the pattern
+//! it implements. Internet Explorer's lazy pattern keeps the regex engine,
+//! behind a test for the literals it needs.
 
 use std::borrow::Cow;
-use std::sync::{Arc, LazyLock};
 
-use php_std::pcre::Regex;
 use php_std::string;
 
-use crate::pattern::{around, compile, contains_ci, group, pattern};
+use crate::pattern::{group, pattern};
+use crate::scan::{
+    contains_ci, dotted, dotted_underscored, find_ci, run, slash_version, starts_with_ci, version_after,
+};
 use crate::values::{Client, Text, text};
 use crate::version;
 
@@ -58,22 +62,10 @@ fn browser<'a>(
     }
 }
 
-/// Tokens whose version `tokenVersion()` reads.
-#[derive(Clone, Copy)]
-enum Token {
-    Chrome,
-    AppleWebKit,
-    Presto,
-    Version,
-    Trident,
-}
-
-/// `tokenVersion()`: the normalised version after `<token>/`.
-fn token_version(ua: &[u8], token: Token) -> Option<Text<'_>> {
-    static PATTERNS: LazyLock<[Arc<Regex>; 5]> = LazyLock::new(|| {
-        ["Chrome", "AppleWebKit", "Presto", "Version", "Trident"].map(|t| around("/", t, r"\/([0-9.]+)/i"))
-    });
-    group(&PATTERNS[token as usize], ua).map(version::normalize)
+/// `tokenVersion()`: the normalised version after `<token>/`
+/// (`/<token>\/([0-9.]+)/i`).
+fn token_version<'a>(ua: &'a [u8], token: &str) -> Option<Text<'a>> {
+    slash_version(ua, token).map(version::normalize)
 }
 
 /// Chromium-based browsers that ship their own token. These resolve before
@@ -81,35 +73,31 @@ fn token_version(ua: &[u8], token: Token) -> Option<Text<'_>> {
 /// strings also carry a `Chrome/` token (and sometimes the `Version/4.0`
 /// WebView marker).
 fn derivative(ua: &[u8]) -> Option<Client<'_>> {
-    static BLINK: LazyLock<Vec<(Arc<Regex>, &str, &str)>> = LazyLock::new(|| {
-        [
-            (r"/coc_coc_browser\/([0-9.]+)/i", "CC", "Coc Coc"),
-            (r"/Vivaldi\/([0-9.]+)/i", "VI", "Vivaldi"),
-            (r"/YaBrowser\/([0-9.]+)/i", "YA", "Yandex Browser"),
-            (r"/Brave\/([0-9.]+)/i", "BR", "Brave"),
-            (r"/Whale\/([0-9.]+)/i", "WH", "Whale Browser"),
-            (r"/UCBrowser\/([0-9.]+)/i", "UC", "UC Browser"),
-            (r"/(?:MQQBrowser|QQBrowser)\/([0-9.]+)/i", "QQ", "QQ Browser"),
-            (r"/DuckDuckGo\/([0-9.]+)/i", "DD", "DuckDuckGo Privacy Browser"),
-            (r"/Silk\/([0-9.]+)/i", "MS", "Mobile Silk"),
-        ]
-        .into_iter()
-        .map(|(regex, code, name)| (compile(regex.as_bytes()), code, name))
-        .collect()
-    });
-    for (regex, code, name) in BLINK.iter() {
-        if let Some(version) = group(regex, ua) {
+    /// `/(?:<token>|...)\/([0-9.]+)/i`, the code and the name.
+    const BLINK: [(&[&str], &str, &str); 9] = [
+        (&["coc_coc_browser"], "CC", "Coc Coc"),
+        (&["Vivaldi"], "VI", "Vivaldi"),
+        (&["YaBrowser"], "YA", "Yandex Browser"),
+        (&["Brave"], "BR", "Brave"),
+        (&["Whale"], "WH", "Whale Browser"),
+        (&["UCBrowser"], "UC", "UC Browser"),
+        (&["MQQBrowser", "QQBrowser"], "QQ", "QQ Browser"),
+        (&["DuckDuckGo"], "DD", "DuckDuckGo Privacy Browser"),
+        (&["Silk"], "MS", "Mobile Silk"),
+    ];
+    for (tokens, code, name) in BLINK {
+        if let Some(version) = version_after(ua, tokens, b"/", dotted, dotted) {
             return Some(derivative_client(ua, code, name, version));
         }
     }
     // Firefox Focus reports as Blink only when it embeds a Chrome token.
-    if let Some(version) = group(pattern!(r"/Focus\/([0-9.]+)/i"), ua)
-        && token_version(ua, Token::Chrome).is_some()
+    if let Some(version) = slash_version(ua, "Focus")
+        && slash_version(ua, "Chrome").is_some()
     {
         return Some(derivative_client(ua, "FK", "Firefox Focus", version));
     }
     // Huawei Browser distinguishes its mobile build by name.
-    if let Some(version) = group(pattern!(r"/HuaweiBrowser\/([0-9.]+)/i"), ua) {
+    if let Some(version) = slash_version(ua, "HuaweiBrowser") {
         let (code, name) =
             if contains_ci(ua, "Mobile") { ("HU", "Huawei Browser Mobile") } else { ("HP", "Huawei Browser") };
         return Some(derivative_client(ua, code, name, version));
@@ -122,48 +110,50 @@ fn derivative(ua: &[u8]) -> Option<Client<'_>> {
 /// engine stays unknown when neither token is present.
 fn derivative_client<'a>(ua: &'a [u8], code: &'static str, name: &'static str, version: &'a [u8]) -> Client<'a> {
     let version = Some(version::display(version));
-    if let Some(chrome) = token_version(ua, Token::Chrome) {
+    if let Some(chrome) = token_version(ua, "Chrome") {
         return browser(code, name, version, Some("Blink"), Some(chrome));
     }
-    if let Some(webkit) = token_version(ua, Token::AppleWebKit) {
+    if let Some(webkit) = token_version(ua, "AppleWebKit") {
         return browser(code, name, version, Some("WebKit"), Some(webkit));
     }
     browser(code, name, version, None, None)
 }
 
 fn edge(ua: &[u8]) -> Option<Client<'_>> {
-    let version = group(pattern!(r"/(?:EdgA|EdgiOS|Edg|Edge)\/([0-9.]+)/i"), ua)?;
-    let engine_version = token_version(ua, Token::Chrome).unwrap_or_else(|| version::normalize(version));
+    // `/(?:EdgA|EdgiOS|Edg|Edge)\/([0-9.]+)/i`
+    let version = version_after(ua, &["EdgA", "EdgiOS", "Edg", "Edge"], b"/", dotted, dotted)?;
+    let engine_version = token_version(ua, "Chrome").unwrap_or_else(|| version::normalize(version));
     Some(browser("PS", "Microsoft Edge", Some(version::display(version)), Some("Blink"), Some(engine_version)))
 }
 
 fn opera(ua: &[u8]) -> Option<Client<'_>> {
-    if let Some(version) = group(pattern!(r"/Opera Mini\/([0-9.]+)/i"), ua) {
-        let presto = token_version(ua, Token::Presto);
+    if let Some(version) = slash_version(ua, "Opera Mini") {
+        let presto = token_version(ua, "Presto");
         return Some(browser("OI", "Opera Mini", Some(version::display(version)), Some("Presto"), presto));
     }
-    let version = group(pattern!(r"/(?:OPR|Opera)\/([0-9.]+)/i"), ua)?;
-    let engine_version = token_version(ua, Token::Chrome).unwrap_or_else(|| version::normalize(version));
+    // `/(?:OPR|Opera)\/([0-9.]+)/i`
+    let version = version_after(ua, &["OPR", "Opera"], b"/", dotted, dotted)?;
+    let engine_version = token_version(ua, "Chrome").unwrap_or_else(|| version::normalize(version));
     let mobile = contains_ci(ua, "Mobile") || contains_ci(ua, "Opera Mobi");
     let (code, name) = if mobile { ("OM", "Opera Mobile") } else { ("OP", "Opera") };
     Some(browser(code, name, Some(version::display(version)), Some("Blink"), Some(engine_version)))
 }
 
 fn samsung(ua: &[u8]) -> Option<Client<'_>> {
-    let version = group(pattern!(r"/SamsungBrowser\/([0-9.]+)/i"), ua)?;
-    let engine_version = token_version(ua, Token::Chrome).unwrap_or_else(|| version::normalize(version));
+    let version = slash_version(ua, "SamsungBrowser")?;
+    let engine_version = token_version(ua, "Chrome").unwrap_or_else(|| version::normalize(version));
     Some(browser("SB", "Samsung Browser", Some(version::display(version)), Some("Blink"), Some(engine_version)))
 }
 
 fn chrome_ios(ua: &[u8]) -> Option<Client<'_>> {
-    let version = group(pattern!(r"/CriOS\/([0-9.]+)/i"), ua)?;
-    let webkit = token_version(ua, Token::AppleWebKit);
+    let version = slash_version(ua, "CriOS")?;
+    let webkit = token_version(ua, "AppleWebKit");
     Some(browser("CI", "Chrome Mobile iOS", Some(version::display(version)), Some("WebKit"), webkit))
 }
 
 fn firefox_ios(ua: &[u8]) -> Option<Client<'_>> {
-    let version = group(pattern!(r"/FxiOS\/([0-9.]+)/i"), ua)?;
-    let webkit = token_version(ua, Token::AppleWebKit);
+    let version = slash_version(ua, "FxiOS")?;
+    let webkit = token_version(ua, "AppleWebKit");
     Some(browser("F1", "Firefox Mobile iOS", Some(version::display(version)), Some("WebKit"), webkit))
 }
 
@@ -171,7 +161,7 @@ fn android_web_view(ua: &[u8]) -> Option<Client<'_>> {
     if !string::str_contains(ua, b"; wv)") && !contains_ci(ua, "Version/4.0 Chrome/") {
         return None;
     }
-    let engine_version = token_version(ua, Token::Chrome)?;
+    let engine_version = token_version(ua, "Chrome")?;
     let version = match &engine_version {
         Cow::Borrowed(v) => version::display(v),
         Cow::Owned(v) => Cow::Owned(version::display(v).into_owned()),
@@ -180,14 +170,15 @@ fn android_web_view(ua: &[u8]) -> Option<Client<'_>> {
 }
 
 fn chrome(ua: &[u8]) -> Option<Client<'_>> {
-    let version = group(pattern!(r"/(?:Chrome|Chromium|HeadlessChrome)\/([0-9.]+)/i"), ua)?;
+    // `/(?:Chrome|Chromium|HeadlessChrome)\/([0-9.]+)/i`
+    let version = version_after(ua, &["Chrome", "Chromium", "HeadlessChrome"], b"/", dotted, dotted)?;
     let mobile = contains_ci(ua, "Mobile") || contains_ci(ua, "Android");
     let (code, name) = if mobile { ("CM", "Chrome Mobile") } else { ("CH", "Chrome") };
     Some(browser(code, name, Some(version::display(version)), Some("Blink"), Some(version::normalize(version))))
 }
 
 fn firefox(ua: &[u8]) -> Option<Client<'_>> {
-    let version = version::display(group(pattern!(r"/Firefox\/([0-9.]+)/i"), ua)?);
+    let version = version::display(slash_version(ua, "Firefox")?);
     let mobile = contains_ci(ua, "Mobile") || contains_ci(ua, "Android");
     let (code, name) = if mobile { ("FM", "Firefox Mobile") } else { ("FF", "Firefox") };
     Some(browser(code, name, Some(version.clone()), Some("Gecko"), Some(version)))
@@ -197,52 +188,67 @@ fn safari(ua: &[u8]) -> Option<Client<'_>> {
     if !contains_ci(ua, "Safari/") || !contains_ci(ua, "AppleWebKit/") {
         return None;
     }
-    let version = token_version(ua, Token::Version);
+    let version = token_version(ua, "Version");
     let mobile =
         contains_ci(ua, "Mobile/") && (contains_ci(ua, "iPhone") || contains_ci(ua, "iPad") || contains_ci(ua, "iPod"));
     let (code, name) = if mobile { ("MF", "Mobile Safari") } else { ("SF", "Safari") };
-    Some(browser(code, name, version, Some("WebKit"), token_version(ua, Token::AppleWebKit)))
+    Some(browser(code, name, version, Some("WebKit"), token_version(ua, "AppleWebKit")))
 }
 
 fn internet_explorer(ua: &[u8]) -> Option<Client<'_>> {
+    // The pattern needs `MSIE ` or `Trident/` and then `rv:`.
+    let literals = contains_ci(ua, "MSIE ") || (contains_ci(ua, "Trident/") && contains_ci(ua, "rv:"));
+    if !literals {
+        return None;
+    }
     let version = group(pattern!(r"/(?:MSIE |Trident\/.*?rv:)([0-9.]+)/i"), ua)?;
-    let trident = token_version(ua, Token::Trident);
+    let trident = token_version(ua, "Trident");
     Some(browser("IE", "Internet Explorer", Some(version::normalize(version)), Some("Trident"), trident))
 }
 
 fn library(ua: &[u8]) -> Option<Client<'_>> {
-    static LIBRARIES: LazyLock<Vec<(Arc<Regex>, &str)>> = LazyLock::new(|| {
-        [
-            (r"/curl\/([0-9.]+)/i", "curl"),
-            (r"/Wget\/([0-9.]+)/i", "Wget"),
-            (r"/PostmanRuntime\/([0-9.]+)/i", "Postman Runtime"),
-            (r"/okhttp\/([0-9.]+)/i", "OkHttp"),
-            (r"/Dart\/([0-9.]+)/i", "Dart"),
-            (r"/GuzzleHttp\/([0-9.]+)/i", "Guzzle"),
-            (r"/python-requests\/([0-9.]+)/i", "Python Requests"),
-            (r"/Python-urllib\/?([0-9.]*)/i", "Python urllib"),
-            (r"/aiohttp\/([0-9.]+)/i", "aiohttp"),
-            (r"/Go-http-client\/([0-9.]+)/i", "Go-http-client"),
-            (r"/node-fetch\/([0-9.]+)/i", "Node Fetch"),
-            (r"/axios\/([0-9.]+)/i", "Axios"),
-            (r"/HTTPie\/([0-9.]+)/i", "HTTPie"),
-            (r"/Apache-HttpClient\/([0-9.]+)/i", "Apache HTTP Client"),
-            (r"/Java-http-client\/([0-9.]+)/i", "Java HTTP Client"),
-            (r"/Java\/([0-9._]+)/i", "Java"),
-            (r"/got\/([0-9.]+)/i", "got"),
-        ]
-        .into_iter()
-        .map(|(regex, name)| (compile(regex.as_bytes()), name))
-        .collect()
-    });
-    LIBRARIES.iter().find_map(|(regex, name)| {
-        group(regex, ua).map(|version| Client {
+    /// `/<token>\/([0-9.]+)/i` and the library's name; `Java` takes
+    /// `[0-9._]` and `Python-urllib` is [`python_urllib`].
+    const LIBRARIES: [(&str, &str); 17] = [
+        ("curl", "curl"),
+        ("Wget", "Wget"),
+        ("PostmanRuntime", "Postman Runtime"),
+        ("okhttp", "OkHttp"),
+        ("Dart", "Dart"),
+        ("GuzzleHttp", "Guzzle"),
+        ("python-requests", "Python Requests"),
+        ("Python-urllib", "Python urllib"),
+        ("aiohttp", "aiohttp"),
+        ("Go-http-client", "Go-http-client"),
+        ("node-fetch", "Node Fetch"),
+        ("axios", "Axios"),
+        ("HTTPie", "HTTPie"),
+        ("Apache-HttpClient", "Apache HTTP Client"),
+        ("Java-http-client", "Java HTTP Client"),
+        ("Java", "Java"),
+        ("got", "got"),
+    ];
+    LIBRARIES.iter().find_map(|&(token, name)| {
+        let version = match token {
+            "Python-urllib" => python_urllib(ua),
+            "Java" => version_after(ua, &["Java"], b"/", dotted_underscored, dotted_underscored),
+            _ => slash_version(ua, token),
+        }?;
+        Some(Client {
             kind: text("library"),
             name: text(name),
             version: Some(version::display(version)),
             ..Client::default()
         })
     })
+}
+
+/// `/Python-urllib\/?([0-9.]*)/i`: any occurrence matches, the version may
+/// be empty.
+pub(super) fn python_urllib(ua: &[u8]) -> Option<&[u8]> {
+    let at = find_ci(ua, b"Python-urllib", 0)? + "Python-urllib".len();
+    let start = if starts_with_ci(ua, at, "/") { at + 1 } else { at };
+    Some(&ua[start..start + run(ua, start, dotted)])
 }
 
 /// Native Flutter iOS clients send `<bundle identifier>/<version> <machine>

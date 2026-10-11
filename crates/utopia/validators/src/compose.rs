@@ -7,10 +7,16 @@ use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 /// The rules of a composite validator.
 pub type Rules<'a> = Vec<Box<dyn Validator + 'a>>;
 
-/// The verdict of a composite that `rules[index]` decided.
+/// The verdict of a composite that `rules[index]` decided. Unless the rule's
+/// verdict carries a description, the rule is described only when the
+/// verdict is ([`Validator::rule_description`]).
 fn decided_by(index: usize, rule: &dyn Validator, valid: bool, verdict: Verdict) -> Verdict {
-    let description = verdict.description.unwrap_or_else(|| Cow::Owned(rule.description()));
-    Verdict { valid, description: Some(description), decided: true, rule: Some(index) }
+    Verdict { valid, description: verdict.into_description(rule), decided: true, rule: Some(index) }
+}
+
+/// `rules[index]`'s description, for a verdict that rule decided.
+fn rule_description(rules: &Rules<'_>, index: usize) -> Option<String> {
+    rules.get(index).map(|rule| rule.description())
 }
 
 /// The verdict of a composite no rule decided: PHP describes the first rule,
@@ -78,6 +84,11 @@ impl Validator for AllOf<'_> {
         try_first(&self.rules)
     }
 
+    /// The description of the rule at `index`.
+    fn rule_description(&self, index: usize) -> Option<String> {
+        rule_description(&self.rules, index)
+    }
+
     is_valid_via_validate!();
 
     /// Validates against each rule in turn and stops at the first that fails,
@@ -90,7 +101,7 @@ impl Validator for AllOf<'_> {
                 return Ok(decided_by(i, rule.as_ref(), false, v));
             }
             if i == 0 {
-                first = v.description;
+                first = v.into_description(rule.as_ref());
             }
         }
         Ok(undecided(true, first))
@@ -116,6 +127,11 @@ impl Validator for AnyOf<'_> {
     /// The description of the first rule, or [`Error::Engine`] without rules.
     fn try_description(&self) -> Result<String, Error> {
         try_first(&self.rules)
+    }
+
+    /// The description of the rule at `index`.
+    fn rule_description(&self, index: usize) -> Option<String> {
+        rule_description(&self.rules, index)
     }
 
     is_valid_via_validate!();
@@ -159,6 +175,11 @@ impl Validator for NoneOf<'_> {
         try_first(&self.rules)
     }
 
+    /// The description of the rule at `index`.
+    fn rule_description(&self, index: usize) -> Option<String> {
+        rule_description(&self.rules, index)
+    }
+
     is_valid_via_validate!();
 
     /// Validates against each rule in turn and stops at the first that passes,
@@ -172,7 +193,7 @@ impl Validator for NoneOf<'_> {
                 return Ok(decided_by(i, rule.as_ref(), false, v));
             }
             if i == 0 {
-                first = v.description;
+                first = v.into_description(rule.as_ref());
             }
         }
         Ok(undecided(true, first))
@@ -250,11 +271,12 @@ impl Validator for Multiple<'_> {
         for (i, rule) in self.rules.iter().enumerate() {
             let v = rule.validate(value)?;
             decided |= v.decided;
-            if let Some(d) = v.description {
+            let rule_valid = v.valid;
+            if let Some(d) = v.into_description(rule.as_ref()) {
                 described.resize(i + 1, None);
                 described[i] = Some(d);
             }
-            if !v.valid {
+            if !rule_valid {
                 valid = false;
                 break;
             }

@@ -357,16 +357,7 @@ impl<'a> Locale<'a> {
                 Missing::Null => None,
             },
         };
-        let Some(mut text) = text else { return Ok(None) };
-        for (name, value) in placeholders {
-            let search = format!("{{{{{name}}}}}");
-            let (replaced, count) = php_std::string::str_replace(search.as_bytes(), value.as_bytes(), text.as_bytes());
-            if count > 0 {
-                // Replacing UTF-8 with UTF-8 at character boundaries.
-                text = Cow::Owned(String::from_utf8_lossy(&replaced).into_owned());
-            }
-        }
-        Ok(Some(text))
+        Ok(text.map(|text| replace_placeholders(text, placeholders)))
     }
 
     /// Every text of the default language.
@@ -384,6 +375,50 @@ impl<'a> Locale<'a> {
     }
 }
 
+/// `str_replace("{{name}}", $value, $text)` for each placeholder in turn
+/// (a later placeholder also replaces what an earlier value brought in).
+///
+/// Each pass writes into a spare buffer only when the text holds the
+/// placeholder, and the two buffers swap, so a text with any number of
+/// placeholders costs at most two allocations. Placeholders are found in
+/// place, without building the `{{name}}` string.
+fn replace_placeholders<'s>(mut text: Cow<'s, str>, placeholders: &[(&str, &str)]) -> Cow<'s, str> {
+    let mut spare = String::new();
+    for (name, value) in placeholders {
+        let width = name.len() + 4;
+        let (mut copied, mut from) = (0, 0);
+        let mut out = std::mem::take(&mut spare);
+        out.clear();
+        let bytes = text.as_bytes();
+        while let Some(found) = bytes[from..].windows(2).position(|pair| pair == b"{{") {
+            let at = from + found;
+            let rest = &text[at + 2..];
+            if rest.starts_with(name) && rest[name.len()..].starts_with("}}") {
+                // Leftmost, non-overlapping matches, as `str_replace` takes them.
+                if copied == 0 {
+                    out.reserve(text.len() + value.len());
+                }
+                out.push_str(&text[copied..at]);
+                out.push_str(value);
+                copied = at + width;
+                from = copied;
+            } else {
+                from = at + 1;
+            }
+        }
+        if copied == 0 {
+            spare = out;
+            continue;
+        }
+        out.push_str(&text[copied..]);
+        spare = match std::mem::replace(&mut text, Cow::Owned(out)) {
+            Cow::Owned(previous) => previous,
+            Cow::Borrowed(_) => String::new(),
+        };
+    }
+    text
+}
+
 fn returned_error(given: &str) -> Error {
     Error::Type(format!(
         "Utopia\\Locale\\Locale::getTranslations(): Return value must be of type array, {given} returned"
@@ -393,6 +428,39 @@ fn returned_error(given: &str) -> Error {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// PHP's loop: `str_replace('{{'.$name.'}}', $value, $text)` per placeholder.
+    fn str_replaced(text: &str, placeholders: &[(&str, &str)]) -> String {
+        let mut text = text.as_bytes().to_vec();
+        for (name, value) in placeholders {
+            let search = format!("{{{{{name}}}}}");
+            text = php_std::string::str_replace(search.as_bytes(), value.as_bytes(), &text).0.into_owned();
+        }
+        String::from_utf8(text).unwrap()
+    }
+
+    #[test]
+    fn placeholders_replace_like_str_replace() {
+        const PIECES: [&str; 12] = ["{{", "}}", "{", "}", "a", "b", "{{a}}", "{{b}}", "é", "{{{a}}}", "", "{{}}"];
+        let mut seed = 0x9e37_79b9_7f4a_7c15_u64;
+        let mut next = |n: usize| {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            (seed % n as u64) as usize
+        };
+        for _ in 0..20_000 {
+            let mut pick = |n: usize| (0..n).map(|_| PIECES[next(PIECES.len())]).collect::<String>();
+            let text = pick(6);
+            let (n1, v1, n2, v2) = (pick(1), pick(2), pick(1), pick(2));
+            let placeholders = [(n1.as_str(), v1.as_str()), (n2.as_str(), v2.as_str())];
+            assert_eq!(
+                replace_placeholders(Cow::Borrowed(&text), &placeholders),
+                str_replaced(&text, &placeholders),
+                "{text:?} {placeholders:?}"
+            );
+        }
+    }
 
     fn languages() -> Languages {
         let mut l = Languages::new();

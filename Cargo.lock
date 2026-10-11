@@ -2321,7 +2321,6 @@ version = "0.1.0"
 dependencies = [
  "aes",
  "ctr",
- "getrandom 0.3.4",
  "hex",
  "hmac 0.12.1",
  "indexmap",
@@ -2331,6 +2330,7 @@ dependencies = [
  "openssl",
  "p256",
  "php-std",
+ "rand 0.10.3",
  "serde_json",
  "sha2 0.10.9",
  "thiserror",
@@ -2480,6 +2480,8 @@ dependencies = [
 name = "utopia-user-agent"
 version = "0.1.0"
 dependencies = [
+ "aho-corasick",
+ "memchr",
  "php-std",
 ]
 

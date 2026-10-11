@@ -32,7 +32,72 @@ pub fn parse_query(input: &str) -> Params {
 /// Parses an `application/x-www-form-urlencoded` byte string into params,
 /// like [`parse_query`].
 pub fn parse_query_bytes(input: &[u8]) -> Params {
-    array_to_params(&php_std::encoding::parse_str(input))
+    flat_query(input).unwrap_or_else(|| array_to_params(&php_std::encoding::parse_str(input)))
+}
+
+/// `parse_str()` straight into params, for the usual string where no name
+/// has a `[` (which builds nested arrays); `None` for any other string.
+fn flat_query(input: &[u8]) -> Option<Params> {
+    let mut params = Map::new();
+    let mut count = 0;
+    for var in c_str(input).split(|&b| b == b'&').filter(|t| !t.is_empty()) {
+        count += 1;
+        if count > php_std::encoding::MAX_INPUT_VARS {
+            break;
+        }
+        let (name, value) = match var.iter().position(|&b| b == b'=') {
+            Some(eq) => (&var[..eq], php_std::encoding::urldecode(&var[eq + 1..])),
+            None => (var, Vec::new()),
+        };
+        let name = if name.iter().any(|&b| b == b'%' || b == b'+') {
+            std::borrow::Cow::Owned(php_std::encoding::urldecode(name))
+        } else {
+            std::borrow::Cow::Borrowed(name)
+        };
+        register_flat(&mut params, &name, value, false)?;
+    }
+    Some(params)
+}
+
+/// `php_register_variable_ex()` into params for a name without `[`: leading
+/// spaces dropped, `.` and ` ` as `_`, nothing from a NUL on. `keep_existing`
+/// is the `$_COOKIE` rule (the first of two names wins).
+///
+/// `None` when the name needs PHP's array rules: it has a `[`, or it is not
+/// UTF-8 (two such names can share a params key that PHP keeps apart).
+pub(crate) fn register_flat(params: &mut Params, name: &[u8], value: Vec<u8>, keep_existing: bool) -> Option<()> {
+    let name = c_str(name);
+    let name = &name[name.iter().position(|&b| b != b' ').unwrap_or(name.len())..];
+    if name.contains(&b'[') {
+        return None;
+    }
+    if name.is_empty() {
+        return Some(());
+    }
+    let mut key = name.to_vec();
+    for b in &mut key {
+        if matches!(*b, b' ' | b'.') {
+            *b = b'_';
+        }
+    }
+    // A PHP key from these bytes prints back as the same text, so the params
+    // key is the name itself.
+    let key = String::from_utf8(key).ok()?;
+    if keep_existing && params.contains_key(&key) {
+        return Some(());
+    }
+    params.insert(key, Value::String(lossy(value)));
+    Some(())
+}
+
+/// The bytes as UTF-8, invalid sequences replaced; no copy when valid.
+fn lossy(bytes: Vec<u8>) -> String {
+    String::from_utf8(bytes).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
+}
+
+/// The engine's C string: everything from the first NUL on is ignored.
+fn c_str(s: &[u8]) -> &[u8] {
+    s.iter().position(|&b| b == 0).map_or(s, |n| &s[..n])
 }
 
 /// Decodes a JSON body into params.
@@ -47,6 +112,20 @@ pub fn decode_payload(raw: &[u8]) -> Params {
     // PHP decodes into objects only when the body can hold an empty object
     // (`/\{\s*\}/`); the two modes differ for property names PHP objects reject.
     let assoc = !has_empty_object(raw);
+    if assoc {
+        // Straight into params: `json_decode($raw, true)` as JSON values.
+        // Only a number PHP decodes to INF needs the PHP value model.
+        use php_std::json::{DEFAULT_DEPTH, Error, Flags, decode_value};
+        match decode_value(raw, DEFAULT_DEPTH, Flags::NONE) {
+            Ok(Value::Object(members)) => return members,
+            Ok(Value::Array(list)) => {
+                return list.into_iter().enumerate().map(|(i, v)| (i.to_string(), v)).collect();
+            }
+            Ok(_) => return Map::new(),
+            Err(Error::Unrepresentable) => {}
+            Err(_) => return Map::new(),
+        }
+    }
     match php_std::json::decode(raw, Some(assoc), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE) {
         Ok(php_std::Value::Array(a)) => array_to_params(&a),
         Ok(php_std::Value::Object(o)) if !o.is_empty() => array_to_params(&object_to_array(&o)),

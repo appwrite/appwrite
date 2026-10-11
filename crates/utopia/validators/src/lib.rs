@@ -187,13 +187,19 @@ pub struct Verdict {
     /// decided before reports: an [`AllOf`] describes its first rule as that
     /// rule's validation left it.
     ///
+    /// A composite's verdict that one of its rules decided without a
+    /// description of its own leaves this `None` and names the rule in
+    /// [`Verdict::rule`]: [`Verdict::describe`] describes that rule only
+    /// when asked, so validating builds no description.
+    ///
     /// PHP: what `getDescription()` returns after this validation.
     pub description: Option<Cow<'static, str>>,
     /// Whether this validation decided the description to report. One that did
     /// not leaves an earlier decision in place.
     pub decided: bool,
     /// The index of the rule of an [`AllOf`], [`AnyOf`] or [`NoneOf`] that
-    /// decided.
+    /// decided. Without a [`Verdict::description`], that rule's description
+    /// is the one to report ([`Validator::rule_description`]).
     ///
     /// PHP: `failedRule`.
     pub rule: Option<usize>,
@@ -215,6 +221,14 @@ impl Verdict {
         Verdict { valid, description, decided: true, rule: None }
     }
 
+    /// The description this verdict of `validator` carries: its own, or that
+    /// of the rule that decided it; `None` for [`Validator::description`].
+    ///
+    /// A composite or wrapper reads its inner verdicts through this.
+    pub fn into_description(self, validator: &(impl Validator + ?Sized)) -> Option<Cow<'static, str>> {
+        self.description.or_else(|| Some(Cow::Owned(validator.rule_description(self.rule?)?)))
+    }
+
     /// The description to report after this validation, for a validator that had
     /// not decided before.
     ///
@@ -222,7 +236,7 @@ impl Verdict {
     pub fn describe(&self, validator: &(impl Validator + ?Sized)) -> String {
         match &self.description {
             Some(d) => d.clone().into_owned(),
-            None => validator.description(),
+            None => self.rule.and_then(|i| validator.rule_description(i)).unwrap_or_else(|| validator.description()),
         }
     }
 
@@ -233,7 +247,10 @@ impl Verdict {
     pub fn try_describe(&self, validator: &(impl Validator + ?Sized)) -> Result<String, Error> {
         match &self.description {
             Some(d) => Ok(d.clone().into_owned()),
-            None => validator.try_description(),
+            None => match self.rule.and_then(|i| validator.rule_description(i)) {
+                Some(d) => Ok(d),
+                None => validator.try_description(),
+            },
         }
     }
 }
@@ -316,6 +333,16 @@ pub trait Validator: Send + Sync {
     fn try_description(&self) -> Result<String, Error> {
         Ok(self.description())
     }
+
+    /// The description of rule `index` of a composite, which a [`Verdict`]
+    /// of this validator names as the rule that decided; `None` for a
+    /// validator without rules.
+    ///
+    /// PHP: `$this->failedRule->getDescription()`.
+    fn rule_description(&self, index: usize) -> Option<String> {
+        let _ = index;
+        None
+    }
 }
 
 /// `is_valid` of a validator implementing `validate`.
@@ -354,6 +381,9 @@ macro_rules! forward_validator {
             }
             fn try_description(&self) -> Result<String, Error> {
                 (**self).try_description()
+            }
+            fn rule_description(&self, index: usize) -> Option<String> {
+                (**self).rule_description(index)
             }
         }
     )*};

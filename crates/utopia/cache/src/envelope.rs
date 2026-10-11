@@ -56,10 +56,8 @@ impl<C: Codec> Envelope<C> {
     /// PHP: the coercion of the `array|string` parameter.
     pub fn encode(&self, data: &Value, time: i64) -> Result<Vec<u8>> {
         let data = crate::adapter::coerce(data, "Utopia\\Cache\\Envelope::encode(): Argument #1 ($data)")?;
-        let mut record = Array::with_capacity(2);
-        record.set(ArrayKey::from("time"), Value::Int(time));
-        record.set(ArrayKey::from("data"), data.into_owned());
-        self.codec.encode(&Value::Array(record))
+        // The record is written around the borrowed data where the codec can.
+        self.codec.encode_envelope(time, &data)
     }
 
     /// The data of a stored envelope while it is fresh (`time + ttl > now`).
