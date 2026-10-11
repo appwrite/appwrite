@@ -503,6 +503,33 @@ final class VideosCustomServerTest extends Scope
         }
     }
 
+    /**
+     * A SubRip file the parser rejects settles on `error` instead of staying
+     * `pending`; the row is kept so the failure is visible in the list.
+     */
+    #[Depends('testCreateVideo')]
+    public function testCaptionErrorOnMalformedSubrip(string $videoId): void
+    {
+        $response = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/captions', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getBrokenCaptionFile()['$id'],
+            'name' => 'Broken',
+            'code' => 'heb',
+            'default' => false,
+        ]);
+
+        $this->assertEquals(201, $response['headers']['status-code']);
+        $this->assertEquals('pending', $response['body']['status']);
+        $captionId = $response['body']['$id'];
+
+        $body = $this->waitForCaptionTerminalState($videoId, $captionId);
+        $this->assertEquals('error', $body['status'], 'Malformed SubRip did not fail the caption');
+
+        $list = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/captions', $this->headers());
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertContains($captionId, \array_column($list['body']['captions'], '$id'));
+    }
+
     #[Depends('testCreateCaption')]
     public function testListCaptions(array $caption): array
     {
@@ -663,6 +690,37 @@ final class VideosCustomServerTest extends Scope
         $body = $this->waitForRenditionTerminalState($video['$id'], $rendition['body']['$id']);
         $this->assertEquals('ready', $body['status'], 'Short silence rendition did not finish');
         $this->assertEquals('100', $body['progress']);
+    }
+
+    /**
+     * A source ffprobe cannot read fails the encode: the rendition settles on
+     * `error` with both timestamps set, and the scratch directory is removed.
+     */
+    public function testRenditionErrorOnTruncatedSource(): void
+    {
+        $video = $this->client->call(Client::METHOD_POST, '/videos', $this->headers(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getInvalidVideoFile()['$id'],
+        ]);
+        $this->assertEquals(201, $video['headers']['status-code']);
+        $videoId = $video['body']['$id'];
+
+        $profile = $this->seededProfile('360p');
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->headers(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $this->assertEquals('pending', $rendition['body']['status']);
+
+        $body = $this->waitForRenditionTerminalState($videoId, $rendition['body']['$id']);
+        $this->assertEquals('error', $body['status'], 'Truncated source did not fail the encode');
+        $this->assertNotEmpty($body['startedAt']);
+        $this->assertNotEmpty($body['endedAt']);
+
+        $this->assertEventually(function () use ($videoId) {
+            $this->assertSame([], $this->videoTmpJobs($videoId), 'Scratch directory survived a failed encode');
+        });
     }
 
     /**

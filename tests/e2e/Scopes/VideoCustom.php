@@ -29,6 +29,7 @@ trait VideoCustom
     protected static array $audioOnlyFile = [];
     protected static array $shortSilenceFile = [];
     protected static array $invalidVideoFile = [];
+    protected static array $brokenCaptionFile = [];
 
     /**
      * Bucket holding the source media, readable by anyone so the client-side
@@ -444,6 +445,37 @@ trait VideoCustom
         self::$overrideCaptionFile = ['$id' => $file['body']['$id']];
 
         return self::$overrideCaptionFile;
+    }
+
+    /**
+     * Uploads a SubRip fixture whose only cue has a malformed end timestamp, so
+     * create succeeds and the caption worker settles on `error`.
+     */
+    public function getBrokenCaptionFile(): array
+    {
+        if (!empty(self::$brokenCaptionFile)) {
+            return self::$brokenCaptionFile;
+        }
+
+        $source = \realpath(__DIR__ . '/../../resources/disk-a/video-broken.srt');
+        $this->assertNotFalse($source);
+
+        $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $this->getVideoBucket()['$id'] . '/files', \array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => 'unique()',
+            'file' => new \CURLFile($source, 'text/plain', 'video-broken.srt'),
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
+        ]);
+
+        $this->assertEquals(201, $file['headers']['status-code']);
+
+        self::$brokenCaptionFile = ['$id' => $file['body']['$id']];
+
+        return self::$brokenCaptionFile;
     }
 
     /**

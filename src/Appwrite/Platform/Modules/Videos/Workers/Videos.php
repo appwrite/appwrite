@@ -31,8 +31,14 @@ use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\Local;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
+use Utopia\Telemetry\Histogram;
+use Utopia\Telemetry\UpDownCounter;
 use Utopia\Video\Adapter\FFmpeg;
+use Utopia\Video\Adapter\FFprobe;
 use Utopia\Video\Encoder;
+use Utopia\Video\Exception\Runtime;
 use Utopia\Video\Format\HEVC;
 use Utopia\Video\Format\VP9;
 use Utopia\Video\Format\X264;
@@ -43,6 +49,7 @@ use Utopia\Video\Output\Hls;
 use Utopia\Video\Package;
 use Utopia\Video\Packager;
 use Utopia\Video\Progress;
+use Utopia\Video\Reporter\Silent;
 use Utopia\Video\Representation;
 use Utopia\Video\Tile;
 use Utopia\Video\Track;
@@ -76,6 +83,20 @@ class Videos extends Action
     /** Packaged media segment length in seconds (HLS / DASH / CMAF). */
     private const SEGMENT_DURATION = 4;
 
+    /** ffmpeg worker threads per job; also exported as encoder.threads. */
+    private const THREADS = 4;
+
+    /** Seconds one embedded caption track may take to extract before it counts as failed. */
+    private const SUBTITLE_TIMEOUT = 60;
+
+    /** Histogram bucket boundaries in seconds. */
+    private const JOB_BUCKETS = [1, 5, 10, 30, 60, 120, 300, 600, 1200, 1800, 3600];
+    private const PHASE_BUCKETS = [0.1, 0.5, 1, 5, 10, 30, 60, 120, 300, 600, 1800];
+    private const WAIT_BUCKETS = [1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600];
+
+    /** Encode speed buckets as a multiple of realtime. */
+    private const SPEED_BUCKETS = [0.1, 0.25, 0.5, 1, 2, 4, 8, 16, 32];
+
     /**
      * Must be exactly 'videos': app/worker.php derives the queue name
      * (`v1-videos`) and looks the action up by this key.
@@ -98,6 +119,7 @@ class Videos extends Action
             ->inject('authorization')
             ->inject('usage')
             ->inject('publisherForUsage')
+            ->inject('telemetry')
             ->callback($this->action(...));
     }
 
@@ -111,6 +133,7 @@ class Videos extends Action
         Authorization $authorization,
         Context $usage,
         UsagePublisher $publisherForUsage,
+        Telemetry $telemetry,
     ): void {
         $payload = $message->getPayload();
 
@@ -124,35 +147,72 @@ class Videos extends Action
         Span::add('project.id', $project->getId());
         Span::add('video.id', $videoMessage->video->getId());
         Span::add('video.action', $action->value);
+        Span::add('queue.name', $message->getQueue());
+        Span::add('queue.pid', $message->getPid());
+        Span::add('message.timestamp', (string) $message->getTimestamp());
+        Span::add('message.attempts', $message->getAttempts());
+        Span::add('video.bucket.id', (string) $videoMessage->video->getAttribute('bucketId', ''));
+        Span::add('video.file.id', (string) $videoMessage->video->getAttribute('fileId', ''));
 
-        match ($action) {
-            VideoAction::Timeline => $this->timeline(
-                $dbForProject,
-                $deviceForFiles,
-                $deviceForVideos,
-                $queueForRealtime,
-                $project,
-                $videoMessage
+        if ($videoMessage->rendition !== null) {
+            Span::add('rendition.id', $videoMessage->rendition->getId());
+        }
+        if ($videoMessage->profile !== null) {
+            Span::add('profile.id', $videoMessage->profile->getId());
+        }
+        if ($videoMessage->caption !== null) {
+            Span::add('caption.id', $videoMessage->caption->getId());
+        }
+
+        $this->record(
+            $telemetry->createHistogram(
+                'worker.videos.queue.wait',
+                's',
+                'Seconds a videos message waited before a worker picked it up',
+                ['ExplicitBucketBoundaries' => self::WAIT_BUCKETS]
             ),
-            VideoAction::Caption => $this->caption(
-                $dbForProject,
-                $deviceForFiles,
-                $deviceForVideos,
-                $queueForRealtime,
-                $project,
-                $videoMessage
-            ),
-            VideoAction::Encode => $this->encode(
-                $dbForProject,
-                $deviceForFiles,
-                $deviceForVideos,
-                $queueForRealtime,
-                $usage,
-                $publisherForUsage,
-                $project,
-                $videoMessage
-            ),
-        };
+            \max(0, \time() - $message->getTimestamp()),
+            ['action' => $action->value]
+        );
+
+        $inflight = $telemetry->createUpDownCounter('worker.videos.inflight', null, 'Videos jobs currently running');
+        $this->record($inflight, 1, ['action' => $action->value]);
+
+        try {
+            match ($action) {
+                VideoAction::Timeline => $this->timeline(
+                    $dbForProject,
+                    $deviceForFiles,
+                    $deviceForVideos,
+                    $queueForRealtime,
+                    $project,
+                    $videoMessage,
+                    $telemetry
+                ),
+                VideoAction::Caption => $this->caption(
+                    $dbForProject,
+                    $deviceForFiles,
+                    $deviceForVideos,
+                    $queueForRealtime,
+                    $project,
+                    $videoMessage,
+                    $telemetry
+                ),
+                VideoAction::Encode => $this->encode(
+                    $dbForProject,
+                    $deviceForFiles,
+                    $deviceForVideos,
+                    $queueForRealtime,
+                    $usage,
+                    $publisherForUsage,
+                    $project,
+                    $videoMessage,
+                    $telemetry
+                ),
+            };
+        } finally {
+            $this->record($inflight, -1, ['action' => $action->value]);
+        }
     }
 
     /**
@@ -164,7 +224,8 @@ class Videos extends Action
         Device $deviceForVideos,
         Realtime $queueForRealtime,
         Document $project,
-        VideoMessage $videoMessage
+        VideoMessage $videoMessage,
+        Telemetry $telemetry
     ): void {
         $video = $videoMessage->video;
         $projectId = $videoMessage->project->getId();
@@ -175,6 +236,9 @@ class Videos extends Action
             \uniqid('', true)
         );
         $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
+        $started = \microtime(true);
+        $stage = 'download';
+        $outcome = 'error';
 
         try {
             Console::info('Videos worker: timeline started for video ' . $video->getId());
@@ -186,7 +250,10 @@ class Videos extends Action
                 $workspace,
                 $queueForRealtime,
                 $project,
-                $permissions
+                $permissions,
+                $telemetry,
+                VideoAction::Timeline->value,
+                $stage
             );
 
             $this->notify(
@@ -206,7 +273,8 @@ class Videos extends Action
             $height = (int) $video->getAttribute('height', 0);
 
             if ($width <= 0 || $height <= 0) {
-                Console::warning('Videos worker: source has no video track; skipping timeline for ' . $video->getId());
+                Span::add('warning.message', 'Source has no video track; timeline skipped');
+                $outcome = 'skipped';
                 $this->notify(
                     $queueForRealtime,
                     $project,
@@ -241,7 +309,8 @@ class Videos extends Action
 
             // Appwrite rewrites sheet URLs to preview endpoints, so skip the
             // library-written VTT and render our own from cues().
-            Console::info('Videos worker: encoder=' . $encoder->getName() . ' tiling sprites for video ' . $video->getId());
+            $stage = 'tile';
+            $phaseStart = \microtime(true);
             $sheet = $encoder->tile(
                 $inPath,
                 \rtrim($workspace['outDir'], '/'),
@@ -250,6 +319,12 @@ class Videos extends Action
                 (new Tile())->width(480)->grid(4, 4)->quality(2)->vtt(false)
             );
 
+            $this->phase($telemetry, VideoAction::Timeline->value, 'tile', $phaseStart);
+            Span::add('timeline.sheets', \count($sheet->images()));
+
+            $stage = 'upload';
+            $phaseStart = \microtime(true);
+            $size = 0;
             $timelineDir = $deviceForVideos->getPath($video->getId()) . '/timeline/';
             $urls = [];
 
@@ -259,6 +334,7 @@ class Videos extends Action
                 $data = (new Local('/'))->read($localFile);
                 // Retained bytes. StatsResources sums this column into the videos.storage gauge.
                 $bytes = $data->getSize() ?? (\filesize($localFile) ?: 0);
+                $size += $bytes;
 
                 $preview = $dbForProject->createDocument('videos_timelines', new Document([
                     'videoId' => $video->getId(),
@@ -284,9 +360,27 @@ class Videos extends Action
                 $vttPath = $deviceForVideos->getPath($video->getId() . '/timeline') . '/timeline.vtt';
                 // Retained bytes. StatsResources sums this column into the videos.storage gauge.
                 $bytes = \strlen($vtt);
+                $size += $bytes;
                 $deviceForVideos->write($vttPath, new Stream($vtt), 'text/vtt');
                 $this->persistTimelineVtt($dbForProject, $video, $vttPath, $bytes);
-                Console::info('Uploaded timeline vtt for video ' . $video->getId());
+            }
+
+            $this->phase($telemetry, VideoAction::Timeline->value, 'upload', $phaseStart);
+            Span::add('timeline.size', $size);
+
+            $this->notify(
+                $queueForRealtime,
+                $project,
+                $video,
+                'videos.[videoId].timeline.update',
+                ['videoId' => $video->getId()],
+                $permissions
+            );
+            $outcome = 'ready';
+        } catch (\Throwable $th) {
+            Span::add('error.stage', $stage);
+            if ($th instanceof Runtime) {
+                $this->runtime($telemetry, $th, 'ffmpeg', $stage);
             }
 
             $this->notify(
@@ -297,17 +391,16 @@ class Videos extends Action
                 ['videoId' => $video->getId()],
                 $permissions
             );
-        } catch (\Throwable $th) {
-            $this->notify(
-                $queueForRealtime,
-                $project,
-                $video,
-                'videos.[videoId].timeline.update',
-                ['videoId' => $video->getId()],
-                $permissions
-            );
             throw $th;
         } finally {
+            Span::add('timeline.outcome', $outcome);
+            $this->outcome(
+                $telemetry,
+                VideoAction::Timeline->value,
+                $outcome,
+                $started,
+                $outcome === 'error' ? ['error_stage' => $stage] : []
+            );
             $this->cleanup($workspace['basePath']);
         }
     }
@@ -321,7 +414,8 @@ class Videos extends Action
         Device $deviceForVideos,
         Realtime $queueForRealtime,
         Document $project,
-        VideoMessage $videoMessage
+        VideoMessage $videoMessage,
+        Telemetry $telemetry
     ): void {
         $caption = $videoMessage->caption;
 
@@ -343,6 +437,14 @@ class Videos extends Action
             \uniqid('', true)
         );
         $permissions = $this->sourceReadPermissions($dbForProject, $project, $video);
+        Span::add('caption.code', (string) $caption->getAttribute('code', ''));
+        Span::add('caption.default', (bool) $caption->getAttribute('default', false));
+        Span::add('caption.bucket.id', (string) $caption->getAttribute('bucketId', ''));
+        Span::add('caption.file.id', (string) $caption->getAttribute('fileId', ''));
+        $started = \microtime(true);
+        $stage = 'claim';
+        $outcome = 'error';
+        $conversion = '';
 
         try {
             $caption = $dbForProject->updateDocument(
@@ -364,34 +466,53 @@ class Videos extends Action
                 $permissions
             );
 
+            $stage = 'download';
+            $phaseStart = \microtime(true);
             $file = $this->resolveFile(
                 $dbForProject,
                 $caption->getAttribute('bucketId', ''),
                 $caption->getAttribute('fileId', '')
             );
+            Span::add('caption.source_name', (string) $file->getAttribute('name', ''));
+            Span::add('caption.source_path', (string) $file->getAttribute('path', ''));
+            Span::add('caption.source_mime', (string) $file->getAttribute('mimeType', ''));
+            Span::add('caption.source_size', (int) $file->getAttribute('sizeOriginal', 0));
             $downloaded = $this->download($deviceForFiles, $file, $workspace['inDir']);
             $ext = \strtolower(\pathinfo($downloaded, PATHINFO_EXTENSION));
+            Span::add('caption.source_ext', $ext);
+            $this->phase($telemetry, VideoAction::Caption->value, 'download', $phaseStart);
             $captionPath = $workspace['inDir'] . $caption->getId() . '.vtt';
 
+            $stage = 'convert';
+            $phaseStart = \microtime(true);
             if ($ext === 'srt') {
+                $conversion = 'srt';
                 $this->subripToWebvtt($downloaded, $captionPath);
             } elseif (\in_array($ext, ['vtt', 'webvtt'], true)) {
+                $conversion = 'copy';
                 if (!\copy($downloaded, $captionPath)) {
                     throw new \Exception('Failed to stage WebVTT caption');
                 }
             } else {
                 // text/plain and application/x-subrip without a .srt extension: try
                 // Subrip parsing, then fall back to a straight copy.
+                $conversion = 'srt';
                 try {
                     $this->subripToWebvtt($downloaded, $captionPath);
-                } catch (\Throwable) {
+                } catch (\Throwable $parse) {
+                    $conversion = 'fallback';
+                    Span::add('warning.message', 'SubRip parse failed, stored raw copy: ' . $parse->getMessage());
                     if (!\copy($downloaded, $captionPath)) {
                         throw new \Exception('Failed to stage caption as WebVTT');
                     }
                 }
             }
+            $this->phase($telemetry, VideoAction::Caption->value, 'convert', $phaseStart);
+            Span::add('caption.conversion', $conversion);
 
-            $this->persistCaptionVtt(
+            $stage = 'persist';
+            $phaseStart = \microtime(true);
+            $caption = $this->persistCaptionVtt(
                 $dbForProject,
                 $deviceForVideos,
                 $video,
@@ -401,7 +522,11 @@ class Videos extends Action
                 $project,
                 $permissions
             );
+            $this->phase($telemetry, VideoAction::Caption->value, 'persist', $phaseStart);
+            Span::add('caption.size', (int) $caption->getAttribute('size', 0));
+            $outcome = 'ready';
         } catch (\Throwable $th) {
+            Span::add('error.stage', $stage);
             $caption = $dbForProject->updateDocument(
                 'videos_captions',
                 $caption->getId(),
@@ -423,6 +548,15 @@ class Videos extends Action
 
             throw $th;
         } finally {
+            Span::add('caption.outcome', $outcome);
+            Span::add('caption.status', (string) $caption->getAttribute('status', ''));
+            $this->outcome(
+                $telemetry,
+                VideoAction::Caption->value,
+                $outcome,
+                $started,
+                $outcome === 'error' ? ['error_stage' => $stage] : []
+            );
             $this->cleanup($workspace['basePath']);
         }
     }
@@ -440,7 +574,8 @@ class Videos extends Action
         Context $usage,
         UsagePublisher $publisherForUsage,
         Document $project,
-        VideoMessage $videoMessage
+        VideoMessage $videoMessage,
+        Telemetry $telemetry
     ): void {
         $rendition = $videoMessage->rendition;
         $profile = $videoMessage->profile;
@@ -466,12 +601,22 @@ class Videos extends Action
             : (string) $rendition->getAttribute('output', Base::OUTPUT_HLS);
         $permissions = $this->sourceReadPermissions($dbForProject, $project, $videoMessage->video);
         $claimed = false;
+        $codec = Base::normalizeCodec(
+            $rendition->getAttribute('codec')
+                ?: $profile->getAttribute('codec')
+        );
+        $stage = 'claim';
+        $outcome = 'error';
+        $status = '';
+        $last = null;
 
         try {
             // Every rendition owns exactly one Encode message, so a message whose
             // row already left `pending` is a stale redelivery and is dropped here.
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             if ($current->isEmpty() || $current->getAttribute('status') !== Base::STATUS_PENDING) {
+                $outcome = 'duplicate';
+                $status = (string) $current->getAttribute('status', '');
                 return;
             }
 
@@ -491,11 +636,18 @@ class Videos extends Action
                 ]
             );
             if ($updated === 0) {
+                // A sibling coroutine won the claim.
+                $outcome = 'duplicate';
+                $status = Base::STATUS_STARTED;
                 return;
             }
 
             $rendition = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             $claimed = true;
+            Span::add('rendition.name', (string) $rendition->getAttribute('name', ''));
+            Span::add('rendition.output', $output);
+            Span::add('rendition.codec', $codec);
+            $stage = 'download';
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -522,15 +674,23 @@ class Videos extends Action
                 $workspace,
                 $queueForRealtime,
                 $project,
-                $permissions
+                $permissions,
+                $telemetry,
+                VideoAction::Encode->value,
+                $stage
             );
 
-            $ffmpeg = new FFmpeg(threads: 4);
-            $packager = new Packager($ffmpeg);
+            // Silent reporters: failures reach the span through the exception,
+            // so the library must not print its own copy to stdout.
+            $probe = new FFprobe();
+            $probe->setReporter(new Silent());
+            $packager = new Packager(new FFmpeg(threads: self::THREADS), probe: $probe, reporter: new Silent());
 
+            $stage = 'probe';
             if (!$packager->valid($inPath)) {
                 throw new \Exception('Not a valid media file: ' . $inPath);
             }
+            $stage = 'encode';
 
             $representation = new Representation(
                 width: (int) $profile->getAttribute('width'),
@@ -538,16 +698,17 @@ class Videos extends Action
                 video: (int) $profile->getAttribute('videoBitRate'),
                 audio: \max(1, (int) $profile->getAttribute('audioBitRate')),
             );
+            Span::add('rendition.width', (int) $profile->getAttribute('width'));
+            Span::add('rendition.height', (int) $profile->getAttribute('height'));
+            Span::add('rendition.video_bitrate', (int) $profile->getAttribute('videoBitRate'));
+            Span::add('rendition.audio_bitrate', (int) $profile->getAttribute('audioBitRate'));
+            Span::add('encoder.name', $packager->getName());
+            Span::add('encoder.threads', self::THREADS);
 
             Console::info(
                 'Encoding video ' . $video->getId()
                 . ' as ' . $rendition->getAttribute('name')
                 . ' (' . $output . ')'
-            );
-
-            $codec = Base::normalizeCodec(
-                $rendition->getAttribute('codec')
-                    ?: $profile->getAttribute('codec')
             );
 
             // Apply loudnorm only when the probe found an audio stream.
@@ -583,26 +744,24 @@ class Videos extends Action
                 default => (new Hls())->segment(self::SEGMENT_DURATION)->manifests(false),
             };
 
-            Console::info(
-                'Videos worker: packager=' . $packager->getName()
-                . ' output=' . $output
-                . ' video=' . $video->getId()
-                . ' rendition=' . $rendition->getId()
-            );
-
             $lastProgress = -1;
             // Once the row leaves `started` (sweeper abort, error park, e2e seed),
             // never resume DB writes for this pack — even if status is set back to
             // `started` before ffmpeg exits.
             $halted = false;
             $lastStatusCheck = 0.0;
+            $phaseStart = \microtime(true);
             $package = $packager
                 ->open($inPath)
                 ->format($format)
                 ->add($representation)
                 ->output($target)
-                ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$lastStatusCheck) {
-                    if ($halted || !$progress instanceof Progress) {
+                ->on(Packager::PROGRESS, function (mixed $progress) use ($dbForProject, $queueForRealtime, $project, $permissions, &$rendition, &$lastProgress, &$halted, &$lastStatusCheck, &$last) {
+                    if (!$progress instanceof Progress) {
+                        return;
+                    }
+                    $last = $progress;
+                    if ($halted) {
                         return;
                     }
 
@@ -646,12 +805,20 @@ class Videos extends Action
                         $permissions
                     );
                 })
-                ->on(Packager::LOG, function (mixed $line) {
-                    if (\is_string($line) && \trim($line) !== '') {
-                        Console::info('Videos worker: packager: ' . \trim($line));
-                    }
-                })
                 ->pack(\rtrim($workspace['outDir'], '/'));
+            $this->phase($telemetry, VideoAction::Encode->value, 'encode', $phaseStart);
+            if ($last !== null && $last->speed > 0) {
+                $this->record(
+                    $telemetry->createHistogram(
+                        'worker.videos.encode.speed',
+                        '1',
+                        'Encode speed as a multiple of realtime',
+                        ['ExplicitBucketBoundaries' => self::SPEED_BUCKETS]
+                    ),
+                    $last->speed,
+                    ['codec' => $codec, 'output' => $output]
+                );
+            }
 
             // Maintenance (or an e2e park) may have moved the row out of
             // `started` while ffmpeg was still running — stop before ending.
@@ -661,6 +828,8 @@ class Videos extends Action
                 || $current->isEmpty()
                 || $current->getAttribute('status') !== Base::STATUS_STARTED
             ) {
+                $outcome = 'halted';
+                $status = (string) $current->getAttribute('status', '');
                 return;
             }
 
@@ -668,6 +837,8 @@ class Videos extends Action
                 . '/' . $rendition->getAttribute('name')
                 . '-' . $rendition->getId() . '/';
 
+            $stage = 'persist';
+            $phaseStart = \microtime(true);
             // Drop any leftover segments from a previous attempt at the same id.
             // deleteDocuments paginates internally, so a long rendition's >1000
             // segment rows (a ~100-minute HLS ladder at 4s segments) are all
@@ -683,12 +854,17 @@ class Videos extends Action
                 $path,
                 $output
             );
+            $this->phase($telemetry, VideoAction::Encode->value, 'persist', $phaseStart);
+            Span::add('rendition.segments', \count($package->segments()));
+            Span::add('rendition.files', \count($package->files()));
 
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             if (
                 $current->isEmpty()
                 || $current->getAttribute('status') !== Base::STATUS_STARTED
             ) {
+                $outcome = 'halted';
+                $status = (string) $current->getAttribute('status', '');
                 return;
             }
 
@@ -716,6 +892,8 @@ class Videos extends Action
 
             Console::info('Rendition ' . $rendition->getId() . ' conversion done');
 
+            $stage = 'upload';
+            $phaseStart = \microtime(true);
             $storageBytes = $this->uploadFiles(
                 $package->files(),
                 $path,
@@ -756,11 +934,17 @@ class Videos extends Action
                 }
             );
 
+            $this->phase($telemetry, VideoAction::Encode->value, 'upload', $phaseStart);
+            Span::add('rendition.size', $storageBytes);
+
+            $stage = 'finalize';
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             if (
                 $current->isEmpty()
                 || !\in_array($current->getAttribute('status'), [Base::STATUS_ENDED, Base::STATUS_UPLOADING], true)
             ) {
+                $outcome = 'halted';
+                $status = (string) $current->getAttribute('status', '');
                 return;
             }
 
@@ -787,6 +971,8 @@ class Videos extends Action
                 ],
                 $permissions
             );
+            $outcome = 'ready';
+            $status = Base::STATUS_READY;
         } catch (\Throwable $th) {
             $current = $dbForProject->getDocument('videos_renditions', $rendition->getId());
             // Do not overwrite aborted/error parks from maintenance or e2e seeding.
@@ -822,17 +1008,38 @@ class Videos extends Action
                     ],
                     $permissions
                 );
+                $status = Base::STATUS_ERROR;
             }
 
-            Console::error(
-                'Error encoding video ' . $videoMessage->video->getId() . PHP_EOL
-                . 'Message: ' . $th->getMessage() . PHP_EOL
-                . 'File: ' . $th->getFile() . PHP_EOL
-                . 'Line: ' . $th->getLine()
-            );
+            // The harness finishes the span with this exception, so the exporter
+            // adds error.type/message/file/line; only the stage and ffmpeg detail
+            // are added here.
+            Span::add('error.stage', $stage);
+            if ($th instanceof Runtime) {
+                $this->runtime($telemetry, $th, 'ffmpeg', $stage);
+            }
 
             throw $th;
         } finally {
+            Span::add('rendition.outcome', $outcome);
+            Span::add('rendition.status', $status);
+            Span::add('rendition.claimed', $claimed);
+            if ($outcome === 'halted') {
+                Span::add('rendition.halt_status', $status);
+            }
+            if ($last !== null) {
+                Span::add('encode.progress', \round($last->percent, 2));
+                Span::add('encode.speed', $last->speed);
+                Span::add('encode.fps', $last->fps);
+            }
+            $this->outcome(
+                $telemetry,
+                VideoAction::Encode->value,
+                $outcome,
+                $startedAt,
+                ['output' => $output, 'codec' => $codec] + ($outcome === 'error' ? ['error_stage' => $stage] : [])
+            );
+
             // Only a run that actually claimed the rendition (pending -> started)
             // is billable; duplicate messages and re-queued downloads are no-ops.
             if ($claimed) {
@@ -943,7 +1150,6 @@ class Videos extends Action
         // Retained bytes. StatsResources sums this column into the videos.storage gauge.
         $bytes = $data->getSize() ?? (\filesize($vttPath) ?: 0);
 
-        Console::info('Uploading ' . $fileName);
         $deviceForVideos->write(
             $fullPath,
             $data,
@@ -996,14 +1202,18 @@ class Videos extends Action
         Encoder $encoder,
         Realtime $queueForRealtime,
         Document $project,
-        array $permissions
+        array $permissions,
+        Telemetry $telemetry
     ): bool {
-        Console::info('Videos worker: extracting embedded captions for video ' . $video->getId());
-
         try {
             $info = $encoder->probe($inPath);
         } catch (\Throwable $th) {
             Console::warning('Videos worker: caption probe failed for ' . $video->getId() . ': ' . $th->getMessage());
+            Span::add('captions.error.stage', 'probe');
+            Span::add('warning.message', 'Caption probe failed: ' . $th->getMessage());
+            if ($th instanceof Runtime) {
+                $this->runtime($telemetry, $th, 'captions.error', 'probe');
+            }
             return false;
         }
 
@@ -1018,9 +1228,20 @@ class Videos extends Action
             . ' streams=[' . \implode(', ', $streams) . ']'
         );
 
+        $textStreams = 0;
+        foreach ($tracks as $track) {
+            if (\in_array(\strtolower((string) ($track->codec ?? '')), self::TEXT_CAPTION_CODECS, true)) {
+                $textStreams++;
+            }
+        }
+        Span::add('captions.streams', \count($tracks));
+        Span::add('captions.text_streams', $textStreams);
+
+        $extracted = $telemetry->createCounter('worker.videos.captions.extracted', null, 'Embedded caption tracks by extraction result');
         $assignedDefault = false;
         $registered = 0;
         $skipped = 0;
+        $failed = 0;
         $retry = false;
         $used = [];
 
@@ -1043,6 +1264,7 @@ class Videos extends Action
                     . $track->index . ' (' . ($track->codec ?? 'unknown') . ') on video '
                     . $video->getId()
                 );
+                $this->record($extracted, 1, ['result' => 'skipped_non_text', 'codec' => $codec !== '' ? $codec : 'unknown']);
                 $skipped++;
                 continue;
             }
@@ -1061,6 +1283,7 @@ class Videos extends Action
                 && $existing->getAttribute('status') === Base::STATUS_READY
                 && ($existing->getAttribute('path') ?? '') !== ''
             ) {
+                $this->record($extracted, 1, ['result' => 'reused', 'codec' => $codec]);
                 $registered++;
                 continue;
             }
@@ -1068,18 +1291,24 @@ class Videos extends Action
             $vttPath = \rtrim($outDir, '/') . '/sub_' . $track->index . '.vtt';
 
             try {
-                Console::info(
-                    'Videos worker: ffmpeg extract map 0:' . $track->index
-                    . ' -> webvtt for video ' . $video->getId()
-                );
-                $this->ffmpegExtractCaption($inPath, $track->index, $vttPath);
+                $encoder->subtitle($inPath, $track->index, $vttPath, self::SUBTITLE_TIMEOUT);
             } catch (\Throwable $th) {
                 Console::warning(
                     'Videos worker: failed extracting caption stream '
                     . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
                 );
-                $skipped++;
+                $this->record($extracted, 1, ['result' => 'failed', 'codec' => $codec]);
+                $failed++;
                 $retry = true;
+                if ($failed === 1) {
+                    Span::add('captions.error.stage', 'extract');
+                    Span::add('captions.error.stream', $track->index);
+                    Span::add('captions.error.codec', $codec);
+                    Span::add('warning.message', 'Embedded caption extraction incomplete: stream ' . $track->index . ' (' . $codec . '): ' . $th->getMessage());
+                    if ($th instanceof Runtime) {
+                        $this->runtime($telemetry, $th, 'captions.error', 'extract');
+                    }
+                }
                 continue;
             }
 
@@ -1088,6 +1317,7 @@ class Videos extends Action
                     'Videos worker: empty VTT for caption stream '
                     . $track->index . ' on video ' . $video->getId()
                 );
+                $this->record($extracted, 1, ['result' => 'skipped_empty', 'codec' => $codec]);
                 $skipped++;
                 continue;
             }
@@ -1141,6 +1371,7 @@ class Videos extends Action
                     $permissions
                 );
                 $registered++;
+                $this->record($extracted, 1, ['result' => 'registered', 'codec' => $codec]);
                 Console::info(
                     'Videos worker: registered embedded caption ' . $caption->getId()
                     . ' code=' . $code
@@ -1154,8 +1385,15 @@ class Videos extends Action
                     'Videos worker: failed registering embedded caption stream '
                     . $track->index . ' on video ' . $video->getId() . ': ' . $th->getMessage()
                 );
-                $skipped++;
+                $this->record($extracted, 1, ['result' => 'failed', 'codec' => $codec]);
+                $failed++;
                 $retry = true;
+                if ($failed === 1) {
+                    Span::add('captions.error.stage', 'persist');
+                    Span::add('captions.error.stream', $track->index);
+                    Span::add('captions.error.codec', $codec);
+                    Span::add('warning.message', 'Embedded caption registration failed: stream ' . $track->index . ' (' . $codec . '): ' . $th->getMessage());
+                }
             }
         }
 
@@ -1200,9 +1438,14 @@ class Videos extends Action
             'Videos worker: embedded caption extract done for video ' . $video->getId()
             . ' registered=' . $registered
             . ' skipped=' . $skipped
+            . ' failed=' . $failed
             . ' streams=' . \count($tracks)
             . ' retry=' . ($retry ? 'yes' : 'no')
         );
+        Span::add('captions.registered', $registered);
+        Span::add('captions.skipped', $skipped);
+        Span::add('captions.failed', $failed);
+        Span::add('captions.retry', $retry);
 
         return !$retry;
     }
@@ -1287,27 +1530,6 @@ class Videos extends Action
     }
 
     /**
-     * Extract one caption stream to WebVTT with the container ffmpeg binary.
-     */
-    private function ffmpegExtractCaption(string $inPath, int $streamIndex, string $outPath): void
-    {
-        $stdout = '';
-        $stderr = '';
-        $command = 'ffmpeg -y -i ' . \escapeshellarg($inPath)
-            . ' -map 0:' . $streamIndex
-            . ' -c:s webvtt '
-            . \escapeshellarg($outPath);
-
-        Console::info('Videos worker: ffmpeg command: ' . $command);
-
-        $code = Console::execute($command, '', $stdout, $stderr, 60);
-
-        if ($code !== 0) {
-            throw new \Exception(\trim($stderr) !== '' ? \trim($stderr) : 'ffmpeg exit ' . $code);
-        }
-    }
-
-    /**
      * Per-job directories under `videos-tmp/jobs/{stamp}~…~{type}-{jobId}/in|out/`.
      *
      * Encode passes the rendition id so each workspace is isolated. Call only
@@ -1334,6 +1556,8 @@ class Videos extends Action
             throw new \Exception('Failed to create temp output directory');
         }
 
+        Span::add('workspace.path', $basePath);
+
         return [
             'basePath' => $basePath,
             'inDir' => $inDir,
@@ -1358,21 +1582,36 @@ class Videos extends Action
         array $workspace,
         Realtime $queueForRealtime,
         Document $project,
-        array $permissions
+        array $permissions,
+        Telemetry $telemetry,
+        string $action,
+        string &$stage
     ): array {
         if ($video->isEmpty()) {
             throw new \Exception('Video not found');
         }
 
+        $stage = 'download';
+        $phaseStart = \microtime(true);
         $file = $this->resolveFile(
             $dbForProject,
             $video->getAttribute('bucketId', ''),
             $video->getAttribute('fileId', '')
         );
+        Span::add('source.name', (string) $file->getAttribute('name', ''));
+        Span::add('source.path', (string) $file->getAttribute('path', ''));
+        Span::add('source.mime', (string) $file->getAttribute('mimeType', ''));
+        Span::add('source.size', (int) $file->getAttribute('sizeOriginal', 0));
+        Span::add('source.encrypted', !empty($file->getAttribute('openSSLCipher')));
+        Span::add('source.compression', (string) $file->getAttribute('algorithm', Compression::NONE));
         $inPath = $this->download($deviceForFiles, $file, $workspace['inDir']);
+        $this->phase($telemetry, $action, 'download', $phaseStart);
 
         if ((int) $video->getAttribute('duration', 0) <= 0) {
-            $video = $this->probe($dbForProject, $video, $file, $inPath);
+            $stage = 'probe';
+            $phaseStart = \microtime(true);
+            $video = $this->probe($dbForProject, $video, $inPath);
+            $this->phase($telemetry, $action, 'probe', $phaseStart);
             $this->notify(
                 $queueForRealtime,
                 $project,
@@ -1382,6 +1621,14 @@ class Videos extends Action
                 $permissions
             );
         }
+
+        Span::add('source.format', (string) $video->getAttribute('format', ''));
+        Span::add('source.duration', (int) $video->getAttribute('duration', 0));
+        Span::add('source.width', (int) $video->getAttribute('width', 0));
+        Span::add('source.height', (int) $video->getAttribute('height', 0));
+        Span::add('source.video_codec', (string) $video->getAttribute('videoCodec', ''));
+        Span::add('source.audio_codec', (string) $video->getAttribute('audioCodec', ''));
+        Span::add('source.fps', (string) $video->getAttribute('videoFrameRate', ''));
 
         if (!$video->getAttribute('captionsExtracted', false)) {
             // Claim before extract so two jobs cannot register the same tracks.
@@ -1396,6 +1643,8 @@ class Videos extends Action
             );
 
             if ($claimed > 0) {
+                $stage = 'captions';
+                $phaseStart = \microtime(true);
                 $extracted = false;
                 try {
                     $extracted = $this->extractEmbeddedCaptions(
@@ -1407,13 +1656,16 @@ class Videos extends Action
                         $this->encoder(),
                         $queueForRealtime,
                         $project,
-                        $permissions
+                        $permissions,
+                        $telemetry
                     );
                 } catch (\Throwable $th) {
                     Console::warning(
                         'Videos worker: embedded caption extract failed for '
                         . $video->getId() . ': ' . $th->getMessage()
                     );
+                    Span::add('captions.error.stage', 'extract');
+                    Span::add('warning.message', 'Embedded caption extract failed: ' . $th->getMessage());
                 }
 
                 if (!$extracted) {
@@ -1428,6 +1680,8 @@ class Videos extends Action
                 }
 
                 $video = $dbForProject->getDocument('videos', $video->getId());
+                Span::add('captions.retry', !$extracted);
+                $this->phase($telemetry, $action, 'captions', $phaseStart);
             }
         }
 
@@ -1447,10 +1701,7 @@ class Videos extends Action
 
         if ($code !== 0) {
             Console::error('Failed removing files from [' . $basePath . ']: ' . $stderr);
-            return;
         }
-
-        Console::info('Removing files from [' . $basePath . ']');
     }
 
     private function resolveFile(Database $dbForProject, string $bucketId, string $fileId): Document
@@ -1479,8 +1730,6 @@ class Videos extends Action
         $fullPath = $file->getAttribute('path', '');
         $basename = \basename($fullPath);
         $localPath = $inDir . $basename;
-
-        Console::info('Downloading file: ' . $basename . ' to ' . $inDir);
 
         if (!$deviceForFiles->exists($fullPath)) {
             throw new \Exception('Source file missing from storage: ' . $fullPath);
@@ -1529,20 +1778,11 @@ class Videos extends Action
     private function probe(
         Database $dbForProject,
         Document $video,
-        Document $file,
         string $inPath,
         ?Encoder $encoder = null
     ): Document {
         $info = ($encoder ?? $this->encoder())->probe($inPath);
         $attrs = $this->attributes($info);
-
-        Console::info(
-            'Input video id: ' . $video->getId() . PHP_EOL
-            . 'Input name: ' . $file->getAttribute('name') . PHP_EOL
-            . 'Input width: ' . ($attrs['width'] ?? 0) . ' px' . PHP_EOL
-            . 'Input height: ' . ($attrs['height'] ?? 0) . ' px' . PHP_EOL
-            . 'Input duration: ' . (($attrs['duration'] ?? 0) / 1000) . ' Sec'
-        );
 
         return $dbForProject->updateDocument(
             'videos',
@@ -1780,7 +2020,6 @@ class Videos extends Action
             $bytes += $data->getSize() ?? (\filesize($localPath) ?: 0);
             $fileName = \basename($localPath);
 
-            Console::info('Uploading ' . $fileName);
             $deviceForVideos->write(
                 $remoteDir . $fileName,
                 $data,
@@ -1797,7 +2036,92 @@ class Videos extends Action
 
     private function encoder(): Encoder
     {
-        return new Encoder(new FFmpeg(threads: 4));
+        // Silent reporters: failures reach the span through the exception, so
+        // the library must not print its own copy to stdout.
+        $probe = new FFprobe();
+        $probe->setReporter(new Silent());
+
+        return new Encoder(new FFmpeg(threads: self::THREADS), $probe, new Silent());
+    }
+
+    /**
+     * Telemetry must never fail a job.
+     *
+     * @param array<string, string|int|float|bool> $attributes
+     */
+    private function record(Counter|UpDownCounter|Histogram $instrument, float|int $value, array $attributes = []): void
+    {
+        try {
+            if ($instrument instanceof Histogram) {
+                $instrument->record($value, $attributes);
+            } else {
+                $instrument->add($value, $attributes);
+            }
+        } catch (\Throwable) {
+            // Metrics are best-effort.
+        }
+    }
+
+    /**
+     * Closes a timed phase: timings.{phase} on the span and one histogram sample.
+     */
+    private function phase(Telemetry $telemetry, string $action, string $phase, float $start): void
+    {
+        $seconds = \round(\microtime(true) - $start, 3);
+        Span::add('timings.' . $phase, $seconds);
+        $this->record(
+            $telemetry->createHistogram(
+                'worker.videos.phase.duration',
+                's',
+                'Videos job phase duration',
+                ['ExplicitBucketBoundaries' => self::PHASE_BUCKETS]
+            ),
+            $seconds,
+            ['action' => $action, 'phase' => $phase]
+        );
+    }
+
+    /**
+     * One jobs count and one duration sample per message.
+     *
+     * @param array<string, string> $attributes
+     */
+    private function outcome(Telemetry $telemetry, string $action, string $outcome, float $start, array $attributes = []): void
+    {
+        $labels = ['action' => $action, 'outcome' => $outcome];
+        $this->record(
+            $telemetry->createCounter('worker.videos.jobs', null, 'Videos jobs by action and outcome'),
+            1,
+            $labels + $attributes
+        );
+        $this->record(
+            $telemetry->createHistogram(
+                'worker.videos.job.duration',
+                's',
+                'Videos job duration',
+                ['ExplicitBucketBoundaries' => self::JOB_BUCKETS]
+            ),
+            \round(\microtime(true) - $start, 3),
+            $labels
+        );
+    }
+
+    /**
+     * Copies a failed ffmpeg or ffprobe run onto the span under {prefix}.* and
+     * counts the exit. The library reports a timeout only through its message.
+     */
+    private function runtime(Telemetry $telemetry, Runtime $runtime, string $prefix, string $purpose): void
+    {
+        $timedOut = \str_contains($runtime->getMessage(), 'timed out after');
+        Span::add($prefix . '.exit_code', $runtime->getCode());
+        Span::add($prefix . '.timed_out', $timedOut);
+        Span::add($prefix . '.command', \substr(\implode(' ', $runtime->command()), 0, 2048));
+        Span::add($prefix . '.stderr', \substr($runtime->output(), -4096));
+        $this->record(
+            $telemetry->createCounter('worker.videos.ffmpeg.exit', null, 'Failed ffmpeg and ffprobe runs by purpose and exit code'),
+            1,
+            ['purpose' => $purpose, 'exit_code' => (string) $runtime->getCode(), 'timed_out' => $timedOut ? 'true' : 'false']
+        );
     }
 
     /**

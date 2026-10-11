@@ -39,6 +39,7 @@ use Utopia\Span\Span;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
 use Utopia\System\System;
+use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Usage\Tenant as UsageTenant;
 
 use function Swoole\Coroutine\batch;
@@ -78,7 +79,8 @@ class Deletes extends Action
             ->inject('publisherForDeletes')
             ->inject('publisherForUsage')
             ->inject('bus')
-            ->inject('executionStore');
+            ->inject('executionStore')
+            ->inject('telemetry');
 
         if (System::getEnv('_APP_EDITION', 'self-hosted') === 'self-hosted') {
             $this
@@ -110,6 +112,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        Telemetry $telemetry,
         UsageConnection $usageConnection,
     ): void {
         $payload = $message->getPayload();
@@ -144,6 +147,7 @@ class Deletes extends Action
             $publisherForUsage,
             $bus,
             $executionStore,
+            $telemetry,
         );
 
         // Sweep rows that landed between the purge and the delete. The
@@ -238,6 +242,7 @@ class Deletes extends Action
         UsagePublisher $publisherForUsage,
         Bus $bus,
         Store $executionStore,
+        Telemetry $telemetry,
     ): void {
         $payload = $message->getPayload();
 
@@ -353,7 +358,7 @@ class Deletes extends Action
                 $this->deleteOldCSVExports($dbForPlatform, $deviceForFiles);
                 break;
             case DELETE_TYPE_VIDEOS_TMP:
-                $this->deleteOldVideoTmp();
+                $this->deleteOldVideoTmp($telemetry);
                 break;
             case DELETE_TYPE_MAINTENANCE:
                 $this->deleteExpiredTargets($project, $getProjectDB);
@@ -366,7 +371,7 @@ class Deletes extends Action
                 $this->deleteExpiredPushLedger($project, $getProjectDB);
                 $this->deleteOldDeployments($publisherForDeletes, $project, $getProjectDB);
                 $this->updateProcessingMigrations($project, $getProjectDB);
-                $this->abortStaleRenditions($project, $getProjectDB);
+                $this->abortStaleRenditions($project, $getProjectDB, $telemetry);
                 break;
             case DELETE_TYPE_REPORT:
                 $this->deleteReport($dbForPlatform, $project, $document);
@@ -574,7 +579,7 @@ class Deletes extends Action
      * Encode already stops when the row leaves `started` and will not overwrite
      * `aborted`, so a live ffmpeg that outlives this pass still settles safely.
      */
-    private function abortStaleRenditions(Document $project, callable $getProjectDB): void
+    private function abortStaleRenditions(Document $project, callable $getProjectDB, Telemetry $telemetry): void
     {
         if ($project->getId() === 'console') {
             return;
@@ -589,7 +594,7 @@ class Deletes extends Action
         $date = DateTime::addSeconds(new \DateTime(), -1 * $retention);
 
         $queries = [
-            Query::select($this->selects),
+            Query::select([...$this->selects, 'status', 'progress']),
             Query::equal('status', [
                 VideosBase::STATUS_PENDING,
                 VideosBase::STATUS_STARTED,
@@ -599,21 +604,45 @@ class Deletes extends Action
             Query::lessThanEqual('$updatedAt', $date),
         ];
 
+        $aborted = 0;
+        $failed = 0;
+
         $this->listByGroup(
             'videos_renditions',
             $queries,
             $dbForProject,
-            function (Document $rendition) use ($dbForProject, $project) {
+            function (Document $rendition) use ($dbForProject, $project, &$aborted, &$failed) {
                 try {
                     $dbForProject->updateDocument('videos_renditions', $rendition->getId(), new Document([
                         'status' => VideosBase::STATUS_ABORTED,
                         'endedAt' => DateTime::now(),
                     ]));
+                    $aborted++;
+                    $age = \max(0, \time() - (int) \strtotime((string) $rendition->getUpdatedAt()));
+                    Console::info(
+                        'Aborted stale rendition ' . $rendition->getId()
+                        . ' for project ' . $project->getId()
+                        . ' status=' . $rendition->getAttribute('status', '')
+                        . ' progress=' . $rendition->getAttribute('progress', '0')
+                        . ' age=' . $age . 's'
+                    );
                 } catch (Throwable $th) {
+                    $failed++;
                     Console::error("Failed to abort stale rendition {$rendition->getId()} for project {$project->getId()}: " . $th->getMessage());
                 }
             }
         );
+
+        Span::add('videos.renditions.aborted', $aborted);
+        Span::add('videos.renditions.abort_failed', $failed);
+
+        if ($aborted > 0) {
+            try {
+                $telemetry->createCounter('worker.videos.renditions.aborted', null, 'Renditions parked by the maintenance sweep')->add($aborted);
+            } catch (Throwable) {
+                // Metrics are best-effort.
+            }
+        }
     }
 
     private function deleteOldDeployments(DeletePublisher $publisherForDeletes, Document $project, callable $getProjectDB): void
@@ -1413,7 +1442,7 @@ class Deletes extends Action
      * Cutoff comes from `_APP_MAINTENANCE_RETENTION_VIDEOS_TMP` (default
      * VideosBase::TMP_TTL, 24 hours).
      */
-    private function deleteOldVideoTmp(): void
+    private function deleteOldVideoTmp(Telemetry $telemetry): void
     {
         $root = VideosBase::tmpJobsRoot();
         $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
@@ -1429,10 +1458,16 @@ class Deletes extends Action
         $cutoff = \gmdate('YmdHi', \time() - $retention);
         Console::info('Deleting video tmp jobs older than ' . $cutoff);
 
+        $scanned = 0;
+        $removed = 0;
+        $failed = 0;
+
         foreach (\scandir($root) ?: [] as $name) {
             if ($name[0] === '.') {
                 continue;
             }
+
+            $scanned++;
 
             if (!VideosBase::jobExpired($name, $cutoff)) {
                 continue;
@@ -1448,11 +1483,25 @@ class Deletes extends Action
             $code = Console::execute('rm -rf ' . \escapeshellarg($path), '', $stdout, $stderr, 30);
 
             if ($code !== 0) {
+                $failed++;
                 Console::error('Failed removing video tmp [' . $path . ']: ' . $stderr);
                 continue;
             }
 
-            Console::info('Removing video tmp [' . $path . ']');
+            $removed++;
+            Console::info('Removed video tmp [' . $path . ']');
+        }
+
+        Span::add('videos.tmp.scanned', $scanned);
+        Span::add('videos.tmp.removed', $removed);
+        Span::add('videos.tmp.failed', $failed);
+
+        if ($removed > 0) {
+            try {
+                $telemetry->createCounter('worker.videos.tmp.removed', null, 'Expired video scratch directories removed by the maintenance sweep')->add($removed);
+            } catch (Throwable) {
+                // Metrics are best-effort.
+            }
         }
     }
 
