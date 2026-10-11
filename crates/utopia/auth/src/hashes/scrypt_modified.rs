@@ -3,7 +3,6 @@
 use aes::cipher::{KeyIvInit, StreamCipher};
 use php_std::encoding::{base64_decode, base64_encode, hex2bin};
 use php_std::mb::mb_scrub;
-use php_std::pcre::{Value, preg_match_bare};
 
 use super::hash_plumbing;
 use super::scrypt::scrypt;
@@ -30,10 +29,14 @@ impl Default for ScryptModified {
     }
 }
 
-const BASE64: &[u8] = b"/^[A-Za-z0-9+\\/]+={0,2}$/";
-
+/// `preg_match('/^[A-Za-z0-9+\/]+={0,2}$/', $value) === 1`: base64
+/// characters, then at most two `=`. Without `/D`, `$` also matches before
+/// one final newline.
 fn is_base64(value: &[u8]) -> bool {
-    matches!(preg_match_bare(BASE64, value), Ok(p) if p.value == Value::Int(1))
+    let body = value.strip_suffix(b"\n").unwrap_or(value);
+    let digits = body.iter().take_while(|&&b| b.is_ascii_alphanumeric() || b == b'+' || b == b'/').count();
+    let padding = &body[digits..];
+    digits > 0 && padding.len() <= 2 && padding.iter().all(|&b| b == b'=')
 }
 
 impl ScryptModified {
@@ -130,5 +133,28 @@ impl Hash for ScryptModified {
     /// Whether hashing `value` gives `hash`, compared in constant time.
     fn verify(&self, value: &[u8], hash: &[u8]) -> Result<bool, Error> {
         Ok(hash_equals(hash, &self.hash(value)?))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use php_std::pcre::{Value, preg_match_bare};
+
+    use super::is_base64;
+
+    #[test]
+    fn base64_check_matches_the_pattern() {
+        const PIECES: [&[u8]; 10] = [b"", b"a", b"Z", b"0", b"+", b"/", b"=", b"\n", b"-", b"\xff"];
+        let mut seed = 0x9e37_79b9_7f4a_7c15_u64;
+        for _ in 0..50_000 {
+            seed ^= seed << 13;
+            seed ^= seed >> 7;
+            seed ^= seed << 17;
+            let value: Vec<u8> =
+                (0..seed % 7).flat_map(|i| PIECES[((seed >> (i * 4)) % 10) as usize]).copied().collect();
+            let php =
+                matches!(preg_match_bare(br"/^[A-Za-z0-9+\/]+={0,2}$/", &value), Ok(p) if p.value == Value::Int(1));
+            assert_eq!(is_base64(&value), php, "{value:?}");
+        }
     }
 }

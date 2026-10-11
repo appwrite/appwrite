@@ -205,3 +205,38 @@ fn strings() {
     assert!(Phone { allow_empty: false, normalize: true }.is_valid(&json!(" 1234567")));
     assert!(Wildcard.is_valid(&json!({})));
 }
+
+/// The native checks against the patterns PHP runs, on generated strings.
+#[test]
+fn native_patterns_match_php() {
+    use crate::text::{is_identifier, preg_matches};
+
+    const PIECES: [&str; 14] = ["", "a", "F", "g", "0", "1", "9", "_", "+", " ", "\n", "%2B", "12345", "é"];
+    let mut seed = 0x2545_f491_4f6c_dd1d_u64;
+    let mut next = |n: usize| {
+        seed ^= seed << 13;
+        seed ^= seed >> 7;
+        seed ^= seed << 17;
+        (seed % n as u64) as usize
+    };
+    let (phone, normalized) = (Phone::default(), Phone { normalize: true, ..Phone::default() });
+    for _ in 0..50_000 {
+        let n = next(8);
+        let s: String = (0..n).map(|_| PIECES[next(PIECES.len())]).collect();
+        let b = s.as_bytes();
+        let value = json!(s);
+        assert_eq!(is_identifier(b), preg_matches(br"/^[A-Za-z_]\w*$/D", b), "{s:?}");
+        assert_eq!(HexColor.is_valid(&value), preg_matches(b"/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/", b), "{s:?}");
+        assert_eq!(phone.is_valid(&value), preg_matches(br"/^\+[1-9]\d{6,14}$/", b), "{s:?}");
+        let decoded = php_std::encoding::rawurldecode(b);
+        let expected = if preg_matches(br"/^ [1-9]\d{6,14}$/", &decoded) {
+            [b"+".as_slice(), &decoded[1..]].concat()
+        } else if !decoded.is_empty() && !decoded.starts_with(b"+") && preg_matches(br"/^[1-9]\d{6,14}$/", &decoded) {
+            [b"+".as_slice(), &decoded].concat()
+        } else {
+            decoded
+        };
+        assert_eq!(Phone::normalize(b), expected, "{s:?}");
+        assert_eq!(normalized.is_valid(&value), preg_matches(br"/^\+[1-9]\d{6,14}$/", &expected), "{s:?}");
+    }
+}

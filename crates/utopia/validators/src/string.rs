@@ -5,7 +5,7 @@ use php_std::mb::mb_strtolower;
 use php_std::pcre::preg_quote;
 use php_std::string::str_contains;
 
-use crate::text::preg_matches;
+use crate::text::{dollar_body, is_e164_digits, preg_matches};
 use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
 
 /// A string containing at least one of the patterns, case-insensitively unless
@@ -238,7 +238,13 @@ impl Validator for HexColor {
 
     /// Valid for a string of exactly 3 or 6 hexadecimal digits, in either case.
     fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
-        Ok(Verdict::of(value.as_str().is_some_and(|s| preg_matches(b"/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/", s))))
+        // `/^([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/`
+        Ok(Verdict::of(
+            value
+                .as_str()
+                .map(dollar_body)
+                .is_some_and(|s| matches!(s.len(), 3 | 6) && s.iter().all(u8::is_ascii_hexdigit)),
+        ))
     }
 
     /// Expects a string ([`Type::String`]).
@@ -266,12 +272,14 @@ impl Phone {
     /// PHP: `Phone::normalize()`.
     pub fn normalize(value: &[u8]) -> Vec<u8> {
         let value = rawurldecode(value);
-        if preg_matches(br"/^ [1-9]\d{6,14}$/", &value) {
+        // `/^ [1-9]\d{6,14}$/`
+        if dollar_body(&value).strip_prefix(b" ").is_some_and(is_e164_digits) {
             let mut out = b"+".to_vec();
             out.extend_from_slice(&value[1..]);
             return out;
         }
-        if !value.is_empty() && !value.starts_with(b"+") && preg_matches(br"/^[1-9]\d{6,14}$/", &value) {
+        // `/^[1-9]\d{6,14}$/`
+        if !value.is_empty() && !value.starts_with(b"+") && is_e164_digits(dollar_body(&value)) {
             let mut out = b"+".to_vec();
             out.extend_from_slice(&value);
             return out;
@@ -296,12 +304,9 @@ impl Validator for Phone {
         if self.allow_empty && s.is_empty() {
             return Ok(Verdict::VALID);
         }
-        let pattern = br"/^\+[1-9]\d{6,14}$/";
-        Ok(Verdict::of(if self.normalize {
-            preg_matches(pattern, &Self::normalize(s))
-        } else {
-            preg_matches(pattern, s)
-        }))
+        // `/^\+[1-9]\d{6,14}$/`
+        let e164 = |s: &[u8]| dollar_body(s).strip_prefix(b"+").is_some_and(is_e164_digits);
+        Ok(Verdict::of(if self.normalize { e164(&Self::normalize(s)) } else { e164(s) }))
     }
 
     /// Expects a string ([`Type::String`]).

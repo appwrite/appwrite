@@ -5,7 +5,7 @@
 use std::borrow::Cow;
 
 use php_std::filter::{self, FILTER_VALIDATE_EMAIL, Options};
-use php_std::{mb, pcre, string};
+use php_std::{mb, string};
 use utopia_domains::Domain;
 
 use crate::canonicals::{Generic, PROVIDERS, Provider};
@@ -170,8 +170,11 @@ impl Email {
         if mb::mb_strlen(local.as_bytes()) > LOCAL_MAX_LENGTH {
             return false;
         }
-        let matched = pcre::preg_match_bare(b"/^[a-zA-Z0-9._+-]+$/", local.as_bytes())
-            .is_ok_and(|m| m.value == pcre::Value::Int(1));
+        // `/^[a-zA-Z0-9._+-]+$/`: without `/D`, `$` also matches before one
+        // final newline.
+        let body = local.strip_suffix('\n').unwrap_or(local);
+        let matched = !body.is_empty()
+            && body.bytes().all(|b| b.is_ascii_alphanumeric() || matches!(b, b'.' | b'_' | b'+' | b'-'));
         if !matched {
             return false;
         }
