@@ -1,0 +1,396 @@
+{
+  "lib": "image",
+  "description": "utopia-php/image: Imagick previews (crop by gravity or focal point, border, rounded corners, opacity, rotation, background, JPEG/PNG/GIF/WebP/AVIF/HEIC output) against pure-Rust codecs.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/image/src"
+    ],
+    "tests": [
+      "packages/image/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/image"
+  },
+  "services": [],
+  "state": [
+    "files"
+  ],
+  "state_mask": {
+    "files": {
+      "paths": [
+        "/*"
+      ],
+      "reason": "encoded bytes differ between ImageMagick's codecs and the pure-Rust ones; the file names are compared, the contents through file.probe and file.compare"
+    }
+  },
+  "ops": {
+    "image.new": {
+      "doc": "new Image(file_get_contents(path) | blob) as a handle",
+      "covers": [
+        "Utopia\\Image\\Image::__construct"
+      ]
+    },
+    "image.crop": {
+      "doc": "$image->crop(width, height, gravity?, x?, y?)",
+      "covers": [
+        "Utopia\\Image\\Image::crop"
+      ]
+    },
+    "image.set_border": {
+      "doc": "$image->setBorder(width, color)",
+      "covers": [
+        "Utopia\\Image\\Image::setBorder"
+      ]
+    },
+    "image.set_border_radius": {
+      "doc": "$image->setBorderRadius(radius)",
+      "covers": [
+        "Utopia\\Image\\Image::setBorderRadius"
+      ]
+    },
+    "image.set_opacity": {
+      "doc": "$image->setOpacity(opacity)",
+      "covers": [
+        "Utopia\\Image\\Image::setOpacity"
+      ]
+    },
+    "image.set_rotation": {
+      "doc": "$image->setRotation(degree)",
+      "covers": [
+        "Utopia\\Image\\Image::setRotation"
+      ]
+    },
+    "image.set_background": {
+      "doc": "$image->setBackground(color)",
+      "covers": [
+        "Utopia\\Image\\Image::setBackground"
+      ]
+    },
+    "image.output": {
+      "doc": "$image->output(type, quality?) described: {format (magic bytes), width and height (first frame), frames, delay (total, 1/100 s)}",
+      "covers": [
+        "Utopia\\Image\\Image::output"
+      ]
+    },
+    "image.save": {
+      "doc": "$image->save(path, type, quality?)",
+      "covers": [
+        "Utopia\\Image\\Image::save"
+      ]
+    },
+    "image.pixel": {
+      "doc": "$image->output(type, quality?), decoded and coalesced: the channel (r, g, b) strictly brighter than the others at (x, y) of `frame`, or null"
+    },
+    "image.compare": {
+      "doc": "$image->output(type, quality?) compared with the image file at `path` (written by the other runtime in interop cases): {size, frames, similar} (see deviations)"
+    },
+    "image.size_by_fixed_height": {
+      "doc": "$image->getSizeByFixedHeight(height) (protected); protected, so outside the inventory, and ported as Image::size_by_fixed_*"
+    },
+    "image.size_by_fixed_width": {
+      "doc": "$image->getSizeByFixedWidth(width) (protected); protected, so outside the inventory, and ported as Image::size_by_fixed_*"
+    },
+    "image.gravity_types": {
+      "doc": "Image::getGravityTypes()",
+      "covers": [
+        "Utopia\\Image\\Image::getGravityTypes"
+      ]
+    },
+    "image.set_resource_limit": {
+      "doc": "Image::setResourceLimit(type, value)",
+      "covers": [
+        "Utopia\\Image\\Image::setResourceLimit"
+      ]
+    },
+    "file.probe": {
+      "doc": "an image file described like image.output's result"
+    },
+    "file.compare": {
+      "doc": "two image files compared like image.compare"
+    },
+    "pipeline": {
+      "doc": "fuzz profile target: new Image(fixture), then crop, border, radius, opacity, rotation and background as the arguments ask, then output; the summary, or the error",
+      "fuzz": [
+        {
+          "name": "pipeline",
+          "args": {
+            "gen": "object",
+            "optional": [
+              "x",
+              "y",
+              "border",
+              "radius",
+              "opacity",
+              "rotation",
+              "background"
+            ],
+            "fields": {
+              "path": {
+                "gen": "pick",
+                "from": [
+                  "packages/image/tests/resources/resize/100x100.png",
+                  "packages/image/tests/resources/resize/100x100.jpg",
+                  "packages/image/tests/resources/resize/100x100.webp",
+                  "packages/image/tests/resources/disk-a/anim-delta.webp",
+                  "packages/image/tests/resources/resize/200x70_S.jpg"
+                ]
+              },
+              "width": {
+                "gen": "int",
+                "min": 0,
+                "max": 300
+              },
+              "height": {
+                "gen": "int",
+                "min": 0,
+                "max": 300
+              },
+              "gravity": {
+                "gen": "ref",
+                "name": "gravity"
+              },
+              "x": {
+                "gen": "float",
+                "min": -0.2,
+                "max": 1.2
+              },
+              "y": {
+                "gen": "float",
+                "min": -0.2,
+                "max": 1.2
+              },
+              "border": {
+                "gen": "int",
+                "min": 0,
+                "max": 12
+              },
+              "color": {
+                "gen": "ref",
+                "name": "color"
+              },
+              "radius": {
+                "gen": "int",
+                "min": 0,
+                "max": 80
+              },
+              "opacity": {
+                "gen": "float",
+                "min": -0.5,
+                "max": 1.5
+              },
+              "rotation": {
+                "gen": "int",
+                "min": -400,
+                "max": 400
+              },
+              "background": {
+                "gen": "ref",
+                "name": "color"
+              },
+              "type": {
+                "gen": "ref",
+                "name": "type"
+              },
+              "quality": {
+                "gen": "int",
+                "min": -1,
+                "max": 100
+              }
+            }
+          },
+          "iterations": 60
+        }
+      ],
+      "covers": [
+        "Utopia\\Image\\Image::__construct",
+        "Utopia\\Image\\Image::crop",
+        "Utopia\\Image\\Image::setBorder",
+        "Utopia\\Image\\Image::setBorderRadius",
+        "Utopia\\Image\\Image::setOpacity",
+        "Utopia\\Image\\Image::setRotation",
+        "Utopia\\Image\\Image::setBackground",
+        "Utopia\\Image\\Image::output"
+      ]
+    },
+    "image.decode": {
+      "doc": "new Image(magic . blob): {width, height, frames} of what was decoded, or the error",
+      "covers": [
+        "Utopia\\Image\\Image::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "garbage",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "magic": {
+                "gen": "ref",
+                "name": "magic"
+              },
+              "blob": {
+                "gen": "bytes",
+                "max": 64
+              }
+            }
+          },
+          "iterations": 300
+        }
+      ],
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "decoder messages of a damaged image are ImageMagick's (with its C source locations) or the Rust decoder's; the class is compared"
+      }
+    }
+  },
+  "generators": {
+    "magic": {
+      "gen": "pick",
+      "from": [
+        "",
+        {
+          "$bytes": "iVBORw0KGgo="
+        },
+        {
+          "$bytes": "/9j/4A=="
+        },
+        "GIF89a",
+        "RIFF\u0000\u0000\u0000\u0000WEBP"
+      ]
+    },
+    "gravity": {
+      "gen": "pick",
+      "from": [
+        "center",
+        "top-left",
+        "top",
+        "top-right",
+        "left",
+        "right",
+        "bottom-left",
+        "bottom",
+        "bottom-right"
+      ]
+    },
+    "color": {
+      "gen": "pick",
+      "from": [
+        "#ff0000",
+        "#00ff0080",
+        "blue",
+        "transparent",
+        "",
+        "rgba(0,0,255,0.5)",
+        "notacolor"
+      ]
+    },
+    "type": {
+      "gen": "pick",
+      "from": [
+        "jpg",
+        "jpeg",
+        "png",
+        "gif",
+        "webp",
+        "bmp"
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Image\\Image::crop",
+      "description": "After cropping an animation the current frame is the last one, so later setters (border, radius, opacity, rotation, output format and quality) act on the last frame only, and the output keeps the first frame's format: an animated GIF cropped and output as webp or png is still a GIF.",
+      "case": "edge.json#multi-frame: operations after a crop apply to the last frame (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::crop",
+      "description": "A gravity or focal-point crop of a single frame keeps the scaled canvas as its page, so a later setBackground() flattens onto the scaled size instead of the crop size.",
+      "case": "edge.json#crop: gravity keeps the scaled canvas for a background (quirk)"
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::setBorderRadius",
+      "description": "On an image without an alpha channel (JPEG) the corners turn black, not transparent; a radius of 0 masks the whole image; setBorder() is always applied because $cornerRadius is never set, and with a border the result is cut to the pre-border size.",
+      "case": "edge.json#radius: no alpha channel turns corners black"
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::save",
+      "description": "A recognised file extension decides the format over $type, and an animation saved in a format without animations is written as one file per frame (name-0.png, name-1.png, ...).",
+      "case": "edge.json#save: the extension decides the format"
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::setOpacity",
+      "description": "Existing transparency is replaced: every pixel gets the same alpha.",
+      "case": "interop.json#opacity"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Image\\Image::output",
+      "php": "Encodes with ImageMagick 7 (libjpeg-turbo, libpng, giflib-style GIF writer, libwebp, libheif/AOM): output bytes, file sizes and pixel values are ImageMagick's.",
+      "reason": "The Rust codecs are pure Rust (zune-jpeg and image's JPEG encoder, png, gif with NeuQuant, image-webp, ravif/rav1e) and resample with fast_image_resize, so bytes and exact pixels differ. Results compare instead the format read from the magic bytes, the first frame's size, the frame count and total delay exactly, and pixels through image.compare / file.compare: both images decoded by the comparing runtime, coalesced, area-averaged to 16x16 grids of premultiplied RGBA (0-255) and similar when the mean absolute difference of every frame pair is at most 6 (2.4%). Measured between the runtimes: 0.2-3 for crops, borders, opacity, rotations and animations (codec noise and Lanczos vs ImageMagick's filters); the kitten fixture cropped top-left against top-right (NW.jpg, NE.jpg) is 13.6 and an image against its 0.5-opacity version 58.6. The saved files' bytes are masked (state_mask), their names compared."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::output",
+      "php": "webp output is lossy VP8 at the given quality (libwebp), lossless only when asked; quality above 100 fails with ImagickException.",
+      "reason": "No maintained pure-Rust lossy VP8 encoder exists and libwebp is C: Rust writes lossless VP8L (single frames, or an animated VP8X/ANMF container), so files are larger and the quality is ignored (above 100 still fails the same way). Pixels compare within the tolerance."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::output",
+      "php": "heic output fails with ImagickException('Failed to get the image contents (empty or invalid image?)') in Appwrite's image (libheif without an HEVC encoder); an ImageMagick built with x265 would encode it.",
+      "reason": "There is no HEVC encoder in Rust without C (x265/libde265): Rust always fails with the same class and message, which matches the dev image."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::__construct",
+      "php": "Reads every format ImageMagick has a delegate for (AVIF, HEIC, TIFF, BMP, SVG, ...); a damaged blob fails with ImageMagick's message, which names its C source location.",
+      "reason": "Rust reads JPEG, PNG, GIF and WebP (the formats Appwrite previews; AVIF decoding needs the dav1d C library, HEIC an HEVC decoder). Other formats fail with ImagickException('no decode delegate for this image format `<FORMAT>''). Empty blobs and unknown magic bytes give PHP's exact messages; damaged blobs give the Rust decoder's message under the same class (the garbage fuzz profile masks the message)."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::__construct",
+      "php": "Frames of an animated GIF or WebP are kept as stored (partial frames with offsets) until crop() coalesces them; the width and height are the first stored frame's.",
+      "reason": "Rust composites (coalesces) frames while decoding, so an animation whose first frame does not cover the canvas reports the canvas size, and setters applied before a crop act on a full frame. The PHP fixtures and Appwrite's previews crop first."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::crop",
+      "php": "int $width and $height accept negative values, which fail with ImagickException('Image dimension exceeds maximum supported size ...'); any string is accepted as $gravity, and an unknown one crops around the centre through the scale-and-crop path.",
+      "reason": "Sizes are u32 and the gravity is the Gravity enum, so neither can be expressed; PHP's behaviour for them is an error or an undocumented fallback."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::setBorder",
+      "php": "A negative $borderWidth fails with ImagickException('frame is less than image size ...').",
+      "reason": "The width is a u32."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::setBorderRadius",
+      "php": "A negative $cornerRadius fails with ImagickException('non-conforming drawing primitive definition `roundrectangle' ...'). Rounded corners are ImageMagick's polygon rasterisation.",
+      "reason": "The radius is a u32. Rust tests pixel centres against the exact rounded rectangle, so edge pixels can differ; pixels compare within the tolerance."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::setBorder",
+      "php": "Colours are any ImageMagick colour: X11 and SVG names (gray0-gray100, LightGoldenrod, ...), hsl(), cmyk(), device-* and #rgb/#rrggbb/#rrggbbaa/rgb()/rgba() forms.",
+      "reason": "utopia_image::Color parses the hex forms (3, 4, 6, 8, 12 and 16 digits), rgb()/rgba() with numbers or percentages, the 148 CSS names, transparent, none and the empty string (white, ImageMagick's background); other strings fail with ImagickException('Unrecognized color string') as an unknown colour does in PHP."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::setResourceLimit",
+      "php": "Sets ImageMagick's process-wide limit; an unknown $type is ignored. Past the area or memory limits ImageMagick moves pixels to a disk cache.",
+      "reason": "Resource is an enum, so an unknown type cannot be passed. Rust keeps frames in memory and records the limits for callers to read (Resource::limit); the width/height policy of 50000 pixels is enforced with ImageMagick's message."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::save",
+      "php": "Writes the virtual canvas offsets ImageMagick tracks (PNG oFFs/vpAg chunks after a gravity crop or a rotation) and the source's metadata profiles.",
+      "reason": "Rust tracks the canvas (pages) for flattening and GIF placement but writes no PNG offset chunks or profiles; readers that ignore them, as browsers do, see the same image."
+    },
+    {
+      "symbol": "Utopia\\Image\\Image::save",
+      "php": "An invalid $type is only refused after the target directory was created (mkdir runs first).",
+      "reason": "Rust takes an OutputFormat, parsed from the string before save() runs, so an invalid type fails before any directory is created; the case compares the error without the files state."
+    }
+  ],
+  "bench": {
+    "bound": {}
+  }
+}

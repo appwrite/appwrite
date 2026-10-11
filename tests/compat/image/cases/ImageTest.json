@@ -1,0 +1,3607 @@
+{
+  "source": "packages/image/tests/ImageTest.php",
+  "cases": [
+    {
+      "name": "testJpeg",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPng",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropFocalUsesNormalizedCoordinates",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "x": 0.75,
+            "y": 0.5
+          },
+          "expect": null
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "testCropFocalRejectsCoordinatesOutsideTheImage",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100,
+            "x": 1.1,
+            "y": 0.5
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Focal point coordinates must be finite and between 0 and 1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropFocalRejectsNonFiniteCoordinates",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100,
+            "x": {
+              "$float": "NAN"
+            },
+            "y": 0.5
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Focal point coordinates must be finite and between 0 and 1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropFocalRequiresBothCoordinates",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100,
+            "x": 0.5
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Both focal point coordinates are required"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropFocalPreservesAnimatedFramesAndDelay",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "R0lGODlhBgACAPAAAP8AAAAA/yH/C05FVFNDQVBFMi4wAwEAAAAh+QQAHgAAACwAAAAABgACAAACBYQRcRgFACH5BAAeAAAALAAAAAAGAAIAgP8AAACAAAIFhBFxGAUAOw=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "x": 0.75,
+            "y": 0.5
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "gif",
+            "quality": 100
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 2,
+            "height": 2,
+            "frames": 2,
+            "delay": 60
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "gif",
+            "quality": 100,
+            "frame": 0,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "b"
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "gif",
+            "quality": 100,
+            "frame": 1,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "g"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityNw",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 50,
+            "height": 200,
+            "gravity": "top-left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/NW.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/NW.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/NW.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/NW.jpg",
+            "reference": "packages/image/tests/resources/resize/NW.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityN",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-3.gif"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 50,
+            "gravity": "top"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/N.gif",
+            "type": "gif",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/N.gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 100,
+            "height": 50,
+            "frames": 63,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/N.gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 100,
+            "height": 50,
+            "frames": 63,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/N.gif",
+            "reference": "packages/image/tests/resources/resize/N.gif"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityNe",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 50,
+            "height": 200,
+            "gravity": "top-right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/NE.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/NE.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/NE.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/NE.jpg",
+            "reference": "packages/image/tests/resources/resize/NE.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravitySw",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 50,
+            "height": 200,
+            "gravity": "bottom-left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/SW.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/SW.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/SW.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/SW.jpg",
+            "reference": "packages/image/tests/resources/resize/SW.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityS",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-3.gif"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 50,
+            "gravity": "bottom"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/S.gif",
+            "type": "gif",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/S.gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 100,
+            "height": 50,
+            "frames": 63,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/S.gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 100,
+            "height": 50,
+            "frames": 63,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/S.gif",
+            "reference": "packages/image/tests/resources/resize/S.gif"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravitySe",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 50,
+            "height": 200,
+            "gravity": "bottom-right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/SE.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/SE.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/SE.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/SE.jpg",
+            "reference": "packages/image/tests/resources/resize/SE.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityC",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 150,
+            "height": 200,
+            "gravity": "center"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/C.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/C.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 150,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/C.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 150,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/C.jpg",
+            "reference": "packages/image/tests/resources/resize/C.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityW",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-3.gif"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 50,
+            "height": 100,
+            "gravity": "left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/W.gif",
+            "type": "gif",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/W.gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 50,
+            "height": 100,
+            "frames": 63,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/W.gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 50,
+            "height": 100,
+            "frames": 63,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/W.gif",
+            "reference": "packages/image/tests/resources/resize/W.gif"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityE",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 50,
+            "height": 200,
+            "gravity": "right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/E.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/E.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/E.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 50,
+            "height": 200,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/E.jpg",
+            "reference": "packages/image/tests/resources/resize/E.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPreservesAspectRatio",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAEAQMAAACeIXx6AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAGUExURf8AAAAA/2yh/Y4AAAAOSURBVAjXY2AAggMMBwADCAGB5HEoTgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 4,
+            "height": 2,
+            "gravity": "top"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 4,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 2,
+            "y": 1
+          },
+          "expect": "r"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal top-left",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "top-left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "r"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal top",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "top"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "g"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal top-right",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "top-right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal left",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "r"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal center",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "center"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "g"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal right",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal bottom-left",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "bottom-left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "r"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal bottom",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "bottom"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "g"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: horizontal bottom-right",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAYAAAACAgMAAAAGM0XNAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAAOSURBVAjXY2BdwMC6AAADSQFL+J/ImAAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "bottom-right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical top-left",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "top-left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "r"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical top",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "top"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "r"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical top-right",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "top-right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "r"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical left",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "g"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical center",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "center"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "g"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical right",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "g"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical bottom-left",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "bottom-left"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical bottom",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "bottom"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "testCropGravityPositions: vertical bottom-right",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "iVBORw0KGgoAAAANSUhEUgAAAAIAAAAGAgMAAACUSaehAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAJUExURf8AAACAAAAA/1bIupQAAAARSURBVAjXY2AAggAgXMCwAAAGTAHhvo5slgAAAABJRU5ErkJggg=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 2,
+            "height": 2,
+            "gravity": "bottom-right"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 2,
+            "height": 2,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100,
+            "x": 1,
+            "y": 1
+          },
+          "expect": "b"
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x400",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 400
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x400.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x400.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 100,
+            "height": 400,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x400.jpg",
+            "reference": "packages/image/tests/resources/resize/100x400.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop400x100",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 400,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/400x100.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/400x100.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 400,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/400x100.jpg",
+            "reference": "packages/image/tests/resources/resize/400x100.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100Webp",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100.webp",
+            "type": "webp",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.webp"
+          },
+          "expect": {
+            "format": "WEBP",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100WebpQuality30",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100-q30.webp",
+            "type": "webp",
+            "quality": 30
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100-q30.webp"
+          },
+          "expect": {
+            "format": "WEBP",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100-q30.webp"
+          },
+          "expect": {
+            "format": "WEBP",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWebpBlobOutput",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "webp",
+            "quality": 75
+          },
+          "expect": {
+            "format": "WEBP",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRepeatedOutputAppliesExifRotationOnce",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "/9j/4QAiRXhpZgAASUkqAAgAAAABABIBAwABAAAABgAAAAAAAAD/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAAKABQDAREAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAj/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFgEBAQEAAAAAAAAAAAAAAAAAAAcJ/8QAFBEBAAAAAAAAAAAAAAAAAAAAAP/aAAwDAQACEQMRAD8AnRDGqYAAAAD/2Q=="
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 10,
+            "height": 20,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 100
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 10,
+            "height": 20,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSavePreservesImageForSubsequentExports",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/reusable.jpg",
+            "type": "jpg",
+            "quality": 75
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "png",
+            "quality": 75
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 1837,
+            "height": 1920,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSaveWritesFilenameZero",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/0",
+            "type": "jpg",
+            "quality": 75
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/0"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 1837,
+            "height": 1920,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWebpFromWebpInput",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.webp"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 50,
+            "height": 50
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/roundtrip.webp",
+            "type": "webp",
+            "quality": 75
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/roundtrip.webp"
+          },
+          "expect": {
+            "format": "WEBP",
+            "width": 50,
+            "height": 50,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100Avif",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100.avif",
+            "type": "avif",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.avif"
+          },
+          "expect": {
+            "format": "AVIF",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100AvifQuality30",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100-q30.avif",
+            "type": "avif",
+            "quality": 30
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100-q30.avif"
+          },
+          "expect": {
+            "format": "AVIF",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100Heic (no HEVC encoder in either runtime)",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "heic",
+            "quality": 100
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "Failed to get the image contents (empty or invalid image?)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100HeicQuality30 (no HEVC encoder in either runtime)",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "heic",
+            "quality": 30
+          },
+          "expect": {
+            "$error": {
+              "class": "ImagickException",
+              "message": "Failed to get the image contents (empty or invalid image?)"
+            }
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100.heic"
+          },
+          "expect": {
+            "format": "HEIC",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100Png",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.png",
+            "reference": "packages/image/tests/resources/resize/100x100.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100PngQuality30",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100-q30.jpg",
+            "type": "jpg",
+            "quality": 10
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100-q30.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "packages/image/tests/resources/resize/100x100-q30.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100x100Gif",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-3.gif"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100.gif",
+            "type": "gif",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 100,
+            "height": 100,
+            "frames": 63,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100.gif",
+            "reference": "packages/image/tests/resources/resize/100x100.gif"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testBorder5Red",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_border",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 5,
+            "color": "#ff0000"
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/border_5_red.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/border_5_red.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 1847,
+            "height": 1930,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/border_5_red.jpg",
+            "reference": "packages/image/tests/resources/resize/border_5_red.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRotate45",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_rotation",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "degree": 45
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/rotate_45.jpg",
+            "type": "jpg",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/rotate_45.jpg"
+          },
+          "expect": {
+            "format": "JPEG",
+            "width": 2659,
+            "height": 2658,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/rotate_45.jpg",
+            "reference": "packages/image/tests/resources/resize/rotate_45.jpg"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testOpacity02",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_opacity",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "opacity": 0.2
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/opacity_0.2.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/opacity_0.2.png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 1837,
+            "height": 1920,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/opacity_0.2.png",
+            "reference": "packages/image/tests/resources/resize/opacity_0.2.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "testBorderRadius500",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.set_border_radius",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "radius": 500
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/border_radius_500.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/border_radius_500.png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 1837,
+            "height": 1920,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/border_radius_500.png",
+            "reference": "packages/image/tests/resources/resize/border_radius_500.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100Op05",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.set_opacity",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "opacity": 0.5
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100_OP_0.5.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100_OP_0.5.png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        },
+        {
+          "op": "file.compare",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100_OP_0.5.png",
+            "reference": "packages/image/tests/resources/resize/100x100_OP_0.5.png"
+          },
+          "expect": {
+            "size": true,
+            "frames": true,
+            "similar": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCrop100BR50",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 100,
+            "height": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "image.set_opacity",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "opacity": 0.5
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/100x100_BR_50.png",
+            "type": "png",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/100x100_BR_50.png"
+          },
+          "expect": {
+            "format": "PNG",
+            "width": 100,
+            "height": 100,
+            "frames": 1,
+            "delay": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGifSmallLastFrame",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/last-frame-1px.gif"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 0,
+            "height": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/last-frame-1px-output.gif",
+            "type": "gif",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/last-frame-1px-output.gif"
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 329,
+            "height": 274,
+            "frames": 50,
+            "delay": 623
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCropAnimatedWebpPreservesFrames",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "path": "packages/image/tests/resources/disk-a/anim-delta.webp"
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 32,
+            "height": 32
+          },
+          "expect": null
+        },
+        {
+          "op": "image.save",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "path": "/tmp/compat-fs/${ns}/anim-delta-32x32.webp",
+            "type": "webp",
+            "quality": 100
+          },
+          "expect": null
+        },
+        {
+          "op": "file.probe",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/anim-delta-32x32.webp"
+          },
+          "expect": {
+            "format": "WEBP",
+            "width": 32,
+            "height": 32,
+            "frames": 5,
+            "delay": 50
+          }
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "webp",
+            "quality": 100,
+            "frame": 0,
+            "x": 8,
+            "y": 8
+          },
+          "expect": "r"
+        },
+        {
+          "op": "image.pixel",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "webp",
+            "quality": 100,
+            "frame": 1,
+            "x": 8,
+            "y": 8
+          },
+          "expect": "g"
+        }
+      ]
+    },
+    {
+      "name": "testCropAnimatedWebpPreservesHoldFrames (written as GIF: the first frame keeps its format)",
+      "steps": [
+        {
+          "op": "image.new",
+          "args": {
+            "blob": {
+              "$bytes": "R0lGODlhKAAoAPAAAP8AAAAAACH/C05FVFNDQVBFMi4wAwEAAAAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQAh+QQEKAAAACwAAAAAKAAoAIAAAP8AAAACJ4SPqcvtD6OctNqLs968+w+G4kiW5omm6sq27gvH8kzX9o3n+s4jBQA7"
+            }
+          },
+          "bind": "i",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "image.crop",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "width": 20,
+            "height": 20
+          },
+          "expect": null
+        },
+        {
+          "op": "image.output",
+          "args": {
+            "image": {
+              "$ref": "i"
+            },
+            "type": "webp",
+            "quality": 100
+          },
+          "expect": {
+            "format": "GIF",
+            "width": 20,
+            "height": 20,
+            "frames": 3,
+            "delay": 120
+          }
+        }
+      ]
+    }
+  ]
+}

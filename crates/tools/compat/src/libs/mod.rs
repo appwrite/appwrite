@@ -22,6 +22,7 @@ pub mod domains;
 pub mod dsn;
 pub mod emails;
 pub mod http;
+pub mod image;
 pub mod locale;
 pub mod lock;
 pub mod php_std;
@@ -48,6 +49,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("dsn", dsn::OPS),
     ("emails", emails::OPS),
     ("http", http::OPS),
+    ("image", image::OPS),
     ("locale", locale::OPS),
     ("lock", lock::OPS),
     ("php-std", php_std::OPS),
@@ -76,6 +78,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "dsn" => dsn::call(op, args, session).await,
         "emails" => emails::call(op, args, session).await,
         "http" => http::call(op, args, session).await,
+        "image" => image::call(op, args, session).await,
         "locale" => locale::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
         "php-std" => php_std::call(op, args, session).await,
@@ -105,6 +108,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "dsn" => dsn::BENCHES,
         "emails" => emails::BENCHES,
         "http" => http::BENCHES,
+        "image" => image::BENCHES,
         "locale" => locale::BENCHES,
         "lock" => lock::BENCHES,
         "php-std" => php_std::BENCHES,
@@ -133,6 +137,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "dsn" => dsn::bench(name, session).await,
         "emails" => emails::bench(name, session).await,
         "http" => http::bench(name, session).await,
+        "image" => image::bench(name, session).await,
         "locale" => locale::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
