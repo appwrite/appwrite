@@ -29,10 +29,22 @@ const HASHING = __ENV.APPWRITE_BENCHMARK_HASHING === 'true';
 const PASSWORD = 'benchmark-password';
 
 const apiDuration = new Trend('appwrite_users_duration', true);
-const ENDPOINTS = [
-    'users.get', 'users.list', 'users.search', 'users.prefs.get', 'users.prefs.update', 'users.name.update',
-    'users.targets.list', 'users.create', 'users.delete', 'users.sessions.create', 'users.sessions.delete', 'users.tokens.create',
-];
+// Each measured call and the API route it exercises (method and path as the API declares it).
+const ROUTES = {
+    'users.get': 'GET /v1/users/:userId',
+    'users.list': 'GET /v1/users',
+    'users.search': 'GET /v1/users',
+    'users.prefs.get': 'GET /v1/users/:userId/prefs',
+    'users.prefs.update': 'PATCH /v1/users/:userId/prefs',
+    'users.name.update': 'PATCH /v1/users/:userId/name',
+    'users.targets.list': 'GET /v1/users/:userId/targets',
+    'users.create': 'POST /v1/users',
+    'users.delete': 'DELETE /v1/users/:userId',
+    'users.sessions.create': 'POST /v1/users/:userId/sessions',
+    'users.sessions.delete': 'DELETE /v1/users/:userId/sessions/:sessionId',
+    'users.tokens.create': 'POST /v1/users/:userId/tokens',
+};
+const ENDPOINTS = Object.keys(ROUTES);
 const failures = new Counter('appwrite_users_failures');
 
 export const options = {
@@ -188,7 +200,7 @@ export function handleSummary(data) {
     for (const name of ENDPOINTS) {
         const sub = data.metrics[`appwrite_users_duration{name:${name}}`];
         if (sub && sub.values.count) {
-            endpoints[name] = pick(sub.values);
+            endpoints[name] = { route: ROUTES[name], ...pick(sub.values) };
         }
     }
     const seconds = data.state.testRunDurationMs / 1000;

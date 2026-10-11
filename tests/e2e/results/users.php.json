@@ -1,0 +1,28 @@
+{
+  "suite": "Users",
+  "dir": "tests/e2e/Services/Users",
+  "runtime": "php",
+  "endpoint": "http://appwrite/v1",
+  "date": "2026-10-11T17:51:16Z",
+  "commit": "9acda67221",
+  "branch": "worktree-agent-a0f77f09c1885ee79",
+  "command": "docker exec -e _APP_E2E_ENDPOINT= appwrite vendor/bin/paratest --processes 2 --functional /usr/src/code/tests/e2e/Services/Users --exclude-group abuseEnabled --log-junit /tmp/compat-e2e-users.xml",
+  "tests": 68,
+  "assertions": 971,
+  "passed": 68,
+  "failures": 0,
+  "errors": 0,
+  "skipped": 0,
+  "wall": 76.8,
+  "failed": [],
+  "environment": {
+    "php": {
+      "container": "appwrite",
+      "image": "appwrite-dev",
+      "id": "88b87c5028a0",
+      "created": "2026-10-09T07:39:19.618591965Z"
+    },
+    "rust": null,
+    "processes": 2
+  }
+}

@@ -1,0 +1,450 @@
+{
+  "$comment": "The cross-cutting PHP behaviour a migrated service must reproduce, and where appwrite-core does. `bin/compat appwrite` finds every Http::init/shutdown/error/options/wildcard hook in app/controllers and every hook action class (setType) in the modules, reads its groups, injections, labels, errors and headers from the code, and joins it to the entry here by `php.file`, `php.kind` and `php.anchor` (text inside the hook, needed when a file has several hooks of a kind). A hook without an entry is listed as undescribed; an entry whose hook or Rust anchor is gone is reported. `rust.status`: done, partial or missing; `rust.where`: files and text anchors in crates/appwrite. Resources (`kind: resource`) are request resources in app/init/resources/request.php that carry behaviour.",
+  "hooks": [
+    {
+      "id": "auth",
+      "title": "Authentication, roles and scopes",
+      "description": "Binds project routes to the project in the path, rejects an unknown project, derives the role and scopes from the session, an API key (expiry, key actor, last access and SDK tracking) or console admin membership, adds the impersonator's user discovery scope, refuses account writes while impersonating, checks disabled products, services and the REST API, then the route's scope, a blocked user, a required password reset and missing MFA factors.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Step 9: Validate scope permissions" },
+      "rust": {
+        "status": "partial",
+        "note": "Same checks in the same order for project, standard and ephemeral keys, sessions, JWTs, admin mode and impersonation. Account and organization keys are treated as unknown keys, the path project binding and the DocumentsDB/VectorsDB product switches are not needed by Users yet.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- auth (shared/api.php)" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_key_usage" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn track_access" }
+        ]
+      }
+    },
+    {
+      "id": "abuse",
+      "title": "Abuse limits",
+      "description": "Rate limits a route by its `abuse-key`, `abuse-limit` and `abuse-time` labels (raised 100 times for listed projects), skipping keys and privileged users and when `_APP_OPTIONS_ABUSE` is disabled; sets the X-RateLimit headers and throws a rate limit error past the limit. Also hands the user to the request and response.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "GENERAL_RATE_LIMIT_EXCEEDED" },
+      "rust": {
+        "status": "missing",
+        "note": "Not implemented; the Users routes declare no abuse labels, so PHP sets no limit or header for them either.",
+        "where": []
+      }
+    },
+    {
+      "id": "context",
+      "title": "Events, audit context and response cache",
+      "description": "Names the route's event on the events queue with the project and acting user, fills the audit context (mode, IP, user agent, hostname, SDK, audit event, actor or impersonated target), and for routes labelled `cache` serves a stored response (with bucket, file and token checks) or marks a cache miss.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "Background Jobs" },
+      "rust": {
+        "status": "partial",
+        "note": "Events and the audit context come from the route's labels and the request; the `cache` label (storage previews) is not implemented.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "pub(super) fn schedule" }
+        ]
+      }
+    },
+    {
+      "id": "session-active",
+      "title": "One session at a time",
+      "description": "Refuses to create a session for a caller who already has one, unless the route is labelled `session.allowActive`.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "init", "anchor": "session.allowActive" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "session-limit",
+      "title": "Session limit",
+      "description": "After a session is created, deletes the user's oldest sessions beyond the project's `maxSessions` and purges the cached user.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "maxSessions" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "events",
+      "title": "Events: realtime, functions and webhooks",
+      "description": "When the route set an event, generates its event names and publishes them to realtime (console only for allowed groups), to the functions queue when a function listens to one of them, and to the webhooks queue when a webhook does.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "getWebhooksEvents" },
+      "rust": {
+        "status": "done",
+        "note": "Function events are cached in the same Redis hash as PHP's.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn trigger" },
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn function_events" }
+        ]
+      }
+    },
+    {
+      "id": "abuse-reset",
+      "title": "Abuse counter reset",
+      "description": "Resets the route's abuse counters when the response status is one of its `abuse-reset` codes.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "abuse-reset" },
+      "rust": { "status": "missing", "note": "No Users route has `abuse-reset`.", "where": [] }
+    },
+    {
+      "id": "audits",
+      "title": "Audits",
+      "description": "Renders the route's `audits.resource` template from the request and response, picks the actor (target user, key or guest) and enqueues an audit message with the response payload.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "publisherForAudits->enqueue" },
+      "rust": {
+        "status": "done",
+        "note": "Skipped on the self-hosted edition, like the PHP audit publisher.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn audit" }]
+      }
+    },
+    {
+      "id": "cache-write",
+      "title": "Response cache write",
+      "description": "For routes labelled `cache`, stores a successful payload in the project's file cache and records it in the `cache` collection, refreshing the access time and content on later hits.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "cache.resourceType" },
+      "rust": { "status": "missing", "note": "No Users route is cached.", "where": [] }
+    },
+    {
+      "id": "usage",
+      "title": "Usage metrics",
+      "description": "Outside the console, dispatches RequestCompleted (network requests, inbound and outbound bytes) for non-privileged callers and enqueues the request's usage metrics, without the ones the API key disables.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "publisherForUsage->enqueue" },
+      "rust": {
+        "status": "partial",
+        "note": "Network and resource metrics are published; an API key's disabled metrics are read but not filtered out yet.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn usage" }]
+      }
+    },
+    {
+      "id": "onboarding",
+      "title": "Onboarding stages",
+      "description": "After a successful SDK, CLI or MCP request, marks the matching onboarding stage of the project (or the project in the path on the console) as completed, with the actor type, under a lock.",
+      "php": { "file": "app/controllers/shared/api.php", "kind": "shutdown", "anchor": "ONBOARDING_STATUS_COMPLETED" },
+      "rust": {
+        "status": "partial",
+        "note": "Records `users.create`, the only Users stage; the CLI and MCP install stages are not recorded.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn onboarding" }]
+      }
+    },
+    {
+      "id": "usage-context",
+      "title": "Usage context",
+      "description": "Records the request's metadata for usage: path, method, user agent, hostname, country from the IP, SDK and version, protocol, accept headers, query keys, region and service.",
+      "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "->setQueryKeys($queryKeys)" },
+      "rust": {
+        "status": "partial",
+        "note": "Country and query keys are left empty.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "pub(super) fn schedule" }]
+      }
+    },
+    {
+      "id": "usage-status",
+      "title": "Usage status",
+      "description": "Adds the response status to the usage context and the project as the resource when the action named none.",
+      "php": { "file": "app/controllers/general.php", "kind": "shutdown", "anchor": "fillMissingResource" },
+      "rust": {
+        "status": "done",
+        "note": null,
+        "where": [{ "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "async fn usage" }]
+      }
+    },
+    {
+      "id": "admin-console",
+      "title": "No admin mode on the console",
+      "description": "Refuses admin mode for the console project.",
+      "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "Admin mode is not allowed for console project" },
+      "rust": {
+        "status": "done",
+        "note": null,
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "Admin mode is not allowed for console project" }]
+      }
+    },
+    {
+      "id": "console-forbidden",
+      "title": "Project services refuse the console",
+      "description": "Refuses database, functions, sites and messaging routes on the console project, explaining a missing project ID.",
+      "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "No Appwrite project was specified" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "request",
+      "title": "Router, formats, locale and HTTPS",
+      "description": "Sends requests for custom domains to the function and site router, answers 404 without a route, adds request filters for older `X-Appwrite-Response-Format` versions and response filters with a version warning header, sets the locale from the parameter or header, and with `_APP_OPTIONS_FORCE_HTTPS` redirects GET requests to HTTPS and refuses other methods.",
+      "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "x-appwrite-response-format" },
+      "rust": {
+        "status": "partial",
+        "note": "Response formats, the warning and the locale are handled; Traefik never routes custom domains to Rust. Request filters for formats before 1.5.0 and forced HTTPS are not implemented.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- response format, locale" }]
+      }
+    },
+    {
+      "id": "security",
+      "title": "CORS, security headers and origin check",
+      "description": "Adds the CORS headers, `Server`, `X-Content-Type-Options` and HSTS over HTTPS, then rejects a browser origin that is not an allowed platform (CSRF), unless an API key is sent or the route allows any origin.",
+      "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "Application level CSRF protection" },
+      "rust": {
+        "status": "done",
+        "note": null,
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- CORS / origin (I4)" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn finalize" },
+          { "file": "crates/appwrite/core/src/network.rs", "anchor": "pub fn validate_origin" }
+        ]
+      }
+    },
+    {
+      "id": "certificates",
+      "title": "Certificate for the main domain",
+      "description": "On the first request to a known platform hostname, creates its `rules` document and enqueues a certificate job, remembering certified domains in memory.",
+      "php": { "file": "app/controllers/general.php", "kind": "init", "anchor": "Issuing a TLS certificate" },
+      "rust": {
+        "status": "missing",
+        "note": "Requests reaching Rust also reach PHP on other routes, which issues the certificate.",
+        "where": []
+      }
+    },
+    {
+      "id": "preflight",
+      "title": "CORS preflight",
+      "description": "Answers OPTIONS with the CORS headers and 204 (custom domains go to the router first) and dispatches RequestCompleted for usage, since OPTIONS runs no shutdown hooks.",
+      "php": { "file": "app/controllers/general.php", "kind": "options" },
+      "rust": {
+        "status": "partial",
+        "note": "Headers and status match; no usage is recorded for preflights.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn preflight" }]
+      }
+    },
+    {
+      "id": "error",
+      "title": "Error responses",
+      "description": "Maps framework and database exceptions to Appwrite errors, dispatches usage for non-publishable errors, adds span attributes, hides messages of unexpected codes behind a 500, adds the development trace, CORS and no-cache headers, and renders the error model (or an HTML page outside /v1).",
+      "php": { "file": "app/controllers/general.php", "kind": "error" },
+      "rust": {
+        "status": "partial",
+        "note": "Error model, status codes, development fields, CORS and no-cache headers match; failed requests record no usage.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(crate) fn error_response" },
+          { "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn finalize" }
+        ]
+      }
+    },
+    {
+      "id": "wildcard",
+      "title": "Unknown routes",
+      "description": "Answers routes that match nothing with a route not found error.",
+      "php": { "file": "app/controllers/general.php", "kind": "wildcard" },
+      "rust": {
+        "status": "done",
+        "note": null,
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "pub(super) fn wildcard_route" }]
+      }
+    },
+    {
+      "id": "mfa-fresh",
+      "title": "Recent MFA challenge",
+      "description": "For `mfaProtected` routes, requires an MFA challenge completed within the recent window.",
+      "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_CHALLENGE_REQUIRED" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "recent-session",
+      "title": "Recent sign-in",
+      "description": "For `recentSession` routes, requires a session created or MFA-verified within the recent window.",
+      "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "USER_REAUTHENTICATION_REQUIRED" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "auth-methods",
+      "title": "Authentication methods",
+      "description": "For `auth` routes, refuses console access from denied countries and, except for keys and privileged users, an authentication method the project disabled (`auth.type` label).",
+      "php": { "file": "app/controllers/shared/api/auth.php", "kind": "init", "anchor": "auth.type" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "graphql-api",
+      "title": "GraphQL API switch",
+      "description": "Hands the user to the request and response and refuses GraphQL when the project disabled it, except for keys and privileged users.",
+      "php": { "file": "app/controllers/api/graphql.php", "kind": "init" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "graphql-schema",
+      "title": "GraphQL schema refresh",
+      "description": "Marks the project's GraphQL schema dirty after routes that change it (`schema` group).",
+      "php": { "file": "app/controllers/api/graphql.php", "kind": "shutdown" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "projects-console",
+      "title": "Projects API on the console only",
+      "description": "Refuses the legacy `projects` routes outside the console project.",
+      "php": { "file": "app/controllers/api/projects.php", "kind": "init" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "mock",
+      "title": "Mock route bookkeeping",
+      "description": "For test-only `mock` routes, records the route as exercised in the tests cache file and answers with a mock model.",
+      "php": { "file": "app/controllers/mock.php", "kind": "shutdown" },
+      "rust": { "status": "missing", "note": "Test-only routes.", "where": [] }
+    },
+    {
+      "id": "console-api",
+      "title": "Console routes on the console only",
+      "description": "Refuses `console` routes outside the console project.",
+      "php": { "file": "src/Appwrite/Platform/Modules/Console/Http/Init/API.php", "kind": "init" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "console-web",
+      "title": "Web page headers",
+      "description": "Adds `X-Frame-Options`, `X-XSS-Protection` and `X-UA-Compatible` to `web` routes.",
+      "php": { "file": "src/Appwrite/Platform/Modules/Console/Http/Init/Web.php", "kind": "init" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "database-timeout",
+      "title": "Database timeout header",
+      "description": "In development, applies the `X-Appwrite-Timeout` header as the project database's query timeout.",
+      "php": { "file": "src/Appwrite/Platform/Modules/Databases/Http/Init/Timeout.php", "kind": "init" },
+      "rust": {
+        "status": "missing",
+        "note": "Its `api` group makes it run for every API route, Users included; it only acts in development.",
+        "where": []
+      }
+    },
+    {
+      "id": "organization",
+      "title": "Organization exists",
+      "description": "Refuses `organization` routes when the organization (team) is not found.",
+      "php": { "file": "src/Appwrite/Platform/Modules/Organization/Http/Init.php", "kind": "init" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "project",
+      "title": "Project routes need a project",
+      "description": "Refuses `project` routes on the console project or an unknown project.",
+      "php": { "file": "src/Appwrite/Platform/Modules/Project/Http/Init.php", "kind": "init" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "webhooks",
+      "title": "Webhook routes need a project",
+      "description": "Refuses `webhooks` routes on the console project or an unknown project.",
+      "php": { "file": "src/Appwrite/Platform/Modules/Webhooks/Http/Init.php", "kind": "init" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "s3-init",
+      "title": "S3 gateway setup",
+      "description": "Adds CORS headers exposing the S3 response headers, sets the events queue's project and user, and fills the usage context like the `api` group's hook.",
+      "php": { "file": "src/Appwrite/Platform/Modules/S3/Http/Init.php", "kind": "init" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "s3-events",
+      "title": "S3 gateway events",
+      "description": "Publishes the S3 actions' events to realtime, functions and webhooks, like the `api` group's events hook.",
+      "php": { "file": "src/Appwrite/Platform/Modules/S3/Http/Shutdown/Events.php", "kind": "shutdown" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "s3-usage",
+      "title": "S3 gateway usage",
+      "description": "Records the response status and publishes network and usage metrics for S3 requests outside the console.",
+      "php": { "file": "src/Appwrite/Platform/Modules/S3/Http/Shutdown/Usage.php", "kind": "shutdown" },
+      "rust": { "status": "missing", "note": null, "where": [] }
+    },
+    {
+      "id": "resource-project",
+      "title": "Project",
+      "description": "The project from the `project` parameter, `X-Appwrite-Project` header, query, S3 credential or legacy `/v1/projects/:projectId` path; the console project when none.",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('project'" },
+      "rust": {
+        "status": "done",
+        "note": "S3 credentials and the legacy project paths are not needed by Users.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- project" }]
+      }
+    },
+    {
+      "id": "resource-mode",
+      "title": "Mode",
+      "description": "`default` or `admin` from the `mode` parameter or `X-Appwrite-Mode`; admin when the project asked for is not the one resolved.",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('mode'" },
+      "rust": {
+        "status": "done",
+        "note": null,
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- mode" }]
+      }
+    },
+    {
+      "id": "resource-user",
+      "title": "User",
+      "description": "The user from the session cookie (console cookie in admin mode), the `X-Appwrite-Session` header or `X-Fallback-Cookies`, then a JWT; an account API key's user when its header matches.",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('user'" },
+      "rust": {
+        "status": "partial",
+        "note": "Account API keys are not resolved.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn resolve_user" }]
+      }
+    },
+    {
+      "id": "resource-session",
+      "title": "Session",
+      "description": "The user's current session, verified from the session secret or the JWT's session ID.",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('session'" },
+      "rust": {
+        "status": "done",
+        "note": null,
+        "where": [{ "file": "crates/appwrite/core/src/auth/mod.rs", "anchor": "pub fn session_verify" }]
+      }
+    },
+    {
+      "id": "resource-key",
+      "title": "API key",
+      "description": "Decodes `X-Appwrite-Key` and requires the project, user or organization header its type names.",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('apiKey'" },
+      "rust": {
+        "status": "partial",
+        "note": "Project keys (standard and ephemeral); account and organization keys are not resolved.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// -- API key" }]
+      }
+    },
+    {
+      "id": "resource-impersonation",
+      "title": "Impersonation",
+      "description": "For a user with the impersonator flag, the target user by ID, email or phone header (or parameter).",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('impersonatorUser'" },
+      "rust": {
+        "status": "done",
+        "note": null,
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "// Impersonation." }]
+      }
+    },
+    {
+      "id": "resource-team",
+      "title": "Team",
+      "description": "The organization that owns the project, or on the console the one a route names (path project, `teamId` or `X-Appwrite-Organization`); used for admin roles.",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('team'" },
+      "rust": {
+        "status": "partial",
+        "note": "The project's team for admin mode; console organization routes are not needed by Users.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "async fn load_team_id" }]
+      }
+    },
+    {
+      "id": "resource-hostnames",
+      "title": "Allowed hostnames",
+      "description": "Hostnames CORS and the origin check accept: platform and console hosts, the project's platforms, the origin on preflight, and a custom domain rule's domain.",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('allowedHostnames'" },
+      "rust": {
+        "status": "partial",
+        "note": "Custom domain rules are not consulted.",
+        "where": [{ "file": "crates/appwrite/core/src/platform/lifecycle.rs", "anchor": "fn allowed_hostnames" }]
+      }
+    },
+    {
+      "id": "resource-database-listeners",
+      "title": "Project database listeners",
+      "description": "Listeners on the project database: the `users.[userId].create` event for every user created, usage metrics for created and deleted documents (users, sessions, deployments ...), and purging the functions events cache.",
+      "php": { "file": "app/init/resources/request.php", "kind": "resource", "anchor": "$context->set('dbForProject'" },
+      "rust": {
+        "status": "partial",
+        "note": "Actions record the user creation event and their usage metrics explicitly; there is no generic listener.",
+        "where": [
+          { "file": "crates/appwrite/core/src/platform/shutdown.rs", "anchor": "// Database listener" },
+          { "file": "crates/appwrite/core/src/platform/context.rs", "anchor": "pub fn metric" }
+        ]
+      }
+    }
+  ]
+}

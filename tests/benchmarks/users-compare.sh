@@ -9,6 +9,12 @@
 #
 #   tests/benchmarks/users-compare.sh                 # default ladder
 #   RATES="100 400 800" DURATION=120s tests/benchmarks/users-compare.sh
+#   RESULTS=tests/benchmarks/results/users.json tests/benchmarks/users-compare.sh
+#
+# The Markdown report goes to stdout and $OUT/report.md; the same run as JSON
+# (per step and per endpoint, with the environment) to $RESULTS, by default
+# $OUT/users.json. Committed as tests/benchmarks/results/users.json, it is
+# what `bin/compat appwrite` shows in the docs site's Appwrite migration.
 #
 # Each step runs the same k6 workload (tests/benchmarks/users.js) against
 # PHP (port 9501, direct) and Rust (port 9530, direct) while sampling the
@@ -31,6 +37,9 @@ DB_CONTAINER=${DB_CONTAINER:-appwrite-postgresql}
 REDIS_CONTAINER=${REDIS_CONTAINER:-appwrite-redis}
 
 mkdir -p "$OUT"
+if [ -n "${RESULTS:-}" ]; then
+    mkdir -p "$(dirname "$RESULTS")"
+fi
 
 cgroup_cpu_usec() {
     local id
@@ -103,4 +112,5 @@ for vus in $MAX_VUS; do
     run_step rust "$RUST_ENDPOINT" "$RUST_CONTAINER" vus "$vus"
 done
 
-python3 "$HERE/users-report.py" "$OUT" | tee "$OUT/report.md"
+DURATION=$DURATION HASHING=$HASHING PHP_ENDPOINT=$PHP_ENDPOINT RUST_ENDPOINT=$RUST_ENDPOINT DB_CONTAINER=$DB_CONTAINER \
+    python3 "$HERE/users-report.py" "$OUT" --json "${RESULTS:-$OUT/users.json}" | tee "$OUT/report.md"

@@ -1,5 +1,6 @@
 //! The `compat` command. See `tests/compat/README.md`.
 
+pub mod appwrite;
 pub mod bench;
 pub mod cases;
 pub mod compare;

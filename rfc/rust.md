@@ -90,6 +90,7 @@ docker compose exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite \
 ## 4. Correctness
 
 - The PHP Users suite (`tests/e2e/Services/Users`, 62 tests) runs against Rust in CI through Traefik. This is the `e2e_rust` job, for PostgreSQL in both dedicated and shared mode. `Scope::$endpoint` can now be overridden with `_APP_E2E_ENDPOINT`. Requests to `/account`, `/teams` and `/projects` in the same tests keep hitting PHP, which exercises cross-runtime consistency: for example, a password set by Rust followed by a login through PHP, or a session created by Rust used on `/account`.
+- `bin/compat appwrite e2e Users --write` runs the same suite through Traefik on a running dev stack (no container is started or rebuilt) and records the result in `tests/e2e/results/users.rust.json`; `--side php` records the PHP run next to it.
 - `tests/rust/run.sh` runs a port of the Users assertions against Rust alone. It uses real PostgreSQL and Redis, and no PHP is needed. Covered: creation including all 7 hash imports, validation messages, auth errors, queries, cursors, search, every attribute update, labels, prefs, password, sessions, tokens, JWT, targets, MFA, memberships, identities, passkeys, deletion, console admin mode, session/JWT/impersonation auth and CORS.
 - PHP behaviours that look like bugs are **kept** for parity and documented in code. Examples: the empty-password update that answers and then keeps going; `sha512/224` returning 500; `total=false` counting because PHP casts `"false"` to `true`; target lookup falling back to the user document. They should be fixed in PHP and Rust together, in a later release.
 
@@ -134,7 +135,10 @@ CPU is read from cgroup counters, or integrated from `docker stats` where cgroup
 ```bash
 bash tests/benchmarks/users-compare.sh             # default ladder
 RATES="200 800" DURATION=120s HASHING=true bash tests/benchmarks/users-compare.sh
+RESULTS=tests/benchmarks/results/users.json bash tests/benchmarks/users-compare.sh   # also record it
 ```
+
+`RESULTS` writes the run as JSON (every step and endpoint, with the machine, images and commit). Committed, it is what the docs site's Appwrite migration shows (`bin/compat appwrite`, `apps/crates`).
 
 Run it on dedicated hardware before and after every performance change, and attach the report to the PR. The numbers that matter most are CPU ms/request at equal load and memory under the highest sustained rate.
 

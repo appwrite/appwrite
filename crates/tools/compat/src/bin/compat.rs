@@ -8,7 +8,7 @@ use compat::libs::LIBS;
 use compat::runner::config::Config;
 use compat::runner::coverage::coverage;
 use compat::runner::engine::{Engine, FuzzOptions, Report};
-use compat::runner::{crates, render_status, report, scaffold, spec};
+use compat::runner::{appwrite, crates, render_status, report, scaffold, spec};
 use serde_json::Value;
 
 const USAGE: &str = "usage: compat <command> [args]
@@ -32,7 +32,12 @@ const USAGE: &str = "usage: compat <command> [args]
                                                  for a crate without compat cases)
   crates [--out <dir>]                           every Utopia library's docs (Rust API, PHP API by
                                                  reflection, examples, status) as JSON for apps/crates
-                                                 (default apps/crates/data)
+                                                 (default apps/crates/data), and the Appwrite migration
+  appwrite [--out <dir>]                         the Appwrite API's move to Rust (services, routes, E2E
+                                                 suites and runs, benchmarks, hooks) as appwrite.json
+  appwrite e2e <Suite>... [--side php] [--write] run tests/e2e/Services/<Suite> in the running dev stack
+                                                 through Traefik (Rust; --side php: straight to PHP);
+                                                 --write stores tests/e2e/results/<suite>.<runtime>.json
   bench <lib>... [--write] [--host]              time each library's benchmarks on PHP and on a release
                                                  build of Rust, both in Linux containers on the dev stack's
                                                  network (--host: Rust natively); --write stores
@@ -321,6 +326,49 @@ fn real_main(args: &[String]) -> Result<bool, String> {
             let out = cli.out.as_deref().map(PathBuf::from).unwrap_or_else(|| root.join("apps/crates/data"));
             let n = crates::write(Some(&mut engine), &root, &out)?;
             eprintln!("wrote {n} crates to {}", out.display());
+            let summary = appwrite::write(&root, &out)?;
+            eprintln!("wrote the Appwrite migration: {summary}");
+            Ok(true)
+        }
+        "appwrite" if cli.positional.get(1).map(String::as_str) == Some("e2e") => {
+            let suites = cli.positional.get(2..).unwrap_or_default();
+            if suites.is_empty() {
+                return Err(format!("`appwrite e2e` needs a suite (a directory of tests/e2e/Services)\n\n{USAGE}"));
+            }
+            let rust = cli.side.as_deref() != Some("php");
+            let mut ok = true;
+            for suite in suites {
+                let result = appwrite::e2e::run(&root, suite, rust)?;
+                eprintln!(
+                    "{suite} ({}): {} tests, {} passed, {} failures, {} errors, {} skipped in {}s",
+                    result["runtime"].as_str().unwrap_or(""),
+                    result["tests"],
+                    result["passed"],
+                    result["failures"],
+                    result["errors"],
+                    result["skipped"],
+                    result["wall"]
+                );
+                ok &= result["failures"] == 0 && result["errors"] == 0 && result["tests"].as_u64().unwrap_or(0) > 0;
+                if cli.write {
+                    let dir = root.join("tests/e2e/results");
+                    std::fs::create_dir_all(&dir).map_err(|e| e.to_string())?;
+                    let path = dir.join(format!(
+                        "{}.{}.json",
+                        suite.to_ascii_lowercase(),
+                        result["runtime"].as_str().unwrap_or("rust")
+                    ));
+                    let text = serde_json::to_string_pretty(&result).map_err(|e| e.to_string())? + "\n";
+                    std::fs::write(&path, text).map_err(|e| e.to_string())?;
+                    eprintln!("wrote {}", path.strip_prefix(&root).unwrap_or(&path).display());
+                }
+            }
+            Ok(ok)
+        }
+        "appwrite" => {
+            let out = cli.out.as_deref().map(PathBuf::from).unwrap_or_else(|| root.join("apps/crates/data"));
+            let summary = appwrite::write(&root, &out)?;
+            eprintln!("wrote {}: {summary}", out.join("appwrite.json").display());
             Ok(true)
         }
         "status" => {
