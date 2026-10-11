@@ -1,8 +1,8 @@
 {
   "lib": "auth",
   "environment": {
-    "date": "2026-10-11T09:11:35Z",
-    "commit": "efd6922f03",
+    "date": "2026-10-11T16:04:42Z",
+    "commit": "c74b41c1e9",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,132 +31,132 @@
       "name": "password",
       "description": "Verify a password against its Argon2id hash at Appwrite's cost (7 MiB, 5 passes, 1 lane)",
       "php": {
-        "ns": 11271542.0,
-        "min": 10898333.0,
-        "max": 12155541.0,
+        "ns": 9664667.0,
+        "min": 9360541.0,
+        "max": 9951750.0,
         "samples": 15,
         "calls": 1
       },
       "rust": {
-        "ns": 10772792.0,
-        "min": 10653958.0,
-        "max": 11162166.0,
+        "ns": 9397167.0,
+        "min": 9212562.5,
+        "max": 9612104.0,
         "samples": 15,
-        "calls": 1,
-        "allocations": 7.066666666666666,
-        "bytes": 7340152.0
+        "calls": 2,
+        "allocations": 7.033333333333333,
+        "bytes": 7340148.0
       },
-      "speedup": 1.0462971901805957,
+      "speedup": 1.0284660259842142,
       "bound": "Argon2id's cost is fixed by its parameters (7 MiB, 5 passes) in every implementation"
     },
     {
       "name": "sha",
       "description": "Verify a 256-character session secret against its SHA-256 hash",
       "php": {
-        "ns": 1933.2642092058284,
-        "min": 1903.583325291904,
-        "max": 2045.0521084628003,
+        "ns": 1895.7463465553235,
+        "min": 1872.639495160372,
+        "max": 1934.004744733346,
         "samples": 15,
-        "calls": 10363
+        "calls": 10538
       },
       "rust": {
-        "ns": 669.2865830996385,
-        "min": 664.1748488022434,
-        "max": 682.6268878602561,
+        "ns": 657.4863379037272,
+        "min": 652.6786871298144,
+        "max": 672.4028273176478,
         "samples": 15,
-        "calls": 29597,
-        "allocations": 2.0000022524805443,
-        "bytes": 70.00027029766531
+        "calls": 30559,
+        "allocations": 2.0000021815722593,
+        "bytes": 70.0002617886711
       },
-      "speedup": 2.8885446952371048,
+      "speedup": 2.8833243175813474,
       "bound": null
     },
     {
       "name": "token",
       "description": "Generate a 256-character token secret",
       "php": {
-        "ns": 510.02622673434854,
-        "min": 503.88722247859306,
-        "max": 527.5822950315336,
+        "ns": 501.90139504595885,
+        "min": 493.9702456983996,
+        "max": 530.7602875247327,
         "samples": 15,
-        "calls": 39006
+        "calls": 39927
       },
       "rust": {
-        "ns": 200.94727147360126,
-        "min": 197.5288120567376,
-        "max": 204.99450354609928,
+        "ns": 189.75337597725658,
+        "min": 185.75433920622453,
+        "max": 195.91305689597127,
         "samples": 15,
-        "calls": 101520,
-        "allocations": 1.000000656685054,
-        "bytes": 256.0000788022065
+        "calls": 106932,
+        "allocations": 1.0000006234491703,
+        "bytes": 256.0000748139004
       },
-      "speedup": 2.538109738909052,
+      "speedup": 2.645019581133121,
       "bound": null
     },
     {
       "name": "jwt-issue",
       "description": "Issue an HS256 JWT with a user and a session claim",
       "php": {
-        "ns": 3817.784239439288,
-        "min": 3766.843530971775,
-        "max": 4024.2547831028605,
+        "ns": 3738.5633907088654,
+        "min": 3708.6185452526374,
+        "max": 3773.3512863224137,
         "samples": 15,
-        "calls": 5279
+        "calls": 5403
       },
       "rust": {
-        "ns": 2260.9412299647606,
-        "min": 2191.7841309537343,
-        "max": 2315.5668978060703,
+        "ns": 2190.6581003056717,
+        "min": 2167.2327635005095,
+        "max": 2291.56764406204,
         "samples": 15,
-        "calls": 8797,
-        "allocations": 29.0000075783411,
-        "bytes": 5026.000909400932
+        "calls": 8833,
+        "allocations": 29.000007547454622,
+        "bytes": 5026.000905694555
       },
-      "speedup": 1.6885818122299412,
+      "speedup": 1.706593735547874,
       "bound": null
     },
     {
       "name": "jwt-verify",
       "description": "Verify an HS256 JWT's signature, type, issuer, audience and expiry",
       "php": {
-        "ns": 4459.746619374861,
-        "min": 4417.608955885613,
-        "max": 4580.082021724673,
+        "ns": 4372.1033270219095,
+        "min": 4325.3313497430345,
+        "max": 4887.172031376792,
         "samples": 15,
-        "calls": 4511
+        "calls": 3697
       },
       "rust": {
-        "ns": 2120.594416900194,
-        "min": 2101.499029963354,
-        "max": 2207.075878422074,
+        "ns": 2182.853677110531,
+        "min": 2172.391753698869,
+        "max": 2197.9574630113143,
         "samples": 15,
-        "calls": 9278,
-        "allocations": 25.000007185456635,
-        "bytes": 3413.000862254796
+        "calls": 9192,
+        "allocations": 25.000007252683492,
+        "bytes": 3413.000870322019
       },
-      "speedup": 2.103064397337211,
+      "speedup": 2.0029300969038446,
       "bound": null
     },
     {
       "name": "session",
       "description": "Decode a session cookie (base64 JSON of an id and a secret) and read its id",
       "php": {
-        "ns": 545.8604172311027,
-        "min": 540.6743971823354,
-        "max": 580.8441614738554,
+        "ns": 540.3583187963367,
+        "min": 530.4527365896206,
+        "max": 552.2593763628435,
         "samples": 15,
-        "calls": 36910
+        "calls": 36688
       },
       "rust": {
-        "ns": 546.2697958404884,
-        "min": 539.4167961403222,
-        "max": 586.7109875432715,
+        "ns": 335.2819748518176,
+        "min": 327.3175386302121,
+        "max": 394.81476342207145,
         "samples": 15,
-        "calls": 36687,
-        "allocations": 10.000001817174113,
-        "bytes": 2988.0002180608935
+        "calls": 58374,
+        "allocations": 6.000001142060963,
+        "bytes": 2436.0001370473155
       },
-      "speedup": 0.9992505926329757,
+      "speedup": 1.6116533524808643,
       "bound": null
     }
   ]

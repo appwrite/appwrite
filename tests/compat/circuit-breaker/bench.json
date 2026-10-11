@@ -1,0 +1,119 @@
+{
+  "lib": "circuit-breaker",
+  "environment": {
+    "date": "2026-10-11T16:04:42Z",
+    "commit": "c74b41c1e9",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "call_closed",
+      "description": "A successful call through a closed in-process breaker",
+      "php": {
+        "ns": 523.539590677119,
+        "min": 518.2082127637186,
+        "max": 530.8088335876256,
+        "samples": 15,
+        "calls": 38014
+      },
+      "rust": {
+        "ns": 56.17131451984521,
+        "min": 55.39370360705978,
+        "max": 58.91047585207557,
+        "samples": 15,
+        "calls": 360238,
+        "allocations": 1.0000001850628382,
+        "bytes": 384.00002220754055
+      },
+      "speedup": 9.320408381971435,
+      "bound": null
+    },
+    {
+      "name": "call_open",
+      "description": "A call short-circuited by an open in-process breaker",
+      "php": {
+        "ns": 359.2758675949502,
+        "min": 354.5150015135058,
+        "max": 367.6120261391357,
+        "samples": 15,
+        "calls": 56161
+      },
+      "rust": {
+        "ns": 46.3905790922488,
+        "min": 46.02592383194461,
+        "max": 47.6279160835272,
+        "samples": 15,
+        "calls": 431572,
+        "allocations": 1.0000001544740313,
+        "bytes": 384.0000185368838
+      },
+      "speedup": 7.744586823986857,
+      "bound": null
+    },
+    {
+      "name": "call_telemetry",
+      "description": "A successful call through a closed breaker recording telemetry",
+      "php": {
+        "ns": 564.9267931677571,
+        "min": 554.0552973565021,
+        "max": 598.7672952251265,
+        "samples": 15,
+        "calls": 33781
+      },
+      "rust": {
+        "ns": 358.7033118751767,
+        "min": 178.7181662424938,
+        "max": 675.755194038292,
+        "samples": 15,
+        "calls": 60117,
+        "allocations": 12.000002217897322,
+        "bytes": 961.0254891849781
+      },
+      "speedup": 1.5749137921657745,
+      "bound": null
+    },
+    {
+      "name": "state",
+      "description": "Read the state of an in-process breaker",
+      "php": {
+        "ns": 54.042309568988884,
+        "min": 53.74232041203578,
+        "max": 56.82174573055028,
+        "samples": 15,
+        "calls": 368900
+      },
+      "rust": {
+        "ns": 26.65774653748723,
+        "min": 26.13872201496294,
+        "max": 28.729928702509174,
+        "samples": 15,
+        "calls": 744907,
+        "allocations": 1.0000000894966308,
+        "bytes": 80.00001073959568
+      },
+      "speedup": 2.027264738712717,
+      "bound": null
+    }
+  ]
+}
