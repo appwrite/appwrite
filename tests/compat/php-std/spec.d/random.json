@@ -1,0 +1,65 @@
+{
+  "ops": {
+    "random.mt_rand": {
+      "doc": "mt_srand(seed), then `draws` calls of mt_rand() (or mt_rand(min, min + span))",
+      "covers": ["mt_srand()", "mt_rand()"],
+      "fuzz": [
+        {
+          "name": "bare",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "seed": { "gen": "int", "min": -9223372036854775808, "max": 9223372036854775807 },
+              "draws": { "gen": "int", "min": 1, "max": 700 }
+            }
+          },
+          "iterations": 300
+        },
+        {
+          "name": "small ranges",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "seed": { "gen": "int", "min": -4294967296, "max": 4294967296 },
+              "draws": { "gen": "int", "min": 1, "max": 50 },
+              "min": { "gen": "int", "min": -1000, "max": 1000 },
+              "span": { "gen": "int", "min": 0, "max": 1000 }
+            }
+          },
+          "iterations": 1000
+        },
+        {
+          "name": "wide ranges",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "seed": { "gen": "int", "min": 0, "max": 4294967295 },
+              "draws": { "gen": "int", "min": 1, "max": 20 },
+              "min": { "gen": "int", "min": -1152921504606846976, "max": 1152921504606846976 },
+              "span": { "gen": "int", "min": 0, "max": 4611686018427387904 }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "random.array_rand": {
+      "doc": "mt_srand(seed), then `draws` calls of array_rand(range(0, len - 1))",
+      "covers": ["array_rand()"],
+      "fuzz": [
+        {
+          "name": "lists",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "seed": { "gen": "int", "min": 0, "max": 4294967295 },
+              "len": { "gen": "int", "min": 1, "max": 40 },
+              "draws": { "gen": "int", "min": 1, "max": 30 }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    }
+  }
+}

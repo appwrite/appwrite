@@ -53,6 +53,10 @@ utopia-image = { path = "crates/utopia/image" }
 utopia-compression = { path = "crates/utopia/compression" }
 utopia-client = { path = "crates/utopia/client" }
 utopia-smtp = { path = "crates/utopia/smtp" }
+utopia-balancer = { path = "crates/utopia/balancer" }
+utopia-detector = { path = "crates/utopia/detector" }
+utopia-schedule = { path = "crates/utopia/schedule" }
+utopia-websocket = { path = "crates/utopia/websocket" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -176,6 +180,9 @@ sha3 = "0.10"
 syn = { version = "2", default-features = false, features = ["full", "parsing", "printing"] }
 thiserror = "2"
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "time", "sync", "signal"] }
+# The WebSocket protocol on tokio (utopia-websocket: the Tokio server adapter
+# and the client); pure Rust, TLS for wss through the workspace's rustls (ring).
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "handshake", "rustls-tls-webpki-roots"] }
 tokio-postgres = { version = "0.7.12", features = ["with-chrono-0_4", "with-serde_json-1"] }
 # TLS streams on tokio for utopia-client's HTTP/1.1 and utopia-smtp's SMTP
 # transports (STARTTLS upgrades a plain stream in place); already in

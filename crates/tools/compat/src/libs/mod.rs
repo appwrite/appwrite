@@ -13,12 +13,14 @@ use crate::bench::Bench;
 
 pub mod abuse;
 pub mod auth;
+pub mod balancer;
 pub mod cache;
 pub mod circuit_breaker;
 pub mod client;
 pub mod compression;
 pub mod config;
 pub mod database;
+pub mod detector;
 pub mod di;
 pub mod domains;
 pub mod dsn;
@@ -32,23 +34,27 @@ pub mod pools;
 pub mod query;
 pub mod queue;
 pub mod registry;
+pub mod schedule;
 pub mod smtp;
 pub mod span;
 pub mod system;
 pub mod telemetry;
 pub mod user_agent;
 pub mod validators;
+pub mod websocket;
 
 /// Library ids (the `tests/compat/<lib>` directory names) and their operations.
 pub const LIBS: &[(&str, &[&str])] = &[
     ("abuse", abuse::OPS),
     ("auth", auth::OPS),
+    ("balancer", balancer::OPS),
     ("cache", cache::OPS),
     ("circuit-breaker", circuit_breaker::OPS),
     ("client", client::OPS),
     ("compression", compression::OPS),
     ("config", config::OPS),
     ("database", database::OPS),
+    ("detector", detector::OPS),
     ("di", di::OPS),
     ("domains", domains::OPS),
     ("dsn", dsn::OPS),
@@ -62,12 +68,14 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("query", query::OPS),
     ("queue", queue::OPS),
     ("registry", registry::OPS),
+    ("schedule", schedule::OPS),
     ("smtp", smtp::OPS),
     ("span", span::OPS),
     ("system", system::OPS),
     ("telemetry", telemetry::OPS),
     ("user-agent", user_agent::OPS),
     ("validators", validators::OPS),
+    ("websocket", websocket::OPS),
 ];
 
 /// Runs one operation of one library.
@@ -75,12 +83,14 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
     match lib {
         "abuse" => abuse::call(op, args, session).await,
         "auth" => auth::call(op, args, session).await,
+        "balancer" => balancer::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
         "circuit-breaker" => circuit_breaker::call(op, args, session).await,
         "client" => client::call(op, args, session).await,
         "compression" => compression::call(op, args, session).await,
         "config" => config::call(op, args, session).await,
         "database" => database::call(op, args, session).await,
+        "detector" => detector::call(op, args, session).await,
         "di" => di::call(op, args, session).await,
         "domains" => domains::call(op, args, session).await,
         "dsn" => dsn::call(op, args, session).await,
@@ -94,12 +104,14 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "query" => query::call(op, args, session).await,
         "queue" => queue::call(op, args, session).await,
         "registry" => registry::call(op, args, session).await,
+        "schedule" => schedule::call(op, args, session).await,
         "smtp" => smtp::call(op, args, session).await,
         "span" => span::call(op, args, session).await,
         "system" => system::call(op, args, session).await,
         "telemetry" => telemetry::call(op, args, session).await,
         "user-agent" => user_agent::call(op, args, session).await,
         "validators" => validators::call(op, args, session).await,
+        "websocket" => websocket::call(op, args, session).await,
         _ => Err(Fault::new(format!("unknown library `{lib}`"))),
     }
 }
@@ -109,11 +121,13 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
     match lib {
         "abuse" => abuse::BENCHES,
         "auth" => auth::BENCHES,
+        "balancer" => balancer::BENCHES,
         "cache" => cache::BENCHES,
         "circuit-breaker" => circuit_breaker::BENCHES,
         "client" => client::BENCHES,
         "compression" => compression::BENCHES,
         "config" => config::BENCHES,
+        "detector" => detector::BENCHES,
         "di" => di::BENCHES,
         "domains" => domains::BENCHES,
         "dsn" => dsn::BENCHES,
@@ -126,12 +140,14 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "pools" => pools::BENCHES,
         "queue" => queue::BENCHES,
         "registry" => registry::BENCHES,
+        "schedule" => schedule::BENCHES,
         "smtp" => smtp::BENCHES,
         "span" => span::BENCHES,
         "system" => system::BENCHES,
         "telemetry" => telemetry::BENCHES,
         "user-agent" => user_agent::BENCHES,
         "validators" => validators::BENCHES,
+        "websocket" => websocket::BENCHES,
         _ => &[],
     }
 }
@@ -141,11 +157,13 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
     match lib {
         "abuse" => abuse::bench(name, session).await,
         "auth" => auth::bench(name, session).await,
+        "balancer" => balancer::bench(name, session).await,
         "cache" => cache::bench(name, session).await,
         "circuit-breaker" => circuit_breaker::bench(name, session).await,
         "client" => client::bench(name, session).await,
         "compression" => compression::bench(name, session).await,
         "config" => config::bench(name, session).await,
+        "detector" => detector::bench(name, session).await,
         "di" => di::bench(name, session).await,
         "domains" => domains::bench(name, session).await,
         "dsn" => dsn::bench(name, session).await,
@@ -158,12 +176,14 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "pools" => pools::bench(name, session).await,
         "queue" => queue::bench(name, session).await,
         "registry" => registry::bench(name, session).await,
+        "schedule" => schedule::bench(name, session).await,
         "smtp" => smtp::bench(name, session).await,
         "span" => span::bench(name, session).await,
         "system" => system::bench(name, session).await,
         "telemetry" => telemetry::bench(name, session).await,
         "user-agent" => user_agent::bench(name, session).await,
         "validators" => validators::bench(name, session).await,
+        "websocket" => websocket::bench(name, session).await,
         _ => Err(Fault::new(format!("{lib}: no benchmarks"))),
     }
 }

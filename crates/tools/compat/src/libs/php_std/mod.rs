@@ -16,7 +16,9 @@ mod igbinary;
 mod json;
 mod mb;
 mod net;
+mod path;
 mod pcre;
+mod random;
 mod serialize;
 mod sort;
 mod string;
@@ -35,7 +37,9 @@ const AREAS: &[&[&str]] = &[
     json::OPS,
     mb::OPS,
     net::OPS,
+    path::OPS,
     pcre::OPS,
+    random::OPS,
     serialize::OPS,
     sort::OPS,
     string::OPS,
@@ -185,7 +189,9 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         Some("json") => json::call(op, args, session).await,
         Some("mb") => mb::call(op, args, session).await,
         Some("net") => net::call(op, args, session).await,
+        Some("path") => path::call(op, args, session).await,
         Some("pcre") => pcre::call(op, args, session).await,
+        Some("random") => random::call(op, args, session).await,
         Some("serialize") => serialize::call(op, args, session).await,
         Some("sort") => sort::call(op, args, session).await,
         Some("string") => string::call(op, args, session).await,

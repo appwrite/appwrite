@@ -1,0 +1,11 @@
+name: flutter_app
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  # jaspr: ^0.23.0
+
+flutter:
+  uses-material-design: true

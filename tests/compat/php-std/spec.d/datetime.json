@@ -1075,6 +1075,260 @@
         }
       ]
     },
+    "datetime.set_date": {
+      "doc": "(new DateTimeImmutable($base, $tz))->setDate($year, $month, $day)->format($format)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "base": {
+                "gen": "ref",
+                "name": "dt_set_base"
+              },
+              "tz": {
+                "gen": "ref",
+                "name": "dt_set_zone"
+              },
+              "year": {
+                "gen": "ref",
+                "name": "dt_set_year"
+              },
+              "month": {
+                "gen": "ref",
+                "name": "dt_set_month"
+              },
+              "day": {
+                "gen": "ref",
+                "name": "dt_set_day"
+              },
+              "format": {
+                "gen": "ref",
+                "name": "dt_set_format"
+              }
+            },
+            "optional": [
+              "tz"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "dst",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "base": {
+                "gen": "pick",
+                "from": [
+                  "2026-01-01 02:30:00",
+                  "2026-07-01 01:30:00.5",
+                  "2026-03-08 00:00:00",
+                  "2026-11-01 00:00:00",
+                  "2026-03-29 00:00:00",
+                  "2026-10-25 00:00:00",
+                  "2026-04-05 00:00:00",
+                  "2026-10-04 00:00:00"
+                ]
+              },
+              "tz": {
+                "gen": "pick",
+                "from": [
+                  "America/New_York",
+                  "Europe/London",
+                  "Australia/Lord_Howe",
+                  "UTC",
+                  "+05:30",
+                  "EDT",
+                  "Europe/Paris"
+                ]
+              },
+              "year": {
+                "gen": "pick",
+                "from": [
+                  2024,
+                  2025,
+                  2026
+                ]
+              },
+              "month": {
+                "gen": "pick",
+                "from": [
+                  3,
+                  4,
+                  10,
+                  11
+                ]
+              },
+              "day": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": 1,
+                    "max": 31
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      32
+                    ]
+                  }
+                ]
+              },
+              "format": {
+                "gen": "ref",
+                "name": "dt_set_format"
+              }
+            },
+            "optional": [
+              "tz"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "datetime.set_time": {
+      "doc": "(new DateTime($base, $tz))->setTime($hour, $minute, $second, $microsecond)->format($format)",
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "base": {
+                "gen": "ref",
+                "name": "dt_set_base"
+              },
+              "tz": {
+                "gen": "ref",
+                "name": "dt_set_zone"
+              },
+              "hour": {
+                "gen": "ref",
+                "name": "dt_set_hour"
+              },
+              "minute": {
+                "gen": "ref",
+                "name": "dt_set_minute"
+              },
+              "second": {
+                "gen": "ref",
+                "name": "dt_set_second"
+              },
+              "microsecond": {
+                "gen": "ref",
+                "name": "dt_set_microsecond"
+              },
+              "format": {
+                "gen": "ref",
+                "name": "dt_set_format"
+              }
+            },
+            "optional": [
+              "tz"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "dst",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "base": {
+                "gen": "pick",
+                "from": [
+                  "2026-01-01 02:30:00",
+                  "2026-07-01 01:30:00.5",
+                  "2026-03-08 00:00:00",
+                  "2026-11-01 00:00:00",
+                  "2026-03-29 00:00:00",
+                  "2026-10-25 00:00:00",
+                  "2026-04-05 00:00:00",
+                  "2026-10-04 00:00:00"
+                ]
+              },
+              "tz": {
+                "gen": "pick",
+                "from": [
+                  "America/New_York",
+                  "Europe/London",
+                  "Australia/Lord_Howe",
+                  "UTC",
+                  "+05:30",
+                  "EDT",
+                  "Europe/Paris"
+                ]
+              },
+              "hour": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      -1,
+                      24,
+                      25,
+                      26
+                    ]
+                  }
+                ]
+              },
+              "minute": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  15,
+                  29,
+                  30,
+                  31,
+                  45,
+                  59,
+                  60,
+                  -1
+                ]
+              },
+              "second": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  59,
+                  60,
+                  -1
+                ]
+              },
+              "microsecond": {
+                "gen": "pick",
+                "from": [
+                  0,
+                  500000,
+                  999999,
+                  1000000,
+                  -1
+                ]
+              },
+              "format": {
+                "gen": "ref",
+                "name": "dt_set_format"
+              }
+            },
+            "optional": [
+              "tz"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
     "datetime.add": {
       "doc": "(new DateTimeImmutable($base))->add(DateInterval::createFromDateString($interval))->format($format)",
       "fuzz": [
@@ -4649,6 +4903,261 @@
           "name": "dt_part"
         }
       ]
+    },
+    "dt_set_base": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "dt_fixed"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "2026-03-08 02:30:00",
+            "2026-03-08 01:59:59.999999",
+            "2026-11-01 01:30:00",
+            "2026-11-01 01:30:00.25 EDT",
+            "2026-11-01 01:30:00 EST",
+            "2026-03-29 01:30:00",
+            "2026-10-25 01:30:00",
+            "2026-04-05 01:45:00",
+            "2026-10-04 02:15:00",
+            "2024-02-29 12:00:00.5",
+            "2026-01-31 23:59:59.999999",
+            "0000-01-01 00:00:00",
+            "9999-12-31 23:59:59",
+            "1970-01-01 00:00:00",
+            "2026-06-15 12:00:00 +05:30",
+            "2026-06-15 12:00:00 -09:30",
+            "2026-03-08 02:30:00 America/New_York",
+            "2026-11-01 01:30:00 America/New_York",
+            "@1700000000.123456",
+            "2026-07-01 00:00:00 CEST",
+            "2026-01-15 08:00:00 Australia/Lord_Howe"
+          ]
+        }
+      ]
+    },
+    "dt_set_zone": {
+      "gen": "pick",
+      "from": [
+        "UTC",
+        "America/New_York",
+        "Europe/London",
+        "Australia/Lord_Howe",
+        "+05:30",
+        "-09:30",
+        "Asia/Kolkata",
+        "Pacific/Chatham",
+        "EST",
+        "CEST",
+        "Z"
+      ]
+    },
+    "dt_set_format": {
+      "gen": "pick",
+      "from": [
+        "Y-m-d H:i:s.u T U",
+        "Y-m-d H:i:s.u e T P U I",
+        "N w t L z o-W",
+        "c u Z B"
+      ]
+    },
+    "dt_set_year": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 1900,
+          "max": 2100
+        },
+        {
+          "gen": "int",
+          "min": -10000,
+          "max": 10000
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            -1,
+            1969,
+            1970,
+            2000,
+            2024,
+            2026,
+            2100,
+            9999,
+            10000,
+            -10000,
+            1000000,
+            -1000000,
+            100000000
+          ]
+        }
+      ]
+    },
+    "dt_set_month": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 1,
+          "max": 12
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            -1,
+            13,
+            14,
+            24,
+            25,
+            -11,
+            -12,
+            -13,
+            100,
+            -100,
+            10000,
+            -10000
+          ]
+        }
+      ]
+    },
+    "dt_set_day": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 1,
+          "max": 31
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            -1,
+            28,
+            29,
+            30,
+            31,
+            32,
+            59,
+            60,
+            61,
+            365,
+            366,
+            -365,
+            10000,
+            -10000,
+            1000000
+          ]
+        }
+      ]
+    },
+    "dt_set_hour": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 23
+        },
+        {
+          "gen": "pick",
+          "from": [
+            24,
+            25,
+            -1,
+            -24,
+            -25,
+            48,
+            100,
+            -100,
+            10000,
+            -10000,
+            1000000
+          ]
+        }
+      ]
+    },
+    "dt_set_minute": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 59
+        },
+        {
+          "gen": "pick",
+          "from": [
+            60,
+            61,
+            -1,
+            -60,
+            -61,
+            1440,
+            10000,
+            -10000,
+            1000000
+          ]
+        }
+      ]
+    },
+    "dt_set_second": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 59
+        },
+        {
+          "gen": "pick",
+          "from": [
+            60,
+            61,
+            -1,
+            -60,
+            -61,
+            86400,
+            10000,
+            -10000,
+            1000000
+          ]
+        }
+      ]
+    },
+    "dt_set_microsecond": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 999999
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            999999,
+            1000000,
+            1000001,
+            -1,
+            -999999,
+            -1000000,
+            -1000001,
+            1999999,
+            999999999,
+            -999999999
+          ]
+        }
+      ]
     }
   },
   "deviations": [
@@ -4664,7 +5173,7 @@
     },
     {
       "symbol": "DateTime",
-      "php": "DatePeriod, diff(), sub(), ISO 8601 duration intervals, setDate()/setTime()/setISODate(), mktime(), strftime(), idate(), getdate(), sunrise/sunset.",
+      "php": "DatePeriod, diff(), sub(), ISO 8601 duration intervals, setISODate(), mktime(), strftime(), idate(), getdate(), sunrise/sunset.",
       "reason": "Not used by the libraries; not converted (see the module docs)."
     }
   ]

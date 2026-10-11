@@ -36,6 +36,7 @@ pub mod net;
 pub mod number;
 pub mod path;
 pub mod pcre;
+pub mod random;
 pub mod serialize;
 pub mod sort;
 pub mod string;

@@ -1,0 +1,46 @@
+{
+  "ops": {
+    "path.basename": {
+      "doc": "basename($path)",
+      "covers": ["basename()"],
+      "fuzz": [
+        {
+          "name": "paths",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "path": { "gen": "ref", "name": "path_path" }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "path.pathinfo_extension": {
+      "doc": "pathinfo($path, PATHINFO_EXTENSION)",
+      "covers": ["pathinfo()"],
+      "fuzz": [
+        {
+          "name": "paths",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "path": { "gen": "ref", "name": "path_path" }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "path_path": {
+      "gen": "one_of",
+      "of": [
+        { "gen": "string", "min": 0, "max": 24, "alphabet": "ab./ \\:-_", "tricky": 0.2 },
+        { "gen": "repeat", "part": { "gen": "pick", "from": ["", ".", "..", "a", "a.b", ".env", "index.html", "x.tar.gz", "dir/", "/"] }, "min": 1, "max": 5, "sep": "/" },
+        { "gen": "bytes", "min": 0, "max": 12 }
+      ]
+    }
+  }
+}

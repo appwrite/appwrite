@@ -13,6 +13,8 @@
 //! | `DateTime::createFromFormat($f, $s, $tz)` | [`DateTime::from_format`] |
 //! | `->format($f)`, `date($f, $ts)`, `gmdate($f, $ts)` | [`DateTime::format`], [`date`], [`gmdate`] |
 //! | `->modify($s)` | [`DateTime::modify`] (`DateTime`), [`DateTime::modified`] (`DateTimeImmutable`) |
+//! | `->setDate($y, $m, $d)` | [`DateTime::set_date`] (`DateTime`), [`DateTime::with_date`] (`DateTimeImmutable`) |
+//! | `->setTime($h, $i, $s, $us)` | [`DateTime::set_time`] (`DateTime`), [`DateTime::with_time`] (`DateTimeImmutable`) |
 //! | `->setTimezone($tz)`, `->getTimezone()` | [`DateTime::set_timezone`], [`DateTime::timezone`] |
 //! | `->getTimestamp()`, `->getOffset()`, `->getMicrosecond()` | [`DateTime::timestamp`], [`DateTime::offset`], [`DateTime::microsecond`] |
 //! | `->add(DateInterval::createFromDateString($s))` | [`DateTime::add`], [`Interval::from_date_string`] |
@@ -31,9 +33,9 @@
 //! the system's, so results do not depend on the host.
 //!
 //! Not modelled: `DatePeriod`, `DateTime::diff()`, `DateTime::sub()`,
-//! intervals created from ISO 8601 durations, `setDate`/`setTime`/
-//! `setISODate`, `idate`, `mktime`, `strftime`, `getdate`, sunrise/sunset
-//! functions; `date_default_timezone_set` (pass the zone instead).
+//! intervals created from ISO 8601 durations, `setISODate`, `idate`,
+//! `mktime`, `strftime`, `getdate`, sunrise/sunset functions;
+//! `date_default_timezone_set` (pass the zone instead).
 
 mod abbreviations;
 mod format;
@@ -399,6 +401,69 @@ impl DateTime {
         Ok(DateTime { t })
     }
 
+    /// `DateTimeImmutable::modify($modifier)` with a [`Modifier`] parsed once.
+    pub fn modified_by(&self, modifier: &Modifier) -> DateTime {
+        let mut t = self.t.clone();
+        apply_modifier(&mut t, &modifier.0);
+        DateTime { t }
+    }
+
+    /// `(int) $date->format('w')`: the day of the week, 0 (Sunday) to 6.
+    pub fn day_of_week(&self) -> i64 {
+        i64::from(timelib::day_of_week(self.t.y, self.t.m, self.t.d) as i32)
+    }
+
+    /// `(int) $date->format('t')`: the number of days in the month.
+    pub fn days_in_month(&self) -> i64 {
+        i64::from(timelib::days_in_month(self.t.y, self.t.m) as i32)
+    }
+
+    /// Sets the year, month and day, keeping the time of day and the zone.
+    ///
+    /// Out-of-range values roll over (month 13 is January of the next
+    /// year, day 0 the last day of the previous month) and the timestamp is
+    /// recomputed. As in PHP, the fields are not re-derived from the new
+    /// timestamp, so a wall time that falls in a DST gap still formats as set.
+    ///
+    /// PHP: `DateTime::setDate()` / `DateTimeImmutable::setDate()`.
+    pub fn set_date(&mut self, year: i64, month: i64, day: i64) {
+        (self.t.y, self.t.m, self.t.d) = (year, month, day);
+        self.t.update_ts(None);
+    }
+
+    /// [`DateTime::set_date`] on a copy.
+    ///
+    /// PHP: `DateTimeImmutable::setDate()`.
+    pub fn with_date(&self, year: i64, month: i64, day: i64) -> DateTime {
+        let mut d = self.clone();
+        d.set_date(year, month, day);
+        d
+    }
+
+    /// Sets the hour, minute, second and microsecond, keeping the date and
+    /// the zone.
+    ///
+    /// Out-of-range values roll over into the next larger unit (hour 24 is
+    /// midnight of the next day), and the fields are then re-derived from
+    /// the new timestamp, so a wall time in a DST gap moves past it.
+    ///
+    /// PHP: `DateTime::setTime()` / `DateTimeImmutable::setTime()`
+    /// (`$second` and `$microsecond` default to 0 there).
+    pub fn set_time(&mut self, hour: i64, minute: i64, second: i64, microsecond: i64) {
+        (self.t.h, self.t.i, self.t.s, self.t.us) = (hour, minute, second, microsecond);
+        self.t.update_ts(None);
+        self.t.update_from_sse();
+    }
+
+    /// [`DateTime::set_time`] on a copy.
+    ///
+    /// PHP: `DateTimeImmutable::setTime()`.
+    pub fn with_time(&self, hour: i64, minute: i64, second: i64, microsecond: i64) -> DateTime {
+        let mut d = self.clone();
+        d.set_time(hour, minute, second, microsecond);
+        d
+    }
+
     /// `DateTime::add($interval)` for an interval made by
     /// `DateInterval::createFromDateString()`.
     pub fn add(&mut self, interval: &Interval) {
@@ -517,11 +582,23 @@ fn finish(
 
 /// `php_date_modify`.
 fn modify(t: &mut Time, modifier: &[u8], prefix: &str) -> Result<(), Error> {
+    let tmp = parse_modifier(modifier, prefix)?;
+    apply_modifier(t, &tmp);
+    Ok(())
+}
+
+/// The parse half of `php_date_modify`.
+fn parse_modifier(modifier: &[u8], prefix: &str) -> Result<Time, Error> {
     let (tmp, errors) = parse::strtotime(modifier);
     if !errors.errors.is_empty() {
         let message = first_error(&format!("{prefix}Failed to parse time string "), modifier, &errors);
         return Err(Error::new(ErrorKind::MalformedString, message));
     }
+    Ok(tmp)
+}
+
+/// The apply half of `php_date_modify`: `tmp` is a parsed modifier.
+fn apply_modifier(t: &mut Time, tmp: &Time) {
     t.relative = tmp.relative.clone();
     t.have_relative = tmp.have_relative;
     t.sse_uptodate = false;
@@ -565,7 +642,30 @@ fn modify(t: &mut Time, modifier: &[u8], prefix: &str) -> Result<(), Error> {
     t.update_from_sse();
     t.have_relative = false;
     t.relative = RelTime::default();
-    Ok(())
+}
+
+/// A modifier string parsed once, to apply to many dates: what
+/// `DateTimeImmutable::modify($modifier)` does, without parsing the string
+/// again each time.
+///
+/// ```
+/// use php_std::datetime::{DateTime, Modifier, Timestamp, TzInfo};
+///
+/// let next_day = Modifier::parse(b"+1 day")?;
+/// let at = DateTime::parse(b"2026-03-28 12:00", Some(&php_std::datetime::TimeZone::new("Europe/Paris")?), &TzInfo::utc(), Timestamp { sec: 0, usec: 0 })?;
+/// assert_eq!(at.modified_by(&next_day).format(b"Y-m-d H:i T"), b"2026-03-29 12:00 CEST");
+/// assert_eq!(at.modified_by(&next_day), at.modified(b"+1 day")?);
+/// # Ok::<(), php_std::datetime::Error>(())
+/// ```
+#[derive(Debug, Clone)]
+pub struct Modifier(Time);
+
+impl Modifier {
+    /// Parses `modifier` as `DateTimeImmutable::modify()` does, failing with
+    /// the same error.
+    pub fn parse(modifier: &[u8]) -> Result<Modifier, Error> {
+        parse_modifier(modifier, "DateTimeImmutable::modify(): ").map(Modifier)
+    }
 }
 
 /// A `DateInterval` made by `DateInterval::createFromDateString()`.

@@ -1,0 +1,3195 @@
+{
+  "source": "packages/balancer/tests/BalancerTest.php",
+  "cases": [
+    {
+      "name": "testBalancer",
+      "steps": [
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": -1
+          },
+          "bind": "rr",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.get_algo",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": "RoundRobin"
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "hostname": "worker-1",
+              "isOnline": true,
+              "cpu": 80
+            }
+          },
+          "bind": "w1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "hostname": "worker-2",
+              "isOnline": false,
+              "cpu": 20
+            }
+          },
+          "bind": "w2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "hostname": "worker-3",
+              "isOnline": true,
+              "cpu": 35
+            }
+          },
+          "bind": "w3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "w1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "w2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "w3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-1",
+            "isOnline": true,
+            "cpu": 80
+          }
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "filter": {
+              "key": "isOnline",
+              "op": "===",
+              "value": true
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-3",
+            "isOnline": true,
+            "cpu": 35
+          }
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-1",
+            "isOnline": true,
+            "cpu": 80
+          }
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "filter": {
+              "key": "cpu",
+              "op": "<",
+              "value": 50
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-3",
+            "isOnline": true,
+            "cpu": 35
+          }
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-3",
+            "isOnline": true,
+            "cpu": 35
+          }
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-3",
+            "isOnline": true,
+            "cpu": 35
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "hostname": "worker-4",
+              "isOnline": true,
+              "cpu": 5
+            }
+          },
+          "bind": "w4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "w4"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-4",
+            "isOnline": true,
+            "cpu": 5
+          }
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-3",
+            "isOnline": true,
+            "cpu": 35
+          }
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-4",
+            "isOnline": true,
+            "cpu": 5
+          }
+        },
+        {
+          "op": "round_robin.get_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "Random",
+            "seed": 1
+          },
+          "bind": "random",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "random"
+            }
+          },
+          "bind": "b2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.get_algo",
+          "args": {
+            "balancer": {
+              "$ref": "b2"
+            }
+          },
+          "expect": "Random"
+        }
+      ]
+    },
+    {
+      "name": "testAlgorithms",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-1"
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-2"
+            }
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "lon-1"
+            }
+          },
+          "bind": "o3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "first"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "Last"
+          },
+          "bind": "last",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "last"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "Random",
+            "seed": 42
+          },
+          "bind": "random",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "random"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "random"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "random"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": -1
+          },
+          "bind": "rr",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": 1
+          },
+          "bind": "rr1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr1"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "round_robin.set_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr1"
+            },
+            "index": 0
+          },
+          "expect": null
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr1"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              },
+              {
+                "$ref": "o3"
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "round_robin.get_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr1"
+            }
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "algorithm names",
+      "steps": [
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.name",
+          "args": {
+            "algorithm": {
+              "$ref": "a"
+            }
+          },
+          "expect": "First"
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "Last"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.name",
+          "args": {
+            "algorithm": {
+              "$ref": "b"
+            }
+          },
+          "expect": "Last"
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "Random",
+            "seed": 3
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.name",
+          "args": {
+            "algorithm": {
+              "$ref": "c"
+            }
+          },
+          "expect": "Random"
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.name",
+          "args": {
+            "algorithm": {
+              "$ref": "d"
+            }
+          },
+          "expect": "RoundRobin"
+        }
+      ]
+    },
+    {
+      "name": "algorithms with no options",
+      "steps": [
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "first",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "first"
+            },
+            "options": []
+          },
+          "expect": null
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "Last"
+          },
+          "bind": "last",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "last"
+            },
+            "options": []
+          },
+          "expect": null
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": 4
+          },
+          "bind": "rr",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": []
+          },
+          "expect": null
+        },
+        {
+          "op": "round_robin.get_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "random with no options throws",
+      "steps": [
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "Random",
+            "seed": 3
+          },
+          "bind": "random",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "random"
+            },
+            "options": []
+          },
+          "expect": {
+            "$error": {
+              "class": "ValueError",
+              "message": "array_rand(): Argument #1 ($array) must not be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "round robin past the largest index",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-1"
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": 9223372036854775807
+          },
+          "bind": "rr",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Cannot increment property Utopia\\Balancer\\Algorithm\\RoundRobin::$index of type int past its maximal value"
+            }
+          }
+        },
+        {
+          "op": "round_robin.get_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "expect": 9223372036854775807
+        },
+        {
+          "op": "round_robin.set_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "index": -9223372036854775808
+          },
+          "expect": null
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "round_robin.get_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "round robin wraps from beyond the options",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-1"
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-2"
+            }
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": 7
+          },
+          "bind": "rr",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "round_robin.get_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "round_robin.set_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "index": -5
+          },
+          "expect": null
+        },
+        {
+          "op": "algorithm.run",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            },
+            "options": [
+              {
+                "$ref": "o1"
+              },
+              {
+                "$ref": "o2"
+              }
+            ]
+          },
+          "expect": 0
+        },
+        {
+          "op": "round_robin.get_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "random picks follow the seed",
+      "steps": [
+        {
+          "op": "balancer.scenario",
+          "args": {
+            "algorithm": {
+              "type": "Random",
+              "seed": 7
+            },
+            "options": [
+              {
+                "dc": "fra-1"
+              },
+              {
+                "dc": "fra-2"
+              },
+              {
+                "dc": "lon-1"
+              }
+            ],
+            "runs": 12
+          },
+          "expect": [
+            0,
+            1,
+            1,
+            2,
+            1,
+            0,
+            2,
+            2,
+            1,
+            2,
+            1,
+            1
+          ]
+        },
+        {
+          "op": "balancer.scenario",
+          "args": {
+            "algorithm": {
+              "type": "Random",
+              "seed": -1
+            },
+            "options": [
+              {
+                "dc": "a"
+              },
+              {
+                "dc": "b"
+              },
+              {
+                "dc": "c"
+              },
+              {
+                "dc": "d"
+              },
+              {
+                "dc": "e"
+              }
+            ],
+            "runs": 12
+          },
+          "expect": [
+            1,
+            3,
+            1,
+            4,
+            0,
+            0,
+            2,
+            4,
+            4,
+            2,
+            2,
+            2
+          ]
+        },
+        {
+          "op": "balancer.scenario",
+          "args": {
+            "algorithm": {
+              "type": "Random",
+              "seed": 7
+            },
+            "options": [],
+            "runs": 2
+          },
+          "expect": [
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testOption",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {}
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.get_states",
+          "args": {
+            "option": {
+              "$ref": "o"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "isOnline",
+            "default": false
+          },
+          "expect": false
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "isOnline"
+          },
+          "expect": null
+        },
+        {
+          "op": "option.set_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "isOnline",
+            "value": true
+          },
+          "expect": null
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "isOnline",
+            "default": false
+          },
+          "expect": true
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "isOnline"
+          },
+          "expect": true
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "ISONLINE"
+          },
+          "expect": null
+        },
+        {
+          "op": "option.get_states",
+          "args": {
+            "option": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "isOnline": true
+          }
+        },
+        {
+          "op": "option.set_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "cpu",
+            "value": 50
+          },
+          "expect": null
+        },
+        {
+          "op": "option.set_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "memory",
+            "value": 1800
+          },
+          "expect": null
+        },
+        {
+          "op": "option.get_states",
+          "args": {
+            "option": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "isOnline": true,
+            "cpu": 50,
+            "memory": 1800
+          }
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "isOnline"
+          },
+          "expect": true
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "cpu"
+          },
+          "expect": 50
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "memory"
+          },
+          "expect": 1800
+        },
+        {
+          "op": "option.delete_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "isOnline"
+          },
+          "expect": null
+        },
+        {
+          "op": "option.delete_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "cpu"
+          },
+          "expect": null
+        },
+        {
+          "op": "option.get_states",
+          "args": {
+            "option": {
+              "$ref": "o"
+            }
+          },
+          "expect": {
+            "memory": 1800
+          }
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "isOnline"
+          },
+          "expect": null
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "cpu"
+          },
+          "expect": null
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "cpu",
+            "default": 0
+          },
+          "expect": 0
+        },
+        {
+          "op": "option.get_state",
+          "args": {
+            "option": {
+              "$ref": "o"
+            },
+            "key": "memory"
+          },
+          "expect": 1800
+        }
+      ]
+    },
+    {
+      "name": "option keys follow PHP array rules",
+      "steps": [
+        {
+          "op": "option.scenario",
+          "args": {
+            "state": {
+              "0": "zero",
+              "x": null,
+              "nested": {
+                "a": [
+                  1,
+                  2.5
+                ]
+              }
+            },
+            "set": [
+              {
+                "k": "1",
+                "v": "one"
+              },
+              {
+                "k": "01",
+                "v": "padded"
+              },
+              {
+                "k": "x",
+                "v": 3
+              }
+            ],
+            "delete": [
+              "0",
+              "missing"
+            ],
+            "get": [
+              "1",
+              "01",
+              "x",
+              "nested",
+              "0"
+            ],
+            "default": "fallback"
+          },
+          "expect": {
+            "states": {
+              "x": 3,
+              "nested": {
+                "a": [
+                  1,
+                  2.5
+                ]
+              },
+              "1": "one",
+              "01": "padded"
+            },
+            "gets": [
+              "one",
+              "padded",
+              3,
+              {
+                "a": [
+                  1,
+                  2.5
+                ]
+              },
+              "fallback"
+            ]
+          }
+        },
+        {
+          "op": "option.scenario",
+          "args": {
+            "state": {},
+            "set": [
+              {
+                "k": "0",
+                "v": "a"
+              },
+              {
+                "k": "1",
+                "v": "b"
+              }
+            ],
+            "get": [
+              "0"
+            ]
+          },
+          "expect": {
+            "states": [
+              "a",
+              "b"
+            ],
+            "gets": [
+              "a"
+            ]
+          }
+        },
+        {
+          "op": "option.scenario",
+          "args": {
+            "state": {
+              "a": null
+            },
+            "get": [
+              "a"
+            ],
+            "default": 5
+          },
+          "expect": {
+            "states": {
+              "a": null
+            },
+            "gets": [
+              5
+            ]
+          }
+        },
+        {
+          "op": "option.scenario",
+          "args": {
+            "state": {
+              "a": 1
+            },
+            "set": [
+              {
+                "k": "a",
+                "v": null
+              }
+            ],
+            "get": [
+              "a"
+            ],
+            "default": 5
+          },
+          "expect": {
+            "states": {
+              "a": null
+            },
+            "gets": [
+              5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGroup",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-1",
+              "cpu": 91,
+              "online": false
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-2",
+              "cpu": 95,
+              "online": false
+            }
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "lon-1",
+              "cpu": 87,
+              "online": true
+            }
+          },
+          "bind": "o3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f1"
+            }
+          },
+          "bind": "b1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            },
+            "filter": {
+              "key": "cpu",
+              "op": "<",
+              "value": 80
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            },
+            "filter": {
+              "key": "online",
+              "op": "===",
+              "value": true
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f2"
+            }
+          },
+          "bind": "b2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b2"
+            },
+            "filter": {
+              "key": "online",
+              "op": "===",
+              "value": true
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f3"
+            }
+          },
+          "bind": "b3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b2"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b3"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            },
+            "option": {
+              "$ref": "o2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b2"
+            },
+            "option": {
+              "$ref": "o2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b3"
+            },
+            "option": {
+              "$ref": "o2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            },
+            "option": {
+              "$ref": "o3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b2"
+            },
+            "option": {
+              "$ref": "o3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b3"
+            },
+            "option": {
+              "$ref": "o3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.new",
+          "bind": "g1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g1"
+            },
+            "balancer": {
+              "$ref": "b1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.new",
+          "bind": "g2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g2"
+            },
+            "balancer": {
+              "$ref": "b1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g2"
+            },
+            "balancer": {
+              "$ref": "b2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g2"
+            }
+          },
+          "expect": {
+            "dataCenter": "lon-1",
+            "cpu": 87,
+            "online": true
+          }
+        },
+        {
+          "op": "group.new",
+          "bind": "g3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g3"
+            },
+            "balancer": {
+              "$ref": "b1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g3"
+            },
+            "balancer": {
+              "$ref": "b3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g3"
+            }
+          },
+          "expect": {
+            "dataCenter": "fra-1",
+            "cpu": 91,
+            "online": false
+          }
+        },
+        {
+          "op": "group.new",
+          "bind": "g4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g4"
+            },
+            "balancer": {
+              "$ref": "b1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g4"
+            },
+            "balancer": {
+              "$ref": "b2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g4"
+            },
+            "balancer": {
+              "$ref": "b3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g4"
+            }
+          },
+          "expect": {
+            "dataCenter": "lon-1",
+            "cpu": 87,
+            "online": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "group shares option state with its balancers",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dc": "fra-1",
+              "online": false
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "filter": {
+              "key": "online",
+              "op": "truthy"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.new",
+          "args": {
+            "name": "workers"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "option.set_state",
+          "args": {
+            "option": {
+              "$ref": "o1"
+            },
+            "key": "online",
+            "value": true
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "dc": "fra-1",
+            "online": true
+          }
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "dc": "fra-1",
+            "online": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "group round robin advances the shared algorithm",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dc": "a"
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dc": "b"
+            }
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": -1
+          },
+          "bind": "rr",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "o2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.new",
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "dc": "a"
+          }
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "dc": "b"
+          }
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "dc": "a"
+          }
+        },
+        {
+          "op": "round_robin.get_index",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "group errors propagate",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dc": "a"
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "RoundRobin",
+            "index": 9223372036854775807
+          },
+          "bind": "rr",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "rr"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.new",
+          "args": {
+            "name": "broken"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.set_telemetry",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Cannot increment property Utopia\\Balancer\\Algorithm\\RoundRobin::$index of type int past its maximal value"
+            }
+          }
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "group telemetry records every run",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dc": "a"
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.new",
+          "bind": "t",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.new",
+          "args": {
+            "name": "workers"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "group.set_telemetry",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "dc": "a"
+          }
+        },
+        {
+          "op": "group.run",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": {
+            "dc": "a"
+          }
+        },
+        {
+          "op": "telemetry.dump",
+          "args": {
+            "telemetry": {
+              "$ref": "t"
+            }
+          },
+          "expect": [
+            [
+              "balancer.run.duration",
+              3
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testGetOptions",
+      "steps": [
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-1",
+              "cpu": 91,
+              "online": false
+            }
+          },
+          "bind": "o1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "fra-2",
+              "cpu": 95,
+              "online": false
+            }
+          },
+          "bind": "o2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "dataCenter": "lon-1",
+              "cpu": 87,
+              "online": true
+            }
+          },
+          "bind": "o3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f1"
+            }
+          },
+          "bind": "b1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f2"
+            }
+          },
+          "bind": "b2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b2"
+            },
+            "option": {
+              "$ref": "o1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            },
+            "option": {
+              "$ref": "o2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b2"
+            },
+            "option": {
+              "$ref": "o2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            },
+            "option": {
+              "$ref": "o3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b2"
+            },
+            "option": {
+              "$ref": "o3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.get_options",
+          "args": {
+            "balancer": {
+              "$ref": "b1"
+            }
+          },
+          "expect": [
+            {
+              "dataCenter": "fra-1",
+              "cpu": 91,
+              "online": false
+            },
+            {
+              "dataCenter": "fra-2",
+              "cpu": 95,
+              "online": false
+            },
+            {
+              "dataCenter": "lon-1",
+              "cpu": 87,
+              "online": true
+            }
+          ]
+        },
+        {
+          "op": "group.new",
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "balancer": {
+              "$ref": "b1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.add",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "balancer": {
+              "$ref": "b2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "group.get_options",
+          "args": {
+            "group": {
+              "$ref": "g"
+            }
+          },
+          "expect": [
+            {
+              "dataCenter": "fra-1",
+              "cpu": 91,
+              "online": false
+            },
+            {
+              "dataCenter": "fra-2",
+              "cpu": 95,
+              "online": false
+            },
+            {
+              "dataCenter": "lon-1",
+              "cpu": 87,
+              "online": true
+            },
+            {
+              "dataCenter": "fra-1",
+              "cpu": 91,
+              "online": false
+            },
+            {
+              "dataCenter": "fra-2",
+              "cpu": 95,
+              "online": false
+            },
+            {
+              "dataCenter": "lon-1",
+              "cpu": 87,
+              "online": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testFilteredOptions",
+      "steps": [
+        {
+          "op": "algorithm.new",
+          "args": {
+            "type": "First"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.new",
+          "args": {
+            "algorithm": {
+              "$ref": "f"
+            }
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "hostname": "worker-1",
+              "isOnline": true,
+              "cpu": 80
+            }
+          },
+          "bind": "w1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "hostname": "worker-2",
+              "isOnline": false,
+              "cpu": 20
+            }
+          },
+          "bind": "w2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "option.new",
+          "args": {
+            "state": {
+              "hostname": "worker-3",
+              "isOnline": true,
+              "cpu": 35
+            }
+          },
+          "bind": "w3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "w1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "w2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.add_option",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "option": {
+              "$ref": "w3"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.get_filtered_options",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": [
+            {
+              "hostname": "worker-1",
+              "isOnline": true,
+              "cpu": 80
+            },
+            {
+              "hostname": "worker-2",
+              "isOnline": false,
+              "cpu": 20
+            },
+            {
+              "hostname": "worker-3",
+              "isOnline": true,
+              "cpu": 35
+            }
+          ]
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "filter": {
+              "key": "isOnline",
+              "op": "===",
+              "value": true
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.get_filtered_options",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": [
+            {
+              "hostname": "worker-1",
+              "isOnline": true,
+              "cpu": 80
+            },
+            {
+              "hostname": "worker-3",
+              "isOnline": true,
+              "cpu": 35
+            }
+          ]
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": {
+            "hostname": "worker-1",
+            "isOnline": true,
+            "cpu": 80
+          }
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "filter": {
+              "key": "cpu",
+              "op": "<",
+              "value": 50
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.get_filtered_options",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": [
+            {
+              "hostname": "worker-3",
+              "isOnline": true,
+              "cpu": 35
+            }
+          ]
+        },
+        {
+          "op": "balancer.add_filter",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            },
+            "filter": {
+              "op": "false"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "balancer.get_filtered_options",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "balancer.run",
+          "args": {
+            "balancer": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "filters compare like PHP",
+      "steps": [
+        {
+          "op": "balancer.scenario",
+          "args": {
+            "algorithm": {
+              "type": "First"
+            },
+            "options": [
+              {
+                "cpu": "abc"
+              },
+              {
+                "cpu": "40"
+              },
+              {
+                "cpu": 40.5
+              },
+              {
+                "cpu": null
+              },
+              {}
+            ],
+            "filters": [
+              {
+                "key": "cpu",
+                "op": "<",
+                "value": 50
+              }
+            ],
+            "runs": 1
+          },
+          "expect": [
+            1
+          ]
+        },
+        {
+          "op": "balancer.scenario",
+          "args": {
+            "algorithm": {
+              "type": "Last"
+            },
+            "options": [
+              {
+                "cpu": "abc"
+              },
+              {
+                "cpu": "40"
+              },
+              {
+                "cpu": 40.5
+              },
+              {
+                "cpu": null
+              },
+              {}
+            ],
+            "filters": [
+              {
+                "key": "cpu",
+                "op": ">",
+                "value": "5"
+              }
+            ],
+            "runs": 1
+          },
+          "expect": [
+            2
+          ]
+        },
+        {
+          "op": "balancer.scenario",
+          "args": {
+            "algorithm": {
+              "type": "RoundRobin",
+              "index": -1
+            },
+            "options": [
+              {
+                "cpu": "1e1"
+              },
+              {
+                "cpu": 10
+              },
+              {
+                "cpu": "10"
+              },
+              {
+                "cpu": " 10"
+              }
+            ],
+            "filters": [
+              {
+                "key": "cpu",
+                "op": "==",
+                "value": 10
+              }
+            ],
+            "runs": 4
+          },
+          "expect": [
+            0,
+            1,
+            2,
+            3
+          ]
+        },
+        {
+          "op": "balancer.scenario",
+          "args": {
+            "algorithm": {
+              "type": "RoundRobin",
+              "index": -1
+            },
+            "options": [
+              {
+                "online": 1
+              },
+              {
+                "online": true
+              },
+              {
+                "online": "0"
+              },
+              {
+                "online": ""
+              }
+            ],
+            "filters": [
+              {
+                "key": "online",
+                "op": "truthy"
+              }
+            ],
+            "runs": 3
+          },
+          "expect": [
+            0,
+            1,
+            0
+          ]
+        }
+      ]
+    }
+  ]
+}

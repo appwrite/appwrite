@@ -39,15 +39,18 @@ tokio = { workspace = true, features = ["io-std", "io-util", "rt", "macros"] }
 php-std.workspace = true
 utopia-abuse = { workspace = true, features = ["redis-cluster"] }
 utopia-auth.workspace = true
+utopia-balancer.workspace = true
 utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }
 utopia-compression.workspace = true
 utopia-database.workspace = true
+utopia-detector.workspace = true
 utopia-domains.workspace = true
 utopia-dsn.workspace = true
 utopia-config.workspace = true
 utopia-span.workspace = true
 utopia-di.workspace = true
 utopia-registry.workspace = true
+utopia-schedule.workspace = true
 utopia-emails.workspace = true
 utopia-http.workspace = true
 utopia-image.workspace = true
@@ -63,3 +66,5 @@ utopia-circuit-breaker = { workspace = true, features = ["redis"] }
 utopia-client.workspace = true
 utopia-smtp.workspace = true
 utopia-validators.workspace = true
+utopia-websocket.workspace = true
+http.workspace = true

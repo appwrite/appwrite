@@ -1,0 +1,4 @@
+{
+  "name": "acme/api",
+  "require": { "php": ">=8.3" }
+}

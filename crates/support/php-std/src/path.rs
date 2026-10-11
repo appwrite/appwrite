@@ -63,6 +63,30 @@ pub fn basename<'a>(path: &'a [u8], suffix: &[u8]) -> &'a [u8] {
     name
 }
 
+/// PHP `pathinfo($path, PATHINFO_EXTENSION)`: what follows the last `.` of
+/// [`basename`], or an empty string when it has no `.`.
+///
+/// ```
+/// use php_std::path::pathinfo_extension;
+///
+/// assert_eq!(pathinfo_extension(b"server/pages/index.html"), b"html");
+/// assert_eq!(pathinfo_extension(b"archive.tar.gz"), b"gz");
+/// assert_eq!(pathinfo_extension(b"Dockerfile"), b"");
+/// assert_eq!(pathinfo_extension(b".env"), b"env");
+/// ```
+///
+/// ```php
+/// var_dump(pathinfo('server/pages/index.html', PATHINFO_EXTENSION)); // string(4) "html"
+/// var_dump(pathinfo('Dockerfile', PATHINFO_EXTENSION));              // string(0) ""
+/// ```
+pub fn pathinfo_extension(path: &[u8]) -> &[u8] {
+    let base = basename(path, b"");
+    match base.iter().rposition(|&b| b == b'.') {
+        Some(dot) => &base[dot + 1..],
+        None => b"",
+    }
+}
+
 /// `MAXPATHLEN` on Linux, where PHP runs.
 const MAXPATHLEN: usize = 4096;
 

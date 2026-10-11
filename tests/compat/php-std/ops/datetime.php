@@ -54,6 +54,12 @@ return [
     'datetime.modify_mutable' => fn (array $a) => $catching(fn () => $dependsOnNow($a['base'])
         ? $now
         : (new DateTime($a['base']))->modify($a['s'])->format($a['format'])),
+    'datetime.set_date' => fn (array $a) => $catching(fn () => $dependsOnNow($a['base'])
+        ? $now
+        : (new DateTimeImmutable($a['base'], $zone($a['tz'] ?? null)))->setDate($a['year'], $a['month'], $a['day'])->format($a['format'])),
+    'datetime.set_time' => fn (array $a) => $catching(fn () => $dependsOnNow($a['base'])
+        ? $now
+        : (new DateTime($a['base'], $zone($a['tz'] ?? null)))->setTime($a['hour'], $a['minute'], $a['second'], $a['microsecond'])->format($a['format'])),
     'datetime.add' => fn (array $a) => $catching(fn () => $dependsOnNow($a['base'])
         ? $now
         : (new DateTimeImmutable($a['base']))->add(DateInterval::createFromDateString($a['interval']))->format($a['format'])),

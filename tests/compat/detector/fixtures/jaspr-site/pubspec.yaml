@@ -1,0 +1,16 @@
+name: jaspr_site
+description: A site built with Jaspr # {jaspr: 'example'}
+environment:
+  sdk: ^3.8.0
+
+dependencies:
+  jaspr: ^0.23.0
+  shelf: ^1.4.0
+
+dev_dependencies:
+  jaspr_builder: ^0.23.0
+  build_runner: ^2.4.0
+
+jaspr:
+  # mode: server
+  mode: static
