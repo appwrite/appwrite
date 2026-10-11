@@ -100,7 +100,7 @@ fn list(value: Option<String>) -> Vec<String> {
 impl Config {
     /// Loads configuration from the environment.
     pub fn from_env() -> Self {
-        let domain = env_or("_APP_DOMAIN", "localhost");
+        let domain = env_or("_APP_DOMAIN", "localhost").into_owned();
         let console_domain = env("_APP_CONSOLE_DOMAIN").unwrap_or_else(|| domain.clone());
         let force_https = env_or("_APP_OPTIONS_FORCE_HTTPS", "disabled") == "enabled";
         let console_url = env("_APP_CONSOLE_URL")
@@ -110,12 +110,12 @@ impl Config {
 
         let main = DatabaseDsn {
             name: "db_main".to_owned(),
-            scheme: env_or("_APP_DB_ADAPTER", "postgresql"),
-            host: env_or("_APP_DB_HOST", "postgresql"),
+            scheme: env_or("_APP_DB_ADAPTER", "postgresql").into_owned(),
+            host: env_or("_APP_DB_HOST", "postgresql").into_owned(),
             port: env_int("_APP_DB_PORT", 5432) as u16,
-            user: env_or("_APP_DB_USER", ""),
-            password: env_or("_APP_DB_PASS", ""),
-            database: env_or("_APP_DB_SCHEMA", "appwrite"),
+            user: env_or("_APP_DB_USER", "").into_owned(),
+            password: env_or("_APP_DB_PASS", "").into_owned(),
+            database: env_or("_APP_DB_SCHEMA", "appwrite").into_owned(),
         };
         let mut databases = vec![main];
         // `_APP_CONNECTIONS_DATABASE`: "name=scheme://user:pass@host:port/db,..."
@@ -140,15 +140,15 @@ impl Config {
         let cpus = cpus();
         Self {
             development: env_or("_APP_ENV", "production") == "development",
-            edition: env_or("_APP_EDITION", "self-hosted"),
-            locale: env_or("_APP_LOCALE", "en"),
-            region: env_or("_APP_REGION", "default"),
+            edition: env_or("_APP_EDITION", "self-hosted").into_owned(),
+            locale: env_or("_APP_LOCALE", "en").into_owned(),
+            region: env_or("_APP_REGION", "default").into_owned(),
             openssl_key_v1: env_raw("_APP_OPENSSL_KEY_V1").unwrap_or_default(),
             migration_host: env("_APP_MIGRATION_HOST"),
             console_url,
             console_schemas: list(env("_APP_CONSOLE_SCHEMA")),
             force_https,
-            trusted_headers: list(Some(env_or("_APP_TRUSTED_HEADERS", "x-forwarded-for")))
+            trusted_headers: list(Some(env_or("_APP_TRUSTED_HEADERS", "x-forwarded-for").into_owned()))
                 .into_iter()
                 .map(|h| h.to_lowercase())
                 .collect(),
@@ -162,26 +162,26 @@ impl Config {
             databases,
             shared_tables: list(env("_APP_DATABASE_SHARED_TABLES")),
             redis: RedisDsn {
-                host: env_or("_APP_REDIS_HOST", "redis"),
+                host: env_or("_APP_REDIS_HOST", "redis").into_owned(),
                 port: env_int("_APP_REDIS_PORT", 6379) as u16,
                 user: env("_APP_REDIS_USER"),
                 password: env("_APP_REDIS_PASS"),
             },
             usage_stats: env_or("_APP_USAGE_STATS", "enabled") != "disabled",
             abuse: env_or("_APP_OPTIONS_ABUSE", "enabled") != "disabled",
-            pwned_dsn: env_or("_APP_PWNED_PASSWORDS_DSN", "none://localhost"),
+            pwned_dsn: env_or("_APP_PWNED_PASSWORDS_DSN", "none://localhost").into_owned(),
             geo_endpoint: env("_APP_GEO_ENDPOINT"),
             geo_secret: env("_APP_GEO_SECRET"),
-            assets: PathBuf::from(env_or("_APP_RUST_ASSETS", "/usr/src/code")),
+            assets: PathBuf::from(env_or("_APP_RUST_ASSETS", "/usr/src/code").as_ref()),
             port: env_int("_APP_RUST_PORT", 8080) as u16,
             db_pool_size: env_int("_APP_RUST_DB_POOL", (cpus * 8).max(16) as i64) as usize,
             redis_connections: env_int("_APP_RUST_REDIS_CONNECTIONS", cpus.clamp(1, 8) as i64) as usize,
             statement_timeout: Duration::from_millis(env_int("_APP_RUST_DB_TIMEOUT_MS", 15000) as u64),
-            queue_functions: env_or("_APP_FUNCTIONS_QUEUE_NAME", "v1-functions"),
-            queue_webhooks: env_or("_APP_WEBHOOK_QUEUE_NAME", "v1-webhooks"),
-            queue_deletes: env_or("_APP_DELETE_QUEUE_NAME", "v1-deletes"),
-            queue_usage: env_or("_APP_STATS_USAGE_QUEUE_NAME", "v1-stats-usage"),
-            queue_audits: env_or("_APP_AUDITS_QUEUE_NAME", "v1-audits"),
+            queue_functions: env_or("_APP_FUNCTIONS_QUEUE_NAME", "v1-functions").into_owned(),
+            queue_webhooks: env_or("_APP_WEBHOOK_QUEUE_NAME", "v1-webhooks").into_owned(),
+            queue_deletes: env_or("_APP_DELETE_QUEUE_NAME", "v1-deletes").into_owned(),
+            queue_usage: env_or("_APP_STATS_USAGE_QUEUE_NAME", "v1-stats-usage").into_owned(),
+            queue_audits: env_or("_APP_AUDITS_QUEUE_NAME", "v1-audits").into_owned(),
             console_trusted_projects: list(env("_APP_CONSOLE_TRUSTED_PROJECTS")),
             locking: env_or("_APP_LOCKING_ENABLED", "enabled") == "enabled",
             domain,
@@ -191,7 +191,7 @@ impl Config {
 
     /// `platform.hostnames`: API, console and migration hosts.
     pub fn platform_hostnames(&self) -> Vec<String> {
-        let console = utopia_system::env_or("_APP_CONSOLE_DOMAIN", "localhost");
+        let console = utopia_system::env_or("_APP_CONSOLE_DOMAIN", "localhost").into_owned();
         let mut out: Vec<String> = Vec::new();
         for h in [Some(self.domain.clone()), Some(console), self.migration_host.clone()].into_iter().flatten() {
             if !h.is_empty() && h != "0" && !out.contains(&h) {
