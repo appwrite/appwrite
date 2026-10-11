@@ -507,6 +507,14 @@ class Update extends Action
 
                 $queueForEvents->setEvent($eventString);
 
+                $relationships = \array_map(
+                    fn ($document) => $document->getAttribute('key'),
+                    \array_filter(
+                        $collection->getAttribute('attributes', []),
+                        fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+                    )
+                );
+
                 // Get project and function/webhook events (cached)
                 $project = $queueForEvents->getProject();
                 $functionsEvents = $eventProcessor->getFunctionsEvents($project, $dbForProject);
@@ -526,7 +534,7 @@ class Update extends Action
                     $queueForEvents
                         ->setParam('documentId', $doc->getId())
                         ->setParam('rowId', $doc->getId())
-                        ->setPayload($payload);
+                        ->setPayload($payload, sensitive: $relationships);
 
                     // Generate events for this document operation
                     $generatedEvents = Event::generateEvents(

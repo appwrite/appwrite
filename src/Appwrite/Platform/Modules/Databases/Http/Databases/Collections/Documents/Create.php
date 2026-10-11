@@ -543,14 +543,23 @@ class Create extends Action
             return;
         }
 
-        $queueForEvents
-            ->setParam('documentId', $created[0]->getId())
-            ->setParam('rowId', $created[0]->getId())
-            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create');
-
         $response->dynamic(
             $created[0],
             $this->getResponseModel()
         );
+
+        $relationships = \array_map(
+            fn ($document) => $document->getAttribute('key'),
+            \array_filter(
+                $collection->getAttribute('attributes', []),
+                fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
+            )
+        );
+
+        $queueForEvents
+            ->setParam('documentId', $created[0]->getId())
+            ->setParam('rowId', $created[0]->getId())
+            ->setEvent('databases.[databaseId].collections.[collectionId].documents.[documentId].create')
+            ->setPayload($response->getPayload(), sensitive: $relationships);
     }
 }
