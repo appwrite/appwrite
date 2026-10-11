@@ -35,6 +35,7 @@ pub(crate) mod value;
 
 use std::fmt;
 
+pub(crate) use array::Builder;
 pub use array::{Array, ArrayFull, ArrayKey, Iter, KeyRef, numeric_key};
 pub use str::Str;
 pub use value::Value;

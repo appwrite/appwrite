@@ -31,7 +31,7 @@ use indexmap::IndexMap;
 
 use crate::json::push_int;
 use crate::number;
-use crate::types::{Array, ArrayKey, Extension, KeyRef, Str, Value};
+use crate::types::{Array, ArrayKey, Builder, Extension, KeyRef, Str, Value};
 
 // ---------------------------------------------------------------------------
 // serialize (ext/standard/var.c)
@@ -927,64 +927,128 @@ impl Unserializer<'_> {
     }
 
     /// Reads the whole value, building it directly: [`Unserializer::run`]
-    /// without locations. `None` when the data has a back-reference or
-    /// fails (then `run` reads it again and reports what PHP reports).
+    /// without locations, for what `serialize` writes (`N`, `b`, `i`, `d`,
+    /// `s`, `a`, and `O` of `stdClass`). `None` for anything else (a
+    /// back-reference, another class, `S`, data that warns) and on failure:
+    /// then `run` reads it again and reports what PHP reports.
     fn direct(&mut self, p: &mut usize) -> Option<Value> {
-        struct Frame {
-            /// Where its entries start in `entries`.
-            start: usize,
-            key: Option<ArrayKey>,
-            remaining: i64,
-            object: bool,
-            started: bool,
-        }
-        let mut frames: Vec<Frame> = Vec::new();
-        // The entries of the open containers, innermost last.
-        let mut entries: Vec<(ArrayKey, Value)> = Vec::with_capacity((self.buf.len() / 16).min(64));
+        let buf = self.buf;
+        let mut pos = *p;
+        let mut open = match *buf.get(pos)? {
+            b'a' | b'O' => match self.container(&mut pos)? {
+                Ok(open) => open,
+                Err(empty) => {
+                    *p = pos;
+                    return Some(empty);
+                }
+            },
+            _ => {
+                let value = self.scalar(&mut pos)?;
+                *p = pos;
+                return Some(value);
+            }
+        };
+        // The containers `open` is nested in, each with the key it goes to.
+        let mut parents: Vec<(Open, ArrayKey)> = Vec::new();
         loop {
-            let mut done = match self.read(p).ok()?? {
-                Read::Reference => return None,
-                Read::Value(v) => Some(v),
-                Read::Open { elements, object } => {
-                    if self.max_depth > 0 && self.cur_depth >= self.max_depth {
-                        return None;
-                    }
-                    self.cur_depth += 1;
-                    frames.push(Frame { start: entries.len(), key: None, remaining: elements, object, started: false });
-                    None
-                }
-            };
-            // The value is complete (or a container opened): find the next one.
-            loop {
-                let Some(frame) = frames.last_mut() else { return done };
-                if let Some(value) = done.take() {
-                    entries.push((frame.key.take()?, value));
-                }
-                if frame.started && frame.remaining > 0 && !matches!(self.at(p.wrapping_sub(1)), b';' | b'}') {
+            if open.remaining == 0 {
+                if buf.get(pos) != Some(&b'}') {
                     return None;
                 }
-                frame.started = true;
-                if frame.remaining > 0 {
-                    frame.remaining -= 1;
-                    frame.key = Some(match (self.key(p).ok()??, frame.object) {
-                        (KeyValue::Other, _) => return None,
-                        (KeyValue::Int(i), false) => ArrayKey::Int(i),
-                        (KeyValue::Str(s), false) => ArrayKey::normalize(s),
-                        (KeyValue::Int(i), true) => ArrayKey::Str(Str::from(i.to_string())),
-                        (KeyValue::Str(s), true) => ArrayKey::Str(s),
-                    });
-                    break;
-                }
-                let frame = frames.pop()?;
+                pos += 1;
                 self.cur_depth -= 1;
-                if !self.finish(p) {
-                    return None;
+                let array = open.array.finish();
+                let value = if open.object { Value::Object(array) } else { Value::Array(array) };
+                let Some((parent, key)) = parents.pop() else {
+                    *p = pos;
+                    return Some(value);
+                };
+                open = parent;
+                open.array.set(key, value);
+                continue;
+            }
+            open.remaining -= 1;
+            // Every value read here ends with `;` or `}`, which a key may follow.
+            let (key, end) = key(buf, pos, open.object)?;
+            pos = end;
+            match *buf.get(pos)? {
+                b'a' | b'O' => match self.container(&mut pos)? {
+                    Ok(nested) => parents.push((std::mem::replace(&mut open, nested), key)),
+                    Err(empty) => open.array.set(key, empty),
+                },
+                _ => {
+                    let value = self.scalar(&mut pos)?;
+                    open.array.set(key, value);
                 }
-                // Each entry assigned in order (a repeated key keeps its place).
-                let array: Array = entries.drain(frame.start..).collect();
-                done = Some(if frame.object { Value::Object(array) } else { Value::Array(array) });
             }
         }
+    }
+
+    /// A scalar at the cursor for [`Unserializer::direct`].
+    #[inline]
+    fn scalar(&mut self, pos: &mut usize) -> Option<Value> {
+        if self.buf.get(*pos) == Some(&b'd') {
+            // Rare: `read` has the float grammar.
+            return match self.read(pos).ok()?? {
+                Read::Value(v) => Some(v),
+                _ => None,
+            };
+        }
+        let (value, end) = scalar(self.buf, *pos)?;
+        *pos = end;
+        Some(value)
+    }
+
+    /// An `a:` or `O:` (of `stdClass`) at the cursor for
+    /// [`Unserializer::direct`]: the container opened, within the depth
+    /// limit, or the empty array `a:0:{}`.
+    fn container(&mut self, pos: &mut usize) -> Option<Result<Open, Value>> {
+        let buf = self.buf;
+        let i = *pos;
+        if buf.get(i + 1) != Some(&b':') {
+            return None;
+        }
+        let object = buf[i] == b'O';
+        let (elements, brace, cursor) = if object {
+            let (len, quote) = uiv(buf, i + 2, b':')?;
+            if buf.get(quote) != Some(&b'"') {
+                return None;
+            }
+            let cursor = quote + 1 + len;
+            let name = buf.get(quote + 1..cursor)?;
+            // Other classes (and an empty name) are left to `run`.
+            if !name.eq_ignore_ascii_case(b"stdClass") || buf.get(cursor..cursor + 2) != Some(b"\":") {
+                return None;
+            }
+            let (elements, brace) = uiv(buf, cursor + 2, b':')?;
+            // PHP counts the bytes after the name.
+            (elements, brace, cursor)
+        } else {
+            let (elements, brace) = uiv(buf, i + 2, b':')?;
+            (elements, brace, brace + 1)
+        };
+        if buf.get(brace) != Some(&b'{')
+            || elements as i64 >= HT_MAX_SIZE
+            || fake_count(elements as i64, buf.len() - cursor)
+        {
+            return None;
+        }
+        *pos = brace + 1;
+        if elements == 0 && !object {
+            // No nested data, so no depth check.
+            if buf.get(*pos) != Some(&b'}') {
+                return None;
+            }
+            *pos += 1;
+            return Some(Err(Value::Array(Array::new())));
+        }
+        if self.max_depth > 0 && self.cur_depth >= self.max_depth {
+            return None;
+        }
+        self.cur_depth += 1;
+        // Each entry takes at least 6 bytes (`i:0;N;`): no more room than that.
+        let array = Builder::new(elements.min((buf.len() - *pos) / 6));
+        Some(Ok(Open { array, remaining: elements, object }))
     }
 
     /// The location of `key` in the array at `cell` (reused when the key repeats).
@@ -1083,6 +1147,111 @@ impl Unserializer<'_> {
                 });
             }
         }
+    }
+}
+
+/// A container [`Unserializer::direct`] is reading.
+struct Open {
+    array: Builder,
+    /// Entries still to read.
+    remaining: usize,
+    object: bool,
+}
+
+/// `uiv` at `i` followed by `term`: the number and where the terminator
+/// ends. At most 18 digits, so it cannot wrap (longer ones are left to
+/// [`Unserializer::run`]).
+#[inline]
+fn uiv(buf: &[u8], mut i: usize, term: u8) -> Option<(usize, usize)> {
+    let start = i;
+    let mut n = 0usize;
+    while let Some(&c) = buf.get(i)
+        && c.is_ascii_digit()
+    {
+        n = n * 10 + usize::from(c - b'0');
+        i += 1;
+        if i - start > 18 {
+            return None;
+        }
+    }
+    (i > start && buf.get(i) == Some(&term)).then_some((n, i + 1))
+}
+
+/// `iv ";"` at `i` (`[+-]? [0-9]+`): the integer and where it ends. At most
+/// 18 significant digits, so it cannot be out of range (larger ones warn,
+/// which [`Unserializer::run`] reports).
+#[inline]
+fn int(buf: &[u8], mut i: usize) -> Option<(i64, usize)> {
+    let negative = buf.get(i) == Some(&b'-');
+    if matches!(buf.get(i), Some(b'-' | b'+')) {
+        i += 1;
+    }
+    let start = i;
+    while buf.get(i) == Some(&b'0') {
+        i += 1;
+    }
+    let digits = i;
+    let mut n = 0i64;
+    while let Some(&c) = buf.get(i)
+        && c.is_ascii_digit()
+    {
+        if i - digits == 18 {
+            return None;
+        }
+        n = n * 10 + i64::from(c - b'0');
+        i += 1;
+    }
+    (i > start && buf.get(i) == Some(&b';')).then_some((if negative { -n } else { n }, i + 1))
+}
+
+/// The bytes of `uiv ":" ["] ... ["] ";"` at `i` (after `s:`), and where it ends.
+#[inline]
+fn bytes(buf: &[u8], i: usize) -> Option<(&[u8], usize)> {
+    let (len, quote) = uiv(buf, i, b':')?;
+    if buf.get(quote) != Some(&b'"') {
+        return None;
+    }
+    let end = quote + 1 + len;
+    let s = buf.get(quote + 1..end)?;
+    (buf.get(end..end + 2) == Some(b"\";")).then_some((s, end + 2))
+}
+
+/// `N;`, `b:0;`, `b:1;`, `i:..;` or `s:..;` at `i`: the value and where it ends.
+#[inline]
+fn scalar(buf: &[u8], i: usize) -> Option<(Value, usize)> {
+    let tag = buf.get(i..i + 2)?;
+    Some(match tag {
+        b"N;" => (Value::Null, i + 2),
+        b"s:" => {
+            let (s, end) = bytes(buf, i + 2)?;
+            (Value::Str(Str::copy_from(s)), end)
+        }
+        b"i:" => {
+            let (n, end) = int(buf, i + 2)?;
+            (Value::Int(n), end)
+        }
+        b"b:" => match buf.get(i + 2..i + 4)? {
+            b"0;" => (Value::Bool(false), i + 4),
+            b"1;" => (Value::Bool(true), i + 4),
+            _ => return None,
+        },
+        _ => return None,
+    })
+}
+
+/// An array key (`i:` or `s:`, normalised) or property name at `i`, and where it ends.
+#[inline]
+fn key(buf: &[u8], i: usize, object: bool) -> Option<(ArrayKey, usize)> {
+    match buf.get(i..i + 2)? {
+        b"s:" => {
+            let (s, end) = bytes(buf, i + 2)?;
+            Some((if object { ArrayKey::Str(Str::copy_from(s)) } else { ArrayKey::from_bytes(s) }, end))
+        }
+        b"i:" => {
+            let (n, end) = int(buf, i + 2)?;
+            Some((if object { ArrayKey::Str(Str::from(n.to_string())) } else { ArrayKey::Int(n) }, end))
+        }
+        _ => None,
     }
 }
 

@@ -306,8 +306,20 @@ pub fn base64_decode(s: &[u8], strict: bool) -> Option<Vec<u8>> {
         }
         if or { out[j] |= v } else { out[j] = v }
     };
-    let (mut i, mut padding, mut j) = (0usize, 0usize, 0usize);
+    // The bulk: whole groups of four alphabet characters from the start,
+    // three bytes each.
     let mut k = 0;
+    while let Some(g) = s.get(k..k + 4) {
+        let v = |n: usize| BASE64_VALUES[g[n] as usize];
+        let (a, b, c, d) = (v(0), v(1), v(2), v(3));
+        if (a | b | c | d) < 0 {
+            break;
+        }
+        let (a, b, c, d) = (a as u8, b as u8, c as u8, d as u8);
+        out.extend_from_slice(&[a << 2 | b >> 4, b << 4 | c >> 2, c << 6 | d]);
+        k += 4;
+    }
+    let (mut i, mut padding, mut j) = (k, 0usize, out.len());
     while k < s.len() {
         // Four alphabet characters at a group boundary: three bytes at once.
         if i.is_multiple_of(4) && (!strict || padding == 0) && k + 4 <= s.len() {

@@ -125,8 +125,14 @@ impl Store {
         };
         if let Ok(Value::Array(values)) = json::decode(&decoded, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
         {
-            // The decoded keys and values move in, uncopied.
             let properties = self.properties_mut();
+            if properties.is_empty() && properties.next_index().is_none() {
+                // Each decoded entry assigned in order to an empty array is
+                // the decoded array itself (`json_decode` builds it that way).
+                *properties = values;
+                return self;
+            }
+            // The decoded keys and values move in, uncopied.
             for (key, value) in values {
                 properties.set(key, value);
             }
