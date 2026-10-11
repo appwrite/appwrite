@@ -507,13 +507,16 @@ class Update extends Action
 
                 $queueForEvents->setEvent($eventString);
 
-                $relationships = \array_map(
-                    fn ($document) => $document->getAttribute('key'),
-                    \array_filter(
-                        $collection->getAttribute('attributes', []),
-                        fn ($attribute) => $attribute->getAttribute('type') === Database::VAR_RELATIONSHIP
-                    )
-                );
+                // The metadata findOne above skips attribute subqueries. Use the
+                // collection loaded via getCollection() during commit, which
+                // already has the schema needed to match update event payloads.
+                $schema = $collections[$collectionId] ?? $collection;
+                $relationships = [];
+                foreach ($schema->getAttribute('attributes', []) as $attribute) {
+                    if (($attribute['type'] ?? null) === Database::VAR_RELATIONSHIP) {
+                        $relationships[] = $attribute['key'];
+                    }
+                }
 
                 // Get project and function/webhook events (cached)
                 $project = $queueForEvents->getProject();
