@@ -655,6 +655,13 @@ class Migrations extends Action
             Console::error('Line: ' . $th->getLine());
             Console::error($th->getTraceAsString());
 
+            // Sources wrap what failed; the innermost cause names the request that failed.
+            for ($previous = $th->getPrevious(); $previous !== null; $previous = $previous->getPrevious()) {
+                Console::error('Caused by: ' . $previous::class . ': ' . $previous->getMessage());
+                Console::error('File: ' . $previous->getFile() . ':' . $previous->getLine());
+                Console::error($previous->getTraceAsString());
+            }
+
             $migration->setAttribute('status', 'failed');
             $migration->setAttribute('stage', 'finished');
 
