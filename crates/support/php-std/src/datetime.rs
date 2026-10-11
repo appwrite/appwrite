@@ -401,6 +401,23 @@ impl DateTime {
         Ok(DateTime { t })
     }
 
+    /// `DateTimeImmutable::modify($modifier)` with a [`Modifier`] parsed once.
+    pub fn modified_by(&self, modifier: &Modifier) -> DateTime {
+        let mut t = self.t.clone();
+        apply_modifier(&mut t, &modifier.0);
+        DateTime { t }
+    }
+
+    /// `(int) $date->format('w')`: the day of the week, 0 (Sunday) to 6.
+    pub fn day_of_week(&self) -> i64 {
+        i64::from(timelib::day_of_week(self.t.y, self.t.m, self.t.d) as i32)
+    }
+
+    /// `(int) $date->format('t')`: the number of days in the month.
+    pub fn days_in_month(&self) -> i64 {
+        i64::from(timelib::days_in_month(self.t.y, self.t.m) as i32)
+    }
+
     /// Sets the year, month and day, keeping the time of day and the zone.
     ///
     /// Out-of-range values roll over (month 13 is January of the next
@@ -565,11 +582,23 @@ fn finish(
 
 /// `php_date_modify`.
 fn modify(t: &mut Time, modifier: &[u8], prefix: &str) -> Result<(), Error> {
+    let tmp = parse_modifier(modifier, prefix)?;
+    apply_modifier(t, &tmp);
+    Ok(())
+}
+
+/// The parse half of `php_date_modify`.
+fn parse_modifier(modifier: &[u8], prefix: &str) -> Result<Time, Error> {
     let (tmp, errors) = parse::strtotime(modifier);
     if !errors.errors.is_empty() {
         let message = first_error(&format!("{prefix}Failed to parse time string "), modifier, &errors);
         return Err(Error::new(ErrorKind::MalformedString, message));
     }
+    Ok(tmp)
+}
+
+/// The apply half of `php_date_modify`: `tmp` is a parsed modifier.
+fn apply_modifier(t: &mut Time, tmp: &Time) {
     t.relative = tmp.relative.clone();
     t.have_relative = tmp.have_relative;
     t.sse_uptodate = false;
@@ -613,7 +642,30 @@ fn modify(t: &mut Time, modifier: &[u8], prefix: &str) -> Result<(), Error> {
     t.update_from_sse();
     t.have_relative = false;
     t.relative = RelTime::default();
-    Ok(())
+}
+
+/// A modifier string parsed once, to apply to many dates: what
+/// `DateTimeImmutable::modify($modifier)` does, without parsing the string
+/// again each time.
+///
+/// ```
+/// use php_std::datetime::{DateTime, Modifier, Timestamp, TzInfo};
+///
+/// let next_day = Modifier::parse(b"+1 day")?;
+/// let at = DateTime::parse(b"2026-03-28 12:00", Some(&php_std::datetime::TimeZone::new("Europe/Paris")?), &TzInfo::utc(), Timestamp { sec: 0, usec: 0 })?;
+/// assert_eq!(at.modified_by(&next_day).format(b"Y-m-d H:i T"), b"2026-03-29 12:00 CEST");
+/// assert_eq!(at.modified_by(&next_day), at.modified(b"+1 day")?);
+/// # Ok::<(), php_std::datetime::Error>(())
+/// ```
+#[derive(Debug, Clone)]
+pub struct Modifier(Time);
+
+impl Modifier {
+    /// Parses `modifier` as `DateTimeImmutable::modify()` does, failing with
+    /// the same error.
+    pub fn parse(modifier: &[u8]) -> Result<Modifier, Error> {
+        parse_modifier(modifier, "DateTimeImmutable::modify(): ").map(Modifier)
+    }
 }
 
 /// A `DateInterval` made by `DateInterval::createFromDateString()`.

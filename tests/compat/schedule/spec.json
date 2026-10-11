@@ -1,7 +1,7 @@
 {
   "lib": "schedule",
   "description": "utopia-php/schedule: cron, interval, one-shot and shifted triggers, the reconciling scheduler, and its claim stores (memory, Redis).",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "packages/schedule/src"
@@ -314,6 +314,13 @@
       "doc": "$clock->advance(seconds)",
       "covers": [
         "Utopia\\Schedule\\Clock\\Test::advance"
+      ]
+    },
+    "clock.system": {
+      "doc": "new Clock\\System(): now(), sleep(seconds), now() again: {zone, slept at least the seconds (none when not positive), bounded below them + 0.5}",
+      "covers": [
+        "Utopia\\Schedule\\Clock\\System::now",
+        "Utopia\\Schedule\\Clock\\System::sleep"
       ]
     },
     "clock.sleep": {
@@ -768,9 +775,7 @@
       ]
     }
   },
-  "waivers": {
-    "Utopia\\Schedule\\Clock\\System::*": "the wall clock and a real sleep: cases must not depend on the time they run (the Rust SystemClock reads and sleeps on the same clock)"
-  },
+  "waivers": {},
   "tests_waived": {},
   "quirks": [],
   "deviations": []

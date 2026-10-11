@@ -12,7 +12,7 @@ use redis::aio::ConnectionManager;
 use serde_json::{Map, Value, json};
 use utopia_schedule::{
     At, BoxError, Claim, Clock, Cron, Entry, Error, Interval, MemoryStore, Occurrence, Options, RedisStore, Row,
-    Scheduler, Shifted, Source, Stop, Store, TestClock, Trigger,
+    Scheduler, Shifted, Source, Stop, Store, SystemClock, TestClock, Trigger,
 };
 use utopia_telemetry::{Kind, MemoryTelemetry, Number};
 
@@ -22,6 +22,7 @@ pub const OPS: &[&str] = &[
     "trigger.new",
     "trigger.occurrences",
     "trigger.recurring",
+    "clock.system",
     "clock.new",
     "clock.now",
     "clock.advance",
@@ -565,6 +566,20 @@ async fn run_op(op: &str, args: &Value, session: &mut Session) -> Result<Value, 
         }
         "trigger.recurring" => Value::Bool(trigger(a.value("trigger")?)?.recurring()),
 
+        "clock.system" => {
+            let seconds = a.f64("seconds")?;
+            let clock = SystemClock;
+            let before = clock.now()?;
+            clock.sleep(seconds).await;
+            let after = clock.now()?;
+            let at = |d: &DateTime| d.timestamp() as f64 + d.microsecond() as f64 / 1_000_000.0;
+            let (elapsed, expected) = (at(&after) - at(&before), seconds.max(0.0));
+            json!({
+                "zone": String::from_utf8_lossy(&after.format(b"e")),
+                "slept": elapsed >= expected - 0.001,
+                "bounded": elapsed < expected + 0.5,
+            })
+        }
         "clock.new" => session.handle(Arc::new(TestClock::new(&moment(a.value("start")?)?))),
         "clock.now" => {
             let format = a.opt_str("format")?.map_or(FORMAT.to_vec(), |f| f.as_bytes().to_vec());

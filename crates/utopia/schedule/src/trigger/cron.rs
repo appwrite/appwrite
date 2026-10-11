@@ -1,13 +1,22 @@
 use std::borrow::Cow;
+use std::sync::LazyLock;
 
-use php_std::datetime::{DateTime, TzInfo};
+use php_std::datetime::{DateTime, Modifier, TzInfo};
 use php_std::format::str_to_int;
 use php_std::pcre::{self, Key, Value};
 use php_std::string::{ctype_digit, strtolower, strtoupper, trim};
 
 use super::Trigger;
 use crate::Error;
-use crate::moment::shifted;
+
+/// The relative steps the search takes, parsed once (`modify('+1 minute')`, ...).
+static MINUTE: LazyLock<Modifier> = LazyLock::new(|| step(b"+1 minute"));
+static HOUR: LazyLock<Modifier> = LazyLock::new(|| step(b"+1 hour"));
+static DAY: LazyLock<Modifier> = LazyLock::new(|| step(b"+1 day"));
+
+fn step(modifier: &[u8]) -> Modifier {
+    Modifier::parse(modifier).unwrap_or_else(|_| unreachable!("a relative step always parses"))
+}
 
 /// The `@` macros and the expressions they stand for.
 const MACROS: &[(&[u8], &[u8])] = &[
@@ -169,11 +178,6 @@ fn captures(pattern: &[u8], subject: &[u8]) -> Option<Vec<Vec<u8>>> {
     )
 }
 
-/// A one-digit or two-digit number `format()` printed.
-fn number(formatted: &[u8]) -> i64 {
-    str_to_int(formatted)
-}
-
 impl Cron {
     /// Parses `expression`; fails with [`Error::InvalidArgument`] when it
     /// does not parse or never matches a date.
@@ -237,7 +241,7 @@ impl Cron {
         // Occurrences are whole minutes: round any sub-minute part up.
         let rounded;
         let from = if from.fields().5 > 0 || from.microsecond() > 0 {
-            rounded = shifted(from, b"+1 minute");
+            rounded = from.modified_by(&MINUTE);
             &rounded
         } else {
             from
@@ -265,14 +269,14 @@ impl Cron {
             }
 
             if !self.day_matches(&candidate) {
-                candidate = shifted(&candidate.with_time(0, 0, 0, 0), b"+1 day");
+                candidate = candidate.with_time(0, 0, 0, 0).modified_by(&DAY);
                 continue;
             }
 
             let hour = candidate.fields().3;
             if !has(self.hours, hour) {
                 candidate = match first_above(self.hours, hour) {
-                    None => shifted(&candidate.with_time(0, 0, 0, 0), b"+1 day"),
+                    None => candidate.with_time(0, 0, 0, 0).modified_by(&DAY),
                     Some(next) => candidate.with_time(next, 0, 0, 0),
                 };
                 continue;
@@ -281,7 +285,7 @@ impl Cron {
             let minute = candidate.fields().4;
             if !has(self.minutes, minute) {
                 candidate = match first_above(self.minutes, minute) {
-                    None => shifted(&candidate.with_time(hour, 0, 0, 0), b"+1 hour"),
+                    None => candidate.with_time(hour, 0, 0, 0).modified_by(&HOUR),
                     Some(next) => candidate.with_time(hour, next, 0, 0),
                 };
                 continue;
@@ -293,12 +297,12 @@ impl Cron {
 
     fn day_matches(&self, candidate: &DateTime) -> bool {
         let (_, _, day, ..) = candidate.fields();
-        let weekday = number(&candidate.format(b"w"));
+        let weekday = candidate.day_of_week();
         let day_of_month = has(self.days_of_month, day);
         let day_of_week = has(self.days_of_week, weekday);
 
         if !self.rules.is_empty() {
-            let last = number(&candidate.format(b"t"));
+            let last = candidate.days_in_month();
             if self.rules.iter().any(|rule| rule_matches(*rule, candidate, day, last, weekday)) {
                 return true;
             }
@@ -329,7 +333,7 @@ fn rule_matches(rule: DayRule, candidate: &DateTime, day: i64, last: i64, weekda
 fn nearest_weekday(candidate: &DateTime, day: i64, last: i64) -> i64 {
     let (year, month, ..) = candidate.fields();
     let target = candidate.with_date(year, month, day);
-    match number(&target.format(b"w")) {
+    match target.day_of_week() {
         6 => {
             if day > 1 {
                 day - 1
@@ -497,7 +501,7 @@ impl Trigger for Cron {
             if current >= *end {
                 break;
             }
-            due = self.next_match(&shifted(&current, b"+1 minute"));
+            due = self.next_match(&current.modified_by(&MINUTE));
             occurrences.push(current);
         }
         occurrences

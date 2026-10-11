@@ -8,6 +8,7 @@ use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Schedule\Changes;
 use Utopia\Schedule\Claim;
+use Utopia\Schedule\Clock\System as SystemClock;
 use Utopia\Schedule\Clock\Test as TestClock;
 use Utopia\Schedule\Occurrence;
 use Utopia\Schedule\Scheduler;
@@ -98,6 +99,16 @@ final class Adapter implements Base, Benchmarks
             },
             'trigger.recurring' => fn (array $a, Session $s) => self::trigger($a['trigger'])->recurring(),
 
+            'clock.system' => function (array $a, Session $s) {
+                $clock = new SystemClock();
+                $before = $clock->now();
+                $clock->sleep((float) $a['seconds']);
+                $after = $clock->now();
+                $elapsed = (float) $after->format('U.u') - (float) $before->format('U.u');
+                $expected = max(0.0, (float) $a['seconds']);
+
+                return ['zone' => $after->format('e'), 'slept' => $elapsed >= $expected - 0.001, 'bounded' => $elapsed < $expected + 0.5];
+            },
             'clock.new' => fn (array $a, Session $s) => $s->handle(new TestClock(self::moment($a['start']))),
             'clock.now' => fn (array $a, Session $s) => self::clock($a, $s)->now()->format($a['format'] ?? self::FORMAT),
             'clock.advance' => function (array $a, Session $s) {

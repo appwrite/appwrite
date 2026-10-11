@@ -1,8 +1,12 @@
-use php_std::datetime::DateTime;
+use php_std::datetime::{DateTime, Modifier};
 use php_std::format::{Arg, sprintf};
 
 use super::Trigger;
-use crate::moment;
+
+/// `$moment->modify(...)` with a parsed modifier, or the moment itself.
+fn shift(moment: &DateTime, modifier: Option<&Modifier>) -> DateTime {
+    modifier.map_or_else(|| moment.clone(), |m| moment.modified_by(m))
+}
 
 /// Another trigger, every occurrence moved by a fixed number of seconds.
 ///
@@ -47,8 +51,11 @@ pub struct Shifted<T> {
     trigger: T,
     seconds: i64,
     /// `"{$seconds} seconds"` and `sprintf('%d seconds', -$seconds)`.
-    forward: Vec<u8>,
-    back: Vec<u8>,
+    /// `modify("{$seconds} seconds")` and its inverse, parsed once (`None`
+    /// leaves a moment as it is, as `moment::shifted` does for a modifier
+    /// that does not parse).
+    forward: Option<Modifier>,
+    back: Option<Modifier>,
 }
 
 impl<T: Trigger> Shifted<T> {
@@ -59,7 +66,12 @@ impl<T: Trigger> Shifted<T> {
         // `-PHP_INT_MIN` is a float in PHP, which `%d` then formats.
         let negated = seconds.checked_neg().map_or(Arg::Float(-(seconds as f64)), Arg::Int);
         let back = sprintf(b"%d seconds", &[negated]).unwrap_or_default();
-        Self { trigger, seconds, forward: format!("{seconds} seconds").into_bytes(), back }
+        Self {
+            trigger,
+            seconds,
+            forward: Modifier::parse(format!("{seconds} seconds").as_bytes()).ok(),
+            back: Modifier::parse(&back).ok(),
+        }
     }
 
     /// The wrapped trigger.
@@ -80,11 +92,11 @@ impl<T: Trigger> Trigger for Shifted<T> {
         if self.seconds == 0 {
             return self.trigger.occurrences_between(start, end);
         }
-        let start = moment::shifted(start, &self.back);
-        let end = moment::shifted(end, &self.back);
+        let start = shift(start, self.back.as_ref());
+        let end = shift(end, self.back.as_ref());
         let mut occurrences = self.trigger.occurrences_between(&start, &end);
         for due in &mut occurrences {
-            *due = moment::shifted(due, &self.forward);
+            *due = shift(due, self.forward.as_ref());
         }
         occurrences
     }
