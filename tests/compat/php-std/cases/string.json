@@ -7896,6 +7896,87 @@
           "expect": "7e29881ed05c915903dd5e24a8e81cde5d910142ae66207c"
         }
       ]
+    },
+    {
+      "name": "basename: a file path",
+      "op": "string.basename",
+      "args": {
+        "path": "/var/www/index.php",
+        "suffix": ""
+      },
+      "expect": "index.php"
+    },
+    {
+      "name": "basename: with its suffix",
+      "op": "string.basename",
+      "args": {
+        "path": "/var/www/index.php",
+        "suffix": ".php"
+      },
+      "expect": "index"
+    },
+    {
+      "name": "basename: a suffix equal to the name is kept",
+      "op": "string.basename",
+      "args": {
+        "path": "index.php",
+        "suffix": "index.php"
+      },
+      "expect": "index.php"
+    },
+    {
+      "name": "basename: trailing slash",
+      "op": "string.basename",
+      "args": {
+        "path": "/var/www/",
+        "suffix": ""
+      },
+      "expect": "www"
+    },
+    {
+      "name": "basename: only slashes",
+      "op": "string.basename",
+      "args": {
+        "path": "///",
+        "suffix": ""
+      },
+      "expect": ""
+    },
+    {
+      "name": "basename: empty",
+      "op": "string.basename",
+      "args": {
+        "path": "",
+        "suffix": ""
+      },
+      "expect": ""
+    },
+    {
+      "name": "basename: suffix not at the end",
+      "op": "string.basename",
+      "args": {
+        "path": "a/b.c/d",
+        "suffix": ".c"
+      },
+      "expect": "d"
+    },
+    {
+      "name": "basename: non-ASCII",
+      "op": "string.basename",
+      "args": {
+        "path": "café.txt",
+        "suffix": ".txt"
+      },
+      "expect": "café"
+    },
+    {
+      "name": "basename: a NUL byte",
+      "op": "string.basename",
+      "args": {
+        "path": "a\u0000b/c",
+        "suffix": ""
+      },
+      "expect": "c"
     }
   ]
 }

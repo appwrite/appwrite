@@ -1198,6 +1198,260 @@
         ]
       },
       "expect": 9.223372036854776e+18
+    },
+    {
+      "name": "pow: an integral power",
+      "op": "format.pow",
+      "args": {
+        "base": 2.0,
+        "exponent": 10.0
+      },
+      "expect": 1024.0
+    },
+    {
+      "name": "pow: a square root",
+      "op": "format.pow",
+      "args": {
+        "base": 2.0,
+        "exponent": 0.5
+      },
+      "expect": 1.4142135623730951
+    },
+    {
+      "name": "pow: a negative base, fractional exponent: NAN",
+      "op": "format.pow",
+      "args": {
+        "base": -8.0,
+        "exponent": 0.3333333333333333
+      },
+      "expect": {
+        "$float": "NAN"
+      }
+    },
+    {
+      "name": "pow: zero to a negative power: INF",
+      "op": "format.pow",
+      "args": {
+        "base": 0.0,
+        "exponent": -1.0
+      },
+      "expect": {
+        "$float": "INF"
+      }
+    },
+    {
+      "name": "pow: negative zero to an odd negative power: -INF",
+      "op": "format.pow",
+      "args": {
+        "base": -0.0,
+        "exponent": -3.0
+      },
+      "expect": {
+        "$float": "-INF"
+      }
+    },
+    {
+      "name": "pow: one to NAN: 1",
+      "op": "format.pow",
+      "args": {
+        "base": 1.0,
+        "exponent": {
+          "$float": "NAN"
+        }
+      },
+      "expect": 1.0
+    },
+    {
+      "name": "pow: NAN to zero: 1",
+      "op": "format.pow",
+      "args": {
+        "base": {
+          "$float": "NAN"
+        },
+        "exponent": 0.0
+      },
+      "expect": 1.0
+    },
+    {
+      "name": "pow: near the largest double",
+      "op": "format.pow",
+      "args": {
+        "base": 10.0,
+        "exponent": 308.0
+      },
+      "expect": 1e+308
+    },
+    {
+      "name": "pow: past the largest double: INF",
+      "op": "format.pow",
+      "args": {
+        "base": 10.0,
+        "exponent": 309.0
+      },
+      "expect": {
+        "$float": "INF"
+      }
+    },
+    {
+      "name": "pow: rounding-sensitive",
+      "op": "format.pow",
+      "args": {
+        "base": 1.0000001,
+        "exponent": 1000000000.0
+      },
+      "expect": 2.6881038582144647e+43
+    },
+    {
+      "name": "pow: INF to a negative power: 0",
+      "op": "format.pow",
+      "args": {
+        "base": {
+          "$float": "INF"
+        },
+        "exponent": -1.0
+      },
+      "expect": 0.0
+    },
+    {
+      "name": "pow: a large odd power of a negative base",
+      "op": "format.pow",
+      "args": {
+        "base": -2.0,
+        "exponent": 63.0
+      },
+      "expect": -9.223372036854776e+18
+    },
+    {
+      "name": "min of two: ordinary",
+      "op": "format.min_pair",
+      "args": {
+        "a": 1.0,
+        "b": 2.0
+      },
+      "expect": 1.0
+    },
+    {
+      "name": "min of two: NAN first",
+      "op": "format.min_pair",
+      "args": {
+        "a": {
+          "$float": "NAN"
+        },
+        "b": 1.0
+      },
+      "expect": 1.0
+    },
+    {
+      "name": "min of two: NAN second",
+      "op": "format.min_pair",
+      "args": {
+        "a": 1.0,
+        "b": {
+          "$float": "NAN"
+        }
+      },
+      "expect": {
+        "$float": "NAN"
+      }
+    },
+    {
+      "name": "min of two: zero and negative zero",
+      "op": "format.min_pair",
+      "args": {
+        "a": 0.0,
+        "b": -0.0
+      },
+      "expect": -0.0
+    },
+    {
+      "name": "min of two: negative zero and zero",
+      "op": "format.min_pair",
+      "args": {
+        "a": -0.0,
+        "b": 0.0
+      },
+      "expect": 0.0
+    },
+    {
+      "name": "min of two: the infinities",
+      "op": "format.min_pair",
+      "args": {
+        "a": {
+          "$float": "-INF"
+        },
+        "b": {
+          "$float": "INF"
+        }
+      },
+      "expect": {
+        "$float": "-INF"
+      }
+    },
+    {
+      "name": "max of two: ordinary",
+      "op": "format.max_pair",
+      "args": {
+        "a": 1.0,
+        "b": 2.0
+      },
+      "expect": 2.0
+    },
+    {
+      "name": "max of two: NAN first",
+      "op": "format.max_pair",
+      "args": {
+        "a": {
+          "$float": "NAN"
+        },
+        "b": 1.0
+      },
+      "expect": 1.0
+    },
+    {
+      "name": "max of two: NAN second",
+      "op": "format.max_pair",
+      "args": {
+        "a": 1.0,
+        "b": {
+          "$float": "NAN"
+        }
+      },
+      "expect": {
+        "$float": "NAN"
+      }
+    },
+    {
+      "name": "max of two: zero and negative zero",
+      "op": "format.max_pair",
+      "args": {
+        "a": 0.0,
+        "b": -0.0
+      },
+      "expect": 0.0
+    },
+    {
+      "name": "max of two: negative zero and zero",
+      "op": "format.max_pair",
+      "args": {
+        "a": -0.0,
+        "b": 0.0
+      },
+      "expect": -0.0
+    },
+    {
+      "name": "max of two: the infinities",
+      "op": "format.max_pair",
+      "args": {
+        "a": {
+          "$float": "-INF"
+        },
+        "b": {
+          "$float": "INF"
+        }
+      },
+      "expect": {
+        "$float": "INF"
+      }
     }
   ]
 }
