@@ -5,7 +5,7 @@
   "endpoint": "http://appwrite.test/v1",
   "date": "2026-10-11T17:49:58Z",
   "commit": "9acda67221",
-  "branch": "worktree-agent-a0f77f09c1885ee79",
+  "branch": "feat/rust-utopia-conversion",
   "command": "docker exec -e _APP_E2E_ENDPOINT=http://appwrite.test/v1 appwrite vendor/bin/paratest --processes 2 --functional /usr/src/code/tests/e2e/Services/Users --exclude-group abuseEnabled --log-junit /tmp/compat-e2e-users.xml",
   "tests": 68,
   "assertions": 971,
