@@ -3,6 +3,7 @@
 namespace Tests\Compat\Emails;
 
 use Tests\Compat\Adapter as Base;
+use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Emails\Canonicals\Provider;
@@ -26,8 +27,49 @@ use Utopia\Validator\Validator;
 /**
  * Maps tests/compat/emails/spec.json operations onto utopia-php/emails. Glue only: no logic.
  */
-final class Adapter implements Base
+final class Adapter implements Base, Benchmarks
 {
+    public function benchmarks(): array
+    {
+        $parsed = static function (string $address): Email {
+            $email = new Email($address);
+            // Reads the domain lists, as the first check in a process does.
+            $email->isDisposable();
+            $email->isFree();
+
+            return $email;
+        };
+
+        return [
+            'parse' => ['Parse a mixed-case address with a plus tag', fn (Session $s) => fn () => new Email('  John.Doe+News@Example.COM ')],
+            'validate' => ['Validate an address with the email validator', function (Session $s) {
+                $validator = new EmailValidator(false);
+
+                return fn () => $validator->isValid('john.doe+news@example.com');
+            }],
+            'canonical_gmail' => ['Canonicalise a parsed Gmail address with dots and a plus tag', function (Session $s) use ($parsed) {
+                $email = $parsed('John.Doe+newsletter@googlemail.com');
+
+                return fn () => $email->getCanonical();
+            }],
+            'canonical_outlook' => ['Canonicalise a parsed Outlook address with a plus tag', function (Session $s) use ($parsed) {
+                $email = $parsed('jane.doe+promo@hotmail.com');
+
+                return fn () => $email->getCanonical();
+            }],
+            'disposable' => ['Check a parsed corporate address against the disposable domain list', function (Session $s) use ($parsed) {
+                $email = $parsed('jane@acme-robotics.com');
+
+                return fn () => $email->isDisposable();
+            }],
+            'free' => ['Check a parsed Gmail address against the free and disposable domain lists', function (Session $s) use ($parsed) {
+                $email = $parsed('john.doe@gmail.com');
+
+                return fn () => $email->isFree();
+            }],
+        ];
+    }
+
     public function operations(): array
     {
         return [

@@ -36,13 +36,61 @@ pub const OPS: &[&str] = &[
 ];
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = &[
+    ("mutex", "Acquire and release an uncontended in-process mutex"),
+    ("semaphore", "Acquire and release one permit of an in-process semaphore of four"),
+    ("with_lock", "Run a section under an uncontended in-process mutex"),
+    ("distributed", "Acquire and release an uncontended Redis lock: SET NX EX, then the release script"),
+];
 
-pub async fn bench(
-    name: &str,
-    _session: &mut crate::adapter::Session,
-) -> Result<crate::bench::Bench, crate::adapter::Fault> {
-    Err(crate::adapter::Fault::new(format!("lock: no benchmark `{name}`")))
+pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Bench, Fault> {
+    use std::hint::black_box;
+    use std::rc::Rc;
+
+    use crate::bench::Bench;
+
+    /// Acquires (without waiting) and releases `lock` once.
+    async fn cycle(lock: &impl Lock) {
+        black_box(lock.acquire(Wait::from_secs_f64(0.0)).await.ok());
+        black_box(lock.release().await.ok());
+    }
+
+    Ok(match name {
+        "mutex" => {
+            let lock = Rc::new(Mutex::new());
+            Bench::future(move || {
+                let lock = lock.clone();
+                async move { cycle(&*lock).await }
+            })
+        }
+        "semaphore" => {
+            let lock = Rc::new(Semaphore::new(4).map_err(|e| Fault::new(e.to_string()))?);
+            Bench::future(move || {
+                let lock = lock.clone();
+                async move { cycle(&*lock).await }
+            })
+        }
+        "with_lock" => {
+            let lock = Rc::new(Mutex::new());
+            Bench::future(move || {
+                let lock = lock.clone();
+                async move {
+                    black_box(lock.with_lock(Wait::from_secs_f64(0.0), async { black_box(1) }).await.ok());
+                }
+            })
+        }
+        "distributed" => {
+            // The `redis` service as the cases use it, a key in this run's
+            // namespace; every call releases (deletes) it.
+            let key = format!("{}:bench:lock", session.ns);
+            let lock = Rc::new(Distributed::new(connection(session).await?, key, 600));
+            Bench::future(move || {
+                let lock = lock.clone();
+                async move { cycle(&*lock).await }
+            })
+        }
+        _ => return Err(Fault::new(format!("lock: no benchmark `{name}`"))),
+    })
 }
 
 async fn connection(session: &Session) -> Result<ConnectionManager, Fault> {
