@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# The Rust side of `bin/compat bench`: a release build of compat-driver run
+# in a throwaway Linux container on the dev stack's network, next to the PHP
+# driver (bin/compat-php), so both runtimes share a kernel and reach services
+# by their in-network addresses (`redis:6379`, not a forwarded host port).
+#
+#   bin/compat-rust build      # build the image and the release driver (incremental)
+#   bin/compat-rust version    # the toolchain's `rustc -V`
+#   bin/compat-rust            # run the driver (JSON lines on stdin/stdout)
+#
+# The toolchain is Dockerfile.rust's (tests/compat/rust.Dockerfile, same
+# RUST_VERSION). The cargo registry is cached in the `compat-rust-registry`
+# volume and the target dir in one volume per checkout, so rebuilds are
+# incremental and worktrees never run each other's driver. The checkout is
+# mounted at /usr/src/code, as in bin/compat-php, with /tmp/compat-fs.
+# Works from any git worktree, not only the checkout the stack runs from.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+version="${COMPAT_RUST_VERSION:-$(sed -n 's/^ARG RUST_VERSION=//p' Dockerfile.rust)}"
+image="compat-rust:${version}"
+target="compat-rust-target-$(printf '%s' "$PWD" | cksum | cut -d' ' -f1)"
+mkdir -p /tmp/compat-fs
+
+case "${1:-}" in
+build)
+    docker build -q -t "$image" --build-arg "RUST_VERSION=$version" - <tests/compat/rust.Dockerfile >/dev/null
+    exec docker run --rm \
+        -v "$PWD:/usr/src/code:ro" \
+        -v compat-rust-registry:/usr/local/cargo/registry \
+        -v "$target:/target" \
+        -e CARGO_TARGET_DIR=/target \
+        -w /usr/src/code \
+        "$image" \
+        cargo build --quiet --release --locked -p compat --bin compat-driver
+    ;;
+version)
+    exec docker run --rm "$image" rustc -V
+    ;;
+image)
+    echo "$image"
+    ;;
+*)
+    exec docker run --rm -i \
+        --network "${COMPAT_NETWORK:-appwrite}" \
+        -v "$PWD:/usr/src/code" \
+        -v /tmp/compat-fs:/tmp/compat-fs \
+        -v "$target:/target:ro" \
+        -w /usr/src/code \
+        "$image" \
+        /target/release/compat-driver "$@"
+    ;;
+esac

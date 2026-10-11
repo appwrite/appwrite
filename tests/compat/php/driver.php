@@ -60,6 +60,16 @@ while (($line = fgets(STDIN)) !== false) {
                 'version' => PHP_VERSION,
                 'opcache' => (bool) ini_get('opcache.enable_cli'),
                 'jit' => (string) ini_get('opcache.jit'),
+                'os' => (static function (): string {
+                    foreach (explode("\n", (string) @file_get_contents('/etc/os-release')) as $line) {
+                        if (str_starts_with($line, 'PRETTY_NAME=')) {
+                            return trim(substr($line, 12), '"');
+                        }
+                    }
+
+                    return PHP_OS_FAMILY;
+                })(),
+                'kernel' => php_uname('r'),
                 'libs' => array_map(static fn (array $ops) => array_keys($ops), $operations),
             ],
             '$config' => (function () use (&$session, $args) {

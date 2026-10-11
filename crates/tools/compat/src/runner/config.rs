@@ -10,7 +10,11 @@ pub struct Config {
     pub root: PathBuf,
     pub php: Vec<String>,
     pub rust: Vec<String>,
-    /// `name -> {"php": url, "rust": url, "runner": url}`.
+    /// Whether the Rust driver runs in a container on the services' Docker
+    /// network (`bin/compat-rust`, what `compat bench` uses) rather than on
+    /// the host: it then reaches each service at its `rust-container` address.
+    pub rust_in_container: bool,
+    /// `name -> {"php": url, "rust": url, "rust-container"?: url, "runner": url}`.
     pub services: Map<String, Value>,
 }
 
@@ -42,13 +46,29 @@ impl Config {
             root: root.to_path_buf(),
             php: command("php", "COMPAT_PHP"),
             rust,
+            rust_in_container: false,
             services: json.get("services").and_then(Value::as_object).cloned().unwrap_or_default(),
         })
     }
 
-    /// Service endpoints as one runtime (`php` or `rust`) sees them.
+    /// Service endpoints as one runtime (`php` or `rust`) sees them. A
+    /// containerised Rust driver uses a service's `rust-container` address,
+    /// else [`in_network`] of its `php` and `rust` ones.
     pub fn services_for(&self, side: &str) -> Map<String, Value> {
-        self.services.iter().filter_map(|(name, v)| v.get(side).map(|url| (name.clone(), url.clone()))).collect()
+        self.services
+            .iter()
+            .filter_map(|(name, v)| {
+                let url = if side == "rust" && self.rust_in_container {
+                    v.get("rust-container").cloned().or_else(|| {
+                        let (php, rust) = (v.get("php")?.as_str()?, v.get("rust")?.as_str()?);
+                        Some(Value::String(in_network(php, rust)))
+                    })
+                } else {
+                    v.get(side).cloned()
+                };
+                url.map(|url| (name.clone(), url))
+            })
+            .collect()
     }
 
     /// Endpoint the runner uses to snapshot a service.
@@ -59,6 +79,22 @@ impl Config {
             .and_then(Value::as_str)
             .map(str::to_owned)
             .ok_or_else(|| format!("service `{name}` has no `runner` endpoint in tests/compat/compat.json"))
+    }
+}
+
+/// The Rust endpoint as seen from PHP's network: the `rust` URL with the
+/// `php` URL's authority (credentials, hosts and ports), so it keeps Rust's
+/// own database number or path: `redis://localhost:9513/6` with
+/// `redis://redis:6379/11` gives `redis://redis:6379/6`.
+fn in_network(php: &str, rust: &str) -> String {
+    let split = |url: &str| -> Option<(usize, usize)> {
+        let start = url.find("://")? + 3;
+        let end = url[start..].find(['/', '?', '#']).map_or(url.len(), |i| start + i);
+        Some((start, end))
+    };
+    match (split(php), split(rust)) {
+        (Some((ps, pe)), Some((rs, re))) => format!("{}{}{}", &rust[..rs], &php[ps..pe], &rust[re..]),
+        _ => php.to_owned(),
     }
 }
 
@@ -110,5 +146,44 @@ mod tests {
     fn interpolates_env_and_keeps_ns() {
         let env = HashMap::from([("USER_X".to_owned(), "bob".to_owned())]);
         assert_eq!(interpolate("a ${USER_X} ${ns} ${", &env), "a bob ${ns} ${");
+    }
+
+    #[test]
+    fn in_network_keeps_rusts_database() {
+        assert_eq!(in_network("redis://redis:6379/11", "redis://localhost:9513/6"), "redis://redis:6379/6");
+        assert_eq!(in_network("redis://redis:6379", "redis://localhost:9513"), "redis://redis:6379");
+        assert_eq!(
+            in_network("postgres://u:p@postgresql:5432/db", "postgres://u:p@localhost:9512/db"),
+            "postgres://u:p@postgresql:5432/db"
+        );
+        assert_eq!(
+            in_network("redis-cluster://a:1,a:2", "redis-cluster://127.0.0.1:9,127.0.0.1:8"),
+            "redis-cluster://a:1,a:2"
+        );
+        assert_eq!(in_network("http://web:8080", "nope"), "http://web:8080");
+    }
+
+    #[test]
+    fn containerised_rust_uses_in_network_addresses() {
+        let services = serde_json::json!({
+            "redis": { "php": "redis://redis:6379/11", "rust": "redis://localhost:9513/6" },
+            "cluster": {
+                "php": "redis-cluster://a:1",
+                "rust": "redis-cluster://127.0.0.1:9",
+                "rust-container": "redis-cluster://b:2"
+            },
+        });
+        let mut cfg = Config {
+            root: PathBuf::new(),
+            php: vec![],
+            rust: vec![],
+            rust_in_container: false,
+            services: services.as_object().cloned().unwrap_or_default(),
+        };
+        assert_eq!(cfg.services_for("rust")["redis"], "redis://localhost:9513/6");
+        cfg.rust_in_container = true;
+        assert_eq!(cfg.services_for("rust")["redis"], "redis://redis:6379/6");
+        assert_eq!(cfg.services_for("rust")["cluster"], "redis-cluster://b:2");
+        assert_eq!(cfg.services_for("php")["redis"], "redis://redis:6379/11");
     }
 }

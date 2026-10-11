@@ -33,8 +33,10 @@ const USAGE: &str = "usage: compat <command> [args]
   crates [--out <dir>]                           every Utopia library's docs (Rust API, PHP API by
                                                  reflection, examples, status) as JSON for apps/crates
                                                  (default apps/crates/data)
-  bench <lib>... [--write]                       time each library's benchmarks on PHP and on a release
-                                                 build of Rust; --write stores tests/compat/<lib>/bench.json
+  bench <lib>... [--write] [--host]              time each library's benchmarks on PHP and on a release
+                                                 build of Rust, both in Linux containers on the dev stack's
+                                                 network (--host: Rust natively); --write stores
+                                                 tests/compat/<lib>/bench.json
   call <lib> <op> [<args json>] [--side php|rust]  run one operation and print both results
   new <lib>                                      scaffold tests/compat/<lib>
 
@@ -53,6 +55,7 @@ struct Cli {
     fail_fast: bool,
     save: bool,
     write: bool,
+    host: bool,
     verbose: bool,
 }
 
@@ -69,6 +72,7 @@ fn parse(args: &[String]) -> Result<Cli, String> {
         fail_fast: false,
         save: false,
         write: false,
+        host: false,
         verbose: false,
     };
     let mut it = args.iter();
@@ -85,6 +89,7 @@ fn parse(args: &[String]) -> Result<Cli, String> {
             "--force" => cli.force = true,
             "--save" => cli.save = true,
             "--write" => cli.write = true,
+            "--host" => cli.host = true,
             "-v" | "--verbose" => cli.verbose = true,
             s if s.starts_with('-') => return Err(format!("unknown option {s}")),
             s => cli.positional.push(s.to_owned()),
@@ -309,7 +314,7 @@ fn real_main(args: &[String]) -> Result<bool, String> {
         }
         "bench" => {
             let libs = need_lib(&cli)?;
-            compat::runner::bench::use_release_driver(&mut engine, &root)?;
+            compat::runner::bench::use_release_driver(&mut engine, &root, cli.host)?;
             compat::runner::bench::run(&mut engine, &root, &libs, cli.write)
         }
         "crates" => {

@@ -44,6 +44,7 @@
     "cache-cluster": {
       "php": "redis-cluster://compat-cache-cluster-php:17000,compat-cache-cluster-php:17001,compat-cache-cluster-php:17002",
       "rust": "redis-cluster://127.0.0.1:17100,127.0.0.1:17101,127.0.0.1:17102",
+      "rust-container": "redis-cluster://compat-cache-cluster-php:17000,compat-cache-cluster-php:17001,compat-cache-cluster-php:17002",
       "runner": "redis-cluster://127.0.0.1:17100,127.0.0.1:17101,127.0.0.1:17102"
     },
     "cache-redis-shared": {

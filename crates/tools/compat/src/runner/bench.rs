@@ -1,7 +1,8 @@
 //! `compat bench`: each library's benchmarks on PHP and Rust, side by side.
 //!
 //! Both drivers time the same named benchmarks in-process (see
-//! [`crate::bench`]). `--write` stores the results with the machine and
+//! [`crate::bench`]), each in a Linux container on the dev stack's network
+//! unless `--host` runs Rust natively. `--write` stores the results with the machine and
 //! runtimes they ran on in `tests/compat/<lib>/bench.json`, which
 //! `compat crates` publishes on the docs site. Timings depend on the machine:
 //! compare runtimes within one file, not files from different machines.
@@ -15,9 +16,27 @@ use super::engine::Engine;
 use super::spec;
 
 /// Builds the release Rust driver and points the engine at it: benchmarks
-/// of a debug build say nothing. `COMPAT_RUST` still wins.
-pub fn use_release_driver(engine: &mut Engine, root: &Path) -> Result<(), String> {
+/// of a debug build say nothing. By default the driver is built and run in a
+/// Linux container on the services' Docker network (`bin/compat-rust`), like
+/// the PHP driver, so both runtimes share a kernel and reach services the same
+/// way. `host` (`--host`) builds and runs it natively instead; `COMPAT_RUST`
+/// still wins, and runs on the host.
+pub fn use_release_driver(engine: &mut Engine, root: &Path, host: bool) -> Result<(), String> {
     if std::env::var_os("COMPAT_RUST").is_some() {
+        return Ok(());
+    }
+    if !host {
+        let script = root.join("bin/compat-rust");
+        let status = Command::new(&script)
+            .arg("build")
+            .current_dir(root)
+            .status()
+            .map_err(|e| format!("{}: {e}", script.display()))?;
+        if !status.success() {
+            return Err("building the release driver in a container failed".into());
+        }
+        engine.cfg.rust = vec![script.display().to_string()];
+        engine.cfg.rust_in_container = true;
         return Ok(());
     }
     let status = Command::new("cargo")
@@ -123,6 +142,21 @@ fn environment(engine: &mut Engine, root: &Path) -> Result<Value, String> {
             .unwrap_or_default()
     };
     let php = engine.hello_info("php")?;
+    let rust = engine.hello_info("rust")?;
+    let php_image = if engine.cfg.php.first().is_some_and(|c| c.ends_with("bin/compat-php")) {
+        json!(std::env::var("COMPAT_IMAGE").unwrap_or_else(|_| "appwrite-dev".into()))
+    } else {
+        Value::Null
+    };
+    let (rust_version, rust_runs, rust_image) = if engine.cfg.rust_in_container {
+        (
+            run("bin/compat-rust", &["version"]),
+            "in a container on the same Docker network (bin/compat-rust)",
+            json!(run("bin/compat-rust", &["image"])),
+        )
+    } else {
+        (run("rustc", &["-V"]), "natively on the host", Value::Null)
+    };
     Ok(json!({
         "date": run("date", &["-u", "+%Y-%m-%dT%H:%M:%SZ"]),
         "commit": run("git", &["rev-parse", "--short=10", "HEAD"]),
@@ -132,8 +166,18 @@ fn environment(engine: &mut Engine, root: &Path) -> Result<Value, String> {
             "opcache": php["opcache"],
             "jit": php["jit"],
             "runs": "in a container of the dev image (bin/compat-php)",
+            "image": php_image,
+            "os": php["os"],
+            "kernel": php["kernel"],
         },
-        "rust": { "version": run("rustc", &["-V"]), "profile": "release" },
+        "rust": {
+            "version": rust_version,
+            "profile": "release",
+            "runs": rust_runs,
+            "image": rust_image,
+            "os": rust["os"],
+            "kernel": rust["kernel"],
+        },
     }))
 }
 

@@ -6,7 +6,7 @@
 //!           `{"id": 7, "err": {"class": "<PHP exception class>", "message": "..." | {"$bytes": ...}}}`
 //!           `{"id": 7, "fault": "<harness problem>"}`
 //!
-//! Control operations: `$hello` (runtime and the operations of every library),
+//! Control operations: `$hello` (runtime, OS, kernel and the operations of every library),
 //! `$config` (`{"ns": ..., "services": {...}}`, resets handles), `$reset`,
 //! `$equal` (`{"a": ..., "b": ...}`, compares two values) and `$bench`
 //! (`{}` lists the library's benchmarks, `{"name": ...}` times one; see
@@ -31,7 +31,8 @@ pub async fn handle(request: &Value, session: &mut Session) -> OpResult {
         "$hello" => {
             let libs: Map<String, Value> =
                 libs::LIBS.iter().map(|(name, ops)| ((*name).to_owned(), json!(ops))).collect();
-            Ok(Outcome::Ok(json!({ "runtime": "rust", "libs": libs })))
+            let (os, kernel) = system();
+            Ok(Outcome::Ok(json!({ "runtime": "rust", "os": os, "kernel": kernel, "libs": libs })))
         }
         "$config" => {
             let ns = args.get("ns").and_then(Value::as_str).unwrap_or("compat");
@@ -67,6 +68,24 @@ pub async fn handle(request: &Value, session: &mut Session) -> OpResult {
             }
         },
     }
+}
+
+/// The OS the driver runs on (`/etc/os-release`'s name on Linux) and its
+/// kernel release, for `compat bench`'s environment.
+fn system() -> (String, String) {
+    let os = std::fs::read_to_string("/etc/os-release")
+        .ok()
+        .and_then(|t| t.lines().find_map(|l| l.strip_prefix("PRETTY_NAME=").map(|v| v.trim_matches('"').to_owned())))
+        .unwrap_or_else(|| std::env::consts::OS.to_owned());
+    let kernel = std::fs::read_to_string("/proc/sys/kernel/osrelease")
+        .ok()
+        .or_else(|| {
+            let out = std::process::Command::new("uname").arg("-r").output().ok()?;
+            Some(String::from_utf8_lossy(&out.stdout).into_owned())
+        })
+        .map(|k| k.trim().to_owned())
+        .unwrap_or_default();
+    (os, kernel)
 }
 
 /// Encodes a reply line.

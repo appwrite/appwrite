@@ -6,6 +6,13 @@ import { MigrationCard } from './Migration'
 export function Performance({ bench, id }: { bench: Bench | null; id?: string }) {
   if (!bench?.results.length) return null
   const env = bench.environment
+  // Where each runtime ran: both in containers on one kernel since `compat bench`
+  // runs the Rust driver there too; older files timed Rust on the host.
+  const where = env.rust.image
+    ? env.php.kernel && env.php.kernel === env.rust.kernel
+      ? `both in Linux containers on one Docker network (kernel ${env.php.kernel})`
+      : 'both in Linux containers'
+    : 'PHP in a container, Rust on the host'
   // Bars share one scale: the largest speedup on the page fills its track.
   const top = Math.max(...bench.results.map((r) => r.speedup), 1)
   return (
@@ -54,8 +61,8 @@ export function Performance({ bench, id }: { bench: Bench | null; id?: string })
         </table>
       </div>
       <p className="m-0 text-[11.5px] text-muted-foreground">
-        {env.machine.cpu || env.machine.arch} ({env.machine.os}) · PHP {env.php.version}
-        {env.php.opcache ? `, opcache, JIT ${env.php.jit || 'off'}` : ', no opcache'} in a container · {env.rust.version.split(' (')[0]}, {env.rust.profile} build · commit{' '}
+        {env.machine.cpu || env.machine.arch} ({env.machine.os} host) · PHP {env.php.version}
+        {env.php.opcache ? `, opcache, JIT ${env.php.jit || 'off'}` : ', no opcache'} · {env.rust.version.split(' (')[0]}, {env.rust.profile} build · {where} · commit{' '}
         <code className="font-mono">{env.commit}</code> · {env.date.slice(0, 10)}. Timings depend on the machine; compare the runtimes, not the numbers across machines.
       </p>
     </MigrationCard>

@@ -139,8 +139,10 @@ export interface Bench {
     date: string
     commit: string
     machine: { os: string; arch: string; cpu: string }
-    php: { version: string; opcache: boolean; jit: string; runs: string }
-    rust: { version: string; profile: string }
+    // `image`, `os` and `kernel` (and Rust's `runs`) since benchmarks run both
+    // drivers in containers; older files leave them out (Rust ran on the host).
+    php: { version: string; opcache: boolean; jit: string; runs: string; image?: string | null; os?: string; kernel?: string }
+    rust: { version: string; profile: string; runs?: string; image?: string | null; os?: string; kernel?: string }
   }
   results: { name: string; description: string | null; php: Timing; rust: Timing; speedup: number }[]
 }
