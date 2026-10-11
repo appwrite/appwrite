@@ -40,7 +40,7 @@
     },
     "require": {
         "php": ">=8.5",
-        "utopia-php/validators": "^1.0",
+        "utopia-php/validators": "^2.0",
         "utopia-php/domains": "^4.0.0"
     },
     "require-dev": {

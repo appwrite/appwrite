@@ -20,24 +20,38 @@ class Mqtt extends MessagingAdapter
     public readonly Counter $messagesPublished;
     public readonly Counter $messagesDelivered;
     public readonly Counter $messagesDropped;
+    public readonly Counter $messagesFailed;
     public readonly Counter $messagesAcked;
     public readonly Counter $pubacksReceived;
     public readonly Counter $reauth;
+    public readonly Counter $connectRefused;
     public readonly Histogram $authDuration;
     public readonly Histogram $connectionDuration;
     public readonly Histogram $messageSize;
+    public readonly Histogram $deliveryLatency;
+    public readonly Histogram $replayBacklog;
+    public readonly Histogram $ledgerDuration;
+
+    /** @var array<string, array{connections: int, delivered: int}> per-project usage, drained by flushUsage() */
+    private array $usage = [];
 
     public function __construct(Telemetry $telemetry, private readonly PubSub $pubsub)
     {
         $this->messagesPublished = $telemetry->createCounter('mqtt.messages.published');
         $this->messagesDelivered = $telemetry->createCounter('mqtt.messages.delivered');
         $this->messagesDropped = $telemetry->createCounter('mqtt.messages.dropped');
+        $this->messagesFailed = $telemetry->createCounter('mqtt.messages.failed');
         $this->messagesAcked = $telemetry->createCounter('mqtt.messages.acked');
         $this->pubacksReceived = $telemetry->createCounter('mqtt.puback.received');
         $this->reauth = $telemetry->createCounter('mqtt.reauth');
+        // The broker counts accepted/rejected CONNECTs; this adds the refusal reason it cannot see.
+        $this->connectRefused = $telemetry->createCounter('mqtt.connect.refused');
         $this->authDuration = $telemetry->createHistogram('mqtt.auth.duration', 's');
         $this->connectionDuration = $telemetry->createHistogram('mqtt.connection.duration', 's');
         $this->messageSize = $telemetry->createHistogram('mqtt.message.size', 'By');
+        $this->deliveryLatency = $telemetry->createHistogram('mqtt.delivery.latency', 's');
+        $this->replayBacklog = $telemetry->createHistogram('mqtt.replay.backlog', '{message}');
+        $this->ledgerDuration = $telemetry->createHistogram('mqtt.ledger.duration', 's');
     }
 
     /**
@@ -50,13 +64,14 @@ class Mqtt extends MessagingAdapter
      * @param array<int, string> $events ignored
      * @param array<int, string> $channels topics to publish to
      * @param array<int, string> $roles ignored
-     * @param array{payload?: string, qos?: int, sequence?: int} $options
+     * @param array{payload?: string, qos?: int, sequence?: int, publishedAt?: float} $options
      */
     public function send(string $projectId, array $payload, array $events, array $channels, array $roles, array $options = []): void
     {
         $message = $options['payload'] ?? '';
         $qos = $options['qos'] ?? 0;
         $sequence = (int) ($options['sequence'] ?? 0);
+        $publishedAt = (float) ($options['publishedAt'] ?? \microtime(true));
 
         $this->messageSize->record(\strlen($message));
 
@@ -67,6 +82,7 @@ class Mqtt extends MessagingAdapter
                 'topic' => $topic,
                 'qos' => $qos,
                 'sequence' => $sequence,
+                'publishedAt' => $publishedAt,
                 'payload' => base64_encode($message),
             ]));
         }
@@ -86,5 +102,37 @@ class Mqtt extends MessagingAdapter
 
     public function unsubscribe(mixed $identifier): void
     {
+    }
+
+    /** Accumulate one accepted connection for a project, for per-project usage. */
+    public function recordConnection(string $projectId): void
+    {
+        if ($projectId === '') {
+            return;
+        }
+        $this->usage[$projectId]['connections'] = ($this->usage[$projectId]['connections'] ?? 0) + 1;
+    }
+
+    /** Accumulate delivered messages for a project, for per-project usage. */
+    public function recordDeliveries(string $projectId, int $count): void
+    {
+        if ($projectId === '' || $count <= 0) {
+            return;
+        }
+        $this->usage[$projectId]['delivered'] = ($this->usage[$projectId]['delivered'] ?? 0) + $count;
+    }
+
+    /**
+     * Drain and reset the accumulated per-project usage so a flush can enqueue it. The broker runs a
+     * single worker with cooperative coroutines, so the read-and-reset is atomic (no yield between).
+     *
+     * @return array<string, array{connections?: int, delivered?: int}>
+     */
+    public function flushUsage(): array
+    {
+        $usage = $this->usage;
+        $this->usage = [];
+
+        return $usage;
     }
 }

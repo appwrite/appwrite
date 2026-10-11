@@ -64,17 +64,6 @@ abstract class Provider
     }
 
     /**
-     * Remove hyphen-based subaddress (Yahoo style)
-     * Removes everything after the last hyphen
-     */
-    protected function removeHyphenSubaddress(string $local): string
-    {
-        $components = explode('-', $local);
-
-        return count($components) > 1 ? implode('-', array_slice($components, 0, -1)) : $components[0];
-    }
-
-    /**
      * Convert local part to lowercase
      */
     protected function toLowerCase(string $local): string

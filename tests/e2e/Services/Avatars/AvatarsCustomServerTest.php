@@ -155,4 +155,28 @@ final class AvatarsCustomServerTest extends Scope
 
         $this->assertEquals(400, $response['headers']['status-code']);
     }
+
+    public function testUpdatePhotoUnauthorized(): void
+    {
+        /**
+         * Test for FAILURE — API keys carry no user identity, so they can
+         * never upload or delete a photo
+         */
+        $response = $this->client->call(Client::METHOD_PUT, '/avatars/photo', [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ], [
+            'file' => new \CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+
+        $response = $this->client->call(Client::METHOD_DELETE, '/avatars/photo', [
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ]);
+
+        $this->assertEquals(401, $response['headers']['status-code']);
+    }
 }

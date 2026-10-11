@@ -1493,6 +1493,55 @@ trait DatabasesBase
         $this->assertStringContainsString('Index length is longer than the maximum:', $attribute['body']['message']);
     }
 
+    public function testCreateIndexOnAttributeAsSoonAsAvailable(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Index on available attribute',
+            $this->getSecurityParam() => true,
+            'permissions' => [Permission::create(Role::user($this->getUser()['$id']))],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        /**
+         * Test for SUCCESS
+         */
+        $keys = ['first', 'second', 'third', 'fourth', 'fifth'];
+        foreach ($keys as $key) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => $key,
+                'required' => false,
+                'size' => 64,
+            ]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+
+            $this->waitForAttribute($databaseId, $collectionId, $key, waitMs: 5);
+
+            $index = $this->client->call(Client::METHOD_POST, $this->getIndexUrl($databaseId, $collectionId), $headers, [
+                'key' => $key . 'Index',
+                'type' => Database::INDEX_KEY,
+                $this->getIndexAttributesParam() => [$key],
+            ]);
+            $this->assertSame(202, $index['headers']['status-code'], "Index on '{$key}' was rejected right after the attribute reported available: " . ($index['body']['message'] ?? ''));
+        }
+
+        foreach ($keys as $key) {
+            $this->waitForIndex($databaseId, $collectionId, $key . 'Index');
+        }
+    }
+
     public function testUpdateEncryptedAttributeSize(): void
     {
         if (!$this->getSupportForAttributes()) {
@@ -1634,6 +1683,102 @@ trait DatabasesBase
         $this->assertEquals(201, $document['headers']['status-code']);
         $this->assertNull($document['body']['renamed']);
         $this->assertNull($document['body']['boolean']);
+    }
+
+    public function testUpdateRequiredAttributeAllowsPartialUpdate(): void
+    {
+        if (!$this->getSupportForAttributes()) {
+            $this->markTestSkipped('Attributes are not supported by this database adapter');
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Required later',
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        foreach (['title' => true, 'note' => false] as $key => $required) {
+            $attribute = $this->createAttribute($databaseId, $collectionId, 'string', [
+                'key' => $key,
+                'required' => $required,
+                'size' => 128,
+            ]);
+            $this->assertEquals(202, $attribute['headers']['status-code']);
+            $this->waitForAttribute($databaseId, $collectionId, $key);
+        }
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'original'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        $second = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'original'],
+        ]);
+        $this->assertEquals(201, $second['headers']['status-code']);
+        $secondId = $second['body']['$id'];
+
+        $note = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $collectionId, 'string', 'note'), $headers, [
+            'required' => true,
+            'default' => null,
+            'size' => 128,
+        ]);
+        $this->assertEquals(200, $note['headers']['status-code']);
+        $this->assertTrue($note['body']['required']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['title' => 'renamed'],
+        ]);
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame('renamed', $updated['body']['title']);
+        $this->assertNull($updated['body']['note']);
+
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers);
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame('renamed', $fetched['body']['title']);
+        $this->assertNull($fetched['body']['note']);
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $secondId), $headers, [
+            'data' => ['title' => 'upserted'],
+        ]);
+        $this->assertEquals(200, $upserted['headers']['status-code']);
+        $this->assertSame('upserted', $upserted['body']['title']);
+        $this->assertNull($upserted['body']['note']);
+
+        $filled = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['note' => 'present'],
+        ]);
+        $this->assertEquals(200, $filled['headers']['status-code']);
+        $this->assertSame('present', $filled['body']['note']);
+
+        /**
+         * Test for FAILURE
+         */
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['title' => 'missing note'],
+        ]);
+        $this->assertEquals(400, $created['headers']['status-code']);
+        $this->assertStringContainsString('Missing required attribute "note"', $created['body']['message']);
+
+        $cleared = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['note' => null],
+        ]);
+        $this->assertEquals(400, $cleared['headers']['status-code']);
+        $this->assertStringContainsString('Missing required attribute "note"', $cleared['body']['message']);
     }
 
     public function testUpdateAttributeEnum(): void
@@ -1860,7 +2005,7 @@ trait DatabasesBase
         $this->waitForAttribute($databaseId, $containerId, 'relationship');
 
         /**
-         * Test for FAILURE
+         * Test for SUCCESS
          */
         $response = $this->client->call(Client::METHOD_PATCH, $this->getSchemaUrl($databaseId, $containerId, 'string', 'relationship'), array_merge([
             'content-type' => 'application/json',
@@ -1871,11 +2016,11 @@ trait DatabasesBase
             'default' => 'plain',
         ]);
 
-        // The legacy `/:key/relationship` alias outranks the typed route, so the request
-        // reaches the relationship update keyed `string` instead of the string update
-        // keyed `relationship`. Dropping the alias is what would flip this to a 200.
-        $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals($this->getSchemaParam() . '_not_found', $response['body']['type']);
+        // The typed route has a static segment where the legacy `/:key/relationship` alias
+        // has a parameter, so it wins and the request reaches the string update keyed `relationship`.
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals('relationship', $response['body']['key']);
+        $this->assertEquals('plain', $response['body']['default']);
     }
 
     public function testAttributeResponseModels(): void
@@ -7425,6 +7570,315 @@ trait DatabasesBase
         $this->assertEquals(200, $attributes['headers']['status-code']);
         $this->assertEquals(1, $attributes['body']['total']);
         $this->assertEquals('libraryName', $attributes['body'][$this->getSchemaResource()][0]['key']);
+    }
+
+    public function testCreateRelatedPermissions(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $containerPermissions = [
+            Permission::read(Role::users()),
+            Permission::create(Role::users()),
+            Permission::update(Role::users()),
+        ];
+
+        $parent = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'parent',
+            'permissions' => $containerPermissions,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $parent['headers']['status-code']);
+        $parentId = $parent['body']['$id'];
+
+        $child = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'child',
+            'permissions' => $containerPermissions,
+            $this->getSecurityParam() => true,
+        ]);
+        $this->assertEquals(201, $child['headers']['status-code']);
+        $childId = $child['body']['$id'];
+
+        $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $childId, 'string'), $keyHeaders, [
+            'key' => 'name',
+            'size' => 255,
+            'required' => false,
+        ]);
+        $this->waitForAttribute($databaseId, $childId, 'name');
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $parentId, 'relationship'), $keyHeaders, [
+            $this->getRelatedIdParam() => $childId,
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'key' => 'child',
+        ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $parentId, 'child');
+
+        $ownPermissions = [Permission::read(Role::user($this->getUser()['$id']))];
+        $foreignPermissions = [
+            Permission::read(Role::team('relatedPermissionsTeam')),
+            Permission::write(Role::user('relatedPermissionsUser')),
+        ];
+        $expected = $this->getSide() === 'client' ? 401 : 201;
+
+        /**
+         * Test for SUCCESS
+         */
+        $documentId = ID::unique();
+        $relatedId = ID::unique();
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $parentId), $headers, [
+            $this->getRecordIdParam() => $documentId,
+            'data' => [
+                'child' => [
+                    '$id' => $relatedId,
+                    '$permissions' => $ownPermissions,
+                    'name' => 'Own child',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertEquals($ownPermissions, $document['body']['child']['$permissions']);
+
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $parentId, $documentId), $headers, [
+            'data' => [
+                'child' => [
+                    '$id' => $relatedId,
+                    '$permissions' => $ownPermissions,
+                    'name' => 'Renamed child',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertEquals('Renamed child', $document['body']['child']['name']);
+
+        /**
+         * Test for FAILURE
+         */
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $parentId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'child' => [
+                    '$id' => ID::unique(),
+                    '$permissions' => $foreignPermissions,
+                    'name' => 'Foreign child',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals($expected, $document['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $parentId, $documentId), $headers, [
+            'data' => [
+                'child' => [
+                    '$id' => ID::unique(),
+                    '$permissions' => $foreignPermissions,
+                    'name' => 'Foreign child',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals($this->getSide() === 'client' ? 401 : 200, $document['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $parentId, ID::unique()), $headers, [
+            'data' => [
+                'child' => [
+                    '$id' => ID::unique(),
+                    '$permissions' => $foreignPermissions,
+                    'name' => 'Foreign child',
+                ],
+            ],
+        ]);
+
+        $this->assertEquals($this->getSide() === 'client' ? 401 : 200, $document['headers']['status-code']);
+    }
+
+    public function testCreateRelatedListPermissions(): void
+    {
+        if (!$this->getSupportForRelationships()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $headers = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+        $containerPermissions = [
+            Permission::read(Role::users()),
+            Permission::create(Role::users()),
+            Permission::update(Role::users()),
+        ];
+
+        $containers = [];
+        foreach (['parent', 'child', 'grandchild'] as $name) {
+            $container = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
+                $this->getContainerIdParam() => ID::unique(),
+                'name' => $name,
+                'permissions' => $containerPermissions,
+                $this->getSecurityParam() => true,
+            ]);
+            $this->assertEquals(201, $container['headers']['status-code']);
+            $containers[$name] = $container['body']['$id'];
+        }
+
+        foreach (['child', 'grandchild'] as $name) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containers[$name], 'string'), $keyHeaders, [
+                'key' => 'name',
+                'size' => 255,
+                'required' => false,
+            ]);
+            $this->waitForAttribute($databaseId, $containers[$name], 'name');
+        }
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containers['parent'], 'relationship'), $keyHeaders, [
+            $this->getRelatedIdParam() => $containers['child'],
+            'type' => Database::RELATION_ONE_TO_MANY,
+            'key' => 'children',
+        ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $containers['parent'], 'children');
+
+        $relationship = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $containers['child'], 'relationship'), $keyHeaders, [
+            $this->getRelatedIdParam() => $containers['grandchild'],
+            'type' => Database::RELATION_ONE_TO_ONE,
+            'key' => 'grandchild',
+        ]);
+        $this->assertEquals(202, $relationship['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $containers['child'], 'grandchild');
+
+        $ownPermissions = [Permission::read(Role::user($this->getUser()['$id']))];
+        $foreignPermissions = [
+            Permission::read(Role::team('relatedListTeam')),
+            Permission::write(Role::user('relatedListUser')),
+        ];
+        $child = fn (array $permissions, array $grandchild = []) => array_filter([
+            '$id' => ID::unique(),
+            '$permissions' => $permissions,
+            'name' => 'Child',
+            'grandchild' => $grandchild,
+        ]);
+        $grandchild = fn (array $permissions) => [
+            '$id' => ID::unique(),
+            '$permissions' => $permissions,
+            'name' => 'Grandchild',
+        ];
+        $expected = $this->getSide() === 'client' ? 401 : 201;
+
+        /**
+         * Test for SUCCESS
+         */
+        $documentId = ID::unique();
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containers['parent']), $headers, [
+            $this->getRecordIdParam() => $documentId,
+            'data' => [
+                'children' => [
+                    $child($ownPermissions),
+                    $child($ownPermissions, $grandchild($ownPermissions)),
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $this->assertCount(2, $document['body']['children']);
+
+        // Permissions a related document already has can be sent back unchanged.
+        $existingId = ID::unique();
+        $existingPermissions = [
+            Permission::read(Role::team('relatedListTeam')),
+            Permission::update(Role::user('relatedListUser')),
+        ];
+        $existing = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containers['child']), $keyHeaders, [
+            $this->getRecordIdParam() => $existingId,
+            'data' => ['name' => 'Existing'],
+            'permissions' => $existingPermissions,
+        ]);
+        $this->assertEquals(201, $existing['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containers['parent'], $documentId), $headers, [
+            'data' => [
+                'children' => [
+                    [
+                        '$id' => $existingId,
+                        '$permissions' => $existingPermissions,
+                        'name' => 'Linked',
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals(200, $document['headers']['status-code']);
+
+        /**
+         * Test for FAILURE
+         */
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containers['parent']), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'children' => [
+                    $child($ownPermissions),
+                    $child($foreignPermissions),
+                ],
+            ],
+        ]);
+
+        $this->assertEquals($expected, $document['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $containers['parent']), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'children' => [
+                    $child($ownPermissions, $grandchild($foreignPermissions)),
+                ],
+            ],
+        ]);
+
+        $this->assertEquals($expected, $document['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $containers['parent'], $documentId), $headers, [
+            'data' => [
+                'children' => [
+                    [
+                        '$id' => $existingId,
+                        '$permissions' => array_merge($existingPermissions, [Permission::read(Role::team('relatedListOtherTeam'))]),
+                        'name' => 'Linked',
+                    ],
+                ],
+            ],
+        ]);
+
+        $this->assertEquals($this->getSide() === 'client' ? 401 : 200, $document['headers']['status-code']);
+
+        $document = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $containers['parent'], ID::unique()), $headers, [
+            'data' => [
+                'children' => [
+                    $child($ownPermissions, $grandchild($foreignPermissions)),
+                ],
+            ],
+        ]);
+
+        $this->assertEquals($this->getSide() === 'client' ? 401 : 200, $document['headers']['status-code']);
     }
 
     public function testOneToManyRelationship(): void

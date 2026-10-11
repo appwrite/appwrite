@@ -6,8 +6,8 @@ use Appwrite\ID;
 use Appwrite\Tests\Async;
 use CURLFile;
 use Tests\E2E\Client;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 
 trait ProxyHelpers
 {

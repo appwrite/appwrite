@@ -2,7 +2,6 @@
 
 namespace Appwrite\AvatarPhotos;
 
-use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Client;
 use Utopia\Database\Document;
 use Utopia\Psr7\Method;
@@ -79,10 +78,10 @@ abstract class Photo
      *
      * @return string|null Raw response body, or null when unavailable.
      */
-    protected function fetch(string $url): ?string
+    protected function fetch(Client $client, string $url): ?string
     {
         try {
-            $response = (new Client(new CurlAdapter()))
+            $response = $client
                 ->withFollowRedirects(maxHops: 5)
                 ->withConnectTimeout(static::CONNECT_TIMEOUT)
                 ->withTimeout(static::REQUEST_TIMEOUT)

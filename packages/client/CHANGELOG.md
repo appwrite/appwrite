@@ -6,6 +6,16 @@ This project follows semantic versioning.
 
 ## [Unreleased]
 
+### Breaking
+
+- `Adapter` gains `withDestinations()`. A custom adapter must implement it and check the address each connection actually reaches, on every connection and every redirect hop, throwing `DestinationException` on a refused address and dropping proxy settings unless the destinations permit a proxy. `Decorator` forwards the setting.
+
+### Added
+
+- `Utopia\Client\Destinations` decides where a client may connect. `Client` takes one as an optional second constructor argument and through `withDestinations()`; the default is `Anywhere`.
+- `Destinations\Anywhere` (any address, any proxy), `Destinations\PublicInternet` (refuses private, reserved and special-use ranges, except the `IPRange`s it is given), and `Destinations\IPRange` (validated in its constructor).
+- `Utopia\Client\PHPStan\DisallowRawCurlExtension`, a PHPStan extension that reports `curl_init()` and `curl_multi_init()` outside the cURL adapter.
+
 ### Removed
 
 - Remove the `Utopia\Client` and `Utopia\Psr18\StreamingClientInterface` aliases that 0.5 kept for the old names. Use `Utopia\Client\Client` and `Utopia\Client\Psr18\StreamingClientInterface`.

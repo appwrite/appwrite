@@ -100,7 +100,7 @@ const APP_RESOURCE_TOKEN_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_FILE_ACCESS = 24 * 60 * 60; // 24 hours
 const APP_CACHE_UPDATE = 24 * 60 * 60; // 24 hours
 const APP_CACHE_BUSTER = 4327;
-const APP_VERSION_STABLE = '2.3.0';
+const APP_VERSION_STABLE = '2.4.0';
 const APP_DATABASE_ATTRIBUTE_EMAIL = 'email';
 const APP_DATABASE_ATTRIBUTE_ENUM = 'enum';
 const APP_DATABASE_ATTRIBUTE_IP = 'ip';
@@ -131,6 +131,7 @@ const APP_STORAGE_CACHE = '/storage/cache';
 const APP_STORAGE_IMPORTS = '/storage/imports'; // Temporary storage for csv imports
 const APP_STORAGE_CERTIFICATES = '/storage/certificates';
 const APP_STORAGE_CONFIG = '/storage/config';
+const APP_STORAGE_PHOTOS = '_photos'; // User photos folder in each project's uploads; bucket IDs can't start with an underscore, so it never collides with a bucket's folder
 const APP_STORAGE_READ_BUFFER = 20 * (1000 * 1000); //20MB other names `APP_STORAGE_MEMORY_LIMIT`, `APP_STORAGE_MEMORY_BUFFER`, `APP_STORAGE_READ_LIMIT`, `APP_STORAGE_BUFFER_LIMIT`
 const APP_SOCIAL_TWITTER = 'https://twitter.com/appwrite';
 const APP_SOCIAL_TWITTER_HANDLE = 'appwrite';
@@ -207,6 +208,7 @@ const TOKEN_TYPE_GENERIC = 8;
 const TOKEN_TYPE_EMAIL = 9; // OTP
 const TOKEN_TYPE_VERIFICATION_OTP = 10;
 const TOKEN_TYPE_RECOVERY_OTP = 11;
+const TOKEN_TYPE_PASSKEY = 12;
 
 /**
  * Session Providers.
@@ -218,6 +220,7 @@ const SESSION_PROVIDER_PHONE = 'phone';
 const SESSION_PROVIDER_OAUTH2 = 'oauth2';
 const SESSION_PROVIDER_TOKEN = 'token';
 const SESSION_PROVIDER_SERVER = 'server';
+const SESSION_PROVIDER_PASSKEY = 'passkey';
 
 /**
  * Actor that performed the request (user, admin, guest, or API key).
@@ -240,6 +243,9 @@ const ONBOARDING_STATUS_SKIPPED = 'skipped';
  * MFA
  */
 const MFA_RECENT_DURATION = 1800; // 30 mins
+const PASSKEY_TOKEN_DURATION = 60;
+const APP_LIMIT_USER_PASSKEYS = 10;
+const SESSION_RECENT_DURATION = 600; // 10 mins
 
 
 // Database name
@@ -385,6 +391,7 @@ const METRIC_MESSAGES_TYPE_FAILED  = METRIC_MESSAGES . '.{type}.failed';
 const METRIC_MESSAGES_TYPE_PROVIDER = METRIC_MESSAGES . '.{type}.{provider}';
 const METRIC_MESSAGES_TYPE_PROVIDER_SENT  = METRIC_MESSAGES . '.{type}.{provider}.sent';
 const METRIC_MESSAGES_TYPE_PROVIDER_FAILED  = METRIC_MESSAGES . '.{type}.{provider}.failed';
+const METRIC_MESSAGES_RESOURCE_TYPE = 'message';
 const METRIC_SESSIONS  = 'sessions';
 const METRIC_DATABASES = 'databases';
 const METRIC_COLLECTIONS = 'collections';
@@ -491,6 +498,10 @@ const METRIC_REALTIME_CONNECTIONS = 'realtime.connections';
 const METRIC_REALTIME_CONNECTIONS_MESSAGES_SENT = 'realtime.messages.sent';
 const METRIC_REALTIME_INBOUND = 'realtime.inbound';
 const METRIC_REALTIME_OUTBOUND = 'realtime.outbound';
+
+// MQTT push broker metrics (cumulative per-project counters, summed by StatsUsage)
+const METRIC_MQTT_CONNECTIONS = 'mqtt.connections';
+const METRIC_MQTT_MESSAGES_DELIVERED = 'mqtt.messages.delivered';
 
 // Resource types
 const RESOURCE_TYPE_PROJECTS = 'projects';

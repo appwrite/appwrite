@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Network\TrustedProxies;
 use Utopia\Config\Config;
 
 return [
@@ -108,9 +109,9 @@ return [
             ],
             [
                 'name' => '_APP_OPENSSL_KEY_V1',
-                'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The var is not set by default, if you wish to take advantage of Appwrite encryption capabilities you should change it and make sure to **keep it a secret and have a backup for it**.',
+                'description' => 'This is your server private secret key that is used to encrypt all sensitive data on your server. Appwrite server encrypts all secret data on your server like webhooks, HTTP passwords, user sessions, and storage files. The installer generates a unique value. Production refuses to start when this is empty, and warns when it is the public `your-secret-key` placeholder. Changing it makes existing encrypted data unreadable. **Keep it a secret and have a backup for it**.',
                 'introduction' => '',
-                'default' => 'your-secret-key',
+                'default' => '',
                 'required' => true,
                 'question' => 'Choose a secret API key, make sure to make a backup of your key in a secure location',
                 'filter' => 'token'
@@ -215,6 +216,24 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_DNS_EXTERNAL',
+                'description' => 'Comma-separated DNS servers used, instead of the container\'s own resolver, to check the host of a migration source or an avatar URL before Appwrite fetches it. Other fetches (OAuth2 and OIDC providers, webhooks) resolve normally and are checked on the address they connect to. By default, the value of _APP_DNS.',
+                'introduction' => '2.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_ALLOWED_INTERNAL_ADDRESSES',
+                'description' => 'Comma-separated IP addresses or CIDR ranges that Appwrite may reach even though they are private or reserved, when fetching a user-supplied URL (OAuth2 and OIDC providers, webhooks, messaging webhooks, migration sources, avatars). Every other private or reserved address is refused. Set it per container, for example to reach an internal identity provider. By default, empty.',
+                'introduction' => '2.4.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_CONSOLE_WHITELIST_ROOT',
                 'description' => 'This option allows you to disable the creation of new users on the Appwrite console. When enabled only 1 user will be able to use the registration form. New users can be added by inviting them to your project. By default this option is enabled.',
                 'introduction' => '0.8.0',
@@ -245,6 +264,15 @@ return [
                 'name' => '_APP_CONSOLE_URL',
                 'description' => 'Origin of the Appwrite console web app, such as https://console.example.com, used when the backend generates links to the console (OAuth callbacks, emails, error page CTAs, VCS comments and commit statuses). Set it when the console is served on a different host than the API. When empty, links use _APP_CONSOLE_DOMAIN (or _APP_DOMAIN) over https, or over http when _APP_OPTIONS_FORCE_HTTPS is disabled.',
                 'introduction' => '2.3.0',
+                'default' => '',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_CONSOLE_PASSKEY_ORIGINS',
+                'description' => 'Extra web origins allowed to sign in to the console with a passkey, separated by a comma, such as preview consoles. Console passkeys are bound to the host of _APP_CONSOLE_URL (or the console domain when it is empty), and every origin must be on that host or one of its subdomains. Invalid origins are ignored.',
+                'introduction' => '2.4.0',
                 'default' => '',
                 'required' => false,
                 'question' => '',
@@ -459,9 +487,18 @@ return [
             ],
             [
                 'name' => '_APP_TRUSTED_HEADERS',
-                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively.',
+                'description' => 'This option allows you to set the list of trusted headers, the value is a comma‑separated list of HTTP header names, evaluated left-to-right for the first valid IP. Header names are treated case-insensitively. These headers are only read when the connection address is listed in `_APP_TRUSTED_PROXIES`.',
                 'introduction' => '1.8.0',
                 'default' => 'x-forwarded-for',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
+                'name' => '_APP_TRUSTED_PROXIES',
+                'description' => 'Comma-separated CIDRs (or exact IPs) of reverse proxies that may set `_APP_TRUSTED_HEADERS` such as X-Forwarded-For. The default covers loopback, RFC1918 and RFC 6598 (100.64.0.0/10) ranges used by Docker, Traefik and Kubernetes. When the connection comes from a trusted proxy, the client IP is the rightmost header entry that is not itself a trusted proxy. Direct clients whose connection address is not in this list are not trusted — their X-Forwarded-For is ignored. Set it to an empty value to always use the connection IP. If your load balancer has a public address, add that CIDR.',
+                'introduction' => '2.4.0',
+                'default' => TrustedProxies::DEFAULT,
                 'required' => false,
                 'question' => '',
                 'filter' => ''
@@ -1330,7 +1367,7 @@ return [
             ],
             [
                 'name' => '_APP_BUILDS_VOLUME',
-                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage, attached to jobs-service build workers so they write output directly onto it. Must match the storage the "builds" device is backed by.',
+                'description' => 'The Docker volume (or Kubernetes PersistentVolumeClaim) holding build storage. Jobs-service build workers attach only the current project\'s subdirectory (`app-<projectId>`) so they write output directly onto it without seeing other projects. Must match the storage the "builds" device is backed by.',
                 'introduction' => '1.9.0',
                 'default' => 'appwrite-builds',
                 'required' => false,
@@ -1993,21 +2030,6 @@ return [
             [
                 'name' => '_APP_MIGRATIONS_FIREBASE_CLIENT_SECRET',
                 'description' => 'Google OAuth client secret. You can generate secrets in your GCP application settings.',
-                'introduction' => '1.4.0',
-                'default' => '',
-                'required' => false,
-                'question' => '',
-                'filter' => ''
-            ]
-        ]
-    ],
-    [
-        'category' => 'Assistant',
-        'description' => '',
-        'variables' => [
-            [
-                'name' => '_APP_ASSISTANT_OPENAI_API_KEY',
-                'description' => 'OpenAI API key. You can find it in your OpenAI application settings.',
                 'introduction' => '1.4.0',
                 'default' => '',
                 'required' => false,

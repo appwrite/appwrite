@@ -653,6 +653,9 @@ class Messaging extends Action
 
         $usage = new UsageContext();
         $usage
+            ->setResource(METRIC_MESSAGES_RESOURCE_TYPE)
+            ->setResourceId($message->getId())
+            ->setResourceInternalId((string) $message->getSequence())
             ->addMetric(METRIC_MESSAGES, $recipients)
             ->addMetric(METRIC_MESSAGES_SENT, $delivered)
             ->addMetric(METRIC_MESSAGES_FAILED, $failed)

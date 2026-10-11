@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Response;
+use Utopia\Client\Client;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Validator\Authorization;
@@ -112,6 +113,7 @@ class Update extends Base
             ->inject('project')
             ->inject('authorization')
             ->inject('queueForEvents')
+            ->inject('clientForOAuth2')
             ->callback($this->handle(...));
     }
 
@@ -144,7 +146,8 @@ class Update extends Base
         Database $dbForPlatform,
         Document $project,
         Authorization $authorization,
-        QueueEvent $queueForEvents
+        QueueEvent $queueForEvents,
+        Client $clientForOAuth2
     ): void {
         $providerId = static::getProviderId();
         $queueForEvents->setParam('providerId', $providerId);
@@ -163,7 +166,7 @@ class Update extends Base
             'fusionAuthDomain' => $endpoint ?? ($existing['fusionAuthDomain'] ?? ''),
         ]);
 
-        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientId, $encodedSecret, $enabled);
+        $project = $this->persistCredentials($project, $dbForPlatform, $authorization, $clientForOAuth2, $clientId, $encodedSecret, $enabled);
 
         // Reuse buildReadResponse to keep PATCH/GET shapes identical and
         // guarantee the clientSecret is write-only on every response path.

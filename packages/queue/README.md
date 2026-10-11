@@ -94,7 +94,9 @@ $broker = new Nats(
 $broker->publish(new Queue('my-queue'), ['type' => 'test_number', 'value' => 123]);
 ```
 
-Each queue is a WorkQueue-retention stream (a message is removed once acknowledged) with a companion dead stream. `commit()` acknowledges a message, `reject()` schedules redelivery until `maxDeliver` and then dead-letters — unless the handler declared the failure permanent, which dead-letters it at once — `retry()` re-drives the dead stream onto the queue, and `getQueueSize()` reports pending (consumer `num_pending`) or failed (dead stream) counts. `reap()` is a no-op — redelivery after `ackWait` reclaims jobs stranded by a dead worker. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
+Each queue is a WorkQueue-retention stream (a message is removed once acknowledged) with a companion dead stream. `commit()` acknowledges a message, `reject()` schedules redelivery until `maxDeliver` and then dead-letters — unless the handler declared the failure permanent, which dead-letters it at once — `retry()` re-drives the dead stream onto the queue, and `getQueueSize()` reports pending (consumer `num_pending`) or failed (dead stream) counts. `reap()` is a no-op — redelivery after `ackWait` reclaims jobs stranded by a dead worker.
+
+The server-side consumer is created with `max_deliver` one above `maxDeliver`, so reading it off `/jsz` shows the extra delivery. A message whose every attempt died unacknowledged, with no `reject()`, arrives once more and `receive()` dead-letters it without running a handler. At exactly `maxDeliver`, JetStream would retire it silently. It would stay on the work stream, counted as neither pending nor in flight, and only reach the dead stream if a broker happened to be subscribed when the server announced it. The consumer carries a `utopia_queue_spare_delivery` metadata key saying so. A broker under `Provisioning::Require`, which never writes configuration, reads that key to find the spare delivery, and reports through `onError` if it adopts a consumer provisioned without one. Requires [`utopia-php/nats`](https://github.com/utopia-php/nats).
 
 ### Shaping a queue
 
@@ -139,6 +141,12 @@ $maintenance->retry(new Queue('my-queue'));   // moves messages, changes no conf
 ```
 
 `Provisioning::Require` uses what is already provisioned and refuses when it is absent. The boundary is stream configuration plus the two worker consumers; the consumer `retry()` reads the dead stream through is still created, because it carries none of the settings a running fleet depends on.
+
+A queue that nothing has published to or received from does not exist on the server yet. For a worker that scales from zero, nothing receives until something is published, so a KEDA `nats-jetstream` trigger on its consumer reports it missing until then. Call `provision()` with the broker the queue's own worker uses, from a deploy step, to create the queue up front without publishing anything. It is idempotent. Under `Provisioning::Require` it creates nothing and throws if the queue is absent, which makes it a check.
+
+```php
+$broker->provision(new Queue('my-queue'));   // streams + work consumer, no message
+```
 
 ### Concurrency
 
@@ -220,7 +228,7 @@ NATS keeps explicit, server-confirmed acknowledgements. The NATS client's `reque
 
 **Queue 5 migration:** `Server::job()` keeps its positional argument order, but renames `maxCoroutines` to `coroutines` and `batch` to `prefetch`. Rename named arguments and Platform job metadata keys; replace `Server::batch()` with `Server::prefetch()`. Direct adapter queue specs also use `coroutines` and `prefetch`. Omitting prefetch now uses the coroutine count. To preserve the previous effective bound when passing both numbers, pass `prefetch: max($oldBatch, $coroutines)`. Platform's updated worker configuration requires queue 5.
 
-Third-party consumers keep the existing `Consumer` contract. `commit()` acknowledges processed work; `reject()` applies the broker's retry/dead-letter policy. Optional `release()` returns work whose handler never started. On Redis it doesn't count as an attempt. On NATS it can't avoid counting one, because every redelivery counts toward `maxDeliver`. So `Broker\Nats` holds a released message back for `releaseDelay` seconds (default 5) rather than redelivering it at once. Otherwise workers stopping together pass it between them until it runs out of deliveries without running. Existing single-message `extend()` implementations remain supported alongside variadic renewal; no new renewal interface is required. Receipt identity stays opaque on `Message` and is separate from its message ID.
+Third-party consumers keep the existing `Consumer` contract. `commit()` acknowledges processed work; `reject()` applies the broker's retry/dead-letter policy. Optional `release()` returns work whose handler never started. On Redis it never counts as an attempt. A NATS NAK always counts toward `maxDeliver`, so `Broker\Nats` instead requeues the message as a new one, which starts with no attempts, and acknowledges the original once the copy is stored. The requeued job joins the back of the queue. Only a successful requeue is free. On a bounded work stream with `DiscardPolicy::Old`, where a requeue would evict the oldest stored job, or when the requeue is refused, it falls back to a NAK after `releaseDelay` seconds (default 5), which spends an attempt. If the connection fails before the NAK reaches the server, the original is redelivered after `ackWait`, which also spends one. If the copy is stored but the ack is lost, the job is delivered twice. Existing single-message `extend()` implementations remain supported alongside variadic renewal; no new renewal interface is required. Receipt identity stays opaque on `Message` and is separate from its message ID.
 
 Keep prefetch at its default until representative measurements justify a change. With one coroutine, compare prefetch 1, 8, 32, and 100 using the same persistence and acknowledgement guarantees. Local no-op throughput does not establish a production setting. See [the implementation plan](docs/batching.md) and [prior art](docs/prior-art.md).
 

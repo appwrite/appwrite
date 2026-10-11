@@ -42,6 +42,38 @@ class Realtime extends MessagingAdapter
         'presences'
     ];
 
+    // User events, after `users.{userId}`, that neither shape the user's roles nor
+    // end a session, so fromPayload() does not re-resolve the user's open connections
+    // for them. `*` stands for one ID segment. Anything not listed re-resolves, so a
+    // new user event is safe by default.
+    //
+    // `update.password` and `recovery.*.update` stay out: with `invalidateSessions`
+    // they delete sessions without emitting `sessions.*.delete`. `sessions.*.create`
+    // stays out too: the session limit and ID-token sign-in delete older sessions the
+    // same way, and magic URL, OTP and OAuth sign-in can set verification.
+    // `sessions.*.update` stays out: extending a session moves the expiry its open
+    // connections are held to.
+    // `update.email` and `update.phone` stay out: they reset verification, which
+    // changes roles.
+    private const USER_EVENTS_WITHOUT_ACCESS_CHANGE = [
+        'create',
+        'update.name',
+        'update.prefs',
+        'update.avatar',
+        'update.mfa',
+        'update.mfa.recovery-codes',
+        'create.mfa.recovery-codes',
+        'delete.mfa',
+        'recovery.*.create',
+        'verification.*.create',
+        'targets.*.create',
+        'targets.*.update',
+        'targets.*.delete',
+        'tokens.*.create',
+        'challenges.*.create',
+        'identities.*.delete',
+    ];
+
     /**
      * Connection Tree
      *
@@ -49,6 +81,11 @@ class Realtime extends MessagingAdapter
      *      'projectId' -> [PROJECT_ID]
      *      'roles' -> [ROLE_x, ROLE_Y]
      *      'userId' -> [USER_ID]
+     *      'sessionId' -> [SESSION_ID] the session the connection was opened with, if any
+     *      'impersonatedUserId' -> [USER_ID] when opened on that user's behalf
+     *      'impersonator' -> ['projectId' => ..., 'userId' => ..., 'sessionId' => ...] who opened it then
+     *      'expire' -> [UNIX_TIMESTAMP] when that session expires, if any
+     *      'jwtExpire' -> [UNIX_TIMESTAMP] when the JWT the connection was opened with expires, if any
      *      'channels' -> [CHANNEL_NAME_X, CHANNEL_NAME_Y, CHANNEL_NAME_Z]
      *      'presences' -> [PRESENCE_ID_1, PRESENCE_ID_2, ...]
      */
@@ -156,8 +193,11 @@ class Realtime extends MessagingAdapter
             'presences' => $this->connections[$identifier]['presences'] ?? []
         ];
 
-        if (\array_key_exists('authorization', $existing)) {
-            $entry['authorization'] = $existing['authorization'];
+        // Recorded once by the connection handler; every later (re)subscribe keeps it.
+        foreach (['authorization', 'sessionId', 'impersonatedUserId', 'impersonator', 'expire', 'jwtExpire'] as $key) {
+            if (\array_key_exists($key, $existing)) {
+                $entry[$key] = $existing[$key];
+            }
         }
 
         $this->connections[$identifier] = $entry;
@@ -413,6 +453,69 @@ class Realtime extends MessagingAdapter
             && array_key_exists($role, $this->subscriptions[$projectId])
             && array_key_exists($channel, $this->subscriptions[$projectId][$role])
             && !empty($this->subscriptions[$projectId][$role][$channel]);
+    }
+
+    /**
+     * Whether the session or JWT a connection authenticated with has expired.
+     *
+     * Expiry fires no event, so this is checked before every delivery. A connection
+     * that receives nothing stays open, but is closed at its next delivery.
+     */
+    public function isExpired(mixed $connection, int $now): bool
+    {
+        foreach (['expire', 'jwtExpire'] as $key) {
+            $expire = $this->connections[$connection][$key] ?? null;
+            if ($expire !== null && $expire <= $now) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Connection IDs of every connection a user holds in a project, whether or not
+     * it currently subscribes to anything.
+     *
+     * @return array<int, mixed>
+     */
+    public function getUserConnections(string $projectId, string $userId): array
+    {
+        if ($userId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            if (($connection['projectId'] ?? null) === $projectId && ($connection['userId'] ?? '') === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
+    }
+
+    /**
+     * Connection IDs of every connection a user opened, in any project, while
+     * impersonating someone else.
+     *
+     * @return array<int, mixed>
+     */
+    public function getImpersonatorConnections(string $projectId, string $userId): array
+    {
+        if ($userId === '') {
+            return [];
+        }
+
+        $connections = [];
+        foreach ($this->connections as $connectionId => $connection) {
+            $impersonator = $connection['impersonator'] ?? null;
+            if (($impersonator['projectId'] ?? null) === $projectId && ($impersonator['userId'] ?? null) === $userId) {
+                $connections[] = $connectionId;
+            }
+        }
+
+        return $connections;
     }
 
     /**
@@ -824,6 +927,24 @@ class Realtime extends MessagingAdapter
                 $channels[] = 'account';
                 $channels[] = 'account.' . $parts[1];
                 $roles = [Role::user(ID::custom($parts[1]))->toString()];
+                // Roles come from the user document (verification, labels, status,
+                // sessions), so the user's open connections re-resolve when it changes,
+                // as they already do for memberships.
+                $permissionsChanged = true;
+                $suffix = \array_slice($parts, 2);
+                foreach (self::USER_EVENTS_WITHOUT_ACCESS_CHANGE as $pattern) {
+                    $segments = \explode('.', $pattern);
+                    if (\count($segments) !== \count($suffix)) {
+                        continue;
+                    }
+                    foreach ($segments as $i => $segment) {
+                        if ($segment !== '*' && $segment !== $suffix[$i]) {
+                            continue 2;
+                        }
+                    }
+                    $permissionsChanged = false;
+                    break;
+                }
                 break;
             case 'rules':
             case 'migrations':
