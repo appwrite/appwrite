@@ -1,0 +1,115 @@
+{
+  "lib": "http",
+  "environment": {
+    "date": "2026-10-11T09:07:18Z",
+    "commit": "efd6922f03",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "match",
+      "description": "Match a document path with three params against a router of 40 API routes",
+      "php": {
+        "ns": 8225.760528488852,
+        "min": 8140.1391412056155,
+        "max": 8732.366639141206,
+        "samples": 15,
+        "calls": 2422
+      },
+      "rust": {
+        "ns": 1046.8819985457567,
+        "min": 1038.9204840552613,
+        "max": 1085.1835982133582,
+        "samples": 15,
+        "calls": 19254,
+        "allocations": 14.000003462483987,
+        "bytes": 808.0004154980783
+      },
+      "speedup": 7.857390364831384
+    },
+    {
+      "name": "request",
+      "description": "Parse a JSON POST request (9 headers, a cookie, a query string) and read a header, the cookie, the query and the body params",
+      "php": {
+        "ns": 3804.8453250547846,
+        "min": 3655.002008765522,
+        "max": 3945.846968590212,
+        "samples": 15,
+        "calls": 5476
+      },
+      "rust": {
+        "ns": 2279.060397380899,
+        "min": 2255.569428764958,
+        "max": 2308.040754120569,
+        "samples": 15,
+        "calls": 8858,
+        "allocations": 50.00000752615338,
+        "bytes": 5818.000903138406
+      },
+      "speedup": 1.6694798125698296
+    },
+    {
+      "name": "response",
+      "description": "Build a 201 response with a header, a session cookie and a JSON user of 18 fields",
+      "php": {
+        "ns": 2408.9413652635476,
+        "min": 2325.2324404394517,
+        "max": 2606.324280952969,
+        "samples": 15,
+        "calls": 8101
+      },
+      "rust": {
+        "ns": 1220.2821025827573,
+        "min": 1207.7623984479205,
+        "max": 1287.0412271128896,
+        "samples": 15,
+        "calls": 16494,
+        "allocations": 42.99229214663918,
+        "bytes": 5070.846218827048
+      },
+      "speedup": 1.9740856316461282
+    },
+    {
+      "name": "dispatch",
+      "description": "Run a GET request through an app of 40 routes: match, validate three path params, an init hook and a JSON action",
+      "php": {
+        "ns": 21925.98588490771,
+        "min": 21633.686210640608,
+        "max": 22677.478827361563,
+        "samples": 15,
+        "calls": 921
+      },
+      "rust": {
+        "ns": 3991.0023622047242,
+        "min": 3902.6820866141734,
+        "max": 4223.720472440945,
+        "samples": 15,
+        "calls": 5080,
+        "allocations": 107.99527559055119,
+        "bytes": 8472.835931758531
+      },
+      "speedup": 5.493854399222975
+    }
+  ]
+}

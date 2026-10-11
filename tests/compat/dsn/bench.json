@@ -1,8 +1,8 @@
 {
   "lib": "dsn",
   "environment": {
-    "date": "2026-10-11T00:02:34Z",
-    "commit": "809d2819d7",
+    "date": "2026-10-11T09:07:18Z",
+    "commit": "efd6922f03",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -12,11 +12,18 @@
       "version": "8.5.10",
       "opcache": true,
       "jit": "tracing",
-      "runs": "in a container of the dev image (bin/compat-php)"
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
     },
     "rust": {
-      "version": "rustc 1.97.1 (8bab26f4f 2026-07-14)",
-      "profile": "release"
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
     }
   },
   "results": [
@@ -24,43 +31,43 @@
       "name": "parse",
       "description": "Parse a Redis connection string with credentials, a path and three parameters",
       "php": {
-        "ns": 575.5006127093424,
-        "min": 557.7660909143957,
-        "max": 619.2752815545311,
+        "ns": 450.35719122426866,
+        "min": 445.686800288913,
+        "max": 455.6210048754063,
         "samples": 15,
-        "calls": 34274
+        "calls": 44304
       },
       "rust": {
-        "ns": 265.50576493579007,
-        "min": 250.57056113902848,
-        "max": 277.59049413735346,
+        "ns": 138.5670186783603,
+        "min": 136.15966112514224,
+        "max": 144.08223474230525,
         "samples": 15,
-        "calls": 71640,
-        "allocations": 6.00000093057882,
-        "bytes": 60.000111669458406
+        "calls": 144124,
+        "allocations": 6.0000004625646435,
+        "bytes": 60.00005550775721
       },
-      "speedup": 2.1675635286055708
+      "speedup": 3.2501037802482498
     },
     {
       "name": "param",
       "description": "Read one query parameter of a parsed connection string",
       "php": {
-        "ns": 37.021717441550955,
-        "min": 36.80963679154052,
-        "max": 37.97823468471315,
+        "ns": 36.980724817907266,
+        "min": 36.63128071889619,
+        "max": 37.98425378989756,
         "samples": 15,
-        "calls": 522207
+        "calls": 540384
       },
       "rust": {
-        "ns": 13.341587360562267,
-        "min": 13.162407055534128,
-        "max": 13.682981546060137,
+        "ns": 6.367641457407948,
+        "min": 5.927583512070276,
+        "max": 6.548559104018278,
         "samples": 15,
-        "calls": 1485699,
-        "allocations": 4.487225653828041e-8,
-        "bytes": 5.384670784593649e-6
+        "calls": 3095331,
+        "allocations": 2.153781507265836e-8,
+        "bytes": 2.584537808719003e-6
       },
-      "speedup": 2.7749109937987706
+      "speedup": 5.807601615961724
     }
   ]
 }

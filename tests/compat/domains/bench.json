@@ -1,0 +1,136 @@
+{
+  "lib": "domains",
+  "environment": {
+    "date": "2026-10-11T09:07:18Z",
+    "commit": "efd6922f03",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a domain on a multi-label suffix and read its suffix, registrable domain and subdomain",
+      "php": {
+        "ns": 963.1489330887323,
+        "min": 937.7655209037366,
+        "max": 999.159215989186,
+        "samples": 15,
+        "calls": 20714
+      },
+      "rust": {
+        "ns": 146.98978899382868,
+        "min": 144.19852782678814,
+        "max": 150.421397606521,
+        "samples": 15,
+        "calls": 125257,
+        "allocations": 2.0000005322390497,
+        "bytes": 36.000063868685984
+      },
+      "speedup": 6.552488711506142
+    },
+    {
+      "name": "parse_many",
+      "description": "Read the registrable domain of five typical hostnames",
+      "php": {
+        "ns": 3652.321911632101,
+        "min": 3613.345356176736,
+        "max": 3872.9486023444547,
+        "samples": 15,
+        "calls": 5545
+      },
+      "rust": {
+        "ns": 749.857990984718,
+        "min": 736.2632755524609,
+        "max": 782.7598123648623,
+        "samples": 15,
+        "calls": 27287,
+        "allocations": 11.000002443165855,
+        "bytes": 175.0002931799025
+      },
+      "speedup": 4.870684790377243
+    },
+    {
+      "name": "public",
+      "description": "Validate a public domain",
+      "php": {
+        "ns": 772.7941176470588,
+        "min": 763.8287151702787,
+        "max": 789.7526315789473,
+        "samples": 15,
+        "calls": 25840
+      },
+      "rust": {
+        "ns": 235.77478662167528,
+        "min": 230.17308455736404,
+        "max": 243.3877530766177,
+        "samples": 15,
+        "calls": 80608,
+        "allocations": 2.0000008270477703,
+        "bytes": 41.000099245732436
+      },
+      "speedup": 3.277679215492562
+    },
+    {
+      "name": "apex",
+      "description": "Validate an apex domain on a multi-label suffix",
+      "php": {
+        "ns": 1373.776790021363,
+        "min": 1350.3032182482254,
+        "max": 1408.5291847563917,
+        "samples": 15,
+        "calls": 14511
+      },
+      "rust": {
+        "ns": 384.3699312582065,
+        "min": 378.8578821348575,
+        "max": 412.62375453773075,
+        "samples": 15,
+        "calls": 51788,
+        "allocations": 5.000001287299503,
+        "bytes": 73.00015447594038
+      },
+      "speedup": 3.5741005690127903
+    },
+    {
+      "name": "registrable",
+      "description": "Validate a registrable domain",
+      "php": {
+        "ns": 595.3417969893985,
+        "min": 585.9361272184151,
+        "max": 605.107479646225,
+        "samples": 15,
+        "calls": 34146
+      },
+      "rust": {
+        "ns": 214.8537551551986,
+        "min": 212.69038419795962,
+        "max": 219.60287605817234,
+        "samples": 15,
+        "calls": 92140,
+        "allocations": 4.0000007235366475,
+        "bytes": 47.000086824397656
+      },
+      "speedup": 2.7709164150254493
+    }
+  ]
+}

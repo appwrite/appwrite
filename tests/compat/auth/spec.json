@@ -5897,5 +5897,10 @@
       "php": "webauthn-lib's StringStream fread()s a CBOR byte or text string's declared length before checking it, so a credential declaring a string larger than PHP's memory_limit ends the process with a fatal \"Allowed memory size exhausted\" error.",
       "reason": "Rust reads only the bytes present and reports the same \"Out of range. Expected: N, read: M.\" error webauthn-lib raises for lengths that fit in memory."
     }
-  ]
+  ],
+  "bench": {
+    "bound": {
+      "password": "Argon2id's cost is fixed by its parameters (7 MiB, 5 passes) in every implementation"
+    }
+  }
 }

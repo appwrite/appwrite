@@ -48,6 +48,10 @@ pub struct Spec {
     /// (crates/CONVERSION.md §6), with PHP's behaviour for them.
     #[serde(default)]
     pub deviations: Vec<Deviation>,
+    /// Benchmark settings for `compat bench`: `bound` names the benchmarks
+    /// bound by work both runtimes wait on equally, with the reason.
+    #[serde(default)]
+    pub bench: Option<serde_json::Value>,
 }
 
 #[derive(Debug, Deserialize)]

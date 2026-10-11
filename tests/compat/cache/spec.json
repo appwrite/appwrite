@@ -1053,5 +1053,12 @@
       "php": "`$idleGrace` bounds how long the reader coroutine stays parked on an idle connection before retiring (a Swoole worker cannot exit while it waits).",
       "reason": "The Rust reader is a parked tokio task that costs nothing idle; it lives as long as the connection. idleGrace is validated the same way."
     }
-  ]
+  ],
+  "bench": {
+    "bound": {
+      "redis_load": "A Redis round trip, the same on both runtimes, dominates the call",
+      "redis_miss": "A Redis round trip, the same on both runtimes, dominates the call",
+      "redis_save": "A Redis round trip, the same on both runtimes, dominates the call"
+    }
+  }
 }

@@ -1,0 +1,163 @@
+{
+  "lib": "auth",
+  "environment": {
+    "date": "2026-10-11T09:11:35Z",
+    "commit": "efd6922f03",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "password",
+      "description": "Verify a password against its Argon2id hash at Appwrite's cost (7 MiB, 5 passes, 1 lane)",
+      "php": {
+        "ns": 11271542.0,
+        "min": 10898333.0,
+        "max": 12155541.0,
+        "samples": 15,
+        "calls": 1
+      },
+      "rust": {
+        "ns": 10772792.0,
+        "min": 10653958.0,
+        "max": 11162166.0,
+        "samples": 15,
+        "calls": 1,
+        "allocations": 7.066666666666666,
+        "bytes": 7340152.0
+      },
+      "speedup": 1.0462971901805957,
+      "bound": "Argon2id's cost is fixed by its parameters (7 MiB, 5 passes) in every implementation"
+    },
+    {
+      "name": "sha",
+      "description": "Verify a 256-character session secret against its SHA-256 hash",
+      "php": {
+        "ns": 1933.2642092058284,
+        "min": 1903.583325291904,
+        "max": 2045.0521084628003,
+        "samples": 15,
+        "calls": 10363
+      },
+      "rust": {
+        "ns": 669.2865830996385,
+        "min": 664.1748488022434,
+        "max": 682.6268878602561,
+        "samples": 15,
+        "calls": 29597,
+        "allocations": 2.0000022524805443,
+        "bytes": 70.00027029766531
+      },
+      "speedup": 2.8885446952371048,
+      "bound": null
+    },
+    {
+      "name": "token",
+      "description": "Generate a 256-character token secret",
+      "php": {
+        "ns": 510.02622673434854,
+        "min": 503.88722247859306,
+        "max": 527.5822950315336,
+        "samples": 15,
+        "calls": 39006
+      },
+      "rust": {
+        "ns": 200.94727147360126,
+        "min": 197.5288120567376,
+        "max": 204.99450354609928,
+        "samples": 15,
+        "calls": 101520,
+        "allocations": 1.000000656685054,
+        "bytes": 256.0000788022065
+      },
+      "speedup": 2.538109738909052,
+      "bound": null
+    },
+    {
+      "name": "jwt-issue",
+      "description": "Issue an HS256 JWT with a user and a session claim",
+      "php": {
+        "ns": 3817.784239439288,
+        "min": 3766.843530971775,
+        "max": 4024.2547831028605,
+        "samples": 15,
+        "calls": 5279
+      },
+      "rust": {
+        "ns": 2260.9412299647606,
+        "min": 2191.7841309537343,
+        "max": 2315.5668978060703,
+        "samples": 15,
+        "calls": 8797,
+        "allocations": 29.0000075783411,
+        "bytes": 5026.000909400932
+      },
+      "speedup": 1.6885818122299412,
+      "bound": null
+    },
+    {
+      "name": "jwt-verify",
+      "description": "Verify an HS256 JWT's signature, type, issuer, audience and expiry",
+      "php": {
+        "ns": 4459.746619374861,
+        "min": 4417.608955885613,
+        "max": 4580.082021724673,
+        "samples": 15,
+        "calls": 4511
+      },
+      "rust": {
+        "ns": 2120.594416900194,
+        "min": 2101.499029963354,
+        "max": 2207.075878422074,
+        "samples": 15,
+        "calls": 9278,
+        "allocations": 25.000007185456635,
+        "bytes": 3413.000862254796
+      },
+      "speedup": 2.103064397337211,
+      "bound": null
+    },
+    {
+      "name": "session",
+      "description": "Decode a session cookie (base64 JSON of an id and a secret) and read its id",
+      "php": {
+        "ns": 545.8604172311027,
+        "min": 540.6743971823354,
+        "max": 580.8441614738554,
+        "samples": 15,
+        "calls": 36910
+      },
+      "rust": {
+        "ns": 546.2697958404884,
+        "min": 539.4167961403222,
+        "max": 586.7109875432715,
+        "samples": 15,
+        "calls": 36687,
+        "allocations": 10.000001817174113,
+        "bytes": 2988.0002180608935
+      },
+      "speedup": 0.9992505926329757,
+      "bound": null
+    }
+  ]
+}

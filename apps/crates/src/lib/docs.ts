@@ -144,7 +144,8 @@ export interface Bench {
     php: { version: string; opcache: boolean; jit: string; runs: string; image?: string | null; os?: string; kernel?: string }
     rust: { version: string; profile: string; runs?: string; image?: string | null; os?: string; kernel?: string }
   }
-  results: { name: string; description: string | null; php: Timing; rust: Timing; speedup: number }[]
+  /** `bound`: why the benchmark is bound by work both runtimes wait on equally (it must reach parity, not win). */
+  results: { name: string; description: string | null; php: Timing; rust: Timing; speedup: number; bound?: string | null }[]
 }
 
 /** `1234.5` ns → `1.23 µs`. */

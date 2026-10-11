@@ -1,0 +1,157 @@
+{
+  "lib": "validators",
+  "environment": {
+    "date": "2026-10-11T09:07:18Z",
+    "commit": "efd6922f03",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "compat-cache-php",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "text",
+      "description": "Validate a 33-character name against Text(128)",
+      "php": {
+        "ns": 63.41014863201742,
+        "min": 62.96361829025845,
+        "max": 64.72816434724983,
+        "samples": 15,
+        "calls": 316890
+      },
+      "rust": {
+        "ns": 36.756982995737296,
+        "min": 28.303581305180984,
+        "max": 40.641573383142486,
+        "samples": 15,
+        "calls": 536983,
+        "allocations": 1.2415042313567965e-7,
+        "bytes": 0.000014898050776281558
+      },
+      "speedup": 1.72511842550764
+    },
+    {
+      "name": "url",
+      "description": "Validate an OAuth2 callback URL with a query string against URL()",
+      "php": {
+        "ns": 413.2696536331322,
+        "min": 383.40514177068695,
+        "max": 471.05687360502606,
+        "samples": 15,
+        "calls": 48388
+      },
+      "rust": {
+        "ns": 284.43260389714806,
+        "min": 278.8942244441521,
+        "max": 296.7116899823123,
+        "samples": 15,
+        "calls": 68409,
+        "allocations": 2.0000009745306415,
+        "bytes": 196.000116943677
+      },
+      "speedup": 1.4529616083765562
+    },
+    {
+      "name": "range",
+      "description": "Validate an integer page limit against Range(1, 5000)",
+      "php": {
+        "ns": 51.83938931617333,
+        "min": 51.39091249290161,
+        "max": 53.30802425358976,
+        "samples": 15,
+        "calls": 382129
+      },
+      "rust": {
+        "ns": 6.48091084021671,
+        "min": 6.402144114856729,
+        "max": 6.715508314318657,
+        "samples": 15,
+        "calls": 3132668,
+        "allocations": 2.1281114585607753e-8,
+        "bytes": 2.55373375027293e-6
+      },
+      "speedup": 7.998781435857543
+    },
+    {
+      "name": "json",
+      "description": "Validate a JSON document string of 221 bytes against JSON",
+      "php": {
+        "ns": 1081.191243620736,
+        "min": 1067.8574805264573,
+        "max": 1099.5791565941445,
+        "samples": 15,
+        "calls": 18615
+      },
+      "rust": {
+        "ns": 628.638578552042,
+        "min": 618.1686233667866,
+        "max": 653.2446190746703,
+        "samples": 15,
+        "calls": 31686,
+        "allocations": 11.000002103978623,
+        "bytes": 3085.000252477435
+      },
+      "speedup": 1.7198932431271865
+    },
+    {
+      "name": "list",
+      "description": "Validate a list of 8 permission strings against ArrayList(Text(256), 100)",
+      "php": {
+        "ns": 390.11317046367134,
+        "min": 380.70079039688915,
+        "max": 662.3571790861829,
+        "samples": 15,
+        "calls": 47318
+      },
+      "rust": {
+        "ns": 276.18155284113914,
+        "min": 219.26950330678903,
+        "max": 303.9771561614253,
+        "samples": 15,
+        "calls": 59272,
+        "allocations": 1.1247581769919466e-6,
+        "bytes": 0.00013497098123903362
+      },
+      "speedup": 1.4125243574398547
+    },
+    {
+      "name": "any-of",
+      "description": "Validate an ID string against AnyOf(Integer, Text(36)), failing the first rule",
+      "php": {
+        "ns": 123.46695118400922,
+        "min": 121.67890834536028,
+        "max": 131.8597461642809,
+        "samples": 15,
+        "calls": 161443
+      },
+      "rust": {
+        "ns": 29.261345365134492,
+        "min": 26.22144384912095,
+        "max": 31.994858120064052,
+        "samples": 15,
+        "calls": 606393,
+        "allocations": 1.0993970356957727e-7,
+        "bytes": 0.000013192764428349273
+      },
+      "speedup": 4.2194557236976085
+    }
+  ]
+}

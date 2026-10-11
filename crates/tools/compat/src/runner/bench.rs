@@ -71,6 +71,7 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
             eprintln!("{lib}: benchmark `{name}` exists in Rust only");
             ok = false;
         }
+        let bound = bound_benchmarks(root, lib);
         let mut results = Vec::new();
         for name in names.into_iter().filter(|n| php.contains_key(*n)) {
             let args = json!({ "name": name });
@@ -87,7 +88,11 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
                 speedup,
                 r["allocations"].as_f64().unwrap_or(0.0)
             );
-            if speedup < 1.0 {
+            // A benchmark bound by something both runtimes wait on equally (a
+            // service round trip, a fixed-cost algorithm) must reach parity;
+            // every other must be faster.
+            let bound = bound.get(name.as_str());
+            if speedup < if bound.is_some() { PARITY } else { 1.0 } {
                 eprintln!("{lib}: `{name}` is slower in Rust");
                 ok = false;
             }
@@ -97,6 +102,7 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
                 "php": p,
                 "rust": r,
                 "speedup": speedup,
+                "bound": bound,
             }));
         }
         if results.is_empty() {
@@ -116,6 +122,19 @@ pub fn run(engine: &mut Engine, root: &Path, libs: &[String], write: bool) -> Re
         }
     }
     Ok(ok)
+}
+
+/// How close to PHP a bound benchmark must come.
+const PARITY: f64 = 0.95;
+
+/// `bench.bound` in the library's spec.json: benchmarks bound by something
+/// both runtimes wait on equally, each with the reason.
+fn bound_benchmarks(root: &Path, lib: &str) -> Map<String, Value> {
+    std::fs::read_to_string(spec::lib_dir(root, lib).join("spec.json"))
+        .ok()
+        .and_then(|t| serde_json::from_str::<Value>(&t).ok())
+        .and_then(|s| s["bench"]["bound"].as_object().cloned())
+        .unwrap_or_default()
 }
 
 /// Where the numbers come from: the commit, the machine and both runtimes.

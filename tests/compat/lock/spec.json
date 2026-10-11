@@ -162,5 +162,10 @@
       "php": "`$mode` is any int: values other than LOCK_SH (1) and LOCK_EX (2) raise a ValueError on the first acquire, or for LOCK_UN (3) make every acquire succeed without locking.",
       "reason": "utopia_lock::Mode has only Exclusive and Shared."
     }
-  ]
+  ],
+  "bench": {
+    "bound": {
+      "distributed": "Two Redis round trips, the same on both runtimes, dominate the call"
+    }
+  }
 }
