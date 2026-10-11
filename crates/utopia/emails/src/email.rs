@@ -231,14 +231,14 @@ impl Email {
     ///
     /// PHP: `getSubdomain()`.
     pub fn subdomain(&self) -> String {
-        self.domain.sub()
+        self.domain.sub().to_owned()
     }
 
     /// Whether there is a subdomain (one that is not empty nor `"0"`).
     ///
     /// PHP: `hasSubdomain()`.
     pub fn has_subdomain(&self) -> bool {
-        !empty(&self.domain.sub())
+        !empty(self.domain.sub())
     }
 
     /// The address with the aliases of its provider ([`PROVIDERS`]) removed.

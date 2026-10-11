@@ -119,21 +119,36 @@ impl PublicSuffixList {
     }
 }
 
-/// Which rule matched, borrowing from the domain.
+/// Which rule matched: where its text starts in the domain.
 #[derive(Debug, Clone, Copy)]
-enum Rule<'d> {
+enum Rule {
     /// No rule: the rule is `''`.
     None,
     /// `!<joined>`.
-    Exception(&'d str),
+    Exception(usize),
     /// `<joined>`.
-    Exact(&'d str),
+    Exact(usize),
     /// `*.<next>`.
-    Wildcard(&'d str),
+    Wildcard(usize),
+}
+
+/// The parts of a domain, found once: byte offsets into it.
+#[derive(Debug, Clone, Copy)]
+struct Parts {
+    /// Where the suffix starts (the domain's length for none).
+    suffix: usize,
+    rule: Rule,
+    /// The registrable name.
+    name: (usize, usize),
+    /// Where the subdomain ends (it starts the domain).
+    sub: usize,
 }
 
 /// A domain name, lower-cased, split against a [`PublicSuffixList`] into
 /// its suffix, registrable name and subdomain.
+///
+/// The suffix search runs once, on the first getter that needs it; the
+/// suffix, name and subdomain are then slices of the domain.
 ///
 /// ```
 /// use utopia_domains::Domain;
@@ -161,6 +176,7 @@ enum Rule<'d> {
 pub struct Domain<'l> {
     domain: String,
     list: Option<&'l PublicSuffixList>,
+    parts: OnceLock<Parts>,
 }
 
 /// Whether a string is empty or `"0"`.
@@ -170,13 +186,12 @@ fn empty(s: &str) -> bool {
     s.is_empty() || s == "0"
 }
 
-/// `s` without its last `cut` characters.
+/// Where `s` ends without its last `cut` characters (`cut` > 0).
 ///
-/// PHP: `mb_substr($s, 0, -$cut)`.
-fn cut_end(s: &str, cut: usize) -> String {
-    let cut = i64::try_from(cut).unwrap_or(i64::MAX);
-    let bytes = mb::mb_substr(s.as_bytes(), 0, Some(-cut)).unwrap_or_default();
-    String::from_utf8(bytes).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
+/// PHP: the length of `mb_substr($s, 0, -$cut)`, which is empty when `cut`
+/// reaches the length. The domain is UTF-8, so characters are `char`s.
+fn cut_end(s: &str, cut: usize) -> usize {
+    s.char_indices().rev().nth(cut - 1).map_or(0, |(at, _)| at)
 }
 
 impl Domain<'static> {
@@ -220,7 +235,7 @@ impl<'l> Domain<'l> {
         }
         let lower = mb::mb_strtolower(domain.as_bytes());
         let domain = String::from_utf8(lower).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned());
-        Ok(Self { domain, list })
+        Ok(Self { domain, list, parts: OnceLock::new() })
     }
 
     fn list(&self) -> &'l PublicSuffixList {
@@ -232,28 +247,45 @@ impl<'l> Domain<'l> {
 
     /// The suffix search: for each label from the left, an exception rule
     /// `!<rest>`, then the rule `<rest>`, then a wildcard `*.<after>`.
-    fn find(&self) -> (&str, Rule<'_>) {
+    /// Returns where the suffix starts, and the rule.
+    fn find(&self) -> (usize, Rule) {
         let d = self.domain.as_str();
         let list = self.list();
         let mut start = 0;
         loop {
             let joined = &d[start..];
             let next_start = joined.find('.').map(|p| start + p + 1);
-            let next = next_start.map_or("", |n| &d[n..]);
+            let next = next_start.unwrap_or(d.len());
             if list.exceptions.contains(joined) {
-                return (next, Rule::Exception(joined));
+                return (next, Rule::Exception(start));
             }
             if list.rules.contains_key(joined) {
-                return (joined, Rule::Exact(joined));
+                return (start, Rule::Exact(start));
             }
-            if list.wildcards.contains(next) {
-                return (joined, Rule::Wildcard(next));
+            if list.wildcards.contains(&d[next..]) {
+                return (start, Rule::Wildcard(next));
             }
             match next_start {
                 Some(n) => start = n,
-                None => return ("", Rule::None),
+                None => return (d.len(), Rule::None),
             }
         }
+    }
+
+    /// The parts, found on first use.
+    fn parts(&self) -> &Parts {
+        self.parts.get_or_init(|| {
+            let d = self.domain.as_str();
+            let (suffix, rule) = self.find();
+            // `.` and the suffix, the suffix being the TLD when no rule matched.
+            let counted = if empty(&d[suffix..]) { self.tld() } else { &d[suffix..] };
+            let suffix_len = 1 + counted.chars().count();
+            let end = cut_end(d, suffix_len);
+            let name = (d[..end].rfind('.').map_or(0, |p| p + 1), end);
+            let name_text = &d[name.0..name.1];
+            let name_len = if empty(name_text) { 0 } else { 1 + name_text.chars().count() };
+            Parts { suffix, rule, name, sub: cut_end(d, name_len + suffix_len) }
+        })
     }
 
     /// The whole domain, lower-cased.
@@ -275,55 +307,48 @@ impl<'l> Domain<'l> {
     ///
     /// PHP: `getSuffix()`.
     pub fn suffix(&self) -> &str {
-        self.find().0
+        &self.domain[self.parts().suffix..]
     }
 
     /// The rule that matched (`com`, `*.ck`, `!www.ck`), `""` when none did.
     ///
     /// PHP: `getRule()`.
     pub fn rule(&self) -> Cow<'_, str> {
-        match self.find().1 {
+        match self.parts().rule {
             Rule::None => Cow::Borrowed(""),
-            Rule::Exception(joined) => Cow::Owned(format!("!{joined}")),
-            Rule::Exact(joined) => Cow::Borrowed(joined),
-            Rule::Wildcard(next) => Cow::Owned(format!("*.{next}")),
+            Rule::Exception(at) => Cow::Owned(format!("!{}", &self.domain[at..])),
+            Rule::Exact(at) => Cow::Borrowed(&self.domain[at..]),
+            Rule::Wildcard(at) => Cow::Owned(format!("*.{}", &self.domain[at..])),
         }
-    }
-
-    /// Characters in `.` and the suffix, the suffix being the TLD when no rule matched.
-    fn suffix_len(&self) -> usize {
-        let suffix = self.suffix();
-        let suffix = if empty(suffix) { self.tld() } else { suffix };
-        1 + mb::mb_strlen(suffix.as_bytes())
     }
 
     /// The registrable name: the label before the suffix (`example` in
     /// `blog.example.co.uk`).
     ///
     /// PHP: `getName()`.
-    pub fn name(&self) -> String {
-        let mut rest = cut_end(&self.domain, self.suffix_len());
-        match rest.rfind('.') {
-            Some(p) => rest.split_off(p + 1),
-            None => rest,
-        }
+    pub fn name(&self) -> &str {
+        let (start, end) = self.parts().name;
+        &self.domain[start..end]
     }
 
     /// The subdomain: what comes before the name (`blog` in
     /// `blog.example.co.uk`).
     ///
     /// PHP: `getSub()`.
-    pub fn sub(&self) -> String {
-        let name = self.name();
-        let name_len = if empty(&name) { 0 } else { 1 + mb::mb_strlen(name.as_bytes()) };
-        cut_end(&self.domain, name_len + self.suffix_len())
+    pub fn sub(&self) -> &str {
+        &self.domain[..self.parts().sub]
     }
 
     /// The apex domain, `name.suffix`, whether or not the suffix is known.
     ///
     /// PHP: `getApex()`.
     pub fn apex(&self) -> String {
-        format!("{}.{}", self.name(), self.suffix())
+        let (name, suffix) = (self.name(), self.suffix());
+        let mut apex = String::with_capacity(name.len() + 1 + suffix.len());
+        apex.push_str(name);
+        apex.push('.');
+        apex.push_str(suffix);
+        apex
     }
 
     /// The registrable domain, `name.suffix`, when the suffix is known; else
@@ -387,26 +412,23 @@ mod tests {
         let d = Domain::with_list("Mail.Sub.Example.CO.UK", &list).unwrap();
         assert_eq!(d.get(), "mail.sub.example.co.uk");
         assert_eq!((d.suffix(), &*d.rule(), d.tld()), ("co.uk", "co.uk", "uk"));
-        assert_eq!(
-            (d.name(), d.sub(), d.registerable()),
-            ("example".into(), "mail.sub".into(), "example.co.uk".into())
-        );
+        assert_eq!((d.name(), d.sub(), d.registerable()), ("example", "mail.sub", "example.co.uk".into()));
         assert!(d.is_known() && d.is_icann() && !d.is_private());
 
         let d = Domain::with_list("a.b.ck", &list).unwrap();
-        assert_eq!((d.suffix(), &*d.rule(), d.name()), ("b.ck", "*.ck", "a".into()));
+        assert_eq!((d.suffix(), &*d.rule(), d.name()), ("b.ck", "*.ck", "a"));
         let d = Domain::with_list("www.ck", &list).unwrap();
-        assert_eq!((d.suffix(), &*d.rule(), d.name()), ("ck", "!www.ck", "www".into()));
+        assert_eq!((d.suffix(), &*d.rule(), d.name()), ("ck", "!www.ck", "www"));
         let d = Domain::with_list("me.github.io", &list).unwrap();
         assert!(d.is_private());
 
         let d = Domain::with_list("example.test", &list).unwrap();
-        assert_eq!((d.suffix(), &*d.rule(), d.name(), d.sub()), ("", "", "example".into(), String::new()));
+        assert_eq!((d.suffix(), &*d.rule(), d.name(), d.sub()), ("", "", "example", ""));
         assert!(!d.is_known() && d.is_test());
         assert_eq!(d.registerable(), "");
 
         let d = Domain::with_list("x.0.com", &list).unwrap();
-        assert_eq!((d.name(), d.sub()), ("0".into(), "x.0".into()));
+        assert_eq!((d.name(), d.sub()), ("0", "x.0"));
     }
 
     #[test]
