@@ -1,0 +1,282 @@
+{
+  "cases": [
+    {
+      "name": "YAML 1.1 scalars",
+      "op": "yaml.parse",
+      "args": {
+        "input": "a: 99999999999999999999\nb: 0x7FFFFFFFFFFFFFFFFF\nc: 1,000\nd: 1:20:30\ne: 190:20:30.15\nf: 0b11\ng: -0b11\nh: 0o17\ni: 1.5e+3\nj: .5\nk: +.inf\nl: 08\nm: 1e3\nn: 0755\no: yes\np: Off\nq: ~"
+      },
+      "expect": {
+        "$array": [
+          [
+            "a",
+            7766279631452241919
+          ],
+          [
+            "b",
+            9223372036854775807
+          ],
+          [
+            "c",
+            1000
+          ],
+          [
+            "d",
+            4830
+          ],
+          [
+            "e",
+            685230.15
+          ],
+          [
+            "f",
+            3
+          ],
+          [
+            "g",
+            -3
+          ],
+          [
+            "h",
+            "0o17"
+          ],
+          [
+            "i",
+            1500.0
+          ],
+          [
+            "j",
+            0.5
+          ],
+          [
+            "k",
+            {
+              "$float": "INF"
+            }
+          ],
+          [
+            "l",
+            "08"
+          ],
+          [
+            "m",
+            "1e3"
+          ],
+          [
+            0,
+            493
+          ],
+          [
+            "o",
+            true
+          ],
+          [
+            "p",
+            false
+          ],
+          [
+            "q",
+            null
+          ]
+        ]
+      }
+    },
+    {
+      "name": "keys",
+      "op": "yaml.parse",
+      "args": {
+        "input": "y: a\nn: b\n~: c\n1.5: d\ntrue: e\n'07': f\n.inf: g\n-1: h\n[1, 2]: i"
+      },
+      "expect": {
+        "$array": [
+          [
+            1,
+            "e"
+          ],
+          [
+            0,
+            "g"
+          ],
+          [
+            "",
+            "c"
+          ],
+          [
+            "07",
+            "f"
+          ],
+          [
+            -1,
+            "h"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "tags",
+      "op": "yaml.parse",
+      "args": {
+        "input": "a: !!str 12\nb: !!int '13'\nc: !!float 2\nd: !!int 1.9\ne: !!bool 0\nf: !!null x\ng: ! 12\nh: !!binary aGk=\ni: 2001-12-14 21:59:43.10 -5\nj: !!float abc"
+      },
+      "expect": {
+        "$array": [
+          [
+            "a",
+            "12"
+          ],
+          [
+            "b",
+            13
+          ],
+          [
+            "c",
+            2.0
+          ],
+          [
+            "d",
+            1
+          ],
+          [
+            "e",
+            "0"
+          ],
+          [
+            "f",
+            null
+          ],
+          [
+            "g",
+            "12"
+          ],
+          [
+            "h",
+            "aGk="
+          ],
+          [
+            "i",
+            "2001-12-14 21:59:43.10 -5"
+          ],
+          [
+            "j",
+            0.0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "merge keys",
+      "op": "yaml.parse",
+      "args": {
+        "input": "base: &b {x: 1, k: 2}\nm:\n  <<: *b\n  k: 3\nq:\n  k: 4\n  <<: [*b, {z: 5}]\no:\n  <<: {p: 1}"
+      },
+      "expect": {
+        "$array": [
+          [
+            "base",
+            {
+              "$array": [
+                [
+                  "x",
+                  1
+                ],
+                [
+                  "k",
+                  2
+                ]
+              ]
+            }
+          ],
+          [
+            "m",
+            {
+              "$array": [
+                [
+                  "x",
+                  1
+                ],
+                [
+                  "k",
+                  3
+                ]
+              ]
+            }
+          ],
+          [
+            "q",
+            {
+              "$array": [
+                [
+                  "k",
+                  4
+                ],
+                [
+                  "x",
+                  1
+                ]
+              ]
+            }
+          ],
+          [
+            "o",
+            []
+          ]
+        ]
+      }
+    },
+    {
+      "name": "first document only",
+      "op": "yaml.parse",
+      "args": {
+        "input": "a: 1\n--- x\n"
+      },
+      "expect": {
+        "$array": [
+          [
+            "a",
+            1
+          ]
+        ]
+      }
+    },
+    {
+      "name": "unknown alias",
+      "op": "yaml.parse",
+      "args": {
+        "input": "a: *m"
+      },
+      "expect": false
+    },
+    {
+      "name": "unknown alias then an error keeps what was read",
+      "op": "yaml.parse",
+      "args": {
+        "input": "a: *m\n5"
+      },
+      "expect": []
+    },
+    {
+      "name": "empty",
+      "op": "yaml.parse",
+      "args": {
+        "input": ""
+      },
+      "expect": null
+    },
+    {
+      "name": "scalar document",
+      "op": "yaml.parse",
+      "args": {
+        "input": "plain"
+      },
+      "expect": "plain"
+    },
+    {
+      "name": "malformed",
+      "op": "yaml.parse",
+      "args": {
+        "input": ":value"
+      },
+      "expect": ":value"
+    }
+  ]
+}

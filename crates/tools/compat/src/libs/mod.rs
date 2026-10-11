@@ -13,6 +13,7 @@ use crate::bench::Bench;
 
 pub mod auth;
 pub mod cache;
+pub mod config;
 pub mod database;
 pub mod di;
 pub mod domains;
@@ -43,6 +44,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("lock", lock::OPS),
     ("php-std", php_std::OPS),
     ("query", query::OPS),
+    ("config", config::OPS),
     ("span", span::OPS),
     ("di", di::OPS),
     ("registry", registry::OPS),
@@ -66,6 +68,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "lock" => lock::call(op, args, session).await,
         "php-std" => php_std::call(op, args, session).await,
         "query" => query::call(op, args, session).await,
+        "config" => config::call(op, args, session).await,
         "span" => span::call(op, args, session).await,
         "di" => di::call(op, args, session).await,
         "registry" => registry::call(op, args, session).await,
@@ -89,6 +92,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "locale" => locale::BENCHES,
         "lock" => lock::BENCHES,
         "php-std" => php_std::BENCHES,
+        "config" => config::BENCHES,
         "span" => span::BENCHES,
         "di" => di::BENCHES,
         "registry" => registry::BENCHES,
@@ -111,6 +115,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "locale" => locale::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
+        "config" => config::bench(name, session).await,
         "span" => span::bench(name, session).await,
         "di" => di::bench(name, session).await,
         "registry" => registry::bench(name, session).await,

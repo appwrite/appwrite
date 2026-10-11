@@ -1,0 +1,381 @@
+{
+  "source": "packages/config/tests/Parser/PHPTest.php",
+  "cases": [
+    {
+      "name": "testPHPBasicTypes",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php\n\nreturn [\n    \"string\" => \"hello world\",\n    \"unicode_string\" => \"ä你こحب🌍\",\n    \"integer\" => 42,\n    \"float\" => 3.14159,\n    \"negative\" => -50,\n    \"boolean_true\" => true,\n    \"boolean_false\" => false,\n    \"null_value\" => null,\n];"
+          },
+          "expect": {
+            "$array": [
+              [
+                "string",
+                "hello world"
+              ],
+              [
+                "unicode_string",
+                "ä你こحب🌍"
+              ],
+              [
+                "integer",
+                42
+              ],
+              [
+                "float",
+                3.14159
+              ],
+              [
+                "negative",
+                -50
+              ],
+              [
+                "boolean_true",
+                true
+              ],
+              [
+                "boolean_false",
+                false
+              ],
+              [
+                "null_value",
+                null
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPArray",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php\n\nreturn [\n    \"simple_array\" => [1, 2, 3, 4, 5],\n    \"mixed_array\" => [\"string\", 42, true, null, 3.14],\n    \"nested_array\" => [[1, 2, 3], [\"a\", \"b\", \"c\", \"d\"], [true, false]],\n    \"empty_array\" => [],\n];"
+          },
+          "expect": {
+            "$array": [
+              [
+                "simple_array",
+                [
+                  1,
+                  2,
+                  3,
+                  4,
+                  5
+                ]
+              ],
+              [
+                "mixed_array",
+                [
+                  "string",
+                  42,
+                  true,
+                  null,
+                  3.14
+                ]
+              ],
+              [
+                "nested_array",
+                [
+                  [
+                    1,
+                    2,
+                    3
+                  ],
+                  [
+                    "a",
+                    "b",
+                    "c",
+                    "d"
+                  ],
+                  [
+                    true,
+                    false
+                  ]
+                ]
+              ],
+              [
+                "empty_array",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPObject",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php\n\nreturn [\n    \"simple_object\" => [\n        \"name\" => \"John Doe\",\n        \"age\" => 30,\n        \"active\" => true,\n    ],\n    \"nested_object\" => [\n        \"user\" => [\n            \"profile\" => [\n                \"name\" => \"Jane\",\n                \"settings\" => [\n                    \"theme\" => \"dark\",\n                ],\n            ],\n        ],\n    ],\n    \"empty_object\" => [],\n];"
+          },
+          "expect": {
+            "$array": [
+              [
+                "simple_object",
+                {
+                  "$array": [
+                    [
+                      "name",
+                      "John Doe"
+                    ],
+                    [
+                      "age",
+                      30
+                    ],
+                    [
+                      "active",
+                      true
+                    ]
+                  ]
+                }
+              ],
+              [
+                "nested_object",
+                {
+                  "$array": [
+                    [
+                      "user",
+                      {
+                        "$array": [
+                          [
+                            "profile",
+                            {
+                              "$array": [
+                                [
+                                  "name",
+                                  "Jane"
+                                ],
+                                [
+                                  "settings",
+                                  {
+                                    "$array": [
+                                      [
+                                        "theme",
+                                        "dark"
+                                      ]
+                                    ]
+                                  }
+                                ]
+                              ]
+                            }
+                          ]
+                        ]
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "empty_object",
+                []
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPParseExceptionMissingStart",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "return ['key' => 'value'];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "PHP config must start with an opening <?php tag."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "secret\n<?php return [];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "PHP config must start with an opening <?php tag."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "\n<?php return [];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "PHP config must start with an opening <?php tag."
+            }
+          }
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "﻿<?php return [];"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "PHP config must start with an opening <?php tag."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPParseExceptionMissingCode",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "PHP config file must return an array."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPParseExceptionWrongSyntax",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [};"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Failed to parse PHP config file: Unclosed '[' does not match '}'"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPParseExceptionEmptyString",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "PHP config must start with an opening <?php tag."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPParseExceptionNumber",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": 12
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPParseExceptionBoolean",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPParseExceptionNull",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": null
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Config\\Exception\\Parse",
+              "message": "Contents must be a string."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPHPEdgeCases",
+      "steps": [
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [];"
+          },
+          "expect": []
+        },
+        {
+          "op": "config.parse",
+          "args": {
+            "parser": "php",
+            "contents": "<?php return [ 'key' => 5 + 3 ];"
+          },
+          "expect": {
+            "$array": [
+              [
+                "key",
+                8
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

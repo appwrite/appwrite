@@ -24,6 +24,7 @@ pub(crate) mod typed;
 mod types;
 mod url;
 mod value;
+mod yaml;
 
 const AREAS: &[&[&str]] = &[
     datetime::OPS,
@@ -41,6 +42,7 @@ const AREAS: &[&[&str]] = &[
     types::OPS,
     url::OPS,
     value::OPS,
+    yaml::OPS,
 ];
 
 /// Every operation of every area.
@@ -190,6 +192,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         Some("types") => types::call(op, args, session).await,
         Some("url") => url::call(op, args, session).await,
         Some("value") => value::call(op, args, session).await,
+        Some("yaml") => yaml::call(op, args, session).await,
         _ => Err(Fault::new(format!("php-std: unknown operation `{op}`"))),
     }
 }

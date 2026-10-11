@@ -596,7 +596,9 @@ impl Engine {
         ns_r: &str,
         masks: &[&Mask],
     ) -> Result<(Value, Value, Value), String> {
-        let mut budget = 400;
+        // COMPAT_NO_SHRINK=1 reports the generated input as it is: shrinking
+        // keeps any difference, which can hide the one that was found.
+        let mut budget = if std::env::var_os("COMPAT_NO_SHRINK").is_some() { 0 } else { 400 };
         'outer: loop {
             for candidate in generate::shrink(&args) {
                 if budget == 0 {

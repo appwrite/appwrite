@@ -43,5 +43,6 @@ pub mod system;
 pub mod types;
 pub mod url;
 pub mod value;
+pub mod yaml;
 
 pub use types::{Array, ArrayKey, EngineError, Extension, Never, Str, Value};

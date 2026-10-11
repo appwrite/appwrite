@@ -1,0 +1,16 @@
+[package]
+name = "utopia-config"
+description = "Application configuration: a process-wide parameter registry, and typed configs loaded from env, dotenv, JSON, YAML or PHP files and validated against a schema."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+thiserror.workspace = true
+utopia-validators.workspace = true
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"
