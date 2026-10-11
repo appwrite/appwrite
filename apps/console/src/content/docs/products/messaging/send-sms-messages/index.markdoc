@@ -1,0 +1,1026 @@
+---
+layout: article
+title: Send SMS messages
+description: Send SMS messages to your users using Appwrite Messaging.
+---
+You can send custom SMS messages to your app's users using Appwrite Messaging and a connected SMTP service.
+This guide takes you through the implementation path of adding SMS messaging to your app.
+
+# Add a provider {% #add-a-provider %}
+Appwrite supports [Twilio](/docs/products/messaging/twilio/),
+[MSG91](/docs/products/messaging/msg91/),
+[Telesign](/docs/products/messaging/telesign/),
+[Textmagic](/docs/products/messaging/textmagic/),
+and [Vonage](/docs/products/messaging/vonage/)
+as SMS providers. You must configure one of them as a provider.
+{% only_dark %}
+![Add a SMTP provider](/images/docs/messaging/providers/twilio/dark/provider.avif)
+{% /only_dark %}
+{% only_light %}
+![Add a SMTP provider](/images/docs/messaging/providers/twilio/provider.avif)
+{% /only_light %}
+To add a new provider navigate to **Messaging** > **Providers** > {% icon icon="plus" size="m" /%} **Add provider** > **SMS**
+and follow the wizard. You can find more details about configuring in the provider guides for
+[Twilio](/docs/products/messaging/twilio/),
+[MSG91](/docs/products/messaging/msg91/),
+[Telesign](/docs/products/messaging/telesign/),
+[Textmagic](/docs/products/messaging/textmagic/),
+and [Vonage](/docs/products/messaging/vonage/).
+
+# Add targets {% #add-targets %}
+In Appwrite Messaging, each user has **targets** like their email, phone number, and devices with your app installed.
+You can deliver messages to users through their **targets**.
+
+{% only_dark %}
+![Target overview](/images/docs/messaging/targets/dark/target-overview.avif)
+{% /only_dark %}
+{% only_light %}
+![Target overview](/images/docs/messaging/targets/target-overview.avif)
+{% /only_light %}
+
+If the user signed up with phone (SMS) authentication, their account would already have a phone number as a target.
+During development, you can add targets to existing accounts by navigating to **Authentication** > **Users** > **Select a user** > **Targets** > **Add a subscriber**.
+{% only_dark %}
+![Add a target](/images/docs/messaging/targets/dark/add-targets.avif)
+{% /only_dark %}
+{% only_light %}
+![Add a target](/images/docs/messaging/targets/add-targets.avif)
+{% /only_light %}
+
+You can also implement forms in your app to collect contact information and add it as a target with the [createSubscriber](/docs/references/cloud/server-nodejs/messaging#createSubscriber) endpoint.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2');                  // Your secret API key
+
+const users = new sdk.Users(client);
+
+const target = await users.createTarget({
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>',
+    providerType: sdk.MessagingProviderType.Phone,
+    identifier: '<IDENTIFIER>',
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')    // Your API Endpoint
+    .setProject('<PROJECT_ID>')                    // Your project ID
+    .setJWT('eyJhbVCJ9.eyJ...');                    // Your secret JSON Web Token
+
+const users = new sdk.Users(client);
+
+const target = await users.createTarget({
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>',
+    providerType: sdk.MessagingProviderType.Phone,
+    identifier: '<IDENTIFIER>',
+    providerId: '<PROVIDER_ID>',
+    name: '<NAME>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Users;
+use Appwrite\Enums\MessagingProviderType;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    ->setProject('<PROJECT_ID>')                  // Your project ID
+    ->setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+$users = new Users($client);
+
+$target = $users->createTarget(
+    userId: '<USER_ID>',
+    targetId: '<TARGET_ID>',
+    providerType: MessagingProviderType::EMAIL(),
+    identifier: '<IDENTIFIER>',
+    providerId: '<PROVIDER_ID>',    // optional
+    name: '<NAME>'                  // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.enums import MessagingProviderType
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>')                 # Your project ID
+client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
+
+users = Users(client)
+
+target = users.create_target(
+    user_id = '<USER_ID>',
+    target_id = '<TARGET_ID>',
+    provider_type = MessagingProviderType.PHONE,
+    identifier = '<IDENTIFIER>',
+    provider_id = '<PROVIDER_ID>', # optional
+    name = '<NAME>' # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+include Appwrite::Enums
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')   # Your API Endpoint
+    .set_project('<PROJECT_ID>')                   # Your project ID
+    .set_key('919c2d18fb5d4...a2ae413da83346ad2')   # Your secret API key
+
+users = Users.new(client)
+
+target = users.create_target(
+    user_id: '<USER_ID>',
+    target_id: '<TARGET_ID>',
+    provider_type: MessagingProviderType::EMAIL,
+    identifier: '<IDENTIFIER>',
+    provider_id: '<PROVIDER_ID>',   # optional
+    name: '<NAME>'                  # optional
+)
+
+puts target.inspect
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+using Appwrite.Enums;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")  // Your API Endpoint
+    .SetProject("<PROJECT_ID>")                  // Your project ID
+    .SetKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+Users users = new Users(client);
+
+Target target = await users.CreateTarget(
+    userId: "<USER_ID>",
+    targetId: "<TARGET_ID>",
+    providerType: MessagingProviderType.Phone,
+    identifier: "<IDENTIFIER>",
+    providerId: "<PROVIDER_ID>",  // optional
+    name: "<NAME>"                // optional
+);
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart';
+import 'package:dart_appwrite/models.dart';
+
+Client client = Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+  .setProject('<PROJECT_ID>')                  // Your project ID
+  .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+Users users = Users(client);
+
+Target target = await users.createTarget(
+  userId: '<USER_ID>',
+  targetId: '<TARGET_ID>',
+  providerType:  MessagingProviderType.phone,
+  identifier: '<IDENTIFIER>',
+  providerId: '<PROVIDER_ID>',  // (optional)
+  name: '<NAME>',               // (optional)
+);
+
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Users
+import io.appwrite.enums.MessagingProviderType
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                 // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
+
+val users = Users(client)
+
+val target = users.createTarget(
+    userId = "<USER_ID>",
+    targetId = "<TARGET_ID>",
+    providerType =  MessagingProviderType.PHONE,
+    identifier = "<IDENTIFIER>",
+    providerId = "<PROVIDER_ID>",   // optional
+    name = "<NAME>"                 // optional
+)
+
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Users;
+import io.appwrite.enums.MessagingProviderType;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")  // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+Users users = new Users(client);
+
+users.createTarget(
+    "<USER_ID>",                    // userId
+    "<TARGET_ID>",                  // targetId
+    MessagingProviderType.PHONE,    // providerType
+    "<IDENTIFIER>",                 // identifier
+    "<PROVIDER_ID>",                // providerId (optional)
+    "<NAME>",                       // name (optional)
+    new CoroutineCallback<>((target, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(target);
+    })
+);
+```
+```swift
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                 // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
+
+let users = Users(client)
+
+let target = try await users.createTarget(
+    userId: "<USER_ID>",
+    targetId: "<TARGET_ID>",
+    providerType: .phone,
+    identifier: "<IDENTIFIER>",
+    providerId: "<PROVIDER_ID>", // optional
+    name: "<NAME>"               // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::users::Users;
+use appwrite::enums::messaging_provider_type::MessagingProviderType;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("919c2d18fb5d4...a2ae413da83346ad2");
+
+    let users = Users::new(&client);
+
+    let target = users.create_target(
+        "<USER_ID>",
+        "<TARGET_ID>",
+        MessagingProviderType::Sms,
+        "<IDENTIFIER>",
+        Some("<PROVIDER_ID>"),  // optional
+        Some("<NAME>"),         // optional
+    ).await?;
+
+    println!("{:?}", target);
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Create topics (optional) {% #create-topics %}
+You can use topics to organize targets that should receive the same messages, so you can send SMS messages to groups of targets instead of one at time.
+This step is optional if you plan to only send SMS messages to individual targets.
+
+To create a topic in the Appwrite Console, navigate to **Messaging** > **Topics** > {% icon icon="plus" size="m" /%} **Create topic**.
+{% only_dark %}
+![Add a target](/images/docs/messaging/topics/dark/create-topics.avif)
+{% /only_dark %}
+{% only_light %}
+![Add a target](/images/docs/messaging/topics/create-topics.avif)
+{% /only_light %}
+
+You can also create topics programmatically using an [Appwrite Server SDK](/docs/references/cloud/server-nodejs/messaging#createTopic).
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+const messaging = new sdk.Messaging(client);
+
+const topic = await messaging.createTopic({
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+const messaging = new sdk.Messaging(client);
+
+const topic = await messaging.createTopic({
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Messaging;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    ->setProject('<PROJECT_ID>')                  // Your project ID
+    ->setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+$messaging = new Messaging($client);
+
+$result = $messaging->createTopic(
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>'
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.messaging import Messaging
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<PROJECT_ID>')                 # Your project ID
+client.set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
+
+messaging = Messaging(client)
+
+topic = messaging.create_topic(
+    topic_id = '<TOPIC_ID>',
+    name = '<NAME>'
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<PROJECT_ID>')                 # Your project ID
+    .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
+
+messaging = Messaging.new(client)
+
+topic = messaging.create_topic(
+    topic_id: '<TOPIC_ID>',
+    name: '<NAME>'
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<PROJECT_ID>")                  // Your project ID
+    .SetKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+Topic topic = await messaging.CreateTopic(
+    topicId: "<TOPIC_ID>",
+    name: "<NAME>");
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart';
+import 'package:dart_appwrite/models.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+Messaging messaging = Messaging(client);
+
+Topic topic = await messaging.createTopic(
+    topicId: '<TOPIC_ID>',
+    name: '<NAME>',
+);
+```
+```kotlin
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+val client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                 // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
+
+val messaging = new Messaging(client)
+
+val topic = messaging.createTopic(
+    topicId = "<TOPIC_ID>",
+    name = "<NAME>"
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")  // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+messaging.createTopic(
+    "<TOPIC_ID>",     // topicId
+    "<NAME>",         // name
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                 // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
+
+let messaging = Messaging(client)
+
+let topic = try await messaging.createTopic(
+    topicId: "<TOPIC_ID>",
+    name: "<NAME>"
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::messaging::Messaging;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("919c2d18fb5d4...a2ae413da83346ad2");
+
+    let messaging = Messaging::new(&client);
+
+    let topic = messaging.create_topic(
+        "<TOPIC_ID>",
+        "<NAME>",
+        None, // subscribe (optional)
+    ).await?;
+
+    println!("{:?}", topic);
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Send SMS messages {% #send-sms %}
+You can send SMS messages using a Server SDK.
+To send an SMS messages immediately, you can call the `createSms` endpoint without passing either the `draft` or `scheduledAt` parameters.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+// Init SDK
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+const messaging = new sdk.Messaging(client);
+
+const message = await messaging.createSms({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    draft: false,
+    scheduledAt: ''
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+const messaging = new sdk.Messaging(client);
+
+const message = await messaging.createSms({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    draft: false,
+    scheduledAt: ''
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Messaging;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    ->setProject('<PROJECT_ID>')                  // Your project ID
+    ->setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+$messaging = new Messaging($client);
+
+$result = $messaging->createSms(
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],                  // optional
+    users: [],                   // optional
+    targets: [],                 // optional
+    draft: false,                // optional
+    scheduledAt: ''              // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.messaging import Messaging
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')  # Your API Endpoint
+client.set_project('<PROJECT_ID>')                  # Your project ID
+client.set_key('919c2d18fb5d4...a2ae413da83346ad2')  # Your secret API key
+
+messaging = Messaging(client)
+
+result = messaging.create_sms(
+    message_id = '<MESSAGE_ID>',
+    content = '<CONTENT>',
+    topics = [],                   # optional
+    users = [],                    # optional
+    targets = [],                  # optional
+    draft = false,                 # optional
+    scheduled_at = ''              # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')  # Your API Endpoint
+    .set_project('<PROJECT_ID>')                  # Your project ID
+    .set_key('919c2d18fb5d4...a2ae413da83346ad2')  # Your secret API key
+
+messaging = Messaging.new(client)
+
+response = messaging.create_sms(
+    message_id: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],                   # optional
+    users: [],                    # optional
+    targets: [],                  # optional
+    draft: false,                 # optional
+    scheduled_at: ''              # optional
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")   // Your API Endpoint
+    .SetProject("<PROJECT_ID>")                   // Your project ID
+    .SetKey("919c2d18fb5d4...a2ae413da83346ad2");  // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+Message message = await messaging.CreateSMS(
+    messageId: "<MESSAGE_ID>",
+    content: "<CONTENT>"
+    topics: new List<string> {}       // optional
+    users: new List<string> {}        // optional
+    targets: new List<string> {}      // optional
+    draft: false,                     // optional
+    scheduledAt: "");                 // optional
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart';
+import 'package:dart_appwrite/models.dart';
+
+Client client = Client();
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+Messaging messaging = Messaging(client);
+
+Message message result = await messaging.createSms(
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],                  // optional
+    users: [],                   // optional
+    targets: [],                 // optional
+    draft: false,                // optional
+    scheduledAt: ''              // optional
+);
+```
+```kotlin
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")       // Your API Endpoint
+    .setProject("<PROJECT_ID>")                       // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2")       // Your secret API key
+
+val messaging = Messaging(client)
+
+val message - await messaging.createSms(
+    messageId = "<MESSAGE_ID>",
+    content = "<CONTENT>",
+    topics = listOf(),
+    users = listOf(),
+    targets = listOf(),
+    draft = false,
+    scheduledAt = ""
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")  // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+messaging.createSms(
+    "<MESSAGE_ID>",      // messageId
+    "<CONTENT>",         // content
+    listOf(),            // topics (optional)
+    listOf(),            // users (optional)
+    listOf(),            // targets (optional)
+    false,               // draft (optional)
+    "",                  // scheduledAt (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")  // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2")  // Your secret API key
+
+let messaging = Messaging(client)
+
+let message = try await messaging.createSms(
+    messageId: "<MESSAGE_ID>",
+    content: "<CONTENT>",
+    topics: [],                  // optional
+    users: [],                   // optional
+    targets: [],                 // optional
+    draft: false,                // optional
+    scheduledAt: ""              // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::messaging::Messaging;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("919c2d18fb5d4...a2ae413da83346ad2");
+
+    let messaging = Messaging::new(&client);
+
+    let message = messaging.create_sms(
+        "<MESSAGE_ID>",
+        "<CONTENT>",
+        Some(vec![]),       // topics (optional)
+        Some(vec![]),       // users (optional)
+        Some(vec![]),       // targets (optional)
+        Some(false),        // draft (optional)
+        None,               // scheduled_at (optional)
+    ).await?;
+
+    println!("{:?}", message);
+    Ok(())
+}
+```
+{% /multicode %}
+
+# Schedule SMS message {% #schedule-sms %}
+To send an scheduled SMS message, you can call the `createSms` endpoint with `scheduledAt` as a ISO 8601 date time string for the scheduled time.
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+// Init SDK
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+const messaging = new sdk.Messaging(client);
+
+const message = await messaging.createSms({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    draft: false,
+    scheduledAt: '2025-02-13T22:01:00+0000'
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+const messaging = new sdk.Messaging(client);
+
+const message = await messaging.createSms({
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],
+    users: [],
+    targets: [],
+    draft: false,
+    scheduledAt: '2025-02-13T22:01:00+0000'
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Messaging;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    ->setProject('<PROJECT_ID>')                  // Your project ID
+    ->setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+$messaging = new Messaging($client);
+
+$result = $messaging->createSms(
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],                             // optional
+    users: [],                              // optional
+    targets: [],                            // optional
+    draft: false,                           // optional
+    scheduledAt: '2025-02-13T22:01:00+0000' // optional
+);
+```
+```python
+from appwrite.client import Client
+from appwrite.services.messaging import Messaging
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1')  # Your API Endpoint
+client.set_project('<PROJECT_ID>')                  # Your project ID
+client.set_key('919c2d18fb5d4...a2ae413da83346ad2')  # Your secret API key
+
+messaging = Messaging(client)
+
+result = messaging.create_sms(
+    message_id = '<MESSAGE_ID>',
+    content = '<CONTENT>',
+    topics = [],                              # optional
+    users = [],                               # optional
+    targets = [],                             # optional
+    draft = false,                            # optional
+    scheduled_at = '2025-02-13T22:01:00+0000' # optional
+)
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')  # Your API Endpoint
+    .set_project('<PROJECT_ID>')                  # Your project ID
+    .set_key('919c2d18fb5d4...a2ae413da83346ad2')  # Your secret API key
+
+messaging = Messaging.new(client)
+
+response = messaging.create_sms(
+    message_id: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],                              # optional
+    users: [],                               # optional
+    targets: [],                             # optional
+    draft: false,                            # optional
+    scheduled_at: '2025-02-13T22:01:00+0000' # optional
+)
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1")   // Your API Endpoint
+    .SetProject("<PROJECT_ID>")                   // Your project ID
+    .SetKey("919c2d18fb5d4...a2ae413da83346ad2");  // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+Message message = await messaging.CreateSMS(
+    messageId: "<MESSAGE_ID>",
+    content: "<CONTENT>"
+    topics: new List<string> {}                // optional
+    users: new List<string> {}                 // optional
+    targets: new List<string> {}               // optional
+    draft: false,                              // optional
+    scheduledAt: "2025-02-13T22:01:00+0000");  // optional
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+import 'package:dart_appwrite/enums.dart';
+import 'package:dart_appwrite/models.dart';
+
+Client client = Client();
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')  // Your API Endpoint
+    .setProject('<PROJECT_ID>')                  // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2'); // Your secret API key
+
+Messaging messaging = Messaging(client);
+
+Message message result = await messaging.createSms(
+    messageId: '<MESSAGE_ID>',
+    content: '<CONTENT>',
+    topics: [],                             // optional
+    users: [],                              // optional
+    targets: [],                            // optional
+    draft: false,                           // optional
+    scheduledAt: '2025-02-13T22:01:00+0000' // optional
+);
+```
+```kotlin
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")       // Your API Endpoint
+    .setProject("<PROJECT_ID>")                       // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2")       // Your secret API key
+
+val messaging = Messaging(client)
+
+val message - await messaging.createSms(
+    messageId = "<MESSAGE_ID>",
+    content = "<CONTENT>",
+    topics = listOf(),
+    users = listOf(),
+    targets = listOf(),
+    draft = false,
+    scheduledAt = "2025-02-13T22:01:00+0000"
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Messaging;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")  // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+Messaging messaging = new Messaging(client);
+
+messaging.createSms(
+    "<MESSAGE_ID>",              // messageId
+    "<CONTENT>",                 // content
+    listOf(),                    // topics (optional)
+    listOf(),                    // users (optional)
+    listOf(),                    // targets (optional)
+    false,                       // draft (optional)
+    "2025-02-13T22:01:00+0000",  // scheduledAt (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")  // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2")  // Your secret API key
+
+let messaging = Messaging(client)
+
+let message = try await messaging.createSms(
+    messageId: "<MESSAGE_ID>",
+    content: "<CONTENT>",
+    topics: [],                              // optional
+    users: [],                               // optional
+    targets: [],                             // optional
+    draft: false,                            // optional
+    scheduledAt: "2025-02-13T22:01:00+0000"  // optional
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::messaging::Messaging;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("919c2d18fb5d4...a2ae413da83346ad2");
+
+    let messaging = Messaging::new(&client);
+
+    let message = messaging.create_sms(
+        "<MESSAGE_ID>",
+        "<CONTENT>",
+        Some(vec![]),                          // topics (optional)
+        Some(vec![]),                          // users (optional)
+        Some(vec![]),                          // targets (optional)
+        Some(false),                           // draft (optional)
+        Some("2025-02-13T22:01:00+0000"),      // scheduled_at (optional)
+    ).await?;
+
+    println!("{:?}", message);
+    Ok(())
+}
+```
+{% /multicode %}

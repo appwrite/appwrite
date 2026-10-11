@@ -151,15 +151,12 @@ class Execution extends Model
 
             foreach ($headers as $index => $header) {
                 if ($header instanceof Document) {
-                    $value = $header->getAttribute('value');
-                    if (\is_array($value)) {
-                        $header->setAttribute('value', \implode(', ', $value));
-                    }
+                    $header->setAttribute('value', $this->stringify($header->getAttribute('value')));
                     continue;
                 }
 
-                if (\is_array($header) && \is_array($header['value'] ?? null)) {
-                    $header['value'] = \implode(', ', $header['value']);
+                if (\is_array($header) && \array_key_exists('value', $header)) {
+                    $header['value'] = $this->stringify($header['value']);
                     $headers[$index] = $header;
                 }
             }
@@ -168,6 +165,26 @@ class Execution extends Model
         }
 
         return $document;
+    }
+
+    /**
+     * Join multi-value headers and stringify scalars such as a numeric content-length.
+     */
+    private function stringify(mixed $value): string
+    {
+        if (\is_array($value)) {
+            return \implode(', ', \array_map($this->stringify(...), $value));
+        }
+
+        if (\is_bool($value)) {
+            return $value ? 'true' : 'false';
+        }
+
+        if (\is_scalar($value)) {
+            return (string) $value;
+        }
+
+        return '';
     }
 
     /**

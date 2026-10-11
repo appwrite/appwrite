@@ -19,7 +19,7 @@ final class IdentifierTest extends TestCase
         $this->assertTrue($identifier->isValid('A1'));
 
         $this->assertFalse($identifier->isArray());
-        $this->assertSame(\Utopia\Validator::TYPE_STRING, $identifier->getType());
+        $this->assertSame(\Utopia\Validator\Validator::TYPE_STRING, $identifier->getType());
     }
 
     public function testRejectsNonIdentifiers(): void

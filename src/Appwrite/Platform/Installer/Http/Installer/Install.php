@@ -40,7 +40,6 @@ class Install extends Action
             ->param('forceHttps', false, new \Utopia\Validator\Boolean(true), 'Generate HTTPS API URLs and enforce HTTPS', true)
             ->param('emailCertificates', '', new Email(allowEmpty: true), 'Email for SSL certificates', true)
             ->param('opensslKey', '', new Text(64, 0), 'Secret API key', true)
-            ->param('assistantOpenAIKey', '', new Text(256, 0), 'OpenAI API key for assistant', true)
             ->param('accountName', '', new Text(128, 0), 'Account name', true)
             ->param('accountEmail', '', new Email(allowEmpty: true), 'Account email address', true)
             ->param('accountPassword', '', new Password(allowEmpty: true), 'Account password', true)
@@ -72,7 +71,6 @@ class Install extends Action
         bool $forceHttps,
         string $emailCertificates,
         string $opensslKey,
-        string $assistantOpenAIKey,
         string $accountName,
         string $accountEmail,
         string $accountPassword,
@@ -116,7 +114,6 @@ class Install extends Action
             $emailCertificates = trim($accountEmail);
         }
         $opensslKey = trim($opensslKey);
-        $assistantOpenAIKey = trim($assistantOpenAIKey);
 
         // Empty never overrides the installed key; prepareEnvironmentVariables generates one only on a fresh install.
         if (EncryptionKey::isInsecure($opensslKey)) {
@@ -246,7 +243,6 @@ class Install extends Action
                 '_APP_OPTIONS_FORCE_HTTPS' => $forceHttps ? 'enabled' : 'disabled',
                 '_APP_EMAIL_CERTIFICATES' => $emailCertificates,
                 '_APP_DB_ADAPTER' => $lockedDatabase ?? ($database ?: 'postgresql'),
-                '_APP_ASSISTANT_OPENAI_API_KEY' => $assistantOpenAIKey,
             ];
 
             $previousHadError = is_array($existing) && isset($existing['error']);
@@ -290,7 +286,6 @@ class Install extends Action
 
                 $sensitiveFields = [
                     'opensslKey' => ['hash' => 'opensslKeyHash', 'value' => $opensslKey],
-                    'assistantOpenAIKey' => ['hash' => 'assistantOpenAIKeyHash', 'value' => $assistantOpenAIKey],
                 ];
                 foreach ($sensitiveFields as $field => $info) {
                     $hashField = $info['hash'];
@@ -335,7 +330,6 @@ class Install extends Action
                     'emailCertificates' => $emailCertificates,
                     'forceHttps' => $forceHttps,
                     'opensslKeyHash' => $state->hashSensitiveValue($opensslKey),
-                    'assistantOpenAIKeyHash' => $state->hashSensitiveValue($assistantOpenAIKey),
                 ],
                 'step' => 'start',
                 'status' => Server::STATUS_IN_PROGRESS,

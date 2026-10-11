@@ -13,7 +13,7 @@ trait Joins
     #[\Override]
     public function join(string $table, string $left, string $right, string $operator = '=', string $alias = ''): static
     {
-        $this->pendingQueries[] = Query::join($table, $left, $right, $operator, $alias);
+        $this->pendingQueries[] = new Query(Method::Join, $table, [Query::on($left, $right, $operator)], $alias);
 
         return $this;
     }
@@ -21,7 +21,7 @@ trait Joins
     #[\Override]
     public function leftJoin(string $table, string $left, string $right, string $operator = '=', string $alias = ''): static
     {
-        $this->pendingQueries[] = Query::leftJoin($table, $left, $right, $operator, $alias);
+        $this->pendingQueries[] = new Query(Method::LeftJoin, $table, [Query::on($left, $right, $operator)], $alias);
 
         return $this;
     }
@@ -29,7 +29,7 @@ trait Joins
     #[\Override]
     public function rightJoin(string $table, string $left, string $right, string $operator = '=', string $alias = ''): static
     {
-        $this->pendingQueries[] = Query::rightJoin($table, $left, $right, $operator, $alias);
+        $this->pendingQueries[] = new Query(Method::RightJoin, $table, [Query::on($left, $right, $operator)], $alias);
 
         return $this;
     }
@@ -52,16 +52,7 @@ trait Joins
             default => Method::Join,
         };
 
-        if ($method === Method::CrossJoin || $method === Method::NaturalJoin) {
-            $this->pendingQueries[] = new Query($method, $table, $alias !== '' ? [$alias] : []);
-        } else {
-            // Use placeholder values; the JoinBuilder will handle the ON clause
-            $values = ['', '=', ''];
-            if ($alias !== '') {
-                $values[] = $alias;
-            }
-            $this->pendingQueries[] = new Query($method, $table, $values);
-        }
+        $this->pendingQueries[] = new Query($method, $table, [], $alias);
 
         $index = \count($this->pendingQueries) - 1;
         $this->joins[$index] = $joinBuilder;

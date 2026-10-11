@@ -138,7 +138,6 @@
         State.setStateIfEmpty?.('httpsPort', root.querySelector('#https-port')?.value);
         State.setStateIfEmpty?.('emailCertificates', root.querySelector('#ssl-email')?.value);
         State.setStateIfEmpty?.('forceHttps', root.querySelector('#force-https')?.checked);
-        State.setStateIfEmpty?.('assistantOpenAIKey', root.querySelector('#assistant-openai-key')?.value);
     };
 
     const applyStep1State = (root) => {
@@ -157,11 +156,6 @@
         const forceHttps = root.querySelector('#force-https');
         if (forceHttps && typeof formState.forceHttps === 'boolean') {
             forceHttps.checked = formState.forceHttps;
-        }
-
-        const assistantKey = root.querySelector('#assistant-openai-key');
-        if (assistantKey && formState.assistantOpenAIKey) {
-            assistantKey.value = formState.assistantOpenAIKey;
         }
 
         if (formState.database) {
@@ -221,7 +215,6 @@
         const httpsPort = root.querySelector('#https-port');
         const sslEmail = root.querySelector('#ssl-email');
         const forceHttps = root.querySelector('#force-https');
-        const assistantKey = root.querySelector('#assistant-openai-key');
 
         bindInputToState(hostname, 'appDomain');
 
@@ -246,13 +239,11 @@
         bindInputToState(httpsPort, 'httpsPort');
         bindInputToState(sslEmail, 'emailCertificates');
         bindCheckboxToState(forceHttps, 'forceHttps');
-        bindInputToState(assistantKey, 'assistantOpenAIKey');
 
         bindErrorClear?.(hostname);
         bindErrorClear?.(httpPort);
         bindErrorClear?.(httpsPort);
         bindErrorClear?.(sslEmail);
-        bindErrorClear?.(assistantKey);
 
         const checked = root.querySelector('input[name="database"]:checked');
         if (checked) {

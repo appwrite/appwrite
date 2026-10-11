@@ -1,0 +1,107 @@
+import { Link } from '@tanstack/react-router'
+import { ArrowUpRight } from 'lucide-react'
+import { SectionDottedBackground } from '@/components/pages/home/HomeSoftLights'
+import type { BlogCategorySpotlight, BlogPostMeta } from '@/lib/blog/types'
+import { BLOG_CATEGORY_CARD_TITLE_CLASS, BLOG_INDEX_CARD_TITLE_LINES_CLASS } from '@/lib/blog/prose-typography'
+import { formatDate } from '@/lib/date-utils'
+import { cn } from '@/lib/utils'
+
+type BlogCategorySpotlightsSectionProps = {
+  spotlights: BlogCategorySpotlight[]
+}
+
+type BlogCategorySpotlightPostLinkProps = {
+  post: BlogPostMeta
+  className?: string
+}
+
+function BlogCategorySpotlightPostLink({
+  post,
+  className,
+}: BlogCategorySpotlightPostLinkProps) {
+  return (
+    <Link
+      to="/blog/post/$slug"
+      params={{ slug: post.slug }}
+      className={cn(
+        'group relative block py-2.5 pe-5',
+        className,
+      )}
+    >
+      <p className={cn(BLOG_INDEX_CARD_TITLE_LINES_CLASS, 'text-[13px] font-medium leading-snug text-foreground transition-colors group-hover:text-foreground/80')}>
+        {post.title}
+      </p>
+      <p className="mt-1 text-[11px] text-muted-foreground">
+        {formatDate(post.date)}
+        {post.timeToRead > 0 ? ` · ${post.timeToRead} min read` : ''}
+      </p>
+      <ArrowUpRight
+        className="absolute top-2.5 end-2.5 size-3.5 text-muted-foreground"
+        aria-hidden
+      />
+    </Link>
+  )
+}
+
+export function BlogCategorySpotlightsSection({
+  spotlights,
+}: BlogCategorySpotlightsSectionProps) {
+  if (spotlights.length === 0) return null
+
+  return (
+    <section className="relative isolate border-b border-border py-10 sm:py-14">
+      <SectionDottedBackground />
+      <div className="relative z-[1] mx-auto max-w-7xl">
+        <p className="px-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground sm:px-6">
+          Explore by topic
+        </p>
+
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {spotlights.map(({ category, posts }) => (
+            <article
+              key={category.slug}
+              className="flex flex-col p-6"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  <Link
+                    to="/blog/categories/$category"
+                    params={{ category: category.slug }}
+                    className="group inline-block min-w-0"
+                  >
+                    <p
+                      className={cn(
+                        BLOG_CATEGORY_CARD_TITLE_CLASS,
+                        'transition-colors group-hover:text-foreground/80',
+                      )}
+                    >
+                      {category.name}
+                    </p>
+                  </Link>
+                  <p className="mt-1.5 line-clamp-2 text-[12px] leading-relaxed text-muted-foreground">
+                    {category.description}
+                  </p>
+                </div>
+
+                <Link
+                  to="/blog/categories/$category"
+                  params={{ category: category.slug }}
+                  className="inline-flex shrink-0 items-center gap-1 text-[11px] font-medium uppercase tracking-[0.12em] text-muted-foreground transition-colors hover:text-foreground"
+                >
+                  All
+                  <ArrowUpRight className="size-3" aria-hidden />
+                </Link>
+              </div>
+
+              <div className="mt-4 flex flex-col border-t border-border pt-2">
+                {posts.map((post) => (
+                  <BlogCategorySpotlightPostLink key={post.slug} post={post} />
+                ))}
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}

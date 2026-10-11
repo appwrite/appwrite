@@ -424,18 +424,18 @@ return [
         'useCases' => [FunctionUseCases::AI],
         'runtimes' => [
             ...getRuntimes(
-                $templateRuntimes['PYTHON'],
+                ['python-3.14', 'python-3.13', 'python-3.12', 'python-3.11', 'python-3.10'],
                 'pip install -r requirements.txt',
                 'src/main.py',
                 'python/mcp-server',
                 $allowList
             )
         ],
-        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server">file</a>.',
+        'instructions' => 'For documentation and instructions check out <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server">file</a>. For per-user sign-in (MCP_AUTH_MODE=oauth), follow the <a target="_blank" rel="noopener noreferrer" class="link" href="https://github.com/appwrite/templates/tree/main/python/mcp-server#per-user-sign-in-oauth">OAuth setup</a> to enable the project\'s OAuth2 server.',
         'vcsProvider' => 'github',
         'providerRepositoryId' => 'templates',
         'providerOwner' => 'appwrite',
-        'providerVersion' => '1.2.0',
+        'providerVersion' => '1.3.0',
         'variables' => [
             [
                 'name' => 'MCP_SERVER_NAME',
@@ -447,7 +447,7 @@ return [
             ],
             [
                 'name' => 'MCP_AUTH_MODE',
-                'description' => 'Auth gate for the endpoint. Set to "bearer" to require an Authorization header, or "none" to keep it open.',
+                'description' => 'Auth gate for the endpoint: "none" keeps it open, "bearer" requires the shared secret in MCP_AUTH_TOKEN, and "oauth" makes MCP clients sign users in through the project\'s OAuth2 server.',
                 'value' => 'none',
                 'placeholder' => 'none',
                 'required' => false,
@@ -462,6 +462,14 @@ return [
                 'type' => 'password'
             ],
             [
+                'name' => 'MCP_AUTH_SCOPES',
+                'description' => 'OAuth mode only: space-separated scopes advertised to MCP clients, e.g. "openid tasks.read". Each tool checks its own scope.',
+                'value' => '',
+                'placeholder' => 'openid tasks.read',
+                'required' => false,
+                'type' => 'text'
+            ],
+            [
                 'name' => 'MCP_TOOL_TIMEOUT',
                 'description' => 'Soft deadline in seconds for the whole request, before the 30s execution hard-cap.',
                 'value' => '25',
@@ -470,7 +478,7 @@ return [
                 'type' => 'number'
             ]
         ],
-        'scopes' => []
+        'scopes' => ['users.write']
     ],
     [
         'icon' => 'icon-discord',

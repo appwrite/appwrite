@@ -13,6 +13,9 @@ on:
           - client
           - server
 
+permissions:
+  contents: read
+
 jobs:
   setup:
     name: Setup & Build SDK
@@ -20,20 +23,23 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
 
       - name: Set SDK type
         id: set-sdk
+        env:
+          PLATFORM: ${{ github.event.inputs.platform }}
         run: |
-          PLATFORM="${{ github.event.inputs.platform }}"
           if [ -z "$PLATFORM" ]; then
             PLATFORM="console"
           fi
           if [ "$PLATFORM" = "server" ]; then
-            echo "sdk_type=nodejs" >> $GITHUB_OUTPUT
+            echo "sdk_type=nodejs" >> "$GITHUB_OUTPUT"
           else
-            echo "sdk_type=web" >> $GITHUB_OUTPUT
+            echo "sdk_type=web" >> "$GITHUB_OUTPUT"
           fi
-          echo "platform=$PLATFORM" >> $GITHUB_OUTPUT
+          echo "platform=$PLATFORM" >> "$GITHUB_OUTPUT"
         
       - parallel:
           - name: Load and Start Appwrite
@@ -51,9 +57,12 @@ jobs:
           docker compose exec -e _APP_SDK_PREVIEW=enabled appwrite specs --version=latest --mode=normal --git=no
 
       - name: Generate SDK
+        env:
+          PLATFORM: ${{ steps.set-sdk.outputs.platform }}
+          SDK: ${{ steps.set-sdk.outputs.sdk_type }}
         run: |
-          docker compose exec -e _APP_SDK_PREVIEW=enabled appwrite sdks --platform=${{ steps.set-sdk.outputs.platform }} --sdk=${{ steps.set-sdk.outputs.sdk_type }} --version=latest --git=no
-          sudo chown -R $USER:$USER ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}
+          docker compose exec -e _APP_SDK_PREVIEW=enabled appwrite sdks --platform="$PLATFORM" --sdk="$SDK" --version=latest --git=no
+          sudo chown -R "$USER:$USER" "./app/sdks/$PLATFORM-$SDK"
 
       - name: Build and Publish SDK
         working-directory: ./app/sdks/${{ steps.set-sdk.outputs.platform }}-${{ steps.set-sdk.outputs.sdk_type }}

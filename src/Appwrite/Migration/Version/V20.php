@@ -6,7 +6,7 @@ use Appwrite\Migration\Migration;
 use Exception;
 use PDOException;
 use Throwable;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;

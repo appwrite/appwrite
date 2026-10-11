@@ -9,7 +9,7 @@ namespace Appwrite\Platform\Tasks;
 use Appwrite\ID;
 use Tests\E2E\Client;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\System\System;
 use Utopia\Validator\Text;
@@ -326,7 +326,7 @@ class Screenshot extends Action
             break;
         }
 
-        if (empty($idLight) || empty($idDark)) {
+        if (empty($idLight)) {
             Console::error(\json_encode($deployment));
             throw new \Exception("Failed to get deployment screenshot");
         }

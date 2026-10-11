@@ -1,0 +1,45 @@
+---
+layout: tutorial
+title: Protect your API with custom scopes
+description: Define custom scopes on your Appwrite OAuth2 server, request them from a client, and enforce them on your own API.
+step: 1
+difficulty: intermediate
+readtime: 20
+framework: TanStack Start
+category: OAuth2 server
+back: /docs/products/auth/oauth-server
+---
+
+The [Sign in with your product](/docs/products/auth/oauth-server/sign-in-with-your-product/step-1) guide gave Vantage the user's identity. Identity alone only answers who the user is. To let an integration read the user's data from your product, you need [custom scopes](/docs/products/auth/oauth-server/scopes): permissions you define, users approve, and your API enforces.
+
+This tutorial continues with the same two apps. TaskFlow gains a task API that checks scopes, and Vantage asks for permission to read the user's tasks and shows them on its dashboard.
+
+# What you will build {% #what-you-will-build %}
+
+- Two custom scopes on TaskFlow's OAuth2 server: `tasks.read` and `tasks.write`.
+- A consent screen where the user grants or withholds **each permission individually**.
+- A **resource server**: an API route on TaskFlow that validates access tokens and enforces the scopes they carry, operation by operation.
+- A task composer on Vantage's dashboard that succeeds or gets refused depending on what the user granted.
+
+The resource server is the new idea. The OAuth2 server issues tokens and stamps the granted scopes onto them, but it does not know what `tasks.read` means in your product. Your API gives the scope its meaning by checking it on every request.
+
+# The flow {% #the-flow %}
+
+1. Vantage adds `tasks.read` and `tasks.write` to its authorization request.
+2. TaskFlow's consent screen shows each permission, and the user decides which to grant.
+3. The access token Vantage receives carries exactly the approved scopes in its `scope` claim.
+4. Vantage calls TaskFlow's task API with the access token.
+5. TaskFlow verifies the token's signature, checks the scope the operation needs, and allows or refuses.
+
+Everything up to step 3 is the authorization code flow from the first guide, with more scopes in the request. Steps 4 and 5 are what you build here.
+
+# Prerequisites {% #prerequisites %}
+
+- The two apps from [Sign in with your product](/docs/products/auth/oauth-server/sign-in-with-your-product/step-1), running against a project with the OAuth2 server enabled and Vantage registered as a confidential client.
+- [Node.js](https://nodejs.org/) 20 or newer and `pnpm`.
+
+{% info title="Get the finished code" %}
+The complete apps from this tutorial are on GitHub at [appwrite-community/oauth-guide-custom-scopes](https://github.com/appwrite-community/oauth-guide-custom-scopes). Clone it to follow along or to compare against your own.
+{% /info %}
+
+Continue to define the scopes on your project.
