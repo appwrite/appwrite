@@ -50,6 +50,7 @@ use crate::value;
 pub struct Flags(u32);
 
 impl Flags {
+    /// No options.
     pub const NONE: Flags = Flags(0);
     /// `JSON_OBJECT_AS_ARRAY` (decode): objects become arrays.
     pub const OBJECT_AS_ARRAY: Flags = Flags(1 << 0);
@@ -91,6 +92,7 @@ impl Flags {
         Flags(options as u32)
     }
 
+    /// The option bits, as PHP's `int`.
     pub const fn bits(self) -> u32 {
         self.0
     }
@@ -113,12 +115,14 @@ impl Flags {
 impl BitOr for Flags {
     type Output = Flags;
 
+    /// Combines two option sets.
     fn bitor(self, rhs: Flags) -> Flags {
         Flags(self.0 | rhs.0)
     }
 }
 
 impl BitOrAssign for Flags {
+    /// Adds the options of `rhs`.
     fn bitor_assign(&mut self, rhs: Flags) {
         self.0 |= rhs.0;
     }
@@ -127,6 +131,7 @@ impl BitOrAssign for Flags {
 impl BitAnd for Flags {
     type Output = Flags;
 
+    /// Keeps the options set in both.
     fn bitand(self, rhs: Flags) -> Flags {
         Flags(self.0 & rhs.0)
     }
@@ -135,17 +140,29 @@ impl BitAnd for Flags {
 /// `JSON_ERROR_*`: what `json_last_error()` returns.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum ErrorCode {
+    /// `JSON_ERROR_NONE`: no error.
     None = 0,
+    /// `JSON_ERROR_DEPTH`: the maximum nesting depth was exceeded.
     Depth = 1,
+    /// `JSON_ERROR_STATE_MISMATCH`: mismatched brackets or invalid JSON.
     StateMismatch = 2,
+    /// `JSON_ERROR_CTRL_CHAR`: an unescaped control character in a string.
     CtrlChar = 3,
+    /// `JSON_ERROR_SYNTAX`: invalid JSON syntax.
     Syntax = 4,
+    /// `JSON_ERROR_UTF8`: malformed UTF-8.
     Utf8 = 5,
+    /// `JSON_ERROR_RECURSION`: a value contains itself.
     Recursion = 6,
+    /// `JSON_ERROR_INF_OR_NAN`: `INF` or `NAN` cannot be encoded.
     InfOrNan = 7,
+    /// `JSON_ERROR_UNSUPPORTED_TYPE`: a value of a type JSON cannot hold.
     UnsupportedType = 8,
+    /// `JSON_ERROR_INVALID_PROPERTY_NAME`: an object key starting with a NUL byte.
     InvalidPropertyName = 9,
+    /// `JSON_ERROR_UTF16`: an unpaired UTF-16 surrogate in a `\u` escape.
     Utf16 = 10,
+    /// `JSON_ERROR_NON_BACKED_ENUM`: a non-backed enum cannot be encoded.
     NonBackedEnum = 11,
 }
 
@@ -186,7 +203,12 @@ pub enum Error {
     /// returns `json` (with `null`, `0` or `""` where values failed) and sets
     /// `json_last_error()` to `code`. It never throws, even with
     /// `JSON_THROW_ON_ERROR`.
-    Partial { json: String, code: ErrorCode },
+    Partial {
+        /// The partial output PHP returns.
+        json: String,
+        /// The error `json_last_error()` reports.
+        code: ErrorCode,
+    },
     /// An invalid argument: PHP throws `ValueError` with this message.
     Value(String),
     /// [`decode_value`] only: PHP decoded a number `serde_json::Value`
@@ -224,6 +246,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
+    /// Writes the message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(self.message())
     }
@@ -893,13 +916,19 @@ trait Build {
     type Array;
     type Object;
 
+    /// The value of a scalar token.
     fn scalar(&self, token: Token) -> Result<Self::Value, ParseError>;
+    /// A new, empty array.
     fn array(&self) -> Self::Array;
+    /// Appends a value to an array.
     fn push(&self, array: &mut Self::Array, value: Self::Value);
+    /// The value of a finished array.
     fn end_array(&self, array: Self::Array) -> Self::Value;
+    /// A new, empty object.
     fn object(&self) -> Self::Object;
     /// `php_json_parser_object_update`.
     fn set(&self, object: &mut Self::Object, key: String, value: Self::Value) -> Result<(), ParseError>;
+    /// The value of a finished object.
     fn end_object(&self, object: Self::Object) -> Self::Value;
 }
 
@@ -909,6 +938,7 @@ enum ParseError {
 }
 
 impl From<ErrorCode> for ParseError {
+    /// The error `code`.
     fn from(code: ErrorCode) -> Self {
         ParseError::Code(code)
     }
@@ -933,6 +963,7 @@ impl Build for PhpBuilder {
     /// An array (assoc mode) or a `stdClass` property table.
     type Object = Array;
 
+    /// The PHP value of a scalar token.
     fn scalar(&self, token: Token) -> Result<Value, ParseError> {
         Ok(match token {
             Token::Null => Value::Null,
@@ -945,23 +976,28 @@ impl Build for PhpBuilder {
         })
     }
 
+    /// A new, empty PHP array.
     fn array(&self) -> Array {
         Array::new()
     }
 
+    /// Appends a value to a decoded list.
     fn push(&self, array: &mut Array, value: Value) {
         // A decoded list never runs out of keys.
         let _ = array.push(value);
     }
 
+    /// The decoded list as a PHP array.
     fn end_array(&self, array: Array) -> Value {
         Value::Array(array)
     }
 
+    /// A new, empty property table.
     fn object(&self) -> Array {
         Array::new()
     }
 
+    /// Sets a property (a normalised key in assoc mode; a NUL-prefixed name fails otherwise).
     fn set(&self, object: &mut Array, key: String, value: Value) -> Result<(), ParseError> {
         if self.assoc {
             // `zend_symtable_update`.
@@ -975,6 +1011,7 @@ impl Build for PhpBuilder {
         Ok(())
     }
 
+    /// The object as a PHP array (assoc mode) or a `stdClass`.
     fn end_object(&self, object: Array) -> Value {
         if self.assoc { Value::Array(object) } else { Value::Object(object) }
     }
@@ -987,6 +1024,7 @@ impl Build for ValueBuilder {
     type Array = Vec<Json>;
     type Object = Map<String, Json>;
 
+    /// The `serde_json::Value` of a scalar token (`Unrepresentable` for `INF`).
     fn scalar(&self, token: Token) -> Result<Json, ParseError> {
         Ok(match token {
             Token::Null => Json::Null,
@@ -999,28 +1037,34 @@ impl Build for ValueBuilder {
         })
     }
 
+    /// A new, empty JSON array.
     fn array(&self) -> Vec<Json> {
         Vec::new()
     }
 
+    /// Appends a value to a JSON array.
     fn push(&self, array: &mut Vec<Json>, value: Json) {
         array.push(value);
     }
 
+    /// The JSON array.
     fn end_array(&self, array: Vec<Json>) -> Json {
         Json::Array(array)
     }
 
+    /// A new, empty JSON object.
     fn object(&self) -> Map<String, Json> {
         Map::new()
     }
 
+    /// Sets a member; a repeated key replaces the value in place.
     fn set(&self, object: &mut Map<String, Json>, key: String, value: Json) -> Result<(), ParseError> {
         // `zend_symtable_update`: the same key replaces the value in place.
         object.insert(key, value);
         Ok(())
     }
 
+    /// The JSON object, or a JSON array when its keys are `0, 1, 2...` (as PHP's array would be a list).
     fn end_object(&self, object: Map<String, Json>) -> Json {
         let is_list = object.keys().enumerate().all(|(i, k)| numeric_key(k.as_bytes()) == Some(i as i64));
         if is_list { Json::Array(object.into_iter().map(|(_, v)| v).collect()) } else { Json::Object(object) }
@@ -1034,22 +1078,29 @@ impl Build for Validator {
     type Array = ();
     type Object = ();
 
+    /// Accepts any scalar.
     fn scalar(&self, _: Token) -> Result<(), ParseError> {
         Ok(())
     }
 
+    /// Builds nothing.
     fn array(&self) {}
 
+    /// Builds nothing.
     fn push(&self, _: &mut (), _: ()) {}
 
+    /// Builds nothing.
     fn end_array(&self, _: ()) {}
 
+    /// Builds nothing.
     fn object(&self) {}
 
+    /// Accepts any member.
     fn set(&self, _: &mut (), _: String, _: ()) -> Result<(), ParseError> {
         Ok(())
     }
 
+    /// Builds nothing.
     fn end_object(&self, _: ()) {}
 }
 

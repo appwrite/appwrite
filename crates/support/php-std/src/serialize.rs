@@ -219,6 +219,7 @@ pub struct Options {
 }
 
 impl Default for Options {
+    /// The defaults: `max_depth` 4096.
     fn default() -> Self {
         Options { max_depth: 4096 }
     }
@@ -228,7 +229,9 @@ impl Default for Options {
 /// (for example `unserialize(): Extra data starting at offset 4 of 5 bytes`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Unserialized {
+    /// The unserialized value.
     pub value: Value,
+    /// The warnings PHP emitted, in order.
     pub warnings: Vec<String>,
 }
 
@@ -238,7 +241,12 @@ pub enum Error {
     /// PHP returns `false` after emitting `warnings` (the last one is
     /// `unserialize(): Error at offset X of Y bytes`, except for empty input,
     /// which fails silently). `offset` is X.
-    Failed { offset: Option<usize>, warnings: Vec<String> },
+    Failed {
+        /// The byte offset PHP reports, if any.
+        offset: Option<usize>,
+        /// The warnings PHP emitted, in order.
+        warnings: Vec<String>,
+    },
     /// An invalid option: PHP throws `ValueError` with this message.
     Value(String),
     /// Data PHP reads into something [`Value`] cannot hold: objects of other
@@ -259,6 +267,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
+    /// Writes the last warning, or the error message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Error::Failed { warnings, .. } => {

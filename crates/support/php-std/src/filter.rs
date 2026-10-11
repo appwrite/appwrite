@@ -50,69 +50,123 @@ use crate::{number, pcre, url, value};
 
 mod sanitize;
 
+/// No flags, as PHP's `FILTER_FLAG_NONE`.
 pub const FILTER_FLAG_NONE: i64 = 0x0000;
+/// Requires an array and filters each element, as PHP's `FILTER_REQUIRE_ARRAY`.
 pub const FILTER_REQUIRE_ARRAY: i64 = 0x0100_0000;
+/// Requires a scalar value, as PHP's `FILTER_REQUIRE_SCALAR`.
 pub const FILTER_REQUIRE_SCALAR: i64 = 0x0200_0000;
+/// Wraps a scalar result in an array, as PHP's `FILTER_FORCE_ARRAY`.
 pub const FILTER_FORCE_ARRAY: i64 = 0x0400_0000;
+/// Returns `null` instead of `false` on failure, as PHP's `FILTER_NULL_ON_FAILURE`.
 pub const FILTER_NULL_ON_FAILURE: i64 = 0x0800_0000;
+/// Throws `Filter\FilterFailedException` on failure, as PHP's `FILTER_THROW_ON_FAILURE`.
 pub const FILTER_THROW_ON_FAILURE: i64 = 0x1000_0000;
+/// Accepts octal integers (`0` or `0o` prefix), as PHP's `FILTER_FLAG_ALLOW_OCTAL`.
 pub const FILTER_FLAG_ALLOW_OCTAL: i64 = 0x0001;
+/// Accepts hexadecimal integers (`0x` prefix), as PHP's `FILTER_FLAG_ALLOW_HEX`.
 pub const FILTER_FLAG_ALLOW_HEX: i64 = 0x0002;
+/// Strips bytes below 32, as PHP's `FILTER_FLAG_STRIP_LOW`.
 pub const FILTER_FLAG_STRIP_LOW: i64 = 0x0004;
+/// Strips bytes 127 and above, as PHP's `FILTER_FLAG_STRIP_HIGH`.
 pub const FILTER_FLAG_STRIP_HIGH: i64 = 0x0008;
+/// Encodes bytes below 32 as `&#N;`, as PHP's `FILTER_FLAG_ENCODE_LOW`.
 pub const FILTER_FLAG_ENCODE_LOW: i64 = 0x0010;
+/// Encodes bytes 127 and above as `&#N;`, as PHP's `FILTER_FLAG_ENCODE_HIGH`.
 pub const FILTER_FLAG_ENCODE_HIGH: i64 = 0x0020;
+/// Encodes `&` as `&#38;`, as PHP's `FILTER_FLAG_ENCODE_AMP`.
 pub const FILTER_FLAG_ENCODE_AMP: i64 = 0x0040;
+/// Leaves `'` and `"` unencoded, as PHP's `FILTER_FLAG_NO_ENCODE_QUOTES`.
 pub const FILTER_FLAG_NO_ENCODE_QUOTES: i64 = 0x0080;
+/// Turns an empty string into `null`, as PHP's `FILTER_FLAG_EMPTY_STRING_NULL`.
 pub const FILTER_FLAG_EMPTY_STRING_NULL: i64 = 0x0100;
+/// Strips backticks, as PHP's `FILTER_FLAG_STRIP_BACKTICK`.
 pub const FILTER_FLAG_STRIP_BACKTICK: i64 = 0x0200;
+/// Keeps the decimal separator when sanitizing floats, as PHP's `FILTER_FLAG_ALLOW_FRACTION`.
 pub const FILTER_FLAG_ALLOW_FRACTION: i64 = 0x1000;
+/// Accepts or keeps thousand separators, as PHP's `FILTER_FLAG_ALLOW_THOUSAND`.
 pub const FILTER_FLAG_ALLOW_THOUSAND: i64 = 0x2000;
+/// Keeps `e` and `E` when sanitizing floats, as PHP's `FILTER_FLAG_ALLOW_SCIENTIFIC`.
 pub const FILTER_FLAG_ALLOW_SCIENTIFIC: i64 = 0x4000;
+/// Requires a path in a validated URL, as PHP's `FILTER_FLAG_PATH_REQUIRED`.
 pub const FILTER_FLAG_PATH_REQUIRED: i64 = 0x04_0000;
+/// Requires a query string in a validated URL, as PHP's `FILTER_FLAG_QUERY_REQUIRED`.
 pub const FILTER_FLAG_QUERY_REQUIRED: i64 = 0x08_0000;
+/// Accepts IPv4 addresses only, as PHP's `FILTER_FLAG_IPV4`.
 pub const FILTER_FLAG_IPV4: i64 = 0x0010_0000;
+/// Accepts IPv6 addresses only, as PHP's `FILTER_FLAG_IPV6`.
 pub const FILTER_FLAG_IPV6: i64 = 0x0020_0000;
+/// Rejects reserved IP ranges, as PHP's `FILTER_FLAG_NO_RES_RANGE`.
 pub const FILTER_FLAG_NO_RES_RANGE: i64 = 0x0040_0000;
+/// Rejects private IP ranges, as PHP's `FILTER_FLAG_NO_PRIV_RANGE`.
 pub const FILTER_FLAG_NO_PRIV_RANGE: i64 = 0x0080_0000;
+/// Accepts globally routable IP addresses only, as PHP's `FILTER_FLAG_GLOBAL_RANGE`.
 pub const FILTER_FLAG_GLOBAL_RANGE: i64 = 0x2000_0000;
+/// Requires a valid host name for `FILTER_VALIDATE_DOMAIN`, as PHP's `FILTER_FLAG_HOSTNAME`.
 pub const FILTER_FLAG_HOSTNAME: i64 = 0x0010_0000;
+/// Accepts Unicode in an email's local part, as PHP's `FILTER_FLAG_EMAIL_UNICODE`.
 pub const FILTER_FLAG_EMAIL_UNICODE: i64 = 0x0010_0000;
 
+/// Validates an integer, as PHP's `FILTER_VALIDATE_INT`.
 pub const FILTER_VALIDATE_INT: i64 = 0x0101;
+/// Validates a boolean (`"1"`, `"true"`, `"on"`, `"yes"` and their opposites), as PHP's `FILTER_VALIDATE_BOOL`.
 pub const FILTER_VALIDATE_BOOL: i64 = 0x0102;
+/// Validates a float, as PHP's `FILTER_VALIDATE_FLOAT`.
 pub const FILTER_VALIDATE_FLOAT: i64 = 0x0103;
+/// Validates against the `regexp` option, as PHP's `FILTER_VALIDATE_REGEXP`.
 pub const FILTER_VALIDATE_REGEXP: i64 = 0x0110;
+/// Validates a URL, as PHP's `FILTER_VALIDATE_URL`.
 pub const FILTER_VALIDATE_URL: i64 = 0x0111;
+/// Validates an email address, as PHP's `FILTER_VALIDATE_EMAIL`.
 pub const FILTER_VALIDATE_EMAIL: i64 = 0x0112;
+/// Validates an IPv4 or IPv6 address, as PHP's `FILTER_VALIDATE_IP`.
 pub const FILTER_VALIDATE_IP: i64 = 0x0113;
+/// Validates a MAC address, as PHP's `FILTER_VALIDATE_MAC`.
 pub const FILTER_VALIDATE_MAC: i64 = 0x0114;
+/// Validates a domain name, as PHP's `FILTER_VALIDATE_DOMAIN`.
 pub const FILTER_VALIDATE_DOMAIN: i64 = 0x0115;
+/// The default filter, which leaves the string as is, as PHP's `FILTER_DEFAULT`.
 pub const FILTER_DEFAULT: i64 = 0x0204;
+/// Leaves the string as is, optionally stripping or encoding bytes, as PHP's `FILTER_UNSAFE_RAW`.
 pub const FILTER_UNSAFE_RAW: i64 = 0x0204;
 /// PHP deprecates the constant (8.1), not the filter: the ID runs without
 /// a notice.
 pub const FILTER_SANITIZE_STRING: i64 = 0x0201;
 /// An alias of [`FILTER_SANITIZE_STRING`] (also a deprecated constant).
 pub const FILTER_SANITIZE_STRIPPED: i64 = 0x0201;
+/// URL-encodes the string, as PHP's `FILTER_SANITIZE_ENCODED`.
 pub const FILTER_SANITIZE_ENCODED: i64 = 0x0202;
+/// HTML-encodes `'"<>&` and bytes below 32, as PHP's `FILTER_SANITIZE_SPECIAL_CHARS`.
 pub const FILTER_SANITIZE_SPECIAL_CHARS: i64 = 0x0203;
+/// Removes the bytes an email address cannot hold, as PHP's `FILTER_SANITIZE_EMAIL`.
 pub const FILTER_SANITIZE_EMAIL: i64 = 0x0205;
+/// Removes the bytes a URL cannot hold, as PHP's `FILTER_SANITIZE_URL`.
 pub const FILTER_SANITIZE_URL: i64 = 0x0206;
+/// Keeps only digits and signs, as PHP's `FILTER_SANITIZE_NUMBER_INT`.
 pub const FILTER_SANITIZE_NUMBER_INT: i64 = 0x0207;
+/// Keeps only digits, signs and the allowed float characters, as PHP's `FILTER_SANITIZE_NUMBER_FLOAT`.
 pub const FILTER_SANITIZE_NUMBER_FLOAT: i64 = 0x0208;
+/// Encodes as `htmlentities()` with `ENT_QUOTES`, as PHP's `FILTER_SANITIZE_FULL_SPECIAL_CHARS`.
 pub const FILTER_SANITIZE_FULL_SPECIAL_CHARS: i64 = 0x020a;
+/// Escapes as `addslashes()`, as PHP's `FILTER_SANITIZE_ADD_SLASHES`.
 pub const FILTER_SANITIZE_ADD_SLASHES: i64 = 0x020b;
+/// Calls the callable in the `options` entry, as PHP's `FILTER_CALLBACK`.
 pub const FILTER_CALLBACK: i64 = 0x0400;
 
 /// A PHP value given to or returned by `filter_var()`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
+    /// PHP `null`.
     Null,
+    /// A PHP `bool`.
     Bool(bool),
+    /// A PHP `int`.
     Int(i64),
+    /// A PHP `float`.
     Float(f64),
+    /// A PHP `string`, as bytes.
     Str(Vec<u8>),
+    /// A PHP array, as its key-value pairs in order.
     Array(Vec<(Key, Value)>),
     /// A `stdClass` instance (no `__toString()`).
     Object,
@@ -121,6 +175,7 @@ pub enum Value {
 /// The third argument of `filter_var()`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Options {
+    /// A flags integer (`FILTER_FLAG_*` and `FILTER_*_ARRAY` bits).
     Flags(i64),
     /// `['filter' => ..., 'flags' => ..., 'options' => [...]]`
     Array(Vec<(Key, Value)>),
@@ -152,6 +207,7 @@ impl Error {
 }
 
 impl fmt::Display for Error {
+    /// Writes the message, lossily decoded as UTF-8.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&String::from_utf8_lossy(&self.message))
     }
@@ -162,7 +218,9 @@ impl std::error::Error for Error {}
 /// What `filter_var()` returned, and the warning it emitted, if any.
 #[derive(Debug, Clone, PartialEq)]
 pub struct Filtered {
+    /// The value `filter_var()` returned.
     pub value: Value,
+    /// The PHP warning emitted, if any.
     pub warning: Option<Vec<u8>>,
 }
 
@@ -438,10 +496,12 @@ pub trait Callables {
 pub struct NoCallables;
 
 impl Callables for NoCallables {
+    /// Nothing is callable.
     fn is_callable(&self, _callable: &Value) -> bool {
         false
     }
 
+    /// Never called; returns `null`.
     fn call(&mut self, _callable: &Value, _value: &[u8]) -> Value {
         Value::Null
     }

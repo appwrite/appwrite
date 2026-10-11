@@ -84,30 +84,37 @@ pub fn ranges(rs: &[(u8, u8)]) -> P {
     P::Set(s)
 }
 
+/// A pattern matching one ASCII digit.
 pub fn digit() -> P {
     range(b'0', b'9')
 }
 
+/// A pattern matching each of `ps` in turn.
 pub fn seq(ps: Vec<P>) -> P {
     P::Seq(ps)
 }
 
+/// A pattern matching any one of `ps`.
 pub fn alt(ps: Vec<P>) -> P {
     P::Alt(ps)
 }
 
+/// A pattern matching `p` or nothing.
 pub fn opt(p: P) -> P {
     P::Rep(Box::new(p), 0, Some(1))
 }
 
+/// A pattern matching `p` zero or more times.
 pub fn star(p: P) -> P {
     P::Rep(Box::new(p), 0, None)
 }
 
+/// A pattern matching `p` one or more times.
 pub fn plus(p: P) -> P {
     P::Rep(Box::new(p), 1, None)
 }
 
+/// A pattern matching `p` from `min` to `max` times.
 pub fn rep(p: P, min: u32, max: u32) -> P {
     P::Rep(Box::new(p), min, Some(max))
 }
@@ -254,10 +261,12 @@ fn compile(p: &P, next: usize, states: &mut Vec<State>) -> usize {
 pub struct Lazy(OnceLock<Nfa>, fn() -> Vec<P>);
 
 impl Lazy {
+    /// An NFA built from `rules` on first use.
     pub const fn new(rules: fn() -> Vec<P>) -> Lazy {
         Lazy(OnceLock::new(), rules)
     }
 
+    /// The NFA, built on first call.
     pub fn get(&self) -> &Nfa {
         self.0.get_or_init(|| Nfa::new((self.1)()))
     }

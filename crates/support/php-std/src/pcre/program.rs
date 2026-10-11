@@ -13,8 +13,10 @@
 use super::compile::{Assert, Cond, GroupKind, Lit, Node, RepKind, Reverse, Tree, Units};
 use super::parse::REPEAT_UNLIMITED;
 
+/// A repeat maximum that means no limit.
 pub const UNLIMITED: u32 = u32::MAX;
 
+/// What kind of group a `Bra` opens (`OP_BRA`, `OP_CBRA`, `OP_ONCE`, `OP_ASSERT`...).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum BraKind {
     /// The whole pattern (no group frame is recorded).
@@ -35,6 +37,7 @@ pub enum BraKind {
     Cond,
 }
 
+/// How a `Ket` closes its group: once, or looping greedily, lazily or possessively (`OP_KET`, `OP_KETRMAX`, `OP_KETRMIN`, `OP_KETRPOS`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum KetKind {
     Ket,
@@ -43,6 +46,7 @@ pub enum KetKind {
     RPos,
 }
 
+/// One instruction of the lowered program, as PCRE2's opcodes.
 #[derive(Debug, Clone)]
 pub enum Op {
     End,
@@ -106,6 +110,7 @@ pub enum Op {
     Then(Option<u32>),
 }
 
+/// The lowered program the matcher runs, with the pattern data it needs.
 #[derive(Debug, Clone)]
 pub struct Program {
     pub code: Vec<Op>,
@@ -1227,6 +1232,7 @@ struct Gen {
     has_then: bool,
 }
 
+/// Lowers the compiled tree into a [`Program`].
 pub fn lower(tree: &Tree) -> Program {
     let mut g = Gen {
         code: Vec::new(),

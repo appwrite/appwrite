@@ -9,6 +9,7 @@
 
 use super::parse::*;
 
+/// The largest lookbehind length, which also marks an assertion whose branches all have a fixed length.
 pub const LOOKBEHIND_MAX: u32 = 65535;
 const MAX_VARLOOKBEHIND: i32 = 255;
 const GI_SET_FIXED_LENGTH: u32 = 0x8000_0000;
@@ -19,6 +20,7 @@ const PSKIP_ALT: u32 = 0;
 const PSKIP_CLASS: u32 = 1;
 const PSKIP_KET: u32 = 2;
 
+/// Checks every lookbehind of a parsed pattern and records its branch lengths (`check_lookbehinds()`).
 pub struct Checker<'a> {
     pub meta: &'a mut [u32],
     pub pattern: &'a [u8],
@@ -28,6 +30,7 @@ pub struct Checker<'a> {
 }
 
 impl<'a> Checker<'a> {
+    /// A checker over the parsed pattern `meta` of `pattern`.
     pub fn new(meta: &'a mut [u32], pattern: &'a [u8], parsed: &'a Parsed) -> Self {
         let groupinfo = vec![0; 2 * (parsed.bracount as usize + 1)];
         Checker { meta, pattern, parsed, groupinfo, erroroffset: UNSET }

@@ -10,15 +10,20 @@ use super::tz::{TzInfo, abbr_search, strcasecmp};
 /// there, and the message.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Message {
+    /// The byte offset in the trimmed input.
     pub position: i64,
+    /// The byte at that offset (NUL past the end).
     pub character: u8,
+    /// The message, as timelib words it.
     pub message: &'static str,
 }
 
 /// `timelib_error_container`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct Messages {
+    /// The warnings, in the order they were found.
     pub warnings: Vec<Message>,
+    /// The errors, in the order they were found.
     pub errors: Vec<Message>,
 }
 
@@ -415,10 +420,12 @@ pub(super) struct Cursor<'a> {
 }
 
 impl Cursor<'_> {
+    /// The byte at `i`, or 0 past the end.
     pub fn at(&self, i: usize) -> u8 {
         self.s.get(i).copied().unwrap_or(0)
     }
 
+    /// The byte at the cursor, or 0 past the end.
     pub fn cur(&self) -> u8 {
         self.at(self.p)
     }
@@ -446,6 +453,7 @@ impl Cursor<'_> {
         (strtoll(digits), self.p - begin)
     }
 
+    /// `timelib_get_nr`: the number of up to `max` digits after skipping non-digits (`UNSET` when the string ends first).
     pub fn get_nr(&mut self, max: usize) -> i64 {
         self.get_nr_ex(max).0
     }
@@ -698,6 +706,7 @@ const RELTEXT: &[(&str, i32, i64)] = &[
     ("this", 1, 0),
 ];
 
+/// The unit of a relative time word (`timelib_relunit`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Unit {
     Microsec,
@@ -711,6 +720,7 @@ pub enum Unit {
     Special,
 }
 
+/// A relative time word: its name, unit and multiplier (`timelib_relunit`).
 pub struct RelUnit {
     pub name: &'static str,
     pub unit: Unit,

@@ -83,7 +83,9 @@ impl Component {
 /// present: a string, or an integer for the port.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ComponentValue<'a> {
+    /// A string component, as bytes.
     Str(Cow<'a, [u8]>),
+    /// The port.
     Port(u16),
 }
 

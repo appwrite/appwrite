@@ -12,12 +12,18 @@ use crate::value::{Number, numeric_str_ex};
 /// A PHP value.
 #[derive(Clone, PartialEq, Debug, Default)]
 pub enum Value<X: Extension = Never> {
+    /// PHP `null`.
     #[default]
     Null,
+    /// A PHP `bool`.
     Bool(bool),
+    /// A PHP `int`.
     Int(i64),
+    /// A PHP `float`.
     Float(f64),
+    /// A PHP `string`, as bytes.
     Str(Str),
+    /// A PHP array.
     Array(Array<X>),
     /// A `stdClass` instance: its properties in order (string keys, not normalised).
     Object(Array<X>),
@@ -26,36 +32,42 @@ pub enum Value<X: Extension = Never> {
 }
 
 impl<X: Extension> From<bool> for Value<X> {
+    /// A PHP `bool`.
     fn from(b: bool) -> Self {
         Value::Bool(b)
     }
 }
 
 impl<X: Extension> From<i64> for Value<X> {
+    /// A PHP `int`.
     fn from(i: i64) -> Self {
         Value::Int(i)
     }
 }
 
 impl<X: Extension> From<f64> for Value<X> {
+    /// A PHP `float`.
     fn from(f: f64) -> Self {
         Value::Float(f)
     }
 }
 
 impl<X: Extension> From<&str> for Value<X> {
+    /// A PHP `string` with the bytes of `s`.
     fn from(s: &str) -> Self {
         Value::Str(Str::from(s))
     }
 }
 
 impl<X: Extension> From<Str> for Value<X> {
+    /// A PHP `string`.
     fn from(s: Str) -> Self {
         Value::Str(s)
     }
 }
 
 impl<X: Extension> From<Array<X>> for Value<X> {
+    /// A PHP array.
     fn from(a: Array<X>) -> Self {
         Value::Array(a)
     }

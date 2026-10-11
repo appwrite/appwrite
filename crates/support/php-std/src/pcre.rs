@@ -73,13 +73,21 @@ pub use compiled::Captures;
 /// The Unicode version of PCRE2's tables (PHP's "PCRE Unicode Version").
 pub const UNICODE_VERSION: &str = ucd::UNICODE_VERSION;
 
+/// Orders `preg_match_all()` results by group, as PHP's `PREG_PATTERN_ORDER`.
 pub const PREG_PATTERN_ORDER: i64 = 1;
+/// Orders `preg_match_all()` results by match, as PHP's `PREG_SET_ORDER`.
 pub const PREG_SET_ORDER: i64 = 2;
+/// Returns each match with its byte offset, as PHP's `PREG_OFFSET_CAPTURE`.
 pub const PREG_OFFSET_CAPTURE: i64 = 1 << 8;
+/// Reports unmatched groups as `null`, as PHP's `PREG_UNMATCHED_AS_NULL`.
 pub const PREG_UNMATCHED_AS_NULL: i64 = 1 << 9;
+/// Leaves empty pieces out of `preg_split()`, as PHP's `PREG_SPLIT_NO_EMPTY`.
 pub const PREG_SPLIT_NO_EMPTY: i64 = 1;
+/// Returns the delimiter's captured groups from `preg_split()` too, as PHP's `PREG_SPLIT_DELIM_CAPTURE`.
 pub const PREG_SPLIT_DELIM_CAPTURE: i64 = 2;
+/// Returns each `preg_split()` piece with its byte offset, as PHP's `PREG_SPLIT_OFFSET_CAPTURE`.
 pub const PREG_SPLIT_OFFSET_CAPTURE: i64 = 4;
+/// Returns the entries that do not match from `preg_grep()`, as PHP's `PREG_GREP_INVERT`.
 pub const PREG_GREP_INVERT: i64 = 1;
 
 /// `pcre.backtrack_limit` and `pcre.recursion_limit` defaults.
@@ -89,17 +97,24 @@ const RECURSION_LIMIT: u32 = 100_000;
 /// A PHP array key.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Key {
+    /// An integer key.
     Int(i64),
+    /// A string key, as bytes.
     Str(Vec<u8>),
 }
 
 /// The PHP values the `preg_*` functions build.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
+    /// PHP `null`.
     Null,
+    /// A PHP `bool`.
     Bool(bool),
+    /// A PHP `int`.
     Int(i64),
+    /// A PHP `string`, as bytes.
     Str(Vec<u8>),
+    /// A PHP array.
     Array(Array),
 }
 
@@ -111,18 +126,22 @@ pub struct Array {
 }
 
 impl Array {
+    /// An empty array.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// The key-value pairs, in order.
     pub fn entries(&self) -> &[(Key, Value)] {
         &self.entries
     }
 
+    /// The number of elements.
     pub fn len(&self) -> usize {
         self.entries.len()
     }
 
+    /// Whether the array has no elements.
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }
@@ -132,6 +151,7 @@ impl Array {
         self.entries.iter().enumerate().all(|(i, (k, _))| *k == Key::Int(i as i64))
     }
 
+    /// The value at `key`, if any.
     pub fn get(&self, key: &Key) -> Option<&Value> {
         self.entries.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
@@ -175,12 +195,19 @@ impl Array {
 /// `preg_last_error()`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PregError {
+    /// `PREG_NO_ERROR`.
     None,
+    /// `PREG_INTERNAL_ERROR`.
     Internal,
+    /// `PREG_BACKTRACK_LIMIT_ERROR`: `pcre.backtrack_limit` was reached.
     BacktrackLimit,
+    /// `PREG_RECURSION_LIMIT_ERROR`: `pcre.recursion_limit` was reached.
     RecursionLimit,
+    /// `PREG_BAD_UTF8_ERROR`: the subject is not valid UTF-8.
     BadUtf8,
+    /// `PREG_BAD_UTF8_OFFSET_ERROR`: the offset is inside a UTF-8 character.
     BadUtf8Offset,
+    /// `PREG_JIT_STACKLIMIT_ERROR`: the JIT stack ran out.
     JitStackLimit,
 }
 
@@ -235,6 +262,7 @@ impl ArgumentError {
 }
 
 impl fmt::Display for ArgumentError {
+    /// Writes the message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str(&self.message)
     }
@@ -246,8 +274,11 @@ impl std::error::Error for ArgumentError {}
 /// warning it emitted (`"preg_match(): Compilation failed: ..."`).
 #[derive(Debug, Clone, PartialEq)]
 pub struct Preg<T> {
+    /// The value the function returned.
     pub value: T,
+    /// What `preg_last_error()` reports after the call.
     pub error: PregError,
+    /// The last warning emitted, if any.
     pub warning: Option<Vec<u8>>,
 }
 
@@ -255,6 +286,7 @@ pub struct Preg<T> {
 /// text, without the function name.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CompileFailure {
+    /// The warning text.
     pub message: Vec<u8>,
 }
 
@@ -807,7 +839,9 @@ fn warn(func: &str, failure: CompileFailure) -> Vec<u8> {
 /// compile, which leaves `$matches` untouched).
 #[derive(Debug, Clone, PartialEq)]
 pub struct MatchResult {
+    /// The return value: the match count, or `false`.
     pub result: Value,
+    /// `$matches`, or `None` when the pattern did not compile.
     pub matches: Option<Array>,
 }
 
@@ -1169,7 +1203,9 @@ fn finish(result: Option<Vec<u8>>, subject: &[u8], last_end_offset: usize) -> Ve
 /// A `string|array` argument of `preg_replace()`.
 #[derive(Debug, Clone, PartialEq)]
 pub enum StrOrArray<'a> {
+    /// A string.
     Str(&'a [u8]),
+    /// An array of strings, with their keys.
     Array(Vec<(Key, Vec<u8>)>),
 }
 
@@ -1177,7 +1213,9 @@ pub enum StrOrArray<'a> {
 /// (`Str`, `Array` or `Null`) and `$count`.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ReplaceResult {
+    /// The return value: a string, an array, or `null` on failure.
     pub result: Value,
+    /// `$count`, the number of replacements.
     pub count: i64,
 }
 

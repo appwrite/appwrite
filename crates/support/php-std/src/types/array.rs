@@ -16,7 +16,9 @@ use super::{Extension, Never, Str, Value};
 /// numeric strings as string keys.
 #[derive(Clone, PartialEq, Eq)]
 pub enum ArrayKey {
+    /// An integer key.
     Int(i64),
+    /// A string key, as bytes.
     Str(Str),
 }
 
@@ -24,7 +26,9 @@ pub enum ArrayKey {
 /// arrays (which store no keys).
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum KeyRef<'a> {
+    /// An integer key.
     Int(i64),
+    /// A string key, as bytes.
     Str(&'a [u8]),
 }
 
@@ -64,6 +68,7 @@ impl ArrayKey {
         }
     }
 
+    /// The key, borrowed.
     pub fn as_ref(&self) -> KeyRef<'_> {
         match self {
             ArrayKey::Int(i) => KeyRef::Int(*i),
@@ -73,12 +78,14 @@ impl ArrayKey {
 }
 
 impl Hash for ArrayKey {
+    /// Hashes the key as its [`KeyRef`], so borrowed lookups find it.
     fn hash<H: Hasher>(&self, state: &mut H) {
         self.as_ref().hash(state);
     }
 }
 
 impl Hash for KeyRef<'_> {
+    /// Hashes the kind of key, then the key.
     fn hash<H: Hasher>(&self, state: &mut H) {
         match self {
             KeyRef::Int(i) => {
@@ -94,6 +101,7 @@ impl Hash for KeyRef<'_> {
 }
 
 impl Equivalent<ArrayKey> for KeyRef<'_> {
+    /// Whether this borrowed key equals `key`.
     fn equivalent(&self, key: &ArrayKey) -> bool {
         *self == key.as_ref()
     }
@@ -108,6 +116,7 @@ impl<'a> KeyRef<'a> {
         }
     }
 
+    /// The key, owned.
     pub fn to_owned(self) -> ArrayKey {
         match self {
             KeyRef::Int(i) => ArrayKey::Int(i),
@@ -117,6 +126,7 @@ impl<'a> KeyRef<'a> {
 }
 
 impl fmt::Debug for ArrayKey {
+    /// Writes the integer, or the string quoted.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             ArrayKey::Int(i) => write!(f, "{i}"),
@@ -126,6 +136,7 @@ impl fmt::Debug for ArrayKey {
 }
 
 impl From<i64> for ArrayKey {
+    /// The integer key `i`.
     fn from(i: i64) -> Self {
         ArrayKey::Int(i)
     }
@@ -133,6 +144,7 @@ impl From<i64> for ArrayKey {
 
 /// A string key, normalised like `$a["..."]`.
 impl From<&str> for ArrayKey {
+    /// The key `$a["..."]` uses: canonical integer strings become integer keys.
     fn from(s: &str) -> Self {
         ArrayKey::normalize(Str::from(s))
     }
@@ -144,6 +156,7 @@ impl From<&str> for ArrayKey {
 pub struct ArrayFull;
 
 impl fmt::Display for ArrayFull {
+    /// Writes PHP's error message.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.write_str("Cannot add element to the array as the next element is already occupied")
     }
@@ -197,16 +210,19 @@ fn table_size(n: usize) -> u64 {
 }
 
 impl<X: Extension> Default for Array<X> {
+    /// An empty array.
     fn default() -> Self {
         Self::new()
     }
 }
 
 impl<X: Extension> Array<X> {
+    /// An empty array.
     pub fn new() -> Self {
         Array { repr: Repr::Packed(Vec::new()) }
     }
 
+    /// An empty array with room for `n` list elements.
     pub fn with_capacity(n: usize) -> Self {
         Array { repr: Repr::Packed(Vec::with_capacity(n)) }
     }
@@ -234,6 +250,7 @@ impl<X: Extension> Array<X> {
         }
     }
 
+    /// The number of elements.
     pub fn len(&self) -> usize {
         match &self.repr {
             Repr::Packed(v) => v.len(),
@@ -241,6 +258,7 @@ impl<X: Extension> Array<X> {
         }
     }
 
+    /// Whether the array has no elements.
     pub fn is_empty(&self) -> bool {
         self.len() == 0
     }
@@ -254,10 +272,12 @@ impl<X: Extension> Array<X> {
         }
     }
 
+    /// The value at `k`, if any (the key as given, not normalised).
     pub fn get(&self, k: &ArrayKey) -> Option<&Value<X>> {
         self.get_ref(k.as_ref())
     }
 
+    /// The value at a borrowed key, if any (the key as given, not normalised).
     pub fn get_ref(&self, k: KeyRef<'_>) -> Option<&Value<X>> {
         match &self.repr {
             Repr::Packed(v) => match k {
@@ -273,6 +293,7 @@ impl<X: Extension> Array<X> {
         self.get_ref(KeyRef::normalize(k.as_bytes()))
     }
 
+    /// The value at `k`, mutably, if any.
     pub fn get_mut(&mut self, k: &ArrayKey) -> Option<&mut Value<X>> {
         match &mut self.repr {
             Repr::Packed(v) => match k {
@@ -283,6 +304,7 @@ impl<X: Extension> Array<X> {
         }
     }
 
+    /// Whether `k` is set.
     pub fn contains_key(&self, k: &ArrayKey) -> bool {
         self.get(k).is_some()
     }
@@ -381,6 +403,7 @@ impl<X: Extension> Array<X> {
         old
     }
 
+    /// The entries in order, with borrowed keys.
     pub fn iter(&self) -> Iter<'_, X> {
         match &self.repr {
             Repr::Packed(v) => Iter::Packed(v.iter().enumerate()),
@@ -388,10 +411,12 @@ impl<X: Extension> Array<X> {
         }
     }
 
+    /// The values in order.
     pub fn values(&self) -> impl ExactSizeIterator<Item = &Value<X>> + DoubleEndedIterator {
         self.iter().map(|(_, v)| v)
     }
 
+    /// The keys in order.
     pub fn keys(&self) -> impl ExactSizeIterator<Item = KeyRef<'_>> {
         self.iter().map(|(k, _)| k)
     }
@@ -416,13 +441,16 @@ impl<X: Extension> Array<X> {
 
 /// Entries of an [`Array`] in order.
 pub enum Iter<'a, X: Extension> {
+    /// Over a packed array: the keys are the positions.
     Packed(std::iter::Enumerate<std::slice::Iter<'a, Value<X>>>),
+    /// Over a hash array.
     Hash(indexmap::map::Iter<'a, ArrayKey, Value<X>>),
 }
 
 impl<'a, X: Extension> Iterator for Iter<'a, X> {
     type Item = (KeyRef<'a>, &'a Value<X>);
 
+    /// The next entry.
     fn next(&mut self) -> Option<Self::Item> {
         match self {
             Iter::Packed(it) => it.next().map(|(i, v)| (KeyRef::Int(i as i64), v)),
@@ -430,6 +458,7 @@ impl<'a, X: Extension> Iterator for Iter<'a, X> {
         }
     }
 
+    /// The exact number of entries left.
     fn size_hint(&self) -> (usize, Option<usize>) {
         match self {
             Iter::Packed(it) => it.size_hint(),
@@ -439,6 +468,7 @@ impl<'a, X: Extension> Iterator for Iter<'a, X> {
 }
 
 impl<X: Extension> DoubleEndedIterator for Iter<'_, X> {
+    /// The last entry left.
     fn next_back(&mut self) -> Option<Self::Item> {
         match self {
             Iter::Packed(it) => it.next_back().map(|(i, v)| (KeyRef::Int(i as i64), v)),
@@ -453,6 +483,7 @@ impl<X: Extension> IntoIterator for Array<X> {
     type Item = (ArrayKey, Value<X>);
     type IntoIter = Box<dyn Iterator<Item = (ArrayKey, Value<X>)>>;
 
+    /// The entries in order, with owned keys.
     fn into_iter(self) -> Self::IntoIter {
         match self.repr {
             Repr::Packed(v) => Box::new(v.into_iter().enumerate().map(|(i, v)| (ArrayKey::Int(i as i64), v))),
@@ -465,6 +496,7 @@ impl<'a, X: Extension> IntoIterator for &'a Array<X> {
     type Item = (KeyRef<'a>, &'a Value<X>);
     type IntoIter = Iter<'a, X>;
 
+    /// The entries in order, with borrowed keys.
     fn into_iter(self) -> Self::IntoIter {
         self.iter()
     }
@@ -472,6 +504,7 @@ impl<'a, X: Extension> IntoIterator for &'a Array<X> {
 
 /// `$a[$k] = $v` for each pair.
 impl<X: Extension> FromIterator<(ArrayKey, Value<X>)> for Array<X> {
+    /// An array with each pair assigned in order, as `$a[$k] = $v`.
     fn from_iter<T: IntoIterator<Item = (ArrayKey, Value<X>)>>(iter: T) -> Self {
         let mut a = Array::new();
         for (k, v) in iter {
@@ -483,6 +516,7 @@ impl<X: Extension> FromIterator<(ArrayKey, Value<X>)> for Array<X> {
 
 /// A list.
 impl<X: Extension> FromIterator<Value<X>> for Array<X> {
+    /// A list of the values.
     fn from_iter<T: IntoIterator<Item = Value<X>>>(iter: T) -> Self {
         Array::from_list(iter.into_iter().collect())
     }
@@ -490,12 +524,14 @@ impl<X: Extension> FromIterator<Value<X>> for Array<X> {
 
 /// The same entries in the same order (structural, not PHP's `==`).
 impl<X: Extension> PartialEq for Array<X> {
+    /// Whether both have the same entries in the same order.
     fn eq(&self, other: &Self) -> bool {
         self.len() == other.len() && self.iter().zip(other.iter()).all(|(a, b)| a == b)
     }
 }
 
 impl<X: Extension> fmt::Debug for Array<X> {
+    /// Writes the entries as a map.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_map().entries(self.iter()).finish()
     }

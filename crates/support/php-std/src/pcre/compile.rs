@@ -53,12 +53,14 @@ pub enum Class {
     },
 }
 
+/// An item of a class that holds wide characters or properties (`XCLASS` data).
 #[derive(Debug, Clone)]
 pub enum XItem {
     Range(u32, u32),
     Prop { positive: bool, ptype: u32, pdata: u32 },
 }
 
+/// A zero-width assertion: `^`, `$`, `\A`, `\z`, `\Z`, `\G`, `\b` and `\B`.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Assert {
     Circ,
@@ -72,6 +74,7 @@ pub enum Assert {
     WordBoundary { ucp: bool, negated: bool },
 }
 
+/// How a quantifier repeats: greedy, lazy or possessive.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RepKind {
     Greedy,
@@ -86,6 +89,7 @@ pub enum Reverse {
     Variable { min: u32, max: u32 },
 }
 
+/// The condition of a conditional group.
 #[derive(Debug, Clone)]
 pub enum Cond {
     /// Any of these groups is set.
@@ -96,6 +100,7 @@ pub enum Cond {
     Assert(Box<Node>),
 }
 
+/// What kind of group a [`Node::Group`] is.
 #[derive(Debug, Clone)]
 pub enum GroupKind {
     NonCapture,
@@ -113,6 +118,7 @@ pub enum GroupKind {
     Define,
 }
 
+/// A node of the compiled pattern tree.
 #[derive(Debug, Clone)]
 pub enum Node {
     Lit(Lit),
@@ -152,8 +158,11 @@ pub enum Node {
 /// "No code unit found yet" / "no fixed code unit" (`REQ_UNSET`,
 /// `REQ_NONE`); smaller values are a code unit's flags.
 pub const REQ_UNSET: u32 = 0xffff_ffff;
+/// No fixed code unit (`REQ_NONE`).
 pub const REQ_NONE: u32 = 0xffff_fffe;
+/// Flag: the required code unit matches caselessly (`REQ_CASELESS`).
 pub const REQ_CASELESS: u32 = 0x0000_0001;
+/// Flag: the code unit follows a variable-length item (`REQ_VARY`).
 pub const REQ_VARY: u32 = 0x0000_0002;
 
 /// The first and last required code units of a branch or group, as
@@ -247,6 +256,7 @@ enum ClassShape {
     General(Node),
 }
 
+/// Builds the pattern tree from the parsed pattern (`compile_regex()`).
 pub fn build(meta: &[u32], pat: &[u8], parsed: &Parsed, xoptions: u32) -> Result<Tree, CompileError> {
     let mut b = Builder {
         meta,

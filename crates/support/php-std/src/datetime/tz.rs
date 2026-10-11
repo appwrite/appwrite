@@ -84,12 +84,14 @@ pub struct TzInfo {
 }
 
 impl fmt::Debug for TzInfo {
+    /// Writes the identifier as requested.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_tuple("TzInfo").field(&self.name).finish()
     }
 }
 
 impl PartialEq for TzInfo {
+    /// Whether both have the same identifier, as requested.
     fn eq(&self, other: &Self) -> bool {
         self.name == other.name
     }
@@ -126,6 +128,7 @@ impl TzInfo {
         &self.name
     }
 
+    /// The zone's transitions, time types and country.
     pub fn data(&self) -> &ZoneData {
         &self.data
     }
@@ -583,9 +586,13 @@ fn ts_at_start_of_year(year: i64) -> i64 {
 /// A row of timelib's abbreviation tables.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Abbreviation {
+    /// The abbreviation, lowercase (`est`).
     pub name: &'static str,
+    /// Whether it names daylight saving time.
     pub dst: bool,
+    /// The UTC offset in seconds.
     pub gmtoffset: i32,
+    /// The zone identifier it maps to, if any (`America/New_York`).
     pub full_tz_name: Option<&'static str>,
 }
 
