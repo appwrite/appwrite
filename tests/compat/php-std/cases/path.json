@@ -1,0 +1,109 @@
+{
+  "source": "php-std",
+  "cases": [
+    {
+      "name": "basename of a file",
+      "op": "path.basename",
+      "args": {
+        "path": "/srv/app/index.html"
+      },
+      "expect": "index.html"
+    },
+    {
+      "name": "basename with trailing slashes",
+      "op": "path.basename",
+      "args": {
+        "path": "/srv/app//"
+      },
+      "expect": "app"
+    },
+    {
+      "name": "basename of slashes only",
+      "op": "path.basename",
+      "args": {
+        "path": "///"
+      },
+      "expect": ""
+    },
+    {
+      "name": "basename of an empty path",
+      "op": "path.basename",
+      "args": {
+        "path": ""
+      },
+      "expect": ""
+    },
+    {
+      "name": "basename keeps backslashes",
+      "op": "path.basename",
+      "args": {
+        "path": "C:\\dir\\file.txt"
+      },
+      "expect": "C:\\dir\\file.txt"
+    },
+    {
+      "name": "extension of a nested file",
+      "op": "path.pathinfo_extension",
+      "args": {
+        "path": "server/pages/index.html"
+      },
+      "expect": "html"
+    },
+    {
+      "name": "extension is after the last dot",
+      "op": "path.pathinfo_extension",
+      "args": {
+        "path": "archive.tar.gz"
+      },
+      "expect": "gz"
+    },
+    {
+      "name": "no extension",
+      "op": "path.pathinfo_extension",
+      "args": {
+        "path": "Dockerfile"
+      },
+      "expect": ""
+    },
+    {
+      "name": "dotfile",
+      "op": "path.pathinfo_extension",
+      "args": {
+        "path": ".env"
+      },
+      "expect": "env"
+    },
+    {
+      "name": "trailing dot",
+      "op": "path.pathinfo_extension",
+      "args": {
+        "path": "name."
+      },
+      "expect": ""
+    },
+    {
+      "name": "dot in a directory only",
+      "op": "path.pathinfo_extension",
+      "args": {
+        "path": "v1.2/README"
+      },
+      "expect": ""
+    },
+    {
+      "name": "trailing slash",
+      "op": "path.pathinfo_extension",
+      "args": {
+        "path": "server/pages/"
+      },
+      "expect": ""
+    },
+    {
+      "name": "dot directory with slash",
+      "op": "path.pathinfo_extension",
+      "args": {
+        "path": ".next/"
+      },
+      "expect": "next"
+    }
+  ]
+}
