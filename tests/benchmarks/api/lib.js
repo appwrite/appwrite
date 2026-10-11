@@ -69,6 +69,20 @@ class Api {
         return this.expect(res, codes, this.name);
     }
 
+    /**
+     * A measured multipart request (file uploads): `fields` is sent as k6
+     * encodes an object holding `http.file()` values, without the JSON
+     * content type. `measure: false` makes it a `prep` instead.
+     */
+    form(method, path, fields, codes = [201], { headers = this.headers, measure = true } = {}) {
+        const plain = Object.fromEntries(Object.entries(headers).filter(([k]) => k.toLowerCase() !== 'content-type'));
+        const res = http.request(method, `${ENDPOINT}${path}`, fields, { headers: plain, tags: { name: measure ? this.name : 'prep' } });
+        if (measure) {
+            duration.add(res.timings.duration, { name: this.name });
+        }
+        return this.expect(res, codes, measure ? this.name : `${this.name} prep ${method} ${path}`);
+    }
+
     prep(method, path, body = null, codes = [200, 201, 204], headers = this.headers) {
         return this.expect(send(ENDPOINT, method, path, body, headers, 'prep'), codes, `${this.name} prep ${method} ${path}`);
     }

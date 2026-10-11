@@ -74,7 +74,9 @@ export const handleSummary = bench.handleSummary;
   it must answer (`[200]` by default). **`api.prep()`** is any other request to
   the API under test (state to act on, cleanup); **`api.control()`** sends one
   to another service through the PHP API, which serves them all (the Rust API
-  serves only migrated services). `api.session(secret)` gives the headers of a
+  serves only migrated services). `api.form(method, path, fields, codes, { headers, measure })`
+  sends a multipart request (uploads: `fields` holds `http.file(...)` values).
+  `api.session(secret)` gives the headers of a
   client request with a session; pass headers as the last argument of any call.
   `context.admin` (in `seed`) holds the console session's headers, for console
   routes: return it in the seed data to use it in scenarios.
