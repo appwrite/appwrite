@@ -70,10 +70,22 @@ impl Token {
     ///
     /// PHP: `generate()`.
     pub fn token(&self) -> String {
+        const HEX: &[u8; 16] = b"0123456789abcdef";
         let length = usize::try_from(self.length).unwrap_or(0);
-        let mut bytes = vec![0u8; length.div_ceil(2).max(1)];
-        random_bytes(&mut bytes);
-        let mut out = hex::encode(bytes);
+        // `bin2hex(random_bytes(max(1, intdiv($length + 1, 2))))`, cut to
+        // `$length`: hex digits written straight into the token.
+        let mut out = String::with_capacity(length);
+        let mut bytes = [0u8; 64];
+        let mut left = length.div_ceil(2).max(1);
+        while left > 0 {
+            let chunk = &mut bytes[..left.min(64)];
+            random_bytes(chunk);
+            for &b in chunk.iter() {
+                out.push(HEX[usize::from(b >> 4)] as char);
+                out.push(HEX[usize::from(b & 15)] as char);
+            }
+            left -= chunk.len();
+        }
         out.truncate(length);
         out
     }

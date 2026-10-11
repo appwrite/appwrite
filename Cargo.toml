@@ -103,6 +103,9 @@ mimalloc = { version = "0.1", default-features = false }
 # and line numbers of each crate's public items.
 proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
 quote = { version = "1", default-features = false }
+# Thread-local CSPRNG (ChaCha12 keyed from the OS, rekeyed every 64 KiB) for
+# utopia-auth tokens and salts; pure Rust, already in the tree.
+rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
 redis = { version = "0.32", default-features = false, features = ["tokio-comp", "aio", "connection-manager", "script"] }
 regex = "1"
 ripemd = "0.1"
