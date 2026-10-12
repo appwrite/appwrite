@@ -6123,7 +6123,8 @@
               "with-dash": null,
               "id": null
             }
-          }
+          },
+          "bind": "nochange55"
         },
         {
           "op": "database.update_document",
@@ -6151,12 +6152,12 @@
                 ],
                 "$collection": "documents",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "nochange55",
+                  "path": "/$document/$createdAt"
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "nochange55",
+                  "path": "/$document/$updatedAt"
                 },
                 "$sequence": "12",
                 "empty": [],
@@ -6166,9 +6167,31 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "$document": {
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -123456789.12346,
+              "float_unsigned": 123456789.12346,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "empty": [],
+              "with-dash": null,
+              "id": null,
+              "$sequence": "13",
+              "$id": "u0000000000000000031",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "documents"
             }
           }
         },
@@ -6221,7 +6244,8 @@
               "with-dash": null,
               "id": null
             }
-          }
+          },
+          "bind": "nochange57"
         },
         {
           "op": "database.update_document",
@@ -6247,12 +6271,12 @@
                 ],
                 "$collection": "documents",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "nochange57",
+                  "path": "/$document/$createdAt"
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "nochange57",
+                  "path": "/$document/$updatedAt"
                 },
                 "$sequence": "13",
                 "empty": [],
@@ -6264,7 +6288,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         }

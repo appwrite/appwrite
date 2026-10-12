@@ -5740,7 +5740,8 @@
               "with-dash": null,
               "id": null
             }
-          }
+          },
+          "bind": "nochange51"
         },
         {
           "op": "database.update_document",
@@ -5768,12 +5769,12 @@
                 ],
                 "$collection": "documents",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "nochange51",
+                  "path": "/$document/$createdAt"
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "nochange51",
+                  "path": "/$document/$updatedAt"
                 },
                 "$tenant": "999",
                 "$sequence": "56009",
@@ -5784,9 +5785,32 @@
             }
           },
           "expect": {
-            "$error": {
-              "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+            "$document": {
+              "$id": "u0000000000000000030",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "string": "text📝",
+              "integer_signed": -2147483647,
+              "integer_unsigned": 2147483647,
+              "bigint_signed": -9223372036854775807,
+              "bigint_unsigned": 9223372036854775807,
+              "float_signed": -123456789.12346,
+              "float_unsigned": 123456789.12346,
+              "boolean": true,
+              "colors": [
+                "pink",
+                "green",
+                "blue"
+              ],
+              "$collection": "documents",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$tenant": 999,
+              "$sequence": "56010",
+              "empty": [],
+              "with-dash": null,
+              "id": null
             }
           }
         },
@@ -5840,7 +5864,8 @@
               "with-dash": null,
               "id": null
             }
-          }
+          },
+          "bind": "nochange53"
         },
         {
           "op": "database.update_document",
@@ -5866,12 +5891,12 @@
                 ],
                 "$collection": "documents",
                 "$createdAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "nochange53",
+                  "path": "/$document/$createdAt"
                 },
                 "$updatedAt": {
-                  "$now": 0,
-                  "format": "Y-m-d\\TH:i:s.vP"
+                  "$ref": "nochange53",
+                  "path": "/$document/$updatedAt"
                 },
                 "$tenant": "999",
                 "$sequence": "56010",
@@ -5884,7 +5909,7 @@
           "expect": {
             "$error": {
               "class": "Utopia\\Database\\Exception\\Authorization",
-              "message": "No permissions provided for action 'update'"
+              "message": "No permissions provided for action 'read'"
             }
           }
         }
