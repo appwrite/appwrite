@@ -550,7 +550,7 @@ You can use one of the following events.
 
 # Schedule {% #schedule %}
 
-Appwrite supports recurring function executions. Set a schedule in your function's settings, or with a [Server SDK](/docs/sdks#server) using either the `interval` parameter (minutes) or the `schedule` parameter (a cron expression). A function uses one or the other, not both.
+Appwrite supports recurring function executions. Set a schedule in the Appwrite Console under your function's **Settings** > **Executions**, or with a [Server SDK](/docs/sdks#server) using either the `interval` parameter (minutes) or the `schedule` parameter (a cron expression). A function uses one or the other, not both.
 
 ## Interval {% #interval %}
 
@@ -570,6 +570,17 @@ Run times are fixed to the UTC clock, not counted from when you save the functio
 - A daily interval (1440 minutes) runs at one fixed UTC time of day, which you can't choose. Use cron if the time of day matters.
 - An interval that isn't a factor or multiple of 60, such as 45 or 90 minutes, doesn't run at the same time every hour.
 - Changing the interval can move the time Appwrite picks.
+
+To set an interval in the Appwrite Console, open your function and go to **Settings** > **Executions**. In the **Schedule** card, choose **Interval**, pick a preset or choose **Custom** to enter a number of minutes, hours or days, and click **Update**.
+
+{% only_dark %}
+![Interval selected in the Schedule card of a function's Executions settings](/images/docs/functions/execution/dark/interval-schedule.avif)
+{% /only_dark %}
+{% only_light %}
+![Interval selected in the Schedule card of a function's Executions settings](/images/docs/functions/execution/interval-schedule.avif)
+{% /only_light %}
+
+With a Server SDK, pass `interval` when you create or update a function:
 
 {% multicode %}
 ```server-nodejs
