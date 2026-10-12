@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-appwrite-helm-chart",
+    "href": "/blog/post/announcing-appwrite-helm-chart",
+    "title": "Announcing the official Appwrite Helm chart for Kubernetes",
+    "description": "Self-host Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, and ClickHouse, S3, and Functions and Sites.",
+    "date": "2026-10-13",
+    "lastUpdated": "2026-10-13",
+    "timeToRead": 8,
+    "author": "levi-van-noort",
+    "category": "announcements",
+    "featured": false,
+    "cover": "/images/blog/announcing-appwrite-helm-chart/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "deno-deploy-alternative",
     "href": "/blog/post/deno-deploy-alternative",
     "title": "Appwrite Deno Functions as a Deno Deploy alternative",

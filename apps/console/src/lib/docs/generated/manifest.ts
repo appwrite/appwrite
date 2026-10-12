@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 21
+    "readingTimeMinutes": 22
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -430,6 +430,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "readingTimeMinutes": 1
   },
   {
+    "slug": "advanced/self-hosting/platforms/kubernetes",
+    "title": "Kubernetes",
+    "description": "Install self-hosted Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, ClickHouse, and S3 storage.",
+    "layout": "article",
+    "readingTimeMinutes": 14
+  },
+  {
     "slug": "advanced/self-hosting/production",
     "title": "Preparation",
     "description": "Optimize self-hosted Appwrite for production environments. Learn key concepts and best practices for deploying Appwrite in production.",
@@ -490,7 +497,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "apis",
@@ -4078,7 +4085,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "tooling/command-center/shortcuts",

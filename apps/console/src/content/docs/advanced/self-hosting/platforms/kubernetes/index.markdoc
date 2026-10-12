@@ -1,0 +1,485 @@
+---
+layout: article
+title: Kubernetes
+description: Install self-hosted Appwrite on Kubernetes with the official Helm chart, using built-in or managed PostgreSQL, Redis, ClickHouse, and S3 storage.
+---
+
+The official [Appwrite Helm chart](https://github.com/appwrite/helm-chart) installs self-hosted Appwrite on your own Kubernetes cluster, and upgrades it with Helm. It deploys the API, console, realtime, workers, and schedulers, plus the routes your ingress controller or Gateway needs to reach them.
+
+A plain install includes everything Appwrite needs, PostgreSQL, Redis, and ClickHouse included, so you can try it on an empty cluster. For production, you replace each of those with a managed service, one at a time.
+
+The chart is published to `oci://ghcr.io/appwrite/charts/appwrite`, and its source, guides, and example values files live in the [appwrite/helm-chart](https://github.com/appwrite/helm-chart) repository.
+
+{% info title="Pre-release" %}
+Chart versions before 1.0 are pre-releases, and a new minor version can change or rename values. Read the [version notes](https://github.com/appwrite/helm-chart/blob/main/docs/upgrading.md#version-notes) before each upgrade.
+{% /info %}
+
+# Docker or Kubernetes {% #docker-or-kubernetes %}
+
+The [Docker installation](/docs/advanced/self-hosting/installation) runs every Appwrite service on one server, and is the simpler choice when one server is enough. The Helm chart runs the same images on Kubernetes. Choose it when you already operate Kubernetes and want:
+
+- Managed PostgreSQL, Redis, ClickHouse, and S3 in place of containers you maintain
+- API, console, and realtime replicas spread across nodes, with autoscaling
+- Rolling upgrades, with Appwrite's data migration run as part of `helm upgrade`
+- GitOps deployments with Argo CD or Flux
+
+Functions and Sites ask more of a Kubernetes cluster than of a Docker host. They need S3 storage and an executor that runs as a privileged pod. See [Functions and Sites](#functions-and-sites).
+
+# Requirements {% #requirements %}
+
+- Kubernetes 1.29 or later, with a default StorageClass
+- [Helm](https://helm.sh/docs/intro/install/) 4, or Helm 3.18 or later
+- `kubectl` connected to the cluster
+- About 2 CPUs and 4 GiB of memory free for Appwrite
+- An ingress controller, or a Gateway API implementation
+
+The console and the API share one hostname. Requests to `/v1` go to the API, and everything else goes to the console. An ingress controller or Gateway splits that traffic. A `kubectl port-forward` to the console alone doesn't work, because the console would send its API calls to itself.
+
+## Chart and Appwrite versions {% #versions %}
+
+Each chart version deploys one Appwrite version, its `appVersion`, so upgrading the chart upgrades Appwrite.
+
+| Chart | Appwrite |
+| ----- | -------- |
+| 0.1.0 | 2.3.0    |
+
+To see which Appwrite version the latest chart deploys:
+
+```bash
+helm show chart oci://ghcr.io/appwrite/charts/appwrite
+```
+
+# Try it locally {% #try-locally %}
+
+This walkthrough runs Appwrite on [kind](https://kind.sigs.k8s.io), which runs a Kubernetes cluster inside Docker, with Traefik as the ingress controller. It uses plain HTTP and takes about ten minutes. k3d, k3s, and Rancher Desktop already include Traefik, so skip step 2 there.
+
+{% section #local-cluster step=1 title="Create a cluster" %}
+
+```bash
+kind create cluster --name appwrite
+```
+
+{% /section %}
+
+{% section #local-ingress step=2 title="Install an ingress controller" %}
+
+```bash
+helm install traefik traefik --repo https://traefik.github.io/charts \
+  --namespace traefik --create-namespace \
+  --set service.type=ClusterIP --wait
+```
+
+{% /section %}
+
+{% section #local-install step=3 title="Install Appwrite" %}
+
+```bash
+helm install appwrite oci://ghcr.io/appwrite/charts/appwrite \
+  --namespace appwrite --create-namespace \
+  --set appwrite.domain=appwrite.localhost \
+  --set appwrite.certificatesEmail=you@example.com \
+  --set appwrite.forceHttps=false \
+  --set ingress.enabled=true \
+  --wait --timeout 15m
+```
+
+Nothing terminates TLS on a local cluster, so `appwrite.forceHttps=false` turns off the HTTPS redirect. The first start pulls about 2 GB of images and creates the database schema, which takes a few minutes.
+
+{% /section %}
+
+{% section #local-open step=4 title="Open the console" %}
+
+Forward Traefik's port 80 to your machine:
+
+```bash
+kubectl -n traefik port-forward svc/traefik 80:80
+```
+
+Open `http://appwrite.localhost` and sign up. The first account becomes the console administrator, and everyone after it needs an invitation. Point your SDKs at `http://appwrite.localhost/v1`.
+
+Chrome and Firefox resolve `*.localhost` to your machine. If your browser or SDK doesn't, add `127.0.0.1 appwrite.localhost` to your hosts file. Forward port 80 rather than another port, because Appwrite leaves the port out of the links it generates, such as email links and OAuth redirects. On Linux, binding port 80 usually needs `sudo`.
+
+{% /section %}
+
+When you're done, delete the cluster:
+
+```bash
+kind delete cluster --name appwrite
+```
+
+# Install on a cluster {% #install %}
+
+## Before you start {% #before-you-start %}
+
+- An ingress controller with an IngressClass, or a [Gateway API](#networking) implementation
+- [cert-manager](https://cert-manager.io) with a Let's Encrypt `ClusterIssuer`, called `letsencrypt` in the examples below. HTTP-01 is enough for the main domain.
+- A DNS record for your domain, for example `appwrite.example.com`, pointing at the ingress controller's load balancer
+
+## Decide before the first install {% #decide-first %}
+
+These settings are hard to change once Appwrite holds data:
+
+| Setting | Why it's hard to change later |
+| ------- | ----------------------------- |
+| Release name, or `fullnameOverride` | Every resource name starts with it, including the Secret and the volumes. A new name is a new install, with new credentials and empty volumes. |
+| Encryption key | The chart generates `_APP_OPENSSL_KEY_V1` once. Without it, a database backup can't be read. Back it up after installing, or create it yourself and pass it through `appwrite.secrets.existingSecret`. |
+| `appwrite.domain` | It ends up in OAuth redirect URLs, Git webhooks, the CNAME target of custom domains, and the preview domains stored in the database. Changing it breaks all of them. |
+| Database engine | PostgreSQL, built-in or external, is recommended and is the engine the chart's CI tests. Moving to another engine later is a data migration, not a values change. |
+| `storage.device` | `local` keeps files on a volume, `s3` in a bucket. Files stay where they were written, so switching later leaves them behind. Functions and Sites need `s3`. |
+| `/storage` access mode | ReadWriteOnce keeps every pod that mounts `/storage` on one node. ReadWriteMany lets them spread across nodes. A claim's access mode can't be changed, only replaced with a new claim. |
+
+{% section #install-values step=1 title="Write a values file" %}
+
+```yaml
+# values.yaml
+appwrite:
+  domain: appwrite.example.com
+  certificatesEmail: ops@example.com    # Let's Encrypt account for custom domains
+
+ingress:
+  enabled: true
+  className: traefik                    # your IngressClass
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt
+  tls:
+    enabled: true
+```
+
+`appwrite.forceHttps` is on by default, so Appwrite redirects HTTP to HTTPS and generates `https://` links. Keep `ingress.tls.enabled` on with it, or the redirect points at an HTTPS endpoint nothing serves.
+
+The chart's repository has [example values files](https://github.com/appwrite/helm-chart/tree/main/examples) to start from, including overlays for managed services on AWS, Google Cloud, and Azure.
+
+{% /section %}
+
+{% section #install-helm step=2 title="Install the chart" %}
+
+```bash
+helm install appwrite oci://ghcr.io/appwrite/charts/appwrite \
+  --namespace appwrite --create-namespace \
+  -f values.yaml --wait --timeout 15m
+```
+
+The chart checks your values before it installs anything, and stops with a message that names any setting that's missing or inconsistent.
+
+{% /section %}
+
+{% section #install-check step=3 title="Check the install" %}
+
+```bash
+kubectl -n appwrite get pods
+helm test appwrite -n appwrite
+kubectl -n appwrite get certificate
+```
+
+Every pod should be `Running`, the three tests should pass, and the certificate should become `Ready` within a minute or two.
+
+{% /section %}
+
+{% section #install-signup step=4 title="Create the first account" %}
+
+Open `https://appwrite.example.com` and sign up. The first account becomes the console administrator. Everyone after it needs an invitation, unless you change `appwrite.console.whitelistRoot`.
+
+{% /section %}
+
+{% section #install-backup step=5 title="Back up the encryption key" %}
+
+The chart generated `_APP_OPENSSL_KEY_V1`, which encrypts data at rest. Store it somewhere outside the cluster now:
+
+```bash
+kubectl -n appwrite get secret appwrite -o jsonpath='{.data._APP_OPENSSL_KEY_V1}' | base64 -d
+```
+
+The Secret is named after the release, `appwrite` in these examples. A release whose name doesn't contain `appwrite`, such as `prod`, creates `prod-appwrite`.
+
+{% /section %}
+
+# Configuration {% #configuration %}
+
+You configure the chart through Helm values. To print every value with its default and description:
+
+```bash
+helm show values oci://ghcr.io/appwrite/charts/appwrite
+```
+
+The [values reference](https://github.com/appwrite/helm-chart/blob/main/charts/appwrite/README.md#values) lists the same values, grouped by area.
+
+## Built-in or external services {% #external-services %}
+
+By default, the chart runs every service Appwrite depends on. You can replace each one on its own, for example moving PostgreSQL to Amazon RDS while keeping the built-in Redis and ClickHouse.
+
+| Service | By default | Bring your own | Switch with |
+| ------- | ---------- | -------------- | ----------- |
+| PostgreSQL | Built-in StatefulSet | Amazon RDS and Aurora, Cloud SQL, Azure Database for PostgreSQL, CloudNativePG | `database.mode` |
+| Redis | Built-in StatefulSet | ElastiCache, Memorystore, Azure Cache for Redis, Valkey | `redis.mode` |
+| ClickHouse | Built-in StatefulSet | ClickHouse Cloud, the Altinity operator | `clickhouse.mode` |
+| File storage | PersistentVolumeClaim | AWS S3, Cloudflare R2, Google Cloud Storage, DigitalOcean Spaces, MinIO, and other S3-compatible stores | `storage.device` |
+| Email | Off | Any SMTP server | `smtp` |
+
+The built-in datastores each run a single replica, without replication or failover. They suit evaluation and small installs. For data you can't afford to lose, use managed services or operators. To run MariaDB, MySQL, or MongoDB instead of PostgreSQL, set `database.adapter` on an external database.
+
+Every external service takes a `mode` switch, an `external` block with its address, and a password. Every password and key in the chart accepts the same three fields, `value`, `secretName`, and `secretKey`. An inline `value` ends up in your values file, so keep credentials in a Secret instead:
+
+```bash
+kubectl create namespace appwrite
+kubectl -n appwrite create secret generic appwrite-external \
+  --from-literal=db-password='<PostgreSQL password>' \
+  --from-literal=redis-password='<Redis password>'
+```
+
+```yaml
+database:
+  mode: external
+  external:
+    host: appwrite-db.example.internal
+  password:
+    secretName: appwrite-external       # reads the key db-password
+
+redis:
+  mode: external
+  external:
+    host: appwrite-redis.example.internal
+  password:
+    secretName: appwrite-external       # reads the key redis-password
+```
+
+An external PostgreSQL needs the `postgis`, `vector`, and `pg_trgm` extensions and a direct connection, not a transaction-mode pooler. Redis needs a single endpoint without TLS. The [external databases guide](https://github.com/appwrite/helm-chart/blob/main/docs/external-databases.md) has the setup for each provider, and [`examples/external-services.yaml`](https://github.com/appwrite/helm-chart/blob/main/examples/external-services.yaml) annotates every block.
+
+## S3 storage {% #s3 %}
+
+```yaml
+storage:
+  device: s3
+  s3:
+    endpoint: https://<account-id>.r2.cloudflarestorage.com   # empty for AWS S3
+    region: auto
+    bucket: appwrite
+    accessKeyId:
+      secretName: appwrite-s3           # reads the key s3-access-key
+    secretAccessKey:
+      secretName: appwrite-s3           # reads the key s3-secret-key
+```
+
+Appwrite doesn't create the bucket, and it signs requests with static keys. IAM roles for service accounts, such as IRSA, EKS Pod Identity, and GKE Workload Identity, aren't supported. With S3, the API and workers still mount a small `/storage` volume for TLS certificates and ACME challenges. The [storage guide](https://github.com/appwrite/helm-chart/blob/main/docs/storage.md#s3) lists the endpoint and region for each provider.
+
+## Appwrite settings and email {% #appwrite-settings %}
+
+Common settings have values of their own, such as `appwrite.domain`, `appwrite.console.whitelistEmails`, and `smtp`. Set any other [environment variable](/docs/advanced/self-hosting/configuration/environment-variables) in `appwrite.config`. Use `appwrite.secretConfig` for secrets, which the chart stores in a Secret, or `appwrite.extraEnvFrom` to load a Secret you manage:
+
+```yaml
+appwrite:
+  config:
+    _APP_VCS_GITHUB_APP_NAME: my-appwrite
+  secretConfig:
+    _APP_LOGGING_CONFIG: sentry://...
+  extraEnvFrom:
+    - secretRef:
+        name: appwrite-integrations
+```
+
+Leave the database, Redis, ClickHouse, and executor connection variables out of `appwrite.config`. The chart sets them from its own services and credentials, and a copy there would override them.
+
+To send verification, recovery, and invitation emails, add an SMTP server:
+
+```yaml
+smtp:
+  host: smtp.example.com
+  port: 587
+  username: appwrite
+  password:
+    secretName: appwrite-external       # reads the key smtp-password
+
+appwrite:
+  system:
+    emailAddress: appwrite@example.com
+```
+
+The [integrations guide](https://github.com/appwrite/helm-chart/blob/main/docs/integrations.md) covers SMTP providers, Git deployments, console sign-in with OAuth, SMS, and error tracking.
+
+## Networking {% #networking %}
+
+The chart creates the same routes that Traefik handles in the Docker installation:
+
+| Hostname | Path | Goes to |
+| -------- | ---- | ------- |
+| `appwrite.domain` | `/v1/realtime` | Realtime (WebSocket) |
+| `appwrite.domain` | `/v1`, `/.well-known` | API |
+| `appwrite.domain` | Everything else | Console |
+| `*.functions.<domain>`, `*.sites.<domain>` | Everything | API, for function and site previews |
+| Any other hostname | Everything | API, for custom domains. Off by default. |
+
+Use `ingress` with an ingress controller, or `httpRoute` with the Gateway API. `httpRoute` creates HTTPRoutes that attach to the Gateway listeners you name in `parentRefs`, and TLS is configured on those listeners:
+
+```yaml
+httpRoute:
+  enabled: true
+  parentRefs:
+    - name: public
+      namespace: gateway
+      sectionName: https-appwrite
+```
+
+Function and site previews need DNS records for `*.functions.<domain>` and `*.sites.<domain>`, and a wildcard certificate, which only a DNS-01 issuer can get. Turn them on with `ingress.wildcard.enabled` or `httpRoute.wildcard.enabled`.
+
+[Custom domains](/docs/products/network/custom-domains) for projects, functions, and sites need a route that accepts any hostname, through `ingress.customDomains.enabled` or `httpRoute.customDomains.enabled`. Set `appwrite.domainTargets` to your load balancer's hostname and IPs so custom domains verify. On a shared IngressClass, the custom-domains route catches every hostname no other Ingress claims, so give Appwrite an IngressClass or Gateway listeners of its own. The [networking guide](https://github.com/appwrite/helm-chart/blob/main/docs/networking.md) has the details.
+
+## Worker topologies {% #worker-topologies %}
+
+`workers.mode` decides how the chart spreads Appwrite's queues across Deployments:
+
+| Mode | Deployments | When to use |
+| ---- | ----------- | ----------- |
+| `combined` (default) | One `worker` Deployment that consumes every queue | Small installs. Uses the least memory. |
+| `separate` | One Deployment per queue | Scale or size each queue on its own. Matches the [separate topology](/docs/advanced/self-hosting/configuration/topologies#separate) of the Docker installation. |
+| `grouped` | One Deployment per group in `workers.groups` | Isolate busy queues, such as usage or builds, without running a pod per queue. |
+
+```yaml
+workers:
+  mode: grouped
+  groups:
+    core:
+      queues: [databases, deletes, mails, messaging, notifications, certificates, migrations, webhooks]
+    usage:
+      queues: [stats-usage, stats-resources]
+      replicaCount: 2
+    compute:
+      queues: [builds, jobs, functions, executions, screenshots]
+```
+
+The `databases` queue applies schema changes in order, so the Deployment that consumes it always runs one replica. In `combined` mode that Deployment is the only worker, so switch to `separate` or `grouped` to scale workers out.
+
+# Functions and Sites {% #functions-and-sites %}
+
+Functions and Sites are off by default, and the rest of Appwrite works without them. They need:
+
+- **S3 storage.** Builds and the executor exchange code and build output through a bucket. The chart refuses to enable compute with `local` storage.
+- **A privileged executor.** Builds run as unprivileged Kubernetes Jobs in a namespace of their own. Executions run on the [Open Runtimes executor](https://github.com/open-runtimes/executor), which starts runtime containers through its own Docker daemon. That daemon runs in a privileged container, which is root on its node, so you accept it with `compute.executor.privileged` and give it dedicated nodes. Where privileged pods aren't allowed, [Sysbox](https://github.com/nestybox/sysbox) can run the daemon instead, through `compute.executor.runtimeClassName`.
+- **Wildcard DNS and certificates** for previews at `*.functions.<domain>` and `*.sites.<domain>`.
+
+Label and taint the nodes for the executor:
+
+```bash
+kubectl label node <node> workload=executor
+kubectl taint node <node> workload=executor:NoSchedule
+```
+
+Then add compute to values that already configure [S3 storage](#s3):
+
+```yaml
+compute:
+  enabled: true
+  executor:
+    privileged: true                    # accepts Docker-in-Docker: root on the node
+    nodeSelector:
+      workload: executor
+    tolerations:
+      - key: workload
+        value: executor
+        effect: NoSchedule
+  functionsRuntimes: [node-22, python-3.12, php-8.3]
+  sitesRuntimes: [static-1, node-22]    # sites build with node-22
+
+ingress:
+  wildcard:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: letsencrypt-dns01   # a DNS-01 ClusterIssuer
+    tls:
+      enabled: true
+```
+
+Without nodes that match the selector, the executor pod stays `Pending`.
+
+The executor runs in a namespace of its own and can't read Secrets in the Appwrite namespace. When your S3 keys are inline values, the chart copies them over. When they come from a Secret you manage, create a copy for the executor, as the [executor guide](https://github.com/appwrite/helm-chart/blob/main/docs/executor.md#existing-secrets) shows. Runtime options that the Docker installation sets with environment variables are covered in [Functions](/docs/advanced/self-hosting/configuration/functions) and [Sites](/docs/advanced/self-hosting/configuration/sites).
+
+# Production checklist {% #production %}
+
+Before real users depend on the install:
+
+- Move PostgreSQL, Redis, and ClickHouse to managed services or operators, with replication and backups.
+- Back up the chart's whole Secret outside the cluster, not only the encryption key, because the built-in PostgreSQL's password is tied to its volume. Or provide every credential from your secret manager with `appwrite.secrets.existingSecret` and each credential's `secretName`.
+- Back up the database and files, and test a restore.
+- Use a ReadWriteMany volume for `/storage`, so API and worker pods can spread across nodes.
+- Set resources on every component. The chart sets `_APP_CPU_NUM` from each pod's CPU limit, and Appwrite sizes its processes and database pools from it.
+- Run several API, console, and realtime replicas, or turn on their autoscaling.
+- Keep the database connections of every Appwrite pod at peak, counting autoscaling maximums, below the database's `max_connections`.
+- Turn on NetworkPolicies with `networkPolicy.enabled`, and limit the entry points to your ingress controller.
+- Cap function and site specifications with `_APP_COMPUTE_CPUS` and `_APP_COMPUTE_MEMORY` in `appwrite.config`, if you run Functions and Sites.
+- Monitor pod restarts, queue backlogs, and Appwrite's health endpoints. Workers and schedulers have no probes, so a hung worker shows up only as a growing queue.
+
+The chart's [production guide](https://github.com/appwrite/helm-chart/blob/main/docs/production.md) explains each item, and [`examples/production.yaml`](https://github.com/appwrite/helm-chart/blob/main/examples/production.yaml) puts them together.
+
+# Security {% #security %}
+
+Every pod in the Appwrite namespace runs as a non-root user with a read-only root filesystem, no Linux capabilities, and the `RuntimeDefault` seccomp profile, so the `restricted` Pod Security Standard admits it. Build Jobs run in their own namespace under `baseline`, and the executor in its own namespace under `privileged`.
+
+Released charts are signed with cosign keyless signing from GitHub Actions, and carry a build provenance attestation. Verify a chart version before you install it, with cosign 3 or later:
+
+```bash
+cosign verify ghcr.io/appwrite/charts/appwrite:<version> \
+  --certificate-identity https://github.com/appwrite/helm-chart/.github/workflows/release.yaml@refs/heads/main \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
+
+# Upgrading {% #upgrading %}
+
+Each chart version deploys one Appwrite version, so you upgrade Appwrite by upgrading the chart:
+
+1. Back up the database and the chart's Secret. Appwrite migrations can't be rolled back.
+2. Read the [version notes](https://github.com/appwrite/helm-chart/blob/main/docs/upgrading.md#version-notes) of every chart version in between, and the [Appwrite release notes](https://github.com/appwrite/appwrite/releases) for breaking API changes.
+3. Run the upgrade:
+
+```bash
+helm upgrade appwrite oci://ghcr.io/appwrite/charts/appwrite \
+  --version <chart version> -n appwrite -f values.yaml --wait --timeout 30m
+```
+
+When the Appwrite version changes, a post-upgrade Job runs Appwrite's data migration, and Helm reports success only after it finishes. Pass `--wait`, so the migration starts after the new pods are ready. Raise `--timeout` for large installs: the default of 5 minutes is too short for most migrations.
+
+Each migration run applies only the migration of the version it installs, so don't jump over a version whose migration you haven't run. The chart's [upgrade guide](https://github.com/appwrite/helm-chart/blob/main/docs/upgrading.md#before-you-upgrade) lists which versions share a migration, and what to do when one fails.
+
+# Migrating from Docker {% #migrate-from-docker %}
+
+You can move an existing Docker Compose installation to the chart and keep all of its data. Before you start:
+
+- Upgrade the Docker installation to the Appwrite version the chart deploys, including its data migration.
+- Keep the same storage device. Switching between `local` and `s3` during the move breaks the file paths stored in the database.
+- Plan for downtime. Appwrite is unavailable from step 2 until step 5 finishes.
+
+The move has five steps:
+
+1. Collect your settings from `.env`. Put `_APP_OPENSSL_KEY_V1`, `_APP_NOTIFICATIONS_TRACKING_SECRET`, and `_APP_GEO_SECRET` in a Secret and name it in `appwrite.secrets.existingSecret`. The encryption key must be identical, or encrypted data can't be read.
+2. Stop the Docker installation, dump PostgreSQL, and copy the file volumes.
+3. Install the chart with the API scaled to zero, so nothing writes to the new database.
+4. Restore the database and the files.
+5. Upgrade the release with your values to start Appwrite, then move DNS to the cluster.
+
+The chart's [migration guide](https://github.com/appwrite/helm-chart/blob/main/docs/migrating-from-docker.md) has every command, a table that maps `.env` variables to chart values, and notes for MariaDB and MongoDB installations.
+
+# Uninstalling {% #uninstall %}
+
+```bash
+helm uninstall appwrite -n appwrite
+```
+
+Helm leaves the chart's Secret and the PersistentVolumeClaims of `/storage` and the datastores behind on purpose, and installing again with the same release name picks them up. To remove everything, delete the Secret and the claims together:
+
+```bash
+kubectl -n appwrite delete secret appwrite
+kubectl -n appwrite delete pvc -l app.kubernetes.io/instance=appwrite
+```
+
+Deleting only one of them leaves you with new passwords for a database that still expects the old ones.
+
+# Learn more {% #learn-more %}
+
+The chart's repository has a guide for each part of an install:
+
+- [Architecture](https://github.com/appwrite/helm-chart/blob/main/docs/architecture.md): components, startup order, configuration flow, and database connection sizing
+- [Networking, TLS, and domains](https://github.com/appwrite/helm-chart/blob/main/docs/networking.md): Ingress, Gateway API, cert-manager, and custom domains
+- [External databases](https://github.com/appwrite/helm-chart/blob/main/docs/external-databases.md): PostgreSQL, MariaDB, MySQL, MongoDB, Redis, and ClickHouse
+- [Functions and Sites](https://github.com/appwrite/helm-chart/blob/main/docs/executor.md): build Jobs, the executor, and sizing
+- [GitOps](https://github.com/appwrite/helm-chart/blob/main/docs/gitops.md): Argo CD, Flux, and External Secrets
+- [Backup and restore](https://github.com/appwrite/helm-chart/blob/main/docs/backup-restore.md)
+- [Troubleshooting](https://github.com/appwrite/helm-chart/blob/main/docs/troubleshooting.md)
+
+Report problems with the chart in the [helm-chart repository](https://github.com/appwrite/helm-chart/issues), and problems in Appwrite itself in [appwrite/appwrite](https://github.com/appwrite/appwrite/issues).
