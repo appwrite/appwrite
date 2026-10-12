@@ -143,7 +143,9 @@ class Appwrite extends Source
         $this->client = (new Client())
             ->setEndpoint($endpoint)
             ->setProject($projectId)
-            ->setKey($key);
+            ->setKey($key)
+            ->setConnectTimeout(static::CONNECT_TIMEOUT)
+            ->setTimeout(static::REQUEST_TIMEOUT);
 
         $this->users = new Users($this->client);
         $this->teams = new Teams($this->client);

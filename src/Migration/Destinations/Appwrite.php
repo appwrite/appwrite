@@ -283,7 +283,9 @@ class Appwrite extends Destination
         $this->client = (new Client())
             ->setEndpoint($endpoint)
             ->setProject($project)
-            ->setKey($key);
+            ->setKey($key)
+            ->setConnectTimeout(static::CONNECT_TIMEOUT)
+            ->setTimeout(static::REQUEST_TIMEOUT);
 
         $this->functions = new Functions($this->client);
         $this->messaging = new Messaging($this->client);
