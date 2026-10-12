@@ -970,10 +970,10 @@ class Realtime extends MessagingAdapter
                     $channels[] = 'teams.' . $parts[1];
                 }
                 $roles = [Role::team(ID::custom($parts[1]))->toString()];
-                // The subject's team role is gone by the time this delete is delivered:
-                // permissionsChanged re-resolves their connections first, and the event
-                // is addressed only to team:{teamId}. Include their user role so that
-                // client still receives it. Teammates match the team role.
+                // permissionsChanged makes the worker re-subscribe the member's connections with
+                // their current roles before matching, so after a delete team:{teamId} is no
+                // longer in the subscription tree for them. Address the delete to their user
+                // role too so they still receive it; teammates match the team role.
                 if ($parts[2] === 'memberships' && ($parts[4] ?? '') === 'delete') {
                     $userId = $payload->getAttribute('userId', '');
                     if (\is_string($userId) && $userId !== '') {
