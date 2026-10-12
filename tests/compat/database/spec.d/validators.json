@@ -1,0 +1,307 @@
+{
+  "ops": {
+    "validator.new": {
+      "doc": "new Utopia\\Database\\Validator\\<class>(...$spec): a handle (see ops/validators.php for specs)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::__construct",
+        "Utopia\\Database\\Validator\\BigInt::__construct",
+        "Utopia\\Database\\Validator\\ByteLength::__construct",
+        "Utopia\\Database\\Validator\\Datetime::__construct",
+        "Utopia\\Database\\Validator\\Index::__construct",
+        "Utopia\\Database\\Validator\\IndexDependency::__construct",
+        "Utopia\\Database\\Validator\\IndexedQueries::__construct",
+        "Utopia\\Database\\Validator\\Key::__construct",
+        "Utopia\\Database\\Validator\\Label::__construct",
+        "Utopia\\Database\\Validator\\Operator::__construct",
+        "Utopia\\Database\\Validator\\Permissions::__construct",
+        "Utopia\\Database\\Validator\\Queries::__construct",
+        "Utopia\\Database\\Validator\\Queries\\Document::__construct",
+        "Utopia\\Database\\Validator\\Queries\\Documents::__construct",
+        "Utopia\\Database\\Validator\\Query\\Cursor::__construct",
+        "Utopia\\Database\\Validator\\Query\\Filter::__construct",
+        "Utopia\\Database\\Validator\\Query\\Limit::__construct",
+        "Utopia\\Database\\Validator\\Query\\Offset::__construct",
+        "Utopia\\Database\\Validator\\Query\\Order::__construct",
+        "Utopia\\Database\\Validator\\Query\\Select::__construct",
+        "Utopia\\Database\\Validator\\Roles::__construct",
+        "Utopia\\Database\\Validator\\Sequence::__construct",
+        "Utopia\\Database\\Validator\\Spatial::__construct",
+        "Utopia\\Database\\Validator\\Structure::__construct",
+        "Utopia\\Database\\Validator\\UID::__construct",
+        "Utopia\\Database\\Validator\\Vector::__construct"
+      ]
+    },
+    "validator.check": {
+      "doc": "{valid: (new <class>(...$spec))->isValid($value), description: ->getDescription(), value: the document after, for documents}",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::isValid",
+        "Utopia\\Database\\Validator\\BigInt::isValid",
+        "Utopia\\Database\\Validator\\ByteLength::isValid",
+        "Utopia\\Database\\Validator\\Datetime::isValid",
+        "Utopia\\Database\\Validator\\Index::isValid",
+        "Utopia\\Database\\Validator\\IndexDependency::isValid",
+        "Utopia\\Database\\Validator\\IndexedQueries::isValid",
+        "Utopia\\Database\\Validator\\Key::isValid",
+        "Utopia\\Database\\Validator\\Label::isValid",
+        "Utopia\\Database\\Validator\\ObjectValidator::isValid",
+        "Utopia\\Database\\Validator\\Operator::isValid",
+        "Utopia\\Database\\Validator\\PartialStructure::isValid",
+        "Utopia\\Database\\Validator\\Permissions::isValid",
+        "Utopia\\Database\\Validator\\Queries::isValid",
+        "Utopia\\Database\\Validator\\Query\\Cursor::isValid",
+        "Utopia\\Database\\Validator\\Query\\Filter::isValid",
+        "Utopia\\Database\\Validator\\Query\\Limit::isValid",
+        "Utopia\\Database\\Validator\\Query\\Offset::isValid",
+        "Utopia\\Database\\Validator\\Query\\Order::isValid",
+        "Utopia\\Database\\Validator\\Query\\Select::isValid",
+        "Utopia\\Database\\Validator\\Roles::isValid",
+        "Utopia\\Database\\Validator\\Sequence::isValid",
+        "Utopia\\Database\\Validator\\Spatial::isValid",
+        "Utopia\\Database\\Validator\\Structure::isValid",
+        "Utopia\\Database\\Validator\\Vector::isValid"
+      ]
+    },
+    "validator.is_valid": {
+      "doc": "{valid: $validator->isValid($value), description: ->getDescription(), value: the document after, for documents}",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::isValid",
+        "Utopia\\Database\\Validator\\BigInt::isValid",
+        "Utopia\\Database\\Validator\\ByteLength::isValid",
+        "Utopia\\Database\\Validator\\Datetime::isValid",
+        "Utopia\\Database\\Validator\\Index::isValid",
+        "Utopia\\Database\\Validator\\IndexDependency::isValid",
+        "Utopia\\Database\\Validator\\IndexedQueries::isValid",
+        "Utopia\\Database\\Validator\\Key::isValid",
+        "Utopia\\Database\\Validator\\Label::isValid",
+        "Utopia\\Database\\Validator\\ObjectValidator::isValid",
+        "Utopia\\Database\\Validator\\Operator::isValid",
+        "Utopia\\Database\\Validator\\PartialStructure::isValid",
+        "Utopia\\Database\\Validator\\Permissions::isValid",
+        "Utopia\\Database\\Validator\\Queries::isValid",
+        "Utopia\\Database\\Validator\\Query\\Cursor::isValid",
+        "Utopia\\Database\\Validator\\Query\\Filter::isValid",
+        "Utopia\\Database\\Validator\\Query\\Limit::isValid",
+        "Utopia\\Database\\Validator\\Query\\Offset::isValid",
+        "Utopia\\Database\\Validator\\Query\\Order::isValid",
+        "Utopia\\Database\\Validator\\Query\\Select::isValid",
+        "Utopia\\Database\\Validator\\Roles::isValid",
+        "Utopia\\Database\\Validator\\Sequence::isValid",
+        "Utopia\\Database\\Validator\\Spatial::isValid",
+        "Utopia\\Database\\Validator\\Structure::isValid",
+        "Utopia\\Database\\Validator\\Vector::isValid"
+      ]
+    },
+    "validator.description": {
+      "doc": "$validator->getDescription()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::getDescription",
+        "Utopia\\Database\\Validator\\BigInt::getDescription",
+        "Utopia\\Database\\Validator\\ByteLength::getDescription",
+        "Utopia\\Database\\Validator\\Datetime::getDescription",
+        "Utopia\\Database\\Validator\\Index::getDescription",
+        "Utopia\\Database\\Validator\\IndexDependency::getDescription",
+        "Utopia\\Database\\Validator\\Key::getDescription",
+        "Utopia\\Database\\Validator\\ObjectValidator::getDescription",
+        "Utopia\\Database\\Validator\\Operator::getDescription",
+        "Utopia\\Database\\Validator\\Permissions::getDescription",
+        "Utopia\\Database\\Validator\\Queries::getDescription",
+        "Utopia\\Database\\Validator\\Query\\Base::getDescription",
+        "Utopia\\Database\\Validator\\Roles::getDescription",
+        "Utopia\\Database\\Validator\\Sequence::getDescription",
+        "Utopia\\Database\\Validator\\Spatial::getDescription",
+        "Utopia\\Database\\Validator\\Structure::getDescription",
+        "Utopia\\Database\\Validator\\UID::getDescription",
+        "Utopia\\Database\\Validator\\Vector::getDescription"
+      ]
+    },
+    "validator.meta": {
+      "doc": "{type: getType(), is_array: isArray(), method_type: getMethodType(), max_values_count: getMaxValuesCount(), spatial_type: getSpatialType()} (those the class has)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::getType",
+        "Utopia\\Database\\Validator\\BigInt::getType",
+        "Utopia\\Database\\Validator\\ByteLength::getType",
+        "Utopia\\Database\\Validator\\Datetime::getType",
+        "Utopia\\Database\\Validator\\Index::getType",
+        "Utopia\\Database\\Validator\\IndexDependency::getType",
+        "Utopia\\Database\\Validator\\Key::getType",
+        "Utopia\\Database\\Validator\\ObjectValidator::getType",
+        "Utopia\\Database\\Validator\\Operator::getType",
+        "Utopia\\Database\\Validator\\Permissions::getType",
+        "Utopia\\Database\\Validator\\Queries::getType",
+        "Utopia\\Database\\Validator\\Query\\Base::getType",
+        "Utopia\\Database\\Validator\\Roles::getType",
+        "Utopia\\Database\\Validator\\Sequence::getType",
+        "Utopia\\Database\\Validator\\Spatial::getType",
+        "Utopia\\Database\\Validator\\Structure::getType",
+        "Utopia\\Database\\Validator\\Vector::getType",
+        "Utopia\\Database\\Validator\\Attribute::isArray",
+        "Utopia\\Database\\Validator\\BigInt::isArray",
+        "Utopia\\Database\\Validator\\ByteLength::isArray",
+        "Utopia\\Database\\Validator\\Datetime::isArray",
+        "Utopia\\Database\\Validator\\Index::isArray",
+        "Utopia\\Database\\Validator\\IndexDependency::isArray",
+        "Utopia\\Database\\Validator\\Key::isArray",
+        "Utopia\\Database\\Validator\\ObjectValidator::isArray",
+        "Utopia\\Database\\Validator\\Operator::isArray",
+        "Utopia\\Database\\Validator\\Permissions::isArray",
+        "Utopia\\Database\\Validator\\Queries::isArray",
+        "Utopia\\Database\\Validator\\Query\\Base::isArray",
+        "Utopia\\Database\\Validator\\Roles::isArray",
+        "Utopia\\Database\\Validator\\Sequence::isArray",
+        "Utopia\\Database\\Validator\\Spatial::isArray",
+        "Utopia\\Database\\Validator\\Structure::isArray",
+        "Utopia\\Database\\Validator\\Vector::isArray",
+        "Utopia\\Database\\Validator\\Query\\Cursor::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Filter::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Limit::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Offset::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Order::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Select::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Filter::getMaxValuesCount",
+        "Utopia\\Database\\Validator\\Spatial::getSpatialType"
+      ]
+    },
+    "validator.call": {
+      "doc": "{valid: $validator->check<Step>($document), description} for Attribute's and Index's public check methods",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::checkAttributeLimits",
+        "Utopia\\Database\\Validator\\Attribute::checkDefaultValue",
+        "Utopia\\Database\\Validator\\Attribute::checkDuplicateId",
+        "Utopia\\Database\\Validator\\Attribute::checkDuplicateInSchema",
+        "Utopia\\Database\\Validator\\Attribute::checkFormat",
+        "Utopia\\Database\\Validator\\Attribute::checkRequiredFilters",
+        "Utopia\\Database\\Validator\\Attribute::checkType",
+        "Utopia\\Database\\Validator\\Index::checkArrayIndexes",
+        "Utopia\\Database\\Validator\\Index::checkDuplicatedAttributes",
+        "Utopia\\Database\\Validator\\Index::checkEmptyIndexAttributes",
+        "Utopia\\Database\\Validator\\Index::checkFulltextIndexNonString",
+        "Utopia\\Database\\Validator\\Index::checkIdenticalIndexes",
+        "Utopia\\Database\\Validator\\Index::checkIndexLengths",
+        "Utopia\\Database\\Validator\\Index::checkKeyUniqueFulltextSupport",
+        "Utopia\\Database\\Validator\\Index::checkMultipleFulltextIndexes",
+        "Utopia\\Database\\Validator\\Index::checkNonSpatialIndexOnSpatialAttributes",
+        "Utopia\\Database\\Validator\\Index::checkObjectIndexes",
+        "Utopia\\Database\\Validator\\Index::checkReservedNames",
+        "Utopia\\Database\\Validator\\Index::checkSpatialIndexes",
+        "Utopia\\Database\\Validator\\Index::checkTTLIndexes",
+        "Utopia\\Database\\Validator\\Index::checkTrigramIndexes",
+        "Utopia\\Database\\Validator\\Index::checkValidAttributes",
+        "Utopia\\Database\\Validator\\Index::checkValidIndex",
+        "Utopia\\Database\\Validator\\Index::checkVectorIndexes"
+      ]
+    },
+    "validator.big_int": {
+      "doc": "BigInt::<fn>($value, ...): isIntegerString, fitsPhpInt, fitsBigIntRange, normalizeUnsignedString, compareUnsignedStrings, formatIntegerString",
+      "covers": [
+        "Utopia\\Database\\Validator\\BigInt::isIntegerString",
+        "Utopia\\Database\\Validator\\BigInt::fitsPhpInt",
+        "Utopia\\Database\\Validator\\BigInt::fitsBigIntRange",
+        "Utopia\\Database\\Validator\\BigInt::normalizeUnsignedString",
+        "Utopia\\Database\\Validator\\BigInt::compareUnsignedStrings",
+        "Utopia\\Database\\Validator\\BigInt::formatIntegerString"
+      ]
+    },
+    "validator.spatial_wkt": {
+      "doc": "Spatial::isWKTString($value)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Spatial::isWKTString"
+      ]
+    },
+    "validator.format_add": {
+      "doc": "Structure::addFormat($name, <factory>, $type), factory one of email, text, range, enum (the case formats)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::addFormat"
+      ]
+    },
+    "validator.format_remove": {
+      "doc": "Structure::removeFormat($name)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::removeFormat"
+      ]
+    },
+    "validator.format_has": {
+      "doc": "Structure::hasFormat($name, $type)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::hasFormat"
+      ]
+    },
+    "validator.format_get": {
+      "doc": "['type' => Structure::getFormat($name, $type)['type']]",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::getFormat"
+      ]
+    },
+    "validator.formats": {
+      "doc": "name => type of Structure::getFormats()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::getFormats"
+      ]
+    },
+    "role.parse": {
+      "doc": "Role::parse($role) as {role, identifier, dimension, string}",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Role::parse",
+        "Utopia\\Database\\Helpers\\Role::getRole",
+        "Utopia\\Database\\Helpers\\Role::getIdentifier",
+        "Utopia\\Database\\Helpers\\Role::getDimension",
+        "Utopia\\Database\\Helpers\\Role::toString"
+      ]
+    },
+    "role.new": {
+      "doc": "new Role($role, $identifier, $dimension) as role.parse",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Role::__construct"
+      ]
+    },
+    "role.of": {
+      "doc": "Role::<kind>(...) (any, guests, users, user, team, member, label) as role.parse",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Role::any",
+        "Utopia\\Database\\Helpers\\Role::guests",
+        "Utopia\\Database\\Helpers\\Role::users",
+        "Utopia\\Database\\Helpers\\Role::user",
+        "Utopia\\Database\\Helpers\\Role::team",
+        "Utopia\\Database\\Helpers\\Role::member",
+        "Utopia\\Database\\Helpers\\Role::label"
+      ]
+    },
+    "permission.parse": {
+      "doc": "Permission::parse($permission) as {permission, role, identifier, dimension, string}",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Permission::parse",
+        "Utopia\\Database\\Helpers\\Permission::getPermission",
+        "Utopia\\Database\\Helpers\\Permission::getRole",
+        "Utopia\\Database\\Helpers\\Permission::getIdentifier",
+        "Utopia\\Database\\Helpers\\Permission::getDimension",
+        "Utopia\\Database\\Helpers\\Permission::toString"
+      ]
+    },
+    "permission.new": {
+      "doc": "new Permission($permission, $role, $identifier, $dimension) as permission.parse",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Permission::__construct"
+      ]
+    },
+    "permission.of": {
+      "doc": "Permission::<kind>(new Role($role, $identifier, $dimension)) (read, create, update, delete, write)",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Permission::read",
+        "Utopia\\Database\\Helpers\\Permission::create",
+        "Utopia\\Database\\Helpers\\Permission::update",
+        "Utopia\\Database\\Helpers\\Permission::delete",
+        "Utopia\\Database\\Helpers\\Permission::write"
+      ]
+    },
+    "permission.aggregate": {
+      "doc": "Permission::aggregate($permissions[, $allowed])",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Permission::aggregate"
+      ]
+    }
+  },
+  "generators": {},
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": []
+}

@@ -1,0 +1,481 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/KeyTest.php",
+  "cases": [
+    {
+      "name": "testValues",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": false
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": null
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": [
+              "value"
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": 0
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": 1.5
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "asdas7as9as"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "5f058a8925807"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": ""
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "0"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "null"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "_asdasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": ".as5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "-as5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as5dadasdas_"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as_5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as5dasdasdas."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as.5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as5dasdasdas-"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as-5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "dasda asdasd"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "asd\"asd6sdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "asd'as0asdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as!5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as@5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as#5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as$5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as%5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as^5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as&5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as*5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as(5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as)5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as+5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "as=5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "appwrite"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "appwrite_"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "_appwrite"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "_"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$id"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$createdAt"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$updatedAt"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$appwrite"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$permissions"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "allowInternal": true,
+            "value": "$"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: lengths, unicode, newlines",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "é"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "aé"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "a\n"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "A.Z-0_9"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "$id\n"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "$ID"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": " a"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "value": "a "
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "maxLength": 3,
+            "value": "abc"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "maxLength": 3,
+            "value": "abcd"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "maxLength": 3,
+            "value": ""
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "maxLength": 0,
+            "value": "a"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "key",
+            "maxLength": -1,
+            "value": "a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: description and meta",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "key",
+            "maxLength": 12
+          },
+          "bind": "k"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "k"
+            }
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "k"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
