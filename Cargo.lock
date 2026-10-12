@@ -583,6 +583,7 @@ dependencies = [
  "sha2 0.10.9",
  "syn 2.0.119",
  "tokio",
+ "tokio-tungstenite",
  "utopia-abuse",
  "utopia-auth",
  "utopia-balancer",
@@ -605,6 +606,8 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-lock",
+ "utopia-mqtt",
+ "utopia-nats",
  "utopia-openapi",
  "utopia-platform",
  "utopia-pools",
@@ -3740,6 +3743,44 @@ dependencies = [
  "rustix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-mqtt"
+version = "0.1.0"
+dependencies = [
+ "foldhash",
+ "futures-util",
+ "indexmap",
+ "php-std",
+ "rustls",
+ "thiserror",
+ "tokio",
+ "tokio-rustls",
+ "tokio-tungstenite",
+ "utopia-telemetry",
+]
+
+[[package]]
+name = "utopia-nats"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "futures-util",
+ "indexmap",
+ "php-std",
+ "rand 0.10.3",
+ "ring",
+ "rustls",
+ "serde_json",
+ "sha1 0.10.7",
+ "sha2 0.10.9",
+ "thiserror",
+ "tokio",
+ "tokio-rustls",
+ "webpki-roots 1.0.9",
 ]
 
 [[package]]
