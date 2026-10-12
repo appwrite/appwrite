@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 use Appwrite\Databases\Counter;
 use Appwrite\Databases\TransactionCleanup;
 use Appwrite\Databases\TransactionState;
+use Appwrite\Databases\TransactionStatus;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
@@ -404,11 +405,7 @@ class Update extends Action
                 }
             }
 
-            $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
-                'transactions',
-                $transactionId,
-                new Document(['status' => 'committed'])
-            ));
+            $transaction = (new TransactionStatus($dbForProject))->committed($transaction);
 
             (new TransactionCleanup($publisherForDeletes))->queue($project, $transaction);
 
