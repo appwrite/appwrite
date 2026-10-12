@@ -16,9 +16,7 @@
   "services": [
     "database-postgres"
   ],
-  "state": [
-    "postgres@database-postgres"
-  ],
+  "state": [],
   "ops": {},
   "generators": {},
   "waivers": {
