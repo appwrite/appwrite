@@ -145,7 +145,7 @@ A fuzz profile with `"isolate": true` runs in fresh PHP and Rust driver processe
 
 ## Tasks
 
-A library's tasks are the programs it ships besides its API: a data import, a code generator, a maintenance command ([CONVERSION.md](../../crates/CONVERSION.md) §2 rule 6). `bin/compat coverage` discovers them in the PHP package (the parent of each `php.src` directory), so none can be missed:
+A library's tasks are the programs it ships besides its API: a data import, a code generator, a maintenance command ([CONVERSION.md](../../crates/CONVERSION.md) §2 rule 6). `bin/compat coverage` discovers them in the PHP package (the parent of each `php.src` directory; one only the dev image has, under `vendor/`, is read through the PHP driver's `$programs`), so none can be missed:
 
 - every `bin` of `composer.json`;
 - every `composer.json` script except development tooling (`test`, `lint`, `format`, `analyze`, `check`, `refactor`, `bench` and the like, with any `:<suffix>`). A script that only runs a PHP file of the package (`"import:all": "php import.php all --commit=true"`) is a way to run that file's task, listed with it;
@@ -275,17 +275,7 @@ bin/compat record database --case Scope                             # their expe
 
 ### Tasks
 
-The PHP package ships no `bin` in its `composer.json`, and its scripts (`build`, `start`, `test`, `lint`, `format`, `check`, `coverage`) are development tooling. Its programs are the benchmarking CLI under `bin/`, waived (record them under `tasks_waived` in `spec.d/core.json` once this branch has the tasks tooling):
-
-| Program | Waiver |
-|---|---|
-| `vendor/utopia-php/database/bin/cli.php` | The entry point of the benchmarking tasks below (a `Utopia\CLI` app); no product behaviour |
-| `vendor/utopia-php/database/bin/tasks/load.php` | Development benchmark: fills a scratch MariaDB, MySQL, PostgreSQL or MongoDB database of the library's docker-compose stack with mock articles through Swoole PDO pools and times it; `bin/compat bench database` compares both runtimes' writes |
-| `vendor/utopia-php/database/bin/tasks/index.php` | Development benchmark: adds the mock data's indexes to that scratch database and times them |
-| `vendor/utopia-php/database/bin/tasks/query.php` | Development benchmark: times queries over the mock data for growing role counts and writes the timings to `bin/view/results`; `bin/compat bench database` compares both runtimes' finds |
-| `vendor/utopia-php/database/bin/tasks/relationships.php` | Development benchmark: loads and times mock relationship graphs in that scratch database |
-| `vendor/utopia-php/database/bin/tasks/operators.php` | Development benchmark: times operator updates against read-modify-write in that scratch database |
-| `vendor/utopia-php/database/bin/view/index.php` | An HTML page charting the `query` task's result files; no library behaviour |
+The PHP package ships no `bin` in its `composer.json`; its scripts (`build`, `start`, `test`, `lint`, `format`, `check`, `coverage`) and its programs (the benchmarking CLI `bin/cli.php`, its `bin/tasks/{load,index,query,relationships,operators}.php` and the `bin/view/index.php` results page) are development tooling. The package lives only in the dev image (`vendor/`), so `bin/compat coverage` discovers them through the PHP driver (`$programs`); each is waived, with its reason, under `tasks_waived` in `spec.d/core.json` (`test`, `lint`, `format`, `check` and `coverage` are development scripts by name and need no waiver).
 
 ## php-std
 

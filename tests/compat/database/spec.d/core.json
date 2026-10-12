@@ -939,5 +939,16 @@
     "vendor/utopia-php/database/tests/unit/WithCacheLeaseTest.php": "Phase 3: asserts generation leases of a Leasable cache adapter (Utopia\\Cache\\Feature\\Leasable, the test's LeasableMemoryCache); the cases' caches are Memory and None, which have none. Lease-aware caching comes with phase 3's Redis cache",
     "vendor/utopia-php/database/tests/unit/PoolTimeoutTest.php": "Phase 3: tests Utopia\\Database\\Adapter\\Pool (timeouts replayed on each pooled checkout); the Pool adapter is not converted yet",
     "vendor/utopia-php/database/tests/unit/MongoPermissionStringsTest.php": "Phase 3: tests Utopia\\Database\\Adapter\\Mongo::permissionStrings (private, by reflection); the MongoDB adapter is not converted yet"
+  },
+  "tasks_waived": {
+    "vendor/utopia-php/database/bin/cli.php": "Development tooling: the entry point of the bin/tasks benchmarks (a Utopia\\CLI app); no product behaviour",
+    "vendor/utopia-php/database/bin/tasks/load.php": "Development benchmark: fills a scratch MariaDB, MySQL, PostgreSQL or MongoDB database of the library's docker-compose stack with mock articles through Swoole PDO pools and times it; bin/compat bench database compares both runtimes' writes",
+    "vendor/utopia-php/database/bin/tasks/index.php": "Development benchmark: adds the mock data's indexes to that scratch database and times them",
+    "vendor/utopia-php/database/bin/tasks/query.php": "Development benchmark: times queries over the mock data for growing role counts and writes the timings to bin/view/results; bin/compat bench database compares both runtimes' finds",
+    "vendor/utopia-php/database/bin/tasks/relationships.php": "Development benchmark: loads and times mock relationship graphs in that scratch database",
+    "vendor/utopia-php/database/bin/tasks/operators.php": "Development benchmark: times operator updates against read-modify-write in that scratch database",
+    "vendor/utopia-php/database/bin/view/index.php": "Development tooling: an HTML page charting the query benchmark's result files; no library behaviour",
+    "vendor/utopia-php/database/composer.json#build": "Development tooling: builds the library's docker-compose test stack (docker compose build)",
+    "vendor/utopia-php/database/composer.json#start": "Development tooling: starts the library's docker-compose test stack (docker compose up -d)"
   }
 }

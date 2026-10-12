@@ -72,6 +72,52 @@ final class Inventory
     }
 
     /**
+     * What task discovery reads of each PHP package directory (relative to
+     * the repository root) that exists here: its `composer.json` and the
+     * source of every PHP file outside `src/`, `tests/`, `vendor/` and
+     * hidden directories, by path relative to the package. The runner
+     * decides which are programs (`crates/tools/compat/src/runner/tasks.rs`).
+     *
+     * @param list<string> $dirs
+     * @return array<string, array{composer: ?string, files: array<string, string>}>
+     */
+    public static function programs(array $dirs): array
+    {
+        $out = [];
+        foreach ($dirs as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+            $manifest = @file_get_contents("{$dir}/composer.json");
+            $files = [];
+            $paths = new \RecursiveIteratorIterator(new \RecursiveCallbackFilterIterator(
+                new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS),
+                static function (\SplFileInfo $file) use ($dir): bool {
+                    $name = $file->getFilename();
+                    if (str_starts_with($name, '.')) {
+                        return false;
+                    }
+
+                    return !($file->isDir() && $file->getPath() === $dir && in_array($name, ['src', 'tests', 'vendor', 'node_modules'], true));
+                },
+            ));
+            foreach ($paths as $file) {
+                if ($file->getExtension() !== 'php') {
+                    continue;
+                }
+                $source = file_get_contents($file->getPathname());
+                if ($source !== false) {
+                    $files[substr($file->getPathname(), strlen($dir) + 1)] = $source;
+                }
+            }
+            ksort($files);
+            $out[$dir] = ['composer' => $manifest === false ? null : $manifest, 'files' => $files];
+        }
+
+        return $out;
+    }
+
+    /**
      * Signature, docblock and location of each symbol (`Class::method` or
      * `function()`), for `bin/compat report`. Symbols that do not resolve
      * are left out.

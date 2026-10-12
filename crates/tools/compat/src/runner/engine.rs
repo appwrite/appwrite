@@ -826,6 +826,15 @@ impl Engine {
         }
     }
 
+    /// What task discovery reads of the PHP package directories `dirs` in the
+    /// PHP driver's image (see [`super::tasks::discover_listed`]), by directory.
+    pub fn php_programs(&mut self, dirs: &[String]) -> Result<Value, String> {
+        match self.driver("php")?.call("", "$programs", &json!({ "dirs": dirs }))? {
+            Ok(Outcome::Ok(v)) => Ok(v),
+            other => Err(format!("php $programs failed: {other:?}")),
+        }
+    }
+
     /// `$bench` on one runtime: `{}` lists `lib`'s benchmarks, `{"name": ...}` times one.
     pub fn bench(&mut self, side: &'static str, lib: &str, args: &Value) -> Result<Value, String> {
         let ns = self.ns(side.chars().next().unwrap_or('x'));

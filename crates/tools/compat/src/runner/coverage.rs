@@ -232,7 +232,8 @@ pub fn coverage(engine: &mut Engine, lib: &str) -> Result<Coverage, String> {
     c.tests_unported =
         tests.into_iter().filter(|t| !sources.contains(t) && !spec.tests_waived.contains_key(t)).collect();
 
-    let t = tasks::check(&root, lib, &spec);
+    let found = tasks::entries(Some(&mut *engine), &root, &spec)?;
+    let t = tasks::check_entries(&root, lib, &spec, found);
     c.tasks = t.total();
     c.tasks_ported = t.ported.len();
     c.tasks_waived = t.waived.len();
