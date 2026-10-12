@@ -3223,6 +3223,60 @@ trait DatabasesBase
         $this->assertSame(['potato,carrot', 'apple,orange'], $fetched['body']['actors']);
     }
 
+    public function testCreateDocumentFloatPrecision(): void
+    {
+        $data = $this->setupDatabase();
+        $databaseId = $data['databaseId'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Float Precision'
+        ]);
+
+        $this->assertEquals(201, $collection['headers']['status-code']);
+
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/float', [
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+                'x-appwrite-key' => $this->getProject()['apiKey']
+            ], [
+                'key' => 'value',
+                'required' => true,
+            ]);
+
+            $this->waitForAttribute($databaseId, $collectionId, 'value');
+        }
+
+        $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ], [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => [
+                'value' => 1234567.123456789,
+            ],
+        ]);
+
+        $this->assertEquals(201, $created['headers']['status-code']);
+
+        $fetched = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $created['body']['$id']), [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey']
+        ]);
+
+        $this->assertEquals(200, $fetched['headers']['status-code']);
+        $this->assertSame(1234567.123456789, $fetched['body']['value']);
+    }
+
     public function testCreateDocument(): void
     {
         $data = $this->setupIndexes();
