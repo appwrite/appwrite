@@ -62,7 +62,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -80,6 +83,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -95,6 +102,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -110,6 +121,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -127,6 +142,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -144,6 +163,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -161,6 +184,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -180,6 +207,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -199,6 +230,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -216,6 +251,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -233,6 +272,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -250,6 +293,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         }
       ]
@@ -315,7 +362,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -332,6 +382,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -340,7 +394,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -357,6 +412,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -374,6 +433,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -391,6 +454,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -408,6 +475,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -425,6 +496,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -442,6 +517,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -459,6 +538,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -476,6 +559,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -493,6 +580,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -510,6 +601,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -527,6 +622,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: dne"
           }
         },
         {
@@ -544,6 +643,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: "
           }
         },
         {
@@ -559,6 +662,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: "
           }
         },
         {
@@ -574,6 +681,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: "
           }
         },
         {
@@ -591,6 +702,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: "
           }
         },
         {
@@ -608,6 +723,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: "
           }
         },
         {
@@ -625,6 +744,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -643,6 +766,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot query equal on attribute \"integer_array\" because it is an array."
           }
         },
         {
@@ -660,6 +787,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"integer_array\""
           }
         }
       ]
@@ -725,7 +856,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -742,6 +876,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"string\""
           }
         },
         {
@@ -750,7 +888,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"string\""
         },
         {
           "op": "validator.is_valid",
@@ -767,6 +906,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"string\""
           }
         },
         {
@@ -775,7 +918,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"string\""
         }
       ]
     },
@@ -840,7 +984,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -855,6 +1002,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Contains queries require at least one value."
           }
         },
         {
@@ -863,7 +1014,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Contains queries require at least one value."
         },
         {
           "op": "validator.is_valid",
@@ -878,6 +1030,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Equal queries require at least one value."
           }
         },
         {
@@ -886,7 +1042,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Equal queries require at least one value."
         }
       ]
     },
@@ -951,7 +1108,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -5968,6 +6128,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query on attribute has greater than 5000 values: integer"
           }
         },
         {
@@ -5976,7 +6140,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query on attribute has greater than 5000 values: integer"
         }
       ]
     },
@@ -6041,7 +6206,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6058,6 +6226,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -6076,6 +6248,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -6094,6 +6270,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -6109,6 +6289,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "NotContains queries require at least one value."
           }
         },
         {
@@ -6117,7 +6301,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "NotContains queries require at least one value."
         }
       ]
     },
@@ -6182,7 +6367,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6199,6 +6387,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -6216,6 +6408,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot query notSearch on attribute \"string_array\" because it is an array."
           }
         },
         {
@@ -6224,7 +6420,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot query notSearch on attribute \"string_array\" because it is an array."
         },
         {
           "op": "validator.is_valid",
@@ -6242,6 +6439,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "NotSearch queries require exactly one value."
           }
         },
         {
@@ -6250,7 +6451,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "NotSearch queries require exactly one value."
         }
       ]
     },
@@ -6315,7 +6517,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6332,6 +6537,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -6349,6 +6558,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot query notStartsWith on attribute \"string_array\" because it is an array."
           }
         },
         {
@@ -6357,7 +6570,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot query notStartsWith on attribute \"string_array\" because it is an array."
         },
         {
           "op": "validator.is_valid",
@@ -6375,6 +6589,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "NotStartsWith queries require exactly one value."
           }
         },
         {
@@ -6383,7 +6601,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "NotStartsWith queries require exactly one value."
         }
       ]
     },
@@ -6448,7 +6667,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6465,6 +6687,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -6482,6 +6708,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot query notEndsWith on attribute \"string_array\" because it is an array."
           }
         },
         {
@@ -6490,7 +6720,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot query notEndsWith on attribute \"string_array\" because it is an array."
         },
         {
           "op": "validator.is_valid",
@@ -6508,6 +6739,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "NotEndsWith queries require exactly one value."
           }
         },
         {
@@ -6516,7 +6751,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "NotEndsWith queries require exactly one value."
         }
       ]
     },
@@ -6581,7 +6817,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6599,6 +6838,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -6617,6 +6860,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot query notBetween on attribute \"integer_array\" because it is an array."
           }
         },
         {
@@ -6625,7 +6872,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot query notBetween on attribute \"integer_array\" because it is an array."
         },
         {
           "op": "validator.is_valid",
@@ -6642,6 +6890,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "NotBetween queries require exactly two values."
           }
         },
         {
@@ -6650,7 +6902,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "NotBetween queries require exactly two values."
         },
         {
           "op": "validator.is_valid",
@@ -6669,6 +6922,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "NotBetween queries require exactly two values."
           }
         },
         {
@@ -6677,7 +6934,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "NotBetween queries require exactly two values."
         }
       ]
     },
@@ -6742,7 +7000,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6759,6 +7020,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"bigint_unsigned\""
           }
         },
         {
@@ -6767,7 +7032,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_unsigned\""
         },
         {
           "op": "validator.is_valid",
@@ -6784,6 +7050,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"bigint_unsigned\""
           }
         },
         {
@@ -6792,7 +7062,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_unsigned\""
         },
         {
           "op": "validator.is_valid",
@@ -6809,6 +7080,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"bigint_unsigned\""
           }
         },
         {
@@ -6817,7 +7092,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_unsigned\""
         },
         {
           "op": "validator.is_valid",
@@ -6834,6 +7110,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"bigint_unsigned\""
           }
         },
         {
@@ -6842,7 +7122,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_unsigned\""
         },
         {
           "op": "validator.is_valid",
@@ -6859,6 +7140,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"bigint_signed\""
           }
         },
         {
@@ -6867,7 +7152,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_signed\""
         },
         {
           "op": "validator.is_valid",
@@ -6884,6 +7170,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"bigint_signed\""
           }
         },
         {
@@ -6892,7 +7182,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_signed\""
         },
         {
           "op": "validator.is_valid",
@@ -6909,6 +7200,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"bigint_signed\""
           }
         },
         {
@@ -6917,7 +7212,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_signed\""
         },
         {
           "op": "validator.is_valid",
@@ -6934,6 +7230,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"bigint_signed\""
           }
         },
         {
@@ -6942,7 +7242,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_signed\""
         },
         {
           "op": "validator.is_valid",
@@ -6959,6 +7260,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"bigint_signed\""
           }
         },
         {
@@ -6967,7 +7272,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_signed\""
         },
         {
           "op": "validator.is_valid",
@@ -6984,6 +7290,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"bigint_signed\""
           }
         },
         {
@@ -6992,7 +7302,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_signed\""
         },
         {
           "op": "validator.is_valid",
@@ -7009,6 +7320,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"bigint_unsigned\""
           }
         },
         {
@@ -7017,7 +7332,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_unsigned\""
         },
         {
           "op": "validator.is_valid",
@@ -7034,6 +7350,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"bigint_unsigned\""
           }
         },
         {
@@ -7042,7 +7362,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"bigint_unsigned\""
         }
       ]
     },
@@ -7107,7 +7428,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -7124,6 +7448,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -7132,7 +7460,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -7149,6 +7478,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7157,7 +7490,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7174,6 +7508,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7182,7 +7520,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7199,6 +7538,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7207,7 +7550,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7224,6 +7568,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7232,7 +7580,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7249,6 +7598,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7257,7 +7610,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7274,6 +7628,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7282,7 +7640,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7299,6 +7658,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7307,7 +7670,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7324,6 +7688,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7332,7 +7700,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7350,6 +7719,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7358,7 +7731,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7376,6 +7750,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"integer\""
           }
         },
         {
@@ -7384,7 +7762,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"integer\""
         },
         {
           "op": "validator.is_valid",
@@ -7401,6 +7780,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Between queries require exactly two values."
           }
         },
         {
@@ -7409,7 +7792,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Between queries require exactly two values."
         }
       ]
     },
@@ -7474,7 +7858,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -7491,6 +7878,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -7499,7 +7890,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -7516,6 +7908,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -7524,7 +7920,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -7541,6 +7938,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -7549,7 +7950,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -7566,6 +7968,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"string\""
           }
         },
         {
@@ -7574,7 +7980,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"string\""
         },
         {
           "op": "validator.is_valid",
@@ -7591,6 +7998,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"string\""
           }
         },
         {
@@ -7599,7 +8010,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"string\""
         },
         {
           "op": "validator.is_valid",
@@ -7618,6 +8030,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"string\""
           }
         },
         {
@@ -7626,7 +8042,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"string\""
         },
         {
           "op": "validator.is_valid",
@@ -7643,6 +8060,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Query value is invalid for attribute \"string\""
           }
         },
         {
@@ -7651,7 +8072,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"string\""
         },
         {
           "op": "validator.is_valid",
@@ -7668,6 +8090,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot query search on attribute \"string_array\" because it is an array."
           }
         },
         {
@@ -7676,7 +8102,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot query search on attribute \"string_array\" because it is an array."
         },
         {
           "op": "validator.is_valid",
@@ -7693,6 +8120,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Cannot query search on attribute \"string_array\" because it is an array."
           }
         },
         {
@@ -7701,7 +8132,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot query search on attribute \"string_array\" because it is an array."
         },
         {
           "op": "validator.is_valid",
@@ -7719,6 +8151,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "StartsWith queries require exactly one value."
           }
         },
         {
@@ -7727,7 +8163,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "StartsWith queries require exactly one value."
         }
       ]
     },
@@ -7792,7 +8229,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -7809,6 +8249,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $id"
           }
         },
         {
@@ -7817,7 +8261,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $id"
         },
         {
           "op": "validator.is_valid",
@@ -7834,6 +8279,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $id"
           }
         },
         {
@@ -7842,7 +8291,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $id"
         },
         {
           "op": "validator.is_valid",
@@ -7859,6 +8309,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $sequence"
           }
         },
         {
@@ -7867,7 +8321,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $sequence"
         },
         {
           "op": "validator.is_valid",
@@ -7884,6 +8339,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $sequence"
           }
         },
         {
@@ -7892,7 +8351,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $sequence"
         },
         {
           "op": "validator.is_valid",
@@ -7909,6 +8369,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $createdAt"
           }
         },
         {
@@ -7917,7 +8381,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $createdAt"
         },
         {
           "op": "validator.is_valid",
@@ -7934,6 +8399,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $updatedAt"
           }
         },
         {
@@ -7942,7 +8411,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $updatedAt"
         },
         {
           "op": "validator.is_valid",
@@ -7959,6 +8429,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $tenant"
           }
         },
         {
@@ -7967,7 +8441,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $tenant"
         },
         {
           "op": "validator.is_valid",
@@ -7982,6 +8457,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $id"
           }
         },
         {
@@ -7990,7 +8469,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $id"
         }
       ]
     },
@@ -8055,7 +8535,10 @@
             ],
             "idAttributeType": "integer"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -8089,6 +8572,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -8097,7 +8584,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -8122,6 +8610,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "And queries require at least two queries"
           }
         },
         {
@@ -8130,7 +8622,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "And queries require at least two queries"
         },
         {
           "op": "validator.is_valid",
@@ -8147,6 +8640,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "And queries require at least two queries"
           }
         },
         {
@@ -8155,7 +8652,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "And queries require at least two queries"
         },
         {
           "op": "validator.is_valid",
@@ -8170,6 +8668,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "And queries require at least two queries"
           }
         },
         {
@@ -8178,7 +8680,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "And queries require at least two queries"
         },
         {
           "op": "validator.is_valid",
@@ -8197,6 +8700,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "And queries require at least two queries"
           }
         },
         {
@@ -8205,7 +8712,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "And queries require at least two queries"
         },
         {
           "op": "validator.is_valid",
@@ -8271,6 +8779,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "And queries require at least two queries"
           }
         },
         {
@@ -8279,7 +8791,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "And queries require at least two queries"
         }
       ]
     },
@@ -8345,7 +8858,10 @@
             "idAttributeType": "integer",
             "maxValuesCount": 2
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -8353,7 +8869,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -8371,6 +8888,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -8379,7 +8900,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -8398,6 +8920,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query on attribute has greater than 2 values: integer"
           }
         },
         {
@@ -8406,7 +8932,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query on attribute has greater than 2 values: integer"
         },
         {
           "op": "validator.is_valid",
@@ -8425,6 +8952,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query on attribute has greater than 2 values: string_array"
           }
         },
         {
@@ -8433,7 +8964,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query on attribute has greater than 2 values: string_array"
         },
         {
           "op": "validator.meta",
@@ -8441,6 +8973,12 @@
             "validator": {
               "$ref": "v"
             }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false,
+            "method_type": "filter",
+            "max_values_count": 2
           }
         }
       ]
@@ -8506,7 +9044,10 @@
             ],
             "idAttributeType": "string"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -8523,6 +9064,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $sequence"
           }
         },
         {
@@ -8531,7 +9076,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $sequence"
         },
         {
           "op": "validator.is_valid",
@@ -8548,6 +9094,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute not found in schema: $sequence"
           }
         },
         {
@@ -8556,7 +9106,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute not found in schema: $sequence"
         }
       ]
     },
@@ -8622,7 +9173,10 @@
             "idAttributeType": "integer",
             "supportForAttributes": false
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -8639,6 +9193,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -8647,7 +9205,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -8664,6 +9223,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"string\""
           }
         },
         {
@@ -8672,7 +9235,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"string\""
         }
       ]
     },
@@ -8697,7 +9261,10 @@
             "minAllowedDate": "2000-01-01 00:00:00",
             "maxAllowedDate": "2100-01-01 00:00:00"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -8714,6 +9281,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -8722,7 +9293,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -8739,6 +9311,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"d\""
           }
         },
         {
@@ -8747,7 +9323,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"d\""
         },
         {
           "op": "validator.is_valid",
@@ -8764,6 +9341,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"d\""
           }
         },
         {
@@ -8772,7 +9353,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"d\""
         },
         {
           "op": "validator.is_valid",
@@ -8789,6 +9371,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"d\""
           }
         },
         {
@@ -8797,7 +9383,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"d\""
         },
         {
           "op": "validator.is_valid",
@@ -8814,6 +9401,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query value is invalid for attribute \"d\""
           }
         },
         {
@@ -8822,7 +9413,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Query value is invalid for attribute \"d\""
         }
       ]
     }

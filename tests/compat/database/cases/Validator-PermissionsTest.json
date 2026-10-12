@@ -9,7 +9,10 @@
           "args": {
             "validator": "permissions"
           },
-          "bind": "p"
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -20,6 +23,10 @@
             "value": [
               "create(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -31,6 +38,10 @@
             "value": [
               "create(\"users\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -42,6 +53,10 @@
             "value": [
               "create(\"user:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -53,6 +68,10 @@
             "value": [
               "create(\"team:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -64,6 +83,10 @@
             "value": [
               "create(\"team:123abc/edit\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -75,6 +98,10 @@
             "value": [
               "create(\"guests\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -86,6 +113,10 @@
             "value": [
               "create(\"users/verified\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -97,6 +128,10 @@
             "value": [
               "read(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -108,6 +143,10 @@
             "value": [
               "read(\"users\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -119,6 +158,10 @@
             "value": [
               "read(\"user:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -130,6 +173,10 @@
             "value": [
               "read(\"team:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -141,6 +188,10 @@
             "value": [
               "read(\"team:123abc/viewer\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -152,6 +203,10 @@
             "value": [
               "read(\"guests\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -163,6 +218,10 @@
             "value": [
               "read(\"users/verified\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -174,6 +233,10 @@
             "value": [
               "update(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -185,6 +248,10 @@
             "value": [
               "update(\"users\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -196,6 +263,10 @@
             "value": [
               "update(\"user:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -207,6 +278,10 @@
             "value": [
               "update(\"team:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -218,6 +293,10 @@
             "value": [
               "update(\"team:123abc/edit\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -229,6 +308,10 @@
             "value": [
               "update(\"guests\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -240,6 +323,10 @@
             "value": [
               "update(\"users/verified\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -251,6 +338,10 @@
             "value": [
               "delete(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -262,6 +353,10 @@
             "value": [
               "delete(\"users\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -273,6 +368,10 @@
             "value": [
               "delete(\"user:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -284,6 +383,10 @@
             "value": [
               "delete(\"team:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -295,6 +398,10 @@
             "value": [
               "delete(\"team:123abc/edit\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -306,6 +413,10 @@
             "value": [
               "delete(\"guests\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -317,6 +428,10 @@
             "value": [
               "delete(\"users/verified\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -328,6 +443,10 @@
             "value": [
               "delete(\"label:vip\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         }
       ]
@@ -340,7 +459,10 @@
           "args": {
             "validator": "permissions"
           },
-          "bind": "p"
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -353,6 +475,10 @@
               "create(\"any\")",
               "update(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -366,6 +492,10 @@
               "create(\"users\")",
               "update(\"users\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -379,6 +509,10 @@
               "create(\"user:123abc\")",
               "update(\"user:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -392,6 +526,10 @@
               "create(\"team:123abc\")",
               "update(\"team:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -405,6 +543,10 @@
               "create(\"team:123abc/viewer\")",
               "update(\"team:123abc/viewer\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -418,6 +560,10 @@
               "create(\"guests\")",
               "update(\"guests\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -431,6 +577,10 @@
               "create(\"users/verified\")",
               "update(\"users/verified\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         }
       ]
@@ -443,7 +593,10 @@
           "args": {
             "validator": "permissions"
           },
-          "bind": "p"
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -459,6 +612,10 @@
               "update(\"team:123abc\")",
               "delete(\"user:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -476,6 +633,10 @@
               "update(\"team:123abc\")",
               "delete(\"user:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -490,6 +651,10 @@
               "update(\"team:123abc/edit\")",
               "delete(\"team:123abc/edit\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         }
       ]
@@ -502,7 +667,10 @@
           "args": {
             "validator": "permissions"
           },
-          "bind": "p"
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -511,6 +679,10 @@
               "$ref": "p"
             },
             "value": "create(\"any\")"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions must be an array of strings."
           }
         },
         {
@@ -520,6 +692,10 @@
               "$ref": "p"
             },
             "value": false
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions must be an array of strings."
           }
         },
         {
@@ -529,6 +705,10 @@
               "$ref": "p"
             },
             "value": 1.5
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions must be an array of strings."
           }
         },
         {
@@ -541,6 +721,10 @@
               0,
               1.5
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Every permission must be of type string."
           }
         },
         {
@@ -553,6 +737,10 @@
               false,
               []
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Every permission must be of type string."
           }
         },
         {
@@ -566,6 +754,10 @@
                 "a"
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Every permission must be of type string."
           }
         },
         {
@@ -577,6 +769,10 @@
             "value": [
               "*"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Wildcard permission \"*\" has been replaced. Use \"any\" instead."
           }
         },
         {
@@ -588,6 +784,10 @@
             "value": [
               "read(\"role:all\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions using the \"role:\" prefix have been replaced. Use \"users\", \"guests\", or \"any\" instead."
           }
         },
         {
@@ -599,6 +799,10 @@
             "value": [
               "create(\"role:guest\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions using the \"role:\" prefix have been replaced. Use \"users\", \"guests\", or \"any\" instead."
           }
         },
         {
@@ -610,6 +814,10 @@
             "value": [
               "update(\"role:member\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions using the \"role:\" prefix have been replaced. Use \"users\", \"guests\", or \"any\" instead."
           }
         },
         {
@@ -621,6 +829,10 @@
             "value": [
               "user1234"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \"user1234\" is not allowed. Must be one of: create, read, update, delete, write."
           }
         },
         {
@@ -632,6 +844,10 @@
             "value": [
               "user::1234"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \"user::1234\" is not allowed. Must be one of: create, read, update, delete, write."
           }
         },
         {
@@ -643,6 +859,10 @@
             "value": [
               "user:123:4"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \"user:123:4\" is not allowed. Must be one of: create, read, update, delete, write."
           }
         },
         {
@@ -654,6 +874,10 @@
             "value": [
               "read(\"member:\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"member\" must have an ID value."
           }
         },
         {
@@ -665,6 +889,10 @@
             "value": [
               "read(\"user:\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" must have an ID value."
           }
         },
         {
@@ -676,6 +904,10 @@
             "value": [
               "read(\"team:\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" must have an ID value."
           }
         },
         {
@@ -687,6 +919,10 @@
             "value": [
               "read(\"anyy\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"anyy\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -698,6 +934,10 @@
             "value": [
               "read(\"gguest\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"gguest\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -709,6 +949,10 @@
             "value": [
               "read(\"memer:123abc\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"memer\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -720,6 +964,10 @@
             "value": [
               "read(\"user:_1234\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -731,6 +979,10 @@
             "value": [
               "read(\"team:-1234\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -742,6 +994,10 @@
             "value": [
               "read(\"member:.1234\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"member\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -753,6 +1009,10 @@
             "value": [
               "read(\"user:12$4\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -764,6 +1024,10 @@
             "value": [
               "read(\"user:12&4\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -775,6 +1039,10 @@
             "value": [
               "read(\"user:ab(124\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -786,6 +1054,10 @@
             "value": [
               "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -797,6 +1069,10 @@
             "value": [
               "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -808,6 +1084,10 @@
             "value": [
               "update(\"memmber:1234\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"memmber\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -819,6 +1099,10 @@
             "value": [
               "update(\"tteam:1234\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"tteam\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -830,6 +1114,10 @@
             "value": [
               "update(\"userr:1234\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"userr\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -841,6 +1129,10 @@
             "value": [
               "read(\"team:_abcd\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -852,6 +1144,10 @@
             "value": [
               "read(\"team:abcd/\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Dimension must not be empty"
           }
         },
         {
@@ -863,6 +1159,10 @@
             "value": [
               "read(\"team/abcd\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" must have an ID value."
           }
         },
         {
@@ -874,6 +1174,10 @@
             "value": [
               "read(\"team:abcd//efgh\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Only one dimension can be provided"
           }
         },
         {
@@ -885,6 +1189,10 @@
             "value": [
               "read(\"team:abcd/e/fgh\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Only one dimension can be provided"
           }
         },
         {
@@ -896,6 +1204,10 @@
             "value": [
               "read(\"team:ab&cd3/efgh\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -907,6 +1219,10 @@
             "value": [
               "read(\"team:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/efgh\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -918,6 +1234,10 @@
             "value": [
               "read(\"team:abcd/ef*gh\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" dimension value is invalid: Parameter must contain at most 81 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -929,6 +1249,10 @@
             "value": [
               "read(\"team:abcd/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" dimension value is invalid: Parameter must contain at most 81 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -937,7 +1261,10 @@
             "validator": "permissions",
             "length": 100
           },
-          "bind": "h"
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1047,6 +1374,10 @@
               "read(\"any\")",
               "read(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -1158,6 +1489,10 @@
               "read(\"any\")",
               "read(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "You can only provide up to 100 permissions."
           }
         }
       ]
@@ -1170,7 +1505,10 @@
           "args": {
             "validator": "permissions"
           },
-          "bind": "p"
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1185,6 +1523,10 @@
               "update(\"user:5f058a8925807\")",
               "delete(\"user:5f058a8925807\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -1201,6 +1543,10 @@
               "update(\"user:5f058a8925807\")",
               "delete(\"user:5f058a8925807\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         }
       ]
@@ -1213,7 +1559,10 @@
           "args": {
             "validator": "permissions"
           },
-          "bind": "p"
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -1221,7 +1570,8 @@
             "validator": {
               "$ref": "p"
             }
-          }
+          },
+          "expect": "Permissions Error"
         },
         {
           "op": "validator.meta",
@@ -1229,6 +1579,10 @@
             "validator": {
               "$ref": "p"
             }
+          },
+          "expect": {
+            "type": "array",
+            "is_array": false
           }
         },
         {
@@ -1238,6 +1592,10 @@
               "$ref": "p"
             },
             "value": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -1247,6 +1605,10 @@
               "$ref": "p"
             },
             "value": {}
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions must be an array of strings."
           }
         },
         {
@@ -1256,6 +1618,10 @@
               "$ref": "p"
             },
             "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions must be an array of strings."
           }
         },
         {
@@ -1265,6 +1631,10 @@
               "$ref": "p"
             },
             "value": "read(\"any\")"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permissions must be an array of strings."
           }
         },
         {
@@ -1276,6 +1646,10 @@
             "value": {
               "a": "read(\"any\")"
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions must be an array of strings."
           }
         },
         {
@@ -1284,7 +1658,10 @@
             "validator": "permissions",
             "length": 0
           },
-          "bind": "z"
+          "bind": "z",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1494,6 +1871,10 @@
               "read(\"any\")",
               "read(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -1502,7 +1883,10 @@
             "validator": "permissions",
             "length": 1
           },
-          "bind": "o"
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1514,6 +1898,10 @@
               "read(\"any\")",
               "read(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "You can only provide up to 1 permissions."
           }
         },
         {
@@ -1524,7 +1912,10 @@
               "read"
             ]
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1535,6 +1926,10 @@
             "value": [
               "read(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -1546,6 +1941,10 @@
             "value": [
               "write(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \"write(\"any\")\" is not allowed. Must be one of: read."
           }
         },
         {
@@ -1557,6 +1956,10 @@
             "value": [
               "update(\"users\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \"update(\"users\")\" is not allowed. Must be one of: read."
           }
         }
       ]
@@ -1569,7 +1972,10 @@
           "args": {
             "validator": "permissions"
           },
-          "bind": "p"
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1580,6 +1986,10 @@
             "value": [
               "write(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Permissions Error"
           }
         },
         {
@@ -1591,6 +2001,10 @@
             "value": [
               "read(any)"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid permission string format: \"read(any)\"."
           }
         },
         {
@@ -1602,6 +2016,10 @@
             "value": [
               "read(\"any\""
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"any\"\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -1613,6 +2031,10 @@
             "value": [
               "read\"any\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid permission string format: \"read\"any\")\"."
           }
         },
         {
@@ -1624,6 +2046,10 @@
             "value": [
               "READ(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \"READ(\"any\")\" is not allowed. Must be one of: create, read, update, delete, write."
           }
         },
         {
@@ -1635,6 +2061,10 @@
             "value": [
               "read(\"\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -1646,6 +2076,10 @@
             "value": [
               "read(\"any\") "
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"any \" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -1657,6 +2091,10 @@
             "value": [
               " read(\"any\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \" read(\"any\")\" is not allowed. Must be one of: create, read, update, delete, write."
           }
         },
         {
@@ -1668,6 +2106,10 @@
             "value": [
               "read(\"any\")x"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"anyx\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -1679,6 +2121,10 @@
             "value": [
               "read(\"users/verified\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"anyx\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -1690,6 +2136,10 @@
             "value": [
               "read(\"users/unverified\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"anyx\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -1701,6 +2151,10 @@
             "value": [
               "read(\"users/other\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"users\" dimension value is invalid. Must be one of: verified, unverified."
           }
         },
         {
@@ -1712,6 +2166,10 @@
             "value": [
               "read(\"guests/x\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"guests\" can not have a dimension value."
           }
         },
         {
@@ -1723,6 +2181,10 @@
             "value": [
               "read(\"any:1\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"any\" can not have an ID value."
           }
         },
         {
@@ -1734,6 +2196,10 @@
             "value": [
               "read(\"label:vip\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"any\" can not have an ID value."
           }
         },
         {
@@ -1745,6 +2211,10 @@
             "value": [
               "read(\"label:not-alpha\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"label\" identifier value is invalid: Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -1756,6 +2226,10 @@
             "value": [
               "read(\"label:\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"label\" must have an ID value."
           }
         },
         {
@@ -1767,6 +2241,10 @@
             "value": [
               "read(\"member:abc\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"label\" must have an ID value."
           }
         },
         {
@@ -1778,6 +2256,10 @@
             "value": [
               "read(\"user:0\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" must have an ID value."
           }
         },
         {
@@ -1789,6 +2271,10 @@
             "value": [
               "read(\"team:0/0\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Dimension must not be empty"
           }
         },
         {
@@ -1800,6 +2286,10 @@
             "value": [
               "read(\"user:é\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -1811,6 +2301,10 @@
             "value": [
               "read(\"team:a/b/c\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Only one dimension can be provided"
           }
         },
         {
@@ -1822,6 +2316,10 @@
             "value": [
               "read(\"user:a\" )"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -1833,6 +2331,10 @@
             "value": [
               ""
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \"\" is not allowed. Must be one of: create, read, update, delete, write."
           }
         },
         {
@@ -1844,6 +2346,10 @@
             "value": [
               "()"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Permission \"()\" is not allowed. Must be one of: create, read, update, delete, write."
           }
         },
         {
@@ -1855,6 +2361,10 @@
             "value": [
               "read()"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid permission string format: \"read()\"."
           }
         },
         {
@@ -1866,6 +2376,10 @@
             "value": [
               "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -1877,6 +2391,10 @@
             "value": [
               "read(\"team:abc/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\")"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         }
       ]
@@ -1888,96 +2406,197 @@
           "op": "permission.parse",
           "args": {
             "permission": "read(\"any\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"any\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "update(\"team:abc/owner\")"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "team",
+            "identifier": "abc",
+            "dimension": "owner",
+            "string": "update(\"team:abc/owner\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "write(\"users/verified\")"
+          },
+          "expect": {
+            "permission": "write",
+            "role": "users",
+            "identifier": "",
+            "dimension": "verified",
+            "string": "write(\"users/verified\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "delete(\"user:x\")"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "user",
+            "identifier": "x",
+            "dimension": "",
+            "string": "delete(\"user:x\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"label:vip\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "label",
+            "identifier": "vip",
+            "dimension": "",
+            "string": "read(\"label:vip\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(any)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission string format: \"read(any)\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "nope(\"any\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission type: \"nope\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"team:a/b/c\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only one dimension can be provided"
+            }
           }
         },
         {
           "op": "role.parse",
           "args": {
             "role": "any"
+          },
+          "expect": {
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "any"
           }
         },
         {
           "op": "role.parse",
           "args": {
             "role": "user:abc"
+          },
+          "expect": {
+            "role": "user",
+            "identifier": "abc",
+            "dimension": "",
+            "string": "user:abc"
           }
         },
         {
           "op": "role.parse",
           "args": {
             "role": "team:abc/owner"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "abc",
+            "dimension": "owner",
+            "string": "team:abc/owner"
           }
         },
         {
           "op": "role.parse",
           "args": {
             "role": "users/verified"
+          },
+          "expect": {
+            "role": "users",
+            "identifier": "",
+            "dimension": "verified",
+            "string": "users/verified"
           }
         },
         {
           "op": "role.parse",
           "args": {
             "role": "team:a/b/c"
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "Only one dimension can be provided"
+            }
           }
         },
         {
           "op": "role.parse",
           "args": {
             "role": ""
+          },
+          "expect": {
+            "role": "",
+            "identifier": "",
+            "dimension": "",
+            "string": ""
           }
         },
         {
           "op": "role.parse",
           "args": {
             "role": "a:b:c"
+          },
+          "expect": {
+            "role": "a",
+            "identifier": "b",
+            "dimension": "",
+            "string": "a:b"
           }
         },
         {
           "op": "role.parse",
           "args": {
             "role": "/x"
+          },
+          "expect": {
+            "role": "",
+            "identifier": "",
+            "dimension": "x",
+            "string": "/x"
           }
         },
         {
@@ -1986,6 +2605,12 @@
             "kind": "team",
             "identifier": "abc",
             "dimension": "owner"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "abc",
+            "dimension": "owner",
+            "string": "team:abc/owner"
           }
         },
         {
@@ -1993,6 +2618,12 @@
           "args": {
             "kind": "users",
             "dimension": "verified"
+          },
+          "expect": {
+            "role": "users",
+            "identifier": "",
+            "dimension": "verified",
+            "string": "users/verified"
           }
         },
         {
@@ -2000,6 +2631,12 @@
           "args": {
             "kind": "member",
             "identifier": "m1"
+          },
+          "expect": {
+            "role": "member",
+            "identifier": "m1",
+            "dimension": "",
+            "string": "member:m1"
           }
         },
         {
@@ -2007,6 +2644,12 @@
           "args": {
             "kind": "label",
             "identifier": "vip"
+          },
+          "expect": {
+            "role": "label",
+            "identifier": "vip",
+            "dimension": "",
+            "string": "label:vip"
           }
         },
         {
@@ -2015,6 +2658,12 @@
             "role": "team",
             "identifier": "",
             "dimension": "abcd"
+          },
+          "expect": {
+            "role": "team",
+            "identifier": "",
+            "dimension": "abcd",
+            "string": "team/abcd"
           }
         },
         {
@@ -2022,7 +2671,8 @@
           "args": {
             "kind": "write",
             "role": "user:abc"
-          }
+          },
+          "expect": "write(\"user:abc\")"
         },
         {
           "op": "permission.new",
@@ -2031,6 +2681,13 @@
             "role": "team",
             "identifier": "abc",
             "dimension": "owner"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "team",
+            "identifier": "abc",
+            "dimension": "owner",
+            "string": "read(\"team:abc/owner\")"
           }
         },
         {
@@ -2044,7 +2701,14 @@
               "update(\"user:5f058a8925807\")",
               "delete(\"user:5f058a8925807\")"
             ]
-          }
+          },
+          "expect": [
+            "read(\"any\")",
+            "read(\"user:5f058a8925807\")",
+            "create(\"user:5f058a8925807\")",
+            "update(\"user:5f058a8925807\")",
+            "delete(\"user:5f058a8925807\")"
+          ]
         },
         {
           "op": "permission.aggregate",
@@ -2057,13 +2721,18 @@
               "read",
               "update"
             ]
-          }
+          },
+          "expect": [
+            "update(\"any\")",
+            "read(\"users\")"
+          ]
         },
         {
           "op": "permission.aggregate",
           "args": {
             "permissions": null
-          }
+          },
+          "expect": null
         }
       ]
     }

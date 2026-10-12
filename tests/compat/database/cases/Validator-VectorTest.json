@@ -10,7 +10,10 @@
             "validator": "vector",
             "size": 3
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -23,6 +26,10 @@
               2.0,
               3.0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -36,6 +43,10 @@
               0,
               0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -49,6 +60,10 @@
               0.0,
               2.5
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -61,6 +76,10 @@
               1.0,
               2.0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -75,6 +94,10 @@
               3.0,
               4.0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -84,6 +107,10 @@
               "$ref": "v"
             },
             "value": "not an array"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -97,6 +124,10 @@
               "2",
               "3"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -110,6 +141,10 @@
               "not numeric",
               3.0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -123,6 +158,10 @@
               null,
               3.0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -132,6 +171,10 @@
               "$ref": "v"
             },
             "value": []
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -145,6 +188,10 @@
               "y": 2.0,
               "z": 3.0
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -158,6 +205,10 @@
               true,
               3.0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         }
       ]
@@ -171,7 +222,10 @@
             "validator": "vector",
             "size": 1
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -182,6 +236,10 @@
             "value": [
               5.0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 1 numeric values"
           }
         },
         {
@@ -194,6 +252,10 @@
               1.0,
               2.0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 1 numeric values"
           }
         },
         {
@@ -202,7 +264,10 @@
             "validator": "vector",
             "size": 5
           },
-          "bind": "b"
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -217,6 +282,10 @@
               4.0,
               5.0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 5 numeric values"
           }
         },
         {
@@ -230,6 +299,10 @@
               2.0,
               3.0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 5 numeric values"
           }
         },
         {
@@ -238,7 +311,10 @@
             "validator": "vector",
             "size": 128
           },
-          "bind": "c"
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -376,6 +452,10 @@
               1.0,
               1.0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 128 numeric values"
           }
         },
         {
@@ -513,6 +593,10 @@
               1.0,
               1.0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 128 numeric values"
           }
         }
       ]
@@ -526,7 +610,10 @@
             "validator": "vector",
             "size": 3
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -534,7 +621,8 @@
             "validator": {
               "$ref": "a"
             }
-          }
+          },
+          "expect": "Value must be an array of 3 numeric values"
         },
         {
           "op": "validator.new",
@@ -542,7 +630,10 @@
             "validator": "vector",
             "size": 256
           },
-          "bind": "b"
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -550,7 +641,8 @@
             "validator": {
               "$ref": "b"
             }
-          }
+          },
+          "expect": "Value must be an array of 256 numeric values"
         }
       ]
     },
@@ -563,7 +655,10 @@
             "validator": "vector",
             "size": 3
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.meta",
@@ -571,6 +666,10 @@
             "validator": {
               "$ref": "a"
             }
+          },
+          "expect": {
+            "type": "array",
+            "is_array": false
           }
         }
       ]
@@ -584,6 +683,10 @@
             "validator": "vector",
             "size": 3,
             "value": "[1,2,3]"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -592,6 +695,10 @@
             "validator": "vector",
             "size": 3,
             "value": "[1.5,2,3]"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -600,6 +707,10 @@
             "validator": "vector",
             "size": 3,
             "value": "[\"1\",2,3]"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -608,6 +719,10 @@
             "validator": "vector",
             "size": 3,
             "value": "[1,2]"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -616,6 +731,10 @@
             "validator": "vector",
             "size": 3,
             "value": "{\"0\":1,\"1\":2,\"2\":3}"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -624,6 +743,10 @@
             "validator": "vector",
             "size": 3,
             "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -632,6 +755,10 @@
             "validator": "vector",
             "size": 3,
             "value": "null"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -640,6 +767,10 @@
             "validator": "vector",
             "size": 3,
             "value": "[1,2,3"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -648,6 +779,10 @@
             "validator": "vector",
             "size": 3,
             "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -656,6 +791,10 @@
             "validator": "vector",
             "size": 3,
             "value": 3
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -664,6 +803,10 @@
             "validator": "vector",
             "size": 3,
             "value": 1.5
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -676,6 +819,10 @@
               "1": 2,
               "2": 3
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -688,6 +835,10 @@
               "0": 2,
               "2": 3
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -702,6 +853,10 @@
               2,
               3
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 3 numeric values"
           }
         },
         {
@@ -714,6 +869,10 @@
               -1e+308,
               0.0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 3 numeric values"
           }
         }
       ]
@@ -727,6 +886,10 @@
             "validator": "vector",
             "size": 0,
             "value": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 0 numeric values"
           }
         },
         {
@@ -735,6 +898,10 @@
             "validator": "vector",
             "size": 0,
             "value": "[]"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be an array of 0 numeric values"
           }
         },
         {
@@ -745,6 +912,10 @@
             "value": [
               1
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of 0 numeric values"
           }
         },
         {
@@ -753,6 +924,10 @@
             "validator": "vector",
             "size": -1,
             "value": []
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be an array of -1 numeric values"
           }
         },
         {
@@ -761,7 +936,10 @@
             "validator": "vector",
             "size": -1
           },
-          "bind": "n"
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -769,7 +947,8 @@
             "validator": {
               "$ref": "n"
             }
-          }
+          },
+          "expect": "Value must be an array of -1 numeric values"
         }
       ]
     }

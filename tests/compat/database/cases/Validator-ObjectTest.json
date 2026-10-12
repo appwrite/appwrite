@@ -9,7 +9,10 @@
           "args": {
             "validator": "object"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -20,6 +23,10 @@
             "value": {
               "key": "value"
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -35,6 +42,10 @@
                 }
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -52,6 +63,10 @@
                 }
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -66,6 +81,10 @@
                 "nested": null
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -81,6 +100,10 @@
                 }
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -93,6 +116,10 @@
               "a": 1,
               "2": "b"
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -101,7 +128,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Value must be a valid object"
         }
       ]
     },
@@ -113,7 +141,10 @@
           "args": {
             "validator": "object"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -126,6 +157,10 @@
               "b",
               "c"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -135,6 +170,10 @@
               "$ref": "v"
             },
             "value": "not an array"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -146,6 +185,10 @@
             "value": [
               "value"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -154,7 +197,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Value must be a valid object"
         }
       ]
     },
@@ -166,7 +210,10 @@
           "args": {
             "validator": "object"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -175,6 +222,10 @@
               "$ref": "v"
             },
             "value": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -184,6 +235,10 @@
               "$ref": "v"
             },
             "value": {}
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -193,6 +248,10 @@
               "$ref": "v"
             },
             "value": "sldfjsdlfj"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -201,7 +260,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Value must be a valid object"
         }
       ]
     },
@@ -213,6 +273,10 @@
           "args": {
             "validator": "object",
             "value": null
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -220,6 +284,10 @@
           "args": {
             "validator": "object",
             "value": false
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -227,6 +295,10 @@
           "args": {
             "validator": "object",
             "value": true
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -234,6 +306,10 @@
           "args": {
             "validator": "object",
             "value": 0
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -241,6 +317,10 @@
           "args": {
             "validator": "object",
             "value": 1
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -248,6 +328,10 @@
           "args": {
             "validator": "object",
             "value": 0.0
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -255,6 +339,10 @@
           "args": {
             "validator": "object",
             "value": 1.5
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -262,6 +350,10 @@
           "args": {
             "validator": "object",
             "value": "0"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -269,6 +361,10 @@
           "args": {
             "validator": "object",
             "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -276,6 +372,10 @@
           "args": {
             "validator": "object",
             "value": " "
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -283,6 +383,10 @@
           "args": {
             "validator": "object",
             "value": "null"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -290,6 +394,10 @@
           "args": {
             "validator": "object",
             "value": "[1,2]"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -297,6 +405,10 @@
           "args": {
             "validator": "object",
             "value": "{\"a\":1}"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -304,6 +416,10 @@
           "args": {
             "validator": "object",
             "value": "{\"a\":"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -311,6 +427,10 @@
           "args": {
             "validator": "object",
             "value": "\"str\""
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -318,6 +438,10 @@
           "args": {
             "validator": "object",
             "value": "1e5"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -325,6 +449,10 @@
           "args": {
             "validator": "object",
             "value": "{'a':1}"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         }
       ]
@@ -340,6 +468,10 @@
               "0": "a",
               "1": "b"
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -349,6 +481,10 @@
             "value": {
               "1": "a"
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -359,6 +495,10 @@
               "1": "a",
               "0": "b"
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -369,6 +509,10 @@
               "0": "a",
               "2": "b"
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -378,6 +522,10 @@
             "value": {
               "": 1
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -389,6 +537,10 @@
                 "0": 1
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -398,6 +550,10 @@
             "value": [
               null
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         },
         {
@@ -407,6 +563,10 @@
             "value": [
               []
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid object"
           }
         }
       ]
@@ -419,7 +579,10 @@
           "args": {
             "validator": "object"
           },
-          "bind": "m"
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.meta",
@@ -427,6 +590,10 @@
             "validator": {
               "$ref": "m"
             }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false
           }
         },
         {
@@ -435,7 +602,8 @@
             "validator": {
               "$ref": "m"
             }
-          }
+          },
+          "expect": "Value must be a valid object"
         }
       ]
     }

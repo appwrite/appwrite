@@ -9,7 +9,10 @@
           "args": {
             "validator": "roles"
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -20,6 +23,10 @@
             "value": [
               "users"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -31,6 +38,10 @@
             "value": [
               "users/verified"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -42,6 +53,10 @@
             "value": [
               "users/unverified"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -53,6 +68,10 @@
             "value": [
               "team:696f34ea003d48edab8e"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -64,6 +83,10 @@
             "value": [
               "team:696f34ea003d48edab8e/project-696f34ea003d48edab8e-owner"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -75,6 +98,10 @@
             "value": [
               "team:696f34ea003d48edab8e/project-696f34ea003d48edab8e"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -86,6 +113,10 @@
             "value": [
               "label:vip"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         }
       ]
@@ -98,7 +129,10 @@
           "args": {
             "validator": "roles"
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -107,6 +141,10 @@
               "$ref": "r"
             },
             "value": "not an array"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Roles must be an array of strings."
           }
         }
       ]
@@ -120,7 +158,10 @@
             "validator": "roles",
             "length": 2
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -133,6 +174,10 @@
               "users",
               "users"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "You can only provide up to 2 roles."
           }
         }
       ]
@@ -145,7 +190,10 @@
           "args": {
             "validator": "roles"
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -157,6 +205,10 @@
               "users",
               123
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Every role must be of type string."
           }
         }
       ]
@@ -169,7 +221,10 @@
           "args": {
             "validator": "roles"
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -180,6 +235,10 @@
             "value": [
               "*"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Wildcard role \"*\" has been replaced. Use \"any\" instead."
           }
         }
       ]
@@ -192,7 +251,10 @@
           "args": {
             "validator": "roles"
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -203,6 +265,10 @@
             "value": [
               "read(\"role:123\")"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Roles using the \"role:\" prefix have been removed. Use \"users\", \"guests\", or \"any\" instead."
           }
         }
       ]
@@ -218,7 +284,10 @@
               "users"
             ]
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -229,6 +298,10 @@
             "value": [
               "any"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"any\" is not allowed. Must be one of: users."
           }
         }
       ]
@@ -241,7 +314,10 @@
           "args": {
             "validator": "roles"
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -252,6 +328,10 @@
             "value": [
               "label:123"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -263,6 +343,10 @@
             "value": [
               "label:not-alphanumeric"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"label\" identifier value is invalid: Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         }
       ]
@@ -275,7 +359,10 @@
           "args": {
             "validator": "roles"
           },
-          "bind": "r"
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -283,7 +370,8 @@
             "validator": {
               "$ref": "r"
             }
-          }
+          },
+          "expect": "Roles Error"
         },
         {
           "op": "validator.is_valid",
@@ -294,6 +382,10 @@
             "value": [
               "any"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -305,6 +397,10 @@
             "value": [
               "guests"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -316,6 +412,10 @@
             "value": [
               "users"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -327,6 +427,10 @@
             "value": [
               "users/other"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"users\" dimension value is invalid. Must be one of: verified, unverified."
           }
         },
         {
@@ -338,6 +442,10 @@
             "value": [
               "guests/verified"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"guests\" can not have a dimension value."
           }
         },
         {
@@ -349,6 +457,10 @@
             "value": [
               "any/x"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"any\" can not have a dimension value."
           }
         },
         {
@@ -360,6 +472,10 @@
             "value": [
               "user:abc"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"any\" can not have a dimension value."
           }
         },
         {
@@ -371,6 +487,10 @@
             "value": [
               "user:abc/verified"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"any\" can not have a dimension value."
           }
         },
         {
@@ -382,6 +502,10 @@
             "value": [
               "user:abc/unverified"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"any\" can not have a dimension value."
           }
         },
         {
@@ -393,6 +517,10 @@
             "value": [
               "user:abc/other"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" dimension value is invalid. Must be one of: verified, unverified."
           }
         },
         {
@@ -404,6 +532,10 @@
             "value": [
               "member:abc"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"user\" dimension value is invalid. Must be one of: verified, unverified."
           }
         },
         {
@@ -415,6 +547,10 @@
             "value": [
               "member:abc/x"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"member\" can not have a dimension value."
           }
         },
         {
@@ -426,6 +562,10 @@
             "value": [
               "team:abc/"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Dimension must not be empty"
           }
         },
         {
@@ -437,6 +577,10 @@
             "value": [
               "team:/abc"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" must have an ID value."
           }
         },
         {
@@ -448,6 +592,10 @@
             "value": [
               "team:a/b/c"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Only one dimension can be provided"
           }
         },
         {
@@ -459,6 +607,10 @@
             "value": [
               "label:"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"label\" must have an ID value."
           }
         },
         {
@@ -470,6 +622,10 @@
             "value": [
               "label:é"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"label\" identifier value is invalid: Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -481,6 +637,10 @@
             "value": [
               "label:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"label\" identifier value is invalid: Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -492,6 +652,10 @@
             "value": [
               "user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"label\" identifier value is invalid: Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -503,6 +667,10 @@
             "value": [
               "user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" identifier value is invalid: Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -514,6 +682,10 @@
             "value": [
               "user:0"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" must have an ID value."
           }
         },
         {
@@ -525,6 +697,10 @@
             "value": [
               ""
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -536,6 +712,10 @@
             "value": [
               " any"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \" any\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -547,6 +727,10 @@
             "value": [
               "ANY"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"ANY\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -558,6 +742,10 @@
             "value": [
               "role:all"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Roles using the \"role:\" prefix have been removed. Use \"users\", \"guests\", or \"any\" instead."
           }
         },
         {
@@ -569,6 +757,10 @@
             "value": [
               "user"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" must have an ID value."
           }
         },
         {
@@ -580,6 +772,10 @@
             "value": [
               "team"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"team\" must have an ID value."
           }
         },
         {
@@ -591,6 +787,10 @@
             "value": [
               "member"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"member\" must have an ID value."
           }
         },
         {
@@ -602,6 +802,10 @@
             "value": [
               "label"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"label\" must have an ID value."
           }
         },
         {
@@ -613,6 +817,10 @@
             "value": [
               "users:abc"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"users\" can not have an ID value."
           }
         },
         {
@@ -624,6 +832,10 @@
             "value": [
               "guests:abc"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"guests\" can not have an ID value."
           }
         },
         {
@@ -635,6 +847,10 @@
             "value": [
               "any:abc"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"any\" can not have an ID value."
           }
         },
         {
@@ -646,6 +862,10 @@
             "value": [
               "a:b:c"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"a:b:c\" is not allowed. Must be one of: any, guests, users, user, team, member, label."
           }
         },
         {
@@ -657,6 +877,10 @@
             "value": [
               "user::abc"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"user\" must have an ID value."
           }
         },
         {
@@ -666,6 +890,10 @@
               "$ref": "r"
             },
             "value": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"user\" must have an ID value."
           }
         },
         {
@@ -675,6 +903,10 @@
               "$ref": "r"
             },
             "value": {}
+          },
+          "expect": {
+            "valid": false,
+            "description": "Roles must be an array of strings."
           }
         },
         {
@@ -684,6 +916,10 @@
               "$ref": "r"
             },
             "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Roles must be an array of strings."
           }
         },
         {
@@ -695,6 +931,10 @@
             "value": {
               "a": "users"
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles must be an array of strings."
           }
         },
         {
@@ -706,6 +946,10 @@
             "value": [
               null
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Every role must be of type string."
           }
         },
         {
@@ -717,6 +961,10 @@
             "value": [
               1.5
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Every role must be of type string."
           }
         }
       ]
@@ -730,7 +978,10 @@
             "validator": "roles",
             "length": 0
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -890,6 +1141,10 @@
               "users",
               "users"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -898,7 +1153,10 @@
             "validator": "roles",
             "length": 1
           },
-          "bind": "b"
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -909,6 +1167,10 @@
             "value": [
               "users"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -921,6 +1183,10 @@
               "users",
               "any"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "You can only provide up to 1 roles."
           }
         },
         {
@@ -932,7 +1198,10 @@
               "team"
             ]
           },
-          "bind": "c"
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -944,6 +1213,10 @@
               "user:abc",
               "team:abc"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Roles Error"
           }
         },
         {
@@ -956,6 +1229,10 @@
               "user:abc",
               "member:abc"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"member:abc\" is not allowed. Must be one of: user, team."
           }
         },
         {
@@ -967,6 +1244,10 @@
             "value": [
               "users"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Role \"member:abc\" is not allowed. Must be one of: user, team."
           }
         },
         {
@@ -975,7 +1256,10 @@
             "validator": "roles",
             "allowed": []
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -986,6 +1270,10 @@
             "value": [
               "users"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Role \"users\" is not allowed. Must be one of: ."
           }
         },
         {
@@ -994,6 +1282,10 @@
             "validator": {
               "$ref": "d"
             }
+          },
+          "expect": {
+            "type": "array",
+            "is_array": false
           }
         }
       ]

@@ -9,7 +9,10 @@
           "args": {
             "validator": "query_cursor"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -26,6 +29,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -43,6 +50,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         }
       ]
@@ -55,7 +66,10 @@
           "args": {
             "validator": "query_cursor"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -72,6 +86,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -80,7 +98,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -97,6 +116,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -114,6 +137,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -131,6 +158,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -148,6 +179,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -163,6 +198,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         },
         {
@@ -178,6 +217,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query"
           }
         }
       ]
@@ -190,7 +233,10 @@
           "args": {
             "validator": "query_cursor"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -211,6 +257,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -219,7 +269,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -238,6 +289,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -246,7 +301,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -267,6 +323,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -275,7 +335,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -292,6 +353,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -300,7 +365,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -317,6 +383,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -325,7 +395,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -342,6 +413,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -350,7 +425,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -367,6 +443,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -375,7 +455,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -392,6 +473,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -400,7 +485,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -417,6 +503,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -425,7 +515,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -440,6 +531,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -448,7 +543,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         }
       ]
     },
@@ -460,7 +556,10 @@
           "args": {
             "validator": "query_cursor"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -477,6 +576,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -485,7 +588,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -502,6 +606,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -510,7 +618,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -527,6 +636,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -535,7 +648,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -554,6 +668,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -562,7 +680,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -580,6 +699,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -588,7 +711,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -597,6 +721,10 @@
               "$ref": "v"
             },
             "value": "cursorAfter"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -605,7 +733,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -614,6 +743,10 @@
               "$ref": "v"
             },
             "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -622,7 +755,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.is_valid",
@@ -631,6 +765,10 @@
               "$ref": "v"
             },
             "value": 1
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -639,7 +777,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         },
         {
           "op": "validator.meta",
@@ -647,6 +786,11 @@
             "validator": {
               "$ref": "v"
             }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false,
+            "method_type": "cursor"
           }
         }
       ]
@@ -660,7 +804,10 @@
             "validator": "query_cursor",
             "maxLength": 5
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -677,6 +824,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -685,7 +836,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -702,6 +854,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid cursor: UID must contain at most 5 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
           }
         },
         {
@@ -710,7 +866,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid cursor: UID must contain at most 5 chars. Valid chars are a-z, A-Z, 0-9, and underscore. Can't start with a leading underscore"
         }
       ]
     }

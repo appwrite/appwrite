@@ -8,132 +8,286 @@
           "op": "permission.parse",
           "args": {
             "permission": "read(\"any\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"any\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"users\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"users\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"user:123\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "read(\"user:123\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"team:123/admin\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin",
+            "string": "read(\"team:123/admin\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"guests\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "guests",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"guests\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "create(\"any\")"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "create(\"any\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "create(\"users\")"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "create(\"users\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "create(\"user:123\")"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "create(\"user:123\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "create(\"team:123/admin\")"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin",
+            "string": "create(\"team:123/admin\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "create(\"guests\")"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "guests",
+            "identifier": "",
+            "dimension": "",
+            "string": "create(\"guests\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "update(\"any\")"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "update(\"any\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "update(\"users\")"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "update(\"users\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "update(\"user:123\")"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "update(\"user:123\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "update(\"team:123/admin\")"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin",
+            "string": "update(\"team:123/admin\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "update(\"guests\")"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "guests",
+            "identifier": "",
+            "dimension": "",
+            "string": "update(\"guests\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "delete(\"any\")"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "delete(\"any\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "delete(\"users\")"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "delete(\"users\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "delete(\"user:123\")"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "delete(\"user:123\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "delete(\"team:123/admin\")"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin",
+            "string": "delete(\"team:123/admin\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "delete(\"guests\")"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "guests",
+            "identifier": "",
+            "dimension": "",
+            "string": "delete(\"guests\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"users/verified\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "users",
+            "identifier": "",
+            "dimension": "verified",
+            "string": "read(\"users/verified\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"users/unverified\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "users",
+            "identifier": "",
+            "dimension": "unverified",
+            "string": "read(\"users/unverified\")"
           }
         }
       ]
@@ -146,6 +300,13 @@
           "args": {
             "permission": "read",
             "role": "any"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"any\")"
           }
         },
         {
@@ -153,6 +314,13 @@
           "args": {
             "permission": "read",
             "role": "users"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"users\")"
           }
         },
         {
@@ -161,6 +329,13 @@
             "permission": "read",
             "role": "user",
             "identifier": "123"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "read(\"user:123\")"
           }
         },
         {
@@ -170,6 +345,13 @@
             "role": "team",
             "identifier": "123",
             "dimension": "admin"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin",
+            "string": "read(\"team:123/admin\")"
           }
         },
         {
@@ -177,6 +359,13 @@
           "args": {
             "permission": "create",
             "role": "any"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "create(\"any\")"
           }
         },
         {
@@ -184,6 +373,13 @@
           "args": {
             "permission": "create",
             "role": "users"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "create(\"users\")"
           }
         },
         {
@@ -192,6 +388,13 @@
             "permission": "create",
             "role": "user",
             "identifier": "123"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "create(\"user:123\")"
           }
         },
         {
@@ -201,6 +404,13 @@
             "role": "team",
             "identifier": "123",
             "dimension": "admin"
+          },
+          "expect": {
+            "permission": "create",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin",
+            "string": "create(\"team:123/admin\")"
           }
         },
         {
@@ -208,6 +418,13 @@
           "args": {
             "permission": "update",
             "role": "any"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "update(\"any\")"
           }
         },
         {
@@ -215,6 +432,13 @@
           "args": {
             "permission": "update",
             "role": "users"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "update(\"users\")"
           }
         },
         {
@@ -223,6 +447,13 @@
             "permission": "update",
             "role": "user",
             "identifier": "123"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "update(\"user:123\")"
           }
         },
         {
@@ -232,6 +463,13 @@
             "role": "team",
             "identifier": "123",
             "dimension": "admin"
+          },
+          "expect": {
+            "permission": "update",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin",
+            "string": "update(\"team:123/admin\")"
           }
         },
         {
@@ -239,6 +477,13 @@
           "args": {
             "permission": "delete",
             "role": "any"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "delete(\"any\")"
           }
         },
         {
@@ -246,6 +491,13 @@
           "args": {
             "permission": "delete",
             "role": "users"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "users",
+            "identifier": "",
+            "dimension": "",
+            "string": "delete(\"users\")"
           }
         },
         {
@@ -254,6 +506,13 @@
             "permission": "delete",
             "role": "user",
             "identifier": "123"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "user",
+            "identifier": "123",
+            "dimension": "",
+            "string": "delete(\"user:123\")"
           }
         },
         {
@@ -263,6 +522,13 @@
             "role": "team",
             "identifier": "123",
             "dimension": "admin"
+          },
+          "expect": {
+            "permission": "delete",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin",
+            "string": "delete(\"team:123/admin\")"
           }
         }
       ]
@@ -275,14 +541,16 @@
           "args": {
             "kind": "read",
             "role": "any"
-          }
+          },
+          "expect": "read(\"any\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "read",
             "role": "users"
-          }
+          },
+          "expect": "read(\"users\")"
         },
         {
           "op": "permission.of",
@@ -290,7 +558,8 @@
             "kind": "read",
             "role": "user",
             "identifier": "123"
-          }
+          },
+          "expect": "read(\"user:123\")"
         },
         {
           "op": "permission.of",
@@ -299,28 +568,32 @@
             "role": "team",
             "identifier": "123",
             "dimension": "admin"
-          }
+          },
+          "expect": "read(\"team:123/admin\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "read",
             "role": "guests"
-          }
+          },
+          "expect": "read(\"guests\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "create",
             "role": "any"
-          }
+          },
+          "expect": "create(\"any\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "create",
             "role": "users"
-          }
+          },
+          "expect": "create(\"users\")"
         },
         {
           "op": "permission.of",
@@ -328,7 +601,8 @@
             "kind": "create",
             "role": "user",
             "identifier": "123"
-          }
+          },
+          "expect": "create(\"user:123\")"
         },
         {
           "op": "permission.of",
@@ -337,28 +611,32 @@
             "role": "team",
             "identifier": "123",
             "dimension": "admin"
-          }
+          },
+          "expect": "create(\"team:123/admin\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "create",
             "role": "guests"
-          }
+          },
+          "expect": "create(\"guests\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "update",
             "role": "any"
-          }
+          },
+          "expect": "update(\"any\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "update",
             "role": "users"
-          }
+          },
+          "expect": "update(\"users\")"
         },
         {
           "op": "permission.of",
@@ -366,7 +644,8 @@
             "kind": "update",
             "role": "user",
             "identifier": "123"
-          }
+          },
+          "expect": "update(\"user:123\")"
         },
         {
           "op": "permission.of",
@@ -375,28 +654,32 @@
             "role": "team",
             "identifier": "123",
             "dimension": "admin"
-          }
+          },
+          "expect": "update(\"team:123/admin\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "update",
             "role": "guests"
-          }
+          },
+          "expect": "update(\"guests\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "delete",
             "role": "any"
-          }
+          },
+          "expect": "delete(\"any\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "delete",
             "role": "users"
-          }
+          },
+          "expect": "delete(\"users\")"
         },
         {
           "op": "permission.of",
@@ -404,7 +687,8 @@
             "kind": "delete",
             "role": "user",
             "identifier": "123"
-          }
+          },
+          "expect": "delete(\"user:123\")"
         },
         {
           "op": "permission.of",
@@ -413,21 +697,24 @@
             "role": "team",
             "identifier": "123",
             "dimension": "admin"
-          }
+          },
+          "expect": "delete(\"team:123/admin\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "delete",
             "role": "guests"
-          }
+          },
+          "expect": "delete(\"guests\")"
         },
         {
           "op": "permission.of",
           "args": {
             "kind": "write",
             "role": "any"
-          }
+          },
+          "expect": "write(\"any\")"
         }
       ]
     },
@@ -438,24 +725,48 @@
           "op": "permission.parse",
           "args": {
             "permission": "read"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission string format: \"read\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read((\"any\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission type: \"read(\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"users/un/verified\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only one dimension can be provided"
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"users/\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Dimension must not be empty"
+            }
           }
         }
       ]
@@ -469,7 +780,12 @@
             "permissions": [
               "write(\"any\")"
             ]
-          }
+          },
+          "expect": [
+            "create(\"any\")",
+            "update(\"any\")",
+            "delete(\"any\")"
+          ]
         },
         {
           "op": "permission.aggregate",
@@ -481,7 +797,11 @@
               "update",
               "delete"
             ]
-          }
+          },
+          "expect": [
+            "update(\"any\")",
+            "delete(\"any\")"
+          ]
         },
         {
           "op": "permission.aggregate",
@@ -500,7 +820,14 @@
               "update",
               "delete"
             ]
-          }
+          },
+          "expect": [
+            "read(\"any\")",
+            "read(\"user:123\")",
+            "create(\"user:123\")",
+            "update(\"user:123\")",
+            "delete(\"user:123\")"
+          ]
         }
       ]
     },
@@ -511,96 +838,201 @@
           "op": "permission.parse",
           "args": {
             "permission": "write(\"any\")"
+          },
+          "expect": {
+            "permission": "write",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "write(\"any\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "write(\"team:1/owner\")"
+          },
+          "expect": {
+            "permission": "write",
+            "role": "team",
+            "identifier": "1",
+            "dimension": "owner",
+            "string": "write(\"team:1/owner\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "Read(\"any\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission type: \"Read\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "(\"any\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission type: \"\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission string format: \"\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"any\")x"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "anyx",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"anyx\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"any"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "any",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"any\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"a(\"b\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission string format: \"read(\"a(\"b\")\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"user:1:2\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "user",
+            "identifier": "1",
+            "dimension": "",
+            "string": "read(\"user:1\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"team:1/2/3\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Only one dimension can be provided"
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"team:a/b:c\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "team",
+            "identifier": "a",
+            "dimension": "b",
+            "string": "read(\"team:a/b\")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(any)"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission string format: \"read(any)\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": " read(\"any\")"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid permission type: \" read\"."
+            }
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"any\") "
+          },
+          "expect": {
+            "permission": "read",
+            "role": "any ",
+            "identifier": "",
+            "dimension": "",
+            "string": "read(\"any \")"
           }
         },
         {
           "op": "permission.parse",
           "args": {
             "permission": "read(\"é:ü/ß\")"
+          },
+          "expect": {
+            "permission": "read",
+            "role": "é",
+            "identifier": "ü",
+            "dimension": "ß",
+            "string": "read(\"é:ü/ß\")"
           }
         }
       ]

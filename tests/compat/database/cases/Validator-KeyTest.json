@@ -9,6 +9,10 @@
           "args": {
             "validator": "key",
             "value": false
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -16,6 +20,10 @@
           "args": {
             "validator": "key",
             "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -25,6 +33,10 @@
             "value": [
               "value"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -32,6 +44,10 @@
           "args": {
             "validator": "key",
             "value": 0
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -39,6 +55,10 @@
           "args": {
             "validator": "key",
             "value": 1.5
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -46,6 +66,10 @@
           "args": {
             "validator": "key",
             "value": "asdas7as9as"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -53,6 +77,10 @@
           "args": {
             "validator": "key",
             "value": "5f058a8925807"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -60,6 +88,10 @@
           "args": {
             "validator": "key",
             "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -67,6 +99,10 @@
           "args": {
             "validator": "key",
             "value": "0"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -74,6 +110,10 @@
           "args": {
             "validator": "key",
             "value": "null"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -81,6 +121,10 @@
           "args": {
             "validator": "key",
             "value": "_asdasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -88,6 +132,10 @@
           "args": {
             "validator": "key",
             "value": ".as5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -95,6 +143,10 @@
           "args": {
             "validator": "key",
             "value": "-as5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -102,6 +154,10 @@
           "args": {
             "validator": "key",
             "value": "as5dadasdas_"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -109,6 +165,10 @@
           "args": {
             "validator": "key",
             "value": "as_5dasdasdas"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -116,6 +176,10 @@
           "args": {
             "validator": "key",
             "value": "as5dasdasdas."
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -123,6 +187,10 @@
           "args": {
             "validator": "key",
             "value": "as.5dasdasdas"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -130,6 +198,10 @@
           "args": {
             "validator": "key",
             "value": "as5dasdasdas-"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -137,6 +209,10 @@
           "args": {
             "validator": "key",
             "value": "as-5dasdasdas"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -144,6 +220,10 @@
           "args": {
             "validator": "key",
             "value": "dasda asdasd"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -151,6 +231,10 @@
           "args": {
             "validator": "key",
             "value": "asd\"asd6sdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -158,6 +242,10 @@
           "args": {
             "validator": "key",
             "value": "asd'as0asdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -165,6 +253,10 @@
           "args": {
             "validator": "key",
             "value": "as!5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -172,6 +264,10 @@
           "args": {
             "validator": "key",
             "value": "as@5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -179,6 +275,10 @@
           "args": {
             "validator": "key",
             "value": "as#5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -186,6 +286,10 @@
           "args": {
             "validator": "key",
             "value": "as$5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -193,6 +297,10 @@
           "args": {
             "validator": "key",
             "value": "as%5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -200,6 +308,10 @@
           "args": {
             "validator": "key",
             "value": "as^5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -207,6 +319,10 @@
           "args": {
             "validator": "key",
             "value": "as&5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -214,6 +330,10 @@
           "args": {
             "validator": "key",
             "value": "as*5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -221,6 +341,10 @@
           "args": {
             "validator": "key",
             "value": "as(5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -228,6 +352,10 @@
           "args": {
             "validator": "key",
             "value": "as)5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -235,6 +363,10 @@
           "args": {
             "validator": "key",
             "value": "as+5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -242,6 +374,10 @@
           "args": {
             "validator": "key",
             "value": "as=5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -249,6 +385,10 @@
           "args": {
             "validator": "key",
             "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -256,6 +396,10 @@
           "args": {
             "validator": "key",
             "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -264,6 +408,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "appwrite"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -272,6 +420,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "appwrite_"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -280,6 +432,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "_appwrite"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -288,6 +444,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "_"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -296,6 +456,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "$id"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -304,6 +468,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "$createdAt"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -312,6 +480,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "$updatedAt"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -320,6 +492,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "$appwrite"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -328,6 +504,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "$permissions"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -336,6 +516,10 @@
             "validator": "key",
             "allowInternal": true,
             "value": "$"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         }
       ]
@@ -348,6 +532,10 @@
           "args": {
             "validator": "key",
             "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -355,6 +543,10 @@
           "args": {
             "validator": "key",
             "value": "é"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -362,6 +554,10 @@
           "args": {
             "validator": "key",
             "value": "aé"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -369,6 +565,10 @@
           "args": {
             "validator": "key",
             "value": "a\n"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -376,6 +576,10 @@
           "args": {
             "validator": "key",
             "value": "A.Z-0_9"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -383,6 +587,10 @@
           "args": {
             "validator": "key",
             "value": "$id\n"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -390,6 +598,10 @@
           "args": {
             "validator": "key",
             "value": "$ID"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -397,6 +609,10 @@
           "args": {
             "validator": "key",
             "value": " a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -404,6 +620,10 @@
           "args": {
             "validator": "key",
             "value": "a "
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 36 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -412,6 +632,10 @@
             "validator": "key",
             "maxLength": 3,
             "value": "abc"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Parameter must contain at most 3 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -420,6 +644,10 @@
             "validator": "key",
             "maxLength": 3,
             "value": "abcd"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 3 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -428,6 +656,10 @@
             "validator": "key",
             "maxLength": 3,
             "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 3 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -436,6 +668,10 @@
             "validator": "key",
             "maxLength": 0,
             "value": "a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most 0 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         },
         {
@@ -444,6 +680,10 @@
             "validator": "key",
             "maxLength": -1,
             "value": "a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Parameter must contain at most -1 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
           }
         }
       ]
@@ -457,7 +697,10 @@
             "validator": "key",
             "maxLength": 12
           },
-          "bind": "k"
+          "bind": "k",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -465,7 +708,8 @@
             "validator": {
               "$ref": "k"
             }
-          }
+          },
+          "expect": "Parameter must contain at most 12 chars. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can't start with a special char"
         },
         {
           "op": "validator.meta",
@@ -473,6 +717,10 @@
             "validator": {
               "$ref": "k"
             }
+          },
+          "expect": {
+            "type": "string",
+            "is_array": false
           }
         }
       ]

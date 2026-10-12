@@ -38,7 +38,10 @@
             ],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -46,6 +49,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "key",
+                "attributes": [
+                  "not_exist"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid index attribute \"not_exist\" not found",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -114,7 +132,10 @@
             ],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -122,6 +143,22 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "fulltext",
+                "attributes": [
+                  "title",
+                  "date"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute \"date\" cannot be part of a fulltext index, must be of type string",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -175,7 +212,10 @@
             ],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -183,6 +223,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "key",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index length is longer than the maximum: 768",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -246,7 +301,10 @@
             ],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -254,6 +312,19 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -271,6 +342,20 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index2",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "description"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index length is longer than the maximum: 768",
             "value": {
               "$document": {
                 "$id": "index2",
@@ -320,7 +405,10 @@
             ],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -328,6 +416,19 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "key",
+                "attributes": [],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "No attributes provided for index",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -385,7 +486,10 @@
             "supportForVectorIndexes": false,
             "supportForObjectIndexes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -393,6 +497,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_gin_valid",
+                "type": "object",
+                "attributes": [
+                  "data"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
             "value": {
               "$document": {
                 "$id": "idx_gin_valid",
@@ -412,6 +531,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_gin_invalid_type",
+                "type": "object",
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Object index can only be created on object attributes. Attribute \"name\" is of type \"string\"",
             "value": {
               "$document": {
                 "$id": "idx_gin_invalid_type",
@@ -443,6 +577,22 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Object index can be created on a single object attribute",
+            "value": {
+              "$document": {
+                "$id": "idx_gin_multi",
+                "type": "object",
+                "attributes": [
+                  "data",
+                  "name"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -451,6 +601,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_gin_order",
+                "type": "object",
+                "attributes": [
+                  "data"
+                ],
+                "lengths": [],
+                "orders": [
+                  "asc"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Object index do not support explicit orders. Remove the orders to create this index.",
             "value": {
               "$document": {
                 "$id": "idx_gin_order",
@@ -507,7 +674,10 @@
             "supportForVectorIndexes": false,
             "supportForAttributes": false
           },
-          "bind": "n"
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -515,6 +685,21 @@
             "validator": {
               "$ref": "n"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_gin_valid",
+                "type": "object",
+                "attributes": [
+                  "data"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Object indexes are not supported",
             "value": {
               "$document": {
                 "$id": "idx_gin_valid",
@@ -591,7 +776,10 @@
             "supportForObjectIndexes": true,
             "supportForObjects": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -599,6 +787,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_nested_object",
+                "type": "object",
+                "attributes": [
+                  "data.key.nestedKey"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Object index can only be created on a top-level object attribute",
             "value": {
               "$document": {
                 "$id": "idx_nested_object",
@@ -629,6 +832,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Object index can only be created on a top-level object attribute",
+            "value": {
+              "$document": {
+                "$id": "idx_nested_unique",
+                "type": "unique",
+                "attributes": [
+                  "data.key.nestedKey"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -637,6 +855,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_nested_key",
+                "type": "key",
+                "attributes": [
+                  "metadata.user.id"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Object index can only be created on a top-level object attribute",
             "value": {
               "$document": {
                 "$id": "idx_nested_key",
@@ -667,6 +900,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index attribute \"name.key\" is only supported on object attributes",
+            "value": {
+              "$document": {
+                "$id": "idx_invalid_nested",
+                "type": "object",
+                "attributes": [
+                  "name.key"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -686,6 +934,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid index attribute \"nonexistent.key\" not found",
+            "value": {
+              "$document": {
+                "$id": "idx_invalid_base",
+                "type": "object",
+                "attributes": [
+                  "nonexistent.key"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -694,6 +957,22 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_multi_nested",
+                "type": "key",
+                "attributes": [
+                  "data.key1",
+                  "data.key2"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index attribute \"nonexistent.key\" not found",
             "value": {
               "$document": {
                 "$id": "idx_multi_nested",
@@ -748,7 +1027,10 @@
             ],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -756,6 +1038,22 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "fulltext",
+                "attributes": [
+                  "title",
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Duplicate attributes provided",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -813,7 +1111,10 @@
             ],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -821,6 +1122,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "fulltext",
+                "attributes": [
+                  "title",
+                  "title"
+                ],
+                "lengths": [],
+                "orders": [
+                  "asc",
+                  "desc"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Duplicate attributes provided",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -880,7 +1200,10 @@
               "PRIMARY"
             ]
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -888,6 +1211,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "primary",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index key name is reserved",
             "value": {
               "$document": {
                 "$id": "primary",
@@ -940,7 +1278,10 @@
             ],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -948,6 +1289,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "key",
+                "attributes": [
+                  "new"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid index attribute \"new\" not found",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -996,7 +1352,10 @@
             "maxLength": 768,
             "supportForAttributes": false
           },
-          "bind": "w"
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1004,6 +1363,21 @@
             "validator": {
               "$ref": "w"
             },
+            "value": {
+              "$document": {
+                "$id": "index1",
+                "type": "key",
+                "attributes": [
+                  "new"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
             "value": {
               "$document": {
                 "$id": "index1",
@@ -1080,7 +1454,10 @@
             "supportForObjectIndexes": false,
             "supportForTrigramIndexes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1088,6 +1465,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_trigram_valid",
+                "type": "trigram",
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
             "value": {
               "$document": {
                 "$id": "idx_trigram_valid",
@@ -1119,6 +1511,22 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
+            "value": {
+              "$document": {
+                "$id": "idx_trigram_multi_valid",
+                "type": "trigram",
+                "attributes": [
+                  "name",
+                  "description"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -1138,6 +1546,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Trigram index can only be created on string type attributes",
+            "value": {
+              "$document": {
+                "$id": "idx_trigram_invalid_type",
+                "type": "trigram",
+                "attributes": [
+                  "age"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -1146,6 +1569,22 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_trigram_mixed",
+                "type": "trigram",
+                "attributes": [
+                  "name",
+                  "age"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Trigram index can only be created on string type attributes",
             "value": {
               "$document": {
                 "$id": "idx_trigram_mixed",
@@ -1179,6 +1618,23 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Trigram indexes do not support orders or lengths",
+            "value": {
+              "$document": {
+                "$id": "idx_trigram_order",
+                "type": "trigram",
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [
+                  "asc"
+                ]
+              }
+            }
           }
         },
         {
@@ -1187,6 +1643,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_trigram_length",
+                "type": "trigram",
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [
+                  128
+                ],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Trigram indexes do not support orders or lengths",
             "value": {
               "$document": {
                 "$id": "idx_trigram_length",
@@ -1260,7 +1733,10 @@
             "supportForObjectIndexes": false,
             "supportForTrigramIndexes": false
           },
-          "bind": "n"
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1268,6 +1744,21 @@
             "validator": {
               "$ref": "n"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_trigram_valid",
+                "type": "trigram",
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Trigram indexes are not supported",
             "value": {
               "$document": {
                 "$id": "idx_trigram_valid",
@@ -1338,7 +1829,10 @@
             "supportForFulltextIndexes": true,
             "supportForTTLIndexes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1346,6 +1840,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_ttl_valid",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": 3600
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
             "value": {
               "$document": {
                 "$id": "idx_ttl_valid",
@@ -1382,6 +1894,24 @@
                 "ttl": 0
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL must be at least 1 second",
+            "value": {
+              "$document": {
+                "$id": "idx_ttl_zero",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": 0
+              }
+            }
           }
         },
         {
@@ -1404,6 +1934,24 @@
                 "ttl": -100
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL must be at least 1 second",
+            "value": {
+              "$document": {
+                "$id": "idx_ttl_negative",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": -100
+              }
+            }
           }
         },
         {
@@ -1412,6 +1960,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_ttl_invalid_type",
+                "type": "ttl",
+                "attributes": [
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": 3600
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL index can only be created on datetime attributes. Attribute \"name\" is of type \"string\"",
             "value": {
               "$document": {
                 "$id": "idx_ttl_invalid_type",
@@ -1450,6 +2016,26 @@
                 "ttl": 3600
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL indexes must be created on a single datetime attribute.",
+            "value": {
+              "$document": {
+                "$id": "idx_ttl_multi",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt",
+                  "name"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC",
+                  "ASC"
+                ],
+                "ttl": 3600
+              }
+            }
           }
         },
         {
@@ -1458,6 +2044,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_ttl_min",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": 1
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "TTL indexes must be created on a single datetime attribute.",
             "value": {
               "$document": {
                 "$id": "idx_ttl_min",
@@ -1541,7 +2145,10 @@
             "supportForFulltextIndexes": true,
             "supportForTTLIndexes": true
           },
-          "bind": "e"
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1549,6 +2156,24 @@
             "validator": {
               "$ref": "e"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_ttl_duplicate",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": 7200
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "There can be only one TTL index in a collection",
             "value": {
               "$document": {
                 "$id": "idx_ttl_duplicate",
@@ -1627,7 +2252,10 @@
             "supportForObjectIndexes": false,
             "supportForTrigramIndexes": false
           },
-          "bind": "n"
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1635,6 +2263,24 @@
             "validator": {
               "$ref": "n"
             },
+            "value": {
+              "$document": {
+                "$id": "idx_ttl_valid",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ],
+                "ttl": 3600
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL indexes are not supported",
             "value": {
               "$document": {
                 "$id": "idx_ttl_valid",
@@ -1772,7 +2418,10 @@
               "Primary"
             ]
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -1780,7 +2429,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid index"
         },
         {
           "op": "validator.call",
@@ -1800,6 +2450,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Unknown index type: nope. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl"
           }
         },
         {
@@ -1820,6 +2474,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid index attribute \"missing\" not found"
           }
         },
         {
@@ -1842,6 +2500,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index attribute \"missing\" not found"
           }
         },
         {
@@ -1860,6 +2522,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "No attributes provided for index"
           }
         },
         {
@@ -1881,6 +2547,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Duplicate attributes provided"
           }
         },
         {
@@ -1901,6 +2571,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Attribute \"age\" cannot be part of a fulltext index, must be of type string"
           }
         },
         {
@@ -1921,6 +2595,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index length for array not specified"
           }
         },
         {
@@ -1943,6 +2621,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "\"Unique\" index is forbidden on array attributes"
           }
         },
         {
@@ -1965,6 +2647,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot set a length on \"integer\" attributes"
           }
         },
         {
@@ -1987,6 +2673,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index length 300 is larger than the size for title: 255\""
           }
         },
         {
@@ -2009,6 +2699,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Negative index length provided for title"
           }
         },
         {
@@ -2032,6 +2726,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid index lengths. Count of lengths must be equal or less than the number of attributes."
           }
         },
         {
@@ -2054,6 +2752,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index lengths. Count of lengths must be equal or less than the number of attributes."
           }
         },
         {
@@ -2074,6 +2776,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index key name is reserved"
           }
         },
         {
@@ -2095,6 +2801,10 @@
                 "key": "PRIMARY"
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index key name is reserved"
           }
         },
         {
@@ -2115,6 +2825,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Spatial indexes are not supported"
           }
         },
         {
@@ -2135,6 +2849,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot create key index on spatial attribute \"location\". Spatial attributes require spatial indexes."
           }
         },
         {
@@ -2155,6 +2873,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Vector indexes are not supported"
           }
         },
         {
@@ -2175,6 +2897,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Trigram indexes are not supported"
           }
         },
         {
@@ -2195,6 +2921,10 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Trigram indexes are not supported"
           }
         },
         {
@@ -2216,6 +2946,10 @@
                 "ttl": 5
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL index can only be created on datetime attributes. Attribute \"title\" is of type \"string\""
           }
         }
       ]
@@ -2336,7 +3070,10 @@
             "indexes": [],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2344,6 +3081,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "nope",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Unknown index type: nope. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2374,6 +3126,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Unknown index type: . Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": null,
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2382,6 +3149,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "KEY",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Unknown index type: KEY. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2412,6 +3194,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown index type: KEY. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "TITLE"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2420,6 +3217,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "mixed"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown index type: KEY. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2453,6 +3265,24 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown index type: KEY. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "$id",
+                  "$createdAt",
+                  "$updatedAt",
+                  "$sequence"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2461,6 +3291,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "fulltext",
+                "attributes": [
+                  "$id"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown index type: KEY. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot, trigram, ttl",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2492,6 +3337,22 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Duplicate attributes provided",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "unique",
+                "attributes": [
+                  "title",
+                  "TITLE"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2500,6 +3361,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [
+                  0
+                ],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Duplicate attributes provided",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2534,6 +3412,23 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Duplicate attributes provided",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [
+                  255
+                ],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2542,6 +3437,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [
+                  256
+                ],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index length 256 is larger than the size for title: 255\"",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2578,6 +3490,25 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Index length 256 is larger than the size for title: 255\"",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "score"
+                ],
+                "lengths": [
+                  255,
+                  0
+                ],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2586,6 +3517,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "age"
+                ],
+                "lengths": [
+                  5
+                ],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot set a length on \"integer\" attributes",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2719,7 +3667,10 @@
             "indexes": [],
             "maxLength": 768
           },
-          "bind": "n"
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2727,6 +3678,23 @@
             "validator": {
               "$ref": "n"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "tags"
+                ],
+                "lengths": [
+                  10
+                ],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Indexing an array attribute is not supported",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2759,6 +3727,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Index length for array not specified",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "tags"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2767,6 +3750,21 @@
             "validator": {
               "$ref": "n"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "fulltext",
+                "attributes": [
+                  "tags"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "\"Fulltext\" index is forbidden on array attributes",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2797,6 +3795,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Spatial indexes are not supported",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "spatial",
+                "attributes": [
+                  "location"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2816,6 +3829,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Vector indexes are not supported",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "hnsw_dot",
+                "attributes": [
+                  "embedding"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -2824,6 +3852,21 @@
             "validator": {
               "$ref": "n"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "location"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot create key index on spatial attribute \"location\". Spatial attributes require spatial indexes.",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2956,7 +3999,10 @@
             "supportForVectorIndexes": true,
             "supportForSpatialIndexes": true
           },
-          "bind": "y"
+          "bind": "y",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2964,6 +4010,23 @@
             "validator": {
               "$ref": "y"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "tags"
+                ],
+                "lengths": [
+                  10
+                ],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
             "value": {
               "$document": {
                 "$id": "a",
@@ -2985,6 +4048,25 @@
             "validator": {
               "$ref": "y"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "tags"
+                ],
+                "lengths": [
+                  10
+                ],
+                "orders": [
+                  "DESC"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid index order \"DESC\" on array attribute \"\"",
             "value": {
               "$document": {
                 "$id": "a",
@@ -3023,6 +4105,25 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Duplicate attributes provided",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "tags",
+                  "tags"
+                ],
+                "lengths": [
+                  10,
+                  10
+                ],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3031,6 +4132,24 @@
             "validator": {
               "$ref": "y"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "tags",
+                  "title"
+                ],
+                "lengths": [
+                  10
+                ],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Duplicate attributes provided",
             "value": {
               "$document": {
                 "$id": "a",
@@ -3064,6 +4183,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Spatial indexes do not allow null values. Mark the attribute \"location\" as required or create the index on a column with no null values.",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "spatial",
+                "attributes": [
+                  "location"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3083,6 +4217,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Spatial indexes do not allow null values. Mark the attribute \"location\" as required or create the index on a column with no null values.",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "spatial",
+                "attributes": [
+                  "place"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3091,6 +4240,23 @@
             "validator": {
               "$ref": "y"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "spatial",
+                "attributes": [
+                  "place"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Spatial indexes with explicit orders are not supported. Remove the orders to create this index.",
             "value": {
               "$document": {
                 "$id": "a",
@@ -3124,6 +4290,22 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Spatial index must have exactly one attribute",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "spatial",
+                "attributes": [
+                  "place",
+                  "location"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3132,6 +4314,21 @@
             "validator": {
               "$ref": "y"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "spatial",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Spatial index can only be created on spatial attributes (point, linestring, polygon). Attribute \"title\" is of type \"string\"",
             "value": {
               "$document": {
                 "$id": "a",
@@ -3162,6 +4359,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Spatial index can only be created on spatial attributes (point, linestring, polygon). Attribute \"title\" is of type \"string\"",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "hnsw_euclidean",
+                "attributes": [
+                  "embedding"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3170,6 +4382,23 @@
             "validator": {
               "$ref": "y"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "hnsw_euclidean",
+                "attributes": [
+                  "embedding"
+                ],
+                "lengths": [
+                  0
+                ],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Spatial index can only be created on spatial attributes (point, linestring, polygon). Attribute \"title\" is of type \"string\"",
             "value": {
               "$document": {
                 "$id": "a",
@@ -3204,6 +4433,23 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Cannot set a length on \"vector\" attributes",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "hnsw_euclidean",
+                "attributes": [
+                  "embedding"
+                ],
+                "lengths": [
+                  3
+                ],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3223,6 +4469,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Vector index can only be created on vector attributes",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "hnsw_euclidean",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3231,6 +4492,22 @@
             "validator": {
               "$ref": "y"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "hnsw_euclidean",
+                "attributes": [
+                  "embedding",
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Vector index must have exactly one attribute",
             "value": {
               "$document": {
                 "$id": "a",
@@ -3398,7 +4675,10 @@
             "supportForMultipleFulltextIndexes": false,
             "supportForIdenticalIndexes": false
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3406,6 +4686,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "ft2",
+                "type": "fulltext",
+                "attributes": [
+                  "Mixed"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "There is already a fulltext index in the collection",
             "value": {
               "$document": {
                 "$id": "ft2",
@@ -3436,6 +4731,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "There is already a fulltext index in the collection",
+            "value": {
+              "$document": {
+                "$id": "ft",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3444,6 +4754,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "k2",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "age"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "There is already an index with the same attributes and orders",
             "value": {
               "$document": {
                 "$id": "k2",
@@ -3482,6 +4811,25 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "There is already an index with the same attributes and orders",
+            "value": {
+              "$document": {
+                "$id": "k3",
+                "type": "key",
+                "attributes": [
+                  "age",
+                  "title"
+                ],
+                "lengths": [],
+                "orders": [
+                  "DESC",
+                  "ASC"
+                ]
+              }
+            }
           }
         },
         {
@@ -3490,6 +4838,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "k4",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "age"
+                ],
+                "lengths": [],
+                "orders": [
+                  "DESC",
+                  "DESC"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "There is already an index with the same attributes and orders",
             "value": {
               "$document": {
                 "$id": "k4",
@@ -3528,6 +4895,25 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "There is already an index with the same attributes and orders",
+            "value": {
+              "$document": {
+                "$id": "k5",
+                "type": "unique",
+                "attributes": [
+                  "title",
+                  "age"
+                ],
+                "lengths": [],
+                "orders": [
+                  "ASC",
+                  "DESC"
+                ]
+              }
+            }
           }
         },
         {
@@ -3536,6 +4922,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "k6",
+                "type": "key",
+                "attributes": [
+                  "title",
+                  "score",
+                  "age"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "There is already an index with the same attributes and orders",
             "value": {
               "$document": {
                 "$id": "k6",
@@ -3667,7 +5070,10 @@
             "supportForUniqueIndexes": false,
             "supportForFulltextIndexes": false
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3675,6 +5081,21 @@
             "validator": {
               "$ref": "d"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Key index is not supported",
             "value": {
               "$document": {
                 "$id": "a",
@@ -3705,6 +5126,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Unique index is not supported",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "unique",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3724,6 +5160,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Fulltext index is not supported",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "fulltext",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3732,6 +5183,21 @@
             "validator": {
               "$ref": "d"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "object",
+                "attributes": [
+                  "title"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Object indexes are not supported",
             "value": {
               "$document": {
                 "$id": "a",
@@ -3773,7 +5239,10 @@
             "maxLength": 768,
             "supportForTTLIndexes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3781,6 +5250,22 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "t",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": "3600"
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
             "value": {
               "$document": {
                 "$id": "t",
@@ -3813,6 +5298,22 @@
                 "ttl": 1.5
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
+            "value": {
+              "$document": {
+                "$id": "t",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": 1.5
+              }
+            }
           }
         },
         {
@@ -3821,6 +5322,22 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "t",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": 0.5
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL must be at least 1 second",
             "value": {
               "$document": {
                 "$id": "t",
@@ -3853,6 +5370,22 @@
                 "ttl": null
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL must be at least 1 second",
+            "value": {
+              "$document": {
+                "$id": "t",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": null
+              }
+            }
           }
         },
         {
@@ -3872,6 +5405,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "TTL must be at least 1 second",
+            "value": {
+              "$document": {
+                "$id": "t",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -3880,6 +5428,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "t",
+                "type": "ttl",
+                "attributes": [
+                  "expiresAt"
+                ],
+                "lengths": [],
+                "orders": [
+                  "DESC"
+                ],
+                "ttl": 1
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "TTL must be at least 1 second",
             "value": {
               "$document": {
                 "$id": "t",
@@ -3914,6 +5480,22 @@
                 "ttl": 10
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "TTL must be at least 1 second",
+            "value": {
+              "$document": {
+                "$id": "t",
+                "type": "ttl",
+                "attributes": [
+                  "$createdAt"
+                ],
+                "lengths": [],
+                "orders": [],
+                "ttl": 10
+              }
+            }
           }
         },
         {
@@ -3922,6 +5504,20 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "t",
+                "type": "ttl",
+                "attributes": [],
+                "lengths": [],
+                "orders": [],
+                "ttl": 10
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "No attributes provided for index",
             "value": {
               "$document": {
                 "$id": "t",
@@ -3947,7 +5543,10 @@
             "indexes": [],
             "maxLength": 768
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -3955,7 +5554,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid index"
         },
         {
           "op": "validator.meta",
@@ -3963,6 +5563,10 @@
             "validator": {
               "$ref": "v"
             }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false
           }
         },
         {
@@ -3971,6 +5575,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "$id"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index",
             "value": {
               "$document": {
                 "$id": "a",
@@ -4001,6 +5620,21 @@
                 "orders": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid index attribute \"missing\" not found",
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "missing"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
           }
         },
         {
@@ -4009,6 +5643,21 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "type": "key",
+                "attributes": [
+                  "$id"
+                ],
+                "lengths": [],
+                "orders": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid index attribute \"missing\" not found",
             "value": {
               "$document": {
                 "$id": "a",

@@ -9,6 +9,10 @@
           "args": {
             "validator": "label",
             "value": false
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -16,6 +20,10 @@
           "args": {
             "validator": "label",
             "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -25,6 +33,10 @@
             "value": [
               "value"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -32,6 +44,10 @@
           "args": {
             "validator": "label",
             "value": 0
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -39,6 +55,10 @@
           "args": {
             "validator": "label",
             "value": 1.5
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -46,6 +66,10 @@
           "args": {
             "validator": "label",
             "value": "asdas7as9as"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -53,6 +77,10 @@
           "args": {
             "validator": "label",
             "value": "5f058a8925807"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -60,6 +88,10 @@
           "args": {
             "validator": "label",
             "value": "_asdasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -67,6 +99,10 @@
           "args": {
             "validator": "label",
             "value": ".as5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -74,6 +110,10 @@
           "args": {
             "validator": "label",
             "value": "-as5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -81,6 +121,10 @@
           "args": {
             "validator": "label",
             "value": "as5dadasdas_"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -88,6 +132,10 @@
           "args": {
             "validator": "label",
             "value": "as_5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -95,6 +143,10 @@
           "args": {
             "validator": "label",
             "value": "as5dasdasdas."
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -102,6 +154,10 @@
           "args": {
             "validator": "label",
             "value": "as.5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -109,6 +165,10 @@
           "args": {
             "validator": "label",
             "value": "as5dasdasdas-"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -116,6 +176,10 @@
           "args": {
             "validator": "label",
             "value": "as-5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -123,6 +187,10 @@
           "args": {
             "validator": "label",
             "value": "dasda asdasd"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -130,6 +198,10 @@
           "args": {
             "validator": "label",
             "value": "asd\"asd6sdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -137,6 +209,10 @@
           "args": {
             "validator": "label",
             "value": "asd'as0asdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -144,6 +220,10 @@
           "args": {
             "validator": "label",
             "value": "as!5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -151,6 +231,10 @@
           "args": {
             "validator": "label",
             "value": "as@5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -158,6 +242,10 @@
           "args": {
             "validator": "label",
             "value": "as#5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -165,6 +253,10 @@
           "args": {
             "validator": "label",
             "value": "as$5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -172,6 +264,10 @@
           "args": {
             "validator": "label",
             "value": "as%5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -179,6 +275,10 @@
           "args": {
             "validator": "label",
             "value": "as^5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -186,6 +286,10 @@
           "args": {
             "validator": "label",
             "value": "as&5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -193,6 +297,10 @@
           "args": {
             "validator": "label",
             "value": "as*5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -200,6 +308,10 @@
           "args": {
             "validator": "label",
             "value": "as(5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -207,6 +319,10 @@
           "args": {
             "validator": "label",
             "value": "as)5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -214,6 +330,10 @@
           "args": {
             "validator": "label",
             "value": "as+5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -221,6 +341,10 @@
           "args": {
             "validator": "label",
             "value": "as=5dasdasdas"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -228,6 +352,10 @@
           "args": {
             "validator": "label",
             "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -235,6 +363,10 @@
           "args": {
             "validator": "label",
             "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         }
       ]
@@ -247,6 +379,10 @@
           "args": {
             "validator": "label",
             "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -254,6 +390,10 @@
           "args": {
             "validator": "label",
             "value": "0"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -261,6 +401,10 @@
           "args": {
             "validator": "label",
             "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -268,6 +412,10 @@
           "args": {
             "validator": "label",
             "value": "é"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -275,6 +423,10 @@
           "args": {
             "validator": "label",
             "value": "aé"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -282,6 +434,10 @@
           "args": {
             "validator": "label",
             "value": "a\n"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -289,6 +445,10 @@
           "args": {
             "validator": "label",
             "value": "ABCxyz019"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -296,6 +456,10 @@
           "args": {
             "validator": "label",
             "value": "$id"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -303,6 +467,10 @@
           "args": {
             "validator": "label",
             "value": " a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -311,6 +479,10 @@
             "validator": "label",
             "allowInternal": true,
             "value": "$id"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -319,6 +491,10 @@
             "validator": "label",
             "allowInternal": true,
             "value": "$createdAt"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -327,6 +503,10 @@
             "validator": "label",
             "allowInternal": true,
             "value": "appwrite_"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -335,6 +515,10 @@
             "validator": "label",
             "allowInternal": true,
             "value": "$"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 36 chars containing only alphanumeric chars"
           }
         },
         {
@@ -343,6 +527,10 @@
             "validator": "label",
             "maxLength": 3,
             "value": "abc"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string between 1 and 3 chars containing only alphanumeric chars"
           }
         },
         {
@@ -351,6 +539,10 @@
             "validator": "label",
             "maxLength": 3,
             "value": "abcd"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 3 chars containing only alphanumeric chars"
           }
         },
         {
@@ -359,6 +551,10 @@
             "validator": "label",
             "maxLength": 0,
             "value": "a"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 0 chars containing only alphanumeric chars"
           }
         }
       ]
@@ -372,7 +568,10 @@
             "validator": "label",
             "maxLength": 12
           },
-          "bind": "l"
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -380,7 +579,8 @@
             "validator": {
               "$ref": "l"
             }
-          }
+          },
+          "expect": "Value must be a valid string between 1 and 12 chars containing only alphanumeric chars"
         },
         {
           "op": "validator.meta",
@@ -388,6 +588,10 @@
             "validator": {
               "$ref": "l"
             }
+          },
+          "expect": {
+            "type": "string",
+            "is_array": false
           }
         },
         {
@@ -397,6 +601,10 @@
               "$ref": "l"
             },
             "value": "a_b"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid string between 1 and 12 chars containing only alphanumeric chars"
           }
         },
         {
@@ -406,6 +614,10 @@
               "$ref": "l"
             },
             "value": "ab"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid string between 1 and 12 chars containing only alphanumeric chars"
           }
         }
       ]

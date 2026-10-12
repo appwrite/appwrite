@@ -10,7 +10,10 @@
             "validator": "spatial",
             "spatialType": "point"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -22,6 +25,10 @@
               10,
               20
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -34,6 +41,10 @@
               0,
               0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -46,6 +57,10 @@
               -180.0,
               90.0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -57,6 +72,10 @@
             "value": [
               10
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Point must be an array of two numeric values [x, y]"
           }
         },
         {
@@ -69,6 +88,10 @@
               10,
               "a"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Point coordinates must be numeric values"
           }
         },
         {
@@ -83,6 +106,10 @@
                 20
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Point must be an array of two numeric values [x, y]"
           }
         },
         {
@@ -91,7 +118,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Value must be a valid point: Point must be an array of two numeric values [x, y]"
         }
       ]
     },
@@ -104,7 +132,10 @@
             "validator": "spatial",
             "spatialType": "linestring"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -122,6 +153,10 @@
                 1
               ]
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid linestring: "
           }
         },
         {
@@ -144,6 +179,10 @@
                 30
               ]
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid linestring: "
           }
         },
         {
@@ -158,6 +197,10 @@
                 10
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid linestring: LineString must contain at least two points"
           }
         },
         {
@@ -175,6 +218,10 @@
                 20
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid linestring: Each point in LineString must be an array of two values [x, y]"
           }
         },
         {
@@ -193,6 +240,10 @@
                 "y"
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid linestring: Each point in LineString must have numeric coordinates"
           }
         },
         {
@@ -201,7 +252,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Value must be a valid linestring: Each point in LineString must have numeric coordinates"
         }
       ]
     },
@@ -214,7 +266,10 @@
             "validator": "spatial",
             "spatialType": "polygon"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -244,6 +299,10 @@
                 0
               ]
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid polygon: "
           }
         },
         {
@@ -298,6 +357,10 @@
                 ]
               ]
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid polygon: "
           }
         },
         {
@@ -307,6 +370,10 @@
               "$ref": "v"
             },
             "value": []
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Polygon must contain at least one ring"
           }
         },
         {
@@ -329,6 +396,10 @@
                 2
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Ring #0 must contain at least 4 points to form a closed polygon"
           }
         },
         {
@@ -353,6 +424,10 @@
                 ]
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Ring #0 must contain at least 4 points to form a closed polygon"
           }
         },
         {
@@ -381,6 +456,10 @@
                 ]
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Coordinates of point #2 in ring #0 must be numeric"
           }
         },
         {
@@ -389,7 +468,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Value must be a valid polygon: Coordinates of point #2 in ring #0 must be numeric"
         }
       ]
     },
@@ -400,31 +480,36 @@
           "op": "validator.spatial_wkt",
           "args": {
             "value": "POINT(1 2)"
-          }
+          },
+          "expect": true
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "LINESTRING(0 0,1 1)"
-          }
+          },
+          "expect": true
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "POLYGON((0 0,1 0,1 1,0 1,0 0))"
-          }
+          },
+          "expect": true
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "CIRCLE(0 0,1)"
-          }
+          },
+          "expect": false
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "POINT1(1 2)"
-          }
+          },
+          "expect": false
         }
       ]
     },
@@ -437,7 +522,10 @@
             "validator": "spatial",
             "spatialType": "point"
           },
-          "bind": "a"
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -449,6 +537,10 @@
               200,
               10
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
           }
         },
         {
@@ -457,7 +549,8 @@
             "validator": {
               "$ref": "a"
             }
-          }
+          },
+          "expect": "Value must be a valid point: Longitude (x) must be between -180 and 180, got 200"
         },
         {
           "op": "validator.new",
@@ -465,7 +558,10 @@
             "validator": "spatial",
             "spatialType": "point"
           },
-          "bind": "b"
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -477,6 +573,10 @@
               10,
               -100
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Latitude (y) must be between -90 and 90, got -100"
           }
         },
         {
@@ -485,7 +585,8 @@
             "validator": {
               "$ref": "b"
             }
-          }
+          },
+          "expect": "Value must be a valid point: Latitude (y) must be between -90 and 90, got -100"
         },
         {
           "op": "validator.new",
@@ -493,7 +594,10 @@
             "validator": "spatial",
             "spatialType": "linestring"
           },
-          "bind": "c"
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -511,6 +615,10 @@
                 45
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid linestring: Invalid coordinates at point #1: Longitude (x) must be between -180 and 180, got 181"
           }
         },
         {
@@ -519,7 +627,8 @@
             "validator": {
               "$ref": "c"
             }
-          }
+          },
+          "expect": "Value must be a valid linestring: Invalid coordinates at point #1: Longitude (x) must be between -180 and 180, got 181"
         },
         {
           "op": "validator.new",
@@ -527,7 +636,10 @@
             "validator": "spatial",
             "spatialType": "polygon"
           },
-          "bind": "d"
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -555,6 +667,10 @@
                 ]
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Invalid coordinates at point #2 in ring #0: Longitude (x) must be between -180 and 180, got 190"
           }
         },
         {
@@ -563,7 +679,8 @@
             "validator": {
               "$ref": "d"
             }
-          }
+          },
+          "expect": "Value must be a valid polygon: Invalid coordinates at point #2 in ring #0: Longitude (x) must be between -180 and 180, got 190"
         }
       ]
     },
@@ -574,55 +691,64 @@
           "op": "validator.spatial_wkt",
           "args": {
             "value": "  point (1 2)"
-          }
+          },
+          "expect": true
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "Polygon("
-          }
+          },
+          "expect": true
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "POINT"
-          }
+          },
+          "expect": false
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "POINT 1 2"
-          }
+          },
+          "expect": false
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": ""
-          }
+          },
+          "expect": false
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "MULTIPOINT(1 2)"
-          }
+          },
+          "expect": false
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "\nLINESTRING\t("
-          }
+          },
+          "expect": true
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "POINT()"
-          }
+          },
+          "expect": true
         },
         {
           "op": "validator.spatial_wkt",
           "args": {
             "value": "xPOINT(1 2)"
-          }
+          },
+          "expect": false
         },
         {
           "op": "validator.check",
@@ -630,6 +756,10 @@
             "validator": "spatial",
             "spatialType": "point",
             "value": "POINT(1 2)"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -638,6 +768,10 @@
             "validator": "spatial",
             "spatialType": "point",
             "value": "garbage"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -646,6 +780,10 @@
             "validator": "spatial",
             "spatialType": "point",
             "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -654,6 +792,10 @@
             "validator": "spatial",
             "spatialType": "point",
             "value": null
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -662,6 +804,10 @@
             "validator": "spatial",
             "spatialType": "polygon",
             "value": "LINESTRING(0 0,1 1)"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid polygon: "
           }
         }
       ]
@@ -678,6 +824,10 @@
               180,
               90
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -689,6 +839,10 @@
               -180,
               -90
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -700,6 +854,10 @@
               180.0001,
               0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Longitude (x) must be between -180 and 180, got 180.0001"
           }
         },
         {
@@ -711,6 +869,10 @@
               0,
               90.5
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Latitude (y) must be between -90 and 90, got 90.5"
           }
         },
         {
@@ -722,6 +884,10 @@
               "10",
               "20"
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -733,6 +899,10 @@
               "1e2",
               "0x1"
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Point coordinates must be numeric values"
           }
         },
         {
@@ -744,6 +914,10 @@
               " 1",
               "2 "
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -755,6 +929,10 @@
               1.5e+20,
               0
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Longitude (x) must be between -180 and 180, got 1.5E+20"
           }
         },
         {
@@ -766,6 +944,10 @@
               -0.0,
               0
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid point: "
           }
         },
         {
@@ -777,6 +959,10 @@
               true,
               1
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Point coordinates must be numeric values"
           }
         },
         {
@@ -788,6 +974,10 @@
               null,
               1
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Point coordinates must be numeric values"
           }
         },
         {
@@ -800,6 +990,10 @@
               2,
               3
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Point must be an array of two numeric values [x, y]"
           }
         },
         {
@@ -808,6 +1002,10 @@
             "validator": "spatial",
             "spatialType": "point",
             "value": []
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Point must be an array of two numeric values [x, y]"
           }
         },
         {
@@ -816,6 +1014,10 @@
             "validator": "spatial",
             "spatialType": "point",
             "value": 5
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Spatial value must be array or WKT string"
           }
         },
         {
@@ -824,6 +1026,10 @@
             "validator": "spatial",
             "spatialType": "point",
             "value": 1.5
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Spatial value must be array or WKT string"
           }
         },
         {
@@ -832,6 +1038,10 @@
             "validator": "spatial",
             "spatialType": "point",
             "value": true
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Spatial value must be array or WKT string"
           }
         },
         {
@@ -844,6 +1054,10 @@
                 "a": 1
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid point: Spatial value must be array or WKT string"
           }
         }
       ]
@@ -857,6 +1071,10 @@
             "validator": "spatial",
             "spatialType": "linestring",
             "value": []
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid linestring: LineString must contain at least two points"
           }
         },
         {
@@ -874,6 +1092,10 @@
                 0
               ]
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid linestring: "
           }
         },
         {
@@ -888,6 +1110,10 @@
               ],
               5
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid linestring: Each point in LineString must be an array of two values [x, y]"
           }
         },
         {
@@ -906,6 +1132,10 @@
                 1
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid linestring: Each point in LineString must be an array of two values [x, y]"
           }
         },
         {
@@ -923,6 +1153,10 @@
                 "1"
               ]
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid linestring: "
           }
         },
         {
@@ -940,6 +1174,10 @@
                 -90.01
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid linestring: Invalid coordinates at point #1: Latitude (y) must be between -90 and 90, got -90.01"
           }
         },
         {
@@ -965,6 +1203,10 @@
                 0
               ]
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid polygon: "
           }
         },
         {
@@ -994,6 +1236,10 @@
                 0.0
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Ring #0 must be closed (first point must equal last point)"
           }
         },
         {
@@ -1019,6 +1265,10 @@
                 "0"
               ]
             ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid polygon: "
           }
         },
         {
@@ -1047,6 +1297,10 @@
               ],
               []
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Ring #1 must be an array of points"
           }
         },
         {
@@ -1092,6 +1346,10 @@
                 ]
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Ring #1 must be closed (first point must equal last point)"
           }
         },
         {
@@ -1120,6 +1378,10 @@
               ],
               7
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Ring #1 must be an array of points"
           }
         },
         {
@@ -1148,6 +1410,10 @@
                 ]
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Point #2 in ring #0 must be an array of two values [x, y]"
           }
         },
         {
@@ -1179,6 +1445,10 @@
                 ]
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Invalid coordinates at point #4 in ring #0: Latitude (y) must be between -90 and 90, got 91"
           }
         },
         {
@@ -1204,6 +1474,10 @@
                 0
               ]
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid polygon: Invalid coordinates at point #3 in ring #0: Longitude (x) must be between -180 and 180, got 200"
           }
         }
       ]
@@ -1217,7 +1491,10 @@
             "validator": "spatial",
             "spatialType": "circle"
           },
-          "bind": "u"
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1229,6 +1506,10 @@
               1,
               2
             ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Value must be a valid circle: Unknown spatial type: circle"
           }
         },
         {
@@ -1238,6 +1519,10 @@
               "$ref": "u"
             },
             "value": null
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid circle: Unknown spatial type: circle"
           }
         },
         {
@@ -1247,6 +1532,10 @@
               "$ref": "u"
             },
             "value": "POINT(1 2)"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Value must be a valid circle: Unknown spatial type: circle"
           }
         },
         {
@@ -1255,7 +1544,8 @@
             "validator": {
               "$ref": "u"
             }
-          }
+          },
+          "expect": "Value must be a valid circle: Unknown spatial type: circle"
         },
         {
           "op": "validator.meta",
@@ -1263,6 +1553,11 @@
             "validator": {
               "$ref": "u"
             }
+          },
+          "expect": {
+            "type": "array",
+            "is_array": false,
+            "spatial_type": "circle"
           }
         },
         {
@@ -1271,7 +1566,10 @@
             "validator": "spatial",
             "spatialType": "polygon"
           },
-          "bind": "m"
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.meta",
@@ -1279,6 +1577,11 @@
             "validator": {
               "$ref": "m"
             }
+          },
+          "expect": {
+            "type": "array",
+            "is_array": false,
+            "spatial_type": "polygon"
           }
         },
         {
@@ -1287,7 +1590,8 @@
             "validator": {
               "$ref": "m"
             }
-          }
+          },
+          "expect": "Value must be a valid polygon: "
         }
       ]
     }

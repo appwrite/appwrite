@@ -27,7 +27,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -48,6 +51,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
           }
         },
         {
@@ -56,7 +65,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in metadata"
         }
       ]
     },
@@ -72,7 +82,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -80,6 +93,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -101,7 +131,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -117,7 +148,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -138,6 +172,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for string is: 1,000"
+            }
           }
         },
         {
@@ -146,7 +186,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for string is: 1,000"
         }
       ]
     },
@@ -162,7 +203,10 @@
             "maxVarcharLength": 1000,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -183,6 +227,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for varchar is: 1,000"
+            }
           }
         },
         {
@@ -191,7 +241,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for varchar is: 1,000"
         }
       ]
     },
@@ -207,7 +258,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -228,6 +282,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for text is: 65535"
+            }
           }
         },
         {
@@ -236,7 +296,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for text is: 65535"
         }
       ]
     },
@@ -252,7 +313,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -273,6 +337,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for mediumtext is: 16777215"
+            }
           }
         },
         {
@@ -281,7 +351,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for mediumtext is: 16777215"
         }
       ]
     },
@@ -297,7 +368,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -318,6 +392,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for int is: 50"
+            }
           }
         },
         {
@@ -326,7 +406,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for int is: 50"
         }
       ]
     },
@@ -342,7 +423,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -363,6 +447,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: unknown_type. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
+            }
           }
         },
         {
@@ -371,7 +461,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: unknown_type. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
         }
       ]
     },
@@ -387,7 +478,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -408,6 +502,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Attribute of type: datetime requires the following filters: datetime"
+            }
           }
         },
         {
@@ -416,7 +516,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute of type: datetime requires the following filters: datetime"
         }
       ]
     },
@@ -432,7 +533,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -440,6 +544,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": [
+                  "datetime"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "created",
@@ -463,7 +586,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -479,7 +603,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -500,6 +627,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot set a default value for a required attribute"
+            }
           }
         },
         {
@@ -508,7 +641,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot set a default value for a required attribute"
         }
       ]
     },
@@ -524,7 +658,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -545,6 +682,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value not_an_integer does not match given type integer"
+            }
           }
         },
         {
@@ -553,7 +696,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value not_an_integer does not match given type integer"
         }
       ]
     },
@@ -570,7 +714,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": false
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -593,6 +740,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector types are not supported by the current database"
+            }
           }
         },
         {
@@ -601,7 +754,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector types are not supported by the current database"
         }
       ]
     },
@@ -618,7 +772,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -641,6 +798,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector type cannot be an array"
+            }
           }
         },
         {
@@ -649,7 +812,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector type cannot be an array"
         }
       ]
     },
@@ -666,7 +830,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -689,6 +856,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector dimensions must be a positive integer"
+            }
           }
         },
         {
@@ -697,7 +870,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector dimensions must be a positive integer"
         }
       ]
     },
@@ -714,7 +888,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -737,6 +914,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector dimensions cannot exceed 16000"
+            }
           }
         },
         {
@@ -745,7 +928,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector dimensions cannot exceed 16000"
         }
       ]
     },
@@ -762,7 +946,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForSpatialAttributes": false
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -785,6 +972,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial attributes are not supported"
+            }
           }
         },
         {
@@ -793,7 +986,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Spatial attributes are not supported"
         }
       ]
     },
@@ -810,7 +1004,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForSpatialAttributes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -833,6 +1030,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial attributes cannot be arrays"
+            }
           }
         },
         {
@@ -841,7 +1044,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Spatial attributes cannot be arrays"
         }
       ]
     },
@@ -858,7 +1062,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForSpatialAttributes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -881,6 +1088,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Size must be empty for spatial attributes"
+            }
           }
         },
         {
@@ -889,7 +1102,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Size must be empty for spatial attributes"
         }
       ]
     },
@@ -906,7 +1120,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForObject": false
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -929,6 +1146,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Object attributes are not supported"
+            }
           }
         },
         {
@@ -937,7 +1160,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Object attributes are not supported"
         }
       ]
     },
@@ -954,7 +1178,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForObject": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -977,6 +1204,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Object attributes cannot be arrays"
+            }
           }
         },
         {
@@ -985,7 +1218,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Object attributes cannot be arrays"
         }
       ]
     },
@@ -1002,7 +1236,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForObject": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1025,6 +1262,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Size must be empty for object attributes"
+            }
           }
         },
         {
@@ -1033,7 +1276,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Size must be empty for object attributes"
         }
       ]
     },
@@ -1053,7 +1297,10 @@
             "attributeCount": 10,
             "attributeWidth": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1074,6 +1321,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Column limit reached. Cannot create new attribute. Current attribute count is 10 but the maximum is 5. Remove some attributes to free up space."
+            }
           }
         },
         {
@@ -1082,7 +1335,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Column limit reached. Cannot create new attribute. Current attribute count is 10 but the maximum is 5. Remove some attributes to free up space."
         }
       ]
     },
@@ -1102,7 +1356,10 @@
             "attributeCount": 5,
             "attributeWidth": 1500
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1123,6 +1380,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Row width limit reached. Cannot create new attribute. Current row width is 1500 bytes but the maximum is 1000 bytes. Reduce the size of existing attributes or remove some attributes to free up space."
+            }
           }
         },
         {
@@ -1131,7 +1394,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Row width limit reached. Cannot create new attribute. Current row width is 1500 bytes but the maximum is 1000 bytes. Reduce the size of existing attributes or remove some attributes to free up space."
         }
       ]
     },
@@ -1148,7 +1412,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1171,6 +1438,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector default value must be an array"
+            }
           }
         },
         {
@@ -1179,7 +1452,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector default value must be an array"
         }
       ]
     },
@@ -1196,7 +1470,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1222,6 +1499,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector default value must have exactly 3 elements"
+            }
           }
         },
         {
@@ -1230,7 +1513,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector default value must have exactly 3 elements"
         }
       ]
     },
@@ -1247,7 +1531,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1274,6 +1561,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector default value must contain only numeric elements"
+            }
           }
         },
         {
@@ -1282,7 +1575,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector default value must contain only numeric elements"
         }
       ]
     },
@@ -1298,7 +1592,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1319,6 +1616,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for longtext is: 4294967295"
+            }
           }
         },
         {
@@ -1327,7 +1630,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for longtext is: 4294967295"
         }
       ]
     },
@@ -1343,7 +1647,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1351,6 +1658,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "varchar",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "name",
@@ -1372,7 +1696,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1388,7 +1713,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1396,6 +1724,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "text",
+                "size": 65535,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "content",
@@ -1417,7 +1762,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1433,7 +1779,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1441,6 +1790,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "mediumtext",
+                "size": 16777215,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "content",
@@ -1462,7 +1828,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1478,7 +1845,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1486,6 +1856,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "longtext",
+                "size": 4294967295,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "content",
@@ -1507,7 +1894,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1523,7 +1911,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1531,6 +1922,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "price",
@@ -1552,7 +1960,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1568,7 +1977,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1576,6 +1988,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "active",
@@ -1597,7 +2026,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1613,7 +2043,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1634,6 +2067,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value not_a_float does not match given type double"
+            }
           }
         },
         {
@@ -1642,7 +2081,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value not_a_float does not match given type double"
         }
       ]
     },
@@ -1658,7 +2098,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1679,6 +2122,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value not_a_boolean does not match given type boolean"
+            }
           }
         },
         {
@@ -1687,7 +2136,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value not_a_boolean does not match given type boolean"
         }
       ]
     },
@@ -1703,7 +2153,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1724,6 +2177,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 123 does not match given type string"
+            }
           }
         },
         {
@@ -1732,7 +2191,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 123 does not match given type string"
         }
       ]
     },
@@ -1748,7 +2208,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1756,6 +2219,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": "default title",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -1777,7 +2257,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1793,7 +2274,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1801,6 +2285,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": 42,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "count",
@@ -1822,7 +2323,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1838,7 +2340,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1859,6 +2364,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value not_a_bigint is not a valid integer string for type bigint"
+            }
           }
         },
         {
@@ -1867,7 +2378,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value not_a_bigint is not a valid integer string for type bigint"
         }
       ]
     },
@@ -1883,7 +2395,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1891,6 +2406,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "123",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "counter",
@@ -1912,7 +2444,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1928,7 +2461,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1936,6 +2472,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 0,
+                "required": false,
+                "default": 19.99,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "price",
@@ -1957,7 +2510,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -1973,7 +2527,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -1981,6 +2538,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "active",
@@ -2002,7 +2576,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2018,7 +2593,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2026,6 +2604,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 80,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "count",
@@ -2047,7 +2642,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2063,7 +2659,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2084,6 +2683,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for int is: 100"
+            }
           }
         },
         {
@@ -2092,7 +2697,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for int is: 100"
         }
       ]
     },
@@ -2109,7 +2715,10 @@
             "maxIntLength": 9223372036854775807,
             "maxBigIntLength": 200
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2117,6 +2726,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "bigint",
+                "size": 101,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "counter",
@@ -2138,7 +2764,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2155,7 +2782,10 @@
             "maxIntLength": 9223372036854775807,
             "maxBigIntLength": 200
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2163,6 +2793,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "bigint",
+                "size": 200,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "counter",
@@ -2184,7 +2831,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2214,7 +2862,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2235,6 +2886,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
           }
         },
         {
@@ -2243,7 +2900,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in metadata"
         }
       ]
     },
@@ -2270,7 +2928,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForSchemaAttributes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2291,6 +2952,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in schema"
+            }
           }
         },
         {
@@ -2299,7 +2966,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in schema"
         }
       ]
     },
@@ -2328,7 +2996,10 @@
             "isMigrating": true,
             "sharedTables": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2336,6 +3007,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "existing_column",
+                "key": "existing_column",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "existing_column",
@@ -2357,7 +3045,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2374,7 +3063,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForSpatialAttributes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2382,6 +3074,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "route",
+                "key": "route",
+                "type": "linestring",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "linestring"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "route",
@@ -2405,7 +3116,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2422,7 +3134,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForSpatialAttributes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2430,6 +3145,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "area",
+                "key": "area",
+                "type": "polygon",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "polygon"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "area",
@@ -2453,7 +3187,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2470,7 +3205,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForSpatialAttributes": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2478,6 +3216,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "location",
@@ -2501,7 +3258,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2518,7 +3276,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2526,6 +3287,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "embedding",
@@ -2549,7 +3329,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2566,7 +3347,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2574,6 +3358,29 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "embedding",
@@ -2601,7 +3408,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2618,7 +3426,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForObject": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2626,6 +3437,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "metadata",
+                "key": "metadata",
+                "type": "object",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "metadata",
@@ -2649,7 +3479,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2665,7 +3496,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2673,6 +3507,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "tags",
@@ -2694,7 +3545,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2710,7 +3562,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2718,6 +3573,27 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": [
+                  "tag1",
+                  "tag2",
+                  "tag3"
+                ],
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "tags",
@@ -2743,7 +3619,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2759,7 +3636,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2784,6 +3664,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 123 does not match given type string"
+            }
           }
         },
         {
@@ -2792,7 +3678,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 123 does not match given type string"
         }
       ]
     },
@@ -2808,7 +3695,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2831,6 +3721,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 12345 does not match given type datetime"
+            }
           }
         },
         {
@@ -2839,7 +3735,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 12345 does not match given type datetime"
         }
       ]
     },
@@ -2855,7 +3752,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2863,6 +3763,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "required": false,
+                "default": "2024-01-01T00:00:00.000Z",
+                "signed": false,
+                "array": false,
+                "filters": [
+                  "datetime"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "created",
@@ -2886,7 +3805,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -2902,7 +3822,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2923,6 +3846,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 123 does not match given type varchar"
+            }
           }
         },
         {
@@ -2931,7 +3860,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 123 does not match given type varchar"
         }
       ]
     },
@@ -2947,7 +3877,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -2968,6 +3901,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 123 does not match given type text"
+            }
           }
         },
         {
@@ -2976,7 +3915,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 123 does not match given type text"
         }
       ]
     },
@@ -2992,7 +3932,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3013,6 +3956,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 123 does not match given type mediumtext"
+            }
           }
         },
         {
@@ -3021,7 +3970,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 123 does not match given type mediumtext"
         }
       ]
     },
@@ -3037,7 +3987,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3058,6 +4011,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 123 does not match given type longtext"
+            }
           }
         },
         {
@@ -3066,7 +4025,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 123 does not match given type longtext"
         }
       ]
     },
@@ -3082,7 +4042,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3090,6 +4053,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "varchar",
+                "size": 255,
+                "required": false,
+                "default": "default name",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "name",
@@ -3111,7 +4091,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -3127,7 +4108,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3135,6 +4119,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "text",
+                "size": 65535,
+                "required": false,
+                "default": "default content",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "content",
@@ -3156,7 +4157,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -3172,7 +4174,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3180,6 +4185,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "count",
@@ -3201,7 +4223,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -3217,7 +4240,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3225,6 +4251,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -3246,7 +4289,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -3262,7 +4306,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3286,6 +4333,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot set an array default value for a non-array attribute"
+            }
           }
         },
         {
@@ -3294,7 +4347,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot set an array default value for a non-array attribute"
         }
       ]
     },
@@ -3310,7 +4364,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -3318,7 +4375,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.meta",
@@ -3326,6 +4384,10 @@
             "validator": {
               "$ref": "v"
             }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false
           }
         }
       ]
@@ -3342,7 +4404,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 101
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3350,6 +4415,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 50,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "c",
@@ -3371,7 +4453,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -3392,6 +4475,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for int is: 51"
+            }
           }
         },
         {
@@ -3400,7 +4489,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for int is: 51"
         },
         {
           "op": "validator.is_valid",
@@ -3408,6 +4498,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 101,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Max size allowed for int is: 51",
             "value": {
               "$document": {
                 "$id": "c",
@@ -3429,7 +4536,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for int is: 51"
         },
         {
           "op": "validator.is_valid",
@@ -3450,6 +4558,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for int is: 101"
+            }
           }
         },
         {
@@ -3458,7 +4572,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for int is: 101"
         },
         {
           "op": "validator.new",
@@ -3469,7 +4584,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3490,6 +4608,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for int is: 4,611,686,018,427,387,904"
+            }
           }
         },
         {
@@ -3498,7 +4622,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for int is: 4,611,686,018,427,387,904"
         },
         {
           "op": "validator.new",
@@ -3509,7 +4634,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 3000001
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3530,6 +4658,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for int is: 1,500,001"
+            }
           }
         },
         {
@@ -3538,7 +4672,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for int is: 1,500,001"
         }
       ]
     },
@@ -3554,7 +4689,10 @@
             "maxVarcharLength": 12345,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3562,6 +4700,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -3583,7 +4738,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -3604,6 +4760,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for string is: 1,000,000"
+            }
           }
         },
         {
@@ -3612,7 +4774,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for string is: 1,000,000"
         },
         {
           "op": "validator.is_valid",
@@ -3620,6 +4783,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "varchar",
+                "size": 12345,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Max size allowed for string is: 1,000,000",
             "value": {
               "$document": {
                 "$id": "title",
@@ -3641,7 +4821,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for string is: 1,000,000"
         },
         {
           "op": "validator.is_valid",
@@ -3662,6 +4843,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for varchar is: 12,345"
+            }
           }
         },
         {
@@ -3670,7 +4857,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for varchar is: 12,345"
         },
         {
           "op": "validator.new",
@@ -3681,7 +4869,10 @@
             "maxVarcharLength": 0,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3689,6 +4880,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -3710,7 +4918,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -3731,6 +4940,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for string is: 0"
+            }
           }
         },
         {
@@ -3739,7 +4954,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for string is: 0"
         },
         {
           "op": "validator.is_valid",
@@ -3760,6 +4976,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for varchar is: 0"
+            }
           }
         },
         {
@@ -3768,7 +4990,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for varchar is: 0"
         }
       ]
     },
@@ -3784,7 +5007,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3805,6 +5031,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for text is: 65535"
+            }
           }
         },
         {
@@ -3813,7 +5045,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for text is: 65535"
         },
         {
           "op": "validator.is_valid",
@@ -3834,6 +5067,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for mediumtext is: 16777215"
+            }
           }
         },
         {
@@ -3842,7 +5081,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for mediumtext is: 16777215"
         },
         {
           "op": "validator.is_valid",
@@ -3863,6 +5103,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for longtext is: 4294967295"
+            }
           }
         },
         {
@@ -3871,7 +5117,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for longtext is: 4294967295"
         },
         {
           "op": "validator.is_valid",
@@ -3879,6 +5126,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "longtext",
+                "size": -1,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Max size allowed for longtext is: 4294967295",
             "value": {
               "$document": {
                 "$id": "c",
@@ -3900,7 +5164,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for longtext is: 4294967295"
         }
       ]
     },
@@ -3916,7 +5181,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -3924,6 +5192,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": "100",
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -3945,7 +5230,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -3966,6 +5252,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for string is: 100"
+            }
           }
         },
         {
@@ -3974,7 +5266,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for string is: 100"
         },
         {
           "op": "validator.is_valid",
@@ -3995,6 +5288,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for string is: 100"
+            }
           }
         },
         {
@@ -4003,7 +5302,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for string is: 100"
         },
         {
           "op": "validator.is_valid",
@@ -4024,6 +5324,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Max size allowed for string is: 100"
+            }
           }
         },
         {
@@ -4032,7 +5338,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Max size allowed for string is: 100"
         }
       ]
     },
@@ -4056,7 +5363,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4071,6 +5381,12 @@
                 "size": 10
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
           }
         },
         {
@@ -4079,7 +5395,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in metadata"
         },
         {
           "op": "validator.is_valid",
@@ -4087,6 +5404,17 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "other",
+                "type": "string",
+                "size": 10
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute already exists in metadata",
             "value": {
               "$document": {
                 "$id": "other",
@@ -4102,7 +5430,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in metadata"
         },
         {
           "op": "validator.is_valid",
@@ -4118,6 +5447,12 @@
                 "size": 10
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
           }
         },
         {
@@ -4126,7 +5461,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in metadata"
         }
       ]
     },
@@ -4150,7 +5486,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4158,6 +5497,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "éa",
+                "key": "éa",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "éa",
@@ -4179,7 +5535,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -4200,6 +5557,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
           }
         },
         {
@@ -4208,7 +5571,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in metadata"
         },
         {
           "op": "validator.is_valid",
@@ -4229,6 +5593,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
           }
         },
         {
@@ -4237,7 +5607,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in metadata"
         }
       ]
     },
@@ -4264,7 +5635,10 @@
             "supportForSchemaAttributes": true,
             "filter": "adapter"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4285,6 +5659,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in schema"
+            }
           }
         },
         {
@@ -4293,7 +5673,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in schema"
         },
         {
           "op": "validator.is_valid",
@@ -4301,6 +5682,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "my-col$",
+                "key": "my-col$",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute already exists in schema",
             "value": {
               "$document": {
                 "$id": "my-col$",
@@ -4322,7 +5720,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in schema"
         }
       ]
     },
@@ -4347,7 +5746,10 @@
               }
             ]
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4355,6 +5757,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "key": "a",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "a",
@@ -4376,7 +5795,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.new",
@@ -4398,7 +5818,10 @@
             "supportForSchemaAttributes": true,
             "isMigrating": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4419,6 +5842,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in schema"
+            }
           }
         },
         {
@@ -4427,7 +5856,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in schema"
         }
       ]
     },
@@ -4443,7 +5873,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4451,6 +5884,26 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "d",
+                "key": "d",
+                "type": "datetime",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "json",
+                  "datetime"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "d",
@@ -4475,7 +5928,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -4498,6 +5952,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Attribute of type: datetime requires the following filters: datetime"
+            }
           }
         },
         {
@@ -4506,7 +5966,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute of type: datetime requires the following filters: datetime"
         }
       ]
     },
@@ -4526,7 +5987,10 @@
             "attributeCount": 5,
             "attributeWidth": 99
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4534,6 +5998,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -4555,7 +6036,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.new",
@@ -4570,7 +6052,10 @@
             "attributeCount": 6,
             "attributeWidth": 200
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4591,6 +6076,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Column limit reached. Cannot create new attribute. Current attribute count is 6 but the maximum is 5. Remove some attributes to free up space."
+            }
           }
         },
         {
@@ -4599,7 +6090,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Column limit reached. Cannot create new attribute. Current attribute count is 6 but the maximum is 5. Remove some attributes to free up space."
         },
         {
           "op": "validator.new",
@@ -4614,7 +6106,10 @@
             "attributeCount": 5,
             "attributeWidth": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4635,6 +6130,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Row width limit reached. Cannot create new attribute. Current row width is 100 bytes but the maximum is 100 bytes. Reduce the size of existing attributes or remove some attributes to free up space."
+            }
           }
         },
         {
@@ -4643,7 +6144,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Row width limit reached. Cannot create new attribute. Current row width is 100 bytes but the maximum is 100 bytes. Reduce the size of existing attributes or remove some attributes to free up space."
         },
         {
           "op": "validator.new",
@@ -4658,7 +6160,10 @@
             "attributeCount": 1000,
             "attributeWidth": 100000
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4666,6 +6171,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -4687,7 +6209,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.new",
@@ -4700,7 +6223,10 @@
             "maxAttributes": 5,
             "attributeCount": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4708,6 +6234,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -4729,7 +6272,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         }
       ]
     },
@@ -4745,7 +6289,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4753,6 +6300,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "r",
+                "key": "r",
+                "type": "relationship",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "r",
@@ -4774,7 +6338,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -4782,6 +6347,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "i",
+                "key": "i",
+                "type": "id",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "i",
@@ -4803,7 +6385,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -4824,6 +6407,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: relationship. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
+            }
           }
         },
         {
@@ -4832,7 +6421,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: relationship. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
         },
         {
           "op": "validator.is_valid",
@@ -4853,6 +6443,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: id. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
+            }
           }
         },
         {
@@ -4861,7 +6457,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: id. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
         }
       ]
     },
@@ -4880,7 +6477,10 @@
             "supportForSpatialAttributes": true,
             "supportForObject": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -4901,6 +6501,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: uuid7. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, vector, point, linestring, polygon, object"
+            }
           }
         },
         {
@@ -4909,7 +6515,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: uuid7. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, vector, point, linestring, polygon, object"
         },
         {
           "op": "validator.is_valid",
@@ -4930,6 +6537,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: STRING. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, vector, point, linestring, polygon, object"
+            }
           }
         },
         {
@@ -4938,7 +6551,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: STRING. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, vector, point, linestring, polygon, object"
         },
         {
           "op": "validator.is_valid",
@@ -4959,6 +6573,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: . Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, vector, point, linestring, polygon, object"
+            }
           }
         },
         {
@@ -4967,7 +6587,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: . Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, vector, point, linestring, polygon, object"
         }
       ]
     },
@@ -4983,7 +6604,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -5004,6 +6628,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 1.5 does not match given type integer"
+            }
           }
         },
         {
@@ -5012,7 +6642,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 1.5 does not match given type integer"
         },
         {
           "op": "validator.is_valid",
@@ -5033,6 +6664,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 1 does not match given type integer"
+            }
           }
         },
         {
@@ -5041,7 +6678,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 1 does not match given type integer"
         },
         {
           "op": "validator.is_valid",
@@ -5062,6 +6700,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 1 does not match given type double"
+            }
           }
         },
         {
@@ -5070,7 +6714,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 1 does not match given type double"
         },
         {
           "op": "validator.is_valid",
@@ -5091,6 +6736,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 0 does not match given type boolean"
+            }
           }
         },
         {
@@ -5099,7 +6750,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 0 does not match given type boolean"
         },
         {
           "op": "validator.is_valid",
@@ -5120,6 +6772,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value  does not match given type string"
+            }
           }
         },
         {
@@ -5128,7 +6786,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value  does not match given type string"
         },
         {
           "op": "validator.is_valid",
@@ -5149,6 +6808,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 1 does not match given type string"
+            }
           }
         },
         {
@@ -5157,7 +6822,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 1 does not match given type string"
         },
         {
           "op": "validator.is_valid",
@@ -5178,6 +6844,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 0 does not match given type integer"
+            }
           }
         },
         {
@@ -5186,7 +6858,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 0 does not match given type integer"
         },
         {
           "op": "validator.is_valid",
@@ -5194,6 +6867,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "double",
+                "size": 255,
+                "required": false,
+                "default": -0.0,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Default value 0 does not match given type integer",
             "value": {
               "$document": {
                 "$id": "c",
@@ -5215,7 +6905,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 0 does not match given type integer"
         },
         {
           "op": "validator.is_valid",
@@ -5223,6 +6914,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "double",
+                "size": 255,
+                "required": false,
+                "default": 1e+20,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Default value 0 does not match given type integer",
             "value": {
               "$document": {
                 "$id": "c",
@@ -5244,7 +6952,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 0 does not match given type integer"
         }
       ]
     },
@@ -5260,7 +6969,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -5268,6 +6980,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": 12,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "b",
@@ -5289,7 +7018,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -5297,6 +7027,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "-12",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "b",
@@ -5318,7 +7065,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -5339,6 +7087,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value -12 is not a valid integer string for type bigint"
+            }
           }
         },
         {
@@ -5347,7 +7101,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value -12 is not a valid integer string for type bigint"
         },
         {
           "op": "validator.is_valid",
@@ -5355,6 +7110,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "18446744073709551615",
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Default value -12 is not a valid integer string for type bigint",
             "value": {
               "$document": {
                 "$id": "b",
@@ -5376,7 +7148,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value -12 is not a valid integer string for type bigint"
         },
         {
           "op": "validator.is_valid",
@@ -5397,6 +7170,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value +1 is not a valid integer string for type bigint"
+            }
           }
         },
         {
@@ -5405,7 +7184,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value +1 is not a valid integer string for type bigint"
         },
         {
           "op": "validator.is_valid",
@@ -5426,6 +7206,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value  1 is not a valid integer string for type bigint"
+            }
           }
         },
         {
@@ -5434,7 +7220,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value  1 is not a valid integer string for type bigint"
         },
         {
           "op": "validator.is_valid",
@@ -5455,6 +7242,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value  is not a valid integer string for type bigint"
+            }
           }
         },
         {
@@ -5463,7 +7256,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value  is not a valid integer string for type bigint"
         },
         {
           "op": "validator.is_valid",
@@ -5484,6 +7278,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 1.5 does not match given type bigint"
+            }
           }
         },
         {
@@ -5492,7 +7292,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value 1.5 does not match given type bigint"
         },
         {
           "op": "validator.is_valid",
@@ -5513,6 +7314,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value  does not match given type bigint"
+            }
           }
         },
         {
@@ -5521,7 +7328,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value  does not match given type bigint"
         },
         {
           "op": "validator.is_valid",
@@ -5529,6 +7337,26 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": [
+                  "1",
+                  2
+                ],
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Default value  does not match given type bigint",
             "value": {
               "$document": {
                 "$id": "b",
@@ -5553,7 +7381,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value  does not match given type bigint"
         },
         {
           "op": "validator.is_valid",
@@ -5577,6 +7406,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value x is not a valid integer string for type bigint"
+            }
           }
         },
         {
@@ -5585,7 +7420,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Default value x is not a valid integer string for type bigint"
         }
       ]
     },
@@ -5602,7 +7438,10 @@
             "maxIntLength": 9223372036854775807,
             "supportForVectors": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -5610,6 +7449,29 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": [
+                  1,
+                  2,
+                  3
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "e",
@@ -5637,7 +7499,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -5664,6 +7527,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector components must be numeric values (float or integer)"
+            }
           }
         },
         {
@@ -5672,7 +7541,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector components must be numeric values (float or integer)"
         },
         {
           "op": "validator.is_valid",
@@ -5699,6 +7569,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector default value must contain only numeric elements"
+            }
           }
         },
         {
@@ -5707,7 +7583,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector default value must contain only numeric elements"
         },
         {
           "op": "validator.is_valid",
@@ -5715,6 +7592,28 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 2,
+                "required": false,
+                "default": {
+                  "a": 1.0,
+                  "b": 2.0
+                },
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Vector default value must contain only numeric elements",
             "value": {
               "$document": {
                 "$id": "e",
@@ -5741,7 +7640,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector default value must contain only numeric elements"
         },
         {
           "op": "validator.is_valid",
@@ -5764,6 +7664,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector default value must have exactly 2 elements"
+            }
           }
         },
         {
@@ -5772,7 +7678,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector default value must have exactly 2 elements"
         },
         {
           "op": "validator.is_valid",
@@ -5780,6 +7687,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 16000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Vector default value must have exactly 2 elements",
             "value": {
               "$document": {
                 "$id": "e",
@@ -5803,7 +7729,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector default value must have exactly 2 elements"
         },
         {
           "op": "validator.is_valid",
@@ -5826,6 +7753,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector dimensions cannot exceed 16000"
+            }
           }
         },
         {
@@ -5834,7 +7767,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector dimensions cannot exceed 16000"
         },
         {
           "op": "validator.is_valid",
@@ -5857,6 +7791,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector dimensions must be a positive integer"
+            }
           }
         },
         {
@@ -5865,7 +7805,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector dimensions must be a positive integer"
         },
         {
           "op": "validator.is_valid",
@@ -5873,6 +7814,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": "3",
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Vector dimensions must be a positive integer",
             "value": {
               "$document": {
                 "$id": "e",
@@ -5896,7 +7856,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Vector dimensions must be a positive integer"
         }
       ]
     },
@@ -5914,7 +7875,10 @@
             "supportForSpatialAttributes": true,
             "supportForObject": true
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -5922,6 +7886,28 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "point",
+                "size": 0,
+                "required": false,
+                "default": [
+                  1.0,
+                  2.0
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "p",
@@ -5948,7 +7934,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -5956,6 +7943,44 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "polygon",
+                "size": 0,
+                "required": false,
+                "default": [
+                  [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      1,
+                      1
+                    ],
+                    [
+                      0,
+                      1
+                    ],
+                    [
+                      0,
+                      0
+                    ]
+                  ]
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "polygon"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "p",
@@ -5998,7 +8023,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -6021,6 +8047,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: point. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
           }
         },
         {
@@ -6029,7 +8061,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: point. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
         },
         {
           "op": "validator.is_valid",
@@ -6037,6 +8070,27 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "o",
+                "key": "o",
+                "type": "object",
+                "size": 0,
+                "required": false,
+                "default": {
+                  "a": 1
+                },
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown attribute type: point. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon",
             "value": {
               "$document": {
                 "$id": "o",
@@ -6062,7 +8116,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: point. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
         },
         {
           "op": "validator.is_valid",
@@ -6085,6 +8140,12 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
+            }
           }
         },
         {
@@ -6093,7 +8154,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
         },
         {
           "op": "validator.is_valid",
@@ -6101,6 +8163,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "linestring",
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "linestring"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon",
             "value": {
               "$document": {
                 "$id": "p",
@@ -6124,7 +8205,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
         },
         {
           "op": "validator.is_valid",
@@ -6132,6 +8214,25 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "linestring",
+                "size": "0",
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "linestring"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon",
             "value": {
               "$document": {
                 "$id": "p",
@@ -6155,7 +8256,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: object. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, point, linestring, polygon"
         }
       ]
     },
@@ -6171,7 +8273,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6179,6 +8284,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -6200,7 +8322,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -6208,6 +8331,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": 1,
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -6229,7 +8369,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -6237,6 +8378,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": "true",
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -6258,7 +8416,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -6279,6 +8438,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot set a default value for a required attribute"
+            }
           }
         },
         {
@@ -6287,7 +8452,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot set a default value for a required attribute"
         },
         {
           "op": "validator.is_valid",
@@ -6295,6 +8461,23 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Cannot set a default value for a required attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -6316,7 +8499,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot set a default value for a required attribute"
         },
         {
           "op": "validator.is_valid",
@@ -6337,6 +8521,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot set an array default value for a non-array attribute"
+            }
           }
         },
         {
@@ -6345,7 +8535,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot set an array default value for a non-array attribute"
         }
       ]
     },
@@ -6369,7 +8560,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6390,6 +8584,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
           }
         },
         {
@@ -6398,7 +8598,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute already exists in metadata"
         },
         {
           "op": "validator.new",
@@ -6409,7 +8610,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6430,6 +8634,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Attribute of type: datetime requires the following filters: datetime"
+            }
           }
         },
         {
@@ -6438,7 +8648,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Attribute of type: datetime requires the following filters: datetime"
         }
       ]
     },
@@ -6451,7 +8662,8 @@
             "name": "attr-email",
             "factory": "email",
             "type": "string"
-          }
+          },
+          "expect": null
         },
         {
           "op": "validator.format_add",
@@ -6459,13 +8671,15 @@
             "name": "attr-range",
             "factory": "range",
             "type": "integer"
-          }
+          },
+          "expect": null
         },
         {
           "op": "validator.format_remove",
           "args": {
             "name": "attr-missing"
-          }
+          },
+          "expect": null
         },
         {
           "op": "validator.new",
@@ -6476,7 +8690,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6484,6 +8701,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-email"
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute",
             "value": {
               "$document": {
                 "$id": "title",
@@ -6506,7 +8741,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid attribute"
         },
         {
           "op": "validator.is_valid",
@@ -6528,6 +8764,12 @@
                 "format": "attr-email"
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Format (\"attr-email\") not available for this attribute type (\"varchar\")"
+            }
           }
         },
         {
@@ -6536,7 +8778,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Format (\"attr-email\") not available for this attribute type (\"varchar\")"
         },
         {
           "op": "validator.is_valid",
@@ -6544,6 +8787,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "n",
+                "key": "n",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-range"
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Format (\"attr-email\") not available for this attribute type (\"varchar\")",
             "value": {
               "$document": {
                 "$id": "n",
@@ -6566,7 +8827,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Format (\"attr-email\") not available for this attribute type (\"varchar\")"
         },
         {
           "op": "validator.is_valid",
@@ -6588,6 +8850,12 @@
                 "format": "attr-range"
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Format (\"attr-range\") not available for this attribute type (\"double\")"
+            }
           }
         },
         {
@@ -6596,7 +8864,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Format (\"attr-range\") not available for this attribute type (\"double\")"
         },
         {
           "op": "validator.is_valid",
@@ -6618,6 +8887,12 @@
                 "format": "attr-missing"
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Format (\"attr-missing\") not available for this attribute type (\"string\")"
+            }
           }
         },
         {
@@ -6626,7 +8901,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Format (\"attr-missing\") not available for this attribute type (\"string\")"
         },
         {
           "op": "validator.is_valid",
@@ -6634,6 +8910,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": ""
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Format (\"attr-missing\") not available for this attribute type (\"string\")",
             "value": {
               "$document": {
                 "$id": "title",
@@ -6656,7 +8950,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Format (\"attr-missing\") not available for this attribute type (\"string\")"
         },
         {
           "op": "validator.is_valid",
@@ -6664,6 +8959,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": null
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Format (\"attr-missing\") not available for this attribute type (\"string\")",
             "value": {
               "$document": {
                 "$id": "title",
@@ -6686,7 +8999,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Format (\"attr-missing\") not available for this attribute type (\"string\")"
         },
         {
           "op": "validator.is_valid",
@@ -6694,6 +9008,24 @@
             "validator": {
               "$ref": "v"
             },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "0"
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Format (\"attr-missing\") not available for this attribute type (\"string\")",
             "value": {
               "$document": {
                 "$id": "title",
@@ -6716,13 +9048,15 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Format (\"attr-missing\") not available for this attribute type (\"string\")"
         },
         {
           "op": "validator.format_remove",
           "args": {
             "name": "attr-email"
-          }
+          },
+          "expect": null
         },
         {
           "op": "validator.new",
@@ -6733,7 +9067,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -6755,6 +9092,12 @@
                 "format": "attr-email"
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Format (\"attr-email\") not available for this attribute type (\"string\")"
+            }
           }
         },
         {
@@ -6763,7 +9106,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Format (\"attr-email\") not available for this attribute type (\"string\")"
         }
       ]
     },
@@ -6801,7 +9145,10 @@
             "attributeCount": 4,
             "attributeWidth": 5
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.format_add",
@@ -6809,7 +9156,8 @@
             "name": "attr-email",
             "factory": "email",
             "type": "string"
-          }
+          },
+          "expect": null
         },
         {
           "op": "validator.call",
@@ -6831,6 +9179,10 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute"
           }
         },
         {
@@ -6853,6 +9205,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in metadata"
+            }
           }
         },
         {
@@ -6875,6 +9233,10 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute already exists in metadata"
           }
         },
         {
@@ -6896,6 +9258,12 @@
                 "array": false,
                 "filters": []
               }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists in schema"
             }
           }
         },
@@ -6921,6 +9289,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute already exists in schema"
           }
         },
         {
@@ -6942,6 +9314,12 @@
                 "array": false,
                 "filters": []
               }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Attribute of type: datetime requires the following filters: datetime"
             }
           }
         },
@@ -6966,6 +9344,10 @@
                 "format": "attr-email"
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Attribute of type: datetime requires the following filters: datetime"
           }
         },
         {
@@ -6989,6 +9371,12 @@
                 "format": "attr-email"
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Format (\"attr-email\") not available for this attribute type (\"integer\")"
+            }
           }
         },
         {
@@ -7010,6 +9398,12 @@
                 "array": false,
                 "filters": []
               }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Column limit reached. Cannot create new attribute. Current attribute count is 4 but the maximum is 3. Remove some attributes to free up space."
             }
           }
         },
@@ -7033,6 +9427,10 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Column limit reached. Cannot create new attribute. Current attribute count is 4 but the maximum is 3. Remove some attributes to free up space."
           }
         },
         {
@@ -7054,6 +9452,12 @@
                 "array": false,
                 "filters": []
               }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
             }
           }
         },
@@ -7077,6 +9481,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector types are not supported by the current database"
+            }
           }
         },
         {
@@ -7099,6 +9509,10 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Vector types are not supported by the current database"
           }
         },
         {
@@ -7120,6 +9534,12 @@
                 "array": false,
                 "filters": []
               }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Default value 1 does not match given type string"
             }
           }
         },
@@ -7143,6 +9563,12 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Cannot set a default value for a required attribute"
+            }
           }
         },
         {
@@ -7151,7 +9577,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Cannot set a default value for a required attribute"
         }
       ]
     },
@@ -7167,7 +9594,10 @@
             "maxVarcharLength": 65535,
             "maxIntLength": 9223372036854775807
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.call",
@@ -7189,6 +9619,10 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute"
           }
         },
         {
@@ -7211,6 +9645,10 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid attribute"
           }
         },
         {
@@ -7232,6 +9670,12 @@
                 "array": false,
                 "filters": []
               }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown attribute type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
             }
           }
         },
@@ -7255,6 +9699,10 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown attribute type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
           }
         },
         {
@@ -7277,6 +9725,10 @@
                 "filters": []
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Unknown attribute type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
           }
         },
         {
@@ -7285,7 +9737,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Unknown attribute type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship"
         }
       ]
     }

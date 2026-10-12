@@ -10,7 +10,10 @@
             "validator": "query_limit",
             "maxLimit": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -27,6 +30,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -44,6 +51,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         }
       ]
@@ -57,7 +68,10 @@
             "validator": "query_limit",
             "maxLimit": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -74,6 +88,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 100"
           }
         },
         {
@@ -82,7 +100,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid range between 1 and 100"
         },
         {
           "op": "validator.is_valid",
@@ -99,6 +118,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 100"
           }
         },
         {
@@ -116,6 +139,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 100"
           }
         },
         {
@@ -133,6 +160,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 100"
           }
         }
       ]
@@ -145,7 +176,10 @@
           "args": {
             "validator": "query_limit"
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.description",
@@ -153,7 +187,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -170,6 +205,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -187,6 +226,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807"
           }
         },
         {
@@ -195,7 +238,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid range between 1 and 9,223,372,036,854,775,807"
         },
         {
           "op": "validator.meta",
@@ -203,6 +247,11 @@
             "validator": {
               "$ref": "v"
             }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false,
+            "method_type": "limit"
           }
         }
       ]
@@ -216,7 +265,10 @@
             "validator": "query_limit",
             "maxLimit": 100
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -233,6 +285,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -241,7 +297,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -258,6 +315,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 100"
           }
         },
         {
@@ -266,7 +327,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid range between 1 and 100"
         },
         {
           "op": "validator.is_valid",
@@ -283,6 +345,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 100"
           }
         },
         {
@@ -291,7 +357,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid range between 1 and 100"
         },
         {
           "op": "validator.is_valid",
@@ -308,6 +375,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 100"
           }
         },
         {
@@ -316,7 +387,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid range between 1 and 100"
         },
         {
           "op": "validator.is_valid",
@@ -333,6 +405,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid number"
           }
         },
         {
@@ -341,7 +417,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
         },
         {
           "op": "validator.is_valid",
@@ -358,6 +435,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid number"
           }
         },
         {
@@ -366,7 +447,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
         },
         {
           "op": "validator.is_valid",
@@ -381,6 +463,10 @@
                 "values": []
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid number"
           }
         },
         {
@@ -389,7 +475,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
         },
         {
           "op": "validator.is_valid",
@@ -407,6 +494,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid limit: Value must be a valid number"
           }
         },
         {
@@ -415,7 +506,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
         },
         {
           "op": "validator.is_valid",
@@ -432,6 +524,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid limit: Value must be a valid number"
           }
         },
         {
@@ -440,7 +536,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
         },
         {
           "op": "validator.is_valid",
@@ -457,6 +554,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: offset"
           }
         },
         {
@@ -465,7 +566,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query method: offset"
         },
         {
           "op": "validator.is_valid",
@@ -474,6 +576,10 @@
               "$ref": "v"
             },
             "value": "limit"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: offset"
           }
         },
         {
@@ -482,7 +588,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query method: offset"
         },
         {
           "op": "validator.is_valid",
@@ -491,6 +598,10 @@
               "$ref": "v"
             },
             "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid query method: offset"
           }
         },
         {
@@ -499,7 +610,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query method: offset"
         }
       ]
     },
@@ -512,7 +624,10 @@
             "validator": "query_limit",
             "maxLimit": 1
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -529,6 +644,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
           }
         },
         {
@@ -537,7 +656,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid query"
         },
         {
           "op": "validator.is_valid",
@@ -554,6 +674,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 1"
           }
         },
         {
@@ -562,7 +686,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid range between 1 and 1"
         }
       ]
     },
@@ -575,7 +700,10 @@
             "validator": "query_limit",
             "maxLimit": 1234567
           },
-          "bind": "v"
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
         },
         {
           "op": "validator.is_valid",
@@ -592,6 +720,10 @@
                 ]
               }
             }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid range between 1 and 1,234,567"
           }
         },
         {
@@ -600,7 +732,8 @@
             "validator": {
               "$ref": "v"
             }
-          }
+          },
+          "expect": "Invalid limit: Value must be a valid range between 1 and 1,234,567"
         }
       ]
     }
