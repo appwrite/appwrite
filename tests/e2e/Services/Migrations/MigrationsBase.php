@@ -2495,24 +2495,38 @@ trait MigrationsBase
 
     public function testAppwriteMigrationFunctionSettings(): void
     {
-        $functionId = $this->setupFunction([
-            'functionId' => ID::unique(),
-            'name' => 'Hourly sync',
-            'runtime' => 'node-22',
-            'interval' => 60,
-            'deploymentRetention' => 7,
-        ]);
-
+        // A fresh source project gives its first function and first site the same internal ID, which is
+        // when Appwrite's function list also returns the site's variables.
+        $source = $this->getProject(true);
         $sourceHeaders = [
             'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey'],
+            'x-appwrite-project' => $source['$id'],
+            'x-appwrite-key' => $source['apiKey'],
         ];
         $destinationHeaders = [
             'content-type' => 'application/json',
             'x-appwrite-project' => $this->getDestinationProject()['$id'],
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $sourceHeaders, [
+            'functionId' => ID::unique(),
+            'name' => 'Hourly sync',
+            'runtime' => 'node-22',
+            'interval' => 60,
+            'deploymentRetention' => 7,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], 'Create function failed: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+        $functionId = $function['body']['$id'];
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $sourceHeaders, [
+            'siteId' => ID::unique(),
+            'name' => 'Storefront',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+        ]);
+        $this->assertSame(201, $site['headers']['status-code'], 'Create site failed: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+        $siteId = $site['body']['$id'];
 
         foreach ([['API_TOKEN', 'token', true], ['REGION', 'eu', false]] as [$key, $value, $secret]) {
             $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', $sourceHeaders, [
@@ -2521,22 +2535,34 @@ trait MigrationsBase
                 'value' => $value,
                 'secret' => $secret,
             ]);
-            $this->assertSame(201, $variable['headers']['status-code'], 'Create variable failed: ' . json_encode($variable['body'], JSON_PRETTY_PRINT));
+            $this->assertSame(201, $variable['headers']['status-code'], 'Create function variable failed: ' . json_encode($variable['body'], JSON_PRETTY_PRINT));
         }
+
+        $variable = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => 'STRIPE_KEY',
+            'value' => 'sk_test',
+            'secret' => true,
+        ]);
+        $this->assertSame(201, $variable['headers']['status-code'], 'Create site variable failed: ' . json_encode($variable['body'], JSON_PRETTY_PRINT));
 
         $result = $this->performMigrationSync([
             'resources' => [
                 Resource::TYPE_FUNCTION,
                 Resource::TYPE_ENVIRONMENT_VARIABLE,
+                Resource::TYPE_SITE,
+                Resource::TYPE_SITE_VARIABLE,
             ],
             'endpoint' => $this->webEndpoint,
-            'projectId' => $this->getProject()['$id'],
-            'apiKey' => $this->getProject()['apiKey'],
+            'projectId' => $source['$id'],
+            'apiKey' => $source['apiKey'],
         ]);
 
         $this->assertSame('completed', $result['status'], 'Migration failed: ' . json_encode($result['errors'] ?? [], JSON_PRETTY_PRINT));
         $this->assertSame(1, $result['statusCounters'][Resource::TYPE_FUNCTION]['success']);
         $this->assertSame(2, $result['statusCounters'][Resource::TYPE_ENVIRONMENT_VARIABLE]['success']);
+        $this->assertSame(1, $result['statusCounters'][Resource::TYPE_SITE]['success']);
+        $this->assertSame(1, $result['statusCounters'][Resource::TYPE_SITE_VARIABLE]['success']);
 
         $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $destinationHeaders);
 
@@ -2545,15 +2571,20 @@ trait MigrationsBase
         $this->assertSame('', $function['body']['schedule']);
         $this->assertSame(7, $function['body']['deploymentRetention']);
 
-        $variables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', $destinationHeaders);
+        $functionVariables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', $destinationHeaders);
 
-        $this->assertSame(200, $variables['headers']['status-code']);
-        $secrets = \array_column($variables['body']['variables'], 'secret', 'key');
+        $this->assertSame(200, $functionVariables['headers']['status-code']);
+        $secrets = \array_column($functionVariables['body']['variables'], 'secret', 'key');
         \ksort($secrets);
-        $this->assertSame(['API_TOKEN' => true, 'REGION' => false], $secrets);
+        $this->assertSame(['API_TOKEN' => true, 'REGION' => false], $secrets, 'The function must not take the site\'s variable.');
 
-        $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, $sourceHeaders);
+        $siteVariables = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables', $destinationHeaders);
+
+        $this->assertSame(200, $siteVariables['headers']['status-code']);
+        $this->assertSame(['STRIPE_KEY' => true], \array_column($siteVariables['body']['variables'], 'secret', 'key'));
+
         $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, $destinationHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, $destinationHeaders);
     }
 
     /**
