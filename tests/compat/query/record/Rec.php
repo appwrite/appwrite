@@ -276,6 +276,7 @@ final class Rec
      *
      * @param array<string, mixed> $record fn or impl+m
      * @param list<mixed> $args
+     * @param \Closure(): mixed $body
      */
     private static function callback(array $record, array $args, \Closure $body): mixed
     {

@@ -286,7 +286,6 @@ final class Adapter implements Base, Benchmarks
         }
     }
 
-    /** @param array{cache: CacheAdapter|Cache, transport: Transport|Fixture|null} $handle */
     private static function callCache(mixed $handle, array $a): array
     {
         $cache = \is_array($handle) ? ($handle['cache'] ?? null) : null;
@@ -303,7 +302,6 @@ final class Adapter implements Base, Benchmarks
         });
     }
 
-    /** @param array{provider: Provider|Certificates, transport: Transport|Fixture|null} $handle */
     private static function callProvider(mixed $handle, array $a): array
     {
         $provider = \is_array($handle) ? ($handle['provider'] ?? null) : null;

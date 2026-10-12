@@ -60,6 +60,7 @@ class VisitorCoverageTest extends TestCase
             from: $table,
             where: new Binary(new Column('active'), '=', new Literal(true)),
         ));
+        $this->assertInstanceOf(Binary::class, $filtered->where);
         $this->assertSame('AND', $filtered->where->operator);
     }
 

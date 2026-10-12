@@ -40,7 +40,12 @@ use Utopia\Mqtt\Properties;
 use Utopia\Mqtt\Property;
 use Utopia\Mqtt\Server;
 use Utopia\Mqtt\Subscription\Store;
-use Utopia\Telemetry\Adapter\Test as TestTelemetry;
+use Utopia\Telemetry\Adapter as Telemetry;
+use Utopia\Telemetry\Counter;
+use Utopia\Telemetry\Gauge;
+use Utopia\Telemetry\Histogram;
+use Utopia\Telemetry\ObservableGauge;
+use Utopia\Telemetry\UpDownCounter;
 
 use function Swoole\Coroutine\run;
 
@@ -57,12 +62,86 @@ final class Rig
 
     public ?Server $server = null;
 
-    public ?TestTelemetry $telemetry = null;
+    public ?Metrics $telemetry = null;
 
     public function __construct(public Memory $adapter, public ?Timeline $timer)
     {
         $this->log = new \ArrayObject();
-        $this->timeline = $timer?->log ?? new \ArrayObject();
+        $this->timeline = $timer->log ?? new \ArrayObject();
+    }
+}
+
+/**
+ * The telemetry a broker records: what each counter and up-down counter was
+ * given, by name, in the order the names were first written (as
+ * Utopia\Telemetry\Adapter\Test lists its instruments).
+ */
+final class Metrics implements Telemetry
+{
+    /** @var array<string, list<float|int>> */
+    public array $counters = [];
+
+    /** @var array<string, list<float|int>> */
+    public array $upDownCounters = [];
+
+    public function createCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Counter
+    {
+        $values = [];
+        $record = function (float|int $amount) use ($name, &$values): void {
+            $values[] = $amount;
+            $this->counters[$name] = $values;
+        };
+
+        return new class ($record) extends Counter {
+            public function __construct(private \Closure $record)
+            {
+            }
+
+            public function add(float|int $amount, iterable $attributes = []): void
+            {
+                ($this->record)($amount);
+            }
+        };
+    }
+
+    public function createUpDownCounter(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): UpDownCounter
+    {
+        $values = [];
+        $record = function (float|int $amount) use ($name, &$values): void {
+            $values[] = $amount;
+            $this->upDownCounters[$name] = $values;
+        };
+
+        return new class ($record) extends UpDownCounter {
+            public function __construct(private \Closure $record)
+            {
+            }
+
+            public function add(float|int $amount, iterable $attributes = []): void
+            {
+                ($this->record)($amount);
+            }
+        };
+    }
+
+    public function createHistogram(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Histogram
+    {
+        throw new \LogicException('unused');
+    }
+
+    public function createGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): Gauge
+    {
+        throw new \LogicException('unused');
+    }
+
+    public function createObservableGauge(string $name, ?string $unit = null, ?string $description = null, array $advisory = []): ObservableGauge
+    {
+        throw new \LogicException('unused');
+    }
+
+    public function collect(): bool
+    {
+        return true;
     }
 }
 
@@ -387,8 +466,7 @@ final class Adapter implements Base, Benchmarks
             'connection.new' => fn (array $a, Session $s) => $s->handle(isset($a['rig']) ? new Connection($a['fd'], self::rig($a, $s)->adapter) : new Connection($a['fd'])),
             'connection.set' => function (array $a, Session $s) {
                 $c = self::connection($a, $s);
-                foreach (['protocol', 'prefix', 'cleanStart' => 'clean_start', 'identity', 'active', 'keepAlive' => 'keep_alive', 'expiresAt' => 'expires_at', 'wheelSlot' => 'wheel_slot'] as $property => $key) {
-                    $property = \is_int($property) ? $key : $property;
+                foreach (['protocol' => 'protocol', 'prefix' => 'prefix', 'clean_start' => 'cleanStart', 'identity' => 'identity', 'active' => 'active', 'keep_alive' => 'keepAlive', 'expires_at' => 'expiresAt', 'wheel_slot' => 'wheelSlot'] as $key => $property) {
                     if (\array_key_exists($key, $a)) {
                         $c->{$property} = $key === 'identity' ? (array) $a[$key] : $a[$key];
                     }
@@ -447,7 +525,7 @@ final class Adapter implements Base, Benchmarks
             },
             'server.telemetry' => function (array $a, Session $s) {
                 $rig = self::rig($a, $s);
-                $rig->telemetry = new TestTelemetry();
+                $rig->telemetry = new Metrics();
 
                 return $rig->server->setTelemetry($rig->telemetry) === $rig->server;
             },
@@ -493,7 +571,7 @@ final class Adapter implements Base, Benchmarks
                 $timer = new Timeline(new \ArrayObject());
                 $rig = new Rig(new Memory($timer), $timer);
                 $rig->server = new Server($rig->adapter, new Recorder($rig->log));
-                $rig->telemetry = new TestTelemetry();
+                $rig->telemetry = new Metrics();
                 $rig->server->setTelemetry($rig->telemetry);
                 $log = $rig->log;
                 $rig->server->error(function (\Throwable $error, string $stage) use ($log): void {
@@ -807,17 +885,17 @@ final class Adapter implements Base, Benchmarks
         ];
     }
 
-    private static function metrics(?TestTelemetry $telemetry): array
+    private static function metrics(?Metrics $telemetry): array
     {
         if ($telemetry === null) {
             return [];
         }
         $out = [];
-        foreach ($telemetry->counters as $name => $counter) {
-            $out[] = ['counter', $name, $counter->values];
+        foreach ($telemetry->counters as $name => $values) {
+            $out[] = ['counter', $name, $values];
         }
-        foreach ($telemetry->upDownCounters as $name => $counter) {
-            $out[] = ['up_down_counter', $name, $counter->values];
+        foreach ($telemetry->upDownCounters as $name => $values) {
+            $out[] = ['up_down_counter', $name, $values];
         }
 
         return $out;
@@ -965,6 +1043,7 @@ final class Adapter implements Base, Benchmarks
                 $tls = ($step['transport'] ?? 'tcp') === 'tls';
                 $endpoint = $endpoints[$tls ? 'tls' : 'tcp'];
                 $client = new Client(($tls ? 'mqtts://' : 'mqtt://') . $endpoint, ['timeout' => $step['timeout'] ?? 5]);
+                /** @var \ArrayObject<int, list<mixed>> $log */
                 $log = new \ArrayObject();
                 $client->onOpen(function () use ($log): void {
                     $log[] = ['open'];
@@ -1009,7 +1088,7 @@ final class Adapter implements Base, Benchmarks
                     }
                     $frame = $sockets[$name][0]->recv(5);
                     if (!$frame instanceof Frame) {
-                        return null;
+                        return;
                     }
                     $sockets[$name][1] .= (string) $frame->data;
                 }

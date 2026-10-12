@@ -10,7 +10,7 @@
  * twin is `fixture` in crates/tools/compat/src/libs/dns.rs.
  */
 
-require '/usr/src/code/vendor/autoload.php';
+require __DIR__ . '/../../../../vendor/autoload.php';
 require __DIR__ . '/Fixture.php';
 
 use Tests\Compat\Dns\Fixture;
@@ -24,7 +24,7 @@ use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\ObservableGauge;
 use Utopia\Telemetry\UpDownCounter;
 
-$config = json_decode((string) file_get_contents($argv[1]), true, flags: JSON_THROW_ON_ERROR);
+$config = json_decode((string) file_get_contents($_SERVER['argv'][1]), true, flags: JSON_THROW_ON_ERROR);
 $state = $config['state'];
 $log = static function (string $file, mixed $entry) use ($state): void {
     file_put_contents($state . '/' . $file, json_encode($entry, JSON_UNESCAPED_SLASHES | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PRESERVE_ZERO_FRACTION) . "\n", FILE_APPEND | LOCK_EX);

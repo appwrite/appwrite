@@ -23,14 +23,17 @@ use Utopia\Psr7\Stream;
  */
 final class Transport implements ClientInterface
 {
-    /** @var list<array{status?: int, headers?: array<string, string>, body?: string, error?: string}> */
+    /** @var list<array<mixed>> */
     private array $responses = [];
 
     /** @var list<array{method: string, url: string, headers: array<string, string>, body: string}> */
     private array $requests = [];
 
     /**
-     * @param list<array{status?: int, headers?: array<string, string>, body?: string, error?: string}> $responses
+     * Responses come from a case's JSON, each an object with any of
+     * `status`, `headers`, `body`, `json` (encoded as the body) or `error`.
+     *
+     * @param list<mixed> $responses
      */
     public function queue(array $responses): void
     {

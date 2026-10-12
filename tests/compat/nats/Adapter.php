@@ -63,7 +63,6 @@ use Utopia\NATS\Protocol\Writer;
 use Utopia\NATS\Request;
 use Utopia\NATS\ServerInfo;
 use Utopia\NATS\Services\Endpoint;
-use Utopia\NATS\Services\Group;
 use Utopia\NATS\Services\Service;
 use Utopia\NATS\Services\ServiceException;
 use Utopia\NATS\Subscription;
@@ -518,7 +517,7 @@ final class Adapter implements Base, Benchmarks
             'js.account_info' => function (array $a, Session $s) {
                 $info = self::js($a, $s)->accountInfo();
 
-                return ['streams_ge_1' => $info->streams >= 1, 'memory_ge_0' => $info->memory >= 0, 'api_total_ge_0' => $info->apiTotal >= 0, 'raw_has_memory' => \array_key_exists('memory', $info->raw), 'limits_is_array' => \is_array($info->limits)];
+                return ['streams_ge_1' => $info->streams >= 1, 'memory_ge_0' => $info->memory >= 0, 'api_total_ge_0' => $info->apiTotal >= 0, 'raw_has_memory' => \array_key_exists('memory', $info->raw), 'limits_is_array' => \is_array($info->raw['limits'] ?? null)];
             },
             'js.ack_batch' => function (array $a, Session $s) {
                 $messages = array_map(fn ($h) => $s->get($h), $a['messages']);
@@ -588,7 +587,7 @@ final class Adapter implements Base, Benchmarks
             'ordered.next' => function (array $a, Session $s) {
                 $message = $s->get($a['ordered'])->next(self::timeout($a));
                 if ($message === null) {
-                    return null;
+                    return;
                 }
                 $meta = $message->metadata();
 

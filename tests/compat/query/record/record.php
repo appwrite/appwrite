@@ -60,7 +60,7 @@ function source(string $relative, string $tests): string
     return \str_starts_with($relative, 'Extra/') ? __DIR__ . '/' . $relative . '.php' : $tests . '/' . $relative . '.php';
 }
 
-$files = \array_slice($argv, 1);
+$files = \array_slice($_SERVER['argv'], 1);
 if ($files === []) {
     $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($tests, \FilesystemIterator::SKIP_DOTS));
     foreach ($it as $file) {
@@ -166,7 +166,7 @@ foreach ($files as $relative) {
                 $status = 'fail';
                 $message = $e->getMessage();
             } catch (\Throwable $e) {
-                $expected = \Closure::bind(fn () => $this->expectedException ?? null, $test, TestCase::class)();
+                $expected = \Closure::bind(static fn (TestCase $test) => $test->expectedException, null, TestCase::class)($test);
                 if ($expected !== null && $e instanceof $expected) {
                     $status = 'ok';
                 } else {

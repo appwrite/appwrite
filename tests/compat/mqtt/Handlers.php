@@ -29,9 +29,6 @@ final class Timeline implements Timer
     /** @var callable|null */
     private $onTick = null;
 
-    /** @var callable|null */
-    private $onClear = null;
-
     /** @param \ArrayObject<int, mixed> $log */
     public function __construct(public \ArrayObject $log)
     {
@@ -44,10 +41,9 @@ final class Timeline implements Timer
         return $this;
     }
 
+    /** The clear hook is not used: clears are logged by clear(), as by the Rust twin. */
     public function onClear(callable $callback): self
     {
-        $this->onClear = $callback;
-
         return $this;
     }
 
@@ -204,12 +200,12 @@ final class Recorder implements Handler
  */
 final class Deliver implements Handler
 {
-    public function onConnect(Connect $connect, Connection $connection): Connack|Auth
+    public function onConnect(Connect $connect, Connection $connection): Connack
     {
         return Connack::accept();
     }
 
-    public function onAuthenticate(Auth $auth, Connection $connection): Connack|Auth|Disconnect
+    public function onAuthenticate(Auth $auth, Connection $connection): Auth
     {
         return Auth::success($auth->method);
     }
@@ -244,4 +240,3 @@ final class Deliver implements Handler
     {
     }
 }
-

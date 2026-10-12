@@ -28,7 +28,9 @@ final class Operations
         return match ($op) {
             'orchestration.new' => (static function () use ($a): mixed {
                 try {
-                    return self::orchestration($a['orchestration'] ?? []) instanceof Orchestration;
+                    self::orchestration($a['orchestration'] ?? []);
+
+                    return true;
                 } catch (Fault $fault) {
                     throw $fault;
                 } catch (\Throwable $error) {
