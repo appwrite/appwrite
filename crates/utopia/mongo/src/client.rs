@@ -381,6 +381,38 @@ pub struct Client {
     link: SyncMutex<Link>,
 }
 
+/// Whether PHP's extension encodes `command`: a key holding a null byte is
+/// an `UnexpectedValueException` naming the key up to it. The extension
+/// stops encoding that document and goes on with the enclosing ones, so the
+/// last such key is the one reported.
+fn encodable(command: &Document) -> Result<()> {
+    fn walk(document: &Document, last: &mut Option<String>) {
+        for (key, value) in document {
+            if let Some((before, _)) = key.split_once('\0') {
+                *last = Some(before.to_owned());
+                return;
+            }
+            value_of(value, last);
+        }
+    }
+    fn value_of(value: &Bson, last: &mut Option<String>) {
+        match value {
+            Bson::Document(d) => walk(d, last),
+            Bson::Array(items) => items.iter().for_each(|v| value_of(v, last)),
+            _ => {}
+        }
+    }
+    let mut last = None;
+    walk(command, &mut last);
+    match last {
+        None => Ok(()),
+        Some(before) => Err(Error::Engine {
+            class: "MongoDB\\Driver\\Exception\\UnexpectedValueException",
+            message: format!("BSON keys cannot contain null bytes. Unexpected null byte after \"{before}\"."),
+        }),
+    }
+}
+
 fn now() -> i64 {
     SystemTime::now().duration_since(UNIX_EPOCH).map_or(0, |d| d.as_secs() as i64)
 }
@@ -669,6 +701,7 @@ impl Client {
         if matches!(command.keys().next().map(String::as_str), Some(command::GET_MORE | command::KILL_CURSORS)) {
             command.remove("readConcern");
         }
+        encodable(&command)?;
         let database = driver.database(db.unwrap_or(&self.config.database));
         let timeout = Duration::from_secs_f64(self.config.timeout);
         let outcome = match &handle {

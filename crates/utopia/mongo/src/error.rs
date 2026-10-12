@@ -180,10 +180,12 @@ pub enum Error {
     InvalidArgument(String),
     /// What the PHP engine throws where the library breaks its own
     /// contract: a typed property read before it is set (`Error`), a
-    /// declared return type not met (`TypeError`).
+    /// declared return type not met (`TypeError`); and what PHP's MongoDB
+    /// extension throws when it cannot encode a command
+    /// (`MongoDB\Driver\Exception\UnexpectedValueException`).
     #[error("{message}")]
     Engine {
-        /// The PHP class: `Error` or `TypeError`.
+        /// The PHP class.
         class: &'static str,
         /// The engine's message.
         message: String,
