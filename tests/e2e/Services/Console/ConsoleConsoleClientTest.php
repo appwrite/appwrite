@@ -35,7 +35,6 @@ final class ConsoleConsoleClientTest extends Scope
         $this->assertIsInt($response['body']['_APP_COMPUTE_SIZE_LIMIT']);
         $this->assertIsBool($response['body']['_APP_DOMAIN_ENABLED']);
         $this->assertIsBool($response['body']['_APP_VCS_ENABLED']);
-        $this->assertIsBool($response['body']['_APP_ASSISTANT_ENABLED']);
         $this->assertIsString($response['body']['_APP_DOMAIN_SITES']);
         $this->assertIsString($response['body']['_APP_DOMAIN_FUNCTIONS']);
         $this->assertIsString($response['body']['_APP_OPTIONS_FORCE_HTTPS']);

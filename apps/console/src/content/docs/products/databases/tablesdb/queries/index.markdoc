@@ -1,0 +1,3086 @@
+---
+layout: article
+title: Queries
+description: Harness the power of querying with Appwrite tablesDB. Discover various query options, filtering, sorting, and advanced querying techniques.
+---
+
+Many list endpoints in Appwrite allow you to filter, sort, and paginate results using queries. Appwrite provides a common set of syntax to build queries.
+
+# Query class {% #query-class %}
+
+Appwrite SDKs provide a `Query` class to help you build queries. The `Query` class has methods for each type of supported query operation.
+
+# Building queries {% #building-queries %}
+
+Queries are passed to an endpoint through the `queries` parameter as an array of query strings, which can be generated using the `Query` class.
+
+Each query method is logically separated via `AND` operations. For `OR` operation, pass multiple values into the query method separated by commas.
+For example `Query.equal('title', ['Avatar', 'Lord of the Rings'])` will fetch the movies `Avatar` or `Lord of the Rings`.
+
+{% info title="Default pagination behavior" %}
+By default, results are limited to the **first 25 items**.
+You can change this through [pagination](/docs/products/databases/pagination).
+{% /info %}
+
+{% multicode %}
+
+```client-web
+import { Client, Query, TablesDB } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.equal('title', ['Avatar', 'Lord of the Rings']),
+        Query.greaterThan('year', 1999)
+    ]
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+
+const tablesDB = new sdk.TablesDB(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>')
+    .setKey('<YOUR_API_KEY>')
+;
+
+const promise = tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        sdk.Query.equal('title', ['Avatar', 'Lord of the Rings']),
+        sdk.Query.greaterThan('year', 1999)
+    ]
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+    final client = Client()
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    final tablesDB = TablesDB(client);
+
+    try {
+        final rows = await tablesDB.listRows(
+            '<DATABASE_ID>',
+            '<TABLE_ID>',
+            [
+                Query.equal('title', ['Avatar', 'Lord of the Rings']),
+                Query.greaterThan('year', 1999)
+            ]
+        );
+    } on AppwriteException catch(e) {
+        print(e);
+    }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+    let client = Client()
+        .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .setProject("<PROJECT_ID>")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        let rows = try await tablesDB.listRows(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            queries: [
+                Query.equal("title", value: ["Avatar", "Lord of the Rings"]),
+                Query.greaterThan("year", value: 1999)
+            ]
+        )
+    } catch {
+        print(error.localizedDescription)
+    }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.Query
+import io.appwrite.services.TablesDB
+
+suspend fun main() {
+    val client = Client(applicationContext)
+        .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+        .setProject('<PROJECT_ID>');
+
+    val tablesDB = TablesDB(client)
+
+    try {
+        val rows = tablesDB.listRows(
+            databaseId = "<DATABASE_ID>",
+            tableId = "<TABLE_ID>",
+            queries = listOf(
+                Query.equal("title", listOf("Avatar", "Lord of the Rings")),
+                Query.greaterThan("year", 1999)
+            )
+        )
+    } catch (e: AppwriteException) {
+        Log.e("Appwrite", e.message)
+    }
+}
+```
+```server-go
+package main
+
+import (
+    "fmt"
+    "log"
+
+    "github.com/appwrite/sdk-for-go/appwrite"
+    "github.com/appwrite/sdk-for-go/query"
+)
+
+func main() {
+    client := appwrite.NewClient(
+        appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+        appwrite.WithProject("<PROJECT_ID>"),
+        appwrite.WithKey("<API_KEY>"),
+    )
+
+    tablesDB := appwrite.NewTablesDB(client)
+
+    rows, err := tablesDB.ListRows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        tablesDB.WithListRowsQueries([]string{
+            query.Equal("title", []string{"Avatar", "Lord of the Rings"}),
+            query.GreaterThan("year", 1999),
+        }),
+    )
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    fmt.Printf("Rows: %+v\n", rows)
+}
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::query::Query;
+use serde_json::Value;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let rows = tables_db.list_rows(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        Some(vec![
+            Query::equal("title", Value::Array(vec![
+                Value::String("Avatar".to_string()),
+                Value::String("Lord of the Rings".to_string()),
+            ])).to_string(),
+            Query::greater_than("year", 1999).to_string(),
+        ]),
+        None,
+        None,
+        None,
+    ).await?;
+
+    println!("{:?}", rows);
+    Ok(())
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Query;
+use Appwrite\Services\TablesDB;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    ->setProject('<PROJECT_ID>')
+    ->setKey('<YOUR_API_KEY>')
+;
+
+$tablesDB = new TablesDB($client);
+
+$result = $tables->listRows(
+    '<DATABASE_ID>',
+    '<TABLE_ID>',
+    [
+        Query::equal('title', ['Avatar', 'Lord of the Rings']),
+        Query::greaterThan('year', 1999)
+    ]
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.query import Query
+from appwrite.services.tables_db import TablesDB
+
+client = Client()
+
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+)
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.list_rows(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    queries=[
+        Query.equal('title', ['Avatar', 'Lord of the Rings']),
+        Query.greater_than('year', 1999)
+    ]
+)
+```
+```graphql
+query {
+    tablesListRows(
+        databaseId: "<DATABASE_ID>",
+        tableId: "<TABLE_ID>"
+        queries: [
+            "{\"method\":\"equal\",\"column\":\"title\",\"values\":[\"Avatar\",\"Lord of the Rings\"]}",
+            "{\"method\":\"greaterThan\",\"column\":\"year\",\"values\":[1999]}"
+        ]
+    ) {
+        total
+        rows {
+            _id
+            data
+        }
+    }
+}
+```
+```http
+GET /v1/tablesdb/<DATABASE_ID>/tables/<TABLE_ID>/rows?queries[]=%7B%22method%22%3A%22equal%22%2C%22column%22%3A%22title%22%2C%22values%22%3A%5B%22Avatar%22%2C%22Lord%20of%20the%20Rings%22%5D%7D&queries[]=%7B%22method%22%3A%22greaterThan%22%2C%22column%22%3A%22year%22%2C%22values%22%3A%5B1999%5D%7D HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+```
+{% /multicode %}
+
+# Query operators {% #query-operators %}
+
+## Select {% #select %}
+
+The `select` operator allows you to specify which columns should be returned from a row. This is essential for optimizing response size, controlling which relationship data loads, and only retrieving the data you need.
+
+{% multicode %}
+```client-web
+Query.select(["name", "title"])
+```
+```client-flutter
+Query.select(["name", "title"])
+```
+```server-python
+Query.select(["name", "title"])
+```
+```server-ruby
+Query.select(["name", "title"])
+```
+```server-deno
+Query.select(["name", "title"])
+```
+```server-php
+Query::select(["name", "title"])
+```
+```client-apple
+Query.select(["name", "title"])
+```
+```server-go
+query.Select([]string{"name", "title"})
+```
+```server-rust
+Query::select(vec!["name", "title"]).to_string()
+```
+```http
+{"method":"select","values":["name","title"]}
+```
+{% /multicode %}
+
+### Select relationship data {% #relationship-select %}
+
+With [opt-in relationship loading](/docs/products/databases/relationships#performance-loading), you must explicitly select relationship data. This gives you fine-grained control over performance and payload size.
+
+#### Get rows without relationships
+By default, rows return only their own fields:
+
+{% multicode %}
+```client-web
+const row = await tablesDB.getRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(['name', 'age'])]
+});
+```
+```client-flutter
+final row = await tablesDB.getRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(["name", "age"])]
+);
+```
+```server-python
+row = tablesDB.get_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    queries=[Query.select(["name", "age"])]
+)
+```
+```server-ruby
+row = tablesDB.get_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    queries: [Query.select(["name", "age"])]
+)
+```
+```server-nodejs
+const row = await tablesDB.getRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(['name', 'age'])]
+});
+```
+```server-php
+$row = $tablesDB->getRow(
+    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
+    [Query::select(["name", "age"])]
+);
+```
+```server-rust
+let row = tables_db.get_row(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    Some(vec![Query::select(vec!["name", "age"]).to_string()]),
+    None,
+).await?;
+```
+```client-apple
+let row = try await tablesDB.getRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    queries: [Query.select(["name", "age"])]
+)
+```
+```http
+GET /v1/tablesdb/<DATABASE_ID>/tables/<TABLE_ID>/rows/<ROW_ID>?queries[]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22name%22%2C%22age%22%5D%7D HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+```
+{% /multicode %}
+
+#### Load all relationship data
+Use the `*` wildcard to load all fields from related rows:
+
+{% multicode %}
+```client-web
+const row = await tablesDB.getRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(['*', 'reviews.*'])]
+});
+```
+```client-flutter
+final row = await tablesDB.getRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(["*", "reviews.*"])]
+);
+```
+```server-python
+row = tablesDB.get_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    queries=[Query.select(["*", "reviews.*"])]
+)
+```
+```server-ruby
+row = tablesDB.get_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    queries: [Query.select(["*", "reviews.*"])]
+)
+```
+```server-nodejs
+const row = await tablesDB.getRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(["*", "reviews.*"])]
+});
+```
+```server-php
+$row = $tablesDB->getRow(
+    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
+    [Query::select(["*", "reviews.*"])]
+);
+```
+```server-rust
+let row = tables_db.get_row(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    Some(vec![Query::select(vec!["*", "reviews.*"]).to_string()]),
+    None,
+).await?;
+```
+```client-apple
+let row = try await tablesDB.getRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    queries: [Query.select(["*", "reviews.*"])]
+)
+```
+```http
+GET /v1/tablesdb/<DATABASE_ID>/tables/<TABLE_ID>/rows/<ROW_ID>?queries[]=%7B%22method%22%3A%22select%22%2C%22values%22%3A%5B%22%2A%22%2C%22reviews.%2A%22%5D%7D HTTP/1.1
+Content-Type: application/json
+X-Appwrite-Project: <PROJECT_ID>
+{"method":"select","values":["*","reviews.*"]}
+```
+{% /multicode %}
+
+#### Select specific relationship fields
+For precise control, select only specific fields from related rows:
+
+{% multicode %}
+```client-web
+const row = await tablesDB.getRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(['name', 'age', 'reviews.author', 'reviews.rating'])]
+});
+```
+```client-flutter
+final row = await tablesDB.getRow(
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(["name", "age", "reviews.author", "reviews.rating"])]
+);
+```
+```server-python
+row = tablesDB.get_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    queries=[Query.select(["name", "age", "reviews.author", "reviews.rating"])]
+)
+```
+```server-ruby
+row = tablesDB.get_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    queries: [Query.select(["name", "age", "reviews.author", "reviews.rating"])]
+)
+```
+```server-nodejs
+const row = await tablesDB.getRow({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    rowId: '<ROW_ID>',
+    queries: [Query.select(["name", "age", "reviews.author", "reviews.rating"])]
+});
+// Result: { name: "John", age: 30, reviews: [{ author: "...", rating: 5 }] }
+```
+```server-php
+$row = $tablesDB->getRow(
+    '<DATABASE_ID>', '<TABLE_ID>', '<ROW_ID>',
+    [Query::select(["name", "age", "reviews.author", "reviews.rating"])]
+);
+```
+```server-rust
+let row = tables_db.get_row(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    Some(vec![Query::select(vec!["name", "age", "reviews.author", "reviews.rating"]).to_string()]),
+    None,
+).await?;
+```
+```client-apple
+let row = try await tablesDB.getRow(
+    databaseId: "<DATABASE_ID>",
+    tableId: "<TABLE_ID>",
+    rowId: "<ROW_ID>",
+    queries: [Query.select(["name", "age", "reviews.author", "reviews.rating"])]
+)
+```
+```http
+# Load specific fields from main and related rows
+{"method":"select","values":["name","age","reviews.author","reviews.rating"]}
+```
+{% /multicode %}
+
+#### Load nested relationships
+You can also load relationships of relationships:
+
+{% multicode %}
+```client-web
+Query.select(["*", "reviews.*", "reviews.author.*"])
+```
+```client-flutter
+Query.select(["*", "reviews.*", "reviews.author.*"])
+```
+```server-python
+Query.select(["*", "reviews.*", "reviews.author.*"])
+```
+```server-ruby
+Query.select(["*", "reviews.*", "reviews.author.*"])
+```
+```server-nodejs
+Query.select(["*", "reviews.*", "reviews.author.*"])
+```
+```server-php
+Query::select(["*", "reviews.*", "reviews.author.*"])
+```
+```server-rust
+Query::select(vec!["*", "reviews.*", "reviews.author.*"]).to_string()
+```
+```client-apple
+Query.select(["*", "reviews.*", "reviews.author.*"])
+```
+```http
+{"method":"select","values":["*","reviews.*","reviews.author.*"]}
+```
+{% /multicode %}
+
+### Use selection patterns {% #select-patterns %}
+
+| Pattern | Description | Use case |
+|---------|-------------|----------|
+| `["field1", "field2"]` | Specific columns only | Minimize response size |
+| `["*"]` | All row columns | Get complete row data |
+| `["*", "relationName.*"]` | Row + all relationship fields | Load row with complete related data |
+| `["field1", "relationName.field2"]` | Specific fields from row and relationships | Precise data loading |
+| `["*", "relationName.field1", "relationName.field2"]` | All row fields + specific relationship fields | Partial relationship loading |
+| `["relationName.*", "relationName.nestedRelation.*"]` | Nested relationship loading | Load relationships of relationships |
+
+### Optimize performance {% #select-performance %}
+
+**Optimize response size** - Only select the fields you actually need. Smaller responses are faster to transfer and parse.
+
+**Control relationship loading** - Related rows are not loaded by default. Use explicit selection to load only the relationships you need.
+
+**Reduce database load** - Selecting fewer fields reduces database processing time, especially for large rows.
+
+{% info title="Related rows" %}
+By default, relationship columns contain only row IDs.
+To load the actual related row data, you must explicitly include relationship fields in your select query.
+Learn more about [relationship performance optimization](/docs/products/databases/relationships#performance-loading).
+{% /info %}
+
+## Comparison operators {% #comparison %}
+
+### Equal {% #equal %}
+
+Returns row if column is equal to any value in the provided array. Also supported for spatial types.
+
+{% multicode %}
+```client-web
+Query.equal("title", ["Iron Man"])
+```
+```client-flutter
+Query.equal("title", ["Iron Man"])
+```
+```server-python
+Query.equal("title", ["Iron Man"])
+```
+```server-ruby
+Query.equal("title", ["Iron Man"])
+```
+```server-deno
+Query.equal("title", ["Iron Man"])
+```
+```server-php
+Query::equal("title", ["Iron Man"])
+```
+```client-apple
+Query.equal("title", value: ["Iron Man"])
+```
+```server-go
+query.Equal("title", []string{"Iron Man"})
+```
+```server-rust
+Query::equal("title", Value::Array(vec![Value::String("Iron Man".to_string())])).to_string()
+```
+```http
+{"method":"equal","column":"title","values":["Iron Man"]}
+```
+{% /multicode %}
+
+### Not equal {% #not-equal %}
+
+Returns row if column is not equal to any value in the provided array. Also supported for spatial types.
+
+{% multicode %}
+```client-web
+Query.notEqual("title", "Iron Man")
+```
+```client-flutter
+Query.notEqual("title", "Iron Man")
+```
+```server-python
+Query.not_equal("title", "Iron Man")
+```
+```server-ruby
+Query.not_equal("title", "Iron Man")
+```
+```server-deno
+Query.notEqual("title", "Iron Man")
+```
+```server-php
+Query::notEqual("title", "Iron Man")
+```
+```client-apple
+Query.notEqual("title", value: "Iron Man")
+```
+```server-go
+query.NotEqual("title", "Iron Man")
+```
+```server-rust
+Query::not_equal("title", "Iron Man").to_string()
+```
+```http
+{"method":"notEqual","column":"title","values":"Iron Man"}
+```
+{% /multicode %}
+
+### Less than {% #less-than %}
+
+Returns row if column is less than the provided value.
+
+{% multicode %}
+```client-web
+Query.lessThan("score", 10)
+```
+```client-flutter
+Query.lessThan("score", 10)
+```
+```server-python
+Query.less_than("score", 10)
+```
+```server-ruby
+Query.less_than("score", 10)
+```
+```server-deno
+Query.lessThan("score", 10)
+```
+```server-php
+Query::lessThan("score", 10)
+```
+```client-apple
+Query.lessThan("score", value: 10)
+```
+```server-go
+query.LessThan("score", 10)
+```
+```server-rust
+Query::less_than("score", 10).to_string()
+```
+```http
+{"method":"lessThan","column":"score","values":[10]}
+```
+{% /multicode %}
+
+### Less than or equal {% #less-than-equal %}
+
+Returns row if column is less than or equal to the provided value.
+
+{% multicode %}
+```client-web
+Query.lessThanEqual("score", 10)
+```
+```client-flutter
+Query.lessThanEqual("score", 10)
+```
+```server-python
+Query.less_than_equal("score", 10)
+```
+```server-ruby
+Query.less_than_equal("score", 10)
+```
+```server-deno
+Query.lessThanEqual("score", 10)
+```
+```server-php
+Query::lessThanEqual("score", 10)
+```
+```client-apple
+Query.lessThanEqual("score", value: 10)
+```
+```server-go
+query.LessThanEqual("score", 10)
+```
+```server-rust
+Query::less_than_equal("score", 10).to_string()
+```
+```http
+{"method":"lessThanEqual","column":"score","values":[10]}
+```
+{% /multicode %}
+
+### Greater than {% #greater-than %}
+
+Returns row if column is greater than the provided value.
+
+{% multicode %}
+```client-web
+Query.greaterThan("score", 10)
+```
+```client-flutter
+Query.greaterThan("score", 10)
+```
+```server-python
+Query.greater_than("score", 10)
+```
+```server-ruby
+Query.greater_than("score", 10)
+```
+```server-deno
+Query.greaterThan("score", 10)
+```
+```server-php
+Query::greaterThan("score", 10)
+```
+```client-apple
+Query.greaterThan("score", value: 10)
+```
+```server-go
+query.GreaterThan("score", 10)
+```
+```server-rust
+Query::greater_than("score", 10).to_string()
+```
+```http
+{"method":"greaterThan","column":"score","values":[10]}
+```
+{% /multicode %}
+
+### Greater than or equal {% #greater-than-equal %}
+
+Returns row if column is greater than or equal to the provided value.
+
+{% multicode %}
+```client-web
+Query.greaterThanEqual("score", 10)
+```
+```client-flutter
+Query.greaterThanEqual("score", 10)
+```
+```server-python
+Query.greater_than_equal("score", 10)
+```
+```server-ruby
+Query.greater_than_equal("score", 10)
+```
+```server-deno
+Query.greaterThanEqual("score", 10)
+```
+```server-php
+Query::greaterThanEqual("score", 10)
+```
+```client-apple
+Query.greaterThanEqual("score", value: 10)
+```
+```server-go
+query.GreaterThanEqual("score", 10)
+```
+```server-rust
+Query::greater_than_equal("score", 10).to_string()
+```
+```http
+{"method":"greaterThanEqual","column":"score","values":[10]}
+```
+{% /multicode %}
+
+### Between {% #between %}
+
+Returns row if column value falls between the two values. The boundary values are inclusive and can be strings or numbers.
+
+{% multicode %}
+```client-web
+Query.between("price", 5, 10)
+```
+```client-flutter
+Query.between("price", 5, 10)
+```
+```server-python
+Query.between("price", 5, 10)
+```
+```server-ruby
+Query.between("price", 5, 10)
+```
+```server-deno
+Query.between("price", 5, 10)
+```
+```server-php
+Query::between("price", 5, 10)
+```
+```client-apple
+Query.between("price", start: 5, end: 10)
+```
+```server-go
+query.Between("price", 5, 10)
+```
+```server-rust
+Query::between("price", 5, 10).to_string()
+```
+```http
+{"method":"between","column":"price","values":[5,10]}
+```
+{% /multicode %}
+
+### Not between {% #not-between %}
+
+Returns rows if the column value is outside the range defined by the two values (strictly less than start OR strictly greater than end).
+Works with strings or numbers. Boundary values are excluded.
+
+{% multicode %}
+```client-web
+Query.notBetween("price", 5, 10)
+```
+```client-flutter
+Query.notBetween("price", 5, 10)
+```
+```client-apple
+Query.notBetween("price", start: 5, end: 10)
+```
+```client-android-kotlin
+Query.notBetween("price", 5, 10)
+```
+```client-android-java
+Query.notBetween("price", 5, 10)
+```
+```server-python
+Query.not_between("price", 5, 10)
+```
+```server-ruby
+Query.not_between("price", 5, 10)
+```
+```server-deno
+Query.notBetween("price", 5, 10)
+```
+```server-nodejs
+Query.notBetween("price", 5, 10)
+```
+```server-php
+Query::notBetween("price", 5, 10)
+```
+```server-swift
+Query.notBetween("price", start: 5, end: 10)
+```
+```server-rust
+Query::not_between("price", 5, 10).to_string()
+```
+```http
+{"method":"notBetween","column":"price","values":[5,10]}
+```
+{% /multicode %}
+
+## Null checks {% #null-checks %}
+
+### Is null {% #is-null %}
+
+Returns rows where column value is null.
+
+{% multicode %}
+```client-web
+Query.isNull("name")
+```
+```client-flutter
+Query.isNull("name")
+```
+```server-python
+Query.is_null("name")
+```
+```server-ruby
+Query.is_null("name")
+```
+```server-deno
+Query.isNull("name")
+```
+```server-php
+Query::isNull("name")
+```
+```client-apple
+Query.isNull("name")
+```
+```server-go
+query.IsNull("name")
+```
+```server-rust
+Query::is_null("name").to_string()
+```
+```http
+{"method":"isNull","column":"name"}
+```
+{% /multicode %}
+
+### Is not null {% #is-not-null %}
+
+Returns rows where column value is **not** null.
+
+{% multicode %}
+```client-web
+Query.isNotNull("name")
+```
+```client-flutter
+Query.isNotNull("name")
+```
+```server-python
+Query.is_not_null("name")
+```
+```server-ruby
+Query.is_not_null("name")
+```
+```server-deno
+Query.isNotNull("name")
+```
+```server-php
+Query::isNotNull("name")
+```
+```client-apple
+Query.isNotNull("name")
+```
+```server-go
+query.IsNotNull("name")
+```
+```server-rust
+Query::is_not_null("name").to_string()
+```
+```http
+{"method":"isNotNull","column":"name"}
+```
+{% /multicode %}
+
+## Text operations {% #text-operations %}
+
+### Starts with {% #starts-with %}
+
+Returns rows if a text column starts with a substring.
+
+{% multicode %}
+```client-web
+Query.startsWith("name", "Once upon a time")
+```
+```client-flutter
+Query.startsWith("name", "Once upon a time")
+```
+```server-python
+Query.starts_with("name", "Once upon a time")
+```
+```server-ruby
+Query.starts_with("name", "Once upon a time")
+```
+```server-deno
+Query.startsWith("name", "Once upon a time")
+```
+```server-php
+Query::startsWith("name", "Once upon a time")
+```
+```client-apple
+Query.startsWith("name", value: "Once upon a time")
+```
+```server-go
+query.StartsWith("name", "Once upon a time")
+```
+```server-rust
+Query::starts_with("name", "Once upon a time").to_string()
+```
+```http
+{"method":"startsWith","column":"name","values":["Once upon a time"]}
+```
+{% /multicode %}
+
+### Not starts with {% #not-starts-with %}
+
+Returns rows if a text column does not start with a substring.
+
+{% multicode %}
+```client-web
+Query.notStartsWith("name", "Once upon a time")
+```
+```client-flutter
+Query.notStartsWith("name", "Once upon a time")
+```
+```client-apple
+Query.notStartsWith("name", value: "Once upon a time")
+```
+```client-android-kotlin
+Query.notStartsWith("name", "Once upon a time")
+```
+```client-android-java
+Query.notStartsWith("name", "Once upon a time")
+```
+```server-python
+Query.not_starts_with("name", "Once upon a time")
+```
+```server-ruby
+Query.not_starts_with("name", "Once upon a time")
+```
+```server-deno
+Query.notStartsWith("name", "Once upon a time")
+```
+```server-nodejs
+Query.notStartsWith("name", "Once upon a time")
+```
+```server-php
+Query::notStartsWith("name", "Once upon a time")
+```
+```server-swift
+Query.notStartsWith("name", value: "Once upon a time")
+```
+```server-rust
+Query::not_starts_with("name", "Once upon a time").to_string()
+```
+```http
+{"method":"notStartsWith","column":"name","values":["Once upon a time"]}
+```
+{% /multicode %}
+
+### Ends with {% #ends-with %}
+
+Returns rows if a text column ends with a substring.
+
+{% multicode %}
+```client-web
+Query.endsWith("name", "happily ever after.")
+```
+```client-flutter
+Query.endsWith("name", "happily ever after.")
+```
+```server-python
+Query.ends_with("name", "happily ever after.")
+```
+```server-ruby
+Query.ends_with("name", "happily ever after.")
+```
+```server-deno
+Query.endsWith("name", "happily ever after.")
+```
+```server-php
+Query::endsWith("name", "happily ever after.")
+```
+```client-apple
+Query.endsWith("name", value: "happily ever after.")
+```
+```server-go
+query.EndsWith("name", "happily ever after.")
+```
+```server-rust
+Query::ends_with("name", "happily ever after.").to_string()
+```
+```http
+{"method":"endsWith","column":"name","values":["happily ever after."]}
+```
+{% /multicode %}
+
+### Not ends with {% #not-ends-with %}
+
+Returns rows if a text column does not end with a substring.
+
+{% multicode %}
+```client-web
+Query.notEndsWith("name", "happily ever after.")
+```
+```client-flutter
+Query.notEndsWith("name", "happily ever after.")
+```
+```client-apple
+Query.notEndsWith("name", value: "happily ever after.")
+```
+```client-android-kotlin
+Query.notEndsWith("name", "happily ever after.")
+```
+```client-android-java
+Query.notEndsWith("name", "happily ever after.")
+```
+```server-python
+Query.not_ends_with("name", "happily ever after.")
+```
+```server-ruby
+Query.not_ends_with("name", "happily ever after.")
+```
+```server-deno
+Query.notEndsWith("name", "happily ever after.")
+```
+```server-nodejs
+Query.notEndsWith("name", "happily ever after.")
+```
+```server-php
+Query::notEndsWith("name", "happily ever after.")
+```
+```server-swift
+Query.notEndsWith("name", value: "happily ever after.")
+```
+```server-rust
+Query::not_ends_with("name", "happily ever after.").to_string()
+```
+```http
+{"method":"notEndsWith","column":"name","values":["happily ever after."]}
+```
+{% /multicode %}
+
+### Contains {% #contains %}
+
+Returns rows if the array column contains the specified elements or if a text column contains the specified substring. Also supported for spatial types.
+
+{% multicode %}
+```client-web
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.contains("name", "Tom")
+```
+```client-flutter
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.contains("name", "Tom")
+```
+```server-python
+# For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+# For text columns
+Query.contains("name", "Tom")
+```
+```server-ruby
+# For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+# For text columns
+Query.contains("name", "Tom")
+```
+```server-deno
+// For arrays
+Query.contains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.contains("name", "Tom")
+```
+```server-php
+// For arrays
+Query::contains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query::contains("name", "Tom")
+```
+```client-apple
+// For arrays
+Query.contains("ingredients", value: ["apple", "banana"])
+
+// For text columns
+Query.contains("name", value: "Tom")
+```server-go
+// For arrays
+query.Contains("ingredients", []string{"apple", "banana"})
+
+// For text columns
+query.Contains("name", "Tom")
+```
+```server-rust
+// For arrays
+Query::contains("ingredients", Value::Array(vec![
+    Value::String("apple".to_string()),
+    Value::String("banana".to_string()),
+])).to_string()
+
+// For text columns
+Query::contains("name", "Tom").to_string()
+```
+```http
+# For arrays
+{"method":"contains","column":"ingredients","values":["apple","banana"]}
+
+# For text columns
+{"method":"contains","column":"name","values":["Tom"]}
+```
+{% /multicode %}
+
+### Not contains {% #not-contains %}
+
+Returns rows if the array column does not contain the specified
+elements, or if a text column does not contain the specified
+substring. Also supported for spatial types.
+
+{% multicode %}
+```client-web
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```client-flutter
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```client-react-native
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```client-apple
+// For arrays
+Query.notContains("ingredients", value: ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", value: "Tom")
+```
+```client-android-kotlin
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```client-android-java
+// For arrays
+Query.notContains("ingredients", Arrays.asList("apple", "banana"))
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```server-python
+# For arrays
+Query.not_contains("ingredients", ['apple', 'banana'])
+
+# For text columns
+Query.not_contains("name", "Tom")
+```
+```server-ruby
+# For arrays
+Query.not_contains("ingredients", ['apple', 'banana'])
+
+# For text columns
+Query.not_contains("name", "Tom")
+```
+```server-deno
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```server-nodejs
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```server-php
+// For arrays
+Query::notContains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query::notContains("name", "Tom")
+```
+```server-dotnet
+// For arrays
+Query.NotContains("ingredients", new List<string> { "apple", "banana" })
+
+// For text columns
+Query.NotContains("name", "Tom")
+```
+```server-go
+// For arrays
+query.NotContains("ingredients", []string{"apple", "banana"})
+
+// For text columns
+query.NotContains("name", "Tom")
+```server-dart
+// For arrays
+Query.notContains("ingredients", ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```server-swift
+// For arrays
+Query.notContains("ingredients", value: ['apple', 'banana'])
+
+// For text columns
+Query.notContains("name", value: "Tom")
+```
+```server-kotlin
+// For arrays
+Query.notContains("ingredients", listOf("apple", "banana"))
+
+// For text columns
+Query.notContains("name", "Tom")
+```
+```server-rust
+// For arrays
+Query::not_contains("ingredients", Value::Array(vec![
+    Value::String("apple".to_string()),
+    Value::String("banana".to_string()),
+])).to_string()
+
+// For text columns
+Query::not_contains("name", "Tom").to_string()
+```
+```http
+# For arrays
+{"method":"notContains","column":"ingredients","values":["apple","banana"]}
+
+# For text columns
+{"method":"notContains","column":"name","values":["Tom"]}
+```
+{% /multicode %}
+
+### Search {% #search %}
+
+Searches text columns for provided keywords. Requires a [full-text index](/docs/products/databases/tables#indexes) on queried columns. The search string must be at least **3 characters** to perform a search.
+
+{% info title="Searching values with hyphens" %}
+The hyphen (`-`) is treated as a stop character by the underlying search engine. To search for exact values that contain hyphens (for example, ticket or SKU codes like `SWT-2621-44`), wrap the value in quotes inside the search string: `Query.search(column, '"SWT-2621-44"')`.
+{% /info %}
+
+{% multicode %}
+```client-web
+Query.search("text", "key words")
+```
+```client-flutter
+Query.search("text", "key words")
+```
+```server-python
+Query.search("text", "key words")
+```
+```server-ruby
+Query.search("text", "key words")
+```
+```server-deno
+Query.search("text", "key words")
+```
+```server-php
+Query::search("text", "key words")
+```
+```client-apple
+Query.search("text", value: "key words")
+```
+```server-go
+query.Search("text", "key words")
+```
+```server-rust
+Query::search("text", "key words").to_string()
+```
+```http
+{"method":"search","column":"text","values":["key words"]}
+```
+{% /multicode %}
+
+### Not search {% #not-search %}
+
+Returns rows if a text column does not match the full-text search
+query. Requires a [full-text index](/docs/products/databases/tables#indexes)
+on queried columns. The search string must be at least **3 characters** to perform a search.
+
+{% info title="Searching values with hyphens" %}
+The hyphen (`-`) is treated as a stop character by the underlying search engine. To exclude exact values that contain hyphens (for example, ticket or SKU codes like `SWT-2621-44`), wrap the value in quotes inside the search string: `Query.notSearch(column, '"SWT-2621-44"')`.
+{% /info %}
+
+{% multicode %}
+```client-web
+Query.notSearch("text", "key words")
+```
+```client-flutter
+Query.notSearch("text", "key words")
+```
+```client-apple
+Query.notSearch("text", value: "key words")
+```
+```client-android-kotlin
+Query.notSearch("text", "key words")
+```
+```client-android-java
+Query.notSearch("text", "key words")
+```
+```server-python
+Query.not_search("text", "key words")
+```
+```server-ruby
+Query.not_search("text", "key words")
+```
+```server-deno
+Query.notSearch("text", "key words")
+```
+```server-nodejs
+Query.notSearch("text", "key words")
+```
+```server-php
+Query::notSearch("text", "key words")
+```
+```server-swift
+Query.notSearch("text", value: "key words")
+```
+```server-rust
+Query::not_search("text", "key words").to_string()
+```
+```http
+{"method":"notSearch","column":"text","values":["key words"]}
+```
+{% /multicode %}
+
+## Logical operators {% #logical-operators %}
+
+### AND {% #and %}
+
+Returns row if it matches all of the nested sub-queries in the array passed in.
+
+{% multicode %}
+```client-web
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
+```client-flutter
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
+```server-python
+Query.and_queries([
+    Query.less_than("size", 10),
+    Query.greater_than("size", 5)
+])
+```
+```server-ruby
+Query.and([
+    Query.less_than("size", 10),
+    Query.greater_than("size", 5)
+])
+```
+```server-deno
+Query.and([
+    Query.lessThan("size", 10),
+    Query.greaterThan("size", 5)
+])
+```
+```server-php
+Query::and([
+    Query::lessThan("size", 10),
+    Query::greaterThan("size", 5)
+])
+```
+```client-apple
+Query.and([
+    Query.lessThan("size", value: 10),
+    Query.greaterThan("size", value: 5)
+])
+```
+```server-go
+query.And([]string{
+    query.LessThan("size", 10),
+    query.GreaterThan("size", 5),
+})
+```
+```server-rust
+Query::and(vec![
+    Query::less_than("size", 10).to_string(),
+    Query::greater_than("size", 5).to_string(),
+]).to_string()
+```
+```http
+{"method":"and","values":[{"method":"lessThan","column":"size","values":[10]},{"method":"greaterThan","column":"size","values":[5]}]}
+```
+{% /multicode %}
+
+### OR {% #or %}
+
+Returns row if it matches any of the nested sub-queries in the array passed in.
+
+{% multicode %}
+```client-web
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
+```client-flutter
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
+```server-python
+Query.or_queries([
+    Query.less_than("size", 5),
+    Query.greater_than("size", 10)
+])
+```
+```server-ruby
+Query.or([
+    Query.less_than("size", 5),
+    Query.greater_than("size", 10)
+])
+```
+```server-deno
+Query.or([
+    Query.lessThan("size", 5),
+    Query.greaterThan("size", 10)
+])
+```
+```server-php
+Query::or([
+    Query::lessThan("size", 5),
+    Query::greaterThan("size", 10)
+])
+```
+```client-apple
+Query.or([
+    Query.lessThan("size", value: 5),
+    Query.greaterThan("size", value: 10)
+])
+```
+```server-go
+query.Or([]string{
+    query.LessThan("size", 5),
+    query.GreaterThan("size", 10),
+})
+```
+```server-rust
+Query::or(vec![
+    Query::less_than("size", 5).to_string(),
+    Query::greater_than("size", 10).to_string(),
+]).to_string()
+```
+```http
+{"method":"or","values":[{"method":"lessThan","column":"size","values":[5]},{"method":"greaterThan","column":"size","values":[10]}]}
+```
+{% /multicode %}
+
+## Ordering {% #ordering %}
+
+### Order descending {% #order-desc %}
+
+Orders results in descending order by column. Column must be indexed.
+
+{% multicode %}
+```client-web
+Query.orderDesc("column")
+```
+```client-flutter
+Query.orderDesc("column")
+```
+```server-python
+Query.order_desc("column")
+```
+```server-ruby
+Query.order_desc("column")
+```
+```server-nodejs
+Query.orderDesc("column")
+```
+```server-php
+Query::orderDesc("column")
+```
+```client-apple
+Query.orderDesc("column")
+```
+```server-go
+query.OrderDesc("column")
+```
+```server-rust
+Query::order_desc("column").to_string()
+```
+```http
+{"method":"orderDesc","column":"column"}
+```
+{% /multicode %}
+
+### Order ascending {% #order-asc %}
+
+Orders results in ascending order by column. Column must be indexed.
+
+{% multicode %}
+```client-web
+Query.orderAsc("column")
+```
+```client-flutter
+Query.orderAsc("column")
+```
+```server-python
+Query.order_asc("column")
+```
+```server-ruby
+Query.order_asc("column")
+```
+```server-nodejs
+Query.orderAsc("column")
+```
+```server-php
+Query::orderAsc("column")
+```
+```client-apple
+Query.orderAsc("column")
+```
+```server-go
+query.OrderAsc("column")
+```
+```server-rust
+Query::order_asc("column").to_string()
+```
+```http
+{"method":"orderAsc","column":"column"}
+```
+{% /multicode %}
+
+### Order random {% #order-random %}
+
+Orders results in random order.
+
+{% multicode %}
+```client-web
+Query.orderRandom()
+```
+```client-flutter
+Query.orderRandom()
+```
+```server-python
+Query.order_random()
+```
+```server-ruby
+Query.order_random()
+```
+```server-nodejs
+Query.orderRandom()
+```
+```server-php
+Query::orderRandom()
+```
+```client-apple
+Query.orderRandom()
+```
+```server-go
+query.OrderRandom()
+```
+```server-rust
+Query::order_random().to_string()
+```
+```http
+{"method":"orderRandom"}
+```
+{% /multicode %}
+
+## Pagination {% #pagination %}
+
+### Limit {% #limit %}
+
+Limits the number of results returned by the query. Used for [pagination](/docs/products/databases/pagination).
+
+{% multicode %}
+```client-web
+Query.limit(25)
+```
+```client-flutter
+Query.limit(25)
+```
+```server-python
+Query.limit(25)
+```
+```server-ruby
+Query.limit(25)
+```
+```server-deno
+Query.limit(25)
+```
+```server-php
+Query::limit(25)
+```
+```client-apple
+Query.limit(25)
+```
+```server-go
+query.Limit(25)
+```
+```server-rust
+Query::limit(25).to_string()
+```
+```http
+{"method":"limit","values":[25]}
+```
+{% /multicode %}
+
+### Offset {% #offset %}
+
+Offset the results returned by skipping some of the results. Used for [pagination](/docs/products/databases/pagination).
+
+{% multicode %}
+```client-web
+Query.offset(0)
+```
+```client-flutter
+Query.offset(0)
+```
+```server-python
+Query.offset(0)
+```
+```server-ruby
+Query.offset(0)
+```
+```server-deno
+Query.offset(0)
+```
+```server-php
+Query::offset(0)
+```
+```client-apple
+Query.offset(0)
+```
+```server-go
+query.Offset(0)
+```
+```server-rust
+Query::offset(0).to_string()
+```
+```http
+{"method":"offset","values":[0]}
+```
+{% /multicode %}
+
+### Cursor after {% #cursor-after %}
+
+Places the cursor after the specified resource ID. Used for [pagination](/docs/products/databases/pagination).
+
+{% multicode %}
+```client-web
+Query.cursorAfter("62a7...f620")
+```
+```client-flutter
+Query.cursorAfter("62a7...f620")
+```
+```server-python
+Query.cursor_after("62a7...f620")
+```
+```server-ruby
+Query.cursor_after("62a7...f620")
+```
+```server-deno
+Query.cursorAfter("62a7...f620")
+```
+```server-php
+Query::cursorAfter("62a7...f620")
+```
+```client-apple
+Query.cursorAfter("62a7...f620")
+```
+```server-go
+query.CursorAfter("62a7...f620")
+```
+```server-rust
+Query::cursor_after("62a7...f620").to_string()
+```
+```http
+{"method":"cursorAfter","values":["62a7...f620"]}
+```
+{% /multicode %}
+
+### Cursor before {% #cursor-before %}
+
+Places the cursor before the specified resource ID. Used for [pagination](/docs/products/databases/pagination).
+
+{% multicode %}
+```client-web
+Query.cursorBefore("62a7...a600")
+```
+```client-flutter
+Query.cursorBefore("62a7...a600")
+```
+```server-python
+Query.cursor_before("62a7...a600")
+```
+```server-ruby
+Query.cursor_before("62a7...a600")
+```
+```server-deno
+Query.cursorBefore("62a7...a600")
+```
+```server-php
+Query::cursorBefore("62a7...a600")
+```
+```client-apple
+Query.cursorBefore("62a7...a600")
+```
+```server-go
+query.CursorBefore("62a7...a600")
+```
+```server-rust
+Query::cursor_before("62a7...a600").to_string()
+```
+```http
+{"method":"cursorBefore","values":["62a7...a600"]}
+```
+{% /multicode %}
+
+# Time helpers {% #time-helpers %}
+
+Built-in helpers for filtering by creation and update timestamps using
+ISO 8601 date-time strings (for example, "2025-01-01T00:00:00Z").
+
+### Created before {% #created-before %}
+
+Returns rows created before the given date.
+
+{% multicode %}
+```client-web
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-flutter
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-apple
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-android-kotlin
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```client-android-java
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-python
+Query.created_before("2025-01-01T00:00:00Z")
+```
+```server-ruby
+Query.created_before("2025-01-01T00:00:00Z")
+```
+```server-deno
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-nodejs
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-php
+Query::createdBefore("2025-01-01T00:00:00Z")
+```
+```server-swift
+Query.createdBefore("2025-01-01T00:00:00Z")
+```
+```server-rust
+Query::created_before("2025-01-01T00:00:00Z").to_string()
+```
+```http
+{"method":"createdBefore","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+
+### Created after {% #created-after %}
+
+Returns rows created after the given date.
+
+{% multicode %}
+```client-web
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-flutter
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-apple
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-android-kotlin
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```client-android-java
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-python
+Query.created_after("2025-01-01T00:00:00Z")
+```
+```server-ruby
+Query.created_after("2025-01-01T00:00:00Z")
+```
+```server-deno
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-nodejs
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-php
+Query::createdAfter("2025-01-01T00:00:00Z")
+```
+```server-swift
+Query.createdAfter("2025-01-01T00:00:00Z")
+```
+```server-rust
+Query::created_after("2025-01-01T00:00:00Z").to_string()
+```
+```http
+{"method":"createdAfter","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+
+### Updated before {% #updated-before %}
+
+Returns rows updated before the given date.
+
+{% multicode %}
+```client-web
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-flutter
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-apple
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-android-kotlin
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```client-android-java
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-python
+Query.updated_before("2025-01-01T00:00:00Z")
+```
+```server-ruby
+Query.updated_before("2025-01-01T00:00:00Z")
+```
+```server-deno
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-nodejs
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-php
+Query::updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-swift
+Query.updatedBefore("2025-01-01T00:00:00Z")
+```
+```server-rust
+Query::updated_before("2025-01-01T00:00:00Z").to_string()
+```
+```http
+{"method":"updatedBefore","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+
+### Updated after {% #updated-after %}
+
+Returns rows updated after the given date.
+
+{% multicode %}
+```client-web
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-flutter
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-apple
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-android-kotlin
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```client-android-java
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-python
+Query.updated_after("2025-01-01T00:00:00Z")
+```
+```server-ruby
+Query.updated_after("2025-01-01T00:00:00Z")
+```
+```server-deno
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-nodejs
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-php
+Query::updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-swift
+Query.updatedAfter("2025-01-01T00:00:00Z")
+```
+```server-rust
+Query::updated_after("2025-01-01T00:00:00Z").to_string()
+```
+```http
+{"method":"updatedAfter","values":["2025-01-01T00:00:00Z"]}
+```
+{% /multicode %}
+# Geo queries and spatial operations {% #geo-queries %}
+
+Geo queries enable geographic operations on [spatial columns](/docs/products/databases/spatial). Coordinates are specified as `[longitude, latitude]` arrays. Distance measurements can be specified in meters or degrees.
+
+For conceptual information about spatial data types, spatial columns and indexing, see [Geo queries](/docs/products/databases/geo-queries).
+
+{% info title="Additional supported queries" %}
+In addition to the spatial-specific operations below, the query helpers `equal`, `notEqual`, `contains`, and `notContains` are also supported on spatial columns. This lets you match or exclude exact spatial values, check whether a geometry collection contains a geometry or not.
+{% /info %}
+
+## Distance equal {% #distance-equal %}
+
+Returns rows where the spatial column is exactly the specified distance from a point.
+
+{% multicode %}
+```client-web
+// Coordinates: [longitude, latitude]
+Query.distanceEqual("location", [-73.9851, 40.7589], 200)
+```
+```client-flutter
+Query.distanceEqual("location", [-73.9851, 40.7589], 200)
+```
+```client-react-native
+Query.distanceEqual("location", [-73.9851, 40.7589], 200)
+```
+```client-apple
+// Query.distanceEqual(column, coordinates, distance)
+Query.distanceEqual("location", values: [-73.9851, 40.7589], distance: 200)
+```
+```client-android-kotlin
+Query.distanceEqual("location", listOf(-73.9851, 40.7589), 200)
+```
+```client-android-java
+Query.distanceEqual("location", Arrays.asList(-73.9851, 40.7589), 200)
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.distanceEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-python
+Query.distance_equal("location", [-73.9851, 40.7589], 200)
+```
+```server-ruby
+Query.distance_equal("location", [-73.9851, 40.7589], 200)
+```
+```server-deno
+Query.distanceEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-php
+Query::distanceEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-dotnet
+Query.DistanceEqual("location", new List<double> { -73.9851, 40.7589 }, 200)
+```
+```server-go
+// query.DistanceEqual(column, coordinates, distance)
+query.DistanceEqual("location", []float64{-73.9851, 40.7589}, 200)
+```
+```server-dart
+Query.distanceEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-swift
+Query.distanceEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-kotlin
+Query.distanceEqual("location", listOf(-73.9851, 40.7589), 200)
+```
+```server-java
+Query.distanceEqual("location", Arrays.asList(-73.9851, 40.7589), 200)
+```
+```server-rust
+Query::distance_equal(
+    "location",
+    Value::Array(vec![Value::from(-73.9851), Value::from(40.7589)]),
+    200,
+    true,
+).to_string()
+```
+```http
+{"method":"distanceEqual","column":"location","values":[[-73.9851, 40.7589], 200]}
+```
+{% /multicode %}
+
+## Distance not equal {% #distance-not-equal %}
+
+Returns rows where the spatial column is not exactly the specified distance from a point.
+
+{% multicode %}
+```client-web
+Query.distanceNotEqual("location", [-73.9851, 40.7589], 200)
+```
+```client-flutter
+Query.distanceNotEqual("location", [-73.9851, 40.7589], 200)
+```
+```client-react-native
+Query.distanceNotEqual("location", [-73.9851, 40.7589], 200)
+```
+```client-apple
+// Query.distanceNotEqual(column, coordinates, distance)
+Query.distanceNotEqual("location", values: [-73.9851, 40.7589], distance: 200)
+```
+```client-android-kotlin
+Query.distanceNotEqual("location", listOf(-73.9851, 40.7589), 200)
+```
+```client-android-java
+Query.distanceNotEqual("location", Arrays.asList(-73.9851, 40.7589), 200)
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.distanceNotEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-python
+Query.distance_not_equal("location", [-73.9851, 40.7589], 200)
+```
+```server-ruby
+Query.distance_not_equal("location", [-73.9851, 40.7589], 200)
+```
+```server-deno
+Query.distanceNotEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-php
+Query::distanceNotEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-dotnet
+Query.DistanceNotEqual("location", new List<double> { -73.9851, 40.7589 }, 200)
+```
+```server-go
+// query.DistanceNotEqual(column, coordinates, distance)
+query.DistanceNotEqual("location", []float64{-73.9851, 40.7589}, 200)
+```
+```server-dart
+Query.distanceNotEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-swift
+Query.distanceNotEqual("location", [-73.9851, 40.7589], 200)
+```
+```server-kotlin
+Query.distanceNotEqual("location", listOf(-73.9851, 40.7589), 200)
+```
+```server-java
+Query.distanceNotEqual("location", Arrays.asList(-73.9851, 40.7589), 200)
+```
+```server-rust
+Query::distance_not_equal(
+    "location",
+    Value::Array(vec![Value::from(-73.9851), Value::from(40.7589)]),
+    200,
+    true,
+).to_string()
+```
+```http
+{"method":"distanceNotEqual","column":"location","values":[[-73.9851, 40.7589], 200]}
+```
+{% /multicode %}
+
+## Distance greater than {% #distance-greater-than %}
+
+Returns rows where the spatial column is more than the specified distance from a point.
+
+{% multicode %}
+```client-web
+Query.distanceGreaterThan("location", [-73.9851, 40.7589], 200)
+```
+```client-flutter
+Query.distanceGreaterThan("location", [-73.9851, 40.7589], 200)
+```
+```client-react-native
+Query.distanceGreaterThan("location", [-73.9851, 40.7589], 200)
+```
+```client-apple
+// Query.distanceGreaterThan(column, coordinates, distance)
+Query.distanceGreaterThan("location", values: [-73.9851, 40.7589], distance: 200)
+```
+```client-android-kotlin
+Query.distanceGreaterThan("location", listOf(-73.9851, 40.7589), 200)
+```
+```client-android-java
+Query.distanceGreaterThan("location", Arrays.asList(-73.9851, 40.7589), 200)
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.distanceGreaterThan("location", [-73.9851, 40.7589], 200)
+```
+```server-python
+Query.distance_greater_than("location", [-73.9851, 40.7589], 200)
+```
+```server-ruby
+Query.distance_greater_than("location", [-73.9851, 40.7589], 200)
+```
+```server-deno
+Query.distanceGreaterThan("location", [-73.9851, 40.7589], 200)
+```
+```server-php
+Query::distanceGreaterThan("location", [-73.9851, 40.7589], 200)
+```
+```server-dotnet
+Query.DistanceGreaterThan("location", new List<double> { -73.9851, 40.7589 }, 200)
+```
+```server-go
+// query.DistanceGreaterThan(column, coordinates, distance)
+query.DistanceGreaterThan("location", []float64{-73.9851, 40.7589}, 200)
+```
+```server-dart
+Query.distanceGreaterThan("location", [-73.9851, 40.7589], 200)
+```
+```server-swift
+Query.distanceGreaterThan("location", [-73.9851, 40.7589], 200)
+```
+```server-kotlin
+Query.distanceGreaterThan("location", listOf(-73.9851, 40.7589), 200)
+```
+```server-rust
+Query::distance_greater_than(
+    "location",
+    Value::Array(vec![Value::from(-73.9851), Value::from(40.7589)]),
+    200,
+    true,
+).to_string()
+```
+```http
+{"method":"distanceGreaterThan","column":"location","values":[[-73.9851, 40.7589], 200]}
+```
+{% /multicode %}
+
+## Distance less than {% #distance-less-than %}
+
+Returns rows where the spatial column is less than the specified distance from a point.
+
+{% multicode %}
+```client-web
+Query.distanceLessThan("location", [-73.9851, 40.7589], 200)
+```
+```client-flutter
+Query.distanceLessThan("location", [-73.9851, 40.7589], 200)
+```
+```client-react-native
+Query.distanceLessThan("location", [-73.9851, 40.7589], 200)
+```
+```client-apple
+// Query.distanceLessThan(column, coordinates, distance)
+Query.distanceLessThan("location", values: [-73.9851, 40.7589], distance: 200)
+```
+```client-android-kotlin
+Query.distanceLessThan("location", listOf(-73.9851, 40.7589), 200)
+```
+```client-android-java
+Query.distanceLessThan("location", Arrays.asList(-73.9851, 40.7589), 200)
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.distanceLessThan("location", [-73.9851, 40.7589], 200)
+```
+```server-python
+Query.distance_less_than("location", [-73.9851, 40.7589], 200)
+```
+```server-ruby
+Query.distance_less_than("location", [-73.9851, 40.7589], 200)
+```
+```server-deno
+Query.distanceLessThan("location", [-73.9851, 40.7589], 200)
+```
+```server-php
+Query::distanceLessThan("location", [-73.9851, 40.7589], 200)
+```
+```server-dotnet
+Query.DistanceLessThan("location", new List<double> { -73.9851, 40.7589 }, 200)
+```
+```server-go
+// query.DistanceLessThan(column, coordinates, distance)
+query.DistanceLessThan("location", []float64{-73.9851, 40.7589}, 200)
+```
+```server-dart
+Query.distanceLessThan("location", [-73.9851, 40.7589], 200)
+```
+```server-swift
+Query.distanceLessThan("location", [-73.9851, 40.7589], 200)
+```
+```server-kotlin
+Query.distanceLessThan("location", listOf(-73.9851, 40.7589), 200)
+```
+```server-rust
+Query::distance_less_than(
+    "location",
+    Value::Array(vec![Value::from(-73.9851), Value::from(40.7589)]),
+    200,
+    true,
+).to_string()
+```
+```http
+{"method":"distanceLessThan","column":"location","values":[[-73.9851, 40.7589], 200]}
+```
+{% /multicode %}
+
+## Intersects {% #intersects %}
+
+Returns rows where the spatial column intersects with the provided geometry.
+
+{% multicode %}
+```client-web
+Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-flutter
+Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-react-native
+Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-apple
+// Query.intersects(column, geometry)
+Query.intersects("area", value: [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-android-kotlin
+Query.intersects("area", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```client-android-java
+Query.intersects("area", Arrays.asList(
+    Arrays.asList(-73.9851, 40.7589),
+    Arrays.asList(-73.9776, 40.7614),
+    Arrays.asList(-73.9733, 40.7505),
+    Arrays.asList(-73.9851, 40.7589)
+))
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-python
+Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-ruby
+Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-deno
+Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-php
+Query::intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-dotnet
+Query.Intersects("area", new List<List<double>>
+{
+    new List<double> { -73.9851, 40.7589 },
+    new List<double> { -73.9776, 40.7614 },
+    new List<double> { -73.9733, 40.7505 },
+    new List<double> { -73.9851, 40.7589 }
+})
+```
+```server-go
+// query.Intersects(column, geometry)
+query.Intersects("area", [][]float64{{-73.9851, 40.7589}, {-73.9776, 40.7614}, {-73.9733, 40.7505}, {-73.9851, 40.7589}})
+```
+```server-dart
+Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-swift
+Query.intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-kotlin
+Query.intersects("area", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```server-rust
+Query::intersects("area", serde_json::json!([
+    [-73.9851, 40.7589],
+    [-73.9776, 40.7614],
+    [-73.9733, 40.7505],
+    [-73.9851, 40.7589]
+])).to_string()
+```
+```http
+{"method":"intersects","column":"area","values":[[[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]]]}
+```
+{% /multicode %}
+
+## Not intersects {% #not-intersects %}
+
+Returns rows where the spatial column does not intersect with the provided geometry.
+
+{% multicode %}
+```client-web
+Query.notIntersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-flutter
+Query.notIntersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-react-native
+Query.notIntersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-apple
+// Query.notIntersects(column, geometry)
+Query.notIntersects("area", value: [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-android-kotlin
+Query.notIntersects("area", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```client-android-java
+Query.notIntersects("area", Arrays.asList(
+    Arrays.asList(-73.9851, 40.7589),
+    Arrays.asList(-73.9776, 40.7614),
+    Arrays.asList(-73.9733, 40.7505),
+    Arrays.asList(-73.9851, 40.7589)
+))
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.notIntersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-python
+Query.not_intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-ruby
+Query.not_intersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-deno
+Query.notIntersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-php
+Query::notIntersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-dotnet
+Query.NotIntersects("area", new List<List<double>>
+{
+    new List<double> { -73.9851, 40.7589 },
+    new List<double> { -73.9776, 40.7614 },
+    new List<double> { -73.9733, 40.7505 },
+    new List<double> { -73.9851, 40.7589 }
+})
+```
+```server-go
+// query.NotIntersects(column, geometry)
+query.NotIntersects("area", [][]float64{{-73.9851, 40.7589}, {-73.9776, 40.7614}, {-73.9733, 40.7505}, {-73.9851, 40.7589}})
+```
+```server-dart
+Query.notIntersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-swift
+Query.notIntersects("area", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-kotlin
+Query.notIntersects("area", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```server-rust
+Query::not_intersects("area", serde_json::json!([
+    [-73.9851, 40.7589],
+    [-73.9776, 40.7614],
+    [-73.9733, 40.7505],
+    [-73.9851, 40.7589]
+])).to_string()
+```
+```http
+{"method":"notIntersects","column":"area","values":[[[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]]]}
+```
+{% /multicode %}
+
+## Overlaps {% #overlaps %}
+
+Returns rows where the spatial column overlaps with the provided geometry.
+
+{% multicode %}
+```client-web
+Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-flutter
+Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-react-native
+Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-apple
+// Query.overlaps(column, geometry)
+Query.overlaps("zone", value: [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-android-kotlin
+Query.overlaps("zone", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```client-android-java
+Query.overlaps("zone", Arrays.asList(
+    Arrays.asList(-73.9851, 40.7589),
+    Arrays.asList(-73.9776, 40.7614),
+    Arrays.asList(-73.9733, 40.7505),
+    Arrays.asList(-73.9851, 40.7589)
+))
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-python
+Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-ruby
+Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-deno
+Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-php
+Query::overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-dotnet
+Query.Overlaps("zone", new List<List<double>>
+{
+    new List<double> { -73.9851, 40.7589 },
+    new List<double> { -73.9776, 40.7614 },
+    new List<double> { -73.9733, 40.7505 },
+    new List<double> { -73.9851, 40.7589 }
+})
+```
+```server-go
+// query.Overlaps(column, geometry)
+query.Overlaps("zone", [][]float64{{-73.9851, 40.7589}, {-73.9776, 40.7614}, {-73.9733, 40.7505}, {-73.9851, 40.7589}})
+```
+```server-dart
+Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-swift
+Query.overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-kotlin
+Query.overlaps("zone", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```server-rust
+Query::overlaps("zone", serde_json::json!([
+    [-73.9851, 40.7589],
+    [-73.9776, 40.7614],
+    [-73.9733, 40.7505],
+    [-73.9851, 40.7589]
+])).to_string()
+```
+```http
+{"method":"overlaps","column":"zone","values":[[[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]]]}
+```
+{% /multicode %}
+
+## Not overlaps {% #not-overlaps %}
+
+Returns rows where the spatial column does not overlap with the provided geometry.
+
+{% multicode %}
+```client-web
+Query.notOverlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-flutter
+Query.notOverlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-react-native
+Query.notOverlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-apple
+// Query.notOverlaps(column, geometry)
+Query.notOverlaps("zone", value: [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-android-kotlin
+Query.notOverlaps("zone", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```client-android-java
+Query.notOverlaps("zone", Arrays.asList(
+    Arrays.asList(-73.9851, 40.7589),
+    Arrays.asList(-73.9776, 40.7614),
+    Arrays.asList(-73.9733, 40.7505),
+    Arrays.asList(-73.9851, 40.7589)
+))
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.notOverlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-python
+Query.not_overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-ruby
+Query.not_overlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-deno
+Query.notOverlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-php
+Query::notOverlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-dotnet
+Query.NotOverlaps("zone", new List<List<double>>
+{
+    new List<double> { -73.9851, 40.7589 },
+    new List<double> { -73.9776, 40.7614 },
+    new List<double> { -73.9733, 40.7505 },
+    new List<double> { -73.9851, 40.7589 }
+})
+```
+```server-go
+// query.NotOverlaps(column, geometry)
+query.NotOverlaps("zone", [][]float64{{-73.9851, 40.7589}, {-73.9776, 40.7614}, {-73.9733, 40.7505}, {-73.9851, 40.7589}})
+```
+```server-dart
+Query.notOverlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-swift
+Query.notOverlaps("zone", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-kotlin
+Query.notOverlaps("zone", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```server-rust
+Query::not_overlaps("zone", serde_json::json!([
+    [-73.9851, 40.7589],
+    [-73.9776, 40.7614],
+    [-73.9733, 40.7505],
+    [-73.9851, 40.7589]
+])).to_string()
+```
+```http
+{"method":"notOverlaps","column":"zone","values":[[[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]]]}
+```
+{% /multicode %}
+
+## Touches {% #touches %}
+
+Returns rows where the spatial column touches the provided geometry.
+
+{% multicode %}
+```client-web
+Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-flutter
+Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-react-native
+Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-apple
+// Query.touches(column, geometry)
+Query.touches("boundary", value: [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-android-kotlin
+Query.touches("boundary", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```client-android-java
+Query.touches("boundary", Arrays.asList(
+    Arrays.asList(-73.9851, 40.7589),
+    Arrays.asList(-73.9776, 40.7614),
+    Arrays.asList(-73.9733, 40.7505),
+    Arrays.asList(-73.9851, 40.7589)
+))
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-python
+Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-ruby
+Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-deno
+Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-php
+Query::touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-dotnet
+Query.Touches("boundary", new List<List<double>>
+{
+    new List<double> { -73.9851, 40.7589 },
+    new List<double> { -73.9776, 40.7614 },
+    new List<double> { -73.9733, 40.7505 },
+    new List<double> { -73.9851, 40.7589 }
+})
+```
+```server-go
+// query.Touches(column, geometry)
+query.Touches("boundary", [][]float64{{-73.9851, 40.7589}, {-73.9776, 40.7614}, {-73.9733, 40.7505}, {-73.9851, 40.7589}})
+```
+```server-dart
+Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-swift
+Query.touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-kotlin
+Query.touches("boundary", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```server-rust
+Query::touches("boundary", serde_json::json!([
+    [-73.9851, 40.7589],
+    [-73.9776, 40.7614],
+    [-73.9733, 40.7505],
+    [-73.9851, 40.7589]
+])).to_string()
+```
+```http
+{"method":"touches","column":"boundary","values":[[[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]]]}
+```
+{% /multicode %}
+
+## Not touches {% #not-touches %}
+
+Returns rows where the spatial column does not touch the provided geometry.
+
+{% multicode %}
+```client-web
+Query.notTouches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-flutter
+Query.notTouches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-react-native
+Query.notTouches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-apple
+// Query.notTouches(column, geometry)
+Query.notTouches("boundary", value: [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```client-android-kotlin
+Query.notTouches("boundary", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```client-android-java
+Query.notTouches("boundary", Arrays.asList(
+    Arrays.asList(-73.9851, 40.7589),
+    Arrays.asList(-73.9776, 40.7614),
+    Arrays.asList(-73.9733, 40.7505),
+    Arrays.asList(-73.9851, 40.7589)
+))
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.notTouches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-python
+Query.not_touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-ruby
+Query.not_touches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-deno
+Query.notTouches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-php
+Query::notTouches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-dotnet
+Query.NotTouches("boundary", new List<List<double>>
+{
+    new List<double> { -73.9851, 40.7589 },
+    new List<double> { -73.9776, 40.7614 },
+    new List<double> { -73.9733, 40.7505 },
+    new List<double> { -73.9851, 40.7589 }
+})
+```
+```server-go
+// query.NotTouches(column, geometry)
+query.NotTouches("boundary", [][]float64{{-73.9851, 40.7589}, {-73.9776, 40.7614}, {-73.9733, 40.7505}, {-73.9851, 40.7589}})
+```
+```server-dart
+Query.notTouches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-swift
+Query.notTouches("boundary", [[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]])
+```
+```server-kotlin
+Query.notTouches("boundary", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614), listOf(-73.9733, 40.7505), listOf(-73.9851, 40.7589)))
+```
+```server-rust
+Query::not_touches("boundary", serde_json::json!([
+    [-73.9851, 40.7589],
+    [-73.9776, 40.7614],
+    [-73.9733, 40.7505],
+    [-73.9851, 40.7589]
+])).to_string()
+```
+```http
+{"method":"notTouches","column":"boundary","values":[[[-73.9851, 40.7589], [-73.9776, 40.7614], [-73.9733, 40.7505], [-73.9851, 40.7589]]]}
+```
+{% /multicode %}
+
+## Crosses {% #crosses %}
+
+Returns rows where the spatial column crosses the provided geometry.
+
+{% multicode %}
+```client-web
+Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```client-flutter
+Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```client-react-native
+Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```client-apple
+// Query.crosses(column, geometry)
+Query.crosses("route", value: [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```client-android-kotlin
+Query.crosses("route", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614)))
+```
+```client-android-java
+Query.crosses("route", Arrays.asList(
+    Arrays.asList(-73.9851, 40.7589),
+    Arrays.asList(-73.9776, 40.7614)
+))
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-python
+Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-ruby
+Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-deno
+Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-php
+Query::crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-dotnet
+Query.Crosses("route", new List<List<double>>
+{
+    new List<double> { -73.9851, 40.7589 },
+    new List<double> { -73.9776, 40.7614 }
+})
+```
+```server-go
+// query.Crosses(column, geometry)
+query.Crosses("route", [][]float64{{-73.9851, 40.7589}, {-73.9776, 40.7614}})
+```
+```server-dart
+Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-swift
+Query.crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-kotlin
+Query.crosses("route", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614)))
+```
+```server-rust
+Query::crosses("route", serde_json::json!([
+    [-73.9851, 40.7589],
+    [-73.9776, 40.7614]
+])).to_string()
+```
+```http
+{"method":"crosses","column":"route","values":[[[-73.9851, 40.7589], [-73.9776, 40.7614]]]}
+```
+{% /multicode %}
+
+## Not crosses {% #not-crosses %}
+
+Returns rows where the spatial column does not cross the provided geometry.
+
+{% multicode %}
+```client-web
+Query.notCrosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```client-flutter
+Query.notCrosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```client-react-native
+Query.notCrosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```client-apple
+// Query.notCrosses(column, geometry)
+Query.notCrosses("route", value: [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```client-android-kotlin
+Query.notCrosses("route", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614)))
+```
+```client-android-java
+Query.notCrosses("route", Arrays.asList(
+    Arrays.asList(-73.9851, 40.7589),
+    Arrays.asList(-73.9776, 40.7614)
+))
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+sdk.Query.notCrosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-python
+Query.not_crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-ruby
+Query.not_crosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-deno
+Query.notCrosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-php
+Query::notCrosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-dotnet
+Query.NotCrosses("route", new List<List<double>>
+{
+    new List<double> { -73.9851, 40.7589 },
+    new List<double> { -73.9776, 40.7614 }
+})
+```
+```server-go
+// query.NotCrosses(column, geometry)
+query.NotCrosses("route", [][]float64{{-73.9851, 40.7589}, {-73.9776, 40.7614}})
+```
+```server-dart
+Query.notCrosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-swift
+Query.notCrosses("route", [[-73.9851, 40.7589], [-73.9776, 40.7614]])
+```
+```server-kotlin
+Query.notCrosses("route", listOf(listOf(-73.9851, 40.7589), listOf(-73.9776, 40.7614)))
+```
+```server-rust
+Query::not_crosses("route", serde_json::json!([
+    [-73.9851, 40.7589],
+    [-73.9776, 40.7614]
+])).to_string()
+```
+```http
+{"method":"notCrosses","column":"route","values":[[[-73.9851, 40.7589], [-73.9776, 40.7614]]]}
+```
+{% /multicode %}
+
+# Complex queries {% #complex-queries %}
+
+You can create complex queries by combining AND and OR operations. For example, to find items that are either books under $20 or magazines under $10:
+
+{% multicode %}
+```client-web
+const results = await tablesDB.listRows({
+    databaseId: '<DATABASE_ID>',
+    tableId: '<TABLE_ID>',
+    queries: [
+        Query.or([
+            Query.and([
+                Query.equal('category', ['books']),
+                Query.lessThan('price', 20)
+            ]),
+            Query.and([
+                Query.equal('category', ['magazines']),
+                Query.lessThan('price', 10)
+            ])
+        ])
+    ]
+});
+```
+```client-flutter
+final results = await tablesDB.listRows(
+    '<DATABASE_ID>',
+    '<TABLE_ID>',
+    [
+        Query.or([
+            Query.and([
+                Query.equal('category', ['books']),
+                Query.lessThan('price', 20)
+            ]),
+            Query.and([
+                Query.equal('category', ['magazines']),
+                Query.lessThan('price', 10)
+            ])
+        ])
+    ]
+);
+```
+```server-python
+results = tablesDB.list_rows(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    queries=[
+        Query.or_queries([
+            Query.and_queries([
+                Query.equal('category', ['books']),
+                Query.less_than('price', 20)
+            ]),
+            Query.and_queries([
+                Query.equal('category', ['magazines']),
+                Query.less_than('price', 10)
+            ])
+        ])
+    ]
+)
+```
+```server-go
+rows, err := tablesDB.ListRows(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    tablesDB.WithListRowsQueries([]string{
+        query.Or([]string{
+            query.And([]string{
+                query.Equal("category", []string{"books"}),
+                query.LessThan("price", 20),
+            }),
+            query.And([]string{
+                query.Equal("category", []string{"magazines"}),
+                query.LessThan("price", 10),
+            }),
+        }),
+    }),
+)
+if err != nil {
+    log.Fatal(err)
+}
+```
+```server-rust
+let rows = tables_db.list_rows(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    Some(vec![
+        Query::or(vec![
+            Query::and(vec![
+                Query::equal("category", Value::Array(vec![Value::String("books".to_string())])).to_string(),
+                Query::less_than("price", 20).to_string(),
+            ]).to_string(),
+            Query::and(vec![
+                Query::equal("category", Value::Array(vec![Value::String("magazines".to_string())])).to_string(),
+                Query::less_than("price", 10).to_string(),
+            ]).to_string(),
+        ]).to_string(),
+    ]),
+    None,
+    None,
+    None,
+).await?;
+```
+```http
+{"method":"or","values":[{"method":"and","values":[{"method":"equal","column":"category","values":["books"]},{"method":"lessThan","column":"price","values":[20]}]},{"method":"and","values":[{"method":"equal","column":"category","values":["magazines"]},{"method":"lessThan","column":"price","values":[10]}]}]}
+```
+{% /multicode %}
+
+This example demonstrates how to combine `OR` and `AND` operations. The query uses `Query.or()` to match either condition: books under $20 OR magazines under $10.
+Each condition within the OR is composed of two AND conditions - one for the category and one for the price threshold. The database will return rows that match either of these combined conditions.

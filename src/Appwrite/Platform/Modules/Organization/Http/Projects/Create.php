@@ -89,6 +89,10 @@ class Create extends Action
             'maxSessions' => APP_LIMIT_USER_SESSIONS_DEFAULT,
             'passwordHistory' => 0,
             'passwordDictionary' => false,
+            'passwordRotation' => [
+                'enabled' => false,
+                'maxAge' => 31536000,
+            ],
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
             'passwordPwned' => [
@@ -117,7 +121,7 @@ class Create extends Action
         ];
 
         foreach ($auth as $method) {
-            $auths[$method['key'] ?? ''] = true;
+            $auths[$method['key'] ?? ''] = $method['enabled'] ?? true;
         }
 
         $projectId = ($projectId == 'unique()') ? ID::unique() : $projectId;

@@ -308,7 +308,7 @@ class Project extends Model
         foreach (Config::getParam('auth', []) as $id => $method) {
             $authMethods[] = new Document([
                 '$id' => $id,
-                'enabled' => $values[$method['key']] ?? true
+                'enabled' => $values[$method['key']] ?? $method['enabled'] ?? true,
             ]);
         }
 

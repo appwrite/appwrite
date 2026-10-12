@@ -180,7 +180,6 @@ class MySQLIntegrationTest extends IntegrationTestCase
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         $this->assertNotFalse($row);
-        \assert(\is_array($row));
         $this->assertSame('idx_email', $row['INDEX_NAME']);
     }
 
@@ -241,7 +240,6 @@ class MySQLIntegrationTest extends IntegrationTestCase
         $row = $stmt->fetch(\PDO::FETCH_ASSOC);
 
         $this->assertNotFalse($row);
-        \assert(\is_array($row));
         $this->assertSame($parentTable, $row['REFERENCED_TABLE_NAME']);
     }
 

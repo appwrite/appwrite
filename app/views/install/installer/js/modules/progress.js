@@ -21,7 +21,7 @@
         storeInstallId,
         clearInstallId
     } = window.InstallerStepsState || {};
-    const { extractHostname, isLocalHost, isIPAddress } = window.InstallerStepsValidation || {};
+    const { extractHostname, extractPort, isLocalHost, isIPAddress } = window.InstallerStepsValidation || {};
     const { generateSecretKey } = window.InstallerStepsUI || {};
     const { showToast } = window.InstallerToast || {};
 
@@ -314,7 +314,7 @@
         } else if (normalizedHost === 'traefik') {
             host = rawDomain.replace(hostForProtocol, 'localhost');
         }
-        const port = protocol === 'https' ? httpsPort : httpPort;
+        const port = extractPort?.(protocol === 'https' ? httpsPort : httpPort);
         const defaultPort = protocol === 'https' ? '443' : '80';
         if (!hasPort && port && port !== defaultPort) {
             host = `${host}:${port}`;
@@ -398,7 +398,6 @@
         const normalizedHttpPort = (formState?.httpPort || '').trim() || '80';
         const normalizedHttpsPort = (formState?.httpsPort || '').trim() || '443';
         const normalizedEmail = (formState?.emailCertificates || '').trim() || (formState?.accountEmail || '').trim();
-        const normalizedAssistantKey = (formState?.assistantOpenAIKey || '').trim();
         const normalizedAccountEmail = (formState?.accountEmail || '').trim();
         const normalizedAccountPassword = (formState?.accountPassword || '').trim();
 
@@ -412,7 +411,6 @@
             emailCertificates: normalizedEmail,
             forceHttps: formState?.forceHttps === true,
             opensslKey: (formState?.opensslKey || '').trim(),
-            assistantOpenAIKey: normalizedAssistantKey,
             accountName: (formState?.accountName || '').trim(),
             accountEmail: normalizedAccountEmail,
             accountPassword: normalizedAccountPassword,
@@ -793,7 +791,7 @@
             const rawDomain = (formState?.appDomain || dataset.defaultAppDomain || '').trim();
             const httpsPort = (formState?.httpsPort || dataset.defaultHttpsPort || '443').trim();
             const domain = normalizeHostname(rawDomain);
-            pollCertificate(domain, httpsPort, 15, 2000).then((ready) => {
+            pollCertificate(domain, extractPort?.(httpsPort) ?? httpsPort, 15, 2000).then((ready) => {
                 stopSyncedSpinnerRotation();
                 const certMessage = ready ? SSL_STEP.done : 'Certificate not ready, continuing over HTTP';
                 animatePanelHeight(() => {

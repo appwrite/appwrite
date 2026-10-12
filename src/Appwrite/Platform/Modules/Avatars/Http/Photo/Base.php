@@ -6,7 +6,7 @@ use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Avatars\Http\Action;
 use Appwrite\Utopia\Database\Documents\User;
 use Psr\Http\Message\StreamInterface;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Conflict as ConflictException;

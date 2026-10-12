@@ -1,0 +1,33 @@
+rules:
+  - id: php.appwrite.route-without-api-group
+    message: >
+      A /v1 route with a non-public scope must include 'api' in ->groups().
+      Scope, auth, abuse and event hooks in app/controllers/shared/api.php
+      are bound to the 'api' group, so without it the scope label is never
+      checked. GraphQL routes are allowlisted (they run their own
+      'graphql' init hook and dispatch through api routes).
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+    patterns:
+      - pattern-either:
+          - patterns:
+              - pattern: $ROUTE->callback(...)
+              - metavariable-regex:
+                  metavariable: $ROUTE
+                  regex: (?s).*->setHttpPath\(\s*['"]/v1/
+          - patterns:
+              - pattern: $ROUTE->action(...)
+              - metavariable-regex:
+                  metavariable: $ROUTE
+                  regex: (?s)^\\?(?:Utopia\\Http\\)?Http::(?:get|post|put|patch|delete)\(\s*['"]/v1/
+      - metavariable-regex:
+          metavariable: $ROUTE
+          regex: (?s).*->label\(\s*['"]scope['"]\s*,\s*(?!\s)(?!['"]public['"])
+      - pattern-not-regex: ->groups\(\s*\[[^\]]*['"](?:api|graphql)['"]

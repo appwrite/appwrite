@@ -735,19 +735,19 @@ parameters:
 		-
 			message: '#^Cannot call method getContentRangeEnd\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
 			identifier: method.nonObject
-			count: 7
+			count: 1
 			path: tests/RequestTest.php
 
 		-
 			message: '#^Cannot call method getContentRangeSize\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
 			identifier: method.nonObject
-			count: 7
+			count: 1
 			path: tests/RequestTest.php
 
 		-
 			message: '#^Cannot call method getContentRangeStart\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
 			identifier: method.nonObject
-			count: 7
+			count: 1
 			path: tests/RequestTest.php
 
 		-
@@ -837,13 +837,13 @@ parameters:
 		-
 			message: '#^Cannot call method getRangeEnd\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
 			identifier: method.nonObject
-			count: 10
+			count: 1
 			path: tests/RequestTest.php
 
 		-
 			message: '#^Cannot call method getRangeStart\(\) on Utopia\\Http\\Adapter\\FPM\\Request\|null\.$#'
 			identifier: method.nonObject
-			count: 10
+			count: 1
 			path: tests/RequestTest.php
 
 		-

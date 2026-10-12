@@ -1,0 +1,126 @@
+---
+layout: post
+title: Introducing Appwrite Start
+description: Appwrite Start is Appwrite Cloud production pricing for India, built so more developers can grow on Appwrite rather than maximize margin on this tier.
+date: 2026-09-21
+cover: /images/blog/introducing-appwrite-cloud-start-plan/cover.avif
+timeToRead: 7
+author: eldad-fux
+category: announcements
+featured: false
+faqs:
+  - question: "What is Appwrite Start?"
+    answer: "Appwrite Start is a paid [Appwrite Cloud](/pricing) plan between Free and Pro. It includes production-oriented limits (bandwidth, storage, executions, monthly active users, backups, and email support) at a lower monthly price than Pro. Eligible organizations can choose it today from the [pricing page](/pricing) and in the Console."
+  - question: "Who is Appwrite Start for?"
+    answer: "Appwrite Start is for developers and small teams who need more than the Free tier for a live app but are not ready for Pro. Typical fits include side projects going to production, early MVPs, client work with modest traffic, and student or indie products that still need daily backups and email support."
+  - question: "Where is Appwrite Start available?"
+    answer: "Appwrite Start is available now for qualifying organizations in India, with billing eligibility determined by organization location in the Console. We are rolling the plan out region by region and will add more markets with a similar economic profile after India. Everywhere else on [Appwrite Cloud](https://cloud.appwrite.io), Free and Pro are unchanged."
+  - question: "How much does Appwrite Start cost in India?"
+    answer: "Eligible organizations in India can subscribe from $10 per month. Included quotas and billing in local currency are shown on the [pricing page](/pricing) and when you choose Start in the Console."
+  - question: "How is Appwrite Start different from the Appwrite Startups program?"
+    answer: "They solve different problems. The [Startups program](/startups) offers credits and hands-on support for qualifying early-stage companies. Appwrite Start is a standard Cloud subscription eligible organizations can choose on the [pricing page](/pricing), with included resources and predictable monthly pricing. You do not apply for Appwrite Start the way you apply for Startups."
+  - question: "How does Appwrite Start compare to Pro?"
+    answer: "Appwrite Start uses the same Appwrite Cloud products as Pro (Auth, Databases, Storage, Functions, Sites, and the rest of the platform) but with lower included quotas and a smaller monthly price. Pro adds higher limits, pay-as-you-go beyond included usage, organization roles, and add-ons. Compare rows on the [pricing page](/pricing) or upgrade from the Console when you outgrow Appwrite Start."
+  - question: "Why did Appwrite introduce Appwrite Start?"
+    answer: "We want every developer to have a clear path to grow on Appwrite, from a first project through production traffic. Free and Pro cover a lot of that journey, but the step between them was too large for too many teams in certain markets. Appwrite Start closes that gap. It is deliberately not our most profitable plan; we built it because widening access matters more than margin on this tier."
+  - question: "Can I self-host instead of using Appwrite Start?"
+    answer: "Yes. Appwrite remains open source, and [self-hosting](/docs/advanced/self-hosting) is always an option if you want to run the stack on your own infrastructure. Appwrite Start exists for teams that prefer managed Cloud operations (backups, scaling, and Console billing) at a regional price point."
+---
+
+On [Appwrite Cloud](https://cloud.appwrite.io), Free is built for learning and early builds. Pro is built for production at scale. Between those two plans, we kept hearing from developers who were ready to ship real apps but not ready for Pro-level spend: freelancers, founders, and engineers at small companies who had outgrown Free limits.
+
+That feedback was loudest in markets where our standard Pro price weighs more heavily on monthly budgets. The product fit was already there. The missing piece was a paid tier sized for that moment.
+
+Today we are introducing Appwrite Start: a paid plan built so more developers can grow on Appwrite without skipping straight to Pro. It is one of the most intentional accessibility moves we have made on Cloud, and it is not designed to be our most profitable tier. Appwrite Start sits between Free and Pro, with production-sized included resources and a price we are keeping deliberately low in the regions where the plan is live.
+
+# Appwrite Start at a glance
+
+Appwrite Start is Appwrite Cloud’s production plan for developers who need more than Free and a clearer runway before Pro, with regional pricing in the markets where the plan is offered. Qualifying organizations can select it on the [pricing page](/pricing) and when creating or upgrading an organization in the Console.
+
+# Why we built Appwrite Start
+
+Appwrite’s mission is to give developers an open, capable backend and hosting stack. Cloud exists so you can focus on product work instead of operating databases, functions, and storage yourself.
+
+That only matters if Cloud is reachable. Without a step between Free and Pro, some teams stall: they hit Free limits, hesitate on Pro, or self-host before they are ready. None of those outcomes match what we want for Appwrite Cloud.
+
+Our goal is simple: every developer should have a chance to grow on Appwrite. Free gets you building. Pro and Enterprise carry you at scale. Appwrite Start is the step we were missing in between, especially in markets where Pro is the right product but not yet the right price.
+
+Appwrite Start is part of that commitment, alongside the Free tier and programs like [Startups](/startups) and [OSS credits](/docs/advanced/billing/oss). We are clear-eyed about the economics: this plan prioritizes access over profit for Appwrite. We price it so teams can run authenticated apps, store files, execute functions, and deploy sites on managed infrastructure with backups and email support, then graduate to Pro when they are ready. That growth path is the point.
+
+# Who Appwrite Start is for
+
+Appwrite Start is not a “lite” hobby tier and it is not Enterprise. It targets a specific middle:
+
+- Indie developers and freelancers shipping client projects or personal products that outgrew Free.
+- Early-stage founders validating an MVP with real users, without committing to Pro-scale spend on day one.
+- Student and community builders moving from hackathon demos to something that stays online.
+- Small product teams in price-sensitive markets who need dependable Cloud operations but watch monthly burn closely.
+
+You are a strong fit if you need more than Free (higher bandwidth, storage, executions, and MAU) and production basics (daily backups retained for seven days, email support), but you do not yet need Pro’s highest quotas, organization roles, or pay-as-you-go headroom.
+
+When traffic, team size, or compliance needs outgrow Start, Pro is the natural next step. Appwrite Start exists so you can reach that moment on Appwrite instead of leaving the platform because the only jump was Free to Pro.
+
+# What you get on Appwrite Start
+
+Appwrite Start uses the same Appwrite Cloud surface area you already know: [Auth](/docs/products/auth), [Databases](/docs/products/databases), [Storage](/docs/products/storage), [Functions](/docs/products/functions), [Sites](/docs/products/sites), [Messaging](/docs/products/messaging), and the rest of the platform. The difference is the included quota bundle and monthly price.
+
+At launch, Appwrite Start includes per project:
+
+- 80GB API bandwidth per month
+- 40GB storage
+- 1.5M function executions per month
+- 100K monthly active users
+- Email support
+- Daily backups stored for 7 days
+- 10 databases, 10 buckets, and 10 functions per project
+- 25-minute build duration for Sites and Functions
+
+Those numbers sit meaningfully above [Free](/docs/advanced/billing/free) and below [Pro](/docs/advanced/billing/pro). For example, Free includes 5GB bandwidth, 2GB storage, and 750K executions; Pro starts at 2TB bandwidth, 150GB storage, and 3.5M executions with pay-as-you-go beyond included usage. Appwrite Start is the middle path: enough room to operate a modest production app with predictable included limits.
+
+See the full comparison table on [pricing](/pricing) for rows like reads, writes, Realtime messages, webhooks, and domains.
+
+# Where Appwrite Start is available
+
+Appwrite Start is live in India today. If your organization qualifies, the [pricing page](/pricing) and Console show Free, Appwrite Start, Pro, and Enterprise together. You get the full Appwrite Cloud stack on Start; only the included quotas and monthly price differ from Pro.
+
+Regional pricing is how we deliver this plan responsibly: the product is the same everywhere, but Appwrite Start is offered where it matches our accessibility goals for that market. India is our first Appwrite Start region. We chose it to launch with a large, active developer community and to refine support and upgrade paths as teams move from Start to Pro. We will bring Appwrite Start to additional markets with a similar economic profile as part of the same mission: make sure developers in those regions can grow on Appwrite, not only start on Free.
+
+Outside Appwrite Start regions, Free, Pro, and Enterprise are unchanged. Check the [pricing page](/pricing) or Organization → Billing → Change plan in the Console for the plans available to your organization.
+
+# Appwrite Start vs Free vs Pro
+
+| | Free | Appwrite Start | Pro |
+| --- | --- | --- | --- |
+| Best for | Learning and small experiments | Production apps on a budget | Scaling production with headroom |
+| Monthly price | $0 | From $10 | From $25 |
+| Bandwidth (included) | 5GB | 80GB | 2TB |
+| Storage (included) | 2GB | 40GB | 150GB |
+| Executions (included) | 750K | 1.5M | 3.5M |
+| MAU (included) | 75K | 100K | 200K |
+| Backups | - | Daily, 7-day retention | Daily, 7-day retention |
+| Support | Community | Email | Email |
+| Beyond included limits | Project freezes | See [pricing comparison](/pricing) | Pay-as-you-go available |
+| Organization roles | - | - | Yes |
+
+Exact billing amounts may display in local currency at checkout. Treat the [pricing page](/pricing) and Console as the source of truth for your organization.
+
+# How to get started on Appwrite Start
+
+1. Create an account on [Appwrite Cloud](https://cloud.appwrite.io) or sign in to an existing one.
+2. Open the [pricing page](/pricing) and confirm Appwrite Start is listed for your organization.
+3. Create an organization and choose Start during setup, or upgrade an existing organization from Organization → Billing → Change plan in the Console.
+4. Build as you would on any Cloud plan: create a project, wire up [Auth](/docs/products/auth), model data in [Databases](/docs/products/databases), and deploy with [Sites](/docs/products/sites) or [Functions](/docs/products/functions).
+
+If you are evaluating Appwrite for the first time, the [quick starts](/docs/quick-starts) walk through a full stack in your framework of choice.
+
+# Getting started with Appwrite Start
+
+Appwrite Start exists because accessibility is a product decision for us, not a footnote. We would rather see developers grow from Free to Start to Pro on Appwrite Cloud than lose them in the gap between tiers, even when Start is not the most profitable plan in our lineup.
+
+If you qualify for Appwrite Start, use it to ship production with confidence. When you outgrow it, Pro and Enterprise are the next steps on the same platform, with higher limits and the features larger teams expect.
+
+- [Appwrite Cloud pricing](/pricing)
+- [Free plan limits](/docs/advanced/billing/free)
+- [Pro plan and budget caps](/docs/advanced/billing/pro)
+- [Billing and payments](/docs/advanced/billing/payments)
+- [Quick starts](/docs/quick-starts)

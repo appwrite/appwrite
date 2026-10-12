@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Policies;
 
+use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -80,6 +81,7 @@ class Get extends Action
             'password-strength' => Response::MODEL_POLICY_PASSWORD_STRENGTH,
             'password-personal-data' => Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             'password-pwned' => Response::MODEL_POLICY_PASSWORD_PWNED,
+            'password-rotation' => Response::MODEL_POLICY_PASSWORD_ROTATION,
             'session-alert' => Response::MODEL_POLICY_SESSION_ALERT,
             'session-duration' => Response::MODEL_POLICY_SESSION_DURATION,
             'session-invalidation' => Response::MODEL_POLICY_SESSION_INVALIDATION,
@@ -91,6 +93,7 @@ class Get extends Action
             'deny-disposable-email' => Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
             'deny-free-email' => Response::MODEL_POLICY_DENY_FREE_EMAIL,
             'deny-corporate-email' => Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            'passkey' => Response::MODEL_POLICY_PASSKEY,
         ];
     }
 
@@ -144,6 +147,14 @@ class Get extends Action
                     '$id' => 'password-pwned',
                 ])),
                 Response::MODEL_POLICY_PASSWORD_PWNED,
+            ],
+            'password-rotation' => [
+                new Document([
+                    '$id' => 'password-rotation',
+                    'enabled' => $auths['passwordRotation']['enabled'] ?? false,
+                    'maxAge' => $auths['passwordRotation']['maxAge'] ?? 31536000,
+                ]),
+                Response::MODEL_POLICY_PASSWORD_ROTATION,
             ],
             'session-alert' => [
                 new Document([
@@ -230,6 +241,14 @@ class Get extends Action
                     'enabled' => $auths['corporateEmails'] ?? false,
                 ]),
                 Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            ],
+            'passkey' => [
+                new Document([
+                    '$id' => 'passkey',
+                    'rpId' => $auths['passkeyRpId'] ?? '',
+                    'origins' => Ceremony::getOrigins($project),
+                ]),
+                Response::MODEL_POLICY_PASSKEY,
             ],
             default => null,
         };
