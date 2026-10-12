@@ -650,21 +650,80 @@ class TransactionState
 
             switch ($filter->getMethod()) {
                 case Query::TYPE_EQUAL:
-                    if (!\in_array($docValue, $values)) {
+                    if (!$this->valueInList($docValue, $values)) {
                         return false;
                     }
                     break;
 
                 case Query::TYPE_NOT_EQUAL:
-                    if (\in_array($docValue, $values)) {
+                    if ($this->valueInList($docValue, $values)) {
                         return false;
                     }
                     break;
 
                 case Query::TYPE_CONTAINS:
-                    $matches = false;
+                case Query::TYPE_CONTAINS_ANY:
+                    if (!$this->containsAny($docValue, $values)) {
+                        return false;
+                    }
+                    break;
+
+                case Query::TYPE_CONTAINS_ALL:
+                    if (!\is_array($docValue)) {
+                        return false;
+                    }
                     foreach ($values as $value) {
-                        if (\is_array($docValue) && \in_array($value, $docValue)) {
+                        if (!\in_array($value, $docValue)) {
+                            return false;
+                        }
+                    }
+                    break;
+
+                case Query::TYPE_NOT_CONTAINS:
+                    // SQL: NULL NOT LIKE / NOT (...) is NULL, so null never matches
+                    if ($docValue === null || $this->containsAny($docValue, $values)) {
+                        return false;
+                    }
+                    break;
+
+                case Query::TYPE_NOT_STARTS_WITH:
+                    if (!\is_string($docValue)) {
+                        return false;
+                    }
+                    foreach ($values as $value) {
+                        if (\str_starts_with($docValue, (string) $value)) {
+                            return false;
+                        }
+                    }
+                    break;
+
+                case Query::TYPE_NOT_ENDS_WITH:
+                    if (!\is_string($docValue)) {
+                        return false;
+                    }
+                    foreach ($values as $value) {
+                        if (\str_ends_with($docValue, (string) $value)) {
+                            return false;
+                        }
+                    }
+                    break;
+
+                case Query::TYPE_NOT_BETWEEN:
+                    if ($docValue === null || ($docValue >= $values[0] && $docValue <= $values[1])) {
+                        return false;
+                    }
+                    break;
+
+                case Query::TYPE_AND:
+                    if (!$this->documentMatchesFilters($doc, $values)) {
+                        return false;
+                    }
+                    break;
+
+                case Query::TYPE_OR:
+                    $matches = false;
+                    foreach ($values as $subQuery) {
+                        if ($this->documentMatchesFilters($doc, [$subQuery])) {
                             $matches = true;
                             break;
                         }
@@ -741,9 +800,55 @@ class TransactionState
                         return false;
                     }
                     break;
+
+                default:
+                    // Operators that cannot be evaluated in memory (e.g. search,
+                    // notSearch, regex) must never match, otherwise a bulk operation
+                    // would modify rows that the database query excludes.
+                    return false;
             }
         }
 
         return true;
+    }
+
+    /**
+     * Null-safe equality: null only equals null, numbers compare by value,
+     * everything else compares strictly.
+     *
+     * @param array<mixed> $values
+     */
+    private function valueInList(mixed $docValue, array $values): bool
+    {
+        foreach ($values as $value) {
+            $bothNumbers = (\is_int($docValue) || \is_float($docValue))
+                && (\is_int($value) || \is_float($value));
+
+            if ($bothNumbers ? $docValue == $value : $docValue === $value) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * True if any of the values is contained in the document value
+     * (array element for array attributes, substring for strings).
+     *
+     * @param array<mixed> $values
+     */
+    private function containsAny(mixed $docValue, array $values): bool
+    {
+        foreach ($values as $value) {
+            if (\is_array($docValue) && \in_array($value, $docValue)) {
+                return true;
+            }
+            if (\is_string($docValue) && \is_string($value) && \str_contains($docValue, $value)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
