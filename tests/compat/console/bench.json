@@ -1,8 +1,8 @@
 {
   "lib": "console",
   "environment": {
-    "date": "2026-10-12T00:44:15Z",
-    "commit": "9acda67221",
+    "date": "2026-10-12T02:48:11Z",
+    "commit": "b5c0f44a39",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,45 +31,47 @@
       "name": "build",
       "description": "Build a plain command with a flag, two options and an argument",
       "php": {
-        "ns": 1618.6405329076622,
-        "min": 1251.1537328094303,
-        "max": 2521.183816306483,
+        "ns": 651.6206384814495,
+        "min": 591.3186540120794,
+        "max": 813.4225021570319,
         "samples": 15,
-        "calls": 16288
+        "calls": 28975
       },
       "rust": {
-        "ns": 307.84506997706967,
-        "min": 274.6092670198466,
-        "max": 1002.3180833399225,
+        "ns": 140.26354060845853,
+        "min": 135.1922151526493,
+        "max": 147.53120488691653,
         "samples": 15,
-        "calls": 63235,
-        "allocations": 13.00000105426847,
-        "bytes": 376.00012651221635
+        "calls": 149624,
+        "allocations": 13.000000445561318,
+        "bytes": 376.00005346735816
       },
-      "speedup": 5.25797126791158,
-      "bound": null
+      "speedup": 4.645687936114696,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "render",
       "description": "Render a redirected pipeline of two commands as a quoted shell string",
       "php": {
-        "ns": 2052.2299571603426,
-        "min": 1224.3026315789473,
-        "max": 3799.8776009791923,
+        "ns": 550.1593276879651,
+        "min": 501.47975365665894,
+        "max": 667.711290736464,
         "samples": 15,
-        "calls": 6536
+        "calls": 38970
       },
       "rust": {
-        "ns": 441.17001806140877,
-        "min": 385.2097531607465,
-        "max": 1381.7128236002409,
+        "ns": 179.14008553771572,
+        "min": 168.57723935536214,
+        "max": 198.03508648924767,
         "samples": 15,
-        "calls": 8305,
-        "allocations": 10.000008027292795,
-        "bytes": 197.00096327513546
+        "calls": 99839,
+        "allocations": 10.00000066774173,
+        "bytes": 197.0000801290077
       },
-      "speedup": 4.651789272032267,
-      "bound": null
+      "speedup": 3.071112342257623,
+      "bound": null,
+      "compat": null
     }
   ]
 }

@@ -1,8 +1,8 @@
 {
   "lib": "bus",
   "environment": {
-    "date": "2026-10-12T00:43:05Z",
-    "commit": "9acda67221",
+    "date": "2026-10-12T02:48:04Z",
+    "commit": "b5c0f44a39",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,45 +31,47 @@
       "name": "dispatch",
       "description": "Dispatch an event to three listeners with one dependency each",
       "php": {
-        "ns": 560.160011355034,
-        "min": 473.4359150264951,
-        "max": 980.5682957986375,
+        "ns": 355.9813821764923,
+        "min": 338.6874350638469,
+        "max": 442.16074002077954,
         "samples": 15,
-        "calls": 42272
+        "calls": 59674
       },
       "rust": {
-        "ns": 375.97868638538495,
-        "min": 320.96323039002465,
-        "max": 1165.1092358996666,
+        "ns": 325.4327152561043,
+        "min": 303.77195398078453,
+        "max": 342.52099014748177,
         "samples": 15,
-        "calls": 34485,
-        "allocations": 18.000001933207674,
-        "bytes": 558.000231984921
+        "calls": 65364,
+        "allocations": 18.00000101992942,
+        "bytes": 558.0001223915305
       },
-      "speedup": 1.4898717178368455,
-      "bound": null
+      "speedup": 1.0938709155173512,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "miss",
       "description": "Dispatch an event no listener handles",
       "php": {
-        "ns": 66.60043870529711,
-        "min": 46.50399317569538,
-        "max": 101.18747252651599,
+        "ns": 32.117536941888716,
+        "min": 29.827274649117165,
+        "max": 41.74409220842487,
         "samples": 15,
-        "calls": 229767
+        "calls": 652782
       },
       "rust": {
-        "ns": 9.1495858600418,
-        "min": 8.50340397821454,
-        "max": 15.328385446159231,
+        "ns": 6.406504706190684,
+        "min": 5.77519326985678,
+        "max": 7.128759408527236,
         "samples": 15,
-        "calls": 1554064,
-        "allocations": 4.289827617567016e-8,
-        "bytes": 5.147793141080419e-6
+        "calls": 3373004,
+        "allocations": 1.976477545436254e-8,
+        "bytes": 2.3717730545235047e-6
       },
-      "speedup": 7.2790659297657925,
-      "bound": null
+      "speedup": 5.0132698585007125,
+      "bound": null,
+      "compat": null
     }
   ]
 }

@@ -1,8 +1,8 @@
 {
   "lib": "platform",
   "environment": {
-    "date": "2026-10-12T00:44:41Z",
-    "commit": "9acda67221",
+    "date": "2026-10-12T02:48:25Z",
+    "commit": "b5c0f44a39",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,45 +31,47 @@
       "name": "declare",
       "description": "Declare an action: method, path, description, groups, a label, three params and two injections",
       "php": {
-        "ns": 1916.8532726484611,
-        "min": 1393.5636468718394,
-        "max": 2545.9832394162695,
+        "ns": 793.42787797319,
+        "min": 717.1502184384452,
+        "max": 908.3103319517569,
         "samples": 15,
-        "calls": 13842
+        "calls": 26781
       },
       "rust": {
-        "ns": 1171.2260178081424,
-        "min": 1090.1957215657726,
-        "max": 1333.6973175785406,
+        "ns": 619.7931556729933,
+        "min": 595.7247124029259,
+        "max": 670.8987207166565,
         "samples": 15,
-        "calls": 17857,
-        "allocations": 40.0000037333632,
-        "bytes": 2457.000448003584
+        "calls": 31033,
+        "allocations": 40.000002148250786,
+        "bytes": 2457.0002577900946
       },
-      "speedup": 1.6366211504041737,
-      "bound": null
+      "speedup": 1.2801494671422404,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "init",
       "description": "Register a service of ten HTTP actions with two params and an injection each",
       "php": {
-        "ns": 22766.17262512768,
-        "min": 20521.70582226762,
-        "max": 38931.77528089887,
+        "ns": 14998.06449375867,
+        "min": 13819.14563106796,
+        "max": 18566.400832177533,
         "samples": 15,
-        "calls": 979
+        "calls": 1442
       },
       "rust": {
-        "ns": 8640.941730934019,
-        "min": 8542.326906598115,
-        "max": 9437.714224507283,
+        "ns": 5491.508287292818,
+        "min": 5269.886740331492,
+        "max": 6494.436771025169,
         "samples": 15,
-        "calls": 2334,
-        "allocations": 288.0000285632676,
-        "bytes": 30273.003427592117
+        "calls": 3258,
+        "allocations": 288.0000204624514,
+        "bytes": 30273.002455494166
       },
-      "speedup": 2.6346865114974958,
-      "bound": null
+      "speedup": 2.731137550764283,
+      "bound": null,
+      "compat": null
     }
   ]
 }

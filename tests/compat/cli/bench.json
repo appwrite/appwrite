@@ -1,8 +1,8 @@
 {
   "lib": "cli",
   "environment": {
-    "date": "2026-10-12T00:44:28Z",
-    "commit": "9acda67221",
+    "date": "2026-10-12T02:48:18Z",
+    "commit": "b5c0f44a39",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,45 +31,47 @@
       "name": "parse",
       "description": "Parse a command line with five arguments, one repeated",
       "php": {
-        "ns": 1868.583608815427,
-        "min": 1293.7786501377411,
-        "max": 3898.3298898071625,
+        "ns": 923.2646434134139,
+        "min": 855.656393071223,
+        "max": 963.377731627885,
         "samples": 15,
-        "calls": 7260
+        "calls": 21187
       },
       "rust": {
-        "ns": 922.5793204371885,
-        "min": 883.4602368866329,
-        "max": 2056.8741482599353,
+        "ns": 589.1712447952272,
+        "min": 564.765769684917,
+        "max": 714.5078615375054,
         "samples": 15,
-        "calls": 21867,
-        "allocations": 23.000003048734012,
-        "bytes": 2488.0003658480814
+        "calls": 32182,
+        "allocations": 23.000002071551386,
+        "bytes": 2488.000248586166
       },
-      "speedup": 2.0253907359748204,
-      "bound": null
+      "speedup": 1.567056524855188,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "run",
       "description": "Run a task: resolve and validate two params and an injected resource, then call it",
       "php": {
-        "ns": 2171.5979997221834,
-        "min": 1476.0557021808584,
-        "max": 4758.508126128629,
+        "ns": 941.5531096487163,
+        "min": 913.820418945222,
+        "max": 1013.7737046992307,
         "samples": 15,
-        "calls": 7199
+        "calls": 21578
       },
       "rust": {
-        "ns": 801.5268438884546,
-        "min": 677.0697159238989,
-        "max": 2185.919989575189,
+        "ns": 505.72682544733556,
+        "min": 471.2924142657822,
+        "max": 532.2508016547132,
         "samples": 15,
-        "calls": 7674,
-        "allocations": 29.000008687342543,
-        "bytes": 813.0010424811051
+        "calls": 40853,
+        "allocations": 29.0000016318671,
+        "bytes": 813.0001958240521
       },
-      "speedup": 2.709326601199144,
-      "bound": null
+      "speedup": 1.8617820180210432,
+      "bound": null,
+      "compat": null
     }
   ]
 }

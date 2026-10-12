@@ -1,8 +1,8 @@
 {
   "lib": "servers",
   "environment": {
-    "date": "2026-10-12T00:44:03Z",
-    "commit": "9acda67221",
+    "date": "2026-10-12T02:47:58Z",
+    "commit": "b5c0f44a39",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,45 +31,47 @@
       "name": "declare",
       "description": "Declare a hook with three params, two injections, groups and a label",
       "php": {
-        "ns": 3903.6326690113324,
-        "min": 1037.7100429855411,
-        "max": 9711.386283704573,
+        "ns": 1069.0592466261307,
+        "min": 936.9685599881359,
+        "max": 1554.0777102180039,
         "samples": 15,
-        "calls": 5118
+        "calls": 13486
       },
       "rust": {
-        "ns": 1168.1869896097578,
-        "min": 729.4873683844737,
-        "max": 2039.2008548493588,
+        "ns": 529.785656511189,
+        "min": 495.03461849555134,
+        "max": 548.1216770018873,
         "samples": 15,
-        "calls": 28777,
-        "allocations": 23.00000231666493,
-        "bytes": 1912.0002779997915
+        "calls": 37090,
+        "allocations": 23.000001797429675,
+        "bytes": 1912.0002156915612
       },
-      "speedup": 3.341616285518958,
-      "bound": null
+      "speedup": 2.0179090043060692,
+      "bound": null,
+      "compat": null
     },
     {
       "name": "prepare",
       "description": "Resolve and validate three params of a hook from the request",
       "php": {
-        "ns": 1791.782242632989,
-        "min": 1511.1182548794488,
-        "max": 3481.749904324531,
+        "ns": 779.8021878224974,
+        "min": 699.2311661506708,
+        "max": 1529.5872033023736,
         "samples": 15,
-        "calls": 10452
+        "calls": 24225
       },
       "rust": {
-        "ns": 1013.3619059390643,
-        "min": 612.4441629071133,
-        "max": 1777.2696372288488,
+        "ns": 363.231342491348,
+        "min": 346.0892800271768,
+        "max": 410.4165268901675,
         "samples": 15,
-        "calls": 16181,
-        "allocations": 18.000004120058506,
-        "bytes": 718.0004944070206
+        "calls": 47099,
+        "allocations": 18.000001415458218,
+        "bytes": 718.0001698549863
       },
-      "speedup": 1.7681563044079267,
-      "bound": null
+      "speedup": 2.1468471924089862,
+      "bound": null,
+      "compat": null
     }
   ]
 }

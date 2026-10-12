@@ -1,8 +1,8 @@
 {
   "lib": "storage",
   "environment": {
-    "date": "2026-10-12T00:05:32Z",
-    "commit": "9acda67221",
+    "date": "2026-10-12T02:47:50Z",
+    "commit": "b5c0f44a39",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,111 +31,116 @@
       "name": "local_write",
       "description": "Write a 64 KB file on the local disk (atomic rename, MD5 ETag)",
       "php": {
-        "ns": 1996014.0,
-        "min": 1415472.1666666667,
-        "max": 2368951.3333333335,
+        "ns": 1972018.0,
+        "min": 1118976.142857143,
+        "max": 6811178.571428572,
         "samples": 15,
-        "calls": 6
+        "calls": 7
       },
       "rust": {
-        "ns": 1054291.6666666667,
-        "min": 682465.3333333334,
-        "max": 3162597.1666666665,
+        "ns": 986633.3333333334,
+        "min": 739747.2,
+        "max": 1424294.4666666666,
         "samples": 15,
-        "calls": 6,
-        "allocations": 14.011111111111111,
-        "bytes": 1103.3333333333333
+        "calls": 15,
+        "allocations": 14.004444444444445,
+        "bytes": 1102.5333333333333
       },
-      "speedup": 1.8932275224281705,
-      "bound": "File system calls (create, write, rename) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+      "speedup": 1.998734416703267,
+      "bound": "File system calls (create, write, rename) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
+      "compat": null
     },
     {
       "name": "local_read",
       "description": "Read a 64 KB local file to the end",
       "php": {
-        "ns": 422360.55102040817,
-        "min": 297029.7551020408,
-        "max": 828943.8775510204,
+        "ns": 215479.16176470587,
+        "min": 162449.75,
+        "max": 435200.98529411765,
         "samples": 15,
-        "calls": 49
+        "calls": 68
       },
       "rust": {
-        "ns": 159031.17322834645,
-        "min": 98026.5748031496,
-        "max": 284598.094488189,
+        "ns": 182429.6222222222,
+        "min": 145673.14444444445,
+        "max": 264555.55555555556,
         "samples": 15,
-        "calls": 127,
-        "allocations": 9.000524934383202,
-        "bytes": 66054.06299212598
+        "calls": 90,
+        "allocations": 9.00074074074074,
+        "bytes": 66054.08888888889
       },
-      "speedup": 2.655834968996661,
-      "bound": "File system calls (open, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+      "speedup": 1.1811632296328782,
+      "bound": "File system calls (open, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
+      "compat": null
     },
     {
       "name": "local_read_range",
       "description": "Read a 4 KB range from the middle of a 64 KB local file",
       "php": {
-        "ns": 88868.21705426357,
-        "min": 65106.26356589147,
-        "max": 114771.0,
+        "ns": 128266.66666666667,
+        "min": 90452.77575757576,
+        "max": 153996.21212121213,
         "samples": 15,
-        "calls": 129
+        "calls": 165
       },
       "rust": {
-        "ns": 79824.11538461539,
-        "min": 63284.254807692305,
-        "max": 95150.64423076923,
+        "ns": 118172.40816326531,
+        "min": 105544.64285714286,
+        "max": 247089.92346938775,
         "samples": 15,
-        "calls": 208,
-        "allocations": 9.000320512820513,
-        "bytes": 4616.038461538462
+        "calls": 196,
+        "allocations": 9.000340136054422,
+        "bytes": 4616.040816326531
       },
-      "speedup": 1.1133003682667966,
-      "bound": "File system calls (open, seek, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+      "speedup": 1.0854197579646112,
+      "bound": "File system calls (open, seek, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
+      "compat": null
     },
     {
       "name": "s3_write",
       "description": "Write a 64 KB object to MinIO (SigV4-signed PUT)",
       "php": {
-        "ns": 3786101.285714286,
-        "min": 3011446.4285714286,
-        "max": 5611000.0,
+        "ns": 3019048.5,
+        "min": 2642673.5,
+        "max": 3749826.5,
         "samples": 15,
-        "calls": 7
+        "calls": 6
       },
       "rust": {
-        "ns": 2476012.0,
-        "min": 2256815.5714285714,
-        "max": 3040476.1428571427,
+        "ns": 2101820.8,
+        "min": 1453245.8,
+        "max": 5739558.3,
         "samples": 15,
-        "calls": 7,
-        "allocations": 248.0095238095238,
-        "bytes": 29969.14285714286
+        "calls": 10,
+        "allocations": 249.00666666666666,
+        "bytes": 30120.8
       },
-      "speedup": 1.529112656042978,
-      "bound": "A MinIO round trip (PUT of 64 KB, hashing included), the same on both runtimes, dominates the call"
+      "speedup": 1.4363967185023576,
+      "bound": "A MinIO round trip (PUT of 64 KB, hashing included), the same on both runtimes, dominates the call",
+      "compat": null
     },
     {
       "name": "validate_file_name",
       "description": "Validate an upload file name",
       "php": {
-        "ns": 130.30746468430758,
-        "min": 126.08122773290641,
-        "max": 137.16721234031664,
+        "ns": 124.45713139904684,
+        "min": 121.24225212874103,
+        "max": 130.84995756507465,
         "samples": 15,
-        "calls": 152411
+        "calls": 107223
       },
       "rust": {
-        "ns": 83.46596464377154,
-        "min": 80.97228000048845,
-        "max": 86.73524347603094,
+        "ns": 46.38921911806794,
+        "min": 43.056748783655856,
+        "max": 48.8831825286749,
         "samples": 15,
-        "calls": 245671,
-        "allocations": 3.000000271365634,
-        "bytes": 56.000032563876076
+        "calls": 454230,
+        "allocations": 3.000000146768524,
+        "bytes": 56.000017612222884
       },
-      "speedup": 1.56120480054898,
-      "bound": null
+      "speedup": 2.6828891230586067,
+      "bound": null,
+      "compat": null
     }
   ]
 }
