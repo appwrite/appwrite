@@ -29,7 +29,7 @@
         "php": ">=8.5",
         "psr/http-client": "^1.0",
         "psr/http-message": "^1.1 || ^2.0",
-        "utopia-php/client": "^0.5",
+        "utopia-php/client": "^0.6",
         "utopia-php/database": "^7.0.0",
         "utopia-php/psr7": "^0.2.1",
         "utopia-php/query": "^0.6 || ^0.7",

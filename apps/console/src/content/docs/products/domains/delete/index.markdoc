@@ -1,0 +1,42 @@
+---
+layout: article
+title: Delete a domain
+description: Remove a domain and its DNS zone from Appwrite, including bulk delete from the organization list.
+---
+
+Deleting a domain removes it from your organization and deletes all DNS records Appwrite hosted for that zone. This action cannot be undone.
+
+This guide covers single and bulk delete and what happens for Appwrite-registered versus external domains.
+
+# Before you delete {% #before-you-delete %}
+
+- Update or remove [product connections](/docs/products/domains/connect) (Sites, Functions, API custom domains) that use the hostname.
+- For **external domains**, plan nameserver changes at your registrar if DNS should continue elsewhere. Deleting in Appwrite does not cancel registration at your external registrar.
+- For **Appwrite-registered domains**, deleting from Appwrite does not cancel registry registration by itself. To release the name entirely, complete [transfer out](/docs/products/domains/transfer#transfer-out) or allow the registration to expire without renewal.
+
+# Delete a single domain {% #delete-a-single-domain %}
+
+1. Open the domain in your organization.
+2. Go to the **Settings** tab.
+3. In **Delete domain**, click **Delete domain**.
+4. Type the domain name exactly as shown to confirm.
+5. Confirm deletion.
+
+The domain and its DNS zone are removed from Appwrite immediately.
+
+# Bulk delete from the list {% #bulk-delete-from-the-list %}
+
+1. Open **Organization** > **Domains**.
+2. Select the checkboxes on the domains to remove.
+3. Use the bulk delete action in the selection bar.
+4. Confirm deletion in the dialog.
+
+Bulk delete uses the same permanent removal as single delete for each selected domain.
+
+# After deletion {% #after-deletion %}
+
+- DNS hosted by Appwrite for that zone stops resolving.
+- The domain no longer counts toward your organization's [plan limit](/docs/products/domains/registration#plan-limits).
+- Appwrite-registered names may still incur renewal obligations at the registry until transfer out or expiry if registration was not separately cancelled. Monitor billing if you delete shortly after registering.
+
+To add the domain again later, use [Register a domain](/docs/products/domains/register), [Transfer a domain](/docs/products/domains/transfer), or [Add external domain](/docs/products/domains/external) depending on how you want to manage registration.

@@ -22,10 +22,10 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Emails\Validator\Email as EmailValidator;
 use Utopia\Platform\Scope\HTTP;
-use Utopia\Validator;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 class Create extends Base
 {

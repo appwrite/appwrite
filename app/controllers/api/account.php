@@ -13,6 +13,8 @@ use Appwrite\Auth\Validator\PasswordStrength;
 use Appwrite\Auth\Validator\PersonalData;
 use Appwrite\Auth\Validator\Phone;
 use Appwrite\Bus\Events\SessionCreated;
+use Appwrite\Deletes\Identities as DeleteIdentities;
+use Appwrite\Deletes\Targets as DeleteTargets;
 use Appwrite\Detector\Detector;
 use Appwrite\Event\Event;
 use Appwrite\Event\Message\Delete as DeleteMessage;
@@ -71,7 +73,6 @@ use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Enum;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
-use Utopia\Validator;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -79,6 +80,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
@@ -134,6 +136,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_EMAIL => Type::EMAIL,
         TOKEN_TYPE_PHONE => Type::PHONE,
         TOKEN_TYPE_GENERIC => 'token',
+        TOKEN_TYPE_PASSKEY => Type::PASSKEY,
         default => throw new Exception(Exception::USER_INVALID_TOKEN)
     });
 
@@ -141,6 +144,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         TOKEN_TYPE_MAGIC_URL => SESSION_PROVIDER_MAGIC_URL,
         TOKEN_TYPE_PHONE => SESSION_PROVIDER_PHONE,
         TOKEN_TYPE_OAUTH2 => $oauthProvider,
+        TOKEN_TYPE_PASSKEY => SESSION_PROVIDER_PASSKEY,
         default => SESSION_PROVIDER_TOKEN,
     };
 
@@ -213,16 +217,30 @@ $createSession = function (string $userId, string $secret, Request $request, Res
             ->setAttribute('factors', \array_merge($session->getAttribute('factors', []), ['oauth2']));
     }
 
+    // A user-verified passkey proves possession and a biometric or PIN, so it counts as both factors
+    if ($verifiedToken->getAttribute('type') === TOKEN_TYPE_PASSKEY) {
+        $session
+            ->setAttribute('factors', [Type::PASSKEY, Type::USER_VERIFICATION])
+            ->setAttribute('mfaUpdatedAt', DateTime::now());
+    }
+
     $authorization->addRole(Role::user($user->getId())->toString());
 
-    $session = $dbForProject->createDocument('sessions', $session
-        ->setAttribute('$permissions', [
-            Permission::read(Role::user($user->getId())),
-            Permission::update(Role::user($user->getId())),
-            Permission::delete(Role::user($user->getId())),
-        ]));
+    // Claim the token and issue the session together: of concurrent exchanges only the one that deletes the token
+    // gets a session, and a failed insert rolls the claim back so the token can be retried
+    $session = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $verifiedToken, $session, $user) {
+        if (!$authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()))) {
+            throw new Exception(Exception::USER_INVALID_TOKEN);
+        }
 
-    $authorization->skip(fn () => $dbForProject->deleteDocument('tokens', $verifiedToken->getId()));
+        return $dbForProject->createDocument('sessions', $session
+            ->setAttribute('$permissions', [
+                Permission::read(Role::user($user->getId())),
+                Permission::update(Role::user($user->getId())),
+                Permission::delete(Role::user($user->getId())),
+            ]));
+    });
+
     $dbForProject->purgeCachedDocument('users', $user->getId());
 
     // Magic URL + Email OTP
@@ -263,7 +281,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
     }
 
-    $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+    $expire = DateTime::addSeconds(new \DateTime(), $duration);
     $protocol = $request->getProtocol();
 
     $response
@@ -567,7 +585,13 @@ Http::delete('/v1/account')
             }
         }
 
-        $dbForProject->deleteDocument('users', $targetUser->getId());
+        // A failure rolls back to an intact account to retry; the rest is queued only once these rows are gone.
+        $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $targetUser) {
+            $dbForProject->deleteDocument('users', $targetUser->getId());
+            DeleteIdentities::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+            DeleteTargets::delete($dbForProject, Query::equal('userInternalId', [$targetUser->getSequence()]));
+            $dbForProject->deleteDocuments('sessions', [Query::equal('userInternalId', [$targetUser->getSequence()])]);
+        }));
 
         $publisherForDeletes->enqueue(new DeleteMessage(
             project: $project,
@@ -923,7 +947,7 @@ Http::patch('/v1/account/sessions/:sessionId')
 
         // Extend session
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $authDuration)));
+        $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
 
         // Refresh OAuth access token
         $provider = $session->getAttribute('provider', '');
@@ -948,7 +972,7 @@ Http::patch('/v1/account/sessions/:sessionId')
             $session
                 ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry('')));
 
             try {
                 $identity = $dbForProject->findOne('identities', [
@@ -1049,6 +1073,14 @@ Http::post('/v1/account/sessions/email')
 
         if (false === $profile->getAttribute('status')) { // Account is blocked
             throw new Exception(Exception::USER_BLOCKED); // User is in status blocked
+        }
+
+        $rotation = $project->getAttribute('auths', [])['passwordRotation'] ?? [];
+        if (
+            ($rotation['enabled'] ?? false)
+            && \microtime(true) - (float) (new \DateTime($profile->getAttribute('passwordUpdate')))->format('U.u') > ($rotation['maxAge'] ?? 31536000)
+        ) {
+            throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }
 
         $user->setAttributes($profile->getArrayCopy());
@@ -1910,6 +1942,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
+                    // The provider verified this address, or its canonical form on the same domain
+                    if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
+                        $user->setAttribute('emailVerification', true);
+                    }
                 }
             }
 
@@ -2195,7 +2231,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $query = URLParser::parseQuery($state['success']['query']);
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $proofForTokenOAuth2 = new ProofsToken(TOKEN_LENGTH_OAUTH2);
         $proofForTokenOAuth2->setHash(new Sha());
@@ -2956,7 +2992,7 @@ Http::post('/v1/account/tokens/email')
         }
 
         $tokenSecret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP);
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -3372,7 +3408,7 @@ Http::post('/v1/account/tokens/phone')
         }
 
         $secret ??= $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP);
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -4494,7 +4530,7 @@ Http::post('/v1/account/recovery/otp')
         $userId = $deliverable ? $profile->getId() : ID::unique();
 
         $secret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP);
 
         $recovery = new Document([
             '$id' => ID::unique(),
@@ -5213,7 +5249,7 @@ Http::post('/v1/account/verifications/phone')
         }
 
         $secret ??= $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
             '$id' => ID::unique(),
@@ -5773,7 +5809,7 @@ Http::post('/v1/account/verifications/email/otp')
         }
 
         $secret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP);
 
         $verification = new Document([
             '$id' => ID::unique(),

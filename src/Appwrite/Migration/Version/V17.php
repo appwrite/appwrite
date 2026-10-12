@@ -4,7 +4,7 @@ namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
 use Utopia\Auth\Proofs\Password;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 

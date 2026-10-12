@@ -20,7 +20,7 @@ use Throwable;
 use Utopia\Bus\Bus;
 use Utopia\Cdn\Certificates\Provider;
 use Utopia\Cdn\Certificates\Status;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -481,12 +481,11 @@ class Certificates extends Action
             return;
         }
 
-        $ruleModel = new Rule();
         $queueForEvents
             ->setProject($project)
             ->setEvent('rules.[ruleId].update')
             ->setParam('ruleId', $rule->getId())
-            ->setPayload($rule->getArrayCopy(array_keys($ruleModel->getRules())));
+            ->setPayload((new Rule())->payload($rule));
 
         /** Trigger Webhook */
         $queueForWebhooks

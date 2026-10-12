@@ -5,7 +5,7 @@ namespace Utopia\VCS\Adapter\Git;
 use Ahc\Jwt\JWT;
 use Exception;
 use Utopia\Cache\Cache;
-use Utopia\Command;
+use Utopia\Console\Command;
 use Utopia\VCS\Adapter\Git;
 use Utopia\VCS\Exception\FileNotFound;
 use Utopia\VCS\Exception\OwnerNotFound;

@@ -1,0 +1,74 @@
+---
+layout: article
+title: TablesDB
+description: Store and query structured data with Appwrite TablesDB. Tables provide performant and scalable storage for your application, business, and user data.
+---
+
+Appwrite Databases let you store and query structured data. 
+Databases provide high-performance and scalable data storage for your key application, business, and user data.
+
+{% info title="Looking for file storage?" %}
+Databases store data, if you need to store files like images, PDFs or videos, use [Appwrite Storage](/docs/products/storage).
+{% /info %}
+
+You can organize data into databases, tables, and rows. You can also paginate, order, and query rows.
+For complex business logic, Appwrite supports relationships to help you model your data.
+
+{% arrow_link href="/docs/products/databases/tablesdb/quick-start" %}
+Quick start 
+{% /arrow_link %}
+
+# Concepts {% #concepts %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/tablesdb/databases" title="Databases" %}
+Create and manage databases, the largest organizational unit.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/tables" title="Tables" %}
+Define typed columns and indexes for structured data.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/rows" title="Rows" %}
+Create, read, update, and delete rows.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/permissions" title="Permissions" %}
+Control access at the table and row level.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/relationships" title="Relationships" %}
+Model one-to-one, one-to-many, and many-to-many relations.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/queries" title="Queries" %}
+Filter rows with comparison, string, and logical operators.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/order" title="Order" %}
+Sort results by one or more columns.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/backups" title="Backups" %}
+Schedule backup policies and restore from any backup.
+{% /cards_item %}
+{% /cards %}
+
+# Guides {% #guides %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/tablesdb/pagination" title="Pagination" %}
+Page through results with offset or cursor pagination.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/transactions" title="Transactions" %}
+Stage operations and commit or roll them back atomically.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/type-generation" title="Type generation" %}
+Generate types for your tables in your language of choice.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/offline" title="Offline sync" %}
+Keep data available offline and sync when back online.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/bulk-operations" title="Bulk operations" %}
+Create, update, upsert, or delete many rows in one request.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/csv-imports" title="CSV imports" %}
+Import rows from CSV files.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/tablesdb/csv-exports" title="CSV exports" %}
+Export tables to CSV files.
+{% /cards_item %}
+{% /cards %}

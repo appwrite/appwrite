@@ -1,0 +1,155 @@
+---
+layout: article
+title: DNS presets
+description: Add email provider DNS records to organization domains with one-click presets in Appwrite Cloud.
+---
+
+**DNS presets** are curated record sets for common email providers. They add the MX (and in some cases TXT) records your provider expects at the apex of your domain (`@`), so you can route mail without typing each record manually.
+
+Presets are available on verified organization domains where Appwrite hosts the DNS zone. They do not replace provider-specific setup such as domain verification TXT, DKIM, or DMARC. Add those records separately after applying a preset.
+
+For manual record operations, see [Manage DNS records](/docs/products/domains/manage-dns). For record types and locked entries, see [DNS records](/docs/products/domains/dns).
+
+# When to use presets {% #when-to-use-presets %}
+
+Use presets when:
+
+- Your domain is **verified** under **Organization** > **Domains** with Appwrite nameservers.
+- You want to receive email at the apex domain (for example `you@example.com`) through a supported provider.
+- You are migrating MX records from another DNS host into Appwrite's zone.
+
+Presets append new records to the zone. They do not remove existing MX or TXT entries. Review the records table before and after applying a preset to avoid duplicate MX records that can confuse mail routing.
+
+{% info title="Product hostnames are separate" %}
+Presets configure **email** at the zone apex. Connecting `www.example.com` or `api.example.com` to Sites, Functions, or APIs uses the [Connect to products](/docs/products/domains/connect) flow and different record types (CNAME, NS, or locked routing records).
+{% /info %}
+
+# Apply a preset in the Console {% #apply-a-preset %}
+
+1. Open **Organization** > **Domains** and select a verified domain.
+2. Open the **DNS Records** tab.
+3. Click **Add preset** and choose a provider.
+4. Appwrite fetches the preset and creates each record in the zone.
+5. Confirm the new rows appear in the records table.
+
+On mobile, open **More** > **Preset** and select the provider.
+
+Allow TTL-based propagation before sending production mail. Most preset records use a TTL of `3600` seconds (1 hour).
+
+# Available presets {% #available-presets %}
+
+| Preset | Records | Record types | Purpose |
+| ------ | ------- | ------------ | ------- |
+| [Google Workspace](#google-workspace) | 5 | MX | Gmail and Google Workspace inbound mail |
+| [Outlook](#outlook) | 1 | MX | Microsoft 365 / Outlook.com hosting |
+| [Mailgun](#mailgun) | 2 | MX | Mailgun transactional email routing |
+| [Zoho](#zoho) | 3 | MX | Zoho Mail inbound routing |
+| [ProtonMail](#protonmail) | 2 | MX | ProtonMail custom domain mail |
+| [iCloud](#icloud) | 3 | MX, TXT | iCloud Mail with SPF |
+
+# Google Workspace {% #google-workspace %}
+
+Adds five MX records at `@` pointing to Google's mail exchangers:
+
+| Priority | Value |
+| -------- | ----- |
+| 1 | `aspmx.l.google.com` |
+| 5 | `alt1.aspmx.l.google.com` |
+| 5 | `alt2.aspmx.l.google.com` |
+| 10 | `alt3.aspmx.l.google.com` |
+| 10 | `alt4.aspmx.l.google.com` |
+
+After applying the preset, complete Google Workspace domain verification and add any TXT or CNAME records Google Admin requires (for example DKIM and site verification). The preset covers inbound MX only.
+
+# Outlook {% #outlook %}
+
+Adds one MX record at `@`:
+
+| Priority | Value |
+| -------- | ----- |
+| 10 | `outlook-com.olc.protection.outlook.com` |
+
+Complete Microsoft 365 domain setup in the Microsoft admin center. You may need additional TXT records for verification and SPF/DKIM that are not part of this preset.
+
+# Mailgun {% #mailgun %}
+
+Adds two MX records at `@`:
+
+| Priority | Value |
+| -------- | ----- |
+| 10 | `mxa.mailgun.org` |
+| 10 | `mxb.mailgun.org` |
+
+Mailgun also requires domain-specific TXT records (SPF, DKIM) from the Mailgun dashboard. Add those manually on the **Records** tab after the preset.
+
+# Zoho {% #zoho %}
+
+Adds three MX records at `@`:
+
+| Priority | Value |
+| -------- | ----- |
+| 10 | `mx.zoho.com` |
+| 20 | `mx2.zoho.com` |
+| 30 | `mx3.zoho.com` |
+
+Complete Zoho domain verification in Zoho Mail admin. Add SPF and DKIM TXT records from Zoho if they are not already in your zone.
+
+# ProtonMail {% #protonmail %}
+
+Adds two MX records at `@`:
+
+| Priority | Value |
+| -------- | ----- |
+| 10 | `mail.protonmail.ch` |
+| 20 | `mailsec.protonmail.ch` |
+
+Follow ProtonMail custom domain setup for any additional TXT or DKIM records required by your plan.
+
+# iCloud {% #icloud %}
+
+Adds two MX records and one SPF TXT record at `@`:
+
+**MX**
+
+| Priority | Value |
+| -------- | ----- |
+| 10 | `mx01.mail.icloud.com` |
+| 20 | `mx02.mail.icloud.com` |
+
+**TXT (SPF)**
+
+```text
+v=spf1 redirect=icloud.com
+```
+
+iCloud is the only preset that includes an SPF TXT record. Other providers expect you to add SPF, DKIM, and verification TXT from their admin consoles.
+
+# After applying a preset {% #after-applying %}
+
+1. **Check for duplicates**: If you already had MX records for another provider, remove or update conflicting rows.
+2. **Add provider verification records**: TXT and CNAME values from your email provider's setup wizard are not included in presets.
+3. **Consider DMARC**: Add a DMARC TXT record at `_dmarc` when you are ready to enforce SPF/DKIM alignment.
+4. **Test delivery**: Send test messages to and from addresses on the domain after propagation.
+
+Preset-created records are normal zone records. You can edit or delete them from the records table unless they are locked (presets create unlocked records).
+
+# Troubleshooting {% #troubleshooting %}
+
+**Preset fails to add records**
+
+- Confirm the domain is verified and you have permission to manage DNS.
+- Check for name conflicts with locked records or duplicate MX at `@`.
+
+**Mail does not arrive after applying a preset**
+
+- Wait for DNS propagation (up to 48 hours in rare cases).
+- Confirm the provider's domain verification and SPF/DKIM steps are complete.
+- Ensure no conflicting MX records remain in the zone.
+
+**Need records for a provider not listed**
+
+- Use **Create record** on the **Records** tab or [import a zone file](/docs/products/domains/manage-dns#import-and-export-a-zone-file) with your provider's BIND export.
+
+{% arrow_link href="/docs/products/domains/manage-dns" %}
+Manage DNS records
+{% /arrow_link %}
