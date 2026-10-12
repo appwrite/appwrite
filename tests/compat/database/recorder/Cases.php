@@ -57,6 +57,7 @@ final class Cases
         private string $schema,
         private array $dirty = [],
     ) {
+        self::$innodb = Profile::engine($this->profile) !== 'postgres';
         foreach ($this->stream as $step) {
             $this->rewrite($step);
         }
@@ -370,6 +371,9 @@ final class Cases
      *
      * @return array{paths: list<string>, reason: string}|null
      */
+    /** Whether the cases run on MariaDB/MySQL (InnoDB). */
+    private static bool $innodb = false;
+
     private static function mask(Step $step): ?array
     {
         $args = (string) json_encode($step->args);
@@ -378,6 +382,9 @@ final class Cases
         }
         if (str_contains($args, '"method":"cursor') && (str_contains($args, '"attribute":"$createdAt"') || str_contains($args, '"attribute":"$updatedAt"'))) {
             return ['paths' => [''], 'reason' => 'documents written within one millisecond tie on $createdAt/$updatedAt, so the page after a cursor depends on timing'];
+        }
+        if (self::$innodb && \in_array($step->op, ['database.get_size_of_collection', 'database.get_size_of_collection_on_disk'], true)) {
+            return ['paths' => [''], 'reason' => 'InnoDB updates the table statistics these sizes come from in the background, so a size read right after a write depends on timing'];
         }
         if ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['getHostname', 'getConnectionId'], true)) {
             return ['paths' => [''], 'reason' => 'each runtime reaches the server under its own host name, on its own connection'];

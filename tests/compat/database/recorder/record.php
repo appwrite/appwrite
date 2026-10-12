@@ -585,13 +585,28 @@ foreach (array_keys($order) as $name) {
     }
 }
 
+/**
+ * What PHP returned while recording, as plain data for out/: documents and
+ * exceptions a result kept as objects encoded.
+ */
+function plain(mixed $value): mixed
+{
+    return match (true) {
+        \is_array($value) => array_map(plain(...), $value),
+        $value instanceof \Throwable => ['$error' => ['class' => $value::class, 'message' => $value->getMessage()]],
+        $value instanceof \Utopia\Database\Document => \Tests\Compat\Database\Values::encode($value),
+        \is_object($value) && !$value instanceof \stdClass => ['$object' => $value::class],
+        default => $value,
+    };
+}
+
 \ini_set("memory_limit", "-1");
 $cases = new Cases($profile, Recorder::$stream, $tests, Target::open(), Recorder::$schema, $dirty);
 $written = $cases->write($root . '/tests/compat/database/cases', $filter);
 @mkdir(__DIR__ . '/out');
 file_put_contents(
     __DIR__ . "/out/{$profile}.json",
-    json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => \Tests\Compat\Database\Values::encode($cases->originals())]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
+    json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => plain($cases->originals())]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
 );
 foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {
     fwrite(STDERR, "problem: {$problem}\n");
