@@ -189,25 +189,6 @@ class Create extends Action
                         if (!$authorization->isValid(new Input(PermissionType::Delete, $permissions))) {
                             throw new Exception(Exception::USER_UNAUTHORIZED);
                         }
-                    } else {
-                        $dbForDatabases = $getDatabasesDB($database);
-                        $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
-                        $creates = $operation['action'] === 'create' || ($operation['action'] === 'upsert' && !$exists);
-
-                        if ($creates && isset($operation[$this->getResourceId()])) {
-                            $data['$id'] = $operation[$this->getResourceId()];
-                        }
-                        if (\in_array($operation['action'], ['increment', 'decrement'])) {
-                            $data = [];
-                        }
-
-                        $this->authorizeStagedWrite(
-                            fn () => $creates
-                                ? $dbForDatabases->authorizeCreate($collectionKey, new Document($data))
-                                : $dbForDatabases->authorizeUpdate($collectionKey, $document ?? new Document(), new Document($data)),
-                            Exception::COLLECTION_NOT_FOUND,
-                            $operation[$this->getGroupId()],
-                        );
                     }
 
                     // Users can only set permissions for roles they have
@@ -234,6 +215,27 @@ class Create extends Action
 
                     if (\in_array($operation['action'], ['create', 'update', 'upsert']) && \is_array($operation['data'] ?? null)) {
                         $this->validateRelationships($database, $collection, $operation['data'], $dbForProject, $transactionState, $transactionId, $authorization);
+                    }
+
+                    if ($operation['action'] !== 'delete') {
+                        $dbForDatabases = $getDatabasesDB($database);
+                        $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
+                        $creates = $operation['action'] === 'create' || ($operation['action'] === 'upsert' && !$exists);
+
+                        if ($creates && isset($operation[$this->getResourceId()])) {
+                            $data['$id'] = $operation[$this->getResourceId()];
+                        }
+                        if (\in_array($operation['action'], ['increment', 'decrement'])) {
+                            $data = [];
+                        }
+
+                        $this->authorizeStagedWrite(
+                            fn () => $creates
+                                ? $dbForDatabases->authorizeCreate($collectionKey, new Document($data))
+                                : $dbForDatabases->authorizeUpdate($collectionKey, $document ?? new Document(), new Document($data)),
+                            Exception::COLLECTION_NOT_FOUND,
+                            $operation[$this->getGroupId()],
+                        );
                     }
                 }
             }
