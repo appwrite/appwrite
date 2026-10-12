@@ -129,7 +129,11 @@ fn method(name: &str) -> Result<HttpMethod, Fault> {
 }
 
 fn array(value: &Json) -> Result<Array, Fault> {
-    typed::decode_array(value)
+    // `{}` decodes to an object; the PHP adapter casts it to an array too.
+    match typed::decode(value)? {
+        Value::Array(a) | Value::Object(a) => Ok(a),
+        _ => Err(Fault::new("expected an array")),
+    }
 }
 
 /// `(array) Typed::decode($value)`.

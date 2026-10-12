@@ -33,6 +33,7 @@ bin/compat record <lib>          # store PHP's results as `expect` in the case f
 bin/compat coverage <lib>        # API coverage, adapter parity, ported tests, ported tasks
 bin/compat check <lib>           # coverage + run + fuzz: the conversion gate
 bin/compat ci                    # run + fuzz every library; check the complete ones
+bin/compat ci database           # only these libraries; `'!database'` leaves one out
 bin/compat status --write        # regenerate STATUS.md
 bin/compat call <lib> <op> '<args json>' [--side php|rust]     # one call, both results
 bin/compat new <lib>             # scaffold tests/compat/<lib>

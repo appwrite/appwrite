@@ -227,6 +227,10 @@ final class Adapter implements Base, Benchmarks
     private static function array(mixed $value): array
     {
         $value = Typed::decode($value);
+        // `{}` decodes to an object; Rust's adapter treats it as an array too.
+        if ($value instanceof \stdClass) {
+            $value = (array) $value;
+        }
         if (! \is_array($value)) {
             throw new Fault('expected an array');
         }

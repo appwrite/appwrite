@@ -1068,11 +1068,21 @@ jobs:
   # PHP <-> Rust compatibility of the Utopia libraries (tests/compat): every
   # case on both runtimes, fuzzing with a new seed each run, and the full
   # conversion gate for libraries marked complete. See crates/CONVERSION.md.
+  # Two shards: the database library's cases (every adapter, thousands of
+  # them) take as long as all the other libraries together.
   compat:
-    name: Tests / Compat / PHP and Rust Utopia libraries
+    name: Tests / Compat / PHP and Rust Utopia libraries (${{ matrix.shard }})
     needs: [build]
     runs-on: gcrunner=${{ github.run_id }}/runner=e2e
-    timeout-minutes: 45
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: database
+            libs: database
+          - shard: libraries
+            libs: '!database'
     env:
       RUST_VERSION: '1.88'
       COMPOSE_PROFILES: postgresql
@@ -1128,14 +1138,17 @@ jobs:
         env:
           COMPAT_SEED: ${{ github.run_number }}
           COMPAT_IMAGE: compat-cache-php
-        run: bin/compat ci
+          COMPAT_LIBS: ${{ matrix.libs }}
+        run: bin/compat ci "${COMPAT_LIBS}"
 
       - name: Replay recorded results with services
+        if: matrix.shard == 'libraries'
         env:
           COMPAT_SERVICES: '1'
         run: cargo test -p compat --test replay --locked
 
       - name: Run documentation examples
+        if: matrix.shard == 'libraries'
         env:
           COMPAT_IMAGE: compat-cache-php
         run: bin/compat examples
