@@ -54,6 +54,16 @@ use function Swoole\Coroutine\batch;
 
 class Messaging extends Action
 {
+    /**
+     * Push provider types that act as silent-wake channels for Appwrite (MQTT) delivery. When a user is
+     * reached over MQTT, a target of one of these types is not sent a separate full notification — it
+     * gets a silent wake so the app reconnects and replays over MQTT. A type absent here is delivered
+     * normally (full notification, never woken); an empty list disables the wake entirely.
+     *
+     * @var array<string>
+     */
+    private const WAKE_PROVIDERS = ['apns'];
+
     private Telemetry $telemetry;
 
     private Provider $provider;
@@ -301,14 +311,16 @@ class Messaging extends Action
                     $recipients = \array_keys($userTopics);
                 }
 
-                // For a user-/target-addressed send, an MQTT-reached user's native targets are not pushed
-                // here: all their registered devices are woken once after the loop (see below), which also
-                // covers devices absent from the streamed pages, e.g. a native target not named in a
-                // targetId send. Only non-MQTT recipients get the full notification; everything else (MQTT
-                // itself, SMS, email, campaign native subscribers) is a single full group.
+                // For a user-/target-addressed send, an MQTT-reached user's wake-channel targets are not
+                // pushed here: all their registered devices are woken once after the loop (see below),
+                // which also covers devices absent from the streamed pages, e.g. a native target not named
+                // in a targetId send. Only non-MQTT recipients get the full notification. A provider not in
+                // the wake list, and every other send (MQTT itself, SMS, email, campaign subscribers), is a
+                // single full group.
                 $recipientGroup = $recipients;
-                $isNativePush = $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') !== 'appwrite';
-                if ($perUser && $isNativePush && $mqttUsers !== []) {
+                $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
+                    && \in_array($provider->getAttribute('provider'), self::WAKE_PROVIDERS, true);
+                if ($perUser && $isWakeProvider && $mqttUsers !== []) {
                     $recipientGroup = [];
                     foreach ($identifiers as $identifier => $userId) {
                         if (empty($userId) || !isset($mqttUsers[$userId])) {
@@ -761,10 +773,11 @@ class Messaging extends Action
     }
 
     /**
-     * Build silent-wake tasks for the APNS/FCM devices of users a topic campaign reached over MQTT, so a
-     * backgrounded app reconnects and replays. Additive to any native subscribers of the campaign.
+     * Build silent-wake tasks for the wake-channel devices (see WAKE_PROVIDERS) of users reached over
+     * MQTT, so a backgrounded app reconnects and replays. Additive to any full notifications from
+     * providers left out of the wake list.
      *
-     * @param array<string, true> $mqttUsers  set of user ids this page reached over MQTT
+     * @param array<string, true> $mqttUsers  set of user ids reached over MQTT
      * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
      * @return array<callable>
      */
@@ -783,8 +796,8 @@ class Messaging extends Action
         }
 
         // Each target is classified by its resolved provider below, not by the query: a target with no
-        // provider id inherits the default, which is a wakeable device when that default is APNS/FCM but
-        // the MQTT channel itself (no token) when it is Appwrite.
+        // provider id inherits the default, which is a wakeable device only when that default's type is
+        // in the wake list (never the Appwrite MQTT provider, which has no device token).
         /** @var array<string, array<string, true>> $tokens  provider id => (identifier => true) */
         $tokens = [];
         $cursor = null;
@@ -818,9 +831,9 @@ class Messaging extends Action
 
                 $provider = $this->resolveProvider($dbForProject, $target->getAttribute('providerId') ?? '', $providers, $default);
 
-                // The Appwrite provider is the MQTT channel we are waking into; a disabled/missing one
-                // falls back to it. Only a real native push provider carries a wake.
-                if ($provider->getAttribute('type') !== MESSAGE_TYPE_PUSH || $provider->getAttribute('provider') === 'appwrite') {
+                // Only a configured wake-channel provider carries a wake. This excludes the Appwrite
+                // (MQTT) provider itself and any native provider left out of the wake list.
+                if (!\in_array($provider->getAttribute('provider'), self::WAKE_PROVIDERS, true)) {
                     continue;
                 }
 
