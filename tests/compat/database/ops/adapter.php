@@ -40,6 +40,33 @@ $collection = static function (mixed $value): Document {
 };
 $normalize = static fn (string $sql): string => (string) \preg_replace('/[0-9a-f]{20}/', '<id>', $sql);
 $strings = static fn (mixed $value): array => \array_map(\strval(...), Values::list($value));
+// Queries as the Database hands them to the adapter: `attribute_types`
+// (attribute => type) and `arrays` (array attributes) set on every query
+// and nested query of those attributes.
+$queries = static function (array $a): array {
+    $types = Values::decodeArray($a['attribute_types'] ?? []);
+    $arrays = \array_map(\strval(...), Values::list($a['arrays'] ?? []));
+    $apply = static function (array $queries) use (&$apply, $types, $arrays): void {
+        foreach ($queries as $query) {
+            if (!$query instanceof \Utopia\Database\Query) {
+                continue;
+            }
+            if (isset($types[$query->getAttribute()])) {
+                $query->setAttributeType((string) $types[$query->getAttribute()]);
+            }
+            if (\in_array($query->getAttribute(), $arrays, true)) {
+                $query->setOnArray(true);
+            }
+            if ($query->isNested()) {
+                $apply($query->getValues());
+            }
+        }
+    };
+    $list = Values::queries($a['queries'] ?? []);
+    $apply($list);
+
+    return $list;
+};
 
 return [
     'adapter.open' => static function (array $a, Session $s) {
@@ -202,9 +229,9 @@ return [
         (int) ($a['tenant_count'] ?? 0),
         (string) ($a['condition'] ?? 'AND'),
     ),
-    'adapter.sql_conditions' => static function (array $a, Session $s) use ($db, $normalize) {
+    'adapter.sql_conditions' => static function (array $a, Session $s) use ($db, $normalize, $queries) {
         $binds = [];
-        $sql = $db($a, $s)->getSQLConditions(Values::queries($a['queries'] ?? []), $binds, (string) ($a['separator'] ?? 'AND'));
+        $sql = $db($a, $s)->getSQLConditions($queries($a), $binds, (string) ($a['separator'] ?? 'AND'));
 
         return ['sql' => $normalize($sql), 'binds' => Values::encode(\array_values($binds))];
     },
@@ -425,7 +452,7 @@ return [
     ),
     'adapter.find' => static fn (array $a, Session $s) => Values::encode($db($a, $s)->find(
         $collection($a['collection']),
-        Values::queries($a['queries'] ?? []),
+        $queries($a),
         \array_key_exists('limit', $a) ? ($a['limit'] === null ? null : (int) $a['limit']) : 25,
         isset($a['offset']) ? (int) $a['offset'] : null,
         $strings($a['order_attributes'] ?? []),
@@ -436,13 +463,13 @@ return [
     )),
     'adapter.count' => static fn (array $a, Session $s) => $db($a, $s)->count(
         $collection($a['collection']),
-        Values::queries($a['queries'] ?? []),
+        $queries($a),
         isset($a['max']) ? (int) $a['max'] : null,
     ),
     'adapter.sum' => static fn (array $a, Session $s) => $db($a, $s)->sum(
         $collection($a['collection']),
         (string) $a['attribute'],
-        Values::queries($a['queries'] ?? []),
+        $queries($a),
         isset($a['max']) ? (int) $a['max'] : null,
     ),
 

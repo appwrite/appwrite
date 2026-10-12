@@ -244,7 +244,15 @@ impl Postgres {
                 .await
             {
                 Ok(_) => {}
-                Err(IndexFailure::Pdo(e)) => return self.failed_collection(&id, e).await,
+                // createIndex() throws processException()'s result: only an
+                // error it leaves a PDOException reaches the cleanup.
+                Err(IndexFailure::Pdo(e)) => {
+                    let mapped = sql::process_exception(e.clone());
+                    if mapped.kind() != Kind::Pdo {
+                        return Err(mapped);
+                    }
+                    return self.failed_collection(&id, e).await;
+                }
                 Err(IndexFailure::Other(e)) => return Err(e),
             }
         }

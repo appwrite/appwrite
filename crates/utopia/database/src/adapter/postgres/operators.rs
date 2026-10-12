@@ -184,7 +184,10 @@ fn number(v: &Value) -> Result<Number> {
             None => return Err(Error::new(Kind::TypeError, format!("Unsupported operand types: string + {}", "int"))),
         },
         other => {
-            return Err(Error::new(Kind::TypeError, format!("Unsupported operand types: {} + int", other.type_name())));
+            return Err(Error::new(
+                Kind::TypeError,
+                format!("Unsupported operand types: {} + int", other.debug_type()),
+            ));
         }
     })
 }
@@ -206,7 +209,10 @@ fn array_of(v: &Value, function: &str) -> Result<Array> {
         Value::Array(a) => Ok(a.clone()),
         other => Err(Error::new(
             Kind::TypeError,
-            format!("{function}(): Argument #1 ($array) must be of type array, {} given", other.type_name()),
+            format!(
+                "{function}(): Argument #1 ($array) must be of type array, {} given",
+                super::sql::value_name(other)
+            ),
         )),
     }
 }

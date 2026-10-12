@@ -52,6 +52,21 @@ pub fn bind_typed(stmt: &mut Statement, key: &str, value: Value) -> Result<()> {
     Ok(())
 }
 
+/// `zend_zval_value_name()`: how a `TypeError` names a value's type.
+pub fn value_name(v: &Value) -> &str {
+    match v {
+        Value::Null => "null",
+        Value::Bool(true) => "true",
+        Value::Bool(false) => "false",
+        Value::Int(_) => "int",
+        Value::Float(_) => "float",
+        Value::Str(_) => "string",
+        Value::Array(_) => "array",
+        Value::Object(_) => "stdClass",
+        Value::Ext(x) => php_std::Extension::class(x),
+    }
+}
+
 /// `quote($string)`: `"string"`.
 pub fn quote(s: &str) -> String {
     format!("\"{s}\"")

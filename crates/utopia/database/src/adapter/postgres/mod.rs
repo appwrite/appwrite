@@ -189,6 +189,9 @@ impl Postgres {
     ///
     /// PHP: `Utopia\Database\Adapter\SQL::getDriver` (the PDO handle).
     pub async fn driver_exec(&self, sql: &str) -> Result<i64> {
+        if sql.is_empty() {
+            return Err(Error::new(crate::Kind::ValueError, "PDO::exec(): Argument #1 ($statement) must not be empty"));
+        }
         self.pdo.lock().await.exec(sql).await.map_err(pdo::PdoError::into_error)
     }
 

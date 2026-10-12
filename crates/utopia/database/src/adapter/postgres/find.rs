@@ -136,20 +136,17 @@ fn sql_operator(method: &Method) -> Result<&'static str> {
     })
 }
 
-/// `convertArrayToWKT` of a query value (arrays only).
-fn wkt(value: Option<&Value>) -> Result<Value> {
+/// `convertArrayToWKT` of a query value (arrays only), called from `line`
+/// of `Postgres.php` (PHP's `TypeError` names the call site).
+fn wkt(value: Option<&Value>, line: u32) -> Result<Value> {
     match value {
         Some(Value::Array(a)) => Ok(Value::Str(super::spatial::array_to_wkt(a)?.into())),
-        Some(other) => Err(Error::new(
+        other => Err(Error::new(
             crate::Kind::TypeError,
             format!(
-                "Utopia\\Database\\Adapter\\SQL::convertArrayToWKT(): Argument #1 ($geometry) must be of type array, {} given",
-                other.type_name()
+                "Utopia\\Database\\Adapter\\SQL::convertArrayToWKT(): Argument #1 ($geometry) must be of type array, {} given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/Postgres.php on line {line}",
+                sql::value_name(other.unwrap_or(&Value::Null))
             ),
-        )),
-        None => Err(Error::new(
-            crate::Kind::TypeError,
-            "Utopia\\Database\\Adapter\\SQL::convertArrayToWKT(): Argument #1 ($geometry) must be of type array, null given",
         )),
     }
 }
@@ -283,25 +280,29 @@ impl Postgres {
     ) -> Result<String> {
         let first = query.values().first();
         let p0 = format!(":{placeholder}_0");
-        let simple = |binds: &mut Binds, function: &str, not: bool| -> Result<String> {
-            binds.set(p0.clone(), wkt(first)?);
+        let simple = |binds: &mut Binds, function: &str, not: bool, line: u32| -> Result<String> {
+            binds.set(p0.clone(), wkt(first, line)?);
             let not = if not { "NOT " } else { "" };
             Ok(format!("{not}{function}({alias}.{attribute}, {})", geom(&p0)))
         };
         match query.method() {
-            Method::Crosses => simple(binds, "ST_Crosses", false),
-            Method::NotCrosses => simple(binds, "ST_Crosses", true),
+            Method::Crosses => simple(binds, "ST_Crosses", false, 1520),
+            Method::NotCrosses => simple(binds, "ST_Crosses", true, 1524),
             Method::DistanceEqual
             | Method::DistanceNotEqual
             | Method::DistanceGreaterThan
             | Method::DistanceLessThan => {
-                let params = match first {
-                    Some(Value::Array(a)) => a.clone(),
-                    _ => Array::new(),
+                // $distanceParams[$i]: an array element, a string's byte, or null.
+                let param = |i: i64| -> Option<Value> {
+                    match first {
+                        Some(Value::Array(a)) => a.get(&ArrayKey::Int(i)).cloned(),
+                        Some(Value::Str(s)) => s.as_bytes().get(i as usize).map(|b| Value::Str(vec![*b].into())),
+                        _ => None,
+                    }
                 };
-                binds.set(p0.clone(), wkt(params.get(&ArrayKey::Int(0)))?);
-                binds.set(format!(":{placeholder}_1"), params.get(&ArrayKey::Int(1)).cloned().unwrap_or(Value::Null));
-                let meters = matches!(params.get(&ArrayKey::Int(2)), Some(Value::Bool(true)));
+                binds.set(p0.clone(), wkt(param(0).as_ref(), 1473)?);
+                binds.set(format!(":{placeholder}_1"), param(1).unwrap_or(Value::Null));
+                let meters = matches!(param(2), Some(Value::Bool(true)));
                 let operator = match query.method() {
                     Method::DistanceEqual => "=",
                     Method::DistanceNotEqual => "!=",
@@ -315,16 +316,16 @@ impl Postgres {
                 }
                 Ok(format!("ST_Distance({alias}.{attribute}, {}) {operator} :{placeholder}_1", geom(&p0)))
             }
-            Method::Equal => simple(binds, "ST_Equals", false),
-            Method::NotEqual => simple(binds, "ST_Equals", true),
-            Method::Intersects => simple(binds, "ST_Intersects", false),
-            Method::NotIntersects => simple(binds, "ST_Intersects", true),
-            Method::Overlaps => simple(binds, "ST_Overlaps", false),
-            Method::NotOverlaps => simple(binds, "ST_Overlaps", true),
-            Method::Touches => simple(binds, "ST_Touches", false),
-            Method::NotTouches => simple(binds, "ST_Touches", true),
-            Method::Contains => simple(binds, "ST_Covers", false),
-            Method::NotContains => simple(binds, "ST_Covers", true),
+            Method::Equal => simple(binds, "ST_Equals", false, 1533),
+            Method::NotEqual => simple(binds, "ST_Equals", true, 1537),
+            Method::Intersects => simple(binds, "ST_Intersects", false, 1541),
+            Method::NotIntersects => simple(binds, "ST_Intersects", true, 1545),
+            Method::Overlaps => simple(binds, "ST_Overlaps", false, 1549),
+            Method::NotOverlaps => simple(binds, "ST_Overlaps", true, 1553),
+            Method::Touches => simple(binds, "ST_Touches", false, 1557),
+            Method::NotTouches => simple(binds, "ST_Touches", true, 1561),
+            Method::Contains => simple(binds, "ST_Covers", false, 1569),
+            Method::NotContains => simple(binds, "ST_Covers", true, 1569),
             Method::IsNull | Method::IsNotNull => Ok(format!("{alias}.{attribute} {}", sql_operator(query.method())?)),
             other => Err(Error::database(format!("Unknown spatial query method: {}", other.as_str()))),
         }
@@ -340,7 +341,10 @@ impl Postgres {
             Some(other) => {
                 return Err(Error::new(
                     crate::Kind::TypeError,
-                    format!("array_map(): Argument #2 ($array) must be of type array, {} given", other.type_name()),
+                    format!(
+                        "array_map(): Argument #2 ($array) must be of type array, {} given",
+                        sql::value_name(other)
+                    ),
                 ));
             }
             None => Array::new(),
@@ -653,7 +657,7 @@ fn object_condition(
                             crate::Kind::TypeError,
                             format!(
                                 "count(): Argument #1 ($value) must be of type Countable|array, {} given",
-                                other.type_name()
+                                sql::value_name(other)
                             ),
                         ));
                     }

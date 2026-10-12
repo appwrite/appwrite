@@ -10,7 +10,7 @@ use utopia_database::adapter::postgres::pdo::PdoError;
 use utopia_database::adapter::{Adapter, FindOptions, with_transaction};
 use utopia_database::document::Document;
 use utopia_database::value::{Array, ArrayKey, Str, Value};
-use utopia_database::{Authorization, Change, Error, Kind};
+use utopia_database::{Authorization, Change, Error, Kind, Query};
 
 use super::codec;
 use crate::adapter::{Fault, OpResult, Outcome, Session};
@@ -402,7 +402,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             .into(),
         )),
         "adapter.sql_conditions" => {
-            let queries = match codec::queries(args.get("queries").unwrap_or(&Json::Null))? {
+            let queries = match typed_queries(args)? {
                 Ok(q) => q,
                 Err(e) => return Ok(codec::error(&e)),
             };
@@ -682,7 +682,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             )
         }
         "adapter.find" => {
-            let queries = match codec::queries(args.get("queries").unwrap_or(&Json::Null))? {
+            let queries = match typed_queries(args)? {
                 Ok(q) => q,
                 Err(e) => return Ok(codec::error(&e)),
             };
@@ -715,7 +715,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             res(db.find(&collection(args)?, &queries, options).await, |d| codec::encode_documents(&d))
         }
         "adapter.count" => {
-            let queries = match codec::queries(args.get("queries").unwrap_or(&Json::Null))? {
+            let queries = match typed_queries(args)? {
                 Ok(q) => q,
                 Err(e) => return Ok(codec::error(&e)),
             };
@@ -726,7 +726,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             res(db.count(&collection(args)?, &queries, max).await, Json::from)
         }
         "adapter.sum" => {
-            let queries = match codec::queries(args.get("queries").unwrap_or(&Json::Null))? {
+            let queries = match typed_queries(args)? {
                 Ok(q) => q,
                 Err(e) => return Ok(codec::error(&e)),
             };
@@ -851,6 +851,50 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         }
         _ => Err(Fault::new(format!("database: unknown operation `{op}`"))),
     }
+}
+
+/// Queries as the Database hands them to the adapter: `attribute_types`
+/// (attribute => type) and `arrays` (array attributes) set on every query
+/// and nested query of those attributes.
+fn typed_queries(args: &Json) -> Result<utopia_database::Result<Vec<Query>>, Fault> {
+    let types: Vec<(String, String)> = match value(args, "attribute_types")? {
+        Value::Array(a) => a
+            .iter()
+            .map(|(k, v)| {
+                let key = match k {
+                    utopia_database::value::KeyRef::Int(i) => i.to_string(),
+                    utopia_database::value::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                };
+                (key, utopia_database::value::to_text(v))
+            })
+            .collect(),
+        _ => Vec::new(),
+    };
+    let arrays = strings(args, "arrays")?;
+    fn apply(queries: &mut [Query], types: &[(String, String)], arrays: &[String]) {
+        for query in queries {
+            if let Some((_, t)) = types.iter().rev().find(|(k, _)| k == query.attribute()) {
+                query.set_attribute_type(t.clone());
+            }
+            if arrays.iter().any(|a| a == query.attribute()) {
+                query.set_on_array(true);
+            }
+            if query.is_nested() {
+                for v in query.values_mut() {
+                    if let Value::Ext(utopia_database::value::Ext::Query(q)) = v {
+                        apply(std::slice::from_mut(q.as_mut()), types, arrays);
+                    }
+                }
+            }
+        }
+    }
+    Ok(match codec::queries(args.get("queries").unwrap_or(&Json::Null))? {
+        Ok(mut q) => {
+            apply(&mut q, &types, &arrays);
+            Ok(q)
+        }
+        Err(e) => Err(e),
+    })
 }
 
 fn bytes(args: &Json, key: &str) -> Result<Vec<u8>, Fault> {
