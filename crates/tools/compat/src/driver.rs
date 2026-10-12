@@ -97,6 +97,17 @@ pub fn reply(id: &Value, result: &OpResult) -> Value {
     }
 }
 
+/// Creates files with the mode PHP's driver container gives them: its umask
+/// is 022, a CI runner's may be 002 (0664 where PHP writes 0644). For every
+/// process that runs the Rust adapters: the driver and `replay`'s test.
+pub fn php_umask() {
+    // SAFETY: umask only sets this process's file mode creation mask.
+    #[cfg(unix)]
+    unsafe {
+        libc::umask(0o022);
+    }
+}
+
 /// Serves requests until stdin closes.
 pub async fn serve() -> std::io::Result<()> {
     let mut lines = BufReader::new(tokio::io::stdin()).lines();

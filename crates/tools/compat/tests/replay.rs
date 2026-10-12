@@ -14,6 +14,7 @@ async fn recorded_php_results_hold_in_rust() {
     // The drivers run from the repository root, where cases' relative paths
     // (fixtures under packages/) resolve.
     std::env::set_current_dir(&root).expect("repository root");
+    compat::driver::php_umask();
     let cfg = Config::load(&root).expect("tests/compat/compat.json");
     let mut problems = Vec::new();
     let mut passed = 0;

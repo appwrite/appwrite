@@ -42,12 +42,6 @@ static ALLOCATOR: Counting = Counting;
 fn main() -> std::io::Result<()> {
     // A child the console adapter started to observe stdio and exit().
     compat::libs::console::child();
-    // Files are created with the mode PHP's driver container gives them: its
-    // umask is 022, a CI runner's may be 002 (0664 where PHP writes 0644).
-    // SAFETY: umask only sets this process's file mode creation mask.
-    #[cfg(unix)]
-    unsafe {
-        libc::umask(0o022);
-    }
+    compat::driver::php_umask();
     tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(compat::driver::serve())
 }
