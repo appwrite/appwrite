@@ -49,7 +49,9 @@ impl php_std::Extension for Ext {
         match self {
             Ext::Document(d) => d.array_copy(&[], &[]),
             Ext::Operator(o) => o.to_array(),
-            Ext::Query(q) => q.to_array(),
+            // A logical query with values that are not queries has no array
+            // form (PHP throws `Error`); it is empty here.
+            Ext::Query(q) => q.to_array().unwrap_or_default(),
         }
     }
 }
