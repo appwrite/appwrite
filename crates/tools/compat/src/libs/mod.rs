@@ -33,6 +33,7 @@ pub mod http;
 pub mod image;
 pub mod locale;
 pub mod lock;
+pub mod orchestration;
 pub mod php_std;
 pub mod platform;
 pub mod pools;
@@ -74,6 +75,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("image", image::OPS),
     ("locale", locale::OPS),
     ("lock", lock::OPS),
+    ("orchestration", orchestration::OPS),
     ("php-std", php_std::OPS),
     ("platform", platform::OPS),
     ("pools", pools::OPS),
@@ -117,6 +119,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "image" => image::call(op, args, session).await,
         "locale" => locale::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
+        "orchestration" => orchestration::call(op, args, session).await,
         "php-std" => php_std::call(op, args, session).await,
         "platform" => platform::call(op, args, session).await,
         "pools" => pools::call(op, args, session).await,
@@ -161,6 +164,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "image" => image::BENCHES,
         "locale" => locale::BENCHES,
         "lock" => lock::BENCHES,
+        "orchestration" => orchestration::BENCHES,
         "php-std" => php_std::BENCHES,
         "platform" => platform::BENCHES,
         "pools" => pools::BENCHES,
@@ -204,6 +208,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "image" => image::bench(name, session).await,
         "locale" => locale::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
+        "orchestration" => orchestration::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
         "platform" => platform::bench(name, session).await,
         "pools" => pools::bench(name, session).await,

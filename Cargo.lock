@@ -605,6 +605,7 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-lock",
+ "utopia-orchestration",
  "utopia-platform",
  "utopia-pools",
  "utopia-queue",
@@ -3703,6 +3704,20 @@ dependencies = [
  "rustix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-orchestration"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "php-std",
+ "thiserror",
+ "tokio",
+ "utopia-console",
 ]
 
 [[package]]
