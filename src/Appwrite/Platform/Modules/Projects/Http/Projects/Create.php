@@ -234,6 +234,16 @@ class Create extends Action
 
                 $this->seedVideoProfiles($dbForProject, $authorization);
             }
+        } else {
+            $adapter = new DatabasePool($pools->get($dsn->getHost()));
+            $dbForProject = new Database($adapter, $cache);
+            $dbForProject
+                ->setDatabase(APP_DATABASE)
+                ->setSharedTables(true)
+                ->setTenant($project->getSequence())
+                ->setNamespace($dsn->getParam('namespace'));
+
+            $this->seedVideoProfiles($dbForProject, $authorization);
         }
 
         // Hook allowing instant project mirroring during migration
