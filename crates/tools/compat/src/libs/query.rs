@@ -115,10 +115,14 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
     use serde_json::json;
     match op {
         "query.parse" => {
-            return last(vec![json!({"static": "parse", "class": "Query", "args": [args.get("query"), args.get("allowRaw").cloned().unwrap_or(json!(false))]})]);
+            return last(vec![
+                json!({"static": "parse", "class": "Query", "args": [args.get("query"), args.get("allowRaw").cloned().unwrap_or(json!(false))]}),
+            ]);
         }
         "query.parse_query" => {
-            return last(vec![json!({"static": "parseQuery", "class": "Query", "args": [args.get("query"), args.get("allowRaw").cloned().unwrap_or(json!(false))]})]);
+            return last(vec![
+                json!({"static": "parseQuery", "class": "Query", "args": [args.get("query"), args.get("allowRaw").cloned().unwrap_or(json!(false))]}),
+            ]);
         }
         "tokenizer.tokenize" => {
             return last(vec![
@@ -127,7 +131,8 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
             ]);
         }
         "classifier.classify" => {
-            let method = if args.get("sql").and_then(Value::as_bool).unwrap_or(false) { "classifySQL" } else { "classify" };
+            let method =
+                if args.get("sql").and_then(Value::as_bool).unwrap_or(false) { "classifySQL" } else { "classify" };
             return last(vec![
                 json!({"new": class_of(args, "Classifier")?, "args": []}),
                 json!({"call": method, "on": {"$o": 1}, "args": [args.get("data")]}),

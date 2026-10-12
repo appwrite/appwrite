@@ -1,25 +1,864 @@
 {
   "cases": [
-    { "name": "parse an equal query", "op": "query.parse", "args": { "query": "{\"method\":\"equal\",\"attribute\":\"status\",\"values\":[\"active\",1,1.5,null]}" } },
-    { "name": "parse refuses raw", "op": "query.parse", "args": { "query": "{\"method\":\"raw\",\"attribute\":\"1 = 1\"}" } },
-    { "name": "parse allows raw when trusted", "op": "query.parse", "args": { "query": "{\"method\":\"raw\",\"attribute\":\"1 = ?\",\"values\":[1]}", "allowRaw": true } },
-    { "name": "parse invalid JSON", "op": "query.parse", "args": { "query": "{\"method\":" } },
-    { "name": "parse a scalar", "op": "query.parse", "args": { "query": "42" } },
-    { "name": "parse a nested or", "op": "query.parse", "args": { "query": "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]},{\"method\":\"isNull\",\"attribute\":\"b\"}]}" } },
-    { "name": "parse a legacy join", "op": "query.parse", "args": { "query": "{\"method\":\"join\",\"attribute\":\"orders\",\"values\":[\"users.id\",\"=\",\"orders.user_id\",\"o\"]}" } },
-    { "name": "parseQuery with a non-string method", "op": "query.parse_query", "args": { "query": { "method": 5 } } },
-    { "name": "parseQuery aggregate with legacy alias", "op": "query.parse_query", "args": { "query": { "method": "count", "attribute": "*", "values": ["total"] } } },
-    { "name": "tokenize MySQL", "op": "tokenizer.tokenize", "args": { "dialect": "mysql", "sql": "SELECT `a`, 'it''s' FROM t # comment\nWHERE x = ?" } },
-    { "name": "tokenize PostgreSQL", "op": "tokenizer.tokenize", "args": { "dialect": "postgresql", "sql": "SELECT \"a\"::int, $1 FROM t WHERE b @> '{}'" } },
-    { "name": "classify SQL", "op": "classifier.classify", "args": { "dialect": "mysql", "sql": true, "data": "WITH x AS (SELECT 1) DELETE FROM t" } },
-    { "name": "classify a PostgreSQL message", "op": "classifier.classify", "args": { "dialect": "postgresql", "data": "Q\u0000\u0000\u0000\rSELECT 1\u0000" } },
-    { "name": "parse and serialize", "op": "ast.parse", "args": { "sql": "SELECT a, COUNT(*) AS n FROM t AS x LEFT JOIN u ON u.id = x.uid WHERE a IN (1, 2) AND b BETWEEN 1 AND 5 GROUP BY a HAVING n > 1 ORDER BY a DESC LIMIT 10" } },
-    { "name": "parse error", "op": "ast.parse", "args": { "sql": "SELECT FROM" } },
-    { "name": "build MySQL", "op": "builder.build", "args": { "dialect": "mysql", "queries": ["{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1,null]}", "{\"method\":\"orderDesc\",\"attribute\":\"b\"}", "{\"method\":\"limit\",\"values\":[5]}"] } },
-    { "name": "build PostgreSQL", "op": "builder.build", "args": { "dialect": "postgresql", "queries": ["{\"method\":\"contains\",\"attribute\":\"name\",\"values\":[\"a%b\"]}", "{\"method\":\"search\",\"attribute\":\"body\",\"values\":[\"hello world\"]}"] } },
-    { "name": "build MongoDB", "op": "builder.build", "args": { "dialect": "mongodb", "queries": ["{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[18]}", "{\"method\":\"select\",\"values\":[\"name\"]}"] } },
-    { "name": "build ClickHouse", "op": "builder.build", "args": { "dialect": "clickhouse", "queries": ["{\"method\":\"regex\",\"attribute\":\"path\",\"values\":[\"^/v1\"]}", "{\"method\":\"offset\",\"values\":[10]}", "{\"method\":\"limit\",\"values\":[5]}"] } },
-    { "name": "build SQLite", "op": "builder.build", "args": { "dialect": "sqlite", "queries": ["{\"method\":\"startsWith\",\"attribute\":\"name\",\"values\":[\"a_\"]}"] } },
-    { "name": "build MariaDB", "op": "builder.build", "args": { "dialect": "mariadb", "queries": ["{\"method\":\"notEqual\",\"attribute\":\"a\",\"values\":[1,2]}"] } }
+    {
+      "name": "parse an equal query",
+      "op": "query.parse",
+      "args": {
+        "query": "{\"method\":\"equal\",\"attribute\":\"status\",\"values\":[\"active\",1,1.5,null]}"
+      },
+      "expect": {
+        "$value": "Query",
+        "id": 1,
+        "props": {
+          "method": {
+            "$enum": "Method::Equal"
+          },
+          "attribute": "status",
+          "values": [
+            "active",
+            1,
+            1.5,
+            null
+          ],
+          "alias": "",
+          "onArray": false,
+          "attributeType": ""
+        }
+      }
+    },
+    {
+      "name": "parse refuses raw",
+      "op": "query.parse",
+      "args": {
+        "query": "{\"method\":\"raw\",\"attribute\":\"1 = 1\"}"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Query\\Exception\\ValidationException",
+          "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+        },
+        "id": 1
+      }
+    },
+    {
+      "name": "parse allows raw when trusted",
+      "op": "query.parse",
+      "args": {
+        "query": "{\"method\":\"raw\",\"attribute\":\"1 = ?\",\"values\":[1]}",
+        "allowRaw": true
+      },
+      "expect": {
+        "$value": "Query",
+        "id": 1,
+        "props": {
+          "method": {
+            "$enum": "Method::Raw"
+          },
+          "attribute": "1 = ?",
+          "values": [
+            1
+          ],
+          "alias": "",
+          "onArray": false,
+          "attributeType": ""
+        }
+      }
+    },
+    {
+      "name": "parse invalid JSON",
+      "op": "query.parse",
+      "args": {
+        "query": "{\"method\":"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Query\\Exception",
+          "message": "Invalid query: Syntax error"
+        },
+        "id": 1
+      }
+    },
+    {
+      "name": "parse a scalar",
+      "op": "query.parse",
+      "args": {
+        "query": "42"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Query\\Exception",
+          "message": "Invalid query. Must be an array, got integer"
+        },
+        "id": 1
+      }
+    },
+    {
+      "name": "parse a nested or",
+      "op": "query.parse",
+      "args": {
+        "query": "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]},{\"method\":\"isNull\",\"attribute\":\"b\"}]}"
+      },
+      "expect": {
+        "$value": "Query",
+        "id": 1,
+        "props": {
+          "method": {
+            "$enum": "Method::Or"
+          },
+          "attribute": "",
+          "values": [
+            {
+              "$value": "Query",
+              "id": 2,
+              "props": {
+                "method": {
+                  "$enum": "Method::Equal"
+                },
+                "attribute": "a",
+                "values": [
+                  1
+                ],
+                "alias": "",
+                "onArray": false,
+                "attributeType": ""
+              }
+            },
+            {
+              "$value": "Query",
+              "id": 3,
+              "props": {
+                "method": {
+                  "$enum": "Method::IsNull"
+                },
+                "attribute": "b",
+                "values": [],
+                "alias": "",
+                "onArray": false,
+                "attributeType": ""
+              }
+            }
+          ],
+          "alias": "",
+          "onArray": false,
+          "attributeType": ""
+        }
+      }
+    },
+    {
+      "name": "parse a legacy join",
+      "op": "query.parse",
+      "args": {
+        "query": "{\"method\":\"join\",\"attribute\":\"orders\",\"values\":[\"users.id\",\"=\",\"orders.user_id\",\"o\"]}"
+      },
+      "expect": {
+        "$value": "Query",
+        "id": 1,
+        "props": {
+          "method": {
+            "$enum": "Method::Join"
+          },
+          "attribute": "orders",
+          "values": [
+            {
+              "$value": "Query",
+              "id": 2,
+              "props": {
+                "method": {
+                  "$enum": "Method::On"
+                },
+                "attribute": "",
+                "values": [
+                  "users.id",
+                  "=",
+                  "orders.user_id"
+                ],
+                "alias": "",
+                "onArray": false,
+                "attributeType": ""
+              }
+            }
+          ],
+          "alias": "o",
+          "onArray": false,
+          "attributeType": ""
+        }
+      }
+    },
+    {
+      "name": "parseQuery with a non-string method",
+      "op": "query.parse_query",
+      "args": {
+        "query": {
+          "method": 5
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Query\\Exception",
+          "message": "Invalid query method. Must be a string, got integer"
+        },
+        "id": 1
+      }
+    },
+    {
+      "name": "parseQuery aggregate with legacy alias",
+      "op": "query.parse_query",
+      "args": {
+        "query": {
+          "method": "count",
+          "attribute": "*",
+          "values": [
+            "total"
+          ]
+        }
+      },
+      "expect": {
+        "$value": "Query",
+        "id": 1,
+        "props": {
+          "method": {
+            "$enum": "Method::Count"
+          },
+          "attribute": "*",
+          "values": [],
+          "alias": "total",
+          "onArray": false,
+          "attributeType": ""
+        }
+      }
+    },
+    {
+      "name": "tokenize MySQL",
+      "op": "tokenizer.tokenize",
+      "args": {
+        "dialect": "mysql",
+        "sql": "SELECT `a`, 'it''s' FROM t # comment\nWHERE x = ?"
+      },
+      "expect": [
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 2,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Keyword"
+            },
+            "value": "SELECT",
+            "position": 0
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 3,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 6
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 4,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+            },
+            "value": "`a`",
+            "position": 7
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 5,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Comma"
+            },
+            "value": ",",
+            "position": 10
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 6,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 11
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 7,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::String"
+            },
+            "value": "'it''s'",
+            "position": 12
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 8,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 19
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 9,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Keyword"
+            },
+            "value": "FROM",
+            "position": 20
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 10,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 24
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 11,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Identifier"
+            },
+            "value": "t",
+            "position": 25
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 12,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 26
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 13,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::LineComment"
+            },
+            "value": "--  comment",
+            "position": 27
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 14,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": "\n",
+            "position": 38
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 15,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Keyword"
+            },
+            "value": "WHERE",
+            "position": 39
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 16,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 44
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 17,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Identifier"
+            },
+            "value": "x",
+            "position": 45
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 18,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 46
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 19,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Operator"
+            },
+            "value": "=",
+            "position": 47
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 20,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 48
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 21,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Placeholder"
+            },
+            "value": "?",
+            "position": 49
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 22,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Eof"
+            },
+            "value": "",
+            "position": 50
+          }
+        }
+      ]
+    },
+    {
+      "name": "tokenize PostgreSQL",
+      "op": "tokenizer.tokenize",
+      "args": {
+        "dialect": "postgresql",
+        "sql": "SELECT \"a\"::int, $1 FROM t WHERE b @> '{}'"
+      },
+      "expect": [
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 2,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Keyword"
+            },
+            "value": "SELECT",
+            "position": 0
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 3,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 6
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 4,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::QuotedIdentifier"
+            },
+            "value": "\"a\"",
+            "position": 7
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 5,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Operator"
+            },
+            "value": "::",
+            "position": 10
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 6,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Identifier"
+            },
+            "value": "int",
+            "position": 12
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 7,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Comma"
+            },
+            "value": ",",
+            "position": 15
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 8,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 16
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 9,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::NumberedPlaceholder"
+            },
+            "value": "$1",
+            "position": 17
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 10,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 19
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 11,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Keyword"
+            },
+            "value": "FROM",
+            "position": 20
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 12,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 24
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 13,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Identifier"
+            },
+            "value": "t",
+            "position": 25
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 14,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 26
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 15,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Keyword"
+            },
+            "value": "WHERE",
+            "position": 27
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 16,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 32
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 17,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Identifier"
+            },
+            "value": "b",
+            "position": 33
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 18,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 34
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 19,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Operator"
+            },
+            "value": "@>",
+            "position": 35
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 20,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Whitespace"
+            },
+            "value": " ",
+            "position": 37
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 21,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::String"
+            },
+            "value": "'{}'",
+            "position": 38
+          }
+        },
+        {
+          "$value": "Tokenizer\\Token",
+          "id": 22,
+          "props": {
+            "type": {
+              "$enum": "Tokenizer\\TokenType::Eof"
+            },
+            "value": "",
+            "position": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "classify SQL",
+      "op": "classifier.classify",
+      "args": {
+        "dialect": "mysql",
+        "sql": true,
+        "data": "WITH x AS (SELECT 1) DELETE FROM t"
+      },
+      "expect": {
+        "$enum": "Type::Write"
+      }
+    },
+    {
+      "name": "classify a PostgreSQL message",
+      "op": "classifier.classify",
+      "args": {
+        "dialect": "postgresql",
+        "data": "Q\u0000\u0000\u0000\rSELECT 1\u0000"
+      },
+      "expect": {
+        "$enum": "Type::Read"
+      }
+    },
+    {
+      "name": "parse and serialize",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a, COUNT(*) AS n FROM t AS x LEFT JOIN u ON u.id = x.uid WHERE a IN (1, 2) AND b BETWEEN 1 AND 5 GROUP BY a HAVING n > 1 ORDER BY a DESC LIMIT 10"
+      },
+      "expect": "SELECT `a`, COUNT(*) AS `n` FROM `t` AS `x` LEFT JOIN `u` ON `u`.`id` = `x`.`uid` WHERE `a` IN (1, 2) AND `b` BETWEEN 1 AND 5 GROUP BY `a` HAVING `n` > 1 ORDER BY `a` DESC LIMIT 10"
+    },
+    {
+      "name": "parse error",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT FROM"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\Query\\Exception",
+          "message": "Unexpected token 'FROM' (Keyword) at position 7"
+        }
+      }
+    },
+    {
+      "name": "build MySQL",
+      "op": "builder.build",
+      "args": {
+        "dialect": "mysql",
+        "queries": [
+          "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1,null]}",
+          "{\"method\":\"orderDesc\",\"attribute\":\"b\"}",
+          "{\"method\":\"limit\",\"values\":[5]}"
+        ]
+      },
+      "expect": {
+        "query": "SELECT * FROM `t` WHERE (`a` IN (?) OR `a` IS NULL) ORDER BY `b` DESC LIMIT ?",
+        "bindings": [
+          1,
+          5
+        ]
+      }
+    },
+    {
+      "name": "build PostgreSQL",
+      "op": "builder.build",
+      "args": {
+        "dialect": "postgresql",
+        "queries": [
+          "{\"method\":\"contains\",\"attribute\":\"name\",\"values\":[\"a%b\"]}",
+          "{\"method\":\"search\",\"attribute\":\"body\",\"values\":[\"hello world\"]}"
+        ]
+      },
+      "expect": {
+        "query": "SELECT * FROM \"t\" WHERE \"name\" ILIKE ? AND to_tsvector(regexp_replace(\"body\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+        "bindings": [
+          "%a\\%b%",
+          "hello or world"
+        ]
+      }
+    },
+    {
+      "name": "build MongoDB",
+      "op": "builder.build",
+      "args": {
+        "dialect": "mongodb",
+        "queries": [
+          "{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[18]}",
+          "{\"method\":\"select\",\"values\":[\"name\"]}"
+        ]
+      },
+      "expect": {
+        "query": "{\"collection\":\"t\",\"operation\":\"find\",\"filter\":{\"age\":{\"$gt\":\"?\"}},\"projection\":{\"name\":1,\"_id\":0}}",
+        "bindings": [
+          18
+        ]
+      }
+    },
+    {
+      "name": "build ClickHouse",
+      "op": "builder.build",
+      "args": {
+        "dialect": "clickhouse",
+        "queries": [
+          "{\"method\":\"regex\",\"attribute\":\"path\",\"values\":[\"^/v1\"]}",
+          "{\"method\":\"offset\",\"values\":[10]}",
+          "{\"method\":\"limit\",\"values\":[5]}"
+        ]
+      },
+      "expect": {
+        "query": "SELECT * FROM `t` WHERE match(`path`, ?) LIMIT ? OFFSET ?",
+        "bindings": [
+          "^/v1",
+          5,
+          10
+        ]
+      }
+    },
+    {
+      "name": "build SQLite",
+      "op": "builder.build",
+      "args": {
+        "dialect": "sqlite",
+        "queries": [
+          "{\"method\":\"startsWith\",\"attribute\":\"name\",\"values\":[\"a_\"]}"
+        ]
+      },
+      "expect": {
+        "query": "SELECT * FROM `t` WHERE `name` LIKE ?",
+        "bindings": [
+          "a\\_%"
+        ]
+      }
+    },
+    {
+      "name": "build MariaDB",
+      "op": "builder.build",
+      "args": {
+        "dialect": "mariadb",
+        "queries": [
+          "{\"method\":\"notEqual\",\"attribute\":\"a\",\"values\":[1,2]}"
+        ]
+      },
+      "expect": {
+        "query": "SELECT * FROM `t` WHERE `a` NOT IN (?, ?)",
+        "bindings": [
+          1,
+          2
+        ]
+      }
+    }
   ]
 }

@@ -95,7 +95,9 @@ fn own(b: &mut PostgreSql, method: &str, a: &mut Args) -> Option<Outcome> {
             }
             "orderByVectorDistance" => {
                 let metric = match a.enum_case(2, "metric")? {
-                    Some((_, case)) => VectorMetric::from_name(&case).ok_or_else(|| fault(format!("no VectorMetric::{case}")))?,
+                    Some((_, case)) => {
+                        VectorMetric::from_name(&case).ok_or_else(|| fault(format!("no VectorMetric::{case}")))?
+                    }
                     None => VectorMetric::Cosine,
                 };
                 b.order_by_vector_distance(a.str(0, "attribute")?, a.array(1, "vector")?, metric);

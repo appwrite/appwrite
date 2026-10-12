@@ -94,14 +94,6 @@ impl<T> Ordered<T> {
         self.0.iter().find(|(k, _)| k == key).map(|(_, v)| v)
     }
 
-    pub(crate) fn is_empty(&self) -> bool {
-        self.0.is_empty()
-    }
-
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&String, &T)> {
-        self.0.iter().map(|(k, v)| (k, v))
-    }
-
     pub(crate) fn clear(&mut self) {
         self.0.clear();
     }

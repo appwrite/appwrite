@@ -9,8 +9,8 @@ use std::sync::Arc;
 use serde_json::Value as Json;
 use utopia_query::builder::feature;
 use utopia_query::builder::{
-    AnyBuilder, Builder, CaseExpression, Dialect, ExplainOptions, JoinBuilder, JoinType, MySql, MySqlDialect, MySqlFamily,
-    Operator, SpatialDistanceFilter, Statement, WindowFrame,
+    AnyBuilder, Builder, CaseExpression, Dialect, ExplainOptions, JoinBuilder, JoinType, MySql, MySqlDialect,
+    MySqlFamily, Operator, SpatialDistanceFilter, Statement, WindowFrame,
 };
 use utopia_query::{Array, Compiler, Query, Value};
 
@@ -29,11 +29,15 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
         "Builder\\MongoDB" | "Builder\\MongoDB\\UpdateOperation" => return super::builder_mongodb::construct(class, a),
         "Builder\\Case\\Expression" => Ok(Ret::obj(CaseExpression::new())),
         "Builder\\JoinBuilder" => Ok(Ret::obj(JoinBuilder::new())),
-        "Builder\\WindowFrame" => (|| {
-            Ok(Ret::obj(WindowFrame::new(a.str(0, "type")?, a.str(1, "start")?, a.opt_str(2, "end")?)))
-        })(),
+        "Builder\\WindowFrame" => {
+            (|| Ok(Ret::obj(WindowFrame::new(a.str(0, "type")?, a.str(1, "start")?, a.opt_str(2, "end")?))))()
+        }
         "Builder\\SpatialDistanceFilter" => (|| {
-            Ok(Ret::obj(SpatialDistanceFilter::new(a.value(0, "geometry")?, a.float(1, "distance")?, a.bool(2, "meters")?)))
+            Ok(Ret::obj(SpatialDistanceFilter::new(
+                a.value(0, "geometry")?,
+                a.float(1, "distance")?,
+                a.bool(2, "meters")?,
+            )))
         })(),
         _ => return None,
     })
@@ -52,9 +56,7 @@ pub(crate) fn call_static(class: &str, method: &str, a: &mut Args) -> Option<Out
 
 /// `Builder\X::fromAst($ast)` for the dialect builder `class` names.
 fn from_ast_for(class: &str, a: &Args) -> Option<Outcome> {
-    use utopia_query::builder::{
-        ClickHouseDialect, MariaDbDialect, MongoDbDialect, PostgreSqlDialect, SqliteDialect,
-    };
+    use utopia_query::builder::{ClickHouseDialect, MariaDbDialect, MongoDbDialect, PostgreSqlDialect, SqliteDialect};
     fn make<D: Dialect>(a: &Args) -> Outcome
     where
         Builder<D>: Object,
@@ -212,7 +214,12 @@ pub(crate) fn builder_arg(a: &Args, index: usize, name: &str) -> Result<Box<dyn 
 }
 
 /// Runs `f` with the builder argument `index` / `name` (built in place).
-pub(crate) fn with_builder_arg<R>(a: &Args, index: usize, name: &str, f: impl FnOnce(&mut dyn AnyBuilder) -> R) -> Result<R, Failure> {
+pub(crate) fn with_builder_arg<R>(
+    a: &Args,
+    index: usize,
+    name: &str,
+    f: impl FnOnce(&mut dyn AnyBuilder) -> R,
+) -> Result<R, Failure> {
     a.with(index, name, |o| {
         let class = o.class();
         with_any_builder(o, f).ok_or_else(|| fault(format!("{class} is not a builder")))
@@ -487,7 +494,8 @@ where
                 let name = a.str(0, "name")?;
                 let columns = a.strings_or_empty(2, "columns")?;
                 with_builder_arg(a, 1, "query", |query| {
-                    if method == "with" { b.with(name, query, columns) } else { b.with_recursive(name, query, columns) }.map(|_| ())
+                    if method == "with" { b.with(name, query, columns) } else { b.with_recursive(name, query, columns) }
+                        .map(|_| ())
                 })??;
                 Ret::This
             }
@@ -541,7 +549,12 @@ where
                 Ret::This
             }
             "window" => {
-                b.window(a.str(0, "name")?, a.opt_strings(1, "partitionBy")?, a.opt_strings(2, "orderBy")?, frame(a, 3, "frame")?);
+                b.window(
+                    a.str(0, "name")?,
+                    a.opt_strings(1, "partitionBy")?,
+                    a.opt_strings(2, "orderBy")?,
+                    frame(a, 3, "frame")?,
+                );
                 Ret::This
             }
             "compileFilter" => Ret::str(Compiler::compile_filter(b, &a.query(0, "query")?)?),
@@ -962,7 +975,11 @@ impl Object for CaseExpression {
                     self.when_in(a.str(0, "column")?, a.array(1, "values")?, a.value(2, "then")?)?;
                 }
                 "whenRaw" => {
-                    self.when_raw(a.str(0, "condition")?, a.value(1, "then")?, a.array_or_empty(2, "conditionBindings")?);
+                    self.when_raw(
+                        a.str(0, "condition")?,
+                        a.value(1, "then")?,
+                        a.array_or_empty(2, "conditionBindings")?,
+                    );
                 }
                 "else" => {
                     self.else_(a.value(0, "value")?);
@@ -993,7 +1010,10 @@ impl Object for utopia_query::builder::WhenClause {
         vec![
             ("kind", Ret::Enum("Builder\\Case\\Kind".into(), self.kind.name())),
             ("column", Ret::opt_str(self.column.as_ref())),
-            ("operator", self.operator.map(|o| Ret::Enum("Builder\\Case\\Operator".into(), o.name())).unwrap_or_else(Ret::null)),
+            (
+                "operator",
+                self.operator.map(|o| Ret::Enum("Builder\\Case\\Operator".into(), o.name())).unwrap_or_else(Ret::null),
+            ),
             ("value", Ret::Value(self.value.clone())),
             ("then", Ret::Value(self.then.clone())),
             ("values", Ret::values(&self.values)),
@@ -1015,7 +1035,11 @@ impl Object for WindowFrame {
         true
     }
     fn props(&self) -> Vec<(&'static str, Ret)> {
-        vec![("type", Ret::str(&self.frame_type)), ("start", Ret::str(&self.start)), ("end", Ret::opt_str(self.end.as_ref()))]
+        vec![
+            ("type", Ret::str(&self.frame_type)),
+            ("start", Ret::str(&self.start)),
+            ("end", Ret::opt_str(self.end.as_ref())),
+        ]
     }
     fn call(&mut self, method: &str, _a: &mut Args) -> Option<Outcome> {
         (method == "toSql").then(|| Ok(Ret::str(self.to_sql())))
