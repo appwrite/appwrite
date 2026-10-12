@@ -86,6 +86,15 @@ impl Postgres {
         })
     }
 
+    /// The same adapter reporting `hostname` as its host name
+    /// ([`Adapter::hostname`], which cache keys carry) instead of the host
+    /// it connected to: for a server reached through a forwarded port or an
+    /// alias, so that keys match those of runtimes reaching it by name.
+    pub fn with_hostname(mut self, hostname: impl Into<String>) -> Self {
+        self.host = hostname.into();
+        self
+    }
+
     /// The connection settings.
     pub async fn config(&self) -> Config {
         self.pdo.lock().await.config().clone()

@@ -635,7 +635,16 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         (db.database.adapter().clone(), db.postgres.clone())
     } else {
         let url = session.service("database-postgres")?.to_owned();
-        let postgres = Arc::new(Postgres::connect(&url).await?);
+        let mut postgres = Postgres::connect(&url).await?;
+        // PHP's adapter names the server by its DSN's host, which cache keys
+        // carry; this driver may reach the same server through a forwarded
+        // port, so it reports PHP's host.
+        if let Ok(php) = session.service("database-postgres@php")
+            && let Some(host) = url_host(php)
+        {
+            postgres = postgres.with_hostname(host);
+        }
+        let postgres = Arc::new(postgres);
         (postgres.clone(), Some(postgres))
     };
     let cache = args::cache(&a.string_or("cache", "memory")?)?;
@@ -853,4 +862,13 @@ async fn sql(a: &Args<'_>, handle: &Db) -> R<Json> {
     };
     let rows = postgres.driver_query(&sql).await?;
     Ok(Json::Array(rows.into_iter().map(|r| encode(&Value::Array(r))).collect()))
+}
+
+/// The host of a `scheme://user:password@host:port/path` URL.
+fn url_host(url: &str) -> Option<&str> {
+    let rest = url.split_once("://")?.1;
+    let authority = rest.split('/').next()?;
+    let host_port = authority.rsplit_once('@').map_or(authority, |(_, h)| h);
+    let host = host_port.rsplit_once(':').map_or(host_port, |(h, _)| h);
+    (!host.is_empty()).then_some(host)
 }
