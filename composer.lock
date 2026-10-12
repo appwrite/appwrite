@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b0bae03072605552eca74e1056a6ffb4",
+    "content-hash": "2c717c9445e005cb4207e5df52c597b1",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4354,16 +4354,16 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "2.0.9",
+            "version": "dev-fix-csv-import-rows",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "2381fac58c4cbe64eb543162cdaa36508356292e"
+                "reference": "0d81ae309b3fae1ea8afb9b8dd721621eecd3dbf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/2381fac58c4cbe64eb543162cdaa36508356292e",
-                "reference": "2381fac58c4cbe64eb543162cdaa36508356292e",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0d81ae309b3fae1ea8afb9b8dd721621eecd3dbf",
+                "reference": "0d81ae309b3fae1ea8afb9b8dd721621eecd3dbf",
                 "shasum": ""
             },
             "require": {
@@ -4403,9 +4403,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/2.0.9"
+                "source": "https://github.com/utopia-php/migration/tree/fix-csv-import-rows"
             },
-            "time": "2026-10-11T19:39:19+00:00"
+            "time": "2026-10-12T14:18:10+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -7589,9 +7589,18 @@
             "time": "2026-07-03T20:44:34+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "package": "utopia-php/migration",
+            "version": "dev-fix-csv-import-rows",
+            "alias": "2.0.999",
+            "alias_normalized": "2.0.999.0"
+        }
+    ],
     "minimum-stability": "dev",
-    "stability-flags": {},
+    "stability-flags": {
+        "utopia-php/migration": 20
+    },
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
