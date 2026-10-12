@@ -116,7 +116,33 @@ impl Database {
     /// typed here; only the values of nested queries (`and`, `or`,
     /// `elemMatch`, ...) can hold something else.
     pub(crate) fn check_query_types(&self, queries: &[Query]) -> Result<()> {
-        todo!("documents")
+        for query in queries {
+            if !query.is_nested() {
+                continue;
+            }
+            let mut nested = Vec::with_capacity(query.values().len());
+            for value in query.values() {
+                match value {
+                    Value::Ext(crate::value::Ext::Query(q)) => nested.push((**q).clone()),
+                    other => {
+                        let kind = match other {
+                            Value::Null => "NULL",
+                            Value::Bool(_) => "boolean",
+                            Value::Int(_) => "integer",
+                            Value::Float(_) => "double",
+                            Value::Str(_) => "string",
+                            Value::Array(_) => "array",
+                            _ => "object",
+                        };
+                        return Err(crate::error::Error::query(format!(
+                            "Invalid query type: \"{kind}\". Expected instances of \"Utopia\\Database\\Query\""
+                        )));
+                    }
+                }
+            }
+            self.check_query_types(&nested)?;
+        }
+        Ok(())
     }
 
     /// How many attributes a collection can have beyond the defaults (`0`:

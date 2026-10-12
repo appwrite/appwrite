@@ -55,6 +55,82 @@
 //! - [`Database::iterate`] returns a `'static` [`BoxStream`] of documents
 //!   (PHP's `Generator`): it pages lazily with `find`, as PHP does.
 //!
+//! # Status (phase B foundation)
+//!
+//! Implemented: the settings, scopes, listeners and `trigger` of
+//! `config.rs`; `filters.rs` (registry, default filters with PHP's
+//! signatures, `encode` / `decode` / `casting`, `encodeAttribute` /
+//! `decodeAttribute`, `encodeSpatialData`, `decodeObject`, filter
+//! signatures); `cache.rs` (keys, query cache key and field, purges,
+//! `with_cache`); `transaction.rs`; and in `collections.rs` the databases
+//! (`create`, `exists`, `list`, `delete`) plus `create_collection` and
+//! `get_collection`, which `create()` needs. Also small helpers other areas
+//! own, because the foundation calls them: `is_ttl_expired`
+//! (`documents.rs`), `check_query_types` (`find.rs`),
+//! `Database::metadata_collection` (`consts.rs`, PHP's `COLLECTION`) and
+//! `index_support` (`collections.rs`, the adapter's `IndexSupport` for the
+//! `Index` validator). Their owners may reshape them.
+//!
+//! `get_collection(METADATA)` returns `Database::metadata_collection`
+//! itself rather than calling `get_document`: PHP's `getDocument` returns
+//! `new Document(COLLECTION)` for that id before anything else, so the
+//! behaviour is the same and `create()` works before `get_document` does.
+//!
+//! Cache keys are shared with PHP, so the default filters' signatures are
+//! PHP's (`file:line` of their closures in the PHP runtime's image:
+//! `/usr/src/code/vendor/utopia-php/database/src/Database/Database.php`).
+//! When the PHP library moves those closures, update `default_signature`'s
+//! line numbers (the recorded `get_cache_keys` hashes check them).
+//!
+//! # Working on an area (phase B handoff)
+//!
+//! Each area owns its files here and its glue in
+//! `crates/tools/compat/src/libs/database/core/<area>.rs` (`schema.rs`,
+//! `documents.rs`, `relationships.rs`); `core/mod.rs` routes each of the
+//! 151 operations of `tests/compat/database/spec.d/core.json` to its area by
+//! the area's `OPS` list. Glue an operation in the area's `call(op, json,
+//! session) -> R<Json>` with the shared `core/args.rs`:
+//!
+//! - Results: `R<T> = Result<T, Fail>`; `?` on a `utopia_database::Result`
+//!   makes the error the operation's `{"$error": ...}`, `?` on a `Fault`
+//!   stops the case, `fault(msg)` builds one. Encode with `encode(&Value)`,
+//!   `document(&Document)`, `documents(&[Document])`, `strings(&[S])`,
+//!   `datetime(&DateTime)`, `error(&Error)` (an exception passed as a
+//!   value), and the markers `database_marker()` (fluent setters),
+//!   `adapter_marker()`, `cache_marker()`, `authorization_marker()`.
+//! - The database: `args::db(json, session)?` (the `db` handle argument, or
+//!   the session's current database); `args::db_handle` also gives its
+//!   PostgreSQL adapter.
+//! - Arguments: `let a = Args::new(json);` then, by PHP parameter name
+//!   (camelCase, as recorded): `string`, `string_or`, `opt_string`, `int`,
+//!   `int_or`, `opt_int`, `bool`, `bool_or`, `opt_bool`, `value` (any
+//!   value, `null` when absent), `opt_value`, `array`, `strings`,
+//!   `opt_strings`, `document`, `opt_document`, `documents`
+//!   (`array<Document>`), `queries`, `query`, `datetime`, `cache`,
+//!   `authorization`, `database`; `has` (present, even `null`), `given`
+//!   (present and not `null`), `raw`. Argument tags (`$now`, `$repeat`,
+//!   `$datetime`) are resolved by every getter.
+//! - Callbacks: decode the other arguments first, then `let calls =
+//!   Calls::new(session);`, `let cb = calls.callback("onNext",
+//!   a.raw("onNext"))?;` (`None` for an absent / `null` one), call the
+//!   library with `|| cb.invoke(vec![...encoded args])` for closures, or
+//!   `Some(&mut cb.clone())` where it takes a `&mut dyn Callback<A>` (`A`:
+//!   `Document`, `(Document, Document)`, `(Document, Option<Document>)` or
+//!   `Error`, see `CallArgs`), then `calls.finish(result)`, which wraps the
+//!   result as `{"result", "calls"}` when there were callbacks. `invoke`
+//!   returns the callback's return value (`$return` or a `return: true`
+//!   step), and a step's uncaught error as the callback's error.
+//! - Fixtures and their log (`db.log`) are already glued: filters
+//!   (`database.add_filter`), formats (`db.add_format`), listeners
+//!   (`database.on`) and transformations (`database.before`).
+//!
+//! Run one trait's cases with `bin/compat run database --case <text>`,
+//! where `<text>` matches a case file or case name (`--case
+//! Scope-DocumentTests`, `--case "DocumentTests::testCreateDocument"`,
+//! `--case core-Database`); add `COMPAT_TIMEOUT=300` under load and `-v`
+//! for details. The PostgreSQL the cases use is started by
+//! `tests/compat/database/services.sh up`.
+//!
 //! PHP: `Utopia\Database\Database`.
 
 mod attributes;

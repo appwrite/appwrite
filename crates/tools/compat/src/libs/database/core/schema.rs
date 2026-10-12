@@ -351,7 +351,9 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
         "database.get_keywords" => Ok(strings(db.keywords())),
         "database.get_limit_for_attributes" => Ok(Json::from(db.limit_for_attributes())),
         "database.get_limit_for_indexes" => Ok(Json::from(db.limit_for_indexes())),
-        "database.get_internal_attributes" => Ok(documents(&db.internal_attributes())),
+        "database.get_internal_attributes" => Ok(Json::Array(
+            db.internal_attributes().iter().map(|a| encode(&Value::Array(a.as_array().clone()))).collect(),
+        )),
         "database.get_connection_id" => Ok(Json::String(db.connection_id().await?)),
         "database.ping" => Ok(Json::Bool(db.ping().await?)),
         "database.reconnect" => {

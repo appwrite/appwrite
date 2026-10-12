@@ -76,8 +76,6 @@ impl Database {
     /// returned.
     ///
     /// PHP: `Database::trigger()` (protected).
-    // TEMPORARY (phase A skeleton): called once the areas are implemented.
-    #[allow(dead_code)]
     pub(crate) fn trigger(&self, event: &str, args: &Value) -> Result<()> {
         let listeners: Vec<Listener> = {
             let s = self.state();
@@ -512,8 +510,6 @@ impl Database {
     /// A document of `collection`'s class from `data`.
     ///
     /// PHP: `Database::createDocumentInstance()` (protected).
-    // TEMPORARY (phase A skeleton): called once the areas are implemented.
-    #[allow(dead_code)]
     pub(crate) fn create_document_instance(&self, collection: &str, data: Array) -> Result<Document> {
         let document = Document::new(data)?;
         Ok(match self.document_type(collection) {

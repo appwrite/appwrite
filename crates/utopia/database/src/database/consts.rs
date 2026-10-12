@@ -236,4 +236,50 @@ impl Database {
             ]),
         ]
     }
+
+    /// The `_metadata` collection's own definition: what
+    /// `getCollection(METADATA)` returns and `create()` creates.
+    ///
+    /// PHP: `new Document(Database::COLLECTION)`.
+    pub(crate) fn metadata_collection() -> Document {
+        let s = |v: &str| Value::Str(Str::from(v));
+        let attribute = |id: &str, kind: &str, size: i64, required: bool, filters: &[&str]| -> Value {
+            Value::Array(
+                [
+                    ("$id", s(id)),
+                    ("key", s(id)),
+                    ("type", s(kind)),
+                    ("size", Value::Int(size)),
+                    ("required", Value::Bool(required)),
+                    ("signed", Value::Bool(true)),
+                    ("array", Value::Bool(false)),
+                    ("filters", Value::Array(filters.iter().map(|f| s(f)).collect())),
+                ]
+                .into_iter()
+                .map(|(k, v)| (ArrayKey::from(k), v))
+                .collect(),
+            )
+        };
+        let attributes = Value::Array(
+            [
+                attribute("name", Self::VAR_STRING, 256, true, &[]),
+                attribute("attributes", Self::VAR_STRING, 1_000_000, false, &["json"]),
+                attribute("indexes", Self::VAR_STRING, 1_000_000, false, &["json"]),
+                attribute("documentSecurity", Self::VAR_BOOLEAN, 0, true, &[]),
+            ]
+            .into_iter()
+            .collect(),
+        );
+        let definition: Array = [
+            ("$id", s(Self::METADATA)),
+            ("$collection", s(Self::METADATA)),
+            ("name", s("collections")),
+            ("attributes", attributes),
+            ("indexes", Value::Array(Array::new())),
+        ]
+        .into_iter()
+        .map(|(k, v)| (ArrayKey::from(k), v))
+        .collect();
+        Document::new(definition).unwrap_or_else(|_| unreachable!("a valid definition"))
+    }
 }

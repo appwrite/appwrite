@@ -148,7 +148,7 @@ pub struct State {
     /// The current database (`db.open`, `db.select`).
     pub current: Option<Db>,
     /// What fixtures logged since the last `db.log`.
-    pub log: Arc<StdMutex<Vec<Json>>>,
+    pub log: Log,
     /// Whether the last operation took callbacks (its result is then
     /// `{"result", "calls"}`); `return: true` steps read it.
     pub called: bool,
@@ -161,7 +161,10 @@ pub fn state(session: &mut Session) -> &mut State {
 
 /// The log fixtures write to: the session whose operation runs now
 /// (`Core::enter`).
-static ACTIVE_LOG: LazyLock<StdMutex<Option<Arc<StdMutex<Vec<Json>>>>>> = LazyLock::new(|| StdMutex::new(None));
+/// A log fixtures append to.
+pub type Log = Arc<StdMutex<Vec<Json>>>;
+
+static ACTIVE_LOG: LazyLock<StdMutex<Option<Log>>> = LazyLock::new(|| StdMutex::new(None));
 
 fn lock<T>(m: &StdMutex<T>) -> std::sync::MutexGuard<'_, T> {
     m.lock().unwrap_or_else(|e| e.into_inner())

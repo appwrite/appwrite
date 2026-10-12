@@ -39,7 +39,37 @@ impl Database {
     ///
     /// PHP: `Database::isTtlExpired()` (private).
     pub(crate) fn is_ttl_expired(&self, collection: &Document, document: &Document) -> bool {
-        todo!("documents")
+        if !self.inner.adapter.support_for_ttl_indexes() {
+            return false;
+        }
+        let indexes = match collection.get("indexes") {
+            Some(Value::Array(a)) => a.values().cloned().collect::<Vec<_>>(),
+            _ => Vec::new(),
+        };
+        for index in &indexes {
+            if crate::validator::index(index, "type") != &Value::Str(Self::INDEX_TTL.into()) {
+                continue;
+            }
+            let ttl = crate::adapter::postgres::pdo::to_long(crate::validator::index(index, "ttl"));
+            let attribute = crate::validator::nth(crate::validator::index(index, "attributes"), 0);
+            if ttl <= 0 || !attribute.truthy() {
+                return false;
+            }
+            if let Some(Value::Str(start)) = document.get(&crate::value::to_text(attribute)) {
+                let utc = php_std::datetime::TzInfo::utc();
+                let (Ok(mut expiry), Ok(now)) = (
+                    php_std::datetime::DateTime::new(start.as_bytes(), None, &utc),
+                    php_std::datetime::DateTime::new(b"now", None, &utc),
+                ) else {
+                    return false;
+                };
+                if expiry.modify(format!("+{ttl} seconds").as_bytes()).is_err() {
+                    return false;
+                }
+                return now > expiry;
+            }
+        }
+        false
     }
 
     /// Creates a document (and its related documents); triggers
