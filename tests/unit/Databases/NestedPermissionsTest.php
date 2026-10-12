@@ -54,7 +54,7 @@ final class NestedPermissionsTest extends TestCase
         $update = [...$read, Permission::update(Role::users())];
         $own = [Permission::read(Role::user(self::USER)), Permission::update(Role::user(self::USER))];
 
-        foreach ([RelationshipType::OneToMany, RelationshipType::OneToOne, RelationshipType::ManyToMany] as $type) {
+        foreach ([RelationshipType::OneToMany, RelationshipType::OneToOne, RelationshipType::ManyToOne, RelationshipType::ManyToMany] as $type) {
             $name = $type->value;
 
             yield "{$name}: a session creates a nested document with create" => [$type, false, $create, [], self::NEW, self::SESSION, null];
@@ -84,7 +84,7 @@ final class NestedPermissionsTest extends TestCase
         $create = fn (): int => $this->database->withTransaction(fn (): int => $this->database->createDocuments('parents', [new Document([
             '$id' => 'parent',
             '$permissions' => [Permission::read(Role::any())],
-            'related' => $type === RelationshipType::OneToOne ? $related : [$related],
+            'related' => \in_array($type, [RelationshipType::OneToOne, RelationshipType::ManyToOne], true) ? $related : [$related],
         ])]));
 
         try {
@@ -131,6 +131,7 @@ final class NestedPermissionsTest extends TestCase
             $this->database->createRelationship('parents', match ($type) {
                 RelationshipType::OneToMany => Relationship::oneToMany('related', 'related', twoWay: true, twoWayKey: 'parent', onDelete: RelationshipDeleteAction::SetNull),
                 RelationshipType::OneToOne => Relationship::oneToOne('related', 'related', twoWay: true, twoWayKey: 'parent', onDelete: RelationshipDeleteAction::SetNull),
+                RelationshipType::ManyToOne => Relationship::manyToOne('related', 'related', twoWay: true, twoWayKey: 'parents', onDelete: RelationshipDeleteAction::SetNull),
                 default => Relationship::manyToMany('related', 'related', twoWay: true, twoWayKey: 'parents', onDelete: RelationshipDeleteAction::SetNull),
             });
             $this->database->createDocument('related', new Document(['$id' => self::STORED, 'name' => 'Stored', '$permissions' => $documentPermissions]));
