@@ -1,3 +1,7 @@
 [[IgnoredVulns]]
 id = "RUSTSEC-2024-0436"
 reason = "paste is unmaintained, not vulnerable. It is a proc-macro, so it runs only at compile time and nothing of it ships; it is reached only through rav1e (AVIF encoding in utopia-image), whose latest release still depends on it."
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2024-0449"
+reason = "unsafe-libyaml is unmaintained (archived), not reported vulnerable. php-std's yaml_parse must reproduce PHP's ext-yaml, which is libyaml, quirks included; the suggested safe-Rust parsers (saphyr, noyalib) parse differently. The fuzz profiles keep away from the one input shape where ext-yaml itself corrupts its heap. Replacing it with the vendored C libyaml (as php-std vendors PCRE2) removes this entry."

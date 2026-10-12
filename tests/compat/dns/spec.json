@@ -1723,6 +1723,11 @@
       "symbol": "Utopia\\DNS\\Adapter\\Native\\Udp::onReadable",
       "php": "Native reads datagrams into 4096 bytes: a larger query is cut.",
       "reason": "The Tokio UDP transport reads up to 65535 bytes, as Swoole does."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Client::query",
+      "php": "Over UDP, socket_recvfrom() takes the first datagram that reaches the client's port, from any address, and only its 16-bit transaction id is checked: a spoofed packet that guesses the id is accepted as the answer.",
+      "reason": "Rust drops datagrams that do not come from the queried server's address and keeps waiting until the same deadline, so a spoofed answer is never decoded. An exchange with the real server is unchanged (the socket stays unconnected, so errors and timeouts read as in PHP)."
     }
   ]
 }

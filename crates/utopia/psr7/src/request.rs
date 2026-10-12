@@ -84,7 +84,7 @@ impl Request {
         let host = host(&uri);
         self.uri = uri;
         if let Some(host) = host
-            && !(preserve_host && !self.header_line(header::HOST).is_empty())
+            && (!preserve_host || self.header_line(header::HOST).is_empty())
         {
             let _ = self.head.headers.set(header::HOST, vec![host]);
         }

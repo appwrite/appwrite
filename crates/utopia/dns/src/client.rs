@@ -78,8 +78,21 @@ impl Client {
             Err(_) => return Err(Error::exception(format!("Failed to send data: {}", TIMED_OUT.0))),
         }
         let mut buffer = [0u8; 512];
-        let received = match tokio::time::timeout(self.timeout, socket.recv_from(&mut buffer)).await {
-            Ok(Ok((n, _))) => n,
+        // Only the server's answer counts: a datagram from any other address
+        // (a spoofed answer guessing the 16-bit id) is dropped and the wait
+        // goes on until the same deadline. PHP's client takes whatever
+        // arrives first; legitimate exchanges see no difference.
+        let deadline = tokio::time::Instant::now() + self.timeout;
+        let from_server = async {
+            loop {
+                let (n, from) = socket.recv_from(&mut buffer).await?;
+                if from == target {
+                    return Ok::<usize, std::io::Error>(n);
+                }
+            }
+        };
+        let received = match tokio::time::timeout_at(deadline, from_server).await {
+            Ok(Ok(n)) => n,
             Ok(Err(e)) => {
                 let (text, code) = errno(&e);
                 return Err(Error::exception(format!(
