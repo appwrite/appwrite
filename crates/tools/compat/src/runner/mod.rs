@@ -14,7 +14,9 @@ pub mod generate;
 pub mod interface;
 pub mod process;
 pub mod report;
+pub mod scrub;
 pub mod snapshot;
+pub mod snapshot_postgres;
 pub mod spec;
 pub mod sync;
 

@@ -45,6 +45,33 @@ final class Inventory
     }
 
     /**
+     * Test files under `dirs` (relative to the repository root): `*Test.php`
+     * classes and the `*Tests.php` traits test classes are assembled from.
+     *
+     * @param list<string> $dirs
+     * @return list<string> Repository paths, sorted.
+     */
+    public static function tests(array $dirs): array
+    {
+        $out = [];
+        foreach ($dirs as $dir) {
+            if (!is_dir($dir)) {
+                continue;
+            }
+            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dir, \FilesystemIterator::SKIP_DOTS));
+            foreach ($files as $file) {
+                $name = $file->getFilename();
+                if (str_ends_with($name, 'Test.php') || str_ends_with($name, 'Tests.php')) {
+                    $out[] = str_replace('//', '/', $file->getPathname());
+                }
+            }
+        }
+        sort($out);
+
+        return array_values(array_unique($out));
+    }
+
+    /**
      * Signature, docblock and location of each symbol (`Class::method` or
      * `function()`), for `bin/compat report`. Symbols that do not resolve
      * are left out.

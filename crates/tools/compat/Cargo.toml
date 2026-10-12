@@ -37,6 +37,8 @@ serde_json.workspace = true
 sha2.workspace = true
 syn.workspace = true
 tokio = { workspace = true, features = ["fs", "io-std", "io-util", "rt", "macros"] }
+# The runner snapshots PostgreSQL schemas (`postgres@<service>`).
+tokio-postgres.workspace = true
 
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
