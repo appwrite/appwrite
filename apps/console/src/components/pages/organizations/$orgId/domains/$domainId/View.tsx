@@ -115,7 +115,7 @@ import {
   useDeleteDnsRecord,
   deleteDnsRecord,
   useUpdateDomainZone,
-  usePresetRecords,
+  useCreatePresetRecords,
   useUpdateDomainTeam,
   useDeleteOrganizationDomain,
   useOrganizations,
@@ -165,15 +165,6 @@ export function View({ initialData }: ViewProps = {}) {
   const [selectedRecord, setSelectedRecord] = useState<Models.DnsRecord | null>(
     null,
   )
-  const [selectedPreset, setSelectedPreset] = useState<
-    | 'zoho'
-    | 'mailgun'
-    | 'outlook'
-    | 'protonmail'
-    | 'icloud'
-    | 'google-workspace'
-    | null
-  >(null)
   const [copiedField, setCopiedField] = useState<string | null>(null)
   const [selectedOrgId, setSelectedOrgId] = useState('')
   const [transferDialogOpen, setTransferDialogOpen] = useState(false)
@@ -366,7 +357,7 @@ export function View({ initialData }: ViewProps = {}) {
   const createRecordMutation = useCreateDnsRecord(domainId)
 
   // Preset records
-  usePresetRecords(domainId, selectedPreset)
+  const createPresetMutation = useCreatePresetRecords(domainId)
 
   const handleCreateRecord = (data: {
     type: string
@@ -548,32 +539,6 @@ export function View({ initialData }: ViewProps = {}) {
       | 'icloud'
       | 'google-workspace',
   ) => {
-    setSelectedPreset(preset)
-
-    // Fetch preset records and create them
-    try {
-      const { fetchPresetRecords } = await import('@/lib/react-query/hooks')
-      const data = await fetchPresetRecords(domainId!, preset)
-
-      if (data?.dnsRecords) {
-        await handleCreatePresetRecords(data.dnsRecords, preset)
-      }
-    } catch (error) {
-      toast.error(getErrorMessage(error))
-      setSelectedPreset(null)
-    }
-  }
-
-  const handleCreatePresetRecords = async (
-    records: Models.DnsRecord[],
-    preset:
-      | 'zoho'
-      | 'mailgun'
-      | 'outlook'
-      | 'protonmail'
-      | 'icloud'
-      | 'google-workspace',
-  ) => {
     const presetLabels: Record<string, string> = {
       'google-workspace': 'Google Workspace',
       outlook: 'Outlook',
@@ -583,35 +548,16 @@ export function View({ initialData }: ViewProps = {}) {
       icloud: 'iCloud',
     }
 
+    // The preset endpoint adds only the records the domain does not have yet,
+    // so applying a preset again, or over matching records, is not an error.
     try {
-      // Create all records from the preset
-      await Promise.all(
-        records.map((record) =>
-          createRecordMutation.mutateAsync({
-            type: record.type,
-            data: {
-              name: record.name || '@',
-              value: record.value,
-              ttl: record.ttl,
-              priority: record.priority,
-              weight: record.weight,
-              port: record.port,
-              comment: record.comment,
-            },
-          }),
-        ),
-      )
+      const result = await createPresetMutation.mutateAsync(preset)
 
       toast.success(
-        `${t('Successfully added')} ${records.length} ${t('DNS records from')} ${presetLabels[preset]}`,
+        `${t('Successfully added')} ${result.total} ${t('DNS records from')} ${presetLabels[preset]}`,
       )
-      queryClient.invalidateQueries({
-        queryKey: ['dns-records', 'domain', domainId],
-      })
-      setSelectedPreset(null)
     } catch (error) {
       toast.error(getErrorMessage(error))
-      setSelectedPreset(null)
     }
   }
 
