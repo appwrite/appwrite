@@ -73,7 +73,6 @@ use Utopia\Messaging\Adapter\SMS\GEOSMS\CallingCode;
 use Utopia\Platform\Enum;
 use Utopia\Storage\Validator\FileName;
 use Utopia\System\System;
-use Utopia\Validator;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Assoc;
@@ -81,6 +80,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 $oauthDefaultSuccess = '/auth/oauth2/success';
@@ -281,7 +281,7 @@ $createSession = function (string $userId, string $secret, Request $request, Res
         $response->addHeader('X-Fallback-Cookies', \json_encode([$store->getKey() => $encoded]));
     }
 
-    $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+    $expire = DateTime::addSeconds(new \DateTime(), $duration);
     $protocol = $request->getProtocol();
 
     $response
@@ -949,7 +949,7 @@ Http::patch('/v1/account/sessions/:sessionId')
 
         // Extend session
         $authDuration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $session->setAttribute('expire', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $authDuration)));
+        $session->setAttribute('expire', DateTime::addSeconds(new \DateTime(), $authDuration));
 
         // Refresh OAuth access token
         $provider = $session->getAttribute('provider', '');
@@ -974,7 +974,7 @@ Http::patch('/v1/account/sessions/:sessionId')
             $session
                 ->setAttribute('providerAccessToken', $oauth2->getAccessToken(''))
                 ->setAttribute('providerRefreshToken', $oauth2->getRefreshToken(''))
-                ->setAttribute('providerAccessTokenExpiry', DateTime::formatTz(DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry(''))));
+                ->setAttribute('providerAccessTokenExpiry', DateTime::addSeconds(new \DateTime(), (int) $oauth2->getAccessTokenExpiry('')));
 
             try {
                 $identity = $dbForProject->findOne('identities', [
@@ -1939,6 +1939,10 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
                         $failureRedirect(Exception::GENERAL_BAD_REQUEST);
                     }
                     $user->setAttributes($userWithEmail->getArrayCopy());
+                    // The provider verified this address, or its canonical form on the same domain
+                    if ((new Email($user->getAttribute('email')))->getDomain() === (new Email($providerEmail))->getDomain()) {
+                        $user->setAttribute('emailVerification', true);
+                    }
                 }
             }
 
@@ -2228,7 +2232,7 @@ Http::get('/v1/account/sessions/oauth2/:provider/redirect')
         $query = URLParser::parseQuery($state['success']['query']);
 
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $proofForTokenOAuth2 = new ProofsToken(TOKEN_LENGTH_OAUTH2);
         $proofForTokenOAuth2->setHash(new Sha());
@@ -2994,7 +2998,7 @@ Http::post('/v1/account/tokens/email')
         }
 
         $tokenSecret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP);
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -3411,7 +3415,7 @@ Http::post('/v1/account/tokens/phone')
         }
 
         $secret ??= $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP);
 
         $token = new Document([
             '$id' => ID::unique(),
@@ -4542,7 +4546,7 @@ Http::post('/v1/account/recovery/otp')
         $userId = $deliverable ? $profile->getId() : ID::unique();
 
         $secret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP);
 
         $recovery = new Document([
             '$id' => ID::unique(),
@@ -5261,7 +5265,7 @@ Http::post('/v1/account/verifications/phone')
         }
 
         $secret ??= $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_CONFIRM);
 
         $verification = new Document([
             '$id' => ID::unique(),
@@ -5823,7 +5827,7 @@ Http::post('/v1/account/verifications/email/otp')
         }
 
         $secret = $proofForCode->generate();
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP));
+        $expire = DateTime::addSeconds(new \DateTime(), TOKEN_EXPIRATION_OTP);
 
         $verification = new Document([
             '$id' => ID::unique(),

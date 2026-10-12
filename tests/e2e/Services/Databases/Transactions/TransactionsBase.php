@@ -1963,6 +1963,7 @@ trait TransactionsBase
         $this->assertEquals($databaseId, $delivery['data']['$databaseId']);
         $this->assertEquals($collectionId, $delivery['data'][$this->getContainerIdResponseKey()]);
         $this->assertArrayNotHasKey($this->getOppositeContainerIdResponseKey(), $delivery['data']);
+        $this->assertArrayNotHasKey('$collection', $delivery['data']);
     }
 
     /**

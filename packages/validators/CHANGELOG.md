@@ -2,6 +2,13 @@
 
 All notable changes to `utopia-php/validators` are documented in this file.
 
+## [Unreleased]
+
+### Changed
+
+- Move the base class from `Utopia\Validator` to `Utopia\Validator\Validator` and the PHPStan extension from `Utopia\PHPStan\DisallowAssertEqualsExtension` to `Utopia\Validator\PHPStan\DisallowAssertEqualsExtension`, so the package declares a single `Utopia\Validator\` prefix. Every other class keeps its name.
+- The old names remain as aliases until the next major release (`src/compat.php`, autoloaded via `files`). `Utopia\Validator` is aliased up front, so code that extends it or declares it as a type keeps working. The PHPStan extension is aliased only when its old name is autoloaded, so installs without PHPStan never load it.
+
 ## 0.4.2
 
 ### Added

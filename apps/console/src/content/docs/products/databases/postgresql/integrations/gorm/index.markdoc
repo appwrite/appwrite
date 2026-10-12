@@ -1,0 +1,168 @@
+---
+layout: article
+title: GORM
+description: Use GORM with an Appwrite native PostgreSQL database in Go. Build the DSN, open a connection, size the database/sql pool against the direct connection, and run migrations with AutoMigrate or golang-migrate.
+---
+
+A native PostgreSQL database is a standard PostgreSQL engine, so [GORM](https://gorm.io/) talks to it with no Appwrite-specific configuration. You build a connection string from the credentials in the Console, hand it to the GORM PostgreSQL driver, and use models, `AutoMigrate`, and the query API exactly as you would against any self-hosted PostgreSQL server.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. See [PostgreSQL databases](/docs/products/databases/postgresql) to create one. To retrieve the hostname, password, database name, and connection string, open the database in the Console and click **Credentials**. The **Credentials** page includes **Details**, **DSN**, **.env**, **Prisma**, **Drizzle**, and **psql** tabs. The primary user is `admin`, and Appwrite generates the database name for each database.
+{% /info %}
+
+# Build the DSN {% #dsn %}
+
+The edge proxy terminates TLS for every native PostgreSQL database, so no certificate file is needed. Keep the password out of source and read the connection details from the environment:
+
+```env
+DB_HOST="db-<hash>.<region>.appwrite.center"
+DB_NAME="<database>"
+DB_PASSWORD="<password>"
+```
+
+GORM's PostgreSQL driver accepts the pgx key/value DSN. Set `sslmode=require`:
+
+```go
+dsn := fmt.Sprintf(
+    "host=%s user=admin password=%s dbname=%s port=5432 sslmode=require",
+    os.Getenv("DB_HOST"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"),
+)
+```
+
+The URL form from the **DSN** tab works too, and the driver parses either format: `postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require`. For full certificate verification, add `sslmode=verify-full`, no CA file needed: Go's drivers validate against the system certificate pool, and the proxy's certificate is signed by a public CA.
+
+For mTLS, see the [Network](/docs/products/databases/postgresql/network-security) page.
+
+# Open a connection {% #open %}
+
+Pass the DSN to the driver's `Open` function and call `gorm.Open`:
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+
+    "gorm.io/driver/postgres"
+    "gorm.io/gorm"
+)
+
+func main() {
+    dsn := fmt.Sprintf(
+        "host=%s user=admin password=%s dbname=%s port=5432 sslmode=require",
+        os.Getenv("DB_HOST"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME"),
+    )
+
+    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    if err != nil {
+        panic(err)
+    }
+
+    _ = db
+}
+```
+
+Connect to the **direct** engine port (`5432`) for a long-running server, see [pool sizing](#pool) below. If you route through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) in its default transaction mode, use `postgres.New` with `PreferSimpleProtocol: true` so the driver stops issuing implicit prepared statements, which transaction mode cannot keep across statements:
+
+```go
+db, err := gorm.Open(postgres.New(postgres.Config{
+    DSN:                  dsn, // pooler host, port 6432
+    PreferSimpleProtocol: true,
+}), &gorm.Config{})
+```
+
+# Define a model and migrate {% #model %}
+
+Declare your models as Go structs and let GORM create the tables with `AutoMigrate`:
+
+```go
+type User struct {
+    ID        uint   `gorm:"primaryKey"`
+    Email     string `gorm:"uniqueIndex"`
+    CreatedAt time.Time
+}
+
+if err := db.AutoMigrate(&User{}); err != nil {
+    panic(err)
+}
+```
+
+`AutoMigrate` creates the table if it's missing and adds any missing columns and indexes. It does not drop columns or change existing column types, so it's convenient in development but not a substitute for versioned migrations in production. Either way, run schema changes against the **direct** engine port: DDL needs a real session connection, and the primary `admin` user owns the generated database. Scoped connection users (`readonly` / `readwrite`) intentionally cannot run DDL.
+
+For versioned migrations, [golang-migrate](https://github.com/golang-migrate/migrate) runs ordered up/down files. Point it at the direct engine port:
+
+```bash
+migrate -path ./migrations \
+  -database "postgresql://admin:$DB_PASSWORD@$DB_HOST:5432/$DB_NAME?sslmode=require" \
+  up
+```
+
+# Size the connection pool {% #pool %}
+
+GORM manages a `database/sql` pool under the hood. A long-running Go server holds that pool for its whole lifetime, so connect to the **direct** engine port and cap the pool yourself against the engine's connection limit. Reach the underlying `*sql.DB` with `db.DB()`:
+
+```go
+sqlDB, err := db.DB()
+if err != nil {
+    panic(err)
+}
+
+sqlDB.SetMaxOpenConns(25)
+sqlDB.SetMaxIdleConns(25)
+sqlDB.SetConnMaxLifetime(time.Hour)
+```
+
+Keep the sum of `SetMaxOpenConns` across every instance below the specification's `maxConnections`. If you run many instances or a serverless/edge runtime that opens a fresh pool per invocation, route through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) and keep each instance's pool small. The pooler multiplexes them onto a handful of backend connections.
+
+# Use sqlx instead {% #sqlx %}
+
+If you prefer raw SQL with light struct scanning, [sqlx](https://github.com/jmoiron/sqlx) wraps `database/sql` and uses the same DSN.
+
+Register the `pgx` stdlib driver (or `lib/pq`) and connect:
+
+```go
+import (
+    _ "github.com/jackc/pgx/v5/stdlib"
+    "github.com/jmoiron/sqlx"
+)
+
+db, err := sqlx.Connect("pgx",
+    fmt.Sprintf("host=%s user=admin password=%s dbname=%s port=5432 sslmode=require",
+        os.Getenv("DB_HOST"), os.Getenv("DB_PASSWORD"), os.Getenv("DB_NAME")))
+if err != nil {
+    panic(err)
+}
+
+db.SetMaxOpenConns(25)
+```
+
+The same pooler caveat applies: in transaction mode, disable implicit prepared statements (the pgx stdlib driver exposes a simple-protocol option, and `lib/pq` can be told to skip prepares), or use [session mode](/docs/products/databases/postgresql/connection-pooling#modes). `sslmode=require` needs no CA file, and neither does `verify-full`: Go's drivers fall back to the system certificate pool when `sslrootcert` is unset, and the proxy's certificate is signed by a public CA that pool already trusts. Set `sslrootcert` only when the container image ships without CA certificates.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are instant, isolated copies of a database with their own hostname and connection string, ideal for running migrations against throwaway data in a pull-request preview or an integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export the host and password into the environment your tests read.
+3. Run `migrate ... up` (or `AutoMigrate`) and your test suite against the branch's direct port.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connect" %}
+Retrieve credentials, rotate the password, and create scoped connection users.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooler" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

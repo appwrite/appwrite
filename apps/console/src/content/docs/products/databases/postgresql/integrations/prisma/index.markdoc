@@ -1,0 +1,222 @@
+---
+layout: article
+title: Prisma
+description: Use Prisma ORM with an Appwrite native PostgreSQL database. Configure the Prisma 7 datasource, run migrations through the direct connection, and route serverless runtime traffic through the connection pooler.
+---
+
+[Prisma ORM](https://www.prisma.io/) works with Appwrite's native PostgreSQL database as a standard PostgreSQL target. Configure Prisma with the connection string from Appwrite, run Prisma Migrate against the direct database connection, and use Prisma Client from your application code.
+
+{% info title="Before you start" %}
+You'll need a native PostgreSQL database in a `ready` state and its credentials. Open the database in the Console and click **Credentials** to copy values from the **Details**, **DSN**, **.env**, **Prisma**, **Drizzle**, or **psql** tabs. You can also call `postgresql.get()` from the Appwrite API to read `hostname`, `connectionUser`, `connectionPassword`, and `connectionString`.
+{% /info %}
+
+# Initialize Prisma {% #initialize %}
+
+Install Prisma, Prisma Client, the PostgreSQL driver adapter, and the TypeScript tools used by the examples:
+
+```bash
+npm install -D prisma typescript tsx @types/node @types/pg
+npm install @prisma/client @prisma/adapter-pg dotenv pg
+```
+
+Initialize Prisma for PostgreSQL:
+
+```bash
+npx prisma init --datasource-provider postgresql --output ../generated/prisma
+```
+
+Prisma 7 generates a `prisma.config.ts` file and a `prisma/schema.prisma` file. Set `"type": "module"` in `package.json` if your project does not already use ECMAScript modules.
+
+# Configure connection strings {% #connection-strings %}
+
+Copy the connection string from the Console **Credentials** view. Keep it in environment variables and do not commit it:
+
+```env
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+SHADOW_DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require&schema=prisma_shadow"
+```
+
+`DATABASE_URL` is the runtime connection used by Prisma Client. `DIRECT_URL` is the direct database connection used by Prisma CLI commands. `SHADOW_DATABASE_URL` is required by `prisma migrate dev`, because Appwrite's `admin` user can run schema changes but cannot create additional PostgreSQL databases for Prisma's default shadow database workflow.
+
+Create the shadow schema once before you run `prisma migrate dev`:
+
+```sql
+CREATE SCHEMA IF NOT EXISTS prisma_shadow;
+```
+
+Appwrite Cloud uses TLS for PostgreSQL connections, so keep `sslmode=require`. For full certificate verification or mTLS, see [Network security](/docs/products/databases/postgresql/network-security).
+
+# Configure Prisma {% #configure-prisma %}
+
+In `prisma.config.ts`, read the CLI connection strings from the environment:
+
+```ts
+import "dotenv/config";
+import { defineConfig } from "prisma/config";
+
+export default defineConfig({
+  schema: "prisma/schema.prisma",
+  migrations: {
+    path: "prisma/migrations",
+    seed: "tsx prisma/seed.ts",
+  },
+  datasource: {
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
+    shadowDatabaseUrl: process.env["SHADOW_DATABASE_URL"],
+  },
+});
+```
+
+In `prisma/schema.prisma`, keep the datasource provider in the schema file and generate Prisma Client into the output directory created by `prisma init`:
+
+```prisma
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+```
+
+If you are connecting to an existing database, run `npx prisma db pull` after you configure the environment variables to introspect its schema.
+
+# Pool connections from serverless {% #pooling %}
+
+Prisma Client opens database connections from each running application instance. On serverless platforms, many cold starts can quickly multiply the number of backend PostgreSQL connections. Route runtime traffic through the [connection pooler](/docs/products/databases/postgresql/connection-pooling) by using the pooler port, `6432`, for `DATABASE_URL` while keeping `DIRECT_URL` on the direct PostgreSQL port, `5432`, for migrations and introspection:
+
+```env
+# Runtime: pooled connection through the Appwrite connection pooler
+DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:6432/<database>?sslmode=require"
+
+# Prisma CLI: direct PostgreSQL connection for migrations and introspection
+DIRECT_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require"
+
+# Prisma Migrate development shadow schema
+SHADOW_DATABASE_URL="postgresql://admin:<password>@db-<hash>.<region>.appwrite.center:5432/<database>?sslmode=require&schema=prisma_shadow"
+```
+
+The pooler defaults to **transaction mode**, which gives the highest connection multiplexing. If your application depends on session-level features such as advisory locks, `LISTEN`/`NOTIFY`, temporary tables, or session-scoped prepared statements, switch the pooler to **session mode**. See [Connection pooling](/docs/products/databases/postgresql/connection-pooling#modes) for pool mode trade-offs.
+
+# Run migrations {% #migrate %}
+
+Generate and apply a migration in development:
+
+```bash
+npx prisma migrate dev --name init
+```
+
+In CI or production, apply committed migrations without prompting:
+
+```bash
+npx prisma migrate deploy
+```
+
+Generate Prisma Client after you install dependencies or change `prisma/schema.prisma`:
+
+```bash
+npx prisma generate
+```
+
+The primary `admin` user owns the database and can run schema changes. Scoped [database roles](/docs/products/databases/postgresql/connections#roles), such as `readonly` and `readwrite` users, are intended for application access and should not run migrations.
+
+# Seed data {% #seed %}
+
+With the seed command configured in `prisma.config.ts`, add a seed script:
+
+```ts
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "../generated/prisma/client";
+
+const adapter = new PrismaPg(
+  { connectionString: process.env.DATABASE_URL! },
+  { schema: process.env.DATABASE_SCHEMA },
+);
+
+const prisma = new PrismaClient({ adapter });
+
+await prisma.user.upsert({
+  where: { email: "ada@example.com" },
+  update: {},
+  create: { email: "ada@example.com" },
+});
+
+await prisma.$disconnect();
+```
+
+Run the seed command:
+
+```bash
+npx prisma db seed
+```
+
+`DATABASE_SCHEMA` is optional. Set it only if you connect to a PostgreSQL schema other than `public`.
+
+# Query with Prisma Client {% #query %}
+
+Instantiate Prisma Client with the PostgreSQL driver adapter:
+
+```ts
+import "dotenv/config";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { PrismaClient } from "./generated/prisma/client";
+
+const adapter = new PrismaPg(
+  { connectionString: process.env.DATABASE_URL! },
+  { schema: process.env.DATABASE_SCHEMA },
+);
+
+const prisma = new PrismaClient({ adapter });
+
+const user = await prisma.user.create({
+  data: { email: "grace@example.com" },
+});
+
+const recent = await prisma.user.findMany({
+  orderBy: { createdAt: "desc" },
+  take: 10,
+});
+
+console.log({ user, recent });
+
+await prisma.$disconnect();
+```
+
+On long-running servers, instantiate `PrismaClient` once and reuse it. On serverless platforms, keep a single client per module scope so warm invocations reuse it, and rely on the pooler to absorb cold-start connection churn.
+
+# Use a branch for previews and CI {% #branches %}
+
+[Branches](/docs/products/databases/postgresql/branches) are instant, isolated copies of a database with their own hostname and connection string. They are useful for running migrations against throwaway data in a pull-request preview or integration-test job:
+
+1. Create a branch from the API and read its `connectionString`.
+2. Export it as `DIRECT_URL`, and use the pooled variant as `DATABASE_URL` if the branch has the pooler enabled.
+3. Run `npx prisma migrate deploy` and your test suite against the branch.
+4. Delete the branch when the job finishes.
+
+Because a branch starts from a storage snapshot, the schema and data match the source database at branch time, so migrations run against realistic data without touching production.
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/products/databases/postgresql/connections" title="Connections" %}
+Retrieve credentials, rotate the password, and create scoped connection users.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/connection-pooling" title="Connection pooling" %}
+Pool modes, ports, and read/write splitting for serverless workloads.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/branches" title="Branches" %}
+Ephemeral database copies for preview environments and CI.
+{% /cards_item %}
+{% cards_item href="/docs/products/databases/postgresql/network-security" title="Network security" %}
+TLS modes, certificate verification, mTLS, and IP allowlists.
+{% /cards_item %}
+{% /cards %}

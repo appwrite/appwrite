@@ -6,7 +6,7 @@ namespace Utopia\DNS\Validator;
 
 use Utopia\DNS\Message\Domain;
 use Utopia\DNS\Message\Record;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Name extends Validator
 {

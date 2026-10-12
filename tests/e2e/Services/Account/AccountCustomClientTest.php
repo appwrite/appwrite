@@ -2360,6 +2360,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertNotEmpty($response['body']['userId']);
         $this->assertNotEmpty($response['body']['expire']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertStringContainsStringIgnoringCase('New login detected on '. $this->getProject()['name'], $lastEmail['text']);
@@ -2390,6 +2391,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals($userId, $response['body']['userId']);
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertNotEmpty($response['body']['expire']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
         $this->assertEmpty($response['body']['secret']);
 
         $lastEmailId = $lastEmail['id'];
@@ -4084,6 +4086,8 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['providerAccessToken']);
         $this->assertEquals('tuvwxyz', $response['body']['providerRefreshToken']);
         $this->assertNotEquals($initialExpiry, $response['body']['providerAccessTokenExpiry']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['providerAccessTokenExpiry']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         // Verify that updateSession refetched the photo and the served avatar content changed
         $refreshedPhotoResponse = $this->client->call(Client::METHOD_GET, '/avatars/photo', [
@@ -4477,6 +4481,8 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertEquals($existingUserId, $response['body']['$id']);
         $this->assertEquals($email, $response['body']['email']);
+        // The provider vouched for the address, so the adopted account needs no verification email
+        $this->assertTrue($response['body']['emailVerification']);
 
         // Clean up - delete the user
         $response = $this->client->call(Client::METHOD_DELETE, '/users/' . $existingUserId, array_merge([
@@ -4812,6 +4818,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$id']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $userId = $response['body']['userId'];
 
@@ -5202,6 +5209,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertNotEmpty($response['body']['$createdAt']);
         $this->assertEmpty($response['body']['secret']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $tokenCreatedAt = $response['body']['$createdAt'];
 
@@ -6035,6 +6043,7 @@ final class AccountCustomClientTest extends Scope
 
         $this->assertEquals(201, $challenge['headers']['status-code']);
         $this->assertNotEmpty($challenge['body']['$id']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $challenge['body']['expire']));
 
         $challengeVerification = $this->client->call(Client::METHOD_PUT, '/account/mfa/challenges', $headers, [
             'challengeId' => $challenge['body']['$id'],
@@ -7099,6 +7108,18 @@ final class AccountCustomClientTest extends Scope
         $this->assertEquals(201, $response['headers']['status-code']);
         $this->assertEquals($existing['id'], $response['body']['userId']);
 
+        // The provider vouched for the address, so the adopted account needs no verification email
+        $projectId = $this->getProject()['$id'];
+        $account = $this->client->call(Client::METHOD_GET, '/account', [
+            'origin' => 'http://localhost',
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $projectId,
+            'cookie' => 'a_session_' . $projectId . '=' . $response['cookies']['a_session_' . $projectId],
+        ]);
+
+        $this->assertEquals(200, $account['headers']['status-code']);
+        $this->assertTrue($account['body']['emailVerification']);
+
         /**
          * Test for FAILURE - unverified provider email cannot link to an existing account
          */
@@ -7569,6 +7590,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);
@@ -7809,6 +7831,7 @@ final class AccountCustomClientTest extends Scope
         $this->assertEmpty($response['body']['secret']);
         $this->assertEmpty($response['body']['phrase']);
         $this->assertTrue((new DatetimeValidator())->isValid($response['body']['expire']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $response['body']['expire']));
 
         $lastEmail = $this->getLastEmailByAddress($email);
         $this->assertNotEmpty($lastEmail, 'Email not found for address: ' . $email);

@@ -5,7 +5,7 @@ namespace Appwrite\Migration\Version;
 use Appwrite\Migration\Migration;
 use Exception;
 use Throwable;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Query;
@@ -90,10 +90,12 @@ class V25 extends Migration
 
                 case 'schedules':
                     if ($collectionType === 'console') {
-                        try {
-                            $this->createAttributeFromCollection($this->dbForProject, $id, 'projectInternalId');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create attribute \"projectInternalId\" in collection {$id}: {$th->getMessage()}");
+                        foreach (['projectInternalId', 'interval'] as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
                         }
 
                         $this->dbForProject->purgeCachedCollection($id);
@@ -224,6 +226,9 @@ class V25 extends Migration
                         if ($id === 'sites') {
                             $attributes[] = 'scopes';
                         }
+                        if ($id === 'functions') {
+                            $attributes[] = 'interval';
+                        }
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
                         } catch (Throwable $th) {
@@ -315,7 +320,7 @@ class V25 extends Migration
                         Console::warning("Failed to create index \"_key_passwordPwned\" from {$id}: {$th->getMessage()}");
                     }
 
-                    // Added in 2.3.0 for custom user photos
+                    // Added in 2.4.0 for custom user photos
                     foreach (['photoId', 'photoSize'] as $attribute) {
                         try {
                             $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);

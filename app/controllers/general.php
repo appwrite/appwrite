@@ -60,7 +60,7 @@ use Swoole\Http\Request as SwooleRequest;
 use Swoole\Table;
 use Utopia\Bus\Bus;
 use Utopia\Config\Config;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -75,8 +75,8 @@ use Utopia\Locale\Locale;
 use Utopia\Platform\Service;
 use Utopia\Span\Span;
 use Utopia\System\System;
-use Utopia\Validator;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 
 Config::setParam('cookieSamesite', Response::COOKIE_SAMESITE_NONE);
 

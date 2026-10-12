@@ -1,0 +1,108 @@
+---
+layout: post
+title: 12 developer tools to supercharge your Appwrite project
+description: Boost your developer experience with Appwrite using these awesome tools.
+date: 2024-06-17
+lastUpdated: 2026-06-29
+cover: /images/blog/developer-tools-appwrite/cover.avif
+timeToRead: 5
+author: aditya-oberai
+category: open-source
+faqs:
+  - question: "What developer tools does Appwrite provide out of the box?"
+    answer: "Appwrite ships with the [Appwrite CLI](/docs/tooling/command-line/installation) for managing projects from the terminal, the SDK Generator for creating SDKs in many languages, and the Appwrite Playgrounds with example projects in 15+ languages and frameworks. Together they cover most workflows from local setup to deployment."
+  - question: "Where can I find community-built libraries for Appwrite?"
+    answer: "The [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite) GitHub repository is a curated list of community libraries, tools, and projects. You can also explore [Built with Appwrite](https://builtwith.appwrite.io/) to see real applications and the tools they use."
+  - question: "Can I generate TypeScript types from my Appwrite tables?"
+    answer: "Yes. Community tools like `fetch-appwrite-types` read your [Appwrite Databases](/docs/products/databases) schema and emit TypeScript definitions, so your client code stays in sync with your tables. This cuts down on runtime mistakes and gives you autocomplete on row fields."
+  - question: "How do I manage Appwrite database schema changes across environments?"
+    answer: "Community tools like Appwrite Utils (Node.js CLI) and AppwriteMigrator (.NET CLI) let you treat your schema as code and sync it between local, staging, and production projects. For most teams this is more reliable than recreating tables by hand in the Console."
+  - question: "Can I deploy a SvelteKit app as an Appwrite Function?"
+    answer: "Yes, with the community-built `adapter-appwrite` you can build a SvelteKit app and ship it as an [Appwrite Function](/docs/products/functions). For full sites with SSR, [Appwrite Sites](/docs/products/sites) is usually the better fit, but the adapter is handy for embedding SvelteKit logic inside a function."
+  - question: "Is there an Express-like framework for Appwrite Functions?"
+    answer: "Yes, AppExpress is a community library inspired by Express.js that adds routing and middleware on top of Appwrite Functions. It keeps the function lightweight while giving you familiar patterns for HTTP routing, middleware chaining, and caching."
+---
+
+Any developer-focused product is only as good as the ecosystem of developer tools surrounding it. Fortunately, over the years, we have seen several outstanding tools developed by our community, as well as a few we have developed in-house to make development with Appwrite far more productive.
+
+# Our favourite developer tools for Appwrite
+
+## ngx-appwrite
+
+ngx-appwrite is a library designed to integrate Appwrite services seamlessly into Angular 16+ applications. It acts as a wrapper around the Appwrite Web SDK, simplifying the use of Appwrite's features within Angular projects. The library enhances developer productivity by providing RxJS streams, which facilitate reactive programming patterns commonly used in Angular applications. This integration allows developers to easily implement Appwrite's backend services, such as database, authentication, and storage while leveraging Angular's powerful framework for building dynamic web applications.
+
+Take a look at their [NPM package](https://www.npmjs.com/package/ngx-appwrite) and [GitHub repo](https://github.com/blackfan23/ngx-appwrite).
+
+## Auth UI
+
+Auth UI offers a customizable login flow for applications, featuring a user interface that can be adapted to different authentication methods in Appwrite. The customizable UI allows developers to implement login mechanisms that align with their specific application requirements, providing flexibility in user management and security configurations. This project demonstrates the versatility of Appwrite in supporting diverse authentication needs across various projects.
+
+Take a look at their [live application](https://www.authui.site/) and [Built With Appwrite page](https://builtwith.appwrite.io/projects/6467cedd4502d0e29205/).
+
+## adapter-appwrite
+
+adapter-appwrite is a tool designed for SvelteKit that enables developers to deploy SvelteKit applications as Appwrite functions. By using adapter-appwrite, developers can leverage SvelteKit's modern web development features, such as server-side rendering and static site generation, while utilizing Appwrite Cloud's infrastructure for their backend functionalities.
+
+Take a look at their [NPM package](https://www.npmjs.com/package/adapter-appwrite) and [GitHub repo](https://github.com/lukehagar/sveltekit-adapters).
+
+## Appread
+
+Appread is a comprehensive guide focused on self-hosting Appwrite instances. The guide covers various aspects of setting up and managing Appwrite, including installation procedures, scaling techniques, security measures, and ensuring high availability. It provides detailed instructions for deploying Appwrite on both small servers and larger Docker Swarm setups. Appread serves as a valuable resource for developers and system administrators who want to leverage Appwrite's features while maintaining control over their own infrastructure, enabling them to optimize performance and reliability.
+
+Take a look at their [online guide](https://book.appread.io/).
+
+## AppExpress
+
+AppExpress is a lightweight framework inspired by Express.js, designed specifically for use with Appwrite Functions. It simplifies the process of creating server-like functionalities within Appwrite by offering an intuitive API for routing and middleware integration. Developers can use AppExpress to build modular and maintainable code for handling HTTP requests, developing middleware, handling caching, and other backend operations. This framework makes it easier to develop and deploy serverless applications with Appwrite, leveraging familiar concepts from Express.js while optimizing for the Appwrite ecosystem.
+
+Take a look at their [GitHub repo](https://github.com/ItzNotABug/appexpress).
+
+## Appwrite Utils
+
+Appwrite Utils is a collection of utilities and a command-line interface (CLI) aimed at simplifying the management of Appwrite projects. It provides tools for handling data migrations, schema updates, and data conversion tasks. The utilities help streamline the process of updating and maintaining the structure of databases and other backend components in Appwrite. This toolset is particularly useful for developers who need to make systematic changes to their Appwrite projects, ensuring smooth transitions and consistency across different environments and versions.
+
+Take a look at their [NPM package](https://www.npmjs.com/package/appwrite-utils) and [GitHub repo](https://github.com/ZachHandley/AppwriteUtils).
+
+## AppwriteX
+
+AppwriteX is a Dart package that noninvasively extends the Appwrite Dart SDK with additional features. It enhances the standard SDK's capabilities, providing more functionalities and tools for developers working with Appwrite in Dart and Flutter environments.
+
+Take a look at their [Pub.dev package](https://pub.dev/packages/appwritex) and [GitHub repo](https://github.com/insightoptech/appwritex).
+
+## AppwriteMigrator
+
+AppwriteMigrator is a .NET CLI tool that enables a code-first approach to managing your database schema with Appwrite. This tool simplifies the process of syncing and migrating your database schema between local and remote environments, ensuring consistency across development, staging, and production setups. By facilitating schema management through code, AppwriteMigrator helps maintain the integrity and consistency of database structures across different deployment stages, making it an invaluable tool for developers working with Appwrite in .NET environments.
+
+Take a look at their [NuGet package](https://www.nuget.org/packages/PinguApps.AppwriteMigrator) and [GitHub repo](https://github.com/PinguApps/AppwriteMigrator).
+
+## fetch-appwrite-types
+
+fetch-appwrite-types is a tool designed to generate TypeScript types from Appwrite database tables. This utility simplifies the integration of Appwrite with TypeScript projects by creating type definitions that reflect the database schema. It enhances type safety and developer experience by providing accurate type information for database operations, reducing runtime errors, and improving code quality.
+
+Take a look at their [NPM package](https://www.npmjs.com/package/fetch-appwrite-types) and [GitHub repo](https://github.com/YsarocK/fetch-appwrite-types).
+
+## Appwrite SDK Generator
+
+The Appwrite SDK Generator is a PHP library that automates the creation of SDKs for various programming languages, such as JavaScript/TypeScript, Dart, Python, Ruby, Kotlin, Swift, and more. It uses predefined language settings and templates to generate codebases based on Appwrite’s OpenAPI specification. This tool simplifies the process of creating and maintaining Appwrite’s SDKs, ensuring they are up-to-date with the latest API changes.
+
+Take a look at our [GitHub repo](https://github.com/appwrite/sdk-generator).
+
+## Appwrite CLI
+
+The Appwrite Command Line Interface (CLI) is a tool for managing Appwrite servers and projects from the command line. It supports various tasks such as project setup, user management, database interactions, and deployment processes. The CLI facilitates automation and streamlines development workflows, making it easier for developers to interact with Appwrite services.
+
+Take a look at our [documentation](/docs/tooling/command-line/installation).
+
+## Appwrite Playgrounds
+
+The Appwrite Playgrounds are a collection of simple example projects that help developers get started with Appwrite in various programming languages and frameworks. These playgrounds include setups for web, Python, React Native, Flutter, Android, PHP, Node.js, Dart, .NET, Kotlin, Swift, Ruby, Apple UIKit, Apple SwiftUI, and Deno. Each playground provides practical examples and boilerplate code to demonstrate how to integrate and use Appwrite's services in different environments, making it easier for developers to learn and implement Appwrite.
+
+Take a look at our [GitHub repos](https://github.com/orgs/appwrite/repositories?q=playground&type=all).
+
+# Want to discover more such tools and projects?
+
+To explore more tools and projects that can help you build your applications quicker and better with Appwrite, visit the following links:
+
+- [Built with Appwrite](https://builtwith.appwrite.io/): Discover a wide range of projects and applications that utilize Appwrite's features.
+- [Awesome Appwrite](https://github.com/appwrite/awesome-appwrite): A curated list of Appwrite-related resources, including libraries, tools, and projects.
+- [Appwrite Discord](/discord): Connect with other developers and the Appwrite team for discussion, questions, and collaboration.

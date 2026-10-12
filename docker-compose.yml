@@ -132,6 +132,7 @@ services:
       - _APP_DOMAIN
       - _APP_CONSOLE_DOMAIN
       - _APP_CONSOLE_URL
+      - _APP_CONSOLE_PASSKEY_ORIGINS
       - _APP_CONSOLE_TRUSTED_PROJECTS
       - _APP_DOMAIN_TARGET_CNAME
       - _APP_DOMAIN_TARGET_AAAA
@@ -273,7 +274,7 @@ services:
         max-file: "5"
         max-size: 10m
     container_name: appwrite-console
-    image: appwrite/new:1.2.5-self-hosted
+    image: appwrite/new:1.2.55-self-hosted
     restart: unless-stopped
     networks:
       - appwrite

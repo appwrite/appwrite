@@ -89,7 +89,7 @@ class Create extends Action
         $secret = $proofForToken->generate();
         $detector = new Detector($request->getUserAgent('UNKNOWN'));
         $duration = $project->getAttribute('auths', [])['duration'] ?? TOKEN_EXPIRATION_LOGIN_LONG;
-        $expire = DateTime::formatTz(DateTime::addSeconds(new \DateTime(), $duration));
+        $expire = DateTime::addSeconds(new \DateTime(), $duration);
 
         $session = new Document(array_merge(
             [
