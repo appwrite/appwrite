@@ -1,0 +1,2071 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/PermissionsTest.php",
+  "cases": [
+    {
+      "name": "testSingleMethodSingleValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions"
+          },
+          "bind": "p"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "create(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "create(\"users\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "create(\"user:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "create(\"team:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "create(\"team:123abc/edit\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "create(\"guests\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "create(\"users/verified\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"users\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:123abc/viewer\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"guests\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"users/verified\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"users\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"user:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"team:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"team:123abc/edit\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"guests\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"users/verified\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "delete(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "delete(\"users\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "delete(\"user:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "delete(\"team:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "delete(\"team:123abc/edit\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "delete(\"guests\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "delete(\"users/verified\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "delete(\"label:vip\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMultipleMethodSingleValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions"
+          },
+          "bind": "p"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"users\")",
+              "create(\"users\")",
+              "update(\"users\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:123abc\")",
+              "create(\"user:123abc\")",
+              "update(\"user:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:123abc\")",
+              "create(\"team:123abc\")",
+              "update(\"team:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:123abc/viewer\")",
+              "create(\"team:123abc/viewer\")",
+              "update(\"team:123abc/viewer\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"guests\")",
+              "create(\"guests\")",
+              "update(\"guests\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"users/verified\")",
+              "create(\"users/verified\")",
+              "update(\"users/verified\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMultipleMethodMultipleValues",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions"
+          },
+          "bind": "p"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"users\")",
+              "create(\"user:123abc\")",
+              "create(\"team:123abc\")",
+              "update(\"user:123abc\")",
+              "update(\"team:123abc\")",
+              "delete(\"user:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:123abc\")",
+              "read(\"team:123abc\")",
+              "create(\"user:123abc\")",
+              "create(\"team:123abc\")",
+              "update(\"user:123abc\")",
+              "update(\"team:123abc\")",
+              "delete(\"user:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any\")",
+              "create(\"guests\")",
+              "update(\"team:123abc/edit\")",
+              "delete(\"team:123abc/edit\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidPermissions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions"
+          },
+          "bind": "p"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": "create(\"any\")"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": false
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": 1.5
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              0,
+              1.5
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              false,
+              []
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              [
+                "a"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "*"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"role:all\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "create(\"role:guest\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"role:member\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "user1234"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "user::1234"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "user:123:4"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"member:\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"anyy\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"gguest\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"memer:123abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:_1234\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:-1234\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"member:.1234\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:12$4\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:12&4\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:ab(124\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"memmber:1234\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"tteam:1234\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "update(\"userr:1234\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:_abcd\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:abcd/\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team/abcd\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:abcd//efgh\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:abcd/e/fgh\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:ab&cd3/efgh\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa/efgh\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:abcd/ef*gh\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:abcd/aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions",
+            "length": 100
+          },
+          "bind": "h"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "h"
+            },
+            "value": [
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "h"
+            },
+            "value": [
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDuplicateMethods",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions"
+          },
+          "bind": "p"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any\")",
+              "read(\"user:5f058a8925807\")",
+              "write(\"user:5f058a8925807\")",
+              "update(\"user:5f058a8925807\")",
+              "delete(\"user:5f058a8925807\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any\")",
+              "read(\"user:5f058a8925807\")",
+              "read(\"user:5f058a8925807\")",
+              "write(\"user:5f058a8925807\")",
+              "update(\"user:5f058a8925807\")",
+              "delete(\"user:5f058a8925807\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: empty, lengths and allowed",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions"
+          },
+          "bind": "p"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            }
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": []
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": {}
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": null
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": "read(\"any\")"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": {
+              "a": "read(\"any\")"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions",
+            "length": 0
+          },
+          "bind": "z"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "z"
+            },
+            "value": [
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")",
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions",
+            "length": 1
+          },
+          "bind": "o"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "o"
+            },
+            "value": [
+              "read(\"any\")",
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions",
+            "allowed": [
+              "read"
+            ]
+          },
+          "bind": "a"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": [
+              "read(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": [
+              "write(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": [
+              "update(\"users\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: malformed permission strings",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "permissions"
+          },
+          "bind": "p"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "write(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(any)"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any\""
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "READ(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any\") "
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              " read(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any\")x"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"users/verified\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"users/unverified\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"users/other\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"guests/x\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"any:1\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"label:vip\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"label:not-alpha\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"label:\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"member:abc\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:0\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:0/0\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:é\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:a/b/c\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:a\" )"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              ""
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "()"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read()"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\")"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": [
+              "read(\"team:abc/bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: role and permission helpers",
+      "steps": [
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "update(\"team:abc/owner\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "write(\"users/verified\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "delete(\"user:x\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"label:vip\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(any)"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "nope(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"team:a/b/c\")"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "any"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "user:abc"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:abc/owner"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "users/verified"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:a/b/c"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": ""
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "a:b:c"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "/x"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "abc",
+            "dimension": "owner"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "users",
+            "dimension": "verified"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "member",
+            "identifier": "m1"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "label",
+            "identifier": "vip"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "",
+            "dimension": "abcd"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "write",
+            "role": "user:abc"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "read",
+            "role": "team",
+            "identifier": "abc",
+            "dimension": "owner"
+          }
+        },
+        {
+          "op": "permission.aggregate",
+          "args": {
+            "permissions": [
+              "read(\"any\")",
+              "read(\"user:5f058a8925807\")",
+              "read(\"user:5f058a8925807\")",
+              "write(\"user:5f058a8925807\")",
+              "update(\"user:5f058a8925807\")",
+              "delete(\"user:5f058a8925807\")"
+            ]
+          }
+        },
+        {
+          "op": "permission.aggregate",
+          "args": {
+            "permissions": [
+              "write(\"any\")",
+              "read(\"users\")"
+            ],
+            "allowed": [
+              "read",
+              "update"
+            ]
+          }
+        },
+        {
+          "op": "permission.aggregate",
+          "args": {
+            "permissions": null
+          }
+        }
+      ]
+    }
+  ]
+}

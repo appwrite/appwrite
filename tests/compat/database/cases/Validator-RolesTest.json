@@ -1,0 +1,1002 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/RolesTest.php",
+  "cases": [
+    {
+      "name": "testValidRole",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles"
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "users"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "users/verified"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "users/unverified"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "team:696f34ea003d48edab8e"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "team:696f34ea003d48edab8e/project-696f34ea003d48edab8e-owner"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "team:696f34ea003d48edab8e/project-696f34ea003d48edab8e"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "label:vip"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNotAnArray",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles"
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": "not an array"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testExceedLength",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles",
+            "length": 2
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "users",
+              "users",
+              "users"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNotAllStrings",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles"
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "users",
+              123
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testObsoleteWildcardRole",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles"
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "*"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testObsoleteRolePrefix",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles"
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "read(\"role:123\")"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDisallowedRoles",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles",
+            "allowed": [
+              "users"
+            ]
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "any"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testLabels",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles"
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "label:123"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "label:not-alphanumeric"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: role strings",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles"
+          },
+          "bind": "r"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "any"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "guests"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "users"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "users/other"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "guests/verified"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "any/x"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user:abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user:abc/verified"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user:abc/unverified"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user:abc/other"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "member:abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "member:abc/x"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "team:abc/"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "team:/abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "team:a/b/c"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "label:"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "label:é"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "label:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user:0"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              ""
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              " any"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "ANY"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "role:all"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "team"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "member"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "label"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "users:abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "guests:abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "any:abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "a:b:c"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              "user::abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": []
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": {}
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": null
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": {
+              "a": "users"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              null
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "r"
+            },
+            "value": [
+              1.5
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: lengths and allowed lists",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles",
+            "length": 0
+          },
+          "bind": "a"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": [
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users",
+              "users"
+            ]
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles",
+            "length": 1
+          },
+          "bind": "b"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "b"
+            },
+            "value": [
+              "users"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "b"
+            },
+            "value": [
+              "users",
+              "any"
+            ]
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles",
+            "allowed": [
+              "user",
+              "team"
+            ]
+          },
+          "bind": "c"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "c"
+            },
+            "value": [
+              "user:abc",
+              "team:abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "c"
+            },
+            "value": [
+              "user:abc",
+              "member:abc"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "c"
+            },
+            "value": [
+              "users"
+            ]
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "roles",
+            "allowed": []
+          },
+          "bind": "d"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": [
+              "users"
+            ]
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

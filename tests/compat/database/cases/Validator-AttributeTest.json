@@ -1,0 +1,7293 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/AttributeTest.php",
+  "cases": [
+    {
+      "name": "testDuplicateAttributeId",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidStringAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testStringSizeTooLarge",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 1000,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVarcharSizeTooLarge",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 1000,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "varchar",
+                "size": 2000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTextSizeTooLarge",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "text",
+                "size": 70000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMediumtextSizeTooLarge",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "mediumtext",
+                "size": 20000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testIntegerSizeTooLarge",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 200,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUnknownType",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "test",
+                "key": "test",
+                "type": "unknown_type",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRequiredFiltersForDatetime",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidDatetimeWithFilter",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": [
+                  "datetime"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDefaultValueOnRequiredAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": true,
+                "default": "default value",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": "not_an_integer",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorNotSupported",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": false
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorCannotBeArray",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embeddings",
+                "key": "embeddings",
+                "type": "vector",
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": true,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorInvalidDimensions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorDimensionsExceedsMax",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 20000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSpatialNotSupported",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSpatialAttributes": false
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSpatialCannotBeArray",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSpatialAttributes": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "locations",
+                "key": "locations",
+                "type": "point",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": true,
+                "filters": [
+                  "point"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSpatialMustHaveEmptySize",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSpatialAttributes": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "size": 100,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testObjectNotSupported",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForObject": false
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "metadata",
+                "key": "metadata",
+                "type": "object",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testObjectCannotBeArray",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForObject": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "metadata",
+                "key": "metadata",
+                "type": "object",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": true,
+                "filters": [
+                  "object"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testObjectMustHaveEmptySize",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForObject": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "metadata",
+                "key": "metadata",
+                "type": "object",
+                "size": 100,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAttributeLimitExceeded",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxAttributes": 5,
+            "maxWidth": 0,
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "attributeCount": 10,
+            "attributeWidth": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testRowWidthLimitExceeded",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxAttributes": 100,
+            "maxWidth": 1000,
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "attributeCount": 5,
+            "attributeWidth": 1500
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorDefaultValueNotArray",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": "not_an_array",
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorDefaultValueWrongElementCount",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": [
+                  1.0,
+                  2.0
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorDefaultValueNonNumericElements",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": [
+                  1.0,
+                  "not_a_number",
+                  3.0
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testLongtextSizeTooLarge",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "longtext",
+                "size": 5000000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidVarcharAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "varchar",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidTextAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "text",
+                "size": 65535,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidMediumtextAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "mediumtext",
+                "size": 16777215,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidLongtextAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "longtext",
+                "size": 4294967295,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidFloatAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidBooleanAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testFloatDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 0,
+                "required": false,
+                "default": "not_a_float",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testBooleanDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": "not_a_boolean",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testStringDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": 123,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidStringWithDefaultValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": "default title",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidIntegerWithDefaultValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": 42,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidBigIntDefaultValueTypeStringNotNumeric",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "not_a_bigint",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidBigIntDefaultValueTypeStringNumeric",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "123",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidFloatWithDefaultValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "price",
+                "key": "price",
+                "type": "double",
+                "size": 0,
+                "required": false,
+                "default": 19.99,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidBooleanWithDefaultValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "active",
+                "key": "active",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUnsignedIntegerSizeLimit",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 80,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUnsignedIntegerSizeTooLarge",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 150,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testBigIntSizeNotLimited",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "maxBigIntLength": 200
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "bigint",
+                "size": 101,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUnsignedBigIntSizeLimit",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "maxBigIntLength": 200
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "counter",
+                "key": "counter",
+                "type": "bigint",
+                "size": 200,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDuplicateAttributeIdCaseInsensitive",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "Title",
+                  "key": "Title",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "default": null,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDuplicateInSchema",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "schemaAttributes": [
+              {
+                "$document": {
+                  "$id": "existing_column",
+                  "key": "existing_column",
+                  "type": "string",
+                  "size": 255
+                }
+              }
+            ],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSchemaAttributes": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "existing_column",
+                "key": "existing_column",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSchemaCheckSkippedWhenMigrating",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "schemaAttributes": [
+              {
+                "$document": {
+                  "$id": "existing_column",
+                  "key": "existing_column",
+                  "type": "string",
+                  "size": 255
+                }
+              }
+            ],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSchemaAttributes": true,
+            "isMigrating": true,
+            "sharedTables": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "existing_column",
+                "key": "existing_column",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidLinestringAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSpatialAttributes": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "route",
+                "key": "route",
+                "type": "linestring",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "linestring"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidPolygonAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSpatialAttributes": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "area",
+                "key": "area",
+                "type": "polygon",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "polygon"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidPointAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSpatialAttributes": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "location",
+                "key": "location",
+                "type": "point",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidVectorAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 128,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidVectorWithDefaultValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "embedding",
+                "key": "embedding",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": [
+                  1.0,
+                  2.0,
+                  3.0
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidObjectAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForObject": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "metadata",
+                "key": "metadata",
+                "type": "object",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testArrayStringAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testArrayWithDefaultValues",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": [
+                  "tag1",
+                  "tag2",
+                  "tag3"
+                ],
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testArrayDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "tags",
+                "key": "tags",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": [
+                  "tag1",
+                  123,
+                  "tag3"
+                ],
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDatetimeDefaultValueMustBeString",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "required": false,
+                "default": 12345,
+                "signed": false,
+                "array": false,
+                "filters": [
+                  "datetime"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidDatetimeWithDefaultValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "created",
+                "key": "created",
+                "type": "datetime",
+                "size": 0,
+                "required": false,
+                "default": "2024-01-01T00:00:00.000Z",
+                "signed": false,
+                "array": false,
+                "filters": [
+                  "datetime"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVarcharDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "varchar",
+                "size": 255,
+                "required": false,
+                "default": 123,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTextDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "text",
+                "size": 65535,
+                "required": false,
+                "default": 123,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testMediumtextDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "mediumtext",
+                "size": 16777215,
+                "required": false,
+                "default": 123,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testLongtextDefaultValueTypeMismatch",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "longtext",
+                "size": 4294967295,
+                "required": false,
+                "default": 123,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidVarcharWithDefaultValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "name",
+                "key": "name",
+                "type": "varchar",
+                "size": 255,
+                "required": false,
+                "default": "default name",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidTextWithDefaultValue",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "content",
+                "key": "content",
+                "type": "text",
+                "size": 65535,
+                "required": false,
+                "default": "default content",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidIntegerAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "count",
+                "key": "count",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testNullDefaultValueAllowed",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testArrayDefaultOnNonArrayAttribute",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": [
+                  "not",
+                  "allowed"
+                ],
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: description before any isValid, and meta",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: integer size limits, odd maxIntLength and number_format of floats",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 101
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 50,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 51,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 101,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 102,
+                "required": false,
+                "default": null,
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 9223372036854775807,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 3000001
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 1500001,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: string and varchar boundaries and number_format",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 1000000,
+            "maxVarcharLength": 12345,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 1000000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 1000001,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "varchar",
+                "size": 12345,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "varchar",
+                "size": 12346,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 0,
+            "maxVarcharLength": 0,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 1,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "varchar",
+                "size": 1,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: text family boundaries",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "text",
+                "size": 65536,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "mediumtext",
+                "size": 16777216,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "longtext",
+                "size": 4294967296,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "longtext",
+                "size": -1,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: size given as a numeric string or float",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 100,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": "100",
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": "101",
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 100.5,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": "abc",
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: missing key falls back to $id, duplicates by $id",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "Name",
+                  "key": "Name",
+                  "type": "string"
+                }
+              }
+            ],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "name",
+                "type": "string",
+                "size": 10
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "other",
+                "type": "string",
+                "size": 10
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "x",
+                "key": "NAME",
+                "type": "string",
+                "size": 10
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: duplicate check with unicode keys (strtolower is byte-wise)",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "Éa",
+                  "key": "Éa",
+                  "type": "string"
+                }
+              }
+            ],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "éa",
+                "key": "éa",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "Éa",
+                "key": "Éa",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "ÉA",
+                "key": "ÉA",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: schema duplicate with the adapter filter",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "schemaAttributes": [
+              {
+                "$document": {
+                  "$id": "my-col$",
+                  "key": "my-col$",
+                  "type": "string"
+                }
+              }
+            ],
+            "supportForSchemaAttributes": true,
+            "filter": "adapter"
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "my-col",
+                "key": "my-col",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "my-col$",
+                "key": "my-col$",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: schema duplicate without schema support, and migrating without shared tables",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "schemaAttributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "key": "a",
+                  "type": "string"
+                }
+              }
+            ]
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "a",
+                "key": "a",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "schemaAttributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "key": "a",
+                  "type": "string"
+                }
+              }
+            ],
+            "supportForSchemaAttributes": true,
+            "isMigrating": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "A",
+                "key": "A",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: datetime filters: extra filters and case",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "d",
+                "key": "d",
+                "type": "datetime",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "json",
+                  "datetime"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "d",
+                "key": "d",
+                "type": "datetime",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "Datetime"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: limits: boundaries and partial callbacks",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "maxAttributes": 5,
+            "maxWidth": 100,
+            "attributeCount": 5,
+            "attributeWidth": 99
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "maxAttributes": 5,
+            "maxWidth": 100,
+            "attributeCount": 6,
+            "attributeWidth": 200
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "maxAttributes": 5,
+            "maxWidth": 100,
+            "attributeCount": 5,
+            "attributeWidth": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "maxAttributes": 0,
+            "maxWidth": 0,
+            "attributeCount": 1000,
+            "attributeWidth": 100000
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "maxAttributes": 5,
+            "attributeCount": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: relationship and id types",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "r",
+                "key": "r",
+                "type": "relationship",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "i",
+                "key": "i",
+                "type": "id",
+                "size": 0,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "r",
+                "key": "r",
+                "type": "relationship",
+                "size": 255,
+                "required": false,
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "i",
+                "key": "i",
+                "type": "id",
+                "size": 255,
+                "required": false,
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: unknown types with every support enabled",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true,
+            "supportForSpatialAttributes": true,
+            "supportForObject": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "u",
+                "key": "u",
+                "type": "uuid7",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "u",
+                "key": "u",
+                "type": "STRING",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "u",
+                "key": "u",
+                "type": "",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: default value message rendering for odd types",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": 1.5,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": true,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "double",
+                "size": 0,
+                "required": false,
+                "default": 1,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "boolean",
+                "size": 0,
+                "required": false,
+                "default": 0,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": false,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": 1.0,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": "0",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "double",
+                "size": 255,
+                "required": false,
+                "default": -0.0,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "c",
+                "key": "c",
+                "type": "double",
+                "size": 255,
+                "required": false,
+                "default": 1e+20,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: bigint defaults",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": 12,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "-12",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "-12",
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "18446744073709551615",
+                "signed": false,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "+1",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": " 1",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": "",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": 1.5,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": false,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": [
+                  "1",
+                  2
+                ],
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "b",
+                "key": "b",
+                "type": "bigint",
+                "size": 0,
+                "required": false,
+                "default": [
+                  "1",
+                  "x"
+                ],
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: vector defaults and dimensions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForVectors": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": [
+                  1,
+                  2,
+                  3
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": [
+                  "1",
+                  "2.5",
+                  "1e3"
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": [
+                  1,
+                  true,
+                  3
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 2,
+                "required": false,
+                "default": {
+                  "a": 1.0,
+                  "b": 2.0
+                },
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 2,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 16000,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": 16001,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": -1,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "e",
+                "key": "e",
+                "type": "vector",
+                "size": "3",
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "vector"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: spatial and object defaults and sizes",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "supportForSpatialAttributes": true,
+            "supportForObject": true
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "point",
+                "size": 0,
+                "required": false,
+                "default": [
+                  1.0,
+                  2.0
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "polygon",
+                "size": 0,
+                "required": false,
+                "default": [
+                  [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      1,
+                      1
+                    ],
+                    [
+                      0,
+                      1
+                    ],
+                    [
+                      0,
+                      0
+                    ]
+                  ]
+                ],
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "polygon"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "point",
+                "size": 0,
+                "required": false,
+                "default": "POINT(1 2)",
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "point"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "o",
+                "key": "o",
+                "type": "object",
+                "size": 0,
+                "required": false,
+                "default": {
+                  "a": 1
+                },
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "o",
+                "key": "o",
+                "type": "object",
+                "size": 0,
+                "required": false,
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "object"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "linestring",
+                "size": null,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "linestring"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "p",
+                "key": "p",
+                "type": "linestring",
+                "size": "0",
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "linestring"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: required with default variants",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": true,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": 1,
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": "true",
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": true,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": true,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": [],
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: check order: duplicate wins over type errors",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string"
+                }
+              }
+            ],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "unknown",
+                "size": 255,
+                "required": false,
+                "default": 5,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "datetime",
+                "size": 5,
+                "required": false,
+                "default": 5,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: checkFormat with registered and missing formats",
+      "steps": [
+        {
+          "op": "validator.format_add",
+          "args": {
+            "name": "attr-email",
+            "factory": "email",
+            "type": "string"
+          }
+        },
+        {
+          "op": "validator.format_add",
+          "args": {
+            "name": "attr-range",
+            "factory": "range",
+            "type": "integer"
+          }
+        },
+        {
+          "op": "validator.format_remove",
+          "args": {
+            "name": "attr-missing"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-email"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "varchar",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-email"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "n",
+                "key": "n",
+                "type": "integer",
+                "size": 4,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-range"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "n",
+                "key": "n",
+                "type": "double",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-range"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-missing"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": ""
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": null
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "0"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.format_remove",
+          "args": {
+            "name": "attr-email"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-email"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: validator.call on each check method",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string"
+                }
+              }
+            ],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807,
+            "schemaAttributes": [
+              {
+                "$document": {
+                  "$id": "col",
+                  "key": "col",
+                  "type": "string"
+                }
+              }
+            ],
+            "supportForSchemaAttributes": true,
+            "maxAttributes": 3,
+            "maxWidth": 10,
+            "attributeCount": 4,
+            "attributeWidth": 5
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.format_add",
+          "args": {
+            "name": "attr-email",
+            "factory": "email",
+            "type": "string"
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDuplicateId",
+            "value": {
+              "$document": {
+                "$id": "other",
+                "key": "other",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDuplicateId",
+            "value": {
+              "$document": {
+                "$id": "TITLE",
+                "key": "TITLE",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDuplicateInSchema",
+            "value": {
+              "$document": {
+                "$id": "other",
+                "key": "other",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDuplicateInSchema",
+            "value": {
+              "$document": {
+                "$id": "Col",
+                "key": "Col",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkRequiredFilters",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "datetime",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [
+                  "datetime"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkRequiredFilters",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "datetime",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkFormat",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-email"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkFormat",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "integer",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": [],
+                "format": "attr-email"
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkAttributeLimits",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkType",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 10,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkType",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "nope",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkType",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "vector",
+                "size": 3,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDefaultValue",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDefaultValue",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": 1,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDefaultValue",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": true,
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: validator.call checkDefaultValue on null and checkType ignoring defaults",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "attribute",
+            "attributes": [],
+            "maxStringLength": 16777216,
+            "maxVarcharLength": 65535,
+            "maxIntLength": 9223372036854775807
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDefaultValue",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "nope",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkType",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": 123,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDefaultValue",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "nope",
+                "size": 255,
+                "required": false,
+                "default": "x",
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkAttributeLimits",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.call",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "method": "checkDuplicateInSchema",
+            "value": {
+              "$document": {
+                "$id": "title",
+                "key": "title",
+                "type": "string",
+                "size": 255,
+                "required": false,
+                "default": null,
+                "signed": true,
+                "array": false,
+                "filters": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
