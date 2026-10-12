@@ -20,6 +20,7 @@ use Utopia\Database\Query;
 use Utopia\Migration\Resource;
 use Utopia\Migration\Sources\Appwrite;
 use Utopia\Migration\Sources\Supabase;
+use Utopia\System\System;
 use WebSocket\ConnectionException;
 use WebSocket\TimeoutException;
 
@@ -330,6 +331,33 @@ trait MigrationsBase
         $this->assertStringContainsString('169.254.169.254', $response['body']['message']);
 
         $this->assertSame($before, $countMigrations());
+    }
+
+    /**
+     * A source that accepts the connection and never answers used to hold the migration
+     * in `processing` forever. The request must time out and the migration fail with it.
+     */
+    public function testAppwriteMigrationFailsWhenSourceNeverAnswers(): void
+    {
+        // Connections complete from the listen backlog, but nothing ever reads or replies.
+        $server = \stream_socket_server('tcp://0.0.0.0:0', $errorCode, $errorMessage);
+        $this->assertNotFalse($server, $errorMessage);
+        $port = \parse_url('tcp://' . \stream_socket_get_name($server, false), PHP_URL_PORT);
+
+        try {
+            // This test runs in the API container, so the internal host reaches the listener.
+            $migration = $this->performMigrationExpectingFailure([
+                'resources' => [Resource::TYPE_USER],
+                'endpoint' => 'http://' . System::getEnv('_APP_MIGRATION_HOST') . ':' . $port . '/v1',
+                'projectId' => $this->getProject()['$id'],
+                'apiKey' => $this->getProject()['apiKey'],
+            ]);
+        } finally {
+            \fclose($server);
+        }
+
+        $this->assertSame('finished', $migration['stage']);
+        $this->assertNotEmpty($migration['errors']);
     }
 
     /**

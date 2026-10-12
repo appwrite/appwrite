@@ -18,6 +18,11 @@ class Ceremony extends Base
     public const string TYPE_AUTHENTICATION = 'passkeyAuthentication';
 
     /**
+     * Android apps sign in from the hash of their signing certificate instead of a web origin.
+     */
+    private const string ANDROID_ORIGIN = 'android:apk-key-hash:';
+
+    /**
      * The relying party for a ceremony started from the given origin, or null when passkeys cannot work there.
      *
      * Origins are the project's platforms on the RP ID. A request from localhost gets a localhost relying party
@@ -69,7 +74,8 @@ class Ceremony extends Base
 
     /**
      * Origins of the web platforms on the RP ID or one of its subdomains, keeping wildcards such as
-     * `https://*.example.com`. Apple apps sign in from the RP ID itself once the domain lists them as associated.
+     * `https://*.example.com`. Apple apps sign in from the RP ID itself once the domain lists them as associated,
+     * and Android apps from each signing certificate once the domain's asset links list them.
      *
      * @param array<array<string, mixed>|Document> $platforms
      * @return array<string>
@@ -84,8 +90,14 @@ class Ceremony extends Base
 
         $origins = [];
         foreach ($platforms as $platform) {
-            if (Platform::mapDeprecatedType(\strtolower($platform['type'] ?? '')) === Platform::TYPE_APPLE) {
+            $type = Platform::mapDeprecatedType(\strtolower($platform['type'] ?? ''));
+            if ($type === Platform::TYPE_APPLE) {
                 $origins[] = 'https://' . $rpId;
+            }
+            if ($type === Platform::TYPE_ANDROID) {
+                foreach ($platform['fingerprints'] ?? [] as $fingerprint) {
+                    $origins[] = self::ANDROID_ORIGIN . \rtrim(\strtr(\base64_encode(\hex2bin(\str_replace(':', '', $fingerprint))), '+/', '-_'), '=');
+                }
             }
         }
 

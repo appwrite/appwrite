@@ -5,6 +5,7 @@ namespace Appwrite\Platform\Modules\Project\Http\Project\Platforms\Android;
 use Appwrite\Event\Event as QueueEvent;
 use Appwrite\Extend\Exception;
 use Appwrite\Network\Platform;
+use Appwrite\Network\Validator\Fingerprint;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -16,6 +17,8 @@ use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Validator\ArrayList;
+use Utopia\Validator\Nullable;
 use Utopia\Validator\Text;
 
 class Update extends Action
@@ -42,7 +45,7 @@ class Update extends Action
                 group: 'platforms',
                 name: 'updateAndroidPlatform',
                 description: <<<EOT
-                Update an Android platform by its unique ID. Use this endpoint to update the platform's name or application ID.
+                Update an Android platform by its unique ID. Use this endpoint to update the platform's name, application ID or signing certificate fingerprints.
                 EOT,
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
@@ -55,6 +58,7 @@ class Update extends Action
             ->param('platformId', '', fn (Database $dbForPlatform) => new UID($dbForPlatform->getAdapter()->getMaxUIDLength()), 'Platform ID.', false, ['dbForPlatform'])
             ->param('name', null, new Text(128, requireNonBlank: true), 'Platform name. Max length: 128 chars.')
             ->param('applicationId', '', new Text(256, requireNonBlank: true), 'Android application ID. Max length: 256 chars.')
+            ->param('fingerprints', null, new Nullable(new ArrayList(new Fingerprint(), APP_LIMIT_ARRAY_PARAMS_SIZE)), 'SHA-256 fingerprints of the certificates your app is signed with, such as "14:6D:E9:...:2B:6A". Passkeys created in the app are accepted when its signature matches one. Find them under App signing in Play Console, or with `./gradlew signingReport`. Omit to keep the current list, or pass an empty array to clear it.', optional: true)
             ->inject('response')
             ->inject('queueForEvents')
             ->inject('dbForPlatform')
@@ -67,6 +71,7 @@ class Update extends Action
         string $platformId,
         string $name,
         string $applicationId,
+        ?array $fingerprints,
         Response $response,
         QueueEvent $queueForEvents,
         Database $dbForPlatform,
@@ -87,6 +92,9 @@ class Update extends Action
             'name' => $name,
             'key' => $applicationId,
         ]);
+        if ($fingerprints !== null) {
+            $updates->setAttribute('fingerprints', \array_values(\array_unique(\array_map(\strtoupper(...), $fingerprints))));
+        }
 
         try {
             $platform = $authorization->skip(fn () => $dbForPlatform->updateDocument('platforms', $platform->getId(), $updates));
