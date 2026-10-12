@@ -297,7 +297,8 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
                 }
             }
             if args.get("status").is_some() {
-                authorization.set_status(flag(args, "status", true)?);
+                // `(bool) $a['status']`: an explicit null is false.
+                authorization.set_status(value(args, "status")?.truthy());
             }
             db.set_authorization(Arc::new(authorization));
             ok(Value::Null)
@@ -644,9 +645,15 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         ),
         "adapter.upsert_documents" => {
             let mut changes = Vec::new();
+            // `$change['old'] ?? []`: a missing or null side is an empty document.
+            let empty = Json::Array(Vec::new());
+            let side = |c: &Json, key: &str| match c.get(key) {
+                None | Some(Json::Null) => codec::document(&empty),
+                Some(j) => codec::document(j),
+            };
             for c in codec::list(args.get("changes").unwrap_or(&Json::Null))? {
-                let old = codec::document(c.get("old").unwrap_or(&Json::Null))?;
-                let new = codec::document(c.get("new").unwrap_or(&Json::Null))?;
+                let old = side(c, "old")?;
+                let new = side(c, "new")?;
                 changes.push(Change::new(old, new));
             }
             res(db.upsert_documents(&collection(args)?, &text_or(args, "attribute", "")?, changes).await, |d| {
