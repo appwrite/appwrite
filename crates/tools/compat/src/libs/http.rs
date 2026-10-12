@@ -266,7 +266,7 @@ pub async fn bench(name: &str, _session: &mut crate::adapter::Session) -> Result
 }
 
 /// Values emitted by actions of the current dispatch.
-type Out = Arc<Mutex<Vec<Value>>>;
+pub(crate) type Out = Arc<Mutex<Vec<Value>>>;
 
 /// A harness problem raised inside an action (PHP's `Fault`).
 const FAULT: &str = "$fault";
@@ -1020,12 +1020,12 @@ impl Validator for AnyValue {
     }
 }
 
-fn validator(spec: &Value) -> Result<Box<dyn Validator>, Fault> {
+pub(crate) fn validator(spec: &Value) -> Result<Box<dyn Validator>, Fault> {
     let (kind, a) =
         spec.as_object().and_then(|o| o.iter().next()).ok_or_else(|| Fault::new(format!("validator spec: {spec}")))?;
     let int = |i: usize, d: i64| a.get(i).and_then(Value::as_i64).unwrap_or(d);
     let malformed = spec.as_object().is_some_and(|o| o.len() != 1)
-        || (matches!(kind.as_str(), "text" | "any_of") && !a.is_array())
+        || (matches!(kind.as_str(), "text" | "any_of" | "array_list" | "range") && !a.is_array())
         || (kind == "whitelist" && !a.get(0).is_some_and(Value::is_array))
         || (matches!(kind.as_str(), "integer" | "boolean") && !(a.is_boolean() || a.is_null()));
     if malformed {
@@ -1046,6 +1046,11 @@ fn validator(spec: &Value) -> Result<Box<dyn Validator>, Fault> {
             }
         }
         "nullable" => Box::new(utopia_validators::Nullable(validator(a)?)),
+        "range" => Box::new(utopia_validators::Range::new(int(0, 0), int(1, 0))),
+        "array_list" => Box::new(utopia_validators::ArrayList::new(
+            validator(a.get(0).unwrap_or(&Value::Null))?,
+            int(1, 0).max(0) as usize,
+        )),
         "any_of" => Box::new(AnyOf {
             rules: a.as_array().into_iter().flatten().map(validator).collect::<Result<_, _>>()?,
             failed: Mutex::new(None),
@@ -1119,14 +1124,51 @@ fn configure(hook: &mut Hook, spec: &Value, out: &Out) -> Result<(), Fault> {
     for name in s.opt("inject").and_then(Value::as_array).into_iter().flatten() {
         hook.inject(&php_string(name));
     }
-    let list: Arc<Vec<Value>> = Arc::new(s.opt("action").and_then(Value::as_array).cloned().unwrap_or_default());
+    hook.set_action(statement_action(s.opt("action").and_then(Value::as_array).cloned().unwrap_or_default(), out));
+    Ok(())
+}
+
+/// A callback running action statements (as Harness.php's hook callbacks).
+pub(crate) fn statement_action(list: Vec<Value>, out: &Out) -> utopia_http::Action {
+    let list = Arc::new(list);
     let out = out.clone();
-    hook.set_action(action(move |mut scope| {
+    action(move |mut scope| {
         let list = list.clone();
         let out = out.clone();
         Box::pin(async move { statements(&list, &mut Env::Scope(&mut scope), &out).await })
-    }));
-    Ok(())
+    })
+}
+
+/// Dispatches one request of `http.run`'s `requests` through `run()` (or
+/// `execute()`): what the server was asked to send, the values actions
+/// emitted and the error run() raised.
+pub(crate) async fn dispatch(http: &Http, spec: &Value, out: &Out) -> Result<Value, Fault> {
+    take(out);
+    let request = request(spec)?;
+    let mut response = Response::new();
+    let context = http.context();
+    let result = if spec.get("via").and_then(Value::as_str) == Some("execute") {
+        http.execute(&request, &mut response, &context).await
+    } else {
+        http.run(&request, &mut response, &context).await
+    };
+    let error = match result {
+        Ok(()) => Value::Null,
+        Err(e) => {
+            if let Some(f) = is_fault(&e) {
+                return Err(f);
+            }
+            error_json(&e)
+        }
+    };
+    let mut result = json!({"wire": wire_json(response.wire()), "out": take(out), "error": error});
+    if spec.get("match").is_some() {
+        result["match"] = http.find(&request).map(|m| Value::String(m.route.path().to_owned())).unwrap_or(Value::Null);
+    }
+    if spec.get("size").is_some() {
+        result["size"] = Value::from(response.size());
+    }
+    Ok(result)
 }
 
 fn build(app: &Value, out: &Out) -> Result<(Http, Vec<Value>), Fault> {
@@ -1240,33 +1282,7 @@ async fn run(a: &Args<'_>) -> Result<Value, Fault> {
     let http = http;
     let mut responses = Vec::new();
     for spec in a.opt("requests").and_then(Value::as_array).into_iter().flatten() {
-        take(&out);
-        let request = request(spec)?;
-        let mut response = Response::new();
-        let context = http.context();
-        let result = if spec.get("via").and_then(Value::as_str) == Some("execute") {
-            http.execute(&request, &mut response, &context).await
-        } else {
-            http.run(&request, &mut response, &context).await
-        };
-        let error = match result {
-            Ok(()) => Value::Null,
-            Err(e) => {
-                if let Some(f) = is_fault(&e) {
-                    return Err(f);
-                }
-                error_json(&e)
-            }
-        };
-        let mut result = json!({"wire": wire_json(response.wire()), "out": take(&out), "error": error});
-        if spec.get("match").is_some() {
-            result["match"] =
-                http.find(&request).map(|m| Value::String(m.route.path().to_owned())).unwrap_or(Value::Null);
-        }
-        if spec.get("size").is_some() {
-            result["size"] = Value::from(response.size());
-        }
-        responses.push(result);
+        responses.push(dispatch(&http, spec, &out).await?);
     }
     let mut result = json!({"setup": setup, "responses": responses});
     if a.opt_bool("telemetry")?.unwrap_or(false) {

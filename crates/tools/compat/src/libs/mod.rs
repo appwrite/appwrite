@@ -14,11 +14,14 @@ use crate::bench::Bench;
 pub mod abuse;
 pub mod auth;
 pub mod balancer;
+pub mod bus;
 pub mod cache;
 pub mod circuit_breaker;
+pub mod cli;
 pub mod client;
 pub mod compression;
 pub mod config;
+pub mod console;
 pub mod database;
 pub mod detector;
 pub mod di;
@@ -30,11 +33,13 @@ pub mod image;
 pub mod locale;
 pub mod lock;
 pub mod php_std;
+pub mod platform;
 pub mod pools;
 pub mod query;
 pub mod queue;
 pub mod registry;
 pub mod schedule;
+pub mod servers;
 pub mod smtp;
 pub mod span;
 pub mod storage;
@@ -49,11 +54,14 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("abuse", abuse::OPS),
     ("auth", auth::OPS),
     ("balancer", balancer::OPS),
+    ("bus", bus::OPS),
     ("cache", cache::OPS),
     ("circuit-breaker", circuit_breaker::OPS),
+    ("cli", cli::OPS),
     ("client", client::OPS),
     ("compression", compression::OPS),
     ("config", config::OPS),
+    ("console", console::OPS),
     ("database", database::OPS),
     ("detector", detector::OPS),
     ("di", di::OPS),
@@ -65,11 +73,13 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("locale", locale::OPS),
     ("lock", lock::OPS),
     ("php-std", php_std::OPS),
+    ("platform", platform::OPS),
     ("pools", pools::OPS),
     ("query", query::OPS),
     ("queue", queue::OPS),
     ("registry", registry::OPS),
     ("schedule", schedule::OPS),
+    ("servers", servers::OPS),
     ("smtp", smtp::OPS),
     ("span", span::OPS),
     ("storage", storage::OPS),
@@ -86,11 +96,14 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "abuse" => abuse::call(op, args, session).await,
         "auth" => auth::call(op, args, session).await,
         "balancer" => balancer::call(op, args, session).await,
+        "bus" => bus::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
         "circuit-breaker" => circuit_breaker::call(op, args, session).await,
+        "cli" => cli::call(op, args, session).await,
         "client" => client::call(op, args, session).await,
         "compression" => compression::call(op, args, session).await,
         "config" => config::call(op, args, session).await,
+        "console" => console::call(op, args, session).await,
         "database" => database::call(op, args, session).await,
         "detector" => detector::call(op, args, session).await,
         "di" => di::call(op, args, session).await,
@@ -102,11 +115,13 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "locale" => locale::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
         "php-std" => php_std::call(op, args, session).await,
+        "platform" => platform::call(op, args, session).await,
         "pools" => pools::call(op, args, session).await,
         "query" => query::call(op, args, session).await,
         "queue" => queue::call(op, args, session).await,
         "registry" => registry::call(op, args, session).await,
         "schedule" => schedule::call(op, args, session).await,
+        "servers" => servers::call(op, args, session).await,
         "smtp" => smtp::call(op, args, session).await,
         "span" => span::call(op, args, session).await,
         "storage" => storage::call(op, args, session).await,
@@ -125,11 +140,14 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "abuse" => abuse::BENCHES,
         "auth" => auth::BENCHES,
         "balancer" => balancer::BENCHES,
+        "bus" => bus::BENCHES,
         "cache" => cache::BENCHES,
         "circuit-breaker" => circuit_breaker::BENCHES,
+        "cli" => cli::BENCHES,
         "client" => client::BENCHES,
         "compression" => compression::BENCHES,
         "config" => config::BENCHES,
+        "console" => console::BENCHES,
         "detector" => detector::BENCHES,
         "di" => di::BENCHES,
         "domains" => domains::BENCHES,
@@ -140,10 +158,12 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "locale" => locale::BENCHES,
         "lock" => lock::BENCHES,
         "php-std" => php_std::BENCHES,
+        "platform" => platform::BENCHES,
         "pools" => pools::BENCHES,
         "queue" => queue::BENCHES,
         "registry" => registry::BENCHES,
         "schedule" => schedule::BENCHES,
+        "servers" => servers::BENCHES,
         "smtp" => smtp::BENCHES,
         "span" => span::BENCHES,
         "storage" => storage::BENCHES,
@@ -162,11 +182,14 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "abuse" => abuse::bench(name, session).await,
         "auth" => auth::bench(name, session).await,
         "balancer" => balancer::bench(name, session).await,
+        "bus" => bus::bench(name, session).await,
         "cache" => cache::bench(name, session).await,
         "circuit-breaker" => circuit_breaker::bench(name, session).await,
+        "cli" => cli::bench(name, session).await,
         "client" => client::bench(name, session).await,
         "compression" => compression::bench(name, session).await,
         "config" => config::bench(name, session).await,
+        "console" => console::bench(name, session).await,
         "detector" => detector::bench(name, session).await,
         "di" => di::bench(name, session).await,
         "domains" => domains::bench(name, session).await,
@@ -177,10 +200,12 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "locale" => locale::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
+        "platform" => platform::bench(name, session).await,
         "pools" => pools::bench(name, session).await,
         "queue" => queue::bench(name, session).await,
         "registry" => registry::bench(name, session).await,
         "schedule" => schedule::bench(name, session).await,
+        "servers" => servers::bench(name, session).await,
         "smtp" => smtp::bench(name, session).await,
         "span" => span::bench(name, session).await,
         "storage" => storage::bench(name, session).await,

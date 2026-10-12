@@ -7977,6 +7977,47 @@
         "suffix": ""
       },
       "expect": "c"
+    },
+    {
+      "name": "escapeshellarg quotes and escapes single quotes",
+      "op": "string.escapeshellarg",
+      "args": {
+        "arg": "it's a \"test\" $HOME `id`"
+      },
+      "expect": "'it'\\''s a \"test\" $HOME `id`'"
+    },
+    {
+      "name": "escapeshellarg of an empty string",
+      "op": "string.escapeshellarg",
+      "args": {
+        "arg": ""
+      },
+      "expect": "''"
+    },
+    {
+      "name": "escapeshellarg keeps UTF-8 and drops invalid bytes",
+      "op": "string.escapeshellarg",
+      "args": {
+        "arg": {
+          "$bytes": "Y2Fmw6kg//4gb2s="
+        }
+      },
+      "expect": "'café  ok'"
+    },
+    {
+      "name": "escapeshellarg refuses a NUL byte",
+      "op": "string.escapeshellarg",
+      "args": {
+        "arg": {
+          "$bytes": "YQBi"
+        }
+      },
+      "expect": {
+        "$error": {
+          "class": "ValueError",
+          "message": "escapeshellarg(): Argument #1 ($arg) must not contain any null bytes"
+        }
+      }
     }
   ]
 }

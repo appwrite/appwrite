@@ -59,6 +59,7 @@ return [
     'string.ord' => fn (array $a) => ord(...$a),
     'string.chr' => fn (array $a) => chr(...$a),
     'string.quotemeta' => fn (array $a) => quotemeta(...$a),
+    'string.escapeshellarg' => fn (array $a) => escapeshellarg(...$a),
     'string.addcslashes' => fn (array $a) => addcslashes(...$a),
     'string.stripcslashes' => fn (array $a) => stripcslashes(...$a),
     'string.ctype_alnum' => fn (array $a) => ctype_alnum($a['text']),

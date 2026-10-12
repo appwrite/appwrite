@@ -1,0 +1,131 @@
+{
+  "source": "packages/bus/tests/BusTest.php",
+  "cases": [
+    {
+      "name": "testDispatchCallsEachSubscribedListenerWithItsOwnInjections",
+      "op": "bus.dispatch",
+      "args": {
+        "resolver": "suffix",
+        "listeners": [
+          {
+            "class": "clock",
+            "injections": [
+              "clock"
+            ],
+            "behaviour": {
+              "record": true
+            }
+          },
+          {
+            "class": "mailer",
+            "injections": [
+              "mailer"
+            ],
+            "behaviour": {
+              "record": true
+            }
+          }
+        ],
+        "events": [
+          "deployed"
+        ]
+      },
+      "expect": {
+        "calls": [
+          [
+            "clock",
+            "Tests\\Compat\\Bus\\Deployed",
+            [
+              "clock:resolved"
+            ]
+          ],
+          [
+            "mailer",
+            "Tests\\Compat\\Bus\\Deployed",
+            [
+              "mailer:resolved"
+            ]
+          ]
+        ],
+        "error": null,
+        "span": {
+          "clock": {
+            "event": "Tests\\Compat\\Bus\\Deployed",
+            "success": true
+          },
+          "mailer": {
+            "event": "Tests\\Compat\\Bus\\Deployed",
+            "success": true
+          }
+        }
+      }
+    },
+    {
+      "name": "testDispatchSkipsListenersOfOtherEvents",
+      "op": "bus.dispatch",
+      "args": {
+        "resolver": "suffix",
+        "listeners": [
+          {
+            "class": "clock",
+            "injections": [
+              "clock"
+            ],
+            "behaviour": {
+              "record": true
+            }
+          },
+          {
+            "class": "refunds",
+            "injections": [
+              "refunds"
+            ],
+            "behaviour": {
+              "record": true
+            }
+          }
+        ],
+        "events": [
+          "deployed"
+        ]
+      },
+      "expect": {
+        "calls": [
+          [
+            "clock",
+            "Tests\\Compat\\Bus\\Deployed",
+            [
+              "clock:resolved"
+            ]
+          ]
+        ],
+        "error": null,
+        "span": {
+          "clock": {
+            "event": "Tests\\Compat\\Bus\\Deployed",
+            "success": true
+          }
+        }
+      }
+    },
+    {
+      "name": "testDispatchWithoutResolverIsRefused",
+      "op": "bus.dispatch",
+      "args": {
+        "resolver": "none",
+        "listeners": [],
+        "events": [
+          "deployed"
+        ]
+      },
+      "expect": {
+        "calls": [],
+        "error": {
+          "class": "LogicException",
+          "message": "Bus resolver must be set via setResolver() before dispatching events"
+        },
+        "span": []
+      }
+    }
+  ]
+}

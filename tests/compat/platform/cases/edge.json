@@ -1,0 +1,2496 @@
+{
+  "cases": [
+    {
+      "name": "inject checks positions, not names",
+      "op": "action.run",
+      "args": {
+        "steps": [
+          {
+            "inject": "0"
+          },
+          {
+            "inject": "0"
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "inject": "user"
+          },
+          {
+            "inject": "1"
+          },
+          {
+            "inject": "2"
+          },
+          {
+            "inject": "5"
+          },
+          {
+            "inject": "01"
+          },
+          {
+            "get": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Injection already declared for 0",
+            "code": 0
+          }
+        },
+        true,
+        true,
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Injection already declared for 1",
+            "code": 0
+          }
+        },
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Injection already declared for 2",
+            "code": 0
+          }
+        },
+        true,
+        true,
+        {
+          "type": "Default",
+          "desc": null,
+          "groups": [],
+          "callback": false,
+          "params": [],
+          "injections": [
+            "0",
+            "user",
+            "user",
+            "5",
+            "01"
+          ],
+          "labels": [],
+          "options": [
+            [
+              "injection:0",
+              "injection"
+            ],
+            [
+              "injection:user",
+              "injection"
+            ],
+            [
+              "injection:5",
+              "injection"
+            ],
+            [
+              "injection:01",
+              "injection"
+            ]
+          ],
+          "path": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Platform\\Action::getHttpPath(): Return value must be of type string, null returned",
+              "code": 0
+            }
+          },
+          "method": "",
+          "methods": [],
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "name": "an action before anything is set",
+      "op": "action.run",
+      "args": {
+        "steps": [
+          {
+            "get": true
+          }
+        ]
+      },
+      "expect": [
+        {
+          "type": "Default",
+          "desc": null,
+          "groups": [],
+          "callback": false,
+          "params": [],
+          "injections": [],
+          "labels": [],
+          "options": [],
+          "path": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Platform\\Action::getHttpPath(): Return value must be of type string, null returned",
+              "code": 0
+            }
+          },
+          "method": "",
+          "methods": [],
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "name": "http methods: setHttpMethods drops duplicates, setHttpMethod replaces, aliases append",
+      "op": "action.run",
+      "args": {
+        "steps": [
+          {
+            "set_http_methods": [
+              "GET",
+              "POST",
+              "GET",
+              "post"
+            ]
+          },
+          {
+            "get": true
+          },
+          {
+            "set_http_method": "PUT"
+          },
+          {
+            "http_alias": "/a"
+          },
+          {
+            "http_alias": "/a"
+          },
+          {
+            "set_http_path": "/v1/x"
+          },
+          {
+            "set_http_methods": []
+          },
+          {
+            "get": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        {
+          "type": "Default",
+          "desc": null,
+          "groups": [],
+          "callback": false,
+          "params": [],
+          "injections": [],
+          "labels": [],
+          "options": [],
+          "path": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Platform\\Action::getHttpPath(): Return value must be of type string, null returned",
+              "code": 0
+            }
+          },
+          "method": "GET",
+          "methods": [
+            "GET",
+            "POST",
+            "post"
+          ],
+          "aliases": []
+        },
+        true,
+        true,
+        true,
+        true,
+        true,
+        {
+          "type": "Default",
+          "desc": null,
+          "groups": [],
+          "callback": false,
+          "params": [],
+          "injections": [],
+          "labels": [],
+          "options": [],
+          "path": "/v1/x",
+          "method": "",
+          "methods": [],
+          "aliases": [
+            "/a",
+            "/a"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a param declared again keeps its place; options in declaration order",
+      "op": "action.run",
+      "args": {
+        "steps": [
+          {
+            "param": {
+              "key": "a",
+              "default": "x",
+              "validator": {
+                "text": [
+                  3
+                ]
+              }
+            }
+          },
+          {
+            "inject": "db"
+          },
+          {
+            "param": {
+              "key": "b",
+              "default_fn": true,
+              "default": 1,
+              "validator": {
+                "factory": {
+                  "boolean": true
+                }
+              },
+              "injections": [
+                "db"
+              ]
+            }
+          },
+          {
+            "param": {
+              "key": "a",
+              "default": "y",
+              "validator": {
+                "any": true
+              },
+              "enum": {
+                "name": "A",
+                "exclude": [
+                  "z"
+                ]
+              }
+            }
+          },
+          {
+            "label": {
+              "key": "scope",
+              "value": [
+                "x",
+                1
+              ]
+            }
+          },
+          {
+            "label": {
+              "key": "scope",
+              "value": "y"
+            }
+          },
+          {
+            "set_type": "Init"
+          },
+          {
+            "desc": "described"
+          },
+          {
+            "groups": [
+              "api",
+              "*"
+            ]
+          },
+          {
+            "get": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        true,
+        {
+          "type": "Init",
+          "desc": "described",
+          "groups": [
+            "api",
+            "*"
+          ],
+          "callback": false,
+          "params": {
+            "a": {
+              "default": "y",
+              "validator": "Value must be anything",
+              "description": "",
+              "optional": false,
+              "injections": [],
+              "skipValidation": false,
+              "deprecated": false,
+              "example": "",
+              "aliases": [],
+              "enum": {
+                "name": "A",
+                "map": null,
+                "exclude": [
+                  "z"
+                ]
+              }
+            },
+            "b": {
+              "default": "factory",
+              "validator": "factory",
+              "description": "",
+              "optional": false,
+              "injections": [
+                "db"
+              ],
+              "skipValidation": false,
+              "deprecated": false,
+              "example": "",
+              "aliases": [],
+              "enum": null
+            }
+          },
+          "injections": [
+            "db"
+          ],
+          "labels": {
+            "scope": "y"
+          },
+          "options": [
+            [
+              "param:a",
+              "param"
+            ],
+            [
+              "injection:db",
+              "injection"
+            ],
+            [
+              "param:b",
+              "param"
+            ]
+          ],
+          "path": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Platform\\Action::getHttpPath(): Return value must be of type string, null returned",
+              "code": 0
+            }
+          },
+          "method": "",
+          "methods": [],
+          "aliases": []
+        }
+      ]
+    },
+    {
+      "name": "service: add, replace, remove, missing",
+      "op": "service.run",
+      "args": {
+        "type": "Task",
+        "steps": [
+          {
+            "actions": true
+          },
+          {
+            "add_action": {
+              "key": "b",
+              "action": {
+                "desc": "first",
+                "callback": {
+                  "id": "x"
+                }
+              }
+            }
+          },
+          {
+            "add_action": {
+              "key": "a",
+              "action": {}
+            }
+          },
+          {
+            "add_action": {
+              "key": "b",
+              "action": {
+                "desc": "second"
+              }
+            }
+          },
+          {
+            "actions": true
+          },
+          {
+            "action": "b"
+          },
+          {
+            "remove_action": "b"
+          },
+          {
+            "remove_action": "missing"
+          },
+          {
+            "action": "b"
+          },
+          {
+            "actions": true
+          },
+          {
+            "set_type": "Worker"
+          },
+          {
+            "type": true
+          }
+        ]
+      },
+      "expect": [
+        [],
+        true,
+        true,
+        true,
+        [
+          "b",
+          "a"
+        ],
+        {
+          "type": "Default",
+          "desc": "second",
+          "groups": [],
+          "callback": false,
+          "params": [],
+          "injections": [],
+          "labels": [],
+          "options": [],
+          "path": {
+            "$error": {
+              "class": "TypeError",
+              "message": "Utopia\\Platform\\Action::getHttpPath(): Return value must be of type string, null returned",
+              "code": 0
+            }
+          },
+          "method": "",
+          "methods": [],
+          "aliases": []
+        },
+        true,
+        true,
+        null,
+        [
+          "a"
+        ],
+        true,
+        "Worker"
+      ]
+    },
+    {
+      "name": "module: services by key and type; a key added again under another type stays in the first type's list",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "api": {
+              "type": "http",
+              "actions": {
+                "r": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/old"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "id": "old",
+                    "statements": [
+                      {
+                        "send": "old"
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "add_service": {
+              "key": "api",
+              "service": {
+                "type": "Task",
+                "actions": {
+                  "t": {
+                    "callback": {
+                      "id": "t",
+                      "statements": []
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "services": true
+          },
+          {
+            "service": "api"
+          },
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "routes": []
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/old"
+            }
+          },
+          {
+            "remove_service": "api"
+          },
+          {
+            "services": true
+          },
+          {
+            "service": "api"
+          },
+          {
+            "remove_service": "api"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        [
+          "api"
+        ],
+        {
+          "type": "Task",
+          "actions": [
+            "t"
+          ]
+        },
+        null,
+        [
+          {
+            "method": "GET",
+            "template": "old",
+            "path": "/old",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": []
+          }
+        ],
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "old",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        },
+        true,
+        [],
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Service api not found",
+            "code": 0
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "modules register in order after the core module",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "a": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "desc": "core",
+                  "callback": {
+                    "id": "core",
+                    "statements": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "add_module": {
+              "services": {
+                "b": {
+                  "type": "Task",
+                  "actions": {
+                    "build": {
+                      "desc": "module",
+                      "callback": {
+                        "id": "module",
+                        "statements": []
+                      }
+                    },
+                    "deploy": {
+                      "callback": {
+                        "id": "deploy",
+                        "statements": []
+                      }
+                    }
+                  }
+                },
+                "c": {
+                  "type": "http",
+                  "actions": {}
+                }
+              }
+            }
+          },
+          {
+            "set_cli": [
+              "app",
+              "build"
+            ]
+          },
+          {
+            "init": {
+              "type": "Task"
+            }
+          },
+          {
+            "cli": []
+          },
+          {
+            "run_cli": true
+          },
+          {
+            "services": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        true,
+        null,
+        {
+          "tasks": [
+            {
+              "key": "build",
+              "name": "build",
+              "desc": "module",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            },
+            {
+              "key": "deploy",
+              "name": "deploy",
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "args": []
+        },
+        {
+          "calls": [
+            [
+              "module",
+              []
+            ]
+          ],
+          "error": null
+        },
+        [
+          "a"
+        ]
+      ]
+    },
+    {
+      "name": "init: unknown type, GraphQL, worker without a consumer",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "a": {
+              "type": "Task",
+              "actions": {}
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "Other"
+            }
+          },
+          {
+            "init": {
+              "type": "GraphQL"
+            }
+          },
+          {
+            "init": {
+              "type": "Worker"
+            }
+          },
+          {
+            "worker": []
+          },
+          {
+            "init": {
+              "type": "worker"
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Please provide which type of initialization you want to carry out.",
+            "code": 0
+          }
+        },
+        null,
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Worker init requires consumerFactory or consumer",
+            "code": 0
+          }
+        },
+        null,
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Please provide which type of initialization you want to carry out.",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "init with no modules' services of that type still validates the type",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {}
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "Nope"
+            }
+          },
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "routes": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Please provide which type of initialization you want to carry out.",
+            "code": 0
+          }
+        },
+        null,
+        []
+      ]
+    },
+    {
+      "name": "tasks without a CLI build one from the process's arguments",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "a": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "callback": {
+                    "id": "b",
+                    "statements": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "Task"
+            }
+          },
+          {
+            "cli": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Missing command",
+            "code": 0
+          }
+        },
+        null
+      ]
+    },
+    {
+      "name": "a route without a path",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "a": {
+              "type": "http",
+              "actions": {
+                "r": {
+                  "http": {
+                    "method": "GET"
+                  },
+                  "callback": {
+                    "id": "r",
+                    "statements": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "routes": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "TypeError",
+            "message": "Utopia\\Platform\\Action::getHttpPath(): Return value must be of type string, null returned",
+            "code": 0
+          }
+        },
+        []
+      ]
+    },
+    {
+      "name": "a route without methods",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "a": {
+              "type": "http",
+              "actions": {
+                "r": {
+                  "http": {
+                    "path": "/x"
+                  },
+                  "callback": {
+                    "id": "r",
+                    "statements": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "routes": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "At least one HTTP method is required.",
+            "code": 0
+          }
+        },
+        []
+      ]
+    },
+    {
+      "name": "actions without a callback: the hook is registered, then init fails",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "a": {
+              "type": "http",
+              "actions": {
+                "r": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/x"
+                  },
+                  "desc": "route",
+                  "labels": {
+                    "scope": "s"
+                  }
+                }
+              }
+            },
+            "t": {
+              "type": "Task",
+              "actions": {
+                "build": {
+                  "desc": "task",
+                  "groups": [
+                    "g"
+                  ]
+                }
+              }
+            },
+            "w": {
+              "type": "Worker",
+              "actions": {
+                "start": {
+                  "type": "WorkerStart",
+                  "desc": "start"
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "routes": [
+              "scope"
+            ]
+          },
+          {
+            "set_cli": [
+              "app",
+              "build"
+            ]
+          },
+          {
+            "init": {
+              "type": "Task"
+            }
+          },
+          {
+            "cli": []
+          },
+          {
+            "set_worker": true
+          },
+          {
+            "init": {
+              "type": "Worker"
+            }
+          },
+          {
+            "worker": []
+          }
+        ]
+      },
+      "mask": {
+        "paths": [
+          "/*/$error/message"
+        ],
+        "reason": "PHP's TypeError from Hook::action(null) names the calling file and line; Rust reports the message without them (spec.json deviations)"
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "TypeError",
+            "message": "<masked>",
+            "code": 0
+          }
+        },
+        [
+          {
+            "method": "GET",
+            "template": "x",
+            "path": "/x",
+            "methods": [
+              "GET"
+            ],
+            "desc": "route",
+            "groups": [],
+            "params": [],
+            "dependencies": [],
+            "labels": {
+              "scope": "s"
+            }
+          }
+        ],
+        true,
+        {
+          "$error": {
+            "class": "TypeError",
+            "message": "<masked>",
+            "code": 0
+          }
+        },
+        {
+          "tasks": [
+            {
+              "key": "build",
+              "name": "build",
+              "desc": "task",
+              "groups": [
+                "g"
+              ],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "args": []
+        },
+        true,
+        {
+          "$error": {
+            "class": "TypeError",
+            "message": "<masked>",
+            "code": 0
+          }
+        },
+        {
+          "jobs": [],
+          "start": [
+            {
+              "desc": "start",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "stop": []
+        }
+      ]
+    },
+    {
+      "name": "http hooks: init, shutdown, options and error by group; routes get groups, labels, params and injections",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "web": {
+              "type": "http",
+              "actions": {
+                "init": {
+                  "type": "Init",
+                  "groups": [
+                    "api"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "id": "i",
+                    "statements": [
+                      {
+                        "add_header": [
+                          "x-init",
+                          "1"
+                        ]
+                      }
+                    ]
+                  }
+                },
+                "shutdown": {
+                  "type": "Shutdown",
+                  "groups": [
+                    "api"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "id": "s",
+                    "statements": [
+                      {
+                        "emit": "shutdown"
+                      }
+                    ]
+                  }
+                },
+                "options": {
+                  "type": "Options",
+                  "groups": [
+                    "*"
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "id": "o",
+                    "statements": [
+                      {
+                        "send": "options"
+                      }
+                    ]
+                  }
+                },
+                "error": {
+                  "type": "Error",
+                  "groups": [
+                    "*"
+                  ],
+                  "inject": [
+                    "response",
+                    "error"
+                  ],
+                  "callback": {
+                    "id": "e",
+                    "statements": [
+                      {
+                        "emit": {
+                          "inject": "error"
+                        }
+                      },
+                      {
+                        "send": "error"
+                      }
+                    ]
+                  }
+                },
+                "users": {
+                  "http": {
+                    "methods": [
+                      "GET",
+                      "POST"
+                    ],
+                    "path": "/v1/users/:userId",
+                    "aliases": [
+                      "/v1/people/:userId"
+                    ]
+                  },
+                  "groups": [
+                    "api"
+                  ],
+                  "labels": {
+                    "scope": "users.read",
+                    "sdk": {
+                      "name": "get"
+                    }
+                  },
+                  "params": [
+                    {
+                      "key": "userId",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          10
+                        ]
+                      },
+                      "description": "User ID."
+                    },
+                    {
+                      "key": "limit",
+                      "default": 25,
+                      "validator": {
+                        "range": [
+                          1,
+                          100
+                        ]
+                      },
+                      "optional": true,
+                      "aliases": [
+                        "max"
+                      ]
+                    }
+                  ],
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "id": "u",
+                    "statements": [
+                      {
+                        "emit": {
+                          "param": "userId"
+                        }
+                      },
+                      {
+                        "emit": {
+                          "param": "limit"
+                        }
+                      },
+                      {
+                        "send": "user"
+                      }
+                    ]
+                  }
+                },
+                "fail": {
+                  "http": {
+                    "method": "GET",
+                    "path": "/fail"
+                  },
+                  "inject": [
+                    "response"
+                  ],
+                  "callback": {
+                    "id": "f",
+                    "statements": [
+                      {
+                        "throw": {
+                          "message": "failed",
+                          "code": 503
+                        }
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "init": {
+              "type": "http"
+            }
+          },
+          {
+            "routes": [
+              "scope",
+              "sdk",
+              "missing"
+            ]
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/v1/users/u1?limit=5"
+            }
+          },
+          {
+            "request": {
+              "method": "POST",
+              "uri": "/v1/people/u2?max=7"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/v1/users/toolongtobevalid"
+            }
+          },
+          {
+            "request": {
+              "method": "OPTIONS",
+              "uri": "/v1/users/u1"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/missing"
+            }
+          },
+          {
+            "request": {
+              "method": "GET",
+              "uri": "/fail"
+            }
+          },
+          {
+            "init": {
+              "type": "http"
+            }
+          }
+        ]
+      },
+      "expect": [
+        null,
+        [
+          {
+            "method": "GET",
+            "template": "v1/users/:::",
+            "path": "/v1/users/:userId",
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "desc": "",
+            "groups": [
+              "api"
+            ],
+            "params": {
+              "userId": {
+                "default": "",
+                "validator": "Value must be a valid string and at least 1 chars and no longer than 10 chars",
+                "description": "User ID.",
+                "optional": false,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [],
+                "enum": null
+              },
+              "limit": {
+                "default": 25,
+                "validator": "Value must be a valid range between 1 and 100",
+                "description": "",
+                "optional": true,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [
+                  "max"
+                ],
+                "enum": null
+              }
+            },
+            "dependencies": [
+              "response"
+            ],
+            "labels": {
+              "scope": "users.read",
+              "sdk": {
+                "name": "get"
+              },
+              "missing": null
+            }
+          },
+          {
+            "method": "GET",
+            "template": "v1/people/:::",
+            "path": "/v1/users/:userId",
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "desc": "",
+            "groups": [
+              "api"
+            ],
+            "params": {
+              "userId": {
+                "default": "",
+                "validator": "Value must be a valid string and at least 1 chars and no longer than 10 chars",
+                "description": "User ID.",
+                "optional": false,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [],
+                "enum": null
+              },
+              "limit": {
+                "default": 25,
+                "validator": "Value must be a valid range between 1 and 100",
+                "description": "",
+                "optional": true,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [
+                  "max"
+                ],
+                "enum": null
+              }
+            },
+            "dependencies": [
+              "response"
+            ],
+            "labels": {
+              "scope": "users.read",
+              "sdk": {
+                "name": "get"
+              },
+              "missing": null
+            }
+          },
+          {
+            "method": "GET",
+            "template": "fail",
+            "path": "/fail",
+            "methods": [
+              "GET"
+            ],
+            "desc": "",
+            "groups": [],
+            "params": [],
+            "dependencies": [
+              "response"
+            ],
+            "labels": {
+              "scope": null,
+              "sdk": null,
+              "missing": null
+            }
+          },
+          {
+            "method": "POST",
+            "template": "v1/users/:::",
+            "path": "/v1/users/:userId",
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "desc": "",
+            "groups": [
+              "api"
+            ],
+            "params": {
+              "userId": {
+                "default": "",
+                "validator": "Value must be a valid string and at least 1 chars and no longer than 10 chars",
+                "description": "User ID.",
+                "optional": false,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [],
+                "enum": null
+              },
+              "limit": {
+                "default": 25,
+                "validator": "Value must be a valid range between 1 and 100",
+                "description": "",
+                "optional": true,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [
+                  "max"
+                ],
+                "enum": null
+              }
+            },
+            "dependencies": [
+              "response"
+            ],
+            "labels": {
+              "scope": "users.read",
+              "sdk": {
+                "name": "get"
+              },
+              "missing": null
+            }
+          },
+          {
+            "method": "POST",
+            "template": "v1/people/:::",
+            "path": "/v1/users/:userId",
+            "methods": [
+              "GET",
+              "POST"
+            ],
+            "desc": "",
+            "groups": [
+              "api"
+            ],
+            "params": {
+              "userId": {
+                "default": "",
+                "validator": "Value must be a valid string and at least 1 chars and no longer than 10 chars",
+                "description": "User ID.",
+                "optional": false,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [],
+                "enum": null
+              },
+              "limit": {
+                "default": 25,
+                "validator": "Value must be a valid range between 1 and 100",
+                "description": "",
+                "optional": true,
+                "injections": [],
+                "skipValidation": false,
+                "deprecated": false,
+                "example": "",
+                "model": null,
+                "aliases": [
+                  "max"
+                ],
+                "enum": null
+              }
+            },
+            "dependencies": [
+              "response"
+            ],
+            "labels": {
+              "scope": "users.read",
+              "sdk": {
+                "name": "get"
+              },
+              "missing": null
+            }
+          }
+        ],
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-init": [
+                "1"
+              ],
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-init",
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "user",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [
+            "u1",
+            "5",
+            "shutdown"
+          ],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-init": [
+                "1"
+              ],
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-init",
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "user",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [
+            "u2",
+            25,
+            "shutdown"
+          ],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-init": [
+                "1"
+              ],
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-init",
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "error",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [
+            {
+              "class": "Utopia\\Http\\Exception",
+              "message": "Invalid `userId` param: Value must be a valid string and at least 1 chars and no longer than 10 chars",
+              "code": 400,
+              "previous": null
+            }
+          ],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "options",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "error",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [
+            {
+              "class": "Utopia\\Http\\Exception",
+              "message": "Not Found",
+              "code": 404,
+              "previous": null
+            }
+          ],
+          "error": null
+        },
+        {
+          "wire": {
+            "status": 200,
+            "headers": {
+              "x-debug-speed": "<masked>"
+            },
+            "order": [
+              "x-debug-speed"
+            ],
+            "cookies": [],
+            "body": "error",
+            "writes": 0,
+            "ended": true
+          },
+          "out": [
+            {
+              "class": "Exception",
+              "message": "failed",
+              "code": 503,
+              "previous": null
+            }
+          ],
+          "error": null
+        },
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Route for (GET:v1/users/:::) already registered.",
+            "code": 0
+          }
+        }
+      ]
+    },
+    {
+      "name": "task hooks: init, shutdown and error around the task; params and labels forwarded",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "cli": {
+              "type": "Task",
+              "actions": {
+                "init": {
+                  "type": "Init",
+                  "callback": {
+                    "id": "init",
+                    "statements": []
+                  }
+                },
+                "shutdown": {
+                  "type": "Shutdown",
+                  "callback": {
+                    "id": "shutdown",
+                    "statements": []
+                  }
+                },
+                "error": {
+                  "type": "Error",
+                  "inject": [
+                    "error"
+                  ],
+                  "callback": {
+                    "id": "error",
+                    "statements": []
+                  }
+                },
+                "build": {
+                  "desc": "Build",
+                  "groups": [
+                    "g"
+                  ],
+                  "labels": {
+                    "scope": "x"
+                  },
+                  "params": [
+                    {
+                      "key": "email",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          20
+                        ]
+                      },
+                      "aliases": [
+                        "e"
+                      ],
+                      "example": "me@example.com",
+                      "deprecated": true,
+                      "enum": {
+                        "name": "E"
+                      }
+                    },
+                    {
+                      "key": "dry-run",
+                      "default": false,
+                      "validator": {
+                        "boolean": true
+                      },
+                      "optional": true
+                    }
+                  ],
+                  "callback": {
+                    "id": "build",
+                    "statements": []
+                  }
+                },
+                "fail": {
+                  "callback": {
+                    "id": "fail",
+                    "fail": {
+                      "message": "boom",
+                      "code": 2
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "set_cli": [
+              "app",
+              "build",
+              "--e=me@example.com",
+              "--dry-run=true"
+            ]
+          },
+          {
+            "init": {
+              "type": "Task"
+            }
+          },
+          {
+            "cli": [
+              "scope"
+            ]
+          },
+          {
+            "run_cli": true
+          },
+          {
+            "set_cli": [
+              "app",
+              "fail"
+            ]
+          },
+          {
+            "init": {
+              "type": "Task"
+            }
+          },
+          {
+            "run_cli": true
+          },
+          {
+            "set_cli": [
+              "app",
+              "build",
+              "--email=invalid-because-it-is-too-long"
+            ]
+          },
+          {
+            "init": {
+              "type": "Task"
+            }
+          },
+          {
+            "run_cli": true
+          }
+        ]
+      },
+      "expect": [
+        true,
+        null,
+        {
+          "tasks": [
+            {
+              "key": "build",
+              "name": "build",
+              "desc": "Build",
+              "groups": [
+                "g"
+              ],
+              "params": {
+                "email": {
+                  "default": "",
+                  "validator": "Value must be a valid string and at least 1 chars and no longer than 20 chars",
+                  "description": "",
+                  "optional": false,
+                  "injections": [],
+                  "skipValidation": false,
+                  "deprecated": true,
+                  "example": "me@example.com",
+                  "model": null,
+                  "aliases": [
+                    "e"
+                  ],
+                  "enum": {
+                    "name": "E",
+                    "map": null,
+                    "exclude": null
+                  }
+                },
+                "dry-run": {
+                  "default": false,
+                  "validator": "Value must be a valid boolean",
+                  "description": "",
+                  "optional": true,
+                  "injections": [],
+                  "skipValidation": false,
+                  "deprecated": false,
+                  "example": "",
+                  "model": null,
+                  "aliases": [],
+                  "enum": null
+                }
+              },
+              "dependencies": [],
+              "labels": {
+                "scope": "x"
+              }
+            },
+            {
+              "key": "fail",
+              "name": "fail",
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": {
+                "scope": null
+              }
+            }
+          ],
+          "args": {
+            "e": "me@example.com",
+            "dry-run": "true"
+          }
+        },
+        {
+          "calls": [
+            [
+              "init",
+              []
+            ],
+            [
+              "build",
+              {
+                "email": "me@example.com",
+                "dryRun": true
+              }
+            ],
+            [
+              "shutdown",
+              []
+            ]
+          ],
+          "error": null
+        },
+        true,
+        null,
+        {
+          "calls": [
+            [
+              "init",
+              []
+            ],
+            [
+              "fail",
+              []
+            ],
+            [
+              "error",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "boom",
+                    "code": 2
+                  }
+                }
+              }
+            ]
+          ],
+          "error": null
+        },
+        true,
+        null,
+        {
+          "calls": [
+            [
+              "init",
+              []
+            ],
+            [
+              "error",
+              {
+                "error": {
+                  "$exception": {
+                    "class": "Exception",
+                    "message": "Invalid email: Value must be a valid string and at least 1 chars and no longer than 20 chars",
+                    "code": 400
+                  }
+                }
+              }
+            ]
+          ],
+          "error": null
+        }
+      ]
+    },
+    {
+      "name": "worker init: names, case, queues, coroutines, prefetch and refusals",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "w": {
+              "type": "Worker",
+              "actions": {
+                "Databases": {
+                  "desc": "db",
+                  "groups": [
+                    "db"
+                  ],
+                  "labels": {
+                    "scope": "d"
+                  },
+                  "params": [
+                    {
+                      "key": "id",
+                      "default": "",
+                      "validator": {
+                        "text": [
+                          5
+                        ]
+                      },
+                      "optional": true,
+                      "aliases": [
+                        "identifier"
+                      ]
+                    }
+                  ],
+                  "inject": [
+                    "message"
+                  ],
+                  "callback": {
+                    "id": "databases",
+                    "statements": []
+                  }
+                },
+                "functions": {
+                  "callback": {
+                    "id": "functions",
+                    "statements": []
+                  }
+                },
+                "init": {
+                  "type": "Init",
+                  "callback": {
+                    "id": "init",
+                    "statements": []
+                  }
+                },
+                "start": {
+                  "type": "WorkerStart",
+                  "labels": {
+                    "scope": "s"
+                  },
+                  "callback": {
+                    "id": "start",
+                    "statements": []
+                  }
+                },
+                "stop": {
+                  "type": "WorkerStop",
+                  "callback": {
+                    "id": "stop",
+                    "statements": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "set_worker": true
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "workers": [
+                  "DATABASES"
+                ],
+                "jobs": {
+                  "databases": {
+                    "coroutines": 4
+                  }
+                }
+              }
+            }
+          },
+          {
+            "worker": [
+              "scope"
+            ]
+          },
+          {
+            "set_worker": true
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "workerName": "functions",
+                "queueName": "shared"
+              }
+            }
+          },
+          {
+            "worker": []
+          },
+          {
+            "set_worker": true
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "jobs": {
+                  "functions": {
+                    "coroutines": 0,
+                    "prefetch": 0
+                  }
+                }
+              }
+            }
+          },
+          {
+            "worker": []
+          },
+          {
+            "set_worker": true
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "jobs": {
+                  "databases": {
+                    "coroutines": 4,
+                    "prefetch": 2
+                  }
+                }
+              }
+            }
+          },
+          {
+            "worker": []
+          },
+          {
+            "set_worker": true
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "jobs": {
+                  "databases": {
+                    "queue": ""
+                  }
+                }
+              }
+            }
+          },
+          {
+            "worker": []
+          },
+          {
+            "worker_hooks": "start"
+          },
+          {
+            "worker_hooks": "stop"
+          }
+        ]
+      },
+      "expect": [
+        true,
+        null,
+        {
+          "jobs": [
+            {
+              "queue": "v1-databases",
+              "coroutines": 4,
+              "prefetch": 4,
+              "desc": "db",
+              "groups": [
+                "db"
+              ],
+              "params": [
+                "id"
+              ],
+              "dependencies": [
+                "message"
+              ],
+              "labels": {
+                "scope": "d"
+              }
+            }
+          ],
+          "start": [
+            {
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": {
+                "scope": "s"
+              }
+            }
+          ],
+          "stop": [
+            {
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": {
+                "scope": null
+              }
+            }
+          ]
+        },
+        true,
+        null,
+        {
+          "jobs": [
+            {
+              "queue": "shared",
+              "coroutines": 1,
+              "prefetch": 1,
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "start": [
+            {
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "stop": [
+            {
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ]
+        },
+        true,
+        {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Prefetch must be at least the number of coroutines",
+            "code": 0
+          }
+        },
+        {
+          "jobs": [
+            {
+              "queue": "v1-databases",
+              "coroutines": 1,
+              "prefetch": 1,
+              "desc": "db",
+              "groups": [
+                "db"
+              ],
+              "params": [
+                "id"
+              ],
+              "dependencies": [
+                "message"
+              ],
+              "labels": []
+            }
+          ],
+          "start": [],
+          "stop": []
+        },
+        true,
+        {
+          "$error": {
+            "class": "InvalidArgumentException",
+            "message": "Prefetch must be at least the number of coroutines",
+            "code": 0
+          }
+        },
+        {
+          "jobs": [],
+          "start": [],
+          "stop": []
+        },
+        true,
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Queue name is required",
+            "code": 0
+          }
+        },
+        {
+          "jobs": [],
+          "start": [],
+          "stop": []
+        },
+        [],
+        []
+      ]
+    },
+    {
+      "name": "worker init creates its server once, from the consumer",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {
+            "w": {
+              "type": "Worker",
+              "actions": {
+                "a": {
+                  "callback": {
+                    "id": "a",
+                    "statements": []
+                  }
+                },
+                "b": {
+                  "callback": {
+                    "id": "b",
+                    "statements": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        "steps": [
+          {
+            "worker": []
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "consumer": true,
+                "workerName": "a",
+                "namespace": "ns"
+              }
+            }
+          },
+          {
+            "worker": []
+          },
+          {
+            "init": {
+              "type": "Worker",
+              "params": {
+                "workerName": "b"
+              }
+            }
+          },
+          {
+            "worker": []
+          }
+        ]
+      },
+      "expect": [
+        null,
+        null,
+        {
+          "jobs": [
+            {
+              "queue": "v1-a",
+              "coroutines": 1,
+              "prefetch": 1,
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "start": [],
+          "stop": []
+        },
+        null,
+        {
+          "jobs": [
+            {
+              "queue": "v1-a",
+              "coroutines": 1,
+              "prefetch": 1,
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            },
+            {
+              "queue": "v1-b",
+              "coroutines": 1,
+              "prefetch": 1,
+              "desc": "",
+              "groups": [],
+              "params": [],
+              "dependencies": [],
+              "labels": []
+            }
+          ],
+          "start": [],
+          "stop": []
+        }
+      ]
+    },
+    {
+      "name": "getService of a missing key",
+      "op": "platform.run",
+      "args": {
+        "core": {
+          "services": {}
+        },
+        "steps": [
+          {
+            "service": "missing"
+          },
+          {
+            "services": true
+          },
+          {
+            "cli": []
+          },
+          {
+            "worker": []
+          },
+          {
+            "run_cli": true
+          },
+          {
+            "worker_hooks": "start"
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Exception",
+            "message": "Service missing not found",
+            "code": 0
+          }
+        },
+        [],
+        null,
+        null,
+        null,
+        null
+      ]
+    }
+  ]
+}

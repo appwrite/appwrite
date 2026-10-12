@@ -1,0 +1,75 @@
+{
+  "lib": "servers",
+  "environment": {
+    "date": "2026-10-12T00:44:03Z",
+    "commit": "9acda67221",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "declare",
+      "description": "Declare a hook with three params, two injections, groups and a label",
+      "php": {
+        "ns": 3903.6326690113324,
+        "min": 1037.7100429855411,
+        "max": 9711.386283704573,
+        "samples": 15,
+        "calls": 5118
+      },
+      "rust": {
+        "ns": 1168.1869896097578,
+        "min": 729.4873683844737,
+        "max": 2039.2008548493588,
+        "samples": 15,
+        "calls": 28777,
+        "allocations": 23.00000231666493,
+        "bytes": 1912.0002779997915
+      },
+      "speedup": 3.341616285518958,
+      "bound": null
+    },
+    {
+      "name": "prepare",
+      "description": "Resolve and validate three params of a hook from the request",
+      "php": {
+        "ns": 1791.782242632989,
+        "min": 1511.1182548794488,
+        "max": 3481.749904324531,
+        "samples": 15,
+        "calls": 10452
+      },
+      "rust": {
+        "ns": 1013.3619059390643,
+        "min": 612.4441629071133,
+        "max": 1777.2696372288488,
+        "samples": 15,
+        "calls": 16181,
+        "allocations": 18.000004120058506,
+        "bytes": 718.0004944070206
+      },
+      "speedup": 1.7681563044079267,
+      "bound": null
+    }
+  ]
+}

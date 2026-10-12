@@ -158,6 +158,7 @@ impl Scope {
 pub struct Hook {
     desc: String,
     groups: Vec<String>,
+    labels: IndexMap<String, serde_json::Value>,
     params: IndexMap<String, Param>,
     injections: Vec<String>,
     order: Vec<(bool, String)>,
@@ -190,6 +191,21 @@ impl Hook {
     /// The groups.
     pub fn group_names(&self) -> Vec<&str> {
         self.groups.iter().map(String::as_str).collect()
+    }
+
+    /// Sets the label `key` (metadata the server does not read).
+    ///
+    /// PHP: `label($key, $value)`.
+    pub fn label(&mut self, key: &str, value: serde_json::Value) -> &mut Self {
+        self.labels.insert(key.to_owned(), value);
+        self
+    }
+
+    /// The label `key`, if set.
+    ///
+    /// PHP: `getLabel($key, $default)`, which returns `$default` when unset.
+    pub fn get_label(&self, key: &str) -> Option<&serde_json::Value> {
+        self.labels.get(key)
     }
 
     /// Declares a param read from the payload.
@@ -246,6 +262,13 @@ impl Hook {
     /// The declared injections.
     pub fn injections(&self) -> &[String] {
         &self.injections
+    }
+
+    /// The callback, once set.
+    ///
+    /// PHP: `getAction()`, a callback doing nothing until one is set.
+    pub fn get_action(&self) -> Option<&Action> {
+        self.action.as_ref()
     }
 
     /// Resolves the arguments and runs the callback.

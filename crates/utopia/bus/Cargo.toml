@@ -1,0 +1,15 @@
+[package]
+name = "utopia-bus"
+description = "A synchronous in-process event bus: typed events, listeners with injected dependencies, failures isolated and recorded on the current span."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+thiserror.workspace = true
+utopia-span.workspace = true
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

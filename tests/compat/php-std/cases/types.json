@@ -2710,6 +2710,159 @@
           }
         ]
       }
+    },
+    {
+      "name": "array_ops: separating an emptied array keeps its next free index (uninitialized dup)",
+      "op": "types.array_ops",
+      "args": {
+        "a": {
+          "$array": []
+        },
+        "ops": [
+          {
+            "op": "push",
+            "k": "",
+            "v": null
+          },
+          {
+            "op": "unset",
+            "k": "0",
+            "v": null
+          },
+          {
+            "op": "copy",
+            "k": "",
+            "v": 0
+          },
+          {
+            "op": "push",
+            "k": ""
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              1,
+              null
+            ]
+          ]
+        },
+        "results": [
+          0,
+          null,
+          0,
+          1
+        ],
+        "list": false,
+        "copies": [
+          []
+        ]
+      }
+    },
+    {
+      "name": "array_ops: a key below the minimum table size makes a separated empty array packed again",
+      "op": "types.array_ops",
+      "args": {
+        "a": [],
+        "ops": [
+          {
+            "op": "set",
+            "k": 9223372036854775806,
+            "v": 1000000000000000.0
+          },
+          {
+            "op": "unset",
+            "k": 9223372036854775806
+          },
+          {
+            "op": "copy"
+          },
+          {
+            "op": "set",
+            "k": 5,
+            "v": -4294967295
+          },
+          {
+            "op": "push",
+            "v": -65536
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              5,
+              -4294967295
+            ],
+            [
+              6,
+              -65536
+            ]
+          ]
+        },
+        "results": [
+          null,
+          null,
+          0,
+          null,
+          6
+        ],
+        "list": false,
+        "copies": [
+          []
+        ]
+      }
+    },
+    {
+      "name": "array_ops: a separated empty array pushes at PHP_INT_MAX",
+      "op": "types.array_ops",
+      "args": {
+        "a": {
+          "$array": [
+            {
+              "k": 9223372036854775807,
+              "v": 0
+            }
+          ]
+        },
+        "ops": [
+          {
+            "op": "unset",
+            "k": "9223372036854775807"
+          },
+          {
+            "op": "copy",
+            "k": ""
+          },
+          {
+            "op": "push",
+            "k": "",
+            "v": ""
+          }
+        ]
+      },
+      "expect": {
+        "array": {
+          "$array": [
+            [
+              9223372036854775807,
+              ""
+            ]
+          ]
+        },
+        "results": [
+          null,
+          0,
+          9223372036854775807
+        ],
+        "list": false,
+        "copies": [
+          []
+        ]
+      }
     }
   ]
 }

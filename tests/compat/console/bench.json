@@ -1,0 +1,75 @@
+{
+  "lib": "console",
+  "environment": {
+    "date": "2026-10-12T00:44:15Z",
+    "commit": "9acda67221",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "build",
+      "description": "Build a plain command with a flag, two options and an argument",
+      "php": {
+        "ns": 1618.6405329076622,
+        "min": 1251.1537328094303,
+        "max": 2521.183816306483,
+        "samples": 15,
+        "calls": 16288
+      },
+      "rust": {
+        "ns": 307.84506997706967,
+        "min": 274.6092670198466,
+        "max": 1002.3180833399225,
+        "samples": 15,
+        "calls": 63235,
+        "allocations": 13.00000105426847,
+        "bytes": 376.00012651221635
+      },
+      "speedup": 5.25797126791158,
+      "bound": null
+    },
+    {
+      "name": "render",
+      "description": "Render a redirected pipeline of two commands as a quoted shell string",
+      "php": {
+        "ns": 2052.2299571603426,
+        "min": 1224.3026315789473,
+        "max": 3799.8776009791923,
+        "samples": 15,
+        "calls": 6536
+      },
+      "rust": {
+        "ns": 441.17001806140877,
+        "min": 385.2097531607465,
+        "max": 1381.7128236002409,
+        "samples": 15,
+        "calls": 8305,
+        "allocations": 10.000008027292795,
+        "bytes": 197.00096327513546
+      },
+      "speedup": 4.651789272032267,
+      "bound": null
+    }
+  ]
+}

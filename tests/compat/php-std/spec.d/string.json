@@ -1901,6 +1901,34 @@
         }
       ]
     },
+    "string.escapeshellarg": {
+      "doc": "escapeshellarg($arg): quotes, embedded quotes, UTF-8 characters kept, invalid bytes dropped, NUL rejected",
+      "fuzz": [
+        {
+          "args": {
+            "gen": "object",
+            "fields": {
+              "arg": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "'\" $`abé",
+                    "min": 0,
+                    "max": 12
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "string_bytes"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
     "string.addcslashes": {
       "doc": "addcslashes($string, $characters)",
       "fuzz": [

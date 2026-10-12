@@ -40,5 +40,7 @@ unsafe impl GlobalAlloc for Counting {
 static ALLOCATOR: Counting = Counting;
 
 fn main() -> std::io::Result<()> {
+    // A child the console adapter started to observe stdio and exit().
+    compat::libs::console::child();
     tokio::runtime::Builder::new_current_thread().enable_all().build()?.block_on(compat::driver::serve())
 }

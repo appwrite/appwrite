@@ -58,6 +58,11 @@ utopia-detector = { path = "crates/utopia/detector" }
 utopia-schedule = { path = "crates/utopia/schedule" }
 utopia-websocket = { path = "crates/utopia/websocket" }
 utopia-storage = { path = "crates/utopia/storage" }
+utopia-bus = { path = "crates/utopia/bus" }
+utopia-cli = { path = "crates/utopia/cli" }
+utopia-console = { path = "crates/utopia/console" }
+utopia-platform = { path = "crates/utopia/platform" }
+utopia-servers = { path = "crates/utopia/servers" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }

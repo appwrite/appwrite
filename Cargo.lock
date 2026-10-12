@@ -576,11 +576,14 @@ dependencies = [
  "utopia-abuse",
  "utopia-auth",
  "utopia-balancer",
+ "utopia-bus",
  "utopia-cache",
  "utopia-circuit-breaker",
+ "utopia-cli",
  "utopia-client",
  "utopia-compression",
  "utopia-config",
+ "utopia-console",
  "utopia-database",
  "utopia-detector",
  "utopia-di",
@@ -591,10 +594,12 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-lock",
+ "utopia-platform",
  "utopia-pools",
  "utopia-queue",
  "utopia-registry",
  "utopia-schedule",
+ "utopia-servers",
  "utopia-smtp",
  "utopia-span",
  "utopia-storage",
@@ -3413,6 +3418,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-bus"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+ "utopia-span",
+]
+
+[[package]]
 name = "utopia-cache"
 version = "0.1.0"
 dependencies = [
@@ -3444,6 +3457,20 @@ dependencies = [
  "thiserror",
  "tokio",
  "utopia-telemetry",
+]
+
+[[package]]
+name = "utopia-cli"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "indexmap",
+ "php-std",
+ "serde_json",
+ "tokio",
+ "utopia-di",
+ "utopia-servers",
+ "utopia-validators",
 ]
 
 [[package]]
@@ -3484,6 +3511,17 @@ version = "0.1.0"
 dependencies = [
  "php-std",
  "thiserror",
+ "utopia-validators",
+]
+
+[[package]]
+name = "utopia-console"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "serde_json",
+ "thiserror",
+ "tokio",
  "utopia-validators",
 ]
 
@@ -3618,6 +3656,23 @@ dependencies = [
 ]
 
 [[package]]
+name = "utopia-platform"
+version = "0.1.0"
+dependencies = [
+ "futures-util",
+ "indexmap",
+ "php-std",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "utopia-cli",
+ "utopia-http",
+ "utopia-queue",
+ "utopia-servers",
+ "utopia-validators",
+]
+
+[[package]]
 name = "utopia-pools"
 version = "0.1.0"
 dependencies = [
@@ -3667,6 +3722,18 @@ dependencies = [
  "thiserror",
  "tokio",
  "utopia-telemetry",
+]
+
+[[package]]
+name = "utopia-servers"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "utopia-di",
+ "utopia-validators",
 ]
 
 [[package]]

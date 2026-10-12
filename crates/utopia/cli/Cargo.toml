@@ -1,0 +1,23 @@
+[package]
+name = "utopia-cli"
+description = "Command-line applications: tasks with validated params and injected resources, init, shutdown and error hooks, and adapters that run them."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+futures-util.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+serde_json.workspace = true
+utopia-di.workspace = true
+utopia-servers.workspace = true
+utopia-validators.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"
