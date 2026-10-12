@@ -291,10 +291,11 @@ impl Database {
         let relationships = relationship_attributes(&collection);
         let selects = Query::group_by_type(&queries).selections;
         let selections = self.validate_selections(&collection, &selects)?;
+        let mut queries = queries;
         let nested_selections = if relationships.is_empty() {
             Vec::new()
         } else {
-            self.process_relationship_queries(&relationships, &queries)?
+            self.process_relationship_queries(&relationships, &mut queries)?
         };
         let document_security = collection.get("documentSecurity").is_some_and(Value::truthy);
         let (collection_key, document_key, hash_key) = self.cache_keys(collection.id(), Some(id), &selections);
@@ -981,16 +982,14 @@ impl Database {
                                 skip_permissions_update = sorted(document.permissions()) == *current_permissions;
                             }
                             document.set("$skipPermissionsUpdate", Value::Bool(skip_permissions_update));
-                            let new = Document::new(array_merge(
+                            let mut new = Document::new(array_merge(
                                 document.array_copy(&[], &[]),
                                 updates.array_copy(&[], &[]),
                             ))?;
                             if has_relationships && self.state().resolve_relationships {
-                                self.silent(
-                                    || self.update_document_relationships(collection, &document, new.clone()),
-                                    None,
-                                )
-                                .await?;
+                                new = self
+                                    .silent(|| self.update_document_relationships(collection, &document, new), None)
+                                    .await?;
                             }
                             self.check_timestamp(new.get("$updatedAt"))?;
                             let encoded = self.encode(collection, new, true).await?;
@@ -1727,8 +1726,6 @@ impl Database {
     /// select (internal attributes stay).
     ///
     /// PHP: `Database::applySelectFiltersToDocuments()` (private).
-    // TEMPORARY (phase B): batch relationship population calls it.
-    #[allow(dead_code)]
     pub(crate) fn apply_select_filters_to_documents(&self, documents: &mut [Document], select_queries: &[Query]) {
         if select_queries.is_empty() || documents.is_empty() {
             return;

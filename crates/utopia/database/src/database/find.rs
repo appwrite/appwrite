@@ -110,7 +110,7 @@ impl Database {
         let nested_selections = if relationships.is_empty() {
             Vec::new()
         } else {
-            self.process_relationship_queries(&relationships, &queries)?
+            self.process_relationship_queries(&relationships, &mut queries)?
         };
 
         let queries = if relationships.is_empty() {
@@ -521,6 +521,8 @@ impl Database {
     /// PHP: `Database::checkQueryTypes()` (private). Top-level queries are
     /// typed here; only the values of nested queries (`and`, `or`,
     /// `elemMatch`, ...) can hold something else.
+    // A method like PHP's (Rust 1.88's clippy flags `self` as only recursed with).
+    #[allow(clippy::only_used_in_recursion)]
     pub(crate) fn check_query_types(&self, queries: &[Query]) -> Result<()> {
         for query in queries {
             if !query.is_nested() {
