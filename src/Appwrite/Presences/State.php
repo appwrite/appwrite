@@ -65,6 +65,15 @@ class State
 
             if (!$isAPIKey && !$isPrivilegedUser) {
                 $this->checkPermissions($permissions, $authorization);
+
+                // Whatever roles a client shares its presence with, it must still be able to
+                // heartbeat, update and delete it.
+                if (!empty($user->getId())) {
+                    foreach ([Database::PERMISSION_UPDATE, Database::PERMISSION_DELETE] as $permission) {
+                        $permissions[] = (new Permission($permission, 'user', $user->getId()))->toString();
+                    }
+                    $permissions = \array_values(\array_unique($permissions));
+                }
             }
         }
 
