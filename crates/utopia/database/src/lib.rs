@@ -36,6 +36,11 @@
 
 #![warn(missing_docs)]
 
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+
 pub mod adapter;
 pub mod change;
 pub mod connection;

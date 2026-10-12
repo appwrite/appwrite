@@ -239,6 +239,20 @@ bin/compat-php tests/compat/database/recorder/record.php shared     # cases/Scop
 bin/compat record database --case Scope                             # their expectations
 ```
 
+### Tasks
+
+The PHP package ships no `bin` in its `composer.json`, and its scripts (`build`, `start`, `test`, `lint`, `format`, `check`, `coverage`) are development tooling. Its programs are the benchmarking CLI under `bin/`, waived (record them under `tasks_waived` in `spec.d/core.json` once this branch has the tasks tooling):
+
+| Program | Waiver |
+|---|---|
+| `vendor/utopia-php/database/bin/cli.php` | The entry point of the benchmarking tasks below (a `Utopia\CLI` app); no product behaviour |
+| `vendor/utopia-php/database/bin/tasks/load.php` | Development benchmark: fills a scratch MariaDB, MySQL, PostgreSQL or MongoDB database of the library's docker-compose stack with mock articles through Swoole PDO pools and times it; `bin/compat bench database` compares both runtimes' writes |
+| `vendor/utopia-php/database/bin/tasks/index.php` | Development benchmark: adds the mock data's indexes to that scratch database and times them |
+| `vendor/utopia-php/database/bin/tasks/query.php` | Development benchmark: times queries over the mock data for growing role counts and writes the timings to `bin/view/results`; `bin/compat bench database` compares both runtimes' finds |
+| `vendor/utopia-php/database/bin/tasks/relationships.php` | Development benchmark: loads and times mock relationship graphs in that scratch database |
+| `vendor/utopia-php/database/bin/tasks/operators.php` | Development benchmark: times operator updates against read-modify-write in that scratch database |
+| `vendor/utopia-php/database/bin/view/index.php` | An HTML page charting the `query` task's result files; no library behaviour |
+
 ## php-std
 
 `tests/compat/php-std` checks the PHP engine functions reimplemented in `crates/support/php-std` (the value model, type juggling, string and number formatting, JSON, `serialize`, igbinary, sorting, `filter_var`, `parse_url`) against the real built-ins. Its operations live in `ops/<area>.php` and `src/libs/php_std/<area>.rs`, one file per area.
