@@ -104,6 +104,8 @@ $platformCollections = [
             Attribute::string(key: 'store', size: 256),
             // For web platforms
             Attribute::string(key: 'hostname', size: 256),
+            // For Android platforms
+            Attribute::string(key: 'fingerprints', size: 128, array: true),
         ],
         'indexes' => [
             Index::key(key: '_key_project', attributes: ['projectInternalId'], lengths: [Database::LENGTH_KEY], orders: [OrderDirection::Asc]),
