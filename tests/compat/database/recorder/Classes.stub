@@ -26,6 +26,18 @@ class RecordingMirror extends \Utopia\Database\Mirror
 {
 }
 
+class RecordingSQLite extends \Utopia\Database\Adapter\SQLite
+{
+}
+
+class RecordingMemory extends \Utopia\Database\Adapter\Memory
+{
+}
+
+class PeerMemory extends RecordingMemory
+{
+}
+
 class RecordingAuthorization extends \Utopia\Database\Validator\Authorization
 {
 }
