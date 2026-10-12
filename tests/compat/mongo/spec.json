@@ -1,7 +1,7 @@
 {
   "lib": "mongo",
   "description": "utopia-php/mongo 1.5: the MongoDB client (commands, CRUD, indexes, collections, sessions and transactions with causal consistency), its SCRAM-SHA-256 conversation and its exceptions, on the official Rust driver. Values cross as JSON: a document PHP decodes as stdClass (a server reply) is {\"$object\": {...}} ({} when empty), a PHP array a plain object, any other BSON type {\"$bson\": <canonical extended JSON>}. A client operation with `inspect: true` returns a Utopia\\Mongo\\Exception it throws as {\"$exception\": {class, message, code, ...}}, so codes are compared too.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "vendor/utopia-php/mongo/src"
