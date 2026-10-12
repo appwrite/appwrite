@@ -52,11 +52,15 @@ pub fn decode(json: &Json) -> Result<Value, Fault> {
             if o.len() == 1 {
                 if let Some(q) = o.get("$query") {
                     let (method, attribute, values) = fields(q)?;
-                    return Ok(Value::from(Query::new(Method::from_name(&method), attribute, values)));
+                    return Ok(Value::from(Query::from_array(Method::from_name(&method), attribute, values)));
                 }
                 if let Some(op) = o.get("$operator") {
                     let (method, attribute, values) = fields(op)?;
-                    return Ok(Value::from(Operator::new(OperatorMethod::from_name(&method), attribute, values)));
+                    return Ok(Value::from(Operator::from_array(
+                        OperatorMethod::from_name(&method),
+                        attribute,
+                        values,
+                    )));
                 }
                 if let Some(obj) = o.get("$object") {
                     return Ok(Value::Object(decode_array(obj)?));
@@ -86,7 +90,7 @@ fn document_of(attrs: Array) -> Result<Document, Fault> {
     Document::new(attrs).map_err(|e| Fault::new(format!("document: {}", e.message())))
 }
 
-fn fields(json: &Json) -> Result<(String, String, Vec<Value>), Fault> {
+fn fields(json: &Json) -> Result<(String, String, Array), Fault> {
     let a = decode_array(json)?;
     let text = |k: &str| -> String {
         match a.get_str(k) {
@@ -96,8 +100,8 @@ fn fields(json: &Json) -> Result<(String, String, Vec<Value>), Fault> {
         }
     };
     let values = match a.get_str("values") {
-        Some(Value::Array(v)) => v.values().cloned().collect(),
-        _ => Vec::new(),
+        Some(Value::Array(v)) => v.clone(),
+        _ => Array::new(),
     };
     Ok((text("method"), text("attribute"), values))
 }
@@ -168,7 +172,7 @@ pub fn encode(value: &Value) -> Json {
             serde_json::json!({
                 "method": q.method().as_str(),
                 "attribute": q.attribute(),
-                "values": Json::Array(q.values().iter().map(encode).collect()),
+                "values": encode_array(&q.values_array()),
             }),
         ),
         Value::Ext(Ext::Operator(o)) => tag(
@@ -176,7 +180,7 @@ pub fn encode(value: &Value) -> Json {
             serde_json::json!({
                 "method": o.method().as_str(),
                 "attribute": o.attribute(),
-                "values": Json::Array(o.values().iter().map(encode).collect()),
+                "values": encode_array(&o.values_array()),
             }),
         ),
     }
