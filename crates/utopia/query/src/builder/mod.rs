@@ -22,6 +22,7 @@
 //! | `Builder` as a parameter type | [`AnyBuilder`] |
 
 mod api;
+mod ast;
 mod case;
 mod clickhouse;
 mod core;
@@ -46,10 +47,10 @@ pub use core::{
 pub use join::JoinBuilder;
 pub use mariadb::{MariaDb, MariaDbDialect};
 pub use mongodb::{IndexHint, MongoDb, MongoDbDialect, Operation, PipelineStage, UpdateOperation, UpdateOperator};
-pub use postgresql::{DeleteUsing, MergeTarget, PostgreSql, PostgreSqlDialect, UpdateFrom};
-pub use sqlite::{Sqlite, SqliteDialect};
 pub use mysql::{MySql, MySqlDialect, MySqlFamily, MySqlState};
+pub use postgresql::{DeleteUsing, MergeTarget, PostgreSql, PostgreSqlDialect, UpdateFrom};
 pub use sql::{SqlDialect, geometry_to_wkt};
+pub use sqlite::{Sqlite, SqliteDialect};
 pub use types::{
     Binding, ColumnPredicate, Condition, CteClause, Executor, JoinOn, JoinType, LockMode, MergeClause,
     SpatialDistanceFilter, Statement, UnionClause, UnionType, VectorMetric, WindowDefinition, WindowFrame,

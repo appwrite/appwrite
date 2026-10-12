@@ -6,8 +6,8 @@
 
 use crate::builder::core::{Builder, Dialect};
 use crate::builder::feature::{
-    BitwiseAggregates, ConditionalAggregates, CrossJoins, InsertOrIgnore, Json, Locking, RawSql,
-    StatisticalAggregates, StringAggregates, Transactions, Upsert, UpsertSelect,
+    BitwiseAggregates, ConditionalAggregates, CrossJoins, InsertOrIgnore, Json, Locking, RawSql, StatisticalAggregates,
+    StringAggregates, Transactions, Upsert, UpsertSelect,
 };
 use crate::builder::mysql::conflict_clause;
 use crate::builder::postgresql::{json_binding, json_path_parts, on_conflict_header};
@@ -75,7 +75,12 @@ impl Dialect for SqliteDialect {
         "RANDOM()".into()
     }
 
-    fn compile_regex(_b: &mut Builder<Self>, _attribute: &str, _values: &Array, _column: Option<&str>) -> Result<String> {
+    fn compile_regex(
+        _b: &mut Builder<Self>,
+        _attribute: &str,
+        _values: &Array,
+        _column: Option<&str>,
+    ) -> Result<String> {
         Err(Error::Unsupported("REGEXP is not natively supported in SQLite.".into()))
     }
 
@@ -108,7 +113,12 @@ impl Dialect for SqliteDialect {
 }
 
 impl SqlDialect for SqliteDialect {
-    fn compile_search_expression(_b: &mut Builder<Self>, _attribute: &str, _values: &Array, _not: bool) -> Result<String> {
+    fn compile_search_expression(
+        _b: &mut Builder<Self>,
+        _attribute: &str,
+        _values: &Array,
+        _not: bool,
+    ) -> Result<String> {
         Err(Error::Unsupported("Full-text search is not supported in the SQLite query builder.".into()))
     }
 

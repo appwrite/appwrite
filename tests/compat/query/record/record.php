@@ -78,6 +78,7 @@ function op(string $relative): string
 }
 
 $summary = [];
+$masks = \json_decode((string) \file_get_contents(__DIR__ . '/masks.json'), true, flags: JSON_THROW_ON_ERROR);
 /** @var array<string, array<string, true>> test file => symbols its cases call */
 $covers = [];
 foreach ($files as $relative) {
@@ -168,7 +169,12 @@ foreach ($files as $relative) {
             if ($trace['impls'] !== []) {
                 $args['impls'] = $trace['impls'];
             }
-            $cases[] = ['name' => $name, 'op' => op($relative), 'args' => $args];
+            $case = ['name' => $name, 'op' => op($relative), 'args' => $args];
+            // Outputs that legitimately differ (see masks.json) are masked.
+            if (isset($masks[$relative . '#' . $name])) {
+                $case['mask'] = $masks[$relative . '#' . $name];
+            }
+            $cases[] = $case;
             foreach (\array_keys(Rec::$symbols) as $symbol) {
                 $covers[$relative][$symbol] = true;
             }

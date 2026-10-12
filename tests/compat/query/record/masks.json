@@ -1,0 +1,10 @@
+{
+  "QueryTest.php#testFingerprintRejectsInvalidElements": {
+    "paths": ["/0/$error"],
+    "reason": "A fingerprint element that is neither a query nor its JSON (an int) cannot be expressed in Rust (QueryOrJson); PHP throws Utopia\\Query\\Exception for it (see spec.json deviations)"
+  },
+  "API/SelectionTest.php#testCursorRejectsScalar": {
+    "paths": ["/0/$error/message"],
+    "reason": "PHP's TypeError for a scalar cursor names the calling file and line; Rust's cursor is a row value, the replay reports the same TypeError class without a PHP call site"
+  }
+}

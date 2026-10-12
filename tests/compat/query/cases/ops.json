@@ -1,0 +1,25 @@
+{
+  "cases": [
+    { "name": "parse an equal query", "op": "query.parse", "args": { "query": "{\"method\":\"equal\",\"attribute\":\"status\",\"values\":[\"active\",1,1.5,null]}" } },
+    { "name": "parse refuses raw", "op": "query.parse", "args": { "query": "{\"method\":\"raw\",\"attribute\":\"1 = 1\"}" } },
+    { "name": "parse allows raw when trusted", "op": "query.parse", "args": { "query": "{\"method\":\"raw\",\"attribute\":\"1 = ?\",\"values\":[1]}", "allowRaw": true } },
+    { "name": "parse invalid JSON", "op": "query.parse", "args": { "query": "{\"method\":" } },
+    { "name": "parse a scalar", "op": "query.parse", "args": { "query": "42" } },
+    { "name": "parse a nested or", "op": "query.parse", "args": { "query": "{\"method\":\"or\",\"values\":[{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]},{\"method\":\"isNull\",\"attribute\":\"b\"}]}" } },
+    { "name": "parse a legacy join", "op": "query.parse", "args": { "query": "{\"method\":\"join\",\"attribute\":\"orders\",\"values\":[\"users.id\",\"=\",\"orders.user_id\",\"o\"]}" } },
+    { "name": "parseQuery with a non-string method", "op": "query.parse_query", "args": { "query": { "method": 5 } } },
+    { "name": "parseQuery aggregate with legacy alias", "op": "query.parse_query", "args": { "query": { "method": "count", "attribute": "*", "values": ["total"] } } },
+    { "name": "tokenize MySQL", "op": "tokenizer.tokenize", "args": { "dialect": "mysql", "sql": "SELECT `a`, 'it''s' FROM t # comment\nWHERE x = ?" } },
+    { "name": "tokenize PostgreSQL", "op": "tokenizer.tokenize", "args": { "dialect": "postgresql", "sql": "SELECT \"a\"::int, $1 FROM t WHERE b @> '{}'" } },
+    { "name": "classify SQL", "op": "classifier.classify", "args": { "dialect": "mysql", "sql": true, "data": "WITH x AS (SELECT 1) DELETE FROM t" } },
+    { "name": "classify a PostgreSQL message", "op": "classifier.classify", "args": { "dialect": "postgresql", "data": "Q\u0000\u0000\u0000\rSELECT 1\u0000" } },
+    { "name": "parse and serialize", "op": "ast.parse", "args": { "sql": "SELECT a, COUNT(*) AS n FROM t AS x LEFT JOIN u ON u.id = x.uid WHERE a IN (1, 2) AND b BETWEEN 1 AND 5 GROUP BY a HAVING n > 1 ORDER BY a DESC LIMIT 10" } },
+    { "name": "parse error", "op": "ast.parse", "args": { "sql": "SELECT FROM" } },
+    { "name": "build MySQL", "op": "builder.build", "args": { "dialect": "mysql", "queries": ["{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1,null]}", "{\"method\":\"orderDesc\",\"attribute\":\"b\"}", "{\"method\":\"limit\",\"values\":[5]}"] } },
+    { "name": "build PostgreSQL", "op": "builder.build", "args": { "dialect": "postgresql", "queries": ["{\"method\":\"contains\",\"attribute\":\"name\",\"values\":[\"a%b\"]}", "{\"method\":\"search\",\"attribute\":\"body\",\"values\":[\"hello world\"]}"] } },
+    { "name": "build MongoDB", "op": "builder.build", "args": { "dialect": "mongodb", "queries": ["{\"method\":\"greaterThan\",\"attribute\":\"age\",\"values\":[18]}", "{\"method\":\"select\",\"values\":[\"name\"]}"] } },
+    { "name": "build ClickHouse", "op": "builder.build", "args": { "dialect": "clickhouse", "queries": ["{\"method\":\"regex\",\"attribute\":\"path\",\"values\":[\"^/v1\"]}", "{\"method\":\"offset\",\"values\":[10]}", "{\"method\":\"limit\",\"values\":[5]}"] } },
+    { "name": "build SQLite", "op": "builder.build", "args": { "dialect": "sqlite", "queries": ["{\"method\":\"startsWith\",\"attribute\":\"name\",\"values\":[\"a_\"]}"] } },
+    { "name": "build MariaDB", "op": "builder.build", "args": { "dialect": "mariadb", "queries": ["{\"method\":\"notEqual\",\"attribute\":\"a\",\"values\":[1,2]}"] } }
+  ]
+}

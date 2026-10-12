@@ -198,6 +198,11 @@ fn data_address(object: &dyn Object) -> usize {
     object as *const dyn Object as *const () as usize
 }
 
+/// An engine outside any program (to export values).
+pub fn standalone() -> Cx {
+    Cx(Arc::new(Engine { state: Mutex::new(State::default()) }))
+}
+
 /// Runs `program` with the test objects `impls` declares; returns the outputs.
 pub fn run(program: &[Json], impls: &Json) -> Result<Json, Fault> {
     let cx = Cx(Arc::new(Engine { state: Mutex::new(State::default()) }));
@@ -490,6 +495,18 @@ impl Cx {
             Value::Ext(Ext::Query(q)) => self.export_object(Box::new((**q).clone())),
             Value::Ext(Ext::Nulls(n)) => json!({"$enum": format!("NullsPosition::{}", n.name())}),
             Value::Ext(Ext::Row { class, fields }) => {
+                // A row object is one PHP object however often it is
+                // returned: the first equal row keeps its number.
+                let slots = self.state().slots.clone();
+                for (i, slot) in slots.iter().enumerate() {
+                    if let Ok(guard) = slot.try_lock()
+                        && let Some(row) = guard.as_any().downcast_ref::<RowObject>()
+                        && row.class == *class
+                        && row.fields == *fields
+                    {
+                        return json!({"$object": format!("\\{class}"), "id": i as i64 + 1});
+                    }
+                }
                 self.export_object(Box::new(RowObject { class: class.clone(), fields: fields.clone() }))
             }
         }

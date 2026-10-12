@@ -417,9 +417,9 @@ fn cast_string(value: &Value) -> Vec<u8> {
 /// `$value` passed to a `string` parameter (arrays are refused).
 fn string_param(value: &Value, function: &str) -> Result<Vec<u8>> {
     match value {
-        Value::Array(_) => Err(Error::Type(format!(
-            "{function}(): Argument #1 ($str) must be of type string, array given"
-        ))),
+        Value::Array(_) => {
+            Err(Error::Type(format!("{function}(): Argument #1 ($str) must be of type string, array given")))
+        }
         other => Ok(cast_string(other)),
     }
 }
@@ -497,7 +497,8 @@ fn operation_to_pipeline(op: &Value) -> Result<Array> {
         });
     }
     let mut pipeline = Array::default();
-    for (name, kind) in [("filter", PipelineStage::Match), ("projection", PipelineStage::Project), ("sort", PipelineStage::Sort)]
+    for (name, kind) in
+        [("filter", PipelineStage::Match), ("projection", PipelineStage::Project), ("sort", PipelineStage::Sort)]
     {
         if let Some(v) = field(name).filter(|v| v.truthy()) {
             append(&mut pipeline, stage(kind, v.clone()));
@@ -678,6 +679,38 @@ impl Builder<MongoDbDialect> {
     /// `slice` elements, sorted by `sort` (`$push` with `$each`).
     ///
     /// PHP: `pushEach()` (`Feature\MongoDB\ArrayPushModifiers`).
+    ///
+    /// ```
+    /// use utopia_query::Query;
+    /// use utopia_query::builder::MongoDb;
+    ///
+    /// let statement = MongoDb::new()
+    ///     .from("users", "")
+    ///     .filter([Query::equal("_id", ["u1"])])
+    ///     .push_each("scores", [90, 85], None, Some(-5), None)?
+    ///     .increment("visits", 1)?
+    ///     .update()?;
+    /// assert_eq!(
+    ///     statement.query,
+    ///     r#"{"collection":"users","operation":"updateMany","filter":{"_id":"?"},"update":{"$push":{"scores":{"$each":["?","?"],"$slice":-5}},"$inc":{"visits":1}}}"#
+    /// );
+    /// assert_eq!(statement.bindings.len(), 3);
+    /// # Ok::<(), utopia_query::Error>(())
+    /// ```
+    ///
+    /// ```php
+    /// use Utopia\Query\Builder\MongoDB;
+    /// use Utopia\Query\Query;
+    ///
+    /// $statement = (new MongoDB())
+    ///     ->from('users')
+    ///     ->filter([Query::equal('_id', ['u1'])])
+    ///     ->pushEach('scores', [90, 85], slice: -5)
+    ///     ->increment('visits', 1)
+    ///     ->update();
+    /// echo $statement->query, "\n";
+    /// // {"collection":"users","operation":"updateMany","filter":{"_id":"?"},"update":{"$push":{"scores":{"$each":["?","?"],"$slice":-5}},"$inc":{"visits":1}}}
+    /// ```
     pub fn push_each(
         &mut self,
         field: &str,
@@ -740,8 +773,7 @@ impl Builder<MongoDbDialect> {
     ///
     /// PHP: `bucketAuto()` (`Feature\MongoDB\PipelineStages`).
     pub fn bucket_auto(&mut self, group_by: &str, buckets: i64, output: Array) -> &mut Self {
-        let mut stage =
-            doc([("groupBy", value::string(format!("${group_by}"))), ("buckets", Value::Int(buckets))]);
+        let mut stage = doc([("groupBy", value::string(format!("${group_by}"))), ("buckets", Value::Int(buckets))]);
         if !output.is_empty() {
             stage.set(key("output"), Value::Array(output));
         }
@@ -882,7 +914,13 @@ impl Builder<MongoDbDialect> {
     }
 
     fn statement_of(&self, operation: Array, read_only: bool) -> Result<Statement> {
-        Ok(Statement::with_parts(encode(operation)?, self.binding_values(), read_only, self.core.executor.clone(), None))
+        Ok(Statement::with_parts(
+            encode(operation)?,
+            self.binding_values(),
+            read_only,
+            self.core.executor.clone(),
+            None,
+        ))
     }
 
     fn has_random_order(&self) -> bool {
@@ -1639,11 +1677,8 @@ impl Builder<MongoDbDialect> {
                 doc([("from", collection), ("pipeline", Value::Array(sub_pipeline)), ("as", value::string(&alias))]),
             ),
         );
-        let condition = if not {
-            doc([("$size", Value::Int(0))])
-        } else {
-            doc([("$ne", Value::Array(Array::default()))])
-        };
+        let condition =
+            if not { doc([("$size", Value::Int(0))]) } else { doc([("$ne", Value::Array(Array::default()))]) };
         append(pipeline, stage(PipelineStage::Match, field_doc(&alias, Value::Array(condition))));
         append(pipeline, stage(PipelineStage::Unset, value::string(&alias)));
         Ok(())
@@ -1680,7 +1715,7 @@ impl Builder<MongoDbDialect> {
         let mut push = Array::with_capacity(fields.len());
         for (field, value) in fields.iter() {
             let modifier = match value {
-                Value::Array(a) => a.get_str("__each").map(|m| m.clone()),
+                Value::Array(a) => a.get_str("__each").cloned(),
                 _ => None,
             };
             let Some(modifier) = modifier else {

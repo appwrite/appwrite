@@ -161,7 +161,7 @@ impl JoinCondition {
 /// use utopia_query::builder::MySql;
 /// use utopia_query::hook::Tenant;
 ///
-/// let statement = MySql::new().from("docs", "").add_hook(Tenant::new(["7"], "tenant_id")?).build()?;
+/// let statement = MySql::new().from("docs", "").add_hook(Tenant::new(["7"], "tenant_id")?)?.build()?;
 /// assert_eq!(statement.query, "SELECT * FROM `docs` WHERE tenant_id IN (?)");
 /// # Ok::<(), utopia_query::Error>(())
 /// ```

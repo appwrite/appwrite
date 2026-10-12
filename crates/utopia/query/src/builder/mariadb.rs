@@ -137,7 +137,9 @@ impl SqlDialect for MariaDbDialect {
             if filter.meters && !query.attribute_type().is_empty() {
                 let wkt = crate::value::to_php_string(&wkt_of(&filter.geometry));
                 let wkt_type = match wkt.find('(') {
-                    Some(position) => wkt[..position].trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']).to_ascii_lowercase(),
+                    Some(position) => {
+                        wkt[..position].trim_matches([' ', '\t', '\n', '\r', '\0', '\x0B']).to_ascii_lowercase()
+                    }
                     None => String::new(),
                 };
                 let attribute_type = query.attribute_type().to_ascii_lowercase();

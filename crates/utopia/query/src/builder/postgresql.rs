@@ -7,12 +7,12 @@
 use php_std::ArrayKey;
 use php_std::json::Flags;
 
-use crate::builder::core::{Builder, Dialect, ExplainOptions, first};
 use crate::builder::AnyBuilder;
+use crate::builder::core::{Builder, Dialect, ExplainOptions, first};
 use crate::builder::feature::{
     BitwiseAggregates, ConditionalAggregates, CrossJoins, Cube, FullOuterJoins, FullTextSearch, InsertOrIgnore, Json,
-    LateralJoins, Locking, NegatedFullTextSearch, RawSql, Returning, Rollup, Sequences, Spatial,
-    StatisticalAggregates, StringAggregates, TableSampling, Transactions, Upsert, UpsertSelect,
+    LateralJoins, Locking, NegatedFullTextSearch, RawSql, Returning, Rollup, Sequences, Spatial, StatisticalAggregates,
+    StringAggregates, TableSampling, Transactions, Upsert, UpsertSelect,
 };
 use crate::builder::mysql::conflict_clause;
 use crate::builder::sql::{self, SqlDialect, distance_operator, geometry_to_wkt, wkt_of};
@@ -165,7 +165,8 @@ fn search_expression(b: &mut Builder<PostgreSqlDialect>, attribute: &str, values
     let mut collapsed = String::with_capacity(term.len());
     let mut in_space = false;
     for c in term.chars() {
-        let c = if matches!(c, '@' | '+' | '-' | '*' | '.' | '\'' | '"' | ')' | '(' | '<' | '>' | '~') { ' ' } else { c };
+        let c =
+            if matches!(c, '@' | '+' | '-' | '*' | '.' | '\'' | '"' | ')' | '(' | '<' | '>' | '~') { ' ' } else { c };
         if is_pcre_space(c) {
             if !in_space {
                 collapsed.push(' ');
@@ -237,7 +238,10 @@ impl Builder<PostgreSqlDialect> {
         let mut conditions = Vec::with_capacity(values.len());
         for value in values.values() {
             let mut value = value.clone();
-            if wrap_scalars && let Value::Array(object) = &mut value && object.len() == 1 {
+            if wrap_scalars
+                && let Value::Array(object) = &mut value
+                && object.len() == 1
+            {
                 let entry = object.iter().next().map(|(k, v)| (k.to_owned(), v.clone()));
                 if let Some((key, inner)) = entry
                     && !matches!(inner, Value::Array(_))

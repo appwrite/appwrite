@@ -1,648 +1,654 @@
 {
-  "source": "packages/query/tests/API/SelectionTest.php",
-  "cases": [
-    {
-      "name": "testSelect",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "select",
-            "class": "Query",
-            "args": [
-              [
-                "name",
-                "email"
-              ]
+    "source": "packages/query/tests/API/SelectionTest.php",
+    "cases": [
+        {
+            "name": "testSelect",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "select",
+                        "class": "Query",
+                        "args": [
+                            [
+                                "name",
+                                "email"
+                            ]
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getValues",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::Select"
+                        },
+                        "attribute": "",
+                        "values": [
+                            "name",
+                            "email"
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::Select"
+                },
+                [
+                    "name",
+                    "email"
+                ]
             ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          },
-          {
-            "call": "getValues",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::Select"
-            },
-            "attribute": "",
-            "values": [
-              "name",
-              "email"
-            ],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
         },
         {
-          "$enum": "Method::Select"
-        },
-        [
-          "name",
-          "email"
-        ]
-      ]
-    },
-    {
-      "name": "testOrderAsc",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "orderAsc",
-            "class": "Query",
-            "args": [
-              "name"
+            "name": "testOrderAsc",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "orderAsc",
+                        "class": "Query",
+                        "args": [
+                            "name"
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getAttribute",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::OrderAsc"
+                        },
+                        "attribute": "name",
+                        "values": [],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::OrderAsc"
+                },
+                "name"
             ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          },
-          {
-            "call": "getAttribute",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::OrderAsc"
-            },
-            "attribute": "name",
-            "values": [],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
         },
         {
-          "$enum": "Method::OrderAsc"
-        },
-        "name"
-      ]
-    },
-    {
-      "name": "testOrderAscNoAttribute",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "orderAsc",
-            "class": "Query",
-            "args": []
-          },
-          {
-            "call": "getAttribute",
-            "on": {
-              "$o": 1
+            "name": "testOrderAscNoAttribute",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "orderAsc",
+                        "class": "Query",
+                        "args": []
+                    },
+                    {
+                        "call": "getAttribute",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
             },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::OrderAsc"
-            },
-            "attribute": "",
-            "values": [],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
-        },
-        ""
-      ]
-    },
-    {
-      "name": "testOrderDesc",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "orderDesc",
-            "class": "Query",
-            "args": [
-              "name"
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::OrderAsc"
+                        },
+                        "attribute": "",
+                        "values": [],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                ""
             ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          },
-          {
-            "call": "getAttribute",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::OrderDesc"
-            },
-            "attribute": "name",
-            "values": [],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
         },
         {
-          "$enum": "Method::OrderDesc"
-        },
-        "name"
-      ]
-    },
-    {
-      "name": "testOrderDescNoAttribute",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "orderDesc",
-            "class": "Query",
-            "args": []
-          },
-          {
-            "call": "getAttribute",
-            "on": {
-              "$o": 1
+            "name": "testOrderDesc",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "orderDesc",
+                        "class": "Query",
+                        "args": [
+                            "name"
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getAttribute",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
             },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::OrderDesc"
-            },
-            "attribute": "",
-            "values": [],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
-        },
-        ""
-      ]
-    },
-    {
-      "name": "testOrderRandom",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "orderRandom",
-            "class": "Query",
-            "args": []
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::OrderRandom"
-            },
-            "attribute": "",
-            "values": [],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
-        },
-        {
-          "$enum": "Method::OrderRandom"
-        }
-      ]
-    },
-    {
-      "name": "testLimit",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "limit",
-            "class": "Query",
-            "args": [
-              25
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::OrderDesc"
+                        },
+                        "attribute": "name",
+                        "values": [],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::OrderDesc"
+                },
+                "name"
             ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          },
-          {
-            "call": "getValues",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::Limit"
-            },
-            "attribute": "",
-            "values": [
-              25
-            ],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
         },
         {
-          "$enum": "Method::Limit"
-        },
-        [
-          25
-        ]
-      ]
-    },
-    {
-      "name": "testOffset",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "offset",
-            "class": "Query",
-            "args": [
-              10
+            "name": "testOrderDescNoAttribute",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "orderDesc",
+                        "class": "Query",
+                        "args": []
+                    },
+                    {
+                        "call": "getAttribute",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::OrderDesc"
+                        },
+                        "attribute": "",
+                        "values": [],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                ""
             ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          },
-          {
-            "call": "getValues",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::Offset"
-            },
-            "attribute": "",
-            "values": [
-              10
-            ],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
         },
         {
-          "$enum": "Method::Offset"
-        },
-        [
-          10
-        ]
-      ]
-    },
-    {
-      "name": "testCursorAfterArray",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "cursorAfter",
-            "class": "Query",
-            "args": [
-              {
-                "id": "doc123"
-              }
-            ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
+            "name": "testOrderRandom",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "orderRandom",
+                        "class": "Query",
+                        "args": []
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
             },
-            "args": []
-          },
-          {
-            "call": "getValues",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::CursorAfter"
-            },
-            "attribute": "",
-            "values": [
-              {
-                "id": "doc123"
-              }
-            ],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
-        },
-        {
-          "$enum": "Method::CursorAfter"
-        },
-        [
-          {
-            "id": "doc123"
-          }
-        ]
-      ]
-    },
-    {
-      "name": "testCursorAfterObject",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "cursorAfter",
-            "class": "Query",
-            "args": [
-              {
-                "$arrayobject": {
-                  "id": "doc123"
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::OrderRandom"
+                        },
+                        "attribute": "",
+                        "values": [],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::OrderRandom"
                 }
-              }
             ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          },
-          {
-            "call": "getValues",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::CursorAfter"
-            },
-            "attribute": "",
-            "values": [
-              {
-                "$object": "\\ArrayObject",
-                "id": 2
-              }
-            ],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
         },
         {
-          "$enum": "Method::CursorAfter"
-        },
-        [
-          {
-            "$object": "\\ArrayObject",
-            "id": 2
-          }
-        ]
-      ]
-    },
-    {
-      "name": "testCursorBeforeArray",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "cursorBefore",
-            "class": "Query",
-            "args": [
-              {
-                "id": "doc123"
-              }
+            "name": "testLimit",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "limit",
+                        "class": "Query",
+                        "args": [
+                            25
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getValues",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::Limit"
+                        },
+                        "attribute": "",
+                        "values": [
+                            25
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::Limit"
+                },
+                [
+                    25
+                ]
             ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          },
-          {
-            "call": "getValues",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::CursorBefore"
-            },
-            "attribute": "",
-            "values": [
-              {
-                "id": "doc123"
-              }
-            ],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
         },
         {
-          "$enum": "Method::CursorBefore"
+            "name": "testOffset",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "offset",
+                        "class": "Query",
+                        "args": [
+                            10
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getValues",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::Offset"
+                        },
+                        "attribute": "",
+                        "values": [
+                            10
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::Offset"
+                },
+                [
+                    10
+                ]
+            ]
         },
-        [
-          {
-            "id": "doc123"
-          }
-        ]
-      ]
-    },
-    {
-      "name": "testCursorBeforeObject",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "cursorBefore",
-            "class": "Query",
-            "args": [
-              {
-                "$arrayobject": {
-                  "id": "doc123"
+        {
+            "name": "testCursorAfterArray",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "cursorAfter",
+                        "class": "Query",
+                        "args": [
+                            {
+                                "id": "doc123"
+                            }
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getValues",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::CursorAfter"
+                        },
+                        "attribute": "",
+                        "values": [
+                            {
+                                "id": "doc123"
+                            }
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::CursorAfter"
+                },
+                [
+                    {
+                        "id": "doc123"
+                    }
+                ]
+            ]
+        },
+        {
+            "name": "testCursorAfterObject",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "cursorAfter",
+                        "class": "Query",
+                        "args": [
+                            {
+                                "$arrayobject": {
+                                    "id": "doc123"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getValues",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::CursorAfter"
+                        },
+                        "attribute": "",
+                        "values": [
+                            {
+                                "$object": "\\ArrayObject",
+                                "id": 2
+                            }
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::CursorAfter"
+                },
+                [
+                    {
+                        "$object": "\\ArrayObject",
+                        "id": 2
+                    }
+                ]
+            ]
+        },
+        {
+            "name": "testCursorBeforeArray",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "cursorBefore",
+                        "class": "Query",
+                        "args": [
+                            {
+                                "id": "doc123"
+                            }
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getValues",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::CursorBefore"
+                        },
+                        "attribute": "",
+                        "values": [
+                            {
+                                "id": "doc123"
+                            }
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::CursorBefore"
+                },
+                [
+                    {
+                        "id": "doc123"
+                    }
+                ]
+            ]
+        },
+        {
+            "name": "testCursorBeforeObject",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "cursorBefore",
+                        "class": "Query",
+                        "args": [
+                            {
+                                "$arrayobject": {
+                                    "id": "doc123"
+                                }
+                            }
+                        ]
+                    },
+                    {
+                        "call": "getMethod",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    },
+                    {
+                        "call": "getValues",
+                        "on": {
+                            "$o": 1
+                        },
+                        "args": []
+                    }
+                ]
+            },
+            "expect": [
+                {
+                    "$value": "Query",
+                    "id": 1,
+                    "props": {
+                        "method": {
+                            "$enum": "Method::CursorBefore"
+                        },
+                        "attribute": "",
+                        "values": [
+                            {
+                                "$object": "\\ArrayObject",
+                                "id": 2
+                            }
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                    }
+                },
+                {
+                    "$enum": "Method::CursorBefore"
+                },
+                [
+                    {
+                        "$object": "\\ArrayObject",
+                        "id": 2
+                    }
+                ]
+            ]
+        },
+        {
+            "name": "testCursorRejectsScalar",
+            "op": "query",
+            "args": {
+                "program": [
+                    {
+                        "static": "cursorAfter",
+                        "class": "Query",
+                        "args": [
+                            "doc123"
+                        ]
+                    }
+                ]
+            },
+            "mask": {
+                "paths": [
+                    "/0/$error/message"
+                ],
+                "reason": "PHP's TypeError for a scalar cursor names the calling file and line; Rust's cursor is a row value, the replay reports the same TypeError class without a PHP call site"
+            },
+            "expect": [
+                {
+                    "$error": {
+                        "class": "TypeError",
+                        "message": "Utopia\\Query\\Query::cursorAfter(): Argument #1 ($value) must be of type object|array, string given, called in /usr/src/code/tests/compat/query/Replay.php on line 121"
+                    },
+                    "id": 1
                 }
-              }
             ]
-          },
-          {
-            "call": "getMethod",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          },
-          {
-            "call": "getValues",
-            "on": {
-              "$o": 1
-            },
-            "args": []
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$value": "Query",
-          "id": 1,
-          "props": {
-            "method": {
-              "$enum": "Method::CursorBefore"
-            },
-            "attribute": "",
-            "values": [
-              {
-                "$object": "\\ArrayObject",
-                "id": 2
-              }
-            ],
-            "alias": "",
-            "onArray": false,
-            "attributeType": ""
-          }
-        },
-        {
-          "$enum": "Method::CursorBefore"
-        },
-        [
-          {
-            "$object": "\\ArrayObject",
-            "id": 2
-          }
-        ]
-      ]
-    },
-    {
-      "name": "testCursorRejectsScalar",
-      "op": "query",
-      "args": {
-        "program": [
-          {
-            "static": "cursorAfter",
-            "class": "Query",
-            "args": [
-              "doc123"
-            ]
-          }
-        ]
-      },
-      "expect": [
-        {
-          "$error": {
-            "class": "TypeError",
-            "message": "Utopia\\Query\\Query::cursorAfter(): Argument #1 ($value) must be of type object|array, string given, called in /usr/src/code/tests/compat/query/Replay.php on line 121"
-          },
-          "id": 1
         }
-      ]
-    }
-  ]
+    ]
 }

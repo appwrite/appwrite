@@ -26,6 +26,7 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
         "Builder\\PostgreSQL" => Ok(Ret::obj(utopia_query::builder::PostgreSql::new())),
         "Builder\\SQLite" => Ok(Ret::obj(utopia_query::builder::Sqlite::new())),
         "Builder\\MariaDB" => Ok(Ret::obj(utopia_query::builder::MariaDb::new())),
+        "Builder\\MongoDB" | "Builder\\MongoDB\\UpdateOperation" => return super::builder_mongodb::construct(class, a),
         "Builder\\Case\\Expression" => Ok(Ret::obj(CaseExpression::new())),
         "Builder\\JoinBuilder" => Ok(Ret::obj(JoinBuilder::new())),
         "Builder\\WindowFrame" => (|| {
@@ -41,11 +42,35 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
 /// `Class::method(...)`.
 pub(crate) fn call_static(class: &str, method: &str, a: &mut Args) -> Option<Outcome> {
     match (class, method) {
+        (_, "fromAst") => from_ast_for(class, a),
         ("Builder\\SpatialDistanceFilter", "fromTuple") => {
             Some((|| Ok(Ret::obj(SpatialDistanceFilter::from_tuple(&a.array(0, "tuple")?))))())
         }
         _ => None,
     }
+}
+
+/// `Builder\X::fromAst($ast)` for the dialect builder `class` names.
+fn from_ast_for(class: &str, a: &Args) -> Option<Outcome> {
+    use utopia_query::builder::{
+        ClickHouseDialect, MariaDbDialect, MongoDbDialect, PostgreSqlDialect, SqliteDialect,
+    };
+    fn make<D: Dialect>(a: &Args) -> Outcome
+    where
+        Builder<D>: Object,
+    {
+        let select = a.object::<utopia_query::ast::Select>(0, "ast")?;
+        Ok(Ret::obj(Builder::<D>::from_ast(&select)?))
+    }
+    Some(match class {
+        "Builder\\MySQL" => make::<MySqlDialect>(a),
+        "Builder\\MariaDB" => make::<MariaDbDialect>(a),
+        "Builder\\PostgreSQL" => make::<PostgreSqlDialect>(a),
+        "Builder\\SQLite" => make::<SqliteDialect>(a),
+        "Builder\\ClickHouse" => make::<ClickHouseDialect>(a),
+        "Builder\\MongoDB" => make::<MongoDbDialect>(a),
+        _ => return None,
+    })
 }
 
 /// `Class::CONSTANT`.
@@ -56,6 +81,9 @@ pub(crate) fn constant(class: &str, name: &str) -> Option<Ret> {
 /// `Class::Case->method(...)`.
 pub(crate) fn enum_call(class: &str, case: &str, method: &str, _a: &mut Args) -> Option<Outcome> {
     if let Some(outcome) = super::builder_clickhouse::enum_call(class, case, method, _a) {
+        return Some(outcome);
+    }
+    if let Some(outcome) = super::builder_mongodb::enum_call(class, case, method, _a) {
         return Some(outcome);
     }
     use utopia_query::builder::{Kind, LockMode, UnionType, VectorMetric};
@@ -109,6 +137,9 @@ pub(crate) fn compile_with(object: &mut dyn Object, query: &Query) -> Outcome {
 /// Runs `f` with `object` as a [`Compiler`], if it is a builder.
 pub(crate) fn with_compiler<R>(object: &mut dyn Object, f: impl FnOnce(&mut dyn Compiler) -> R) -> Option<R> {
     let any = object.as_any_mut();
+    if let Some(b) = any.downcast_mut::<utopia_query::builder::MongoDb>() {
+        return Some(f(b));
+    }
     if let Some(b) = any.downcast_mut::<utopia_query::builder::ClickHouse>() {
         return Some(f(b));
     }
@@ -130,6 +161,9 @@ pub(crate) fn with_compiler<R>(object: &mut dyn Object, f: impl FnOnce(&mut dyn 
 /// A copy of a builder object, as a subquery.
 pub(crate) fn any_builder(object: &dyn Object) -> Option<Box<dyn AnyBuilder>> {
     let any = object.as_any();
+    if let Some(b) = any.downcast_ref::<utopia_query::builder::MongoDb>() {
+        return Some(b.clone_box());
+    }
     if let Some(b) = any.downcast_ref::<utopia_query::builder::ClickHouse>() {
         return Some(b.clone_box());
     }
@@ -151,6 +185,9 @@ pub(crate) fn any_builder(object: &dyn Object) -> Option<Box<dyn AnyBuilder>> {
 /// Runs `f` with `object` as a builder.
 pub(crate) fn with_any_builder<R>(object: &mut dyn Object, f: impl FnOnce(&mut dyn AnyBuilder) -> R) -> Option<R> {
     let any = object.as_any_mut();
+    if let Some(b) = any.downcast_mut::<utopia_query::builder::MongoDb>() {
+        return Some(f(b));
+    }
     if let Some(b) = any.downcast_mut::<utopia_query::builder::ClickHouse>() {
         return Some(f(b));
     }
@@ -365,6 +402,7 @@ where
                 Ret::This
             }
             "build" => Ret::obj(b.build()?),
+            "toAst" => Ret::obj(b.to_ast()?),
             "clone" => Ret::obj(b.clone()),
             "count" => {
                 b.count(a.str_or(0, "attribute", "*")?, a.str_or(1, "alias", "")?);

@@ -187,8 +187,8 @@ impl Format {
     /// ```php
     /// use Utopia\Query\Builder\ClickHouse\Format;
     ///
-    /// echo Format::TabSeparated->serialize([['id' => 1, 'note' => null]]), "\n";
-    /// // 1	\N
+    /// echo json_encode(Format::TabSeparated->serialize([['id' => 1, 'note' => null]])), "\n";
+    /// // "1\t\\N"
     /// echo Format::JSONEachRow->serialize([['id' => 1, 'note' => null]]), "\n";
     /// // {"id":1,"note":null}
     /// ```
@@ -329,8 +329,7 @@ fn is_setting_value(text: &str) -> bool {
 /// `/^[A-Za-z][A-Za-z0-9_]*$/`.
 fn is_format_name(text: &str) -> bool {
     let bytes = before_final_newline(text).as_bytes();
-    bytes.first().is_some_and(u8::is_ascii_alphabetic)
-        && bytes.iter().all(|&b| b.is_ascii_alphanumeric() || b == b'_')
+    bytes.first().is_some_and(u8::is_ascii_alphabetic) && bytes.iter().all(|&b| b.is_ascii_alphanumeric() || b == b'_')
 }
 
 /// `/^[A-Za-z][A-Za-z0-9_]*(?:\((?:[^()]*|\([^()]*\))*\))?$/`: a type name
@@ -395,9 +394,8 @@ fn apply_named_typed_bindings(b: &ClickHouse, statement: Statement) -> Statement
     let mut named = Array::with_capacity(statement.bindings.len());
     let mut index = 0usize;
     for (i, &byte) in sql.iter().enumerate() {
-        let placeholder = byte == b'?'
-            && (i == 0 || sql[i - 1] != b'?')
-            && !matches!(sql.get(i + 1), Some(b'|' | b'&' | b'?'));
+        let placeholder =
+            byte == b'?' && (i == 0 || sql[i - 1] != b'?') && !matches!(sql.get(i + 1), Some(b'|' | b'&' | b'?'));
         if !placeholder {
             rewritten.push(byte);
             continue;
@@ -469,7 +467,12 @@ impl Dialect for ClickHouseDialect {
         Ok(format!("{attribute} {} ?", if not { "NOT LIKE" } else { "LIKE" }))
     }
 
-    fn compile_contains(b: &mut Builder<Self>, attribute: &str, values: &Array, column: Option<&str>) -> Result<String> {
+    fn compile_contains(
+        b: &mut Builder<Self>,
+        attribute: &str,
+        values: &Array,
+        column: Option<&str>,
+    ) -> Result<String> {
         if values.len() == 1 {
             b.add_binding(first(values), column);
             return Ok(format!("position({attribute}, ?) > 0"));
@@ -596,7 +599,11 @@ impl Dialect for ClickHouseDialect {
             "1d" => "toStartOfDay",
             "1w" => "toStartOfWeek",
             "1M" => "toStartOfMonth",
-            _ => return Err(Error::Validation(format!("Invalid groupByTimeBucket interval for ClickHouse: {interval}"))),
+            _ => {
+                return Err(Error::Validation(format!(
+                    "Invalid groupByTimeBucket interval for ClickHouse: {interval}"
+                )));
+            }
         };
         Ok(format!("{function}({})", b.resolve_and_wrap(attribute)?))
     }
@@ -632,7 +639,8 @@ impl Dialect for ClickHouseDialect {
         if parts.is_empty() {
             return Err(Error::Validation("ClickHouse UPDATE requires a WHERE clause.".into()));
         }
-        let sql = format!("ALTER TABLE {} UPDATE {} {}", b.quote(&b.core.table)?, assignments.join(", "), parts.join(" "));
+        let sql =
+            format!("ALTER TABLE {} UPDATE {} {}", b.quote(&b.core.table)?, assignments.join(", "), parts.join(" "));
         let statement = b.statement(sql);
         Ok(apply_named_typed_bindings(b, statement))
     }
@@ -806,7 +814,7 @@ impl Builder<ClickHouseDialect> {
     ///
     /// let mut row = Array::default();
     /// row.set("id".into(), Value::Int(1));
-    /// let insert = ClickHouse::new().into("events").bulk_insert(Format::JSONEachRow, [Value::Array(row)], Vec::new())?;
+    /// let insert = ClickHouse::new().from("events", "").bulk_insert(Format::JSONEachRow, [Value::Array(row)], Vec::new())?;
     /// assert_eq!(insert.query, "INSERT INTO `events` (`id`) FORMAT JSONEachRow");
     /// assert_eq!(insert.body.as_deref(), Some(r#"{"id":1}"#));
     /// # Ok::<(), utopia_query::Error>(())
@@ -816,7 +824,7 @@ impl Builder<ClickHouseDialect> {
     /// use Utopia\Query\Builder\ClickHouse;
     /// use Utopia\Query\Builder\ClickHouse\Format;
     ///
-    /// $insert = (new ClickHouse())->into('events')->bulkInsert(Format::JSONEachRow, [['id' => 1]]);
+    /// $insert = (new ClickHouse())->from('events')->bulkInsert(Format::JSONEachRow, [['id' => 1]]);
     /// echo $insert->query, "\n", $insert->body, "\n";
     /// // INSERT INTO `events` (`id`) FORMAT JSONEachRow
     /// // {"id":1}

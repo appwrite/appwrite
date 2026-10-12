@@ -366,7 +366,14 @@ fn query_static(method: &str, a: &mut Args) -> Option<Outcome> {
                         for item in &items {
                             match item {
                                 Json::String(s) => owned_json.push(s.clone()),
-                                _ => owned_queries.push(a.query_of(item)?),
+                                Json::Object(o) if o.contains_key("$o") => owned_queries.push(a.query_of(item)?),
+                                // An element that is neither cannot be expressed in Rust.
+                                other => {
+                                    return Err(Failure::Engine(
+                                        "TypeError".into(),
+                                        format!("a fingerprint element must be a query or its JSON, got {other}"),
+                                    ));
+                                }
                             }
                         }
                         let (mut qi, mut ji) = (0, 0);
@@ -443,7 +450,7 @@ fn cursor_arg(a: &Args, method: &str) -> Result<Value, Failure> {
         other => Err(Failure::Engine(
             "TypeError".into(),
             format!(
-                "Utopia\\Query\\Query::{method}(): Argument #1 ($value) must be of type object|array, {} given, called in /usr/src/code/tests/compat/query/Replay.php on line 121",
+                "Utopia\\Query\\Query::{method}(): Argument #1 ($value) must be of type object|array, {} given (a scalar cursor)",
                 other.debug_type()
             ),
         )),
