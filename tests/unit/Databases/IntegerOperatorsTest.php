@@ -291,9 +291,29 @@ final class IntegerOperatorsTest extends TestCase
     {
         $operators = new IntegerOperators(Engine::PostgreSQL);
 
-        foreach ([Operator::multiply('1e1000000000', 1.5), Operator::multiply(1.5, '1e1000000000'), new Operator(OperatorType::Divide, 'count', ['1e-1000000000', 0.5])] as $operator) {
+        foreach ([Operator::multiply('1e1000000000', 1.5), new Operator(OperatorType::Divide, 'count', ['1e-1000000000', 0.5])] as $operator) {
             $this->assertSame($operator, $operators->resolve($operator, 10));
         }
+    }
+
+    /**
+     * @return iterable<string, array{Operator, int}>
+     */
+    public static function oversizedLimits(): iterable
+    {
+        yield 'a huge maximum holds nothing back' => [Operator::multiply(1.5, '1e1000000000'), 15];
+        yield 'a huge negative maximum holds everything back' => [Operator::multiply(1.5, '-1e1000000000'), 10];
+        yield 'a tiny positive maximum holds back a positive result' => [Operator::multiply(1.5, '1e-1000000000'), 10];
+        yield 'a huge negative minimum holds nothing back' => [Operator::divide(0.5, '-1e1000000000'), 20];
+        yield 'a tiny negative minimum lets a positive result through' => [Operator::divide(0.5, '-1e-1000000000'), 20];
+    }
+
+    #[DataProvider('oversizedLimits')]
+    public function testALimitTooLongToWriteOutStillBoundsTheResult(Operator $operator, int $expected): void
+    {
+        $resolved = (new IntegerOperators(Engine::PostgreSQL))->resolve($operator, 10);
+
+        $this->assertSame($expected, $resolved->getMethod() === OperatorType::Increment ? 10 + $resolved->getValue() : 10 - $resolved->getValue());
     }
 
     public function testFractionalArrayItemsAreCutTowardZero(): void

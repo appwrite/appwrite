@@ -94,7 +94,7 @@ final readonly class IntegerOperators
         $rounding = $this->engine->rounding($method, !self::isFractional($amount));
         if ($this->engine === Engine::PostgreSQL && \in_array($method, self::EXACT_ON_POSTGRESQL, true)) {
             $exact = self::rational($method, $current, $amount);
-            if ($exact === null || ($limit !== null && self::decimal($limit) === null)) {
+            if ($exact === null) {
                 return $operator;
             }
             if ($limit !== null && $this->beyondRational($method, $exact, $amount, $limit)) {
@@ -181,26 +181,40 @@ final readonly class IntegerOperators
     private function beyondRational(OperatorType $method, array $exact, int|float|string $amount, int|float|string $limit): bool
     {
         $factor = self::decimal($amount);
-        $bound = self::decimal($limit);
-        if ($factor === null || $bound === null) {
-            return false;
-        }
-        if (BigInt::compare($factor[0], 0) === 0) {
+        if ($factor === null || BigInt::compare($factor[0], 0) === 0) {
             return false;
         }
 
         [$numerator, $denominator] = $exact;
-        [$limitNumerator, $limitScale] = $bound;
-        $comparison = BigInt::compare(
-            BigInt::multiply($numerator, self::powerOfTen($limitScale)),
-            BigInt::multiply($limitNumerator, $denominator),
-        );
+        $bound = self::decimal($limit);
+        $comparison = $bound === null
+            ? self::compareWithOversized($numerator, $limit)
+            : BigInt::compare(
+                BigInt::multiply($numerator, self::powerOfTen($bound[1])),
+                BigInt::multiply($bound[0], $denominator),
+            );
 
         return match (true) {
             \in_array($method, self::LIMITED_BY_MAXIMUM, true) => $comparison > 0,
             \in_array($method, self::LIMITED_BY_MINIMUM, true) => $comparison < 0,
             default => false,
         };
+    }
+
+    /**
+     * How a result with at most MAXIMUM_DIGITS digits compares with a limit too long to write out: one beyond every
+     * such result in magnitude, or one closer to zero than any of them but zero.
+     */
+    private static function compareWithOversized(int|string $numerator, int|float|string $limit): int
+    {
+        $negative = \str_starts_with(\ltrim((string) $limit), '-');
+        if (\abs((float) $limit) >= 1) {
+            return $negative ? 1 : -1;
+        }
+
+        $sign = BigInt::compare($numerator, 0);
+
+        return $sign !== 0 ? $sign : ($negative ? 1 : -1);
     }
 
     /**
