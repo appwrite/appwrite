@@ -13,7 +13,7 @@ final class VariablesTest extends TestCase
         $variable = $this->find('_APP_COMPUTE_BUILD_TIMEOUT');
 
         $this->assertSame('2700', $variable['default'], 'The installer writes this default into .env for new self-hosted installs; it must stay 2700 seconds as on main.');
-        $this->assertStringContainsString('The default value is 2700 seconds.', $variable['description']);
+        $this->assertStringContainsString('The default value is 2700 seconds.', (string) $variable['description']);
     }
 
     /**

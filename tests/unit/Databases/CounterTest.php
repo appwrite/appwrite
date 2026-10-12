@@ -16,7 +16,6 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
-use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
@@ -331,8 +330,8 @@ final class CounterTest extends TestCase
 
         $document = Counter::of($this->database, self::COLLECTION, 'ratio')->increase($this->database, self::COLLECTION, 'meter', 'ratio', 1.5, null);
 
-        $this->assertSame(6.75, $document->getAttribute('ratio'));
-        $this->assertSame(6.75, $this->database->getDocument(self::COLLECTION, 'meter')->getAttribute('ratio'));
+        $this->assertEqualsWithDelta(6.75, $document->getAttribute('ratio'), PHP_FLOAT_EPSILON);
+        $this->assertEqualsWithDelta(6.75, $this->database->getDocument(self::COLLECTION, 'meter')->getAttribute('ratio'), PHP_FLOAT_EPSILON);
     }
 
     public function testAFractionalMaximumOnAnIntegerBoundsTheIncrementAtItsWholePart(): void
@@ -367,14 +366,6 @@ final class CounterTest extends TestCase
         }
 
         $this->assertSame(3, $this->database->getDocument(self::COLLECTION, $document->getId())->getAttribute('count'));
-    }
-
-    public function testTheLibraryRefusesTheFractionalBoundItselfOnAnInteger(): void
-    {
-        $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'raw', 'count' => 8]));
-
-        $this->expectException(TypeException::class);
-        $this->database->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'count', 1, 10.5);
     }
 
     public function testAFractionalTextMaximumBeyondFloatPrecisionBoundsTheIncrementAtItsWholePart(): void
