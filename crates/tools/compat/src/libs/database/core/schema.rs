@@ -255,7 +255,7 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
             db.set_authorization(a.authorization("authorization", session)?);
             Ok(database_marker())
         }
-        "database.get_adapter" => Ok(adapter_marker()),
+        "database.get_adapter" => Ok(adapter_marker(&handle)),
         "database.set_timeout" => {
             db.set_timeout(a.int("milliseconds")?, &a.string_or("event", Database::EVENT_ALL)?)?;
             Ok(database_marker())
@@ -620,6 +620,8 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         "roles",
         "adapter",
         "filters",
+        "engine",
+        "schemaless",
     ];
     if let Some(o) = a.raw_object() {
         for key in o.keys() {
@@ -635,11 +637,18 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         Database::add_filter(name, args::filter(name)?);
     }
     let peer = a.given("adapter");
+    let mut mongo = None;
     let (adapter, postgres): (Arc<dyn Adapter>, Option<Arc<Postgres>>) = if peer {
         let db = session
             .get::<Db>(a.raw("adapter").unwrap_or(&Json::Null))
             .map_err(|_| Fault::new("db.open: `adapter` is not a database handle"))?;
+        mongo = db.mongo.clone();
         (db.database.adapter().clone(), db.postgres.clone())
+    } else if a.string_or("engine", "postgres")? == "mongo" {
+        let adapter = Arc::new(super::super::mongo::open(a, session).await?);
+        adapter.set_support_for_attributes(!a.bool_or("schemaless", false)?);
+        mongo = Some(adapter.clone());
+        (adapter, None)
     } else {
         let url = session.service("database-postgres")?.to_owned();
         let mut postgres = Postgres::connect(&url).await?;
@@ -695,7 +704,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     if !peer || a.has("namespace") {
         db.set_namespace(&a.string_or("namespace", "compat")?)?;
     }
-    let handle = Db { database: db.clone(), postgres };
+    let handle = Db { database: db.clone(), postgres, mongo };
     if !peer {
         args::state(session).current = Some(handle.clone());
         if a.bool_or("create", true)? {
@@ -740,7 +749,7 @@ async fn authorization(method: &str, a: &Args<'_>, db: &Database, session: &mut 
 }
 
 /// `db.adapter`: `$db->getAdapter()->$method(...$args)`.
-async fn adapter(a: &Args<'_>, db: &Database) -> R<Json> {
+pub(crate) async fn adapter(a: &Args<'_>, db: &Database) -> R<Json> {
     let method = a.string_or("method", "")?;
     let empty = Json::Object(Map::new());
     let args = Args::new(a.raw("args").filter(|j| !j.is_null()).unwrap_or(&empty));

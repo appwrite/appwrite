@@ -84,8 +84,18 @@ async fn databases(client: &mongodb::Client, ns: &str) -> Result<Vec<String>, St
     Ok(names)
 }
 
+/// Canonical extended JSON, but dates as `{"$date": "<ISO 8601 UTC>"}`
+/// (relaxed form), so the `now` scrub sees the ones near the clock.
 fn json(value: Bson) -> Value {
-    value.into_canonical_extjson()
+    match value {
+        Bson::DateTime(d) => match d.try_to_rfc3339_string() {
+            Ok(iso) => serde_json::json!({ "$date": iso }),
+            Err(_) => Bson::DateTime(d).into_canonical_extjson(),
+        },
+        Bson::Document(d) => Value::Object(d.into_iter().map(|(k, v)| (k, json(v))).collect()),
+        Bson::Array(items) => Value::Array(items.into_iter().map(json).collect()),
+        other => other.into_canonical_extjson(),
+    }
 }
 
 pub fn snapshot(url: &str, ns: &str) -> Result<Value, String> {

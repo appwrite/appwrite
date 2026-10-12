@@ -1,0 +1,31 @@
+{
+  "cases": [
+    {
+      "name": "collections, attributes, documents and finds on MongoDB",
+      "state": ["mongo@database-mongo"],
+      "steps": [
+        { "op": "db.open", "args": { "engine": "mongo" }, "bind": "db" },
+        { "op": "database.create_collection", "args": { "id": "people", "permissions": ["read(\"any\")", "create(\"any\")", "update(\"any\")", "delete(\"any\")"] } },
+        { "op": "database.create_attribute", "args": { "collection": "people", "id": "name", "type": "string", "size": 128, "required": true } },
+        { "op": "database.create_attribute", "args": { "collection": "people", "id": "age", "type": "integer", "size": 0, "required": false } },
+        { "op": "database.create_attribute", "args": { "collection": "people", "id": "born", "type": "datetime", "size": 0, "required": false, "filters": ["datetime"] } },
+        { "op": "database.create_index", "args": { "collection": "people", "id": "by_name", "type": "key", "attributes": ["name"] } },
+        { "op": "database.create_document", "args": { "collection": "people", "document": { "$id": "ada", "name": "Ada", "age": 36, "born": "1815-12-10T00:00:00.000+00:00" } } },
+        { "op": "database.create_document", "args": { "collection": "people", "document": { "$id": "grace", "name": "Grace", "age": 85 } } },
+        { "op": "database.get_document", "args": { "collection": "people", "id": "ada" } },
+        { "op": "database.find", "args": { "collection": "people", "queries": [{ "$query": { "method": "greaterThan", "attribute": "age", "values": [40] } }] } },
+        { "op": "database.find", "args": { "collection": "people", "queries": [{ "$query": { "method": "orderDesc", "attribute": "age", "values": [] } }] } },
+        { "op": "database.count", "args": { "collection": "people" } },
+        { "op": "database.sum", "args": { "collection": "people", "attribute": "age" } },
+        { "op": "database.update_document", "args": { "collection": "people", "id": "ada", "document": { "age": 37 } } },
+        { "op": "database.increase_document_attribute", "args": { "collection": "people", "id": "grace", "attribute": "age", "value": 1 } },
+        { "op": "database.find", "args": { "collection": "people", "queries": [{ "$query": { "method": "startsWith", "attribute": "name", "values": ["Gr"] } }] } },
+        { "op": "database.delete_document", "args": { "collection": "people", "id": "ada" } },
+        { "op": "database.find", "args": { "collection": "people" } },
+        { "op": "mongo.adapter", "args": { "method": "getTenantFilters", "args": { "collection": "people" } } },
+        { "op": "mongo.adapter", "args": { "method": "castingBefore", "args": { "collection": { "$id": "people", "attributes": [{ "$id": "born", "type": "datetime", "array": false }] }, "document": { "born": "2024-01-02T03:04:05.678+00:00" } } } },
+        { "op": "mongo.permission_strings", "args": { "roles": ["user:alice.", "users"], "type": "read" } }
+      ]
+    }
+  ]
+}

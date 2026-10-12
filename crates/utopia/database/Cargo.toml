@@ -11,6 +11,8 @@ publish.workspace = true
 default = ["postgres"]
 # The PostgreSQL adapter (and the legacy row-level layer, also PostgreSQL).
 postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:postgres-protocol", "dep:fallible-iterator"]
+# The MongoDB adapter, on utopia-mongo (the official driver).
+mongo = ["dep:utopia-mongo"]
 
 [dependencies]
 async-trait.workspace = true
@@ -30,6 +32,7 @@ tokio = { workspace = true, features = ["sync", "time", "rt", "net", "io-util"] 
 tokio-postgres = { workspace = true, optional = true }
 tracing.workspace = true
 utopia-cache.workspace = true
+utopia-mongo = { workspace = true, optional = true }
 utopia-validators.workspace = true
 
 [dev-dependencies]

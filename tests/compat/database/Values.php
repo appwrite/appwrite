@@ -17,6 +17,7 @@ use Utopia\Database\Query;
  *   {"$query": {"method", "attribute", "values"}}   new Query(method, attribute, values)
  *   {"$operator": {"method", "attribute", "values"}} new Operator(method, attribute, values)
  *   {"$object": {...}}                              a non-empty stdClass
+ *   {"$bson": <canonical extended JSON>}            a MongoDB\BSON value (UTCDateTime, ObjectId, Regex)
  * Everything else is what Tests\Compat\Codec already decoded: arrays,
  * scalars, `{}` as an empty stdClass, binary strings and non-finite floats.
  *
@@ -50,6 +51,9 @@ final class Values
                 }
                 if (\array_key_exists('$object', $value)) {
                     return (object) self::decodeArray(self::fields($value['$object']));
+                }
+                if (\array_key_exists('$bson', $value)) {
+                    return \MongoDB\BSON\Document::fromJSON(json_encode(['v' => $value['$bson']], JSON_THROW_ON_ERROR))->toPHP()->v;
                 }
             }
 
@@ -171,6 +175,9 @@ final class Values
         }
         if (\is_array($value)) {
             return self::encodeArray($value);
+        }
+        if ($value instanceof \MongoDB\BSON\Type) {
+            return ['$bson' => json_decode(\MongoDB\BSON\Document::fromPHP(['v' => $value])->toCanonicalExtendedJSON(), true, 512, JSON_THROW_ON_ERROR)['v']];
         }
         if (\is_object($value)) {
             throw new Fault('cannot encode ' . get_debug_type($value));

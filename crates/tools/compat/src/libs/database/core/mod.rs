@@ -24,6 +24,8 @@ mod documents;
 mod relationships;
 mod schema;
 
+pub(super) use schema::adapter as adapter_call;
+
 /// Every operation of this area (must match `spec.d/core.json`).
 pub const OPS: &[&str] = &[
     "database.add_filter",

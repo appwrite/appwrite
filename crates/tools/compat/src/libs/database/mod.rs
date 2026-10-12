@@ -15,10 +15,11 @@ mod adapter;
 mod benches;
 mod core;
 mod helpers;
+mod mongo;
 mod validators;
 mod values;
 
-const AREAS: &[&[&str]] = &[adapter::OPS, core::OPS, helpers::OPS, validators::OPS, values::OPS];
+const AREAS: &[&[&str]] = &[adapter::OPS, core::OPS, helpers::OPS, mongo::OPS, validators::OPS, values::OPS];
 
 /// Every operation of every area.
 pub const OPS: &[&str] = &concat_ops();
@@ -31,6 +32,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         adapter::call(op, args, session).await
     } else if core::OPS.contains(&op) {
         core::call(op, args, session).await
+    } else if mongo::OPS.contains(&op) {
+        mongo::call(op, args, session).await
     } else if helpers::OPS.contains(&op) {
         helpers::call(op, args, session).await
     } else if validators::OPS.contains(&op) {

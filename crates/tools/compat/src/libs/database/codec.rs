@@ -11,7 +11,7 @@ use serde_json::{Map, Value as Json};
 use utopia_database::document::Document;
 use utopia_database::operator::{Operator, OperatorMethod};
 use utopia_database::query::{Method, Query};
-use utopia_database::value::{Array, ArrayKey, Ext, KeyRef, Str, Value};
+use utopia_database::value::{Array, ArrayKey, BsonValue, Ext, KeyRef, Str, Value};
 
 use crate::adapter::{Fault, bytes_value, float_value};
 
@@ -64,6 +64,9 @@ pub fn decode(json: &Json) -> Result<Value, Fault> {
                 }
                 if let Some(obj) = o.get("$object") {
                     return Ok(Value::Object(decode_array(obj)?));
+                }
+                if let Some(bson) = o.get("$bson") {
+                    return decode_bson(bson);
                 }
             }
             Value::Array(
@@ -183,7 +186,42 @@ pub fn encode(value: &Value) -> Json {
                 "values": encode_array(&o.values_array()),
             }),
         ),
+        Value::Ext(Ext::Bson(b)) => tag(
+            "$bson",
+            match &**b {
+                BsonValue::UtcDateTime(ms) => serde_json::json!({ "$date": { "$numberLong": ms.to_string() } }),
+                BsonValue::ObjectId(bytes) => {
+                    serde_json::json!({ "$oid": bytes.iter().map(|b| format!("{b:02x}")).collect::<String>() })
+                }
+                BsonValue::Regex { pattern, flags } => {
+                    serde_json::json!({ "$regularExpression": { "pattern": pattern, "options": flags } })
+                }
+            },
+        ),
     }
+}
+
+/// A `{"$bson": <canonical extended JSON>}` value: the BSON types the
+/// MongoDB adapter carries.
+fn decode_bson(json: &Json) -> Result<Value, Fault> {
+    let bad = || Fault::new(format!("unsupported $bson value: {json}"));
+    let o = json.as_object().ok_or_else(bad)?;
+    if let Some(date) = o.get("$date") {
+        let ms = date.get("$numberLong").and_then(Json::as_str).and_then(|s| s.parse().ok()).ok_or_else(bad)?;
+        return Ok(Value::from(BsonValue::UtcDateTime(ms)));
+    }
+    if let Some(Json::String(hex)) = o.get("$oid") {
+        let mut bytes = [0u8; 12];
+        for (i, b) in bytes.iter_mut().enumerate() {
+            *b = u8::from_str_radix(hex.get(i * 2..i * 2 + 2).ok_or_else(bad)?, 16).map_err(|_| bad())?;
+        }
+        return Ok(Value::from(BsonValue::ObjectId(bytes)));
+    }
+    if let Some(re) = o.get("$regularExpression") {
+        let text = |k: &str| re.get(k).and_then(Json::as_str).unwrap_or("").to_owned();
+        return Ok(Value::from(BsonValue::Regex { pattern: text("pattern"), flags: text("options") }));
+    }
+    Err(bad())
 }
 
 /// A document result: `{"$document": {...}}` (plus `$class` for a custom type).

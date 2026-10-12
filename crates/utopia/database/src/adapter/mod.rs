@@ -29,6 +29,8 @@ use crate::query::Query;
 use crate::validator::authorization::Authorization;
 use crate::value::{Array, Value};
 
+#[cfg(feature = "mongo")]
+pub mod mongo;
 #[cfg(feature = "postgres")]
 pub mod postgres;
 
@@ -153,6 +155,9 @@ where
     F: FnMut() -> Fut,
     Fut: Future<Output = Result<T>>,
 {
+    if adapter.bypass_transaction().await? {
+        return f().await;
+    }
     let retries = 2;
     for attempt in 0..=retries {
         let result = async {
@@ -189,7 +194,7 @@ where
             tokio::time::sleep(std::time::Duration::from_micros(50_000 * (attempt as u64 + 1))).await;
             continue;
         }
-        return Err(rollback.unwrap_or(action));
+        return Err(if adapter.rethrows_rollback_failure() { rollback.unwrap_or(action) } else { action });
     }
     Err(Error::transaction("Failed to execute transaction"))
 }
@@ -401,6 +406,20 @@ pub trait Adapter: Send + Sync {
     }
 
     // ----- Transactions -----
+
+    /// Whether `withTransaction()` runs its callback without a transaction:
+    /// adapters that override it to skip one when they cannot (Mongo off a
+    /// replica set) or need not (already in one). `false`.
+    async fn bypass_transaction(&self) -> Result<bool> {
+        Ok(false)
+    }
+
+    /// Whether `withTransaction()`, once out of retries, reports a failed
+    /// rollback in place of the failure that caused it (`true`; Mongo
+    /// reports the failure).
+    fn rethrows_rollback_failure(&self) -> bool {
+        true
+    }
 
     /// `startTransaction()`.
     async fn start_transaction(&self) -> Result<bool>;

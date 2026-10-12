@@ -1,0 +1,21 @@
+{
+  "ops": {
+    "mongo.adapter": {
+      "doc": "$db->getAdapter()->{method}(...args) on a database db.open opened with engine \"mongo\" (Utopia\\Database\\Adapter\\Mongo over utopia-php/mongo): named arguments as database.*, getDriver() as {\"$client\": true}",
+      "services": [
+        "database-mongo"
+      ],
+      "covers": []
+    },
+    "mongo.permission_strings": {
+      "doc": "Mongo::permissionStrings(type) (private, by reflection, as MongoPermissionStringsTest calls it) on an adapter whose Authorization (enabled, cleaned) holds `roles`",
+      "covers": []
+    }
+  },
+  "scrub": [
+    {
+      "kind": "uuid7",
+      "reason": "MongoDB documents get a UUIDv7 _id ($sequence) made from the clock and random bits"
+    }
+  ]
+}

@@ -131,7 +131,7 @@ final class Core
      */
     public static function open(array $a, Session $s): array
     {
-        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters'];
+        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters', 'engine', 'schemaless'];
         foreach (array_keys($a) as $key) {
             if (!\in_array($key, $known, true)) {
                 throw new Fault("db.open: unknown argument `{$key}`");
@@ -153,6 +153,23 @@ final class Core
             }
             $adapter = $peer->getAdapter();
             $pdo = $state->pdos[$peer] ?? null;
+        } elseif (($a['engine'] ?? 'postgres') === 'mongo') {
+            // MongoDB service `database-mongo`: the client's database is the
+            // one every collection lives in (the adapter's setDatabase()
+            // only names databases to drop), `database` (default: the case
+            // namespace).
+            $url = parse_url($s->service('database-mongo'));
+            $client = new \Utopia\Mongo\Client(
+                (string) ($a['database'] ?? $s->ns),
+                (string) ($url['host'] ?? ''),
+                (int) ($url['port'] ?? 27017),
+                urldecode($url['user'] ?? ''),
+                urldecode($url['pass'] ?? ''),
+                false,
+            );
+            $adapter = new \Utopia\Database\Adapter\Mongo($client);
+            $adapter->setSupportForAttributes(!($a['schemaless'] ?? false));
+            $pdo = null;
         } else {
             $url = parse_url($s->service('database-postgres'));
             $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');

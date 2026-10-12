@@ -100,8 +100,11 @@ pub fn database_marker() -> Json {
     json!({"$database": true})
 }
 
-/// The adapter: `{"$adapter": "Postgres"}`.
-pub fn adapter_marker() -> Json {
+/// The adapter: `{"$adapter": "Postgres"}` (`"Mongo"` for a MongoDB one).
+pub fn adapter_marker(db: &Db) -> Json {
+    if db.mongo.is_some() {
+        return json!({"$adapter": "Mongo"});
+    }
     json!({"$adapter": "Postgres"})
 }
 
@@ -136,6 +139,9 @@ pub struct Db {
     /// Its PostgreSQL adapter (`db.sql` runs on its connection); `None` for
     /// none of its own.
     pub postgres: Option<Arc<Postgres>>,
+    /// Its MongoDB adapter (`engine: "mongo"`), for the operations only
+    /// that adapter has.
+    pub mongo: Option<Arc<utopia_database::adapter::mongo::Mongo>>,
 }
 
 /// What a session's databases share (PHP's `CoreState`).
