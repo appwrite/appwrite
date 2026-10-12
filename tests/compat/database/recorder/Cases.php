@@ -471,7 +471,7 @@ final class Cases
                 $name = 'Scope-' . ($this->profile === 'shared' ? 'SharedTables-' : '') . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
                 $source = [$base . 'tests/e2e/Adapter/' . $file, $base . $adapter];
             }
-            if ($filter !== null && !str_contains($name, $filter)) {
+            if ($filter !== null && array_filter(explode(',', $filter), fn (string $f) => str_contains($name, $f)) === []) {
                 continue;
             }
             fwrite(STDERR, "writing {$name}: " . \count($data["cases"]) . " cases, {$data["steps"]} steps\n");

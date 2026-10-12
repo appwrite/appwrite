@@ -14,7 +14,7 @@ use crate::value::{Value, as_document};
 
 /// Counts the collection's attributes, or measures its row width, with a
 /// new attribute. PHP: `$attributeCountCallback` / `$attributeWidthCallback`.
-pub type Measure = Box<dyn Fn(&Document) -> i64 + Send + Sync>;
+pub type Measure = Box<dyn Fn(&Document) -> Result<i64> + Send + Sync>;
 
 /// The adapter's name for an attribute id (PHP: `$filterCallback`).
 pub type Filter = Box<dyn Fn(&str) -> String + Send + Sync>;
@@ -241,8 +241,8 @@ impl Attribute {
         let (Some(count), Some(width)) = (&self.options.attribute_count, &self.options.attribute_width) else {
             return Ok(true);
         };
-        let count = count(attribute);
-        let width = width(attribute);
+        let count = count(attribute)?;
+        let width = width(attribute)?;
         let max_attributes = self.options.max_attributes;
         if max_attributes > 0 && count > max_attributes {
             return self.fail(

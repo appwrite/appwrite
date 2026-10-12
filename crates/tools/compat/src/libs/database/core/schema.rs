@@ -810,7 +810,7 @@ async fn adapter(a: &Args<'_>, db: &Database) -> R<Json> {
         "getMaxDateTime" => Ok(args::datetime(&adapter.max_date_time())),
         "getInternalIndexesKeys" => Ok(strings(adapter.internal_indexes_keys())),
         "getKeywords" => Ok(strings(adapter.keywords())),
-        "getAttributeWidth" => Ok(Json::from(adapter.attribute_width(&args.document("collection")?))),
+        "getAttributeWidth" => Ok(Json::from(adapter.attribute_width(&args.document("collection")?)?)),
         "getCountOfAttributes" => Ok(Json::from(adapter.count_of_attributes(&args.document("collection")?))),
         "getCountOfIndexes" => Ok(Json::from(adapter.count_of_indexes(&args.document("collection")?))),
         "filter" => Ok(Json::String(adapter.filter(&args.string("value")?)?)),

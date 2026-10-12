@@ -76,6 +76,11 @@
 //! `new Document(COLLECTION)` for that id before anything else, so the
 //! behaviour is the same and `create()` works before `get_document` does.
 //!
+//! Schema area: `collections.rs`, `attributes.rs`, `indexes.rs` and
+//! `metadata.rs` are complete. `update_index_meta` and
+//! `rollback_attribute_metadata` wait for their callers in
+//! `relationships.rs` (`updateRelationship`, `createRelationship`).
+//!
 //! Cache keys are shared with PHP, so the default filters' signatures are
 //! PHP's (`file:line` of their closures in the PHP runtime's image:
 //! `/usr/src/code/vendor/utopia-php/database/src/Database/Database.php`).

@@ -2770,14 +2770,14 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "sharedTables"
+            "database": "${ns}_sharedTables"
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "database.set_database",
           "args": {
-            "name": "sharedTables"
+            "name": "${ns}_sharedTables"
           },
           "expect": {
             "$database": true
@@ -2791,7 +2791,7 @@
         {
           "op": "database.set_database",
           "args": {
-            "name": "sharedTables"
+            "name": "${ns}_sharedTables"
           },
           "expect": {
             "$database": true
@@ -3337,21 +3337,14 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "sharedTablesTenantPerDocument"
+            "database": "${ns}_sharedTablesTenantPerDocument"
           },
-          "expect": true
-        },
-        {
-          "op": "database.delete",
-          "args": {
-            "database": "sharedTablesTenantPerDocument"
-          },
-          "expect": true
+          "expect": false
         },
         {
           "op": "database.set_database",
           "args": {
-            "name": "sharedTablesTenantPerDocument"
+            "name": "${ns}_sharedTablesTenantPerDocument"
           },
           "expect": {
             "$database": true

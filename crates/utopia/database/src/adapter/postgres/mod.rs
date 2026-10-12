@@ -596,8 +596,8 @@ impl Adapter for Postgres {
         65535
     }
 
-    fn attribute_width(&self, collection: &Document) -> i64 {
-        ddl::attribute_width(collection).unwrap_or(0)
+    fn attribute_width(&self, collection: &Document) -> Result<i64> {
+        ddl::attribute_width(collection)
     }
 
     fn keywords(&self) -> &'static [&'static str] {
