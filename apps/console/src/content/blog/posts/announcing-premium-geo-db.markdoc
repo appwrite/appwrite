@@ -1,0 +1,147 @@
+---
+layout: post
+title: "Announcing Premium Geo DB: city, ISP, and connection data"
+description: Premium Geo DB adds city, time zone, ISP, ASN, and connection type to IP geolocation on Appwrite Cloud, for Firewall rules, usage, and the Locale API.
+date: 2026-10-01
+cover: /images/blog/announcing-premium-geo-db/cover.avif
+timeToRead: 7
+author: aditya-oberai
+category: announcements, security
+featured: false
+faqs:
+  - question: "What is Premium Geo DB in Appwrite?"
+    answer: "Premium Geo DB is an Appwrite Cloud add-on that switches a project's IP lookups to a more detailed geolocation database. On top of the country, continent, EU membership, and currency every plan gets, it adds city, state, postal code, coordinates, time zone, ISP, AS number, AS organization, connection type, connection usage type, and connection organization. The data appears in [Firewall conditions](/docs/products/firewall/conditions#premium-geo-db), project usage breakdowns, and the [Locale API](/docs/references/cloud/client-web/locale#get). See the [Premium Geo DB docs](/docs/advanced/billing/premium-geo-db)."
+  - question: "How much does Premium Geo DB cost?"
+    answer: "Premium Geo DB costs $10 per project per month, plus applicable taxes. When you enable it, Appwrite charges the prorated amount for the days left in your billing cycle, then adds the full price to each invoice after that. It is available on the Pro plan."
+  - question: "How do I block datacenter and hosting provider traffic in Appwrite?"
+    answer: "Enable Premium Geo DB on the project, open **Firewall**, keep the resource selector on **API**, and choose **Add preset**. Under **Scraping prevention**, pick **Block hosting provider traffic**, review the impact preview, and create the rule. It denies requests whose connection usage type is `hosting`, which covers cloud providers, VPS hosts, and data centers. Your own servers and Functions run on hosting networks too, so add a [bypass rule](/docs/products/firewall/actions) that matches their IP addresses first."
+  - question: "How do I get a user's city from their IP address in Appwrite?"
+    answer: "Enable Premium Geo DB, then call `locale.get()` from a client SDK. The response includes `city`, `timeZone`, `postalCode`, `latitude`, `longitude`, `isp`, the AS fields, and the connection fields for the IP that sent the request. Call it from the client, not a server SDK, or you get your server's location instead of the user's."
+  - question: "What happens to my Firewall rules if I disable Premium Geo DB?"
+    answer: "The add-on stays active until the end of the billing cycle. After that, Appwrite treats premium attributes as empty on API traffic. **Equals** conditions on them never match and **Not equal** conditions match every request, so a deny rule can start denying all traffic. Rewrite or delete rules that use premium attributes before the add-on ends."
+  - question: "Is Premium Geo DB available on self-hosted Appwrite?"
+    answer: "No. Premium Geo DB is an add-on for [Appwrite Cloud](https://cloud.appwrite.io) projects. Self-hosted Appwrite returns country-level location data."
+---
+
+A scraper on a rented cloud server in Virginia and a customer on their phone in Virginia look the same to a country rule. Both resolve to `US`. Block the country and you lose the customer. Allow it and the scraper keeps paginating through your tables.
+
+That has been the limit of IP geolocation in Appwrite so far. Every request resolves to a country, a continent, an EU flag, and a currency. That is enough to keep an API inside the markets you serve, and it is what the country rules in [Appwrite Firewall](/docs/products/firewall) run on. It can't tell you which city a request came from, which network carried it, or whether that network belongs to a hosting provider.
+
+Today, we are announcing **Premium Geo DB**, an add-on for Appwrite Cloud projects.
+
+# What Premium Geo DB gives you
+
+Premium Geo DB switches a project's IP lookups to a more detailed geolocation database. Requests keep the country data they had before and gain the city and network behind the IP. With the add-on on a project, you get:
+
+- 13 more [Firewall condition](/docs/products/firewall/conditions#premium-geo-db) attributes, from city to connection organization.
+- A Firewall preset that denies API traffic from hosting and datacenter networks.
+- Request breakdowns on the project **Usage** page by city, ISP, AS number, and connection type.
+- City, time zone, ISP, AS, and connection fields in responses from the [Locale API](/docs/references/cloud/client-web/locale#get), typed in the client SDKs.
+- Location and network details on Auth sessions and activity events.
+
+It costs $10 per project per month and is available on the Pro plan.
+
+# What IP geolocation data Premium Geo DB adds
+
+Premium Geo DB adds 13 attributes to the lookup Appwrite already runs on every request. Here is what a project resolves for an IP with and without it:
+
+| Data | Every plan | With Premium Geo DB |
+| --- | --- | --- |
+| Country and continent | Yes | Yes |
+| EU membership and currency | Yes | Yes |
+| City, state, and postal code | - | Yes |
+| Latitude, longitude, and time zone | - | Yes |
+| ISP, AS number, and AS organization | - | Yes |
+| Connection type, usage type, and organization | - | Yes |
+
+The network fields describe who runs the network behind an IP. **Connection usage type** says what the network is used for, such as residential, business, or hosting. The **AS number** (autonomous system number) identifies the network operator that routes the IP, such as an ISP or a cloud provider, and **AS organization** is that operator's name. A home broadband connection in Virginia and a VM in a Virginia data center are both `US`, but their connection usage types are different.
+
+The [Premium Geo DB docs](/docs/advanced/billing/premium-geo-db) list every attribute and where you can read it.
+
+# Block hosting and datacenter traffic with Firewall
+
+Automated traffic tends to come from rented servers. A cloud VM costs cents per hour, and a fresh IP is one API call away. OWASP's list of [automated threats to web applications](https://owasp.org/www-project-automated-threats-to-web-applications/) names scraping (OAT-011), credential stuffing (OAT-008), and account creation (OAT-019) among the attacks that bots run at scale. Your real users rarely sign in from a data center.
+
+Premium Geo DB enables the **Block hosting provider traffic** [Firewall preset](/blog/post/announcing-firewall-presets) in the **Scraping prevention** group. It denies API requests whose connection usage type is `hosting`. That covers the big cloud providers, VPS hosts, and data centers.
+
+Open **Firewall**, choose **Add preset**, and pick it. The impact preview shows how many recent requests the rule would have denied before you save it.
+
+For anything more specific, build the rule yourself. The condition builder unlocks all 13 premium attributes, so rules like these become possible:
+
+- Deny account creation (`POST` to `/v1/account`) from hosting connections, and leave sign-ins alone.
+- Rate-limit `/v1/account` paths tighter for hosting connections than for everyone else.
+- Deny traffic from one network operator that keeps showing up in your logs, identified by its AS number, without blocking the whole country.
+
+## Let your own servers through
+
+Your own infrastructure is hosting traffic too. Server-side SDK calls from a Function, a backend on a VPS, and a CI job all come from hosting networks. A hosting deny with no exceptions blocks them along with the scrapers.
+
+Add a [bypass rule](/docs/products/firewall/actions) for trusted callers before you turn on a hosting deny. Give it a lower priority number than the deny rule so it runs first, and match on the IP addresses or ranges your servers send from. Don't match on a custom header alone: any caller can send the same header, and a matching bypass skips every rule after it. Then check the [impact preview](/docs/products/firewall/monitor#impact-preview) against real traffic. The Console is never blocked, so a rule that goes wrong can't lock you out of the page you need to fix it.
+
+## Keep rules working if the add-on ends
+
+If the add-on ends, Appwrite treats premium attributes as empty on API traffic. An **Equals** condition then never matches, and a **Not equal** condition matches every request. A deny rule written as "connection usage type is not `residential`" would start denying all of your API traffic. Rewrite or delete rules that use premium attributes before you disable the add-on.
+
+# Read location and network data with the Locale API
+
+Firewall acts before a request reaches your app. Sometimes your app wants the same data. The Locale API's `get` method returns the location of the IP that sent the request, and with Premium Geo DB it includes the city, postal code, coordinates, time zone, ISP, AS, and connection fields. Recent versions of the Web, Flutter, Apple, and Android SDKs declare them as optional fields on the `Locale` model.
+
+```client-web
+import { Client, Locale } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<PROJECT_ID>');
+
+const locale = new Locale(client);
+
+const { city, timeZone } = await locale.get();
+
+// Pre-fill the time zone on a settings form
+document.querySelector('#timezone').value = timeZone ?? '';
+
+// Suggest a default city for a store picker
+document.querySelector('#city').value = city ?? '';
+```
+
+Call it from the client. The lookup runs on the IP that sends the request, so a call from a server SDK returns your server's location.
+
+Treat the result as a hint in client code. Anyone can skip a check that runs in their own browser. Use the Locale API for decisions that are fine to get wrong or skip, like defaulting a time zone or picking a nearby store. Put anything that must hold in a Firewall rule, which runs before the request reaches your app.
+
+IP geolocation is also an estimate. VPNs, mobile carriers, and corporate proxies can place a user in the wrong city, so a city on its own is a poor reason to lock someone out.
+
+# Break down traffic by city and network in Usage
+
+With the add-on, the project **Usage** page breaks requests down by seven more dimensions: cities, ISPs, AS numbers, AS organizations, connection types, connection usage types, and connection organizations. When a traffic spike hits, you can see which network sent it, not only which country.
+
+The Firewall rule wizard reads the same data. When a condition uses a premium attribute, the impact preview charts the top values in recent traffic, so you can pick the AS number or ISP behind a spike from real requests and turn it into a rule in the same flow.
+
+# Enable Premium Geo DB on a project
+
+![Premium Geo DB card in project settings](/images/blog/announcing-premium-geo-db/enable-premium-geo-db.avif)
+
+1. Sign in to [Appwrite Cloud](https://cloud.appwrite.io) and open your project.
+2. Go to **Settings** and stay on the **Overview** tab.
+3. Find the **Premium Geo DB** card and click **Enable Premium Geo DB**.
+4. Review the monthly price and the prorated amount due today, then click **Enable**.
+
+New requests use the premium database as soon as the add-on is active. The first charge covers the days left in your billing cycle, and the full $10 is added to each invoice after that. Each project needs its own add-on, so a staging project and a production project are billed separately.
+
+To turn it off, click **Disable** on the same card. The add-on stays active until the end of the billing cycle.
+
+# When Premium Geo DB is worth it
+
+Turn it on when the abuse you see comes from cloud networks. Scraping, fake sign-ups, and OTP abuse from rented servers slip past country rules, and connection usage type catches them.
+
+It is also worth it when you need to know where traffic comes from below the country level. That covers city-level usage analytics, debugging a regional outage, and apps that default to the user's time zone or nearest location.
+
+Skip it when country rules already do the job. If the attacks you see come from countries you don't serve, [country rules](/docs/products/firewall/block-countries) work on every plan at no extra cost. Add Premium Geo DB when the traffic you want to stop comes from inside the countries you serve.
+
+# Getting started with Premium Geo DB
+
+Pick the project that gets scraped or abused the most, enable Premium Geo DB, and open its **Usage** page. The network breakdowns show how much of your traffic comes from hosting providers. Use that number to decide between a hosting deny, a tighter rate limit, or no rule at all.
+
+- [Premium Geo DB docs](/docs/advanced/billing/premium-geo-db)
+- [Firewall conditions](/docs/products/firewall/conditions#premium-geo-db)
+- [Firewall actions and bypass rules](/docs/products/firewall/actions)
+- [Locale API reference](/docs/references/cloud/client-web/locale#get)

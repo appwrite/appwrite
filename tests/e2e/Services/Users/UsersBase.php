@@ -675,6 +675,7 @@ trait UsersBase
         $this->assertEquals($data['userId'], $token['body']['userId']);
         $this->assertNotEmpty($token['body']['secret']);
         $this->assertNotEmpty($token['body']['expire']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $token['body']['expire']));
 
         $token = $this->client->call(Client::METHOD_POST, '/users/' . $data['userId'] . '/tokens', array_merge([
             'content-type' => 'application/json',
@@ -735,6 +736,7 @@ trait UsersBase
         $this->assertNotEmpty($session['secret']);
         $this->assertNotEmpty($session['expire']);
         $this->assertEquals('server', $session['provider']);
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $session['expire']));
 
         $response = $this->client->call(Client::METHOD_GET, '/account', [
             'content-type' => 'application/json',

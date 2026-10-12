@@ -1,0 +1,3050 @@
+---
+layout: article
+title: Operators
+description: Update multiple fields atomically without fetching the full row. Perform numeric, array, string, and date updates in a single, consistent workflow.
+---
+
+Database operators let you update fields directly on the server without fetching the full row. Instead of sending new values, you describe the action you want: increment, append, replace, or adjust. This eliminates race conditions and reduces bandwidth usage when updating any values that need to be modified atomically. The operation is applied atomically at the storage layer for safe, concurrent updates.
+
+- Atomic by field: Each operation is applied safely at the storage layer to prevent lost updates under concurrency.
+- Multi-field updates: Apply multiple operations across different fields in a single request or transaction.
+- Type-safe: Operators are exposed through typed SDK methods for clarity and safety.
+- Transaction-ready: Operators can be staged and committed alongside other database actions for consistent writes.
+
+# How operators work {% #how-database-operators-work %}
+
+Instead of the traditional **read-modify-write** pattern, operators use dedicated methods to modify values directly on the server. The server applies the change atomically under concurrency control and returns the new value.
+
+Let's take an example of appending a value to an array field.
+
+**Traditional approach:**
+1. Fetch row → `{ letters: ['a', 'b' ] }`
+2. Update client-side → `letters: ['a', 'b', 'c']`
+3. Write back → `{ letters: ['a', 'b', 'c'] }`
+
+**Operator approach:**
+1. Update/upsert the row with the appropriate value to append
+2. Server applies atomically → `letters: ['a', 'b', 'c']`
+
+Here's how you can do so programmatically:
+
+{% multicode %}
+```client-web
+import { Client, TablesDB, Operator } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.updateRow({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: {
+    letters: Operator.arrayAppend(['c'])
+  }
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+client
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.updateRow({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rowId: '<ROW_ID>',
+  data: {
+    letters: sdk.Operator.arrayAppend(['c'])
+  }
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+  final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>');
+
+  final tablesDB = TablesDB(client);
+
+  try {
+    await tablesDB.updateRow(
+        '<DATABASE_ID>',
+        '<TABLE_ID>',
+        '<ROW_ID>',
+        {
+            'letters': Operator.arrayAppend(['c'])
+        },
+    );
+  } on AppwriteException catch (e) {
+    print(e);
+  }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+  let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  let tablesDB = TablesDB(client)
+
+  do {
+    _ = try await tablesDB.updateRow(
+      databaseId: "<DATABASE_ID>",
+      tableId: "<TABLE_ID>",
+      rowId: "<ROW_ID>",
+      data: [
+        "letters": Operator.arrayAppend(["c"]) 
+      ]
+    )
+  } catch {
+    print(error.localizedDescription)
+  }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.Operator
+
+suspend fun main() {
+  val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  val tablesDB = TablesDB(client)
+
+  tablesDB.updateRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    data = mapOf(
+      "letters" to Operator.arrayAppend(listOf("c"))
+    )
+  )
+}
+```
+```server-go
+package main
+
+import (
+  "log"
+  "github.com/appwrite/sdk-for-go/appwrite"
+  operator "github.com/appwrite/sdk-for-go/operator"
+)
+
+func main() {
+  client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+  )
+
+  tablesDB := appwrite.NewTablesDB(client)
+
+  _, err := tablesDB.UpdateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    tablesDB.WithUpdateRowData(map[string]any{
+      "letters": operator.ArrayAppend([]string{"c"}),
+    }),
+  )
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+use Appwrite\Operator;
+
+$client = (new Client())
+  ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  ->setProject('<YOUR_PROJECT_ID>')
+  ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+$result = $tablesDB->updateRow(
+  '<DATABASE_ID>',
+  '<TABLE_ID>',
+  '<ROW_ID>',
+  [ 'letters' => Operator::arrayAppend(['c']) ]
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.operator import Operator
+
+client = Client()
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>'))
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.update_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={ 'letters': Operator.arrayAppend(['c']) }
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetProject("<YOUR_PROJECT_ID>")
+  .SetKey("<YOUR_API_KEY>");
+
+var tablesDB = new TablesDB(client);
+
+await tablesDB.UpdateRow(
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: new Dictionary<string, object>
+  {
+    { "letters", Operator.ArrayAppend(new[] { "c" }) }
+  }
+);
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new()
+
+client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+
+tablesDB = TablesDB.new(client)
+
+result = tablesDB.update_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'letters' => Operator.arrayAppend(['c']) }
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+import io.appwrite.Operator;
+import java.util.*;
+
+Client client = new Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<YOUR_PROJECT_ID>")
+  .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+tablesDB.updateRow(
+  "<DATABASE_ID>",
+  "<TABLE_ID>",
+  "<ROW_ID>",
+  Map.of("letters", Operator.arrayAppend(List.of("c"))),
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return;
+    }
+    System.out.println(result);
+  })
+);
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::operator;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.update_row(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        "<ROW_ID>",
+        Some(json!({
+            "letters": operator::array_append(&["c"])
+        })),
+        None,
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+
+# When to use operators {% #when-to-use %}
+
+Use operators when you need to:
+
+- Update fields frequently under concurrency (likes, scores, credits, inventory)
+- Edit lists/tags without rewriting whole arrays
+- Make small text changes in-place
+- Adjust dates for lifecycle events or scheduling
+
+This keeps payloads small, avoids race conditions, and reduces round-trips.
+
+# Available operators {% #operators %}
+
+The following operators are available, grouped by field type. Each operator updates the given column atomically on the server.
+
+## Numeric {% #numeric %}
+
+Perform arithmetic on numeric fields without reading the row first.
+
+### increment {% #increment %}
+
+Increase a numeric field by a specified value. Optionally cap the result at a maximum value.
+
+{% multicode %}
+```client-web
+Operator.increment(1)
+```
+```server-python
+Operator.increment(1)
+```
+```server-php
+Operator::increment(1)
+```
+```client-apple
+Operator.increment(1)
+```
+```client-android-kotlin
+Operator.increment(1)
+```
+```server-go
+operator.Increment(1)
+```
+```client-flutter
+Operator.increment(1)
+```
+```server-dotnet
+Operator.Increment(1)
+```
+```server-ruby
+Operator.increment(1)
+```
+```server-java
+Operator.increment(1)
+```
+```server-rust
+operator::increment_by(1)
+```
+{% /multicode %}
+
+### decrement {% #decrement %}
+
+Decrease a numeric field by a specified value. Optionally cap the result at a minimum value.
+
+{% multicode %}
+```client-web
+Operator.decrement(1)
+```
+```server-python
+Operator.decrement(1)
+```
+```server-php
+Operator::decrement(1)
+```
+```client-apple
+Operator.decrement(1)
+```
+```client-android-kotlin
+Operator.decrement(1)
+```
+```server-go
+operator.Decrement(1)
+```
+```client-flutter
+Operator.decrement(1)
+```
+```server-dotnet
+Operator.Decrement(1)
+```
+```server-ruby
+Operator.decrement(1)
+```
+```server-java
+Operator.decrement(1)
+```
+```server-rust
+operator::decrement_by(1)
+```
+{% /multicode %}
+
+### multiply {% #multiply %}
+
+Multiply a numeric field by a specified factor. Optionally cap the result at a maximum value.
+
+{% multicode %}
+```client-web
+Operator.multiply(2)
+```
+```server-python
+Operator.multiply(2)
+```
+```server-php
+Operator::multiply(2)
+```
+```client-apple
+Operator.multiply(2)
+```
+```client-android-kotlin
+Operator.multiply(2)
+```
+```server-go
+operator.Multiply(2)
+```
+```client-flutter
+Operator.multiply(2)
+```
+```server-dotnet
+Operator.Multiply(2)
+```
+```server-ruby
+Operator.multiply(2)
+```
+```server-java
+Operator.multiply(2)
+```
+```server-rust
+operator::multiply(2)
+```
+{% /multicode %}
+
+### divide {% #divide %}
+
+Divide a numeric field by a specified divisor. Optionally cap the result at a minimum value. Divisor cannot be zero.
+
+{% multicode %}
+```client-web
+Operator.divide(5)
+```
+```server-python
+Operator.divide(5)
+```
+```server-php
+Operator::divide(5)
+```
+```client-apple
+Operator.divide(5)
+```
+```client-android-kotlin
+Operator.divide(5)
+```
+```server-go
+operator.Divide(5)
+```
+```client-flutter
+Operator.divide(5)
+```
+```server-dotnet
+Operator.Divide(5)
+```
+```server-ruby
+Operator.divide(5)
+```
+```server-java
+Operator.divide(5)
+```
+```server-rust
+operator::divide(5)
+```
+{% /multicode %}
+
+### modulo {% #modulo %}
+
+Set a numeric field to the remainder of itself divided by a specified value.
+
+{% multicode %}
+```client-web
+Operator.modulo(3)
+```
+```server-python
+Operator.modulo(3)
+```
+```server-php
+Operator::modulo(3)
+```
+```client-apple
+Operator.modulo(3)
+```
+```client-android-kotlin
+Operator.modulo(3)
+```
+```server-go
+operator.Modulo(3)
+```
+```client-flutter
+Operator.modulo(3)
+```
+```server-dotnet
+Operator.Modulo(3)
+```
+```server-ruby
+Operator.modulo(3)
+```
+```server-java
+Operator.modulo(3)
+```
+```server-rust
+operator::modulo(3)
+```
+{% /multicode %}
+
+### power {% #power %}
+
+Raise a numeric field to a specified exponent. Optionally cap the result at a maximum value.
+
+{% multicode %}
+```client-web
+Operator.power(2)
+```
+```server-python
+Operator.power(2)
+```
+```server-php
+Operator::power(2)
+```
+```client-apple
+Operator.power(2)
+```
+```client-android-kotlin
+Operator.power(2)
+```
+```server-go
+operator.Power(2)
+```
+```client-flutter
+Operator.power(2)
+```
+```server-dotnet
+Operator.Power(2)
+```
+```server-ruby
+Operator.power(2)
+```
+```server-java
+Operator.power(2)
+```
+```server-rust
+operator::power(2)
+```
+{% /multicode %}
+
+## Array {% #array %}
+
+Edit lists in place: append, remove, or modify array items atomically.
+
+### arrayAppend {% #array-append %}
+
+Add one or more elements to the end of an array.
+
+{% multicode %}
+```client-web
+Operator.arrayAppend(['c'])
+```
+```server-python
+Operator.arrayAppend(['c'])
+```
+```server-php
+Operator::arrayAppend(['c'])
+```
+```client-apple
+Operator.arrayAppend(["c"])
+```
+```client-android-kotlin
+Operator.arrayAppend(listOf("c"))
+```
+```server-go
+operator.ArrayAppend([]string{"c"})
+```
+```client-flutter
+Operator.arrayAppend(['c'])
+```
+```server-dotnet
+Operator.ArrayAppend(new[] { "c" })
+```
+```server-ruby
+Operator.arrayAppend(['c'])
+```
+```server-java
+Operator.arrayAppend(List.of("c"))
+```
+```server-rust
+operator::array_append(&["c"])
+```
+{% /multicode %}
+
+### arrayPrepend {% #array-prepend %}
+
+Add one or more elements to the beginning of an array.
+
+{% multicode %}
+```client-web
+Operator.arrayPrepend(['z'])
+```
+```server-python
+Operator.arrayPrepend(['z'])
+```
+```server-php
+Operator::arrayPrepend(['z'])
+```
+```client-apple
+Operator.arrayPrepend(["z"])
+```
+```client-android-kotlin
+Operator.arrayPrepend(listOf("z"))
+```
+```server-go
+operator.ArrayPrepend([]string{"z"})
+```
+```client-flutter
+Operator.arrayPrepend(['z'])
+```
+```server-dotnet
+Operator.ArrayPrepend(new[] { "z" })
+```
+```server-ruby
+Operator.arrayPrepend(['z'])
+```
+```server-java
+Operator.arrayPrepend(List.of("z"))
+```
+```server-rust
+operator::array_prepend(&["z"])
+```
+{% /multicode %}
+
+### arrayInsert {% #array-insert %}
+
+Insert an element at a specific index in an array.
+
+{% multicode %}
+```client-web
+Operator.arrayInsert(1, 'x')
+```
+```server-python
+Operator.arrayInsert(1, 'x')
+```
+```server-php
+Operator::arrayInsert(1, 'x')
+```
+```client-apple
+Operator.arrayInsert(1, "x")
+```
+```client-android-kotlin
+Operator.arrayInsert(1, "x")
+```
+```server-go
+operator.ArrayInsert(1, "x")
+```
+```client-flutter
+Operator.arrayInsert(1, 'x')
+```
+```server-dotnet
+Operator.ArrayInsert(1, "x")
+```
+```server-ruby
+Operator.arrayInsert(1, 'x')
+```
+```server-java
+Operator.arrayInsert(1, "x")
+```
+```server-rust
+operator::array_insert(1, "x")
+```
+{% /multicode %}
+
+### arrayRemove {% #array-remove %}
+
+Remove a specified element from an array.
+
+{% multicode %}
+```client-web
+Operator.arrayRemove('b')
+```
+```server-python
+Operator.arrayRemove('b')
+```
+```server-php
+Operator::arrayRemove('b')
+```
+```client-apple
+Operator.arrayRemove("b")
+```
+```client-android-kotlin
+Operator.arrayRemove("b")
+```
+```server-go
+operator.ArrayRemove("b")
+```
+```client-flutter
+Operator.arrayRemove('b')
+```
+```server-dotnet
+Operator.ArrayRemove("b")
+```
+```server-ruby
+Operator.arrayRemove('b')
+```
+```server-java
+Operator.arrayRemove("b")
+```
+```server-rust
+operator::array_remove("b")
+```
+{% /multicode %}
+
+### arrayUnique {% #array-unique %}
+
+Remove duplicate elements from an array.
+
+{% multicode %}
+```client-web
+Operator.arrayUnique()
+```
+```server-python
+Operator.arrayUnique()
+```
+```server-php
+Operator::arrayUnique()
+```
+```client-apple
+Operator.arrayUnique()
+```
+```client-android-kotlin
+Operator.arrayUnique()
+```
+```server-go
+operator.ArrayUnique()
+```
+```client-flutter
+Operator.arrayUnique()
+```
+```server-dotnet
+Operator.ArrayUnique()
+```
+```server-ruby
+Operator.arrayUnique()
+```
+```server-java
+Operator.arrayUnique()
+```
+```server-rust
+operator::array_unique()
+```
+{% /multicode %}
+
+### arrayIntersect {% #array-intersect %}
+
+Keep only elements that exist in both arrays.
+
+{% multicode %}
+```client-web
+Operator.arrayIntersect(['news', 'tech'])
+```
+```server-python
+Operator.arrayIntersect(['news', 'tech'])
+```
+```server-php
+Operator::arrayIntersect(['news', 'tech'])
+```
+```client-apple
+Operator.arrayIntersect(["news", "tech"])
+```
+```client-android-kotlin
+Operator.arrayIntersect(listOf("news", "tech"))
+```
+```server-go
+operator.ArrayIntersect([]string{"news", "tech"})
+```
+```client-flutter
+Operator.arrayIntersect(['news', 'tech'])
+```
+```server-dotnet
+Operator.ArrayIntersect(new[] { "news", "tech" })
+```
+```server-ruby
+Operator.arrayIntersect(['news', 'tech'])
+```
+```server-java
+Operator.arrayIntersect(new String[] {"news", "tech"})
+```
+```server-rust
+operator::array_intersect(&["news", "tech"])
+```
+{% /multicode %}
+
+### arrayDiff {% #array-diff %}
+
+Return elements that exist in the current array but not in the provided array.
+
+{% multicode %}
+```client-web
+Operator.arrayDiff(['old'])
+```
+```server-python
+Operator.arrayDiff(['old'])
+```
+```server-php
+Operator::arrayDiff(['old'])
+```
+```client-apple
+Operator.arrayDiff(["old"])
+```
+```client-android-kotlin
+Operator.arrayDiff(listOf("old"))
+```
+```server-go
+operator.ArrayDiff([]string{"old"})
+```
+```client-flutter
+Operator.arrayDiff(['old'])
+```
+```server-dotnet
+Operator.ArrayDiff(new[] { "old" })
+```
+```server-ruby
+Operator.arrayDiff(['old'])
+```
+```server-java
+Operator.arrayDiff(new String[] {"old"})
+```
+```server-rust
+operator::array_diff(&["old"])
+```
+{% /multicode %}
+
+### arrayFilter {% #array-filter %}
+
+Filter array elements based on a condition.
+
+{% multicode %}
+```client-web
+Operator.arrayFilter(Condition.GreaterThan, 10)
+```
+```server-python
+Operator.arrayFilter(Condition.GreaterThan, 10)
+```
+```server-php
+Operator::arrayFilter(Condition::GreaterThan, 10)
+```
+```client-apple
+Operator.arrayFilter(Condition.GreaterThan, 10)
+```
+```client-android-kotlin
+Operator.arrayFilter(Condition.GreaterThan, 10)
+```
+```server-go
+operator.ArrayFilter(ConditionGreaterThan, 10)
+```
+```client-flutter
+Operator.arrayFilter(Condition.GreaterThan, 10)
+```
+```server-dotnet
+Operator.ArrayFilter(Condition.GreaterThan, 10)
+```
+```server-ruby
+Operator.arrayFilter(Condition.GreaterThan, 10)
+```
+```server-java
+Operator.arrayFilter(Condition.GreaterThan, 10)
+```
+```server-rust
+operator::array_filter_with_value(operator::Condition::GreaterThan, 10)
+```
+{% /multicode %}
+
+## String {% #string %}
+
+Make lightweight text changes without rewriting the whole row.
+
+### stringConcat {% #string-concat %}
+
+Concatenate a value to a string or array field.
+
+{% multicode %}
+```client-web
+Operator.stringConcat('!')
+```
+```server-python
+Operator.stringConcat('!')
+```
+```server-php
+Operator::stringConcat('!')
+```
+```client-apple
+Operator.stringConcat("!")
+```
+```client-android-kotlin
+Operator.stringConcat("!")
+```
+```server-go
+operator.StringConcat("!")
+```
+```client-flutter
+Operator.stringConcat('!')
+```
+```server-dotnet
+Operator.StringConcat("!")
+```
+```server-ruby
+Operator.stringConcat('!')
+```
+```server-java
+Operator.stringConcat("!")
+```
+```server-rust
+operator::string_concat("!")
+```
+{% /multicode %}
+
+### stringReplace {% #string-replace %}
+
+Replace occurrences of a substring with a new string.
+
+{% multicode %}
+```client-web
+Operator.stringReplace('old', 'new')
+```
+```server-python
+Operator.stringReplace('old', 'new')
+```
+```server-php
+Operator::stringReplace('old', 'new')
+```
+```client-apple
+Operator.stringReplace("old", "new")
+```
+```client-android-kotlin
+Operator.stringReplace("old", "new")
+```
+```server-go
+operator.StringReplace("old", "new")
+```
+```client-flutter
+Operator.stringReplace('old', 'new')
+```
+```server-dotnet
+Operator.StringReplace("old", "new")
+```
+```server-ruby
+Operator.stringReplace('old', 'new')
+```
+```server-java
+Operator.stringReplace("old", "new")
+```
+```server-rust
+operator::string_replace("old", "new")
+```
+{% /multicode %}
+
+## Date {% #date %}
+
+Adjust time-based fields for lifecycle and scheduling logic.
+
+### dateAddDays {% #date-add-days %}
+
+Add a specified number of days to a date field.
+
+{% multicode %}
+```client-web
+Operator.dateAddDays(7)
+```
+```server-python
+Operator.dateAddDays(7)
+```
+```server-php
+Operator::dateAddDays(7)
+```
+```client-apple
+Operator.dateAddDays(7)
+```
+```client-android-kotlin
+Operator.dateAddDays(7)
+```
+```server-go
+operator.DateAddDays(7)
+```
+```client-flutter
+Operator.dateAddDays(7)
+```
+```server-dotnet
+Operator.DateAddDays(7)
+```
+```server-ruby
+Operator.dateAddDays(7)
+```
+```server-java
+Operator.dateAddDays(7)
+```
+```server-rust
+operator::date_add_days(7)
+```
+{% /multicode %}
+
+### dateSubDays {% #date-sub-days %}
+
+Subtract a specified number of days from a date field.
+
+{% multicode %}
+```client-web
+Operator.dateSubDays(3)
+```
+```server-python
+Operator.dateSubDays(3)
+```
+```server-php
+Operator::dateSubDays(3)
+```
+```client-apple
+Operator.dateSubDays(3)
+```
+```client-android-kotlin
+Operator.dateSubDays(3)
+```
+```server-go
+operator.DateSubDays(3)
+```
+```client-flutter
+Operator.dateSubDays(3)
+```
+```server-dotnet
+Operator.DateSubDays(3)
+```
+```server-ruby
+Operator.dateSubDays(3)
+```
+```server-java
+Operator.dateSubDays(3)
+```
+```server-rust
+operator::date_sub_days(3)
+```
+{% /multicode %}
+
+### dateSetNow {% #date-set-now %}
+
+Set a date field to the current time on the server.
+
+{% multicode %}
+```client-web
+Operator.dateSetNow()
+```
+```server-python
+Operator.dateSetNow()
+```
+```server-php
+Operator::dateSetNow()
+```
+```client-apple
+Operator.dateSetNow()
+```
+```client-android-kotlin
+Operator.dateSetNow()
+```
+```server-go
+operator.DateSetNow()
+```
+```client-flutter
+Operator.dateSetNow()
+```
+```server-dotnet
+Operator.DateSetNow()
+```
+```server-ruby
+Operator.dateSetNow()
+```
+```server-java
+Operator.dateSetNow()
+```
+```server-rust
+operator::date_set_now()
+```
+{% /multicode %}
+
+## Boolean {% #boolean %}
+
+Toggle boolean values in place.
+
+### toggle {% #toggle %}
+
+Toggle a boolean field between true and false.
+
+{% multicode %}
+```client-web
+Operator.toggle()
+```
+```server-python
+Operator.toggle()
+```
+```server-php
+Operator::toggle()
+```
+```client-apple
+Operator.toggle()
+```
+```client-android-kotlin
+Operator.toggle()
+```
+```server-go
+operator.Toggle()
+```
+```client-flutter
+Operator.toggle()
+```
+```server-dotnet
+Operator.Toggle()
+```
+```server-ruby
+Operator.toggle()
+```
+```server-java
+Operator.toggle()
+```
+```server-rust
+operator::toggle()
+```
+{% /multicode %}
+
+# Examples {% #examples %}
+
+The following examples will demonstrate how you can use operators in different situations
+
+## Update the count of upvotes on a post
+
+This example demonstrates using the `increment` operator to atomically increase the upvote count on a post.
+
+{% multicode %}
+```client-web
+import { Client, TablesDB, Operator } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.updateRow({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: {
+    upvotes: Operator.increment(1)
+  }
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+client
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.updateRow({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rowId: '<ROW_ID>',
+  data: {
+    upvotes: sdk.Operator.increment(1)
+  }
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+  final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>');
+
+  final tablesDB = TablesDB(client);
+
+  try {
+    await tablesDB.updateRow(
+        '<DATABASE_ID>',
+        '<TABLE_ID>',
+        '<ROW_ID>',
+        {
+            'upvotes': Operator.increment(1)
+        },
+    );
+  } on AppwriteException catch (e) {
+    print(e);
+  }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+  let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  let tablesDB = TablesDB(client)
+
+  do {
+    _ = try await tablesDB.updateRow(
+      databaseId: "<DATABASE_ID>",
+      tableId: "<TABLE_ID>",
+      rowId: "<ROW_ID>",
+      data: [
+        "upvotes": Operator.increment(1) 
+      ]
+    )
+  } catch {
+    print(error.localizedDescription)
+  }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.Operator
+
+suspend fun main() {
+  val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  val tablesDB = TablesDB(client)
+
+  tablesDB.updateRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    data = mapOf(
+      "upvotes" to Operator.increment(1)
+    )
+  )
+}
+```
+```server-go
+package main
+
+import (
+  "log"
+  "github.com/appwrite/sdk-for-go/appwrite"
+  operator "github.com/appwrite/sdk-for-go/operator"
+)
+
+func main() {
+  client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+  )
+
+  tablesDB := appwrite.NewTablesDB(client)
+
+  _, err := tablesDB.UpdateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    tablesDB.WithUpdateRowData(map[string]any{
+      "upvotes": operator.Increment(1),
+    }),
+  )
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+use Appwrite\Operator;
+
+$client = (new Client())
+  ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  ->setProject('<YOUR_PROJECT_ID>')
+  ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+$result = $tablesDB->updateRow(
+  '<DATABASE_ID>',
+  '<TABLE_ID>',
+  '<ROW_ID>',
+  [ 'upvotes' => Operator::increment(1) ]
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.operator import Operator
+
+client = Client()
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>'))
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.update_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={ 'upvotes': Operator.increment(1) }
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetProject("<YOUR_PROJECT_ID>")
+  .SetKey("<YOUR_API_KEY>");
+
+var tablesDB = new TablesDB(client);
+
+await tablesDB.UpdateRow(
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: new Dictionary<string, object>
+  {
+    { "upvotes", Operator.Increment(1) }
+  }
+);
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new()
+
+client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+
+tablesDB = TablesDB.new(client)
+
+result = tablesDB.update_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'upvotes' => Operator.increment(1) }
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+import io.appwrite.Operator;
+import java.util.*;
+
+Client client = new Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<YOUR_PROJECT_ID>")
+  .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+tablesDB.updateRow(
+  "<DATABASE_ID>",
+  "<TABLE_ID>",
+  "<ROW_ID>",
+  Map.of("upvotes", Operator.increment(1)),
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return;
+    }
+    System.out.println(result);
+  })
+);
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::operator;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.update_row(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        "<ROW_ID>",
+        Some(json!({
+            "upvotes": operator::increment_by(1)
+        })),
+        None,
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Add a book to a list
+
+This example demonstrates using the `arrayAppend` operator to add a new book to an existing array of books.
+
+{% multicode %}
+```client-web
+import { Client, TablesDB, Operator } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.updateRow({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: {
+    books: Operator.arrayAppend(['The Great Gatsby'])
+  }
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+client
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.updateRow({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rowId: '<ROW_ID>',
+  data: {
+    books: sdk.Operator.arrayAppend(['The Great Gatsby'])
+  }
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+  final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>');
+
+  final tablesDB = TablesDB(client);
+
+  try {
+    await tablesDB.updateRow(
+        '<DATABASE_ID>',
+        '<TABLE_ID>',
+        '<ROW_ID>',
+        {
+            'books': Operator.arrayAppend(['The Great Gatsby'])
+        },
+    );
+  } on AppwriteException catch (e) {
+    print(e);
+  }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+  let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  let tablesDB = TablesDB(client)
+
+  do {
+    _ = try await tablesDB.updateRow(
+      databaseId: "<DATABASE_ID>",
+      tableId: "<TABLE_ID>",
+      rowId: "<ROW_ID>",
+      data: [
+        "books": Operator.arrayAppend(["The Great Gatsby"]) 
+      ]
+    )
+  } catch {
+    print(error.localizedDescription)
+  }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.Operator
+
+suspend fun main() {
+  val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  val tablesDB = TablesDB(client)
+
+  tablesDB.updateRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    data = mapOf(
+      "books" to Operator.arrayAppend(listOf("The Great Gatsby"))
+    )
+  )
+}
+```
+```server-go
+package main
+
+import (
+  "log"
+  "github.com/appwrite/sdk-for-go/appwrite"
+  operator "github.com/appwrite/sdk-for-go/operator"
+)
+
+func main() {
+  client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+  )
+
+  tablesDB := appwrite.NewTablesDB(client)
+
+  _, err := tablesDB.UpdateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    tablesDB.WithUpdateRowData(map[string]any{
+      "books": operator.ArrayAppend([]string{"The Great Gatsby"}),
+    }),
+  )
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+use Appwrite\Operator;
+
+$client = (new Client())
+  ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  ->setProject('<YOUR_PROJECT_ID>')
+  ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+$result = $tablesDB->updateRow(
+  '<DATABASE_ID>',
+  '<TABLE_ID>',
+  '<ROW_ID>',
+  [ 'books' => Operator::arrayAppend(['The Great Gatsby']) ]
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.operator import Operator
+
+client = Client()
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>'))
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.update_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={ 'books': Operator.arrayAppend(['The Great Gatsby']) }
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetProject("<YOUR_PROJECT_ID>")
+  .SetKey("<YOUR_API_KEY>");
+
+var tablesDB = new TablesDB(client);
+
+await tablesDB.UpdateRow(
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: new Dictionary<string, object>
+  {
+    { "books", Operator.ArrayAppend(new[] { "The Great Gatsby" }) }
+  }
+);
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new()
+
+client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+
+tablesDB = TablesDB.new(client)
+
+result = tablesDB.update_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'books' => Operator.arrayAppend(['The Great Gatsby']) }
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+import io.appwrite.Operator;
+import java.util.*;
+
+Client client = new Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<YOUR_PROJECT_ID>")
+  .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+tablesDB.updateRow(
+  "<DATABASE_ID>",
+  "<TABLE_ID>",
+  "<ROW_ID>",
+  Map.of("books", Operator.arrayAppend(List.of("The Great Gatsby"))),
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return;
+    }
+    System.out.println(result);
+  })
+);
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::operator;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.update_row(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        "<ROW_ID>",
+        Some(json!({
+            "books": operator::array_append(&["The Great Gatsby"])
+        })),
+        None,
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Update the date field in a deletion table
+
+This example demonstrates using the `dateAddDays` operator to set a scheduled deletion date 30 days from now.
+
+{% multicode %}
+```client-web
+import { Client, TablesDB, Operator } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+await tablesDB.updateRow({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: {
+    scheduledDeletion: Operator.dateAddDays(30)
+  }
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+client
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+const result = await tablesDB.updateRow({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rowId: '<ROW_ID>',
+  data: {
+    scheduledDeletion: sdk.Operator.dateAddDays(30)
+  }
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+  final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>');
+
+  final tablesDB = TablesDB(client);
+
+  try {
+    await tablesDB.updateRow(
+        '<DATABASE_ID>',
+        '<TABLE_ID>',
+        '<ROW_ID>',
+        {
+            'scheduledDeletion': Operator.dateAddDays(30)
+        },
+    );
+  } on AppwriteException catch (e) {
+    print(e);
+  }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+  let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  let tablesDB = TablesDB(client)
+
+  do {
+    _ = try await tablesDB.updateRow(
+      databaseId: "<DATABASE_ID>",
+      tableId: "<TABLE_ID>",
+      rowId: "<ROW_ID>",
+      data: [
+        "scheduledDeletion": Operator.dateAddDays(30) 
+      ]
+    )
+  } catch {
+    print(error.localizedDescription)
+  }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.Operator
+
+suspend fun main() {
+  val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  val tablesDB = TablesDB(client)
+
+  tablesDB.updateRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    data = mapOf(
+      "scheduledDeletion" to Operator.dateAddDays(30)
+    )
+  )
+}
+```
+```server-go
+package main
+
+import (
+  "log"
+  "github.com/appwrite/sdk-for-go/appwrite"
+  operator "github.com/appwrite/sdk-for-go/operator"
+)
+
+func main() {
+  client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+  )
+
+  tablesDB := appwrite.NewTablesDB(client)
+
+  _, err := tablesDB.UpdateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    tablesDB.WithUpdateRowData(map[string]any{
+      "scheduledDeletion": operator.DateAddDays(30),
+    }),
+  )
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+use Appwrite\Operator;
+
+$client = (new Client())
+  ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  ->setProject('<YOUR_PROJECT_ID>')
+  ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+$result = $tablesDB->updateRow(
+  '<DATABASE_ID>',
+  '<TABLE_ID>',
+  '<ROW_ID>',
+  [ 'scheduledDeletion' => Operator::dateAddDays(30) ]
+);
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.operator import Operator
+
+client = Client()
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>'))
+
+tablesDB = TablesDB(client)
+
+result = tablesDB.update_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={ 'scheduledDeletion': Operator.dateAddDays(30) }
+)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetProject("<YOUR_PROJECT_ID>")
+  .SetKey("<YOUR_API_KEY>");
+
+var tablesDB = new TablesDB(client);
+
+await tablesDB.UpdateRow(
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: new Dictionary<string, object>
+  {
+    { "scheduledDeletion", Operator.DateAddDays(30) }
+  }
+);
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new()
+
+client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+
+tablesDB = TablesDB.new(client)
+
+result = tablesDB.update_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: { 'scheduledDeletion' => Operator.dateAddDays(30) }
+)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+import io.appwrite.Operator;
+import java.util.*;
+
+Client client = new Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<YOUR_PROJECT_ID>")
+  .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+tablesDB.updateRow(
+  "<DATABASE_ID>",
+  "<TABLE_ID>",
+  "<ROW_ID>",
+  Map.of("scheduledDeletion", Operator.dateAddDays(30)),
+  new CoroutineCallback<>((result, error) -> {
+    if (error != null) {
+      error.printStackTrace();
+      return;
+    }
+    System.out.println(result);
+  })
+);
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::operator;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    let result = tables_db.update_row(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        "<ROW_ID>",
+        Some(json!({
+            "scheduledDeletion": operator::date_add_days(30)
+        })),
+        None,
+        None,
+    ).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Update a single row in a transaction
+
+This example demonstrates combining multiple operators (`increment` and `dateSetNow`) in a single transaction to ensure atomic updates.
+
+{% multicode %}
+```client-web
+import { Client, TablesDB, Operator } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+// Create a transaction
+const tx = await tablesDB.createTransaction();
+
+// Update row with operators inside the transaction
+await tablesDB.updateRow({
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: {
+    upvotes: Operator.increment(1),
+    lastModified: Operator.dateSetNow()
+  },
+  transactionId: tx.$id
+});
+
+// Commit the transaction
+await tablesDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+client
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+// Create a transaction
+const tx = await tablesDB.createTransaction();
+
+// Update row with operators inside the transaction
+await tablesDB.updateRow({
+  databaseId: '<DATABASE_ID>',
+  tableId: '<TABLE_ID>',
+  rowId: '<ROW_ID>',
+  data: {
+    upvotes: sdk.Operator.increment(1),
+    lastModified: sdk.Operator.dateSetNow()
+  },
+  transactionId: tx.$id
+});
+
+// Commit the transaction
+await tablesDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+  final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>');
+
+  final tablesDB = TablesDB(client);
+
+  try {
+    // Create a transaction
+    final tx = await tablesDB.createTransaction();
+
+    // Update row with operators inside the transaction
+    await tablesDB.updateRow(
+        '<DATABASE_ID>',
+        '<TABLE_ID>',
+        '<ROW_ID>',
+        {
+            'upvotes': Operator.increment(1),
+            'lastModified': Operator.dateSetNow()
+        },
+        transactionId: tx.$id
+    );
+
+    // Commit the transaction
+    await tablesDB.updateTransaction(tx.$id, 'commit');
+  } on AppwriteException catch (e) {
+    print(e);
+  }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+  let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  let tablesDB = TablesDB(client)
+
+  do {
+    // Create a transaction
+    let tx = try await tablesDB.createTransaction()
+
+    // Update row with operators inside the transaction
+    _ = try await tablesDB.updateRow(
+      databaseId: "<DATABASE_ID>",
+      tableId: "<TABLE_ID>",
+      rowId: "<ROW_ID>",
+      data: [
+        "upvotes": Operator.increment(1),
+        "lastModified": Operator.dateSetNow()
+      ],
+      transactionId: tx.$id
+    )
+
+    // Commit the transaction
+    _ = try await tablesDB.updateTransaction(
+      transactionId: tx.$id,
+      status: "commit"
+    )
+  } catch {
+    print(error.localizedDescription)
+  }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.Operator
+
+suspend fun main() {
+  val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  val tablesDB = TablesDB(client)
+
+  // Create a transaction
+  val tx = tablesDB.createTransaction()
+
+  // Update row with operators inside the transaction
+  tablesDB.updateRow(
+    databaseId = "<DATABASE_ID>",
+    tableId = "<TABLE_ID>",
+    rowId = "<ROW_ID>",
+    data = mapOf(
+      "upvotes" to Operator.increment(1),
+      "lastModified" to Operator.dateSetNow()
+    ),
+    transactionId = tx.$id
+  )
+
+  // Commit the transaction
+  tablesDB.updateTransaction(tx.$id, "commit")
+}
+```
+```server-go
+package main
+
+import (
+  "log"
+  "github.com/appwrite/sdk-for-go/appwrite"
+  operator "github.com/appwrite/sdk-for-go/operator"
+)
+
+func main() {
+  client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+  )
+
+  tablesDB := appwrite.NewTablesDB(client)
+
+  // Create a transaction
+  tx, err := tablesDB.CreateTransaction()
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  // Update row with operators inside the transaction
+  _, err = tablesDB.UpdateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    tablesDB.WithUpdateRowData(map[string]any{
+      "upvotes": operator.Increment(1),
+      "lastModified": operator.DateSetNow(),
+    }),
+    tablesDB.WithUpdateRowTransactionId(tx.Id),
+  )
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  // Commit the transaction
+  _, err = tablesDB.UpdateTransaction(tx.Id, "commit")
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+use Appwrite\Operator;
+
+$client = (new Client())
+  ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  ->setProject('<YOUR_PROJECT_ID>')
+  ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+// Create a transaction
+$tx = $tablesDB->createTransaction();
+
+// Update row with operators inside the transaction
+$result = $tablesDB->updateRow(
+  '<DATABASE_ID>',
+  '<TABLE_ID>',
+  '<ROW_ID>',
+  [
+    'upvotes' => Operator::increment(1),
+    'lastModified' => Operator::dateSetNow()
+  ],
+  transactionId: $tx['$id']
+);
+
+// Commit the transaction
+$tablesDB->updateTransaction($tx['$id'], 'commit');
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.operator import Operator
+
+client = Client()
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>'))
+
+tablesDB = TablesDB(client)
+
+# Create a transaction
+tx = tablesDB.create_transaction()
+
+# Update row with operators inside the transaction
+result = tablesDB.update_row(
+    database_id='<DATABASE_ID>',
+    table_id='<TABLE_ID>',
+    row_id='<ROW_ID>',
+    data={
+        'upvotes': Operator.increment(1),
+        'lastModified': Operator.dateSetNow()
+    },
+    transaction_id=tx.id
+)
+
+# Commit the transaction
+tablesDB.update_transaction(transaction_id=tx.id, commit=True)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetProject("<YOUR_PROJECT_ID>")
+  .SetKey("<YOUR_API_KEY>");
+
+var tablesDB = new TablesDB(client);
+
+// Create a transaction
+var tx = await tablesDB.CreateTransaction();
+
+// Update row with operators inside the transaction
+await tablesDB.UpdateRow(
+  databaseId: "<DATABASE_ID>",
+  tableId: "<TABLE_ID>",
+  rowId: "<ROW_ID>",
+  data: new Dictionary<string, object>
+  {
+    { "upvotes", Operator.Increment(1) },
+    { "lastModified", Operator.DateSetNow() }
+  },
+  transactionId: tx.Id
+);
+
+// Commit the transaction
+await tablesDB.UpdateTransaction(tx.Id, "commit");
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new()
+
+client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+
+tablesDB = TablesDB.new(client)
+
+# Create a transaction
+tx = tablesDB.create_transaction
+
+# Update row with operators inside the transaction
+result = tablesDB.update_row(
+    database_id: '<DATABASE_ID>',
+    table_id: '<TABLE_ID>',
+    row_id: '<ROW_ID>',
+    data: {
+        'upvotes' => Operator.increment(1),
+        'lastModified' => Operator.dateSetNow()
+    },
+    transaction_id: tx['$id']
+)
+
+# Commit the transaction
+tablesDB.update_transaction(transaction_id: tx['$id'], commit: true)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+import io.appwrite.Operator;
+import java.util.*;
+
+Client client = new Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<YOUR_PROJECT_ID>")
+  .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+// Create a transaction
+tablesDB.createTransaction(new CoroutineCallback<>((tx, txError) -> {
+  if (txError != null) {
+    txError.printStackTrace();
+    return;
+  }
+
+  // Update row with operators inside the transaction
+  tablesDB.updateRow(
+    "<DATABASE_ID>",
+    "<TABLE_ID>",
+    "<ROW_ID>",
+    Map.of(
+      "upvotes", Operator.increment(1),
+      "lastModified", Operator.dateSetNow()
+    ),
+    tx.getId(),
+    new CoroutineCallback<>((result, error) -> {
+      if (error != null) {
+        error.printStackTrace();
+        return;
+      }
+
+      // Commit the transaction
+      tablesDB.updateTransaction(
+        tx.getId(),
+        "commit",
+        new CoroutineCallback<>((commitResult, commitError) -> {
+          if (commitError != null) {
+            commitError.printStackTrace();
+            return;
+          }
+          System.out.println("Transaction committed");
+        })
+      );
+    })
+  );
+}));
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::operator;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    // Create a transaction
+    let tx = tables_db.create_transaction(None).await?;
+
+    // Update row with operators inside the transaction
+    let result = tables_db.update_row(
+        "<DATABASE_ID>",
+        "<TABLE_ID>",
+        "<ROW_ID>",
+        Some(json!({
+            "upvotes": operator::increment_by(1),
+            "lastModified": operator::date_set_now()
+        })),
+        None,
+        Some(&tx.id),
+    ).await?;
+
+    // Commit the transaction
+    tables_db.update_transaction(&tx.id, Some(true), None).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}
+
+## Update multiple rows in a transaction
+
+This example demonstrates using `createOperations` to update multiple rows across different tables atomically, combining date and array operators in a single transaction.
+
+{% multicode %}
+```client-web
+import { Client, TablesDB, Operator } from "appwrite";
+
+const client = new Client()
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>');
+
+const tablesDB = new TablesDB(client);
+
+// Create a transaction
+const tx = await tablesDB.createTransaction();
+
+// Stage multiple operations at once using createOperations
+await tablesDB.createOperations({
+  transactionId: tx.$id,
+  operations: [
+    {
+      action: 'update',
+      databaseId: '<DATABASE_ID>',
+      tableId: '<USERS_TABLE_ID>',
+      rowId: '<USER_ID>',
+      data: {
+        lastActivity: Operator.dateSetNow()
+      }
+    },
+    {
+      action: 'update',
+      databaseId: '<DATABASE_ID>',
+      tableId: '<TRANSACTIONS_TABLE_ID>',
+      rowId: '<TRANSACTION_ID>',
+      data: {
+        amount: Operator.increment(10),
+        events: Operator.arrayAppend(['credit_added'])
+      }
+    }
+  ]
+});
+
+// Commit the transaction
+await tablesDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
+```
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client();
+client
+  .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .setProject('<YOUR_PROJECT_ID>')
+  .setKey('<YOUR_API_KEY>');
+
+const tablesDB = new sdk.TablesDB(client);
+
+// Create a transaction
+const tx = await tablesDB.createTransaction();
+
+// Stage multiple operations at once using createOperations
+await tablesDB.createOperations({
+  transactionId: tx.$id,
+  operations: [
+    {
+      action: 'update',
+      databaseId: '<DATABASE_ID>',
+      tableId: '<USERS_TABLE_ID>',
+      rowId: '<USER_ID>',
+      data: {
+        lastActivity: sdk.Operator.dateSetNow()
+      }
+    },
+    {
+      action: 'update',
+      databaseId: '<DATABASE_ID>',
+      tableId: '<TRANSACTIONS_TABLE_ID>',
+      rowId: '<TRANSACTION_ID>',
+      data: {
+        amount: sdk.Operator.increment(10),
+        events: sdk.Operator.arrayAppend(['credit_added'])
+      }
+    }
+  ]
+});
+
+// Commit the transaction
+await tablesDB.updateTransaction({
+  transactionId: tx.$id,
+  commit: true
+});
+```
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+
+void main() async {
+  final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+    .setProject('<YOUR_PROJECT_ID>');
+
+  final tablesDB = TablesDB(client);
+
+  try {
+    // Create a transaction
+    final tx = await tablesDB.createTransaction();
+
+    // Stage multiple operations at once using createOperations
+    await tablesDB.createOperations(
+      transactionId: tx.$id,
+      operations: [
+        {
+          'action': 'update',
+          'databaseId': '<DATABASE_ID>',
+          'tableId': '<USERS_TABLE_ID>',
+          'rowId': '<USER_ID>',
+          'data': {
+            'lastActivity': Operator.dateSetNow()
+          }
+        },
+        {
+          'action': 'update',
+          'databaseId': '<DATABASE_ID>',
+          'tableId': '<TRANSACTIONS_TABLE_ID>',
+          'rowId': '<TRANSACTION_ID>',
+          'data': {
+            'amount': Operator.increment(10),
+            'events': Operator.arrayAppend(['credit_added'])
+          }
+        }
+      ],
+    );
+
+    // Commit the transaction
+    await tablesDB.updateTransaction(tx.$id, 'commit');
+  } on AppwriteException catch (e) {
+    print(e);
+  }
+}
+```
+```client-apple
+import Appwrite
+import AppwriteModels
+
+func main() async throws {
+  let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  let tablesDB = TablesDB(client)
+
+  do {
+    // Create a transaction
+    let tx = try await tablesDB.createTransaction()
+
+    // Stage multiple operations at once using createOperations
+    _ = try await tablesDB.createOperations(
+      transactionId: tx.$id,
+      operations: [
+        [
+          "action": "update",
+          "databaseId": "<DATABASE_ID>",
+          "tableId": "<USERS_TABLE_ID>",
+          "rowId": "<USER_ID>",
+          "data": [
+            "lastActivity": Operator.dateSetNow()
+          ]
+        ],
+        [
+          "action": "update",
+          "databaseId": "<DATABASE_ID>",
+          "tableId": "<TRANSACTIONS_TABLE_ID>",
+          "rowId": "<TRANSACTION_ID>",
+          "data": [
+            "amount": Operator.increment(10),
+            "events": Operator.arrayAppend(["credit_added"])
+          ]
+        ]
+      ]
+    )
+
+    // Commit the transaction
+    _ = try await tablesDB.updateTransaction(
+      transactionId: tx.$id,
+      status: "commit"
+    )
+  } catch {
+    print(error.localizedDescription)
+  }
+}
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.TablesDB
+import io.appwrite.Operator
+
+suspend fun main() {
+  val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+    .setProject("<YOUR_PROJECT_ID>")
+
+  val tablesDB = TablesDB(client)
+
+  // Create a transaction
+  val tx = tablesDB.createTransaction()
+
+  // Stage multiple operations at once using createOperations
+  tablesDB.createOperations(
+    transactionId = tx.$id,
+    operations = listOf(
+      mapOf(
+        "action" to "update",
+        "databaseId" to "<DATABASE_ID>",
+        "tableId" to "<USERS_TABLE_ID>",
+        "rowId" to "<USER_ID>",
+        "data" to mapOf(
+          "lastActivity" to Operator.dateSetNow()
+        )
+      ),
+      mapOf(
+        "action" to "update",
+        "databaseId" to "<DATABASE_ID>",
+        "tableId" to "<TRANSACTIONS_TABLE_ID>",
+        "rowId" to "<TRANSACTION_ID>",
+        "data" to mapOf(
+          "amount" to Operator.increment(10),
+          "events" to Operator.arrayAppend(listOf("credit_added"))
+        )
+      )
+    )
+  )
+
+  // Commit the transaction
+  tablesDB.updateTransaction(tx.$id, "commit")
+}
+```
+```server-go
+package main
+
+import (
+  "log"
+  "github.com/appwrite/sdk-for-go/appwrite"
+  operator "github.com/appwrite/sdk-for-go/operator"
+)
+
+func main() {
+  client := appwrite.NewClient(
+    appwrite.WithEndpoint("https://<REGION>.cloud.appwrite.io/v1"),
+    appwrite.WithProject("<YOUR_PROJECT_ID>"),
+    appwrite.WithKey("<YOUR_API_KEY>"),
+  )
+
+  tablesDB := appwrite.NewTablesDB(client)
+
+  // Create a transaction
+  tx, err := tablesDB.CreateTransaction()
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  // Stage multiple operations at once using createOperations
+  _, err = tablesDB.CreateOperations(
+    tx.Id,
+    []map[string]any{
+      {
+        "action": "update",
+        "databaseId": "<DATABASE_ID>",
+        "tableId": "<USERS_TABLE_ID>",
+        "rowId": "<USER_ID>",
+        "data": map[string]any{
+          "lastActivity": operator.DateSetNow(),
+        },
+      },
+      {
+        "action": "update",
+        "databaseId": "<DATABASE_ID>",
+        "tableId": "<TRANSACTIONS_TABLE_ID>",
+        "rowId": "<TRANSACTION_ID>",
+        "data": map[string]any{
+          "amount": operator.Increment(10),
+          "events": operator.ArrayAppend([]string{"credit_added"}),
+        },
+      },
+    },
+  )
+  if err != nil {
+    log.Fatal(err)
+  }
+
+  // Commit the transaction
+  _, err = tablesDB.UpdateTransaction(tx.Id, "commit")
+  if err != nil {
+    log.Fatal(err)
+  }
+}
+```
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+use Appwrite\Operator;
+
+$client = (new Client())
+  ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1')
+  ->setProject('<YOUR_PROJECT_ID>')
+  ->setKey('<YOUR_API_KEY>');
+
+$tablesDB = new TablesDB($client);
+
+// Create a transaction
+$tx = $tablesDB->createTransaction();
+
+// Stage multiple operations at once using createOperations
+$tablesDB->createOperations(
+  transactionId: $tx['$id'],
+  operations: [
+    [
+      'action' => 'update',
+      'databaseId' => '<DATABASE_ID>',
+      'tableId' => '<USERS_TABLE_ID>',
+      'rowId' => '<USER_ID>',
+      'data' => [
+        'lastActivity' => Operator::dateSetNow()
+      ]
+    ],
+    [
+      'action' => 'update',
+      'databaseId' => '<DATABASE_ID>',
+      'tableId' => '<TRANSACTIONS_TABLE_ID>',
+      'rowId' => '<TRANSACTION_ID>',
+      'data' => [
+        'amount' => Operator::increment(10),
+        'events' => Operator::arrayAppend(['credit_added'])
+      ]
+    ]
+  ]
+);
+
+// Commit the transaction
+$tablesDB->updateTransaction($tx['$id'], 'commit');
+```
+```server-python
+from appwrite.client import Client
+from appwrite.services.tables_db import TablesDB
+from appwrite.operator import Operator
+
+client = Client()
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>'))
+
+tablesDB = TablesDB(client)
+
+# Create a transaction
+tx = tablesDB.create_transaction()
+
+# Stage multiple operations at once using createOperations
+tablesDB.create_operations(
+  transaction_id=tx.id,
+  operations=[
+    {
+      'action': 'update',
+      'databaseId': '<DATABASE_ID>',
+      'tableId': '<USERS_TABLE_ID>',
+      'rowId': '<USER_ID>',
+      'data': {
+        'lastActivity': Operator.dateSetNow()
+      }
+    },
+    {
+      'action': 'update',
+      'databaseId': '<DATABASE_ID>',
+      'tableId': '<TRANSACTIONS_TABLE_ID>',
+      'rowId': '<TRANSACTION_ID>',
+      'data': {
+        'amount': Operator.increment(10),
+        'events': Operator.arrayAppend(['credit_added'])
+      }
+    }
+  ]
+)
+
+# Commit the transaction
+tablesDB.update_transaction(transaction_id=tx.id, commit=True)
+```
+```server-dotnet
+using Appwrite;
+using Appwrite.Services;
+
+var client = new Client()
+  .SetEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .SetProject("<YOUR_PROJECT_ID>")
+  .SetKey("<YOUR_API_KEY>");
+
+var tablesDB = new TablesDB(client);
+
+// Create a transaction
+var tx = await tablesDB.CreateTransaction();
+
+// Stage multiple operations at once using createOperations
+await tablesDB.CreateOperations(
+  transactionId: tx.Id,
+  operations: new List<Dictionary<string, object>>
+  {
+    new Dictionary<string, object>
+    {
+      { "action", "update" },
+      { "databaseId", "<DATABASE_ID>" },
+      { "tableId", "<USERS_TABLE_ID>" },
+      { "rowId", "<USER_ID>" },
+      { "data", new Dictionary<string, object>
+        {
+          { "lastActivity", Operator.DateSetNow() }
+        }
+      }
+    },
+    new Dictionary<string, object>
+    {
+      { "action", "update" },
+      { "databaseId", "<DATABASE_ID>" },
+      { "tableId", "<TRANSACTIONS_TABLE_ID>" },
+      { "rowId", "<TRANSACTION_ID>" },
+      { "data", new Dictionary<string, object>
+        {
+          { "amount", Operator.Increment(10) },
+          { "events", Operator.ArrayAppend(new[] { "credit_added" }) }
+        }
+      }
+    }
+  }
+);
+
+// Commit the transaction
+await tablesDB.UpdateTransaction(tx.Id, "commit");
+```
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new()
+
+client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1')
+  .set_project('<YOUR_PROJECT_ID>')
+  .set_key('<YOUR_API_KEY>')
+
+tablesDB = TablesDB.new(client)
+
+# Create a transaction
+tx = tablesDB.create_transaction
+
+# Stage multiple operations at once using createOperations
+tablesDB.create_operations(
+  transaction_id: tx['$id'],
+  operations: [
+    {
+      'action' => 'update',
+      'databaseId' => '<DATABASE_ID>',
+      'tableId' => '<USERS_TABLE_ID>',
+      'rowId' => '<USER_ID>',
+      'data' => {
+        'lastActivity' => Operator.dateSetNow()
+      }
+    },
+    {
+      'action' => 'update',
+      'databaseId' => '<DATABASE_ID>',
+      'tableId' => '<TRANSACTIONS_TABLE_ID>',
+      'rowId' => '<TRANSACTION_ID>',
+      'data' => {
+        'amount' => Operator.increment(10),
+        'events' => Operator.arrayAppend(['credit_added'])
+      }
+    }
+  ]
+)
+
+# Commit the transaction
+tablesDB.update_transaction(transaction_id: tx['$id'], commit: true)
+```
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.TablesDB;
+import io.appwrite.Operator;
+import java.util.*;
+
+Client client = new Client()
+  .setEndpoint("https://<REGION>.cloud.appwrite.io/v1")
+  .setProject("<YOUR_PROJECT_ID>")
+  .setKey("<YOUR_API_KEY>");
+
+TablesDB tablesDB = new TablesDB(client);
+
+// Create a transaction
+tablesDB.createTransaction(new CoroutineCallback<>((tx, txError) -> {
+  if (txError != null) {
+    txError.printStackTrace();
+    return;
+  }
+
+  // Stage multiple operations at once using createOperations
+  List<Map<String, Object>> operations = Arrays.asList(
+    Map.of(
+      "action", "update",
+      "databaseId", "<DATABASE_ID>",
+      "tableId", "<USERS_TABLE_ID>",
+      "rowId", "<USER_ID>",
+      "data", Map.of(
+        "lastActivity", Operator.dateSetNow()
+      )
+    ),
+    Map.of(
+      "action", "update",
+      "databaseId", "<DATABASE_ID>",
+      "tableId", "<TRANSACTIONS_TABLE_ID>",
+      "rowId", "<TRANSACTION_ID>",
+      "data", Map.of(
+        "amount", Operator.increment(10),
+        "events", Operator.arrayAppend(List.of("credit_added"))
+      )
+    )
+  );
+
+  tablesDB.createOperations(
+    tx.getId(),
+    operations,
+    new CoroutineCallback<>((result, error) -> {
+      if (error != null) {
+        error.printStackTrace();
+        return;
+      }
+
+      // Commit the transaction
+      tablesDB.updateTransaction(
+        tx.getId(),
+        "commit",
+        new CoroutineCallback<>((commitResult, commitError) -> {
+          if (commitError != null) {
+            commitError.printStackTrace();
+            return;
+          }
+          System.out.println("Transaction committed");
+        })
+      );
+    })
+  );
+}));
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::tables_db::TablesDB;
+use appwrite::operator;
+use serde_json::json;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1")
+        .set_project("<PROJECT_ID>")
+        .set_key("<YOUR_API_KEY>");
+
+    let tables_db = TablesDB::new(&client);
+
+    // Create a transaction
+    let tx = tables_db.create_transaction(None).await?;
+
+    // Stage multiple operations at once using createOperations
+    tables_db.create_operations(
+        &tx.id,
+        Some(vec![
+            json!({
+                "action": "update",
+                "databaseId": "<DATABASE_ID>",
+                "tableId": "<USERS_TABLE_ID>",
+                "rowId": "<USER_ID>",
+                "data": {
+                    "lastActivity": operator::date_set_now()
+                }
+            }),
+            json!({
+                "action": "update",
+                "databaseId": "<DATABASE_ID>",
+                "tableId": "<TRANSACTIONS_TABLE_ID>",
+                "rowId": "<TRANSACTION_ID>",
+                "data": {
+                    "amount": operator::increment_by(10),
+                    "events": operator::array_append(&["credit_added"])
+                }
+            }),
+        ]),
+    ).await?;
+
+    // Commit the transaction
+    tables_db.update_transaction(&tx.id, Some(true), None).await?;
+
+    Ok(())
+}
+```
+{% /multicode %}

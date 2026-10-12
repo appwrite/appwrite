@@ -2,6 +2,7 @@
 
 namespace Appwrite\Event;
 
+use Utopia\Database\Helpers\ID;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\System\System;
 
@@ -17,13 +18,19 @@ class Webhook extends Event
     }
 
     /**
-     * Prepare the payload for the webhook event.
+     * Name each triggered event, so the worker can tell a redelivery of it from a new one.
+     *
+     * The id travels in the payload rather than relying on the message pid: the
+     * Redis broker requeues a retried message under a fresh pid, while the payload
+     * is carried through every retry, requeue and broker migration unchanged.
      *
      * @return array
      */
     protected function preparePayload(): array
     {
-        $prepared = parent::preparePayload();
+        $prepared = \array_merge(parent::preparePayload(), [
+            'eventId' => ID::unique(),
+        ]);
 
         // Queue decoders turn nested JSON objects into associative arrays.
         // Keep the original body only when that conversion changes its shape.

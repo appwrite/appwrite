@@ -7,8 +7,8 @@ use Utopia\Emails\Canonicals\Provider;
 /**
  * Yahoo
  *
- * Handles Yahoo email normalization based on validator.js rules
- * - Removes hyphen-based subaddress (everything after last -)
+ * Handles Yahoo email normalization
+ * - Preserves hyphens: nickname-keyword@yahoo.com is a disposable address, not an alias of nickname@yahoo.com
  * - Preserves dots in local part
  * - Normalizes to yahoo.com domain
  */
@@ -30,14 +30,6 @@ class Yahoo extends Provider
     {
         // Convert to lowercase
         $normalizedLocal = $this->toLowerCase($local);
-
-        // Remove hyphen-based subaddress (everything after last -)
-        $normalizedLocal = $this->removeHyphenSubaddress($normalizedLocal);
-
-        // Ensure local part is not empty after normalization
-        if (empty($normalizedLocal)) {
-            throw new \InvalidArgumentException('Email local part cannot be empty after normalization');
-        }
 
         return [
             'local' => $normalizedLocal,

@@ -1,0 +1,342 @@
+---
+layout: article
+title: Collections
+description: Organize your data with Appwrite Collections. Explore how to create and configure collections to store and structure your data effectively.
+---
+Appwrite uses collections as containers of documents. Each collection contains many documents identical in structure.
+The terms collections and documents are used because the Appwrite JSON REST API resembles the API of a traditional NoSQL database, making it intuitive and user-friendly, even though Appwrite uses SQL under the hood.
+
+That said, Appwrite is designed to support both SQL and NoSQL database adapters like MariaDB, MySQL, or MongoDB in future versions.
+
+# Create collection {% #create-collection %}
+You can create collections using the Appwrite Console, a [Server SDK](/docs/sdks#server), or using the [CLI](/docs/tooling/command-line/installation).
+{% tabs %}
+
+{% tabsitem #console title="Console" %}
+You can create a collection by heading to the **Databases** page, navigate to a [database](/docs/products/databases/legacy/databases), and click **Create collection**.
+
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+You can also create collections programmatically using a [Server SDK](/docs/sdks#server). Appwrite [Server SDKs](/docs/sdks#server) require an [API key](/docs/partners/project/api-keys).
+
+{% multicode %}
+
+```server-nodejs
+const sdk = require('node-appwrite');
+
+// Init SDK
+const client = new sdk.Client();
+
+const databases = new sdk.Databases(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+;
+
+const promise = databases.createCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '[COLLECTION_ID]',
+    name: '[NAME]'
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```deno
+import * as sdk from "npm:node-appwrite";
+
+// Init SDK
+let client = new sdk.Client();
+
+let databases = new sdk.Databases(client);
+
+client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+;
+
+
+let promise = databases.createCollection({
+    databaseId: '<DATABASE_ID>',
+    collectionId: '[COLLECTION_ID]',
+    name: '[NAME]'
+});
+
+promise.then(function (response) {
+    console.log(response);
+}, function (error) {
+    console.log(error);
+});
+```
+```php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Databases;
+
+$client = new Client();
+
+$client
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<PROJECT_ID>') // Your project ID
+    ->setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+;
+
+$databases = new Databases($client);
+
+$result = $databases->createCollection('<DATABASE_ID>', '<COLLECTION_ID>', '<NAME>');
+```
+```python
+from appwrite.client import Client
+from appwrite.services.databases import Databases
+
+client = Client()
+
+(client
+  .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+  .set_project('<PROJECT_ID>') # Your project ID
+  .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
+)
+
+databases = Databases(client)
+
+result = databases.create_collection('<DATABASE_ID>', '<COLLECTION_ID>', '<NAME>')
+```
+```ruby
+require 'Appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<PROJECT_ID>') # Your project ID
+    .set_key('919c2d18fb5d4...a2ae413da83346ad2') # Your secret API key
+
+databases = Databases.new(client)
+
+response = databases.create_collection(database_id: '<DATABASE_ID>', collection_id: '<COLLECTION_ID>', name: '<NAME>')
+
+puts response.inspect
+```
+```csharp
+using Appwrite;
+using Appwrite.Services;
+using Appwrite.Models;
+
+var client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<PROJECT_ID>") // Your project ID
+    .SetKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+var databases = new Databases(client);
+
+Collection result = await databases.CreateCollection(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    name: "[NAME]");
+```
+```dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+void main() { // Init SDK
+  Client client = Client();
+  Databases databases = Databases(client);
+
+  client
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>') // Your project ID
+    .setKey('919c2d18fb5d4...a2ae413da83346ad2') // Your secret API key
+  ;
+
+  Future result = databases.createCollection(
+    databaseId: '<DATABASE_ID>',
+    collectionId: '<COLLECTION_ID>',
+    name: '<NAME>',
+  );
+
+  result
+    .then((response) {
+      print(response);
+    }).catchError((error) {
+      print(error.response);
+  });
+}
+```
+```kotlin
+import io.appwrite.Client
+import io.appwrite.services.Databases
+
+val client = Client(context)
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
+
+val databases = Databases(client)
+
+val response = databases.createCollection(
+    databaseId = "<DATABASE_ID>",
+    collectionId = "<COLLECTION_ID>",
+    name = "[NAME]",
+)
+```
+```java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Databases;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+Databases databases = new Databases(client);
+
+databases.createCollection(
+    "<DATABASE_ID>",
+    "<COLLECTION_ID>",
+    "[NAME]",
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+```swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>") // Your project ID
+    .setKey("919c2d18fb5d4...a2ae413da83346ad2") // Your secret API key
+
+let databases = Databases(client)
+
+let collection = try await databases.createCollection(
+    databaseId: "<DATABASE_ID>",
+    collectionId: "<COLLECTION_ID>",
+    name: "[NAME]"
+)
+```
+```server-rust
+use appwrite::Client;
+use appwrite::services::databases::Databases;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        .set_project("<PROJECT_ID>") // Your project ID
+        .set_key("919c2d18fb5d4...a2ae413da83346ad2"); // Your secret API key
+
+    let databases = Databases::new(&client);
+
+    let collection = databases.create_collection(
+        "<DATABASE_ID>",
+        "<COLLECTION_ID>",
+        "[NAME]",
+        None, // permissions
+        None, // document_security
+        None, // enabled
+        None, // attributes
+        None, // indexes
+    ).await?;
+
+    println!("{:?}", collection);
+    Ok(())
+}
+```
+{% /multicode %}
+
+You can also configure **permissions** in the `createCollection` method, learn more about the `createCollection` in the [API references](/docs/references).
+{% /tabsitem %}
+
+{% tabsitem #cli title="CLI" %}
+
+{% partial file="cli-disclaimer.md" /%}
+
+To create your collection using the CLI, first use the `appwrite init collections` command to initialize your collection.
+
+```sh
+appwrite init collections
+```
+
+Then push your collection using the `appwrite push collections` command.
+
+```sh
+appwrite push collections
+```
+
+This will create your collection in the Console with all of your `appwrite.config.json` configurations.
+
+{% arrow_link href="/docs/tooling/command-line/collections#commands" %}
+Learn more about the CLI collections commands
+{% /arrow_link %}
+
+{% /tabsitem %}
+
+{% /tabs %}
+
+# Permissions {% #permissions %}
+Appwrite uses permissions to control data access.
+For security, only users that are granted permissions can access a resource.
+This helps prevent accidental data leaks by forcing you to make more concious decisions around permissions.
+
+By default, Appwrite doesn't grant permissions to any users when a new collection is created.
+This means users can't create new documents or read, update, and delete existing documents.
+
+[Learn about configuring permissions](/docs/products/databases/legacy/permissions).
+
+# Attributes {% #attributes %}
+All documents in a collection follow the same structure.
+Attributes are used to define the structure of your documents and help the Appwrite's API validate your users' input.
+Add your first attribute by clicking the **Add attribute** button.
+
+You can choose between the following types.
+
+| Attribute    | Description                                                      |
+|--------------|------------------------------------------------------------------|
+| `string`     | String attribute.                                                |
+| `integer`    | Integer attribute.                                               |
+| `float`      | Float attribute.                                                 |
+| `boolean`    | Boolean attribute.                                               |
+| `datetime`   | Datetime attribute formatted as an ISO 8601 string.              |
+| `enum`       | Enum attribute.                                                  |
+| `ip`         | IP address attribute for IPv4 and IPv6.                          |
+| `email`      | Email address attribute.                                         |
+| `url`        | URL attribute.                                                   |
+| `relationship` | Relationship attribute relates one collection to another. [Learn more about relationships.](/docs/products/databases/legacy/relationships) |
+
+If an attribute must be populated in all documents, set it as `required`.
+If not, you may optionally set a default value.
+Additionally, decide if the attribute should be a single value or an array of values.
+
+If needed, you can change an attribute's key, default value, size (for strings), and whether it is required or not after creation.
+
+You can increase a string attribute's size without any restrictions. When decreasing size, you must ensure that your existing data is less than or equal to the new size, or the operation will fail.
+
+# Indexes {% #indexes %}
+
+Databases use indexes to quickly locate data without having to search through every document for matches.
+To ensure the best performance, Appwrite recommends an index for every attribute queried.
+If you plan to query multiple attributes in a single query, creating an index with **all** queried attributes will yield optimal performance.
+
+The following indexes are currently supported:
+
+| Type       | Description                                                                                                  |
+|------------|--------------------------------------------------------------------------------------------------------------|
+| `key`      | Plain Index to allow queries.                                                                                 |
+| `unique`   | Unique Index to disallow duplicates.                                                                          |
+| `fulltext` | For searching within string attributes. Required for the [search query method](/docs/products/databases/legacy/queries#query-class).     |
+
+You can create an index by navigating to your collection's **Indexes** tab or by using your favorite [Server SDK](/docs/sdks#server).

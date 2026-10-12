@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Functions;
 
+use Appwrite\Event\Event;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Compute\Specification;
 use Appwrite\Tests\Async\Exceptions\Critical;
@@ -14,8 +15,8 @@ use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
 use Tests\E2E\Scopes\SideServer;
-use Utopia\Command;
-use Utopia\Console;
+use Utopia\Console\Command;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
 use Utopia\Database\Helpers\Role;
@@ -2228,6 +2229,7 @@ final class FunctionsCustomServerTest extends Scope
             $sync = $this->createExecution($functionId, ['async' => 'false']);
             $this->assertEquals(201, $sync['headers']['status-code']);
             $syncId = $sync['body']['$id'];
+            $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $sync['body']['$createdAt']));
 
             // The API stores the queued version and the worker the finished
             // one, so the two versions of an async execution can carry
@@ -2235,23 +2237,20 @@ final class FunctionsCustomServerTest extends Scope
             $async = $this->createExecution($functionId, ['async' => true]);
             $this->assertEquals(202, $async['headers']['status-code']);
             $asyncId = $async['body']['$id'];
-            // The 202 response carries $createdAt in the database format
-            // (2026-09-29 12:46:25.848) while reads return ISO 8601, so bring
-            // every timestamp to one format before comparing them as strings.
-            $iso = fn (string $value) => (new \DateTimeImmutable($value, new \DateTimeZone('UTC')))
-                ->setTimezone(new \DateTimeZone('UTC'))
-                ->format('Y-m-d\TH:i:s.vP');
-            $queuedAt = $iso($async['body']['$createdAt']);
+            // The 202 response and reads both return ISO 8601, so the
+            // timestamps compare as strings.
+            $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $async['body']['$createdAt']));
+            $queuedAt = $async['body']['$createdAt'];
 
             // Both executions reach the store through the executions queue,
             // so wait until each is stored in its final state.
             $createdAt = [];
-            $this->assertEventually(function () use ($functionId, $syncId, $asyncId, $iso, &$createdAt) {
+            $this->assertEventually(function () use ($functionId, $syncId, $asyncId, &$createdAt) {
                 foreach ([$syncId, $asyncId] as $executionId) {
                     $execution = $this->getExecution($functionId, $executionId);
                     $this->assertEquals(200, $execution['headers']['status-code']);
                     $this->assertEquals('completed', $execution['body']['status']);
-                    $createdAt[$executionId] = $iso($execution['body']['$createdAt']);
+                    $createdAt[$executionId] = $execution['body']['$createdAt'];
                 }
             }, 60000, 500);
             $syncCreatedAt = $createdAt[$syncId];
@@ -2323,6 +2322,9 @@ final class FunctionsCustomServerTest extends Scope
         $this->assertStringContainsString('http', (string) $execution['body']['responseBody']);
         $this->assertStringContainsString('Node.js', (string) $execution['body']['responseBody']);
         $this->assertStringContainsString('22', (string) $execution['body']['responseBody']);
+        // The synchronous execution is answered from memory, before any database read
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $execution['body']['$createdAt']));
+        $this->assertNotFalse(\DateTime::createFromFormat('Y-m-d\TH:i:s.uP', $execution['body']['$updatedAt']));
         // Duration is a sub-interval of the call the client just timed, so it can
         // never exceed it, and it must be the same order of magnitude -- the old
         // warm-runtime window was a small fraction of a cold-started request.
@@ -2582,6 +2584,72 @@ final class FunctionsCustomServerTest extends Scope
             $this->assertEquals(200, $rules['headers']['status-code']);
             $this->assertEquals(0, $rules['body']['total']);
         }, 5000, 500);
+    }
+
+    #[Group('queueRetry')]
+    public function testEventSubscribersAreNotRunAgainAfterTheExecutorFailed(): void
+    {
+        // Test for SUCCESS: once the executor has been called, its failure is recorded on the
+        // execution and the event is not retried: the function has run, and a retry would run
+        // it, and every other subscriber of the event, a second time under new executions.
+        $userId = ID::unique();
+        $event = "users.{$userId}.create";
+        $succeeding = $this->setupDeployedFunction('Event subscriber that succeeds', 'basic', ['events' => [$event]]);
+        // The runtime exits in the middle of the request, so the executor answers with an error.
+        $crashing = $this->setupDeployedFunction('Event subscriber that crashes', 'crash', ['events' => [$event]]);
+
+        try {
+            $user = $this->client->call(Client::METHOD_POST, '/users', \array_merge([
+                'content-type' => 'application/json',
+                'x-appwrite-project' => $this->getProject()['$id'],
+            ], $this->getHeaders()), [
+                'userId' => $userId,
+                'email' => $userId . '@localhost.test',
+                'password' => 'password',
+            ]);
+            $this->assertSame(201, $user['headers']['status-code']);
+
+            $this->assertEventually(function () use ($succeeding, $crashing) {
+                $this->assertSame(['completed'], $this->executionStatuses($succeeding));
+                $this->assertSame(['failed'], $this->executionStatuses($crashing));
+            }, 60000, 1000);
+
+            // Whatever the broker parked as failed is now run again.
+            $this->retryFailedFunctions();
+            $settled = \microtime(true) + 15;
+            while (\microtime(true) < $settled) {
+                $this->assertSame(['completed'], $this->executionStatuses($succeeding), 'The retry ran the subscriber that succeeded a second time');
+                $this->assertSame(['failed'], $this->executionStatuses($crashing), 'The retry ran the subscriber that crashed a second time');
+                \usleep(1000000);
+            }
+        } finally {
+            $this->cleanupFunction($succeeding);
+            $this->cleanupFunction($crashing);
+        }
+    }
+
+    /**
+     * @return list<string> The status of every execution of the function, oldest first.
+     */
+    private function executionStatuses(string $functionId): array
+    {
+        $executions = $this->listExecutions($functionId, [
+            'queries' => [Query::orderAsc('$createdAt')->toString()],
+        ]);
+        $this->assertSame(200, $executions['headers']['status-code']);
+
+        return \array_column($executions['body']['executions'], 'status');
+    }
+
+    /**
+     * Run what an operator runs to retry the functions jobs the broker parked as failed.
+     */
+    private function retryFailedFunctions(): void
+    {
+        // Without --limit the task retries nothing: it reads the missing limit as 0. --connection names the broker
+        // hosting the functions queue, which Cloud requires when several are configured; this task ignores it.
+        \exec('queue-retry --name=' . \escapeshellarg(Event::FUNCTIONS_QUEUE_NAME) . ' --connection=queue --limit=1000 2>&1', $output, $exitCode);
+        $this->assertSame(0, $exitCode, \implode("\n", $output));
     }
 
     public function testExecutionTimeout()
