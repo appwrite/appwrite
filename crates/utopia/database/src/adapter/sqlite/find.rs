@@ -286,10 +286,11 @@ impl Sqlite {
                 Ok(format!("JSON_CONTAINS({alias}.{attribute}, :{placeholder}_0)"))
             }
             _ => {
-                let operator = sql_operator(&method)?;
+                // The operator is looked up per value: no values, no error.
                 let mut conditions = Vec::new();
                 for (key, value) in values.iter().enumerate() {
                     binds.set(format!(":{placeholder}_{key}"), value.clone());
+                    let operator = sql_operator(&method)?;
                     conditions.push(format!("{alias}.{attribute} {operator} :{placeholder}_{key}"));
                 }
                 Ok(if conditions.is_empty() { String::new() } else { format!("({})", conditions.join(" OR ")) })
@@ -422,6 +423,9 @@ impl Sqlite {
         );
         let sql = self.trigger_sql(Database::EVENT_DOCUMENT_FIND, sql);
         let mut stmt = Statement::new(sql);
+        // Prepared (natively, so a bad statement fails here) before any
+        // value is bound, inside the try.
+        self.pdo().prepare(&stmt).map_err(sql::processed)?;
         for (key, value) in binds.0 {
             match value {
                 Value::Float(f) => stmt.bind_str(&key, self.float_literal(f)?),
@@ -574,9 +578,9 @@ fn like_condition(mut query: Query, binds: &mut Binds) -> Result<String> {
             Ok(Value::Str(Str::from(v)))
         };
         let bound = match method {
-            Method::StartsWith | Method::NotStartsWith => like(b"", b"%", 3239)?,
-            Method::EndsWith | Method::NotEndsWith => like(b"%", b"", 3240)?,
-            Method::Contains | Method::ContainsAny | Method::NotContains => like(b"%", b"%", 3241)?,
+            Method::StartsWith | Method::NotStartsWith => like(b"", b"%", 3243)?,
+            Method::EndsWith | Method::NotEndsWith => like(b"%", b"", 3244)?,
+            Method::Contains | Method::ContainsAny | Method::NotContains => like(b"%", b"%", 3245)?,
             _ => value.clone(),
         };
         binds.set(format!(":{placeholder}_{key}"), bound);
@@ -604,8 +608,8 @@ fn spatial_condition(
         Ok(format!("{not}{function}({alias}.{attribute}, {p0})"))
     };
     match query.method() {
-        Method::Crosses => simple(binds, "ST_Crosses", false, 1395),
-        Method::NotCrosses => simple(binds, "ST_Crosses", true, 1399),
+        Method::Crosses => simple(binds, "ST_Crosses", false, 1402),
+        Method::NotCrosses => simple(binds, "ST_Crosses", true, 1406),
         Method::DistanceEqual | Method::DistanceNotEqual | Method::DistanceGreaterThan | Method::DistanceLessThan => {
             let param = |i: i64| -> Option<Value> {
                 match first {
@@ -614,7 +618,7 @@ fn spatial_condition(
                     _ => None,
                 }
             };
-            let wkt_value = wkt(param(0).as_ref(), 1346)?;
+            let wkt_value = wkt(param(0).as_ref(), 1353)?;
             binds.set(p0.clone(), wkt_value.clone());
             binds.set(format!(":{placeholder}_1"), param(1).unwrap_or(Value::Null));
             let meters = matches!(param(2), Some(Value::Bool(true)));
@@ -640,16 +644,16 @@ fn spatial_condition(
             }
             Ok(format!("ST_Distance({alias}.{attribute}, {p0}) {operator} :{placeholder}_1"))
         }
-        Method::Intersects => simple(binds, "ST_Intersects", false, 1409),
-        Method::NotIntersects => simple(binds, "ST_Intersects", true, 1413),
-        Method::Overlaps => simple(binds, "ST_Overlaps", false, 1417),
-        Method::NotOverlaps => simple(binds, "ST_Overlaps", true, 1421),
-        Method::Touches => simple(binds, "ST_Touches", false, 1425),
-        Method::NotTouches => simple(binds, "ST_Touches", true, 1429),
-        Method::Equal => simple(binds, "ST_Equals", false, 1433),
-        Method::NotEqual => simple(binds, "ST_Equals", true, 1437),
-        Method::Contains => simple(binds, "ST_Contains", false, 1441),
-        Method::NotContains => simple(binds, "ST_Contains", true, 1445),
+        Method::Intersects => simple(binds, "ST_Intersects", false, 1416),
+        Method::NotIntersects => simple(binds, "ST_Intersects", true, 1420),
+        Method::Overlaps => simple(binds, "ST_Overlaps", false, 1424),
+        Method::NotOverlaps => simple(binds, "ST_Overlaps", true, 1428),
+        Method::Touches => simple(binds, "ST_Touches", false, 1432),
+        Method::NotTouches => simple(binds, "ST_Touches", true, 1436),
+        Method::Equal => simple(binds, "ST_Equals", false, 1440),
+        Method::NotEqual => simple(binds, "ST_Equals", true, 1444),
+        Method::Contains => simple(binds, "ST_Contains", false, 1448),
+        Method::NotContains => simple(binds, "ST_Contains", true, 1452),
         Method::IsNull | Method::IsNotNull => Ok(format!("{alias}.{attribute} {}", sql_operator(query.method())?)),
         other => Err(Error::database(format!("Unknown spatial query method: {}", other.as_str()))),
     }
