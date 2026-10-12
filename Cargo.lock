@@ -3585,6 +3585,7 @@ dependencies = [
  "tokio-postgres",
  "tracing",
  "utopia-cache",
+ "utopia-pools",
  "utopia-validators",
 ]
 
