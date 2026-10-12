@@ -6,7 +6,6 @@ use std::cmp::Ordering;
 use md5::{Digest, Md5};
 use php_std::ArrayKey;
 use php_std::json::{self, Flags};
-use php_std::types::KeyRef;
 
 use crate::enums::{CursorDirection, NullsPosition};
 use crate::error::{Error, Result};
@@ -375,9 +374,8 @@ impl Query {
 
     /// [`Query::parse`] on bytes (PHP strings need not be UTF-8).
     pub fn parse_bytes(query: &[u8], allow_raw: bool) -> Result<Query> {
-        let decoded = json::decode(query, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
+        let decoded: Value = json::decode_ext(query, Some(true), json::DEFAULT_DEPTH, Flags::THROW_ON_ERROR)
             .map_err(|e| Error::query(format!("Invalid query: {}", e.message())))?;
-        let decoded: Value = convert(decoded);
         match decoded {
             Value::Array(array) => Query::parse_query(&array, allow_raw),
             other => Err(Error::query(format!("Invalid query. Must be an array, got {}", gettype(&other)))),
@@ -398,9 +396,8 @@ impl Query {
         let Value::Str(method) = method else {
             return Err(Error::query(format!("Invalid query method. Must be a string, got {}", gettype(&method))));
         };
-        let method_name = String::from_utf8_lossy(method.as_bytes()).into_owned();
         let Some(method) = method.as_str().and_then(Method::try_from_value) else {
-            return Err(Error::query(format!("Invalid query method: {method_name}")));
+            return Err(Error::query(format!("Invalid query method: {}", String::from_utf8_lossy(method.as_bytes()))));
         };
         let Value::Str(attribute) = attribute else {
             return Err(Error::query(format!(
@@ -1574,31 +1571,4 @@ pub(crate) fn compare_strings(a: &str, b: &str) -> Ordering {
 
 fn lossy(bytes: &[u8]) -> String {
     String::from_utf8_lossy(bytes).into_owned()
-}
-
-/// A decoded JSON value (no extension objects) as a query value.
-fn convert(value: php_std::Value) -> Value {
-    match value {
-        php_std::Value::Null => Value::Null,
-        php_std::Value::Bool(b) => Value::Bool(b),
-        php_std::Value::Int(i) => Value::Int(i),
-        php_std::Value::Float(f) => Value::Float(f),
-        php_std::Value::Str(s) => Value::Str(s),
-        php_std::Value::Array(a) => Value::Array(convert_array(a)),
-        php_std::Value::Object(a) => Value::Object(convert_array(a)),
-        php_std::Value::Ext(never) => match never {},
-    }
-}
-
-fn convert_array(a: php_std::Array) -> Array {
-    let next = a.next_index();
-    Array::from_entries(a.iter().map(|(k, v)| (k.to_owned(), convert(v.clone()))).collect::<Vec<_>>(), next)
-}
-
-#[allow(dead_code)]
-fn key_str(k: KeyRef<'_>) -> String {
-    match k {
-        KeyRef::Int(i) => i.to_string(),
-        KeyRef::Str(s) => lossy(s),
-    }
 }

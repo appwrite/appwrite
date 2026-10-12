@@ -423,29 +423,10 @@ fn sub_query(value: &Value) -> Result<&Query> {
 
 /// `json_decode($json, true)`, `None` where PHP returns `null`.
 fn decode(json: &str) -> Option<Value> {
-    let decoded = json::decode(json.as_bytes(), Some(true), json::DEFAULT_DEPTH, Flags::NONE).ok()?;
-    match convert(decoded) {
+    match json::decode_ext(json.as_bytes(), Some(true), json::DEFAULT_DEPTH, Flags::NONE).ok()? {
         Value::Null => None,
         other => Some(other),
     }
-}
-
-fn convert(value: php_std::Value) -> Value {
-    match value {
-        php_std::Value::Null => Value::Null,
-        php_std::Value::Bool(b) => Value::Bool(b),
-        php_std::Value::Int(i) => Value::Int(i),
-        php_std::Value::Float(f) => Value::Float(f),
-        php_std::Value::Str(s) => Value::Str(s),
-        php_std::Value::Array(a) => Value::Array(convert_array(a)),
-        php_std::Value::Object(a) => Value::Object(convert_array(a)),
-        php_std::Value::Ext(never) => match never {},
-    }
-}
-
-fn convert_array(a: php_std::Array) -> Array {
-    let next = a.next_index();
-    Array::from_entries(a.iter().map(|(k, v)| (k.to_owned(), convert(v.clone()))).collect::<Vec<_>>(), next)
 }
 
 /// `json_encode($operation, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES)`.

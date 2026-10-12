@@ -49,24 +49,24 @@ final class Adapter implements Base, Benchmarks
             'postgresql_select' => ['Build the same select for PostgreSQL', $select(\Utopia\Query\Builder\PostgreSQL::class)],
             'clickhouse_select' => ['Build the same select for ClickHouse', $select(\Utopia\Query\Builder\ClickHouse::class)],
             'mongodb_find' => ['Build the same query as a MongoDB find command', $select(\Utopia\Query\Builder\MongoDB::class)],
-            'tokenize' => ['Tokenize a 190-byte select with a join, grouping and ordering', fn (Session $s) => function () {
+            'tokenize' => ['Tokenize a 190-byte select with a join, grouping and ordering', function (Session $s) {
                 $tokenizer = new Tokenizer();
 
                 return fn () => $tokenizer->tokenize(self::SQL);
             }],
-            'classify' => ['Classify a 190-byte select as a read', fn (Session $s) => function () {
+            'classify' => ['Classify a 190-byte select as a read', function (Session $s) {
                 $classifier = new \Utopia\Query\Classifier\MySQL();
 
                 return fn () => $classifier->classifySQL(self::SQL);
             }],
-            'ast_roundtrip' => ['Parse the 190-byte select into an AST and serialize it back', fn (Session $s) => function () {
+            'ast_roundtrip' => ['Parse the 190-byte select into an AST and serialize it back', function (Session $s) {
                 $tokenizer = new Tokenizer();
                 $parser = new Parser();
                 $serializer = new Serializer();
 
                 return fn () => $serializer->serialize($parser->parse(Tokenizer::filter($tokenizer->tokenize(self::SQL))));
             }],
-            'schema_create' => ['Compile a MySQL CREATE TABLE with four columns, a unique index and a primary key', fn (Session $s) => function () {
+            'schema_create' => ['Compile a MySQL CREATE TABLE with four columns, a unique index and a primary key', function (Session $s) {
                 $schema = new \Utopia\Query\Schema\MySQL();
 
                 return function () use ($schema) {
