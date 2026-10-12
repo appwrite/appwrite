@@ -73,6 +73,8 @@ pub enum Kind {
     ValueError,
     /// `JsonException`.
     Json,
+    /// `DivisionByZeroError`, raised by the engine on a division or modulo by zero.
+    DivisionByZero,
     /// `Exception`: PHP's base exception, thrown by library code with `new \Exception`.
     Exception,
 }
@@ -105,6 +107,7 @@ impl Kind {
             Kind::TypeError => "TypeError",
             Kind::ValueError => "ValueError",
             Kind::Json => "JsonException",
+            Kind::DivisionByZero => "DivisionByZeroError",
             Kind::Exception => "Exception",
         }
     }
@@ -115,7 +118,13 @@ impl Kind {
     pub fn parent(self) -> Option<Kind> {
         match self {
             Kind::Unique => Some(Kind::Duplicate),
-            Kind::Database | Kind::Pdo | Kind::TypeError | Kind::ValueError | Kind::Json | Kind::Exception => None,
+            Kind::Database
+            | Kind::Pdo
+            | Kind::TypeError
+            | Kind::ValueError
+            | Kind::Json
+            | Kind::DivisionByZero
+            | Kind::Exception => None,
             _ => Some(Kind::Database),
         }
     }
