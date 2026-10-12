@@ -5858,6 +5858,60 @@ trait DatabasesBase
         $this->assertEquals(2031, $verify2['body']['releaseYear']);
     }
 
+    public function testEncryptedAttributeOperators(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $headers, [
+            $this->getContainerIdParam() => ID::unique(),
+            'name' => 'Encrypted operators',
+        ]);
+        $this->assertEquals(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $secret = $this->createAttribute($databaseId, $collectionId, 'varchar', [
+            'key' => 'secret',
+            'required' => false,
+            'size' => 200,
+            'encrypt' => true,
+        ]);
+        $this->assertEquals(202, $secret['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $collectionId, 'secret');
+
+        $document = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $headers, [
+            $this->getRecordIdParam() => ID::unique(),
+            'data' => ['secret' => 'banana'],
+        ]);
+        $this->assertEquals(201, $document['headers']['status-code']);
+        $documentId = $document['body']['$id'];
+
+        /**
+         * Test for FAILURE
+         */
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['secret' => Operator::stringReplace('a', 'o')->toString()],
+        ]);
+        $this->assertEquals(400, $document['headers']['status-code']);
+
+        /**
+         * Test for SUCCESS
+         */
+        $document = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers, [
+            'data' => ['secret' => 'cherry'],
+        ]);
+        $this->assertEquals(200, $document['headers']['status-code']);
+        $this->assertSame('cherry', $document['body']['secret']);
+    }
+
     public function testDeleteDocument(): void
     {
         $data = $this->setupDocuments();
