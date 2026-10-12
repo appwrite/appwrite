@@ -410,6 +410,9 @@ impl Object for SchemaObj {
     }
 
     fn call(&mut self, method: &str, a: &mut Args) -> Option<Outcome> {
+        if let Some(outcome) = compile_table(&self.0, method, a) {
+            return Some(outcome);
+        }
         let result = match &mut self.0 {
             AnySchema::MySql(x) => mysql_call(x, method, a),
             AnySchema::Pg(x) => postgresql_call(x, method, a),
@@ -449,6 +452,43 @@ impl Object for SchemaObj {
     }
 
     query_object_boilerplate!();
+}
+
+/// `compileCreate($table, $ifNotExists)`, `compileAlter($table)` and
+/// `compileCreatePartitioning($table)`: a table of the schema's dialect.
+fn compile_table(schema: &AnySchema, method: &str, a: &Args) -> Option<Outcome> {
+    if !matches!(method, "compileCreate" | "compileAlter" | "compileCreatePartitioning") {
+        return None;
+    }
+    Some((|| -> Outcome {
+        let table = a
+            .with(0, "table", |o| o.as_any().downcast_ref::<TableObj>().map(|t| lock(&t.0).deep_clone()))?
+            .ok_or_else(|| fault("expected a table"))?;
+        let if_not_exists = a.bool_or(1, "ifNotExists", false)?;
+        macro_rules! compile {
+            ($x:expr, $t:expr) => {
+                match method {
+                    "compileCreate" => statement($x.compile_create($t, if_not_exists)),
+                    "compileAlter" => statement($x.compile_alter($t)),
+                    _ => Err(fault(format!("{method} needs a partitioning schema"))),
+                }
+            };
+        }
+        match (schema, &table) {
+            (AnySchema::MySql(x), AnyTable::MySql(t)) if method == "compileCreatePartitioning" => {
+                Ok(Ret::str(f::Partitioning::compile_create_partitioning(x, t)))
+            }
+            (AnySchema::Pg(x), AnyTable::Pg(t)) if method == "compileCreatePartitioning" => {
+                Ok(Ret::str(f::Partitioning::compile_create_partitioning(x, t)))
+            }
+            (AnySchema::MySql(x), AnyTable::MySql(t)) => compile!(x, t),
+            (AnySchema::Pg(x), AnyTable::Pg(t)) => compile!(x, t),
+            (AnySchema::Sqlite(x), AnyTable::Sqlite(t)) => compile!(x, t),
+            (AnySchema::Ch(x), AnyTable::Ch(t)) => compile!(x, t),
+            (AnySchema::Mongo(x), AnyTable::Mongo(t)) => compile!(x, t),
+            _ => Err(fault("table of another dialect")),
+        }
+    })())
 }
 
 enum SchemaOut {

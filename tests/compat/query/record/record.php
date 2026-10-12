@@ -5,7 +5,11 @@
  * on the library recorded (see Rewriter and Rec), and writes one case per
  * test (and data set) to tests/compat/query/cases/<Dir>.<Test>.json.
  *
- *   bin/compat-php tests/compat/query/record/record.php [<test file relative to packages/query/tests>...]
+ * Tests in tests/compat/query/record/Extra (namespace
+ * Utopia\Query\Tests\Extra) call the API the PHP tests leave out; they are
+ * recorded the same way, as cases/Extra.<Test>.json.
+ *
+ *   bin/compat-php tests/compat/query/record/record.php [<test file relative to packages/query/tests, or Extra/<Test>.php>...]
  *
  * Expectations are not written here: `bin/compat record query` replays the
  * cases on PHP and stores the results.
@@ -39,7 +43,7 @@ $out = $root . '/tests/compat/query/cases';
 
         return;
     }
-    $file = $tests . '/' . $relative . '.php';
+    $file = source($relative, $tests);
     if (!\is_file($file)) {
         return;
     }
@@ -50,6 +54,12 @@ $out = $root . '/tests/compat/query/cases';
     require $tmp;
 }, true, true);
 
+/** The file of a test, relative to packages/query/tests (or Extra/ for the extra tests). */
+function source(string $relative, string $tests): string
+{
+    return \str_starts_with($relative, 'Extra/') ? __DIR__ . '/' . $relative . '.php' : $tests . '/' . $relative . '.php';
+}
+
 $files = \array_slice($argv, 1);
 if ($files === []) {
     $it = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($tests, \FilesystemIterator::SKIP_DOTS));
@@ -58,6 +68,9 @@ if ($files === []) {
             $files[] = \substr($file->getPathname(), \strlen($tests) + 1);
         }
     }
+    foreach (\glob(__DIR__ . '/Extra/*Test.php') ?: [] as $file) {
+        $files[] = 'Extra/' . \basename($file);
+    }
     \sort($files);
 }
 
@@ -65,6 +78,14 @@ if ($files === []) {
 function op(string $relative): string
 {
     $relative = \preg_replace('#^E2E/#', '', $relative);
+    if (\str_starts_with($relative, 'Extra/')) {
+        return match (true) {
+            \str_starts_with($relative, 'Extra/Builder') => 'builder',
+            \str_starts_with($relative, 'Extra/Schema') => 'schema',
+            \str_starts_with($relative, 'Extra/Visitor') => 'ast',
+            default => 'query',
+        };
+    }
 
     return match (true) {
         \str_starts_with($relative, 'Builder/') => 'builder',
@@ -181,6 +202,8 @@ foreach ($files as $relative) {
             Rec::$symbols = [];
         }
     }
+    // A file whose cases call no symbol of the inventory replaces its old entry too.
+    $covers[$relative] ??= [];
     $target = $out . '/' . \str_replace('/', '.', \substr($relative, 0, -4)) . '.json';
     $previous = \is_file($target) ? \json_decode((string) \file_get_contents($target), true) : null;
     // Keep expectations recorded earlier for programs that did not change.
@@ -199,7 +222,7 @@ foreach ($files as $relative) {
         unset($case);
     }
     $json = \json_encode(
-        ['source' => 'packages/query/tests/' . $relative, 'cases' => $cases],
+        ['source' => (\str_starts_with($relative, 'Extra/') ? 'tests/compat/query/record/' : 'packages/query/tests/') . $relative, 'cases' => $cases],
         JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_THROW_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE,
     );
     \file_put_contents($target, $json . "\n");

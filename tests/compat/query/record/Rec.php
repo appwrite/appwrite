@@ -428,27 +428,40 @@ final class Rec
         } catch (\ReflectionException) {
             return;
         }
+        // Engine built-ins (enum `cases()`/`from()`, `Exception::getMessage()`)
+        // and protected methods are not in the inventory.
+        if ($reflection->isInternal() || !$reflection->isPublic()) {
+            return;
+        }
         $declaring = $reflection->getDeclaringClass();
-        $name = $declaring->getName();
         // The inventory lists a trait's method under the trait and under
-        // each class using it.
-        self::$symbols[$name . '::' . $method] = true;
+        // each class using it; a test fixture using a library trait, and a
+        // trait method made public only by the class using it, are not in it.
+        $names = [$declaring->getName()];
         $file = $reflection->getFileName();
         if ($file !== $declaring->getFileName()) {
+            // Every trait on the way has it: the one writing it, and those
+            // composing that one (reflection lists the method under each).
             $queue = [$declaring];
             while ($queue !== []) {
                 $current = \array_shift($queue);
                 foreach ($current->getTraits() as $trait) {
-                    if ($trait->hasMethod($method) && $trait->getFileName() === $file) {
-                        $name = $trait->getName();
-                        $queue = [];
-                        break;
+                    if (
+                        $trait->hasMethod($method)
+                        && $trait->getMethod($method)->getFileName() === $file
+                        && $trait->getMethod($method)->isPublic()
+                    ) {
+                        $names[] = $trait->getName();
                     }
                     $queue[] = $trait;
                 }
             }
         }
-        self::$symbols[$name . '::' . $method] = true;
+        foreach ($names as $name) {
+            if (\str_starts_with($name, Replay::NS) && !\str_starts_with($name, 'Utopia\\Query\\Tests\\')) {
+                self::$symbols[$name . '::' . $method] = true;
+            }
+        }
     }
 
     public static function g(mixed $target, string $property): mixed

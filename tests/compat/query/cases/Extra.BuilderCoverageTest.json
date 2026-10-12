@@ -1,0 +1,3668 @@
+{
+  "source": "tests/compat/query/record/Extra/BuilderCoverageTest.php",
+  "cases": [
+    {
+      "name": "testExecutorOnSelect",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "setExecutor",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$fn": 1
+              }
+            ]
+          },
+          {
+            "call": "execute",
+            "on": {
+              "$o": 1
+            },
+            "args": [],
+            "cb": [
+              {
+                "fn": 1,
+                "do": [
+                  {
+                    "get": "query",
+                    "on": {
+                      "$o": 2
+                    }
+                  }
+                ],
+                "ret": [
+                  {
+                    "id": 1,
+                    "sql": "SELECT * FROM `users`"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "setExecutor",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$fn": 2
+              }
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1,
+                2
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              [
+                {
+                  "$o": 4
+                }
+              ]
+            ]
+          },
+          {
+            "call": "execute",
+            "on": {
+              "$o": 3
+            },
+            "args": [],
+            "cb": [
+              {
+                "fn": 2,
+                "do": [
+                  {
+                    "get": "bindings",
+                    "on": {
+                      "$o": 5
+                    }
+                  }
+                ],
+                "ret": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$cb": "fn:1",
+          "args": [
+            {
+              "$value": "Builder\\Statement",
+              "id": 2,
+              "props": {
+                "query": "SELECT * FROM `users`",
+                "bindings": [],
+                "readOnly": true,
+                "namedBindings": null
+              }
+            }
+          ]
+        },
+        "SELECT * FROM `users`",
+        [
+          {
+            "id": 1,
+            "sql": "SELECT * FROM `users`"
+          }
+        ],
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1,
+              2
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$cb": "fn:2",
+          "args": [
+            {
+              "$value": "Builder\\Statement",
+              "id": 5,
+              "props": {
+                "query": "SELECT * FROM \"users\" WHERE \"id\" IN (?, ?)",
+                "bindings": [
+                  1,
+                  2
+                ],
+                "readOnly": true,
+                "namedBindings": null
+              }
+            }
+          ]
+        },
+        [
+          1,
+          2
+        ],
+        2
+      ]
+    },
+    {
+      "name": "testExecuteWithoutExecutor",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "execute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "BadMethodCallException",
+            "message": "No executor configured on this plan"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testFetch",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "fetch",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              5
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "sortAsc",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "fetch",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              5,
+              true
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "fetch",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              3
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "fetch",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              0
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"users\" ORDER BY \"id\" ASC FETCH FIRST ? ROWS ONLY",
+            "bindings": [
+              5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"users\" ORDER BY \"id\" ASC FETCH FIRST ? ROWS ONLY",
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT * FROM \"users\" ORDER BY \"id\" ASC FETCH FIRST ? ROWS WITH TIES",
+            "bindings": [
+              5
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"users\" ORDER BY \"id\" ASC FETCH FIRST ? ROWS WITH TIES",
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT * FROM `users` FETCH FIRST ? ROWS ONLY",
+            "bindings": [
+              3
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` FETCH FIRST ? ROWS ONLY",
+        {
+          "$object": "Builder\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 7
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "SELECT * FROM `users` FETCH FIRST ? ROWS ONLY",
+            "bindings": [
+              0
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users` FETCH FIRST ? ROWS ONLY"
+      ]
+    },
+    {
+      "name": "testStatementExecutor",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                7
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "withExecutor",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              {
+                "$fn": 1
+              }
+            ]
+          },
+          {
+            "call": "execute",
+            "on": {
+              "$o": 4
+            },
+            "args": [],
+            "cb": [
+              {
+                "fn": 1,
+                "do": [
+                  {
+                    "get": "bindings",
+                    "on": {
+                      "$o": 5
+                    }
+                  }
+                ],
+                "ret": [
+                  {
+                    "bindings": [
+                      7
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              7
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `users` WHERE `id` IN (?)",
+            "bindings": [
+              7
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT * FROM `users` WHERE `id` IN (?)",
+            "bindings": [
+              7
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$cb": "fn:1",
+          "args": [
+            {
+              "$value": "Builder\\Statement",
+              "id": 5,
+              "props": {
+                "query": "SELECT * FROM `users` WHERE `id` IN (?)",
+                "bindings": [
+                  7
+                ],
+                "readOnly": true,
+                "namedBindings": null
+              }
+            }
+          ]
+        },
+        [
+          7
+        ],
+        [
+          {
+            "bindings": [
+              7
+            ]
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testStatementExecuteWithoutExecutor",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "execute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        {
+          "$error": {
+            "class": "BadMethodCallException",
+            "message": "No executor configured on this plan"
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testInsertDefaultValues",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "logs"
+            ]
+          },
+          {
+            "call": "insertDefaultValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "logs"
+            ]
+          },
+          {
+            "call": "insertDefaultValues",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "logs"
+            ]
+          },
+          {
+            "call": "insertDefaultValues",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "logs"
+            ]
+          },
+          {
+            "call": "insertDefaultValues",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `logs` () VALUES ()",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `logs` () VALUES ()",
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "INSERT INTO `logs` () VALUES ()",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `logs` () VALUES ()",
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "INSERT INTO \"logs\" DEFAULT VALUES",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO \"logs\" DEFAULT VALUES",
+        {
+          "$object": "Builder\\SQLite",
+          "id": 7
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 7
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "INSERT INTO `logs` DEFAULT VALUES",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `logs` DEFAULT VALUES"
+      ]
+    },
+    {
+      "name": "testInsertDefaultValuesClickHouse",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "logs"
+            ]
+          },
+          {
+            "call": "insertDefaultValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `logs` DEFAULT VALUES",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInsertDefaultValuesMongoDB",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "logs"
+            ]
+          },
+          {
+            "call": "insertDefaultValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO logs DEFAULT VALUES",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInsertDefaultValuesWithoutTable",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "insertDefaultValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "No table specified. Call from() or into() before building a query."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCaseExpression",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Case\\Expression",
+            "args": []
+          },
+          {
+            "call": "whenNull",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "deleted_at",
+              "live"
+            ]
+          },
+          {
+            "call": "whenNotNull",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "archived_at",
+              "archived"
+            ]
+          },
+          {
+            "call": "whenIn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "status",
+              [
+                "a",
+                "b"
+              ],
+              "grouped"
+            ]
+          },
+          {
+            "call": "else",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "other"
+            ]
+          },
+          {
+            "call": "alias",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "state"
+            ]
+          },
+          {
+            "call": "getWhens",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "hasElse",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getElse",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCase",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "new": "Builder\\Case\\Expression",
+            "args": []
+          },
+          {
+            "call": "hasElse",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          },
+          {
+            "call": "getElse",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          },
+          {
+            "call": "getWhens",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Builder\\Case\\WhenClause",
+            "id": 2,
+            "props": {
+              "kind": {
+                "$enum": "Builder\\Case\\Kind::Null"
+              },
+              "column": "deleted_at",
+              "operator": null,
+              "value": null,
+              "then": "live",
+              "values": [],
+              "rawCondition": null,
+              "rawBindings": []
+            }
+          },
+          {
+            "$value": "Builder\\Case\\WhenClause",
+            "id": 3,
+            "props": {
+              "kind": {
+                "$enum": "Builder\\Case\\Kind::NotNull"
+              },
+              "column": "archived_at",
+              "operator": null,
+              "value": null,
+              "then": "archived",
+              "values": [],
+              "rawCondition": null,
+              "rawBindings": []
+            }
+          },
+          {
+            "$value": "Builder\\Case\\WhenClause",
+            "id": 4,
+            "props": {
+              "kind": {
+                "$enum": "Builder\\Case\\Kind::In"
+              },
+              "column": "status",
+              "operator": null,
+              "value": null,
+              "then": "grouped",
+              "values": [
+                "a",
+                "b"
+              ],
+              "rawCondition": null,
+              "rawBindings": []
+            }
+          }
+        ],
+        true,
+        "other",
+        "state",
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT CASE WHEN `deleted_at` IS NULL THEN ? WHEN `archived_at` IS NOT NULL THEN ? WHEN `status` IN (?, ?) THEN ? ELSE ? END AS `state` FROM `t`",
+            "bindings": [
+              "live",
+              "archived",
+              "a",
+              "b",
+              "grouped",
+              "other"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT CASE WHEN `deleted_at` IS NULL THEN ? WHEN `archived_at` IS NOT NULL THEN ? WHEN `status` IN (?, ?) THEN ? ELSE ? END AS `state` FROM `t`",
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 7
+        },
+        false,
+        null,
+        "",
+        []
+      ]
+    },
+    {
+      "name": "testCaseWhenInEmpty",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\Case\\Expression",
+            "args": []
+          },
+          {
+            "call": "whenIn",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "status",
+              [],
+              "none"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\Case\\Expression",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "whenIn() requires at least one value."
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCaseOperators",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "cases",
+            "class": "Builder\\Case\\Operator",
+            "args": []
+          },
+          {
+            "call": "sqlOperator",
+            "on": {
+              "$enum": "Builder\\Case\\Operator::Equal"
+            },
+            "args": []
+          },
+          {
+            "call": "sqlOperator",
+            "on": {
+              "$enum": "Builder\\Case\\Operator::NotEqual"
+            },
+            "args": []
+          },
+          {
+            "call": "sqlOperator",
+            "on": {
+              "$enum": "Builder\\Case\\Operator::LessThan"
+            },
+            "args": []
+          },
+          {
+            "call": "sqlOperator",
+            "on": {
+              "$enum": "Builder\\Case\\Operator::LessThanEqual"
+            },
+            "args": []
+          },
+          {
+            "call": "sqlOperator",
+            "on": {
+              "$enum": "Builder\\Case\\Operator::GreaterThan"
+            },
+            "args": []
+          },
+          {
+            "call": "sqlOperator",
+            "on": {
+              "$enum": "Builder\\Case\\Operator::GreaterThanEqual"
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        [
+          {
+            "$enum": "Builder\\Case\\Operator::Equal"
+          },
+          {
+            "$enum": "Builder\\Case\\Operator::NotEqual"
+          },
+          {
+            "$enum": "Builder\\Case\\Operator::LessThan"
+          },
+          {
+            "$enum": "Builder\\Case\\Operator::LessThanEqual"
+          },
+          {
+            "$enum": "Builder\\Case\\Operator::GreaterThan"
+          },
+          {
+            "$enum": "Builder\\Case\\Operator::GreaterThanEqual"
+          }
+        ],
+        "=",
+        "!=",
+        "<",
+        "<=",
+        ">",
+        ">="
+      ]
+    },
+    {
+      "name": "testEnumHelpers",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "cases",
+            "class": "Builder\\LockMode",
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Builder\\LockMode::ForUpdate"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Builder\\LockMode::ForShare"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Builder\\LockMode::ForUpdateSkipLocked"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Builder\\LockMode::ForUpdateNoWait"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Builder\\LockMode::ForShareSkipLocked"
+            },
+            "args": []
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$enum": "Builder\\LockMode::ForShareNoWait"
+            },
+            "args": []
+          },
+          {
+            "static": "cases",
+            "class": "Builder\\VectorMetric",
+            "args": []
+          },
+          {
+            "call": "toOperator",
+            "on": {
+              "$enum": "Builder\\VectorMetric::Cosine"
+            },
+            "args": []
+          },
+          {
+            "call": "toOperator",
+            "on": {
+              "$enum": "Builder\\VectorMetric::Euclidean"
+            },
+            "args": []
+          },
+          {
+            "call": "toOperator",
+            "on": {
+              "$enum": "Builder\\VectorMetric::Dot"
+            },
+            "args": []
+          },
+          {
+            "call": "isNested",
+            "on": {
+              "$enum": "Method::And"
+            },
+            "args": []
+          },
+          {
+            "call": "isNested",
+            "on": {
+              "$enum": "Method::Or"
+            },
+            "args": []
+          },
+          {
+            "call": "isNested",
+            "on": {
+              "$enum": "Method::Equal"
+            },
+            "args": []
+          },
+          {
+            "call": "isNested",
+            "on": {
+              "$enum": "Method::Having"
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        [
+          {
+            "$enum": "Builder\\LockMode::ForUpdate"
+          },
+          {
+            "$enum": "Builder\\LockMode::ForShare"
+          },
+          {
+            "$enum": "Builder\\LockMode::ForUpdateSkipLocked"
+          },
+          {
+            "$enum": "Builder\\LockMode::ForUpdateNoWait"
+          },
+          {
+            "$enum": "Builder\\LockMode::ForShareSkipLocked"
+          },
+          {
+            "$enum": "Builder\\LockMode::ForShareNoWait"
+          }
+        ],
+        "FOR UPDATE",
+        "FOR SHARE",
+        "FOR UPDATE SKIP LOCKED",
+        "FOR UPDATE NOWAIT",
+        "FOR SHARE SKIP LOCKED",
+        "FOR SHARE NOWAIT",
+        [
+          {
+            "$enum": "Builder\\VectorMetric::Cosine"
+          },
+          {
+            "$enum": "Builder\\VectorMetric::Euclidean"
+          },
+          {
+            "$enum": "Builder\\VectorMetric::Dot"
+          }
+        ],
+        "<=>",
+        "<->",
+        "<#>",
+        true,
+        true,
+        false,
+        true
+      ]
+    },
+    {
+      "name": "testWindowFrame",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\WindowFrame",
+            "args": [
+              "ROWS",
+              "UNBOUNDED PRECEDING",
+              "CURRENT ROW"
+            ]
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\WindowFrame",
+            "args": [
+              "RANGE",
+              "CURRENT ROW"
+            ]
+          },
+          {
+            "call": "toSql",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Builder\\WindowFrame",
+          "id": 1,
+          "props": {
+            "type": "ROWS",
+            "start": "UNBOUNDED PRECEDING",
+            "end": "CURRENT ROW"
+          }
+        },
+        "ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW",
+        {
+          "$value": "Builder\\WindowFrame",
+          "id": 2,
+          "props": {
+            "type": "RANGE",
+            "start": "CURRENT ROW",
+            "end": null
+          }
+        },
+        "RANGE CURRENT ROW"
+      ]
+    },
+    {
+      "name": "testQueryFactories",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "static": "contains",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "static": "countDistinct",
+            "class": "Query",
+            "args": [
+              "user_id",
+              "users"
+            ]
+          },
+          {
+            "call": "getAlias",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "countDistinct",
+            "class": "Query",
+            "args": [
+              "user_id"
+            ]
+          },
+          {
+            "call": "queries",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                {
+                  "$o": 6
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Contains"
+            },
+            "attribute": "tags",
+            "values": [
+              "a",
+              "b"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Contains"
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT * FROM `t` WHERE (`tags` LIKE ? OR `tags` LIKE ?)",
+            "bindings": [
+              "%a%",
+              "%b%"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `t` WHERE (`tags` LIKE ? OR `tags` LIKE ?)",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::CountDistinct"
+            },
+            "attribute": "user_id",
+            "values": [],
+            "alias": "users",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "users",
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::CountDistinct"
+            },
+            "attribute": "user_id",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "SELECT COUNT(DISTINCT `user_id`) FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(DISTINCT `user_id`) FROM `t`"
+      ]
+    },
+    {
+      "name": "testClickHouseInheritedMethods",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "a"
+            ]
+          },
+          {
+            "call": "naturalJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "b"
+            ]
+          },
+          {
+            "call": "naturalJoin",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "cc"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `a` NATURAL JOIN `b` NATURAL JOIN `c` AS `cc`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `a` NATURAL JOIN `b` NATURAL JOIN `c` AS `cc`"
+      ]
+    },
+    {
+      "name": "testClickHouseInsertColumnExpression",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "id": 1,
+                "at": "now"
+              }
+            ]
+          },
+          {
+            "call": "insertColumnExpression",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "at",
+              "parseDateTimeBestEffort(?)",
+              []
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`, `at`) VALUES (?, parseDateTimeBestEffort(?))",
+            "bindings": [
+              1,
+              "now"
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `events` (`id`, `at`) VALUES (?, parseDateTimeBestEffort(?))"
+      ]
+    },
+    {
+      "name": "testClickHouseConflictSetRaw",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "events"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "id": 1
+              }
+            ]
+          },
+          {
+            "call": "conflictSetRaw",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "count",
+              "count + ?",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "call": "insert",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "INSERT INTO `events` (`id`) VALUES (?)",
+            "bindings": [
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `events` (`id`) VALUES (?)"
+      ]
+    },
+    {
+      "name": "testAggregates",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\MariaDB",
+            "args": []
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "new": "Builder\\ClickHouse",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "bitOr",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "flags",
+              "any_flags"
+            ]
+          },
+          {
+            "call": "bitXor",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "flags"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "bitOr",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "flags",
+              "any_flags"
+            ]
+          },
+          {
+            "call": "bitXor",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "flags"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "bitOr",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "flags",
+              "any_flags"
+            ]
+          },
+          {
+            "call": "bitXor",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "flags"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 8
+            }
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "bitOr",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "flags",
+              "any_flags"
+            ]
+          },
+          {
+            "call": "bitXor",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "flags"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "bitOr",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "flags",
+              "any_flags"
+            ]
+          },
+          {
+            "call": "bitXor",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "flags"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 10
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT BIT_OR(`flags`) AS `any_flags`, BIT_XOR(`flags`) FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT BIT_OR(`flags`) AS `any_flags`, BIT_XOR(`flags`) FROM `t`",
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MariaDB",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "SELECT BIT_OR(`flags`) AS `any_flags`, BIT_XOR(`flags`) FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT BIT_OR(`flags`) AS `any_flags`, BIT_XOR(`flags`) FROM `t`",
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 8,
+          "props": {
+            "query": "SELECT BIT_OR(\"flags\") AS \"any_flags\", BIT_XOR(\"flags\") FROM \"t\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT BIT_OR(\"flags\") AS \"any_flags\", BIT_XOR(\"flags\") FROM \"t\"",
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "SELECT BIT_OR(`flags`) AS `any_flags`, BIT_XOR(`flags`) FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT BIT_OR(`flags`) AS `any_flags`, BIT_XOR(`flags`) FROM `t`",
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\ClickHouse",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 10,
+          "props": {
+            "query": "SELECT BIT_OR(`flags`) AS `any_flags`, BIT_XOR(`flags`) FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT BIT_OR(`flags`) AS `any_flags`, BIT_XOR(`flags`) FROM `t`"
+      ]
+    },
+    {
+      "name": "testJsonAggregates",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "jsonArrayAgg",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name",
+              "names"
+            ]
+          },
+          {
+            "call": "jsonObjectAgg",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "id",
+              "name",
+              "map"
+            ]
+          },
+          {
+            "call": "jsonArrayAgg",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "jsonArrayAgg",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name",
+              "names"
+            ]
+          },
+          {
+            "call": "jsonObjectAgg",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id",
+              "name",
+              "map"
+            ]
+          },
+          {
+            "call": "jsonArrayAgg",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "jsonArrayAgg",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              "names"
+            ]
+          },
+          {
+            "call": "jsonObjectAgg",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "id",
+              "name",
+              "map"
+            ]
+          },
+          {
+            "call": "jsonArrayAgg",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT JSON_ARRAYAGG(`name`) AS `names`, JSON_OBJECTAGG(`id`, `name`) AS `map`, JSON_ARRAYAGG(`email`) FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT JSON_ARRAYAGG(`name`) AS `names`, JSON_OBJECTAGG(`id`, `name`) AS `map`, JSON_ARRAYAGG(`email`) FROM `t`",
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "SELECT JSON_AGG(\"name\") AS \"names\", JSON_OBJECT_AGG(\"id\", \"name\") AS \"map\", JSON_AGG(\"email\") FROM \"t\"",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT JSON_AGG(\"name\") AS \"names\", JSON_OBJECT_AGG(\"id\", \"name\") AS \"map\", JSON_AGG(\"email\") FROM \"t\"",
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT json_group_array(`name`) AS `names`, json_group_object(`id`, `name`) AS `map`, json_group_array(`email`) FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT json_group_array(`name`) AS `names`, json_group_object(`id`, `name`) AS `map`, json_group_array(`email`) FROM `t`"
+      ]
+    },
+    {
+      "name": "testGroupConcat",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "groupConcat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "name",
+              ";",
+              "names",
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "groupConcat",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "team"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "groupConcat",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name",
+              ";",
+              "names",
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "groupConcat",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "team"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT STRING_AGG(\"name\", ? ORDER BY \"name\" ASC) AS \"names\", STRING_AGG(\"email\", ?) FROM \"t\" GROUP BY \"team\"",
+            "bindings": [
+              ";",
+              ","
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT STRING_AGG(\"name\", ? ORDER BY \"name\" ASC) AS \"names\", STRING_AGG(\"email\", ?) FROM \"t\" GROUP BY \"team\"",
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "SELECT GROUP_CONCAT(`name` ORDER BY `name` ASC, ?) AS `names`, GROUP_CONCAT(`email`, ?) FROM `t` GROUP BY `team`",
+            "bindings": [
+              ";",
+              ","
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT GROUP_CONCAT(`name` ORDER BY `name` ASC, ?) AS `names`, GROUP_CONCAT(`email`, ?) FROM `t` GROUP BY `team`"
+      ]
+    },
+    {
+      "name": "testPostgreSQLCompileFilter",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1,
+                2
+              ]
+            ]
+          },
+          {
+            "call": "compileFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "static": "search",
+            "class": "Query",
+            "args": [
+              "body",
+              "hello"
+            ]
+          },
+          {
+            "call": "compileFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 3
+              }
+            ]
+          },
+          {
+            "static": "regex",
+            "class": "Query",
+            "args": [
+              "name",
+              "^a"
+            ]
+          },
+          {
+            "call": "compileFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 4
+              }
+            ]
+          },
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "age",
+              18
+            ]
+          },
+          {
+            "call": "compileFilter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 5
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1,
+              2
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "\"id\" IN (?, ?)",
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Search"
+            },
+            "attribute": "body",
+            "values": [
+              "hello"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "to_tsvector(regexp_replace(\"body\", '[^\\w]+', ' ', 'g')) @@ websearch_to_tsquery(?)",
+        {
+          "$value": "Query",
+          "id": 4,
+          "props": {
+            "method": {
+              "$enum": "Method::Regex"
+            },
+            "attribute": "name",
+            "values": [
+              "^a"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "\"name\" ~ ?",
+        {
+          "$value": "Query",
+          "id": 5,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "age",
+            "values": [
+              18
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        "\"age\" > ?"
+      ]
+    },
+    {
+      "name": "testPostgreSQLWithCube",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "sales"
+            ]
+          },
+          {
+            "call": "count",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "*",
+              "n"
+            ]
+          },
+          {
+            "call": "groupBy",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "region",
+                "year"
+              ]
+            ]
+          },
+          {
+            "call": "withCube",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT COUNT(*) AS \"n\" FROM \"sales\" GROUP BY CUBE(\"region\", \"year\")",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT COUNT(*) AS \"n\" FROM \"sales\" GROUP BY CUBE(\"region\", \"year\")"
+      ]
+    },
+    {
+      "name": "testSQLiteSetJsonPath",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "setJsonPath",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "data",
+              "$.name",
+              "NewValue"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "id",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "update",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "id",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "UPDATE `docs` SET `data` = json_set(`data`, ?, ?) WHERE `id` IN (?)",
+            "bindings": [
+              "$.name",
+              "NewValue",
+              1
+            ],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "UPDATE `docs` SET `data` = json_set(`data`, ?, ?) WHERE `id` IN (?)"
+      ]
+    },
+    {
+      "name": "testSQLiteSetJsonPathInvalid",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "setJsonPath",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "data",
+              "name",
+              "NewValue"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "JSON path must start with '$': name"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSQLiteUpsertSelect",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "staging"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ]
+            ]
+          },
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "fromSelect",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id",
+                "name"
+              ],
+              {
+                "$o": 1
+              }
+            ]
+          },
+          {
+            "call": "onConflict",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              [
+                "id"
+              ],
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "upsertSelect",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "INSERT INTO `users` (`id`, `name`) SELECT `id`, `name` FROM `staging` ON CONFLICT (`id`) DO UPDATE SET `name` = excluded.`name`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "INSERT INTO `users` (`id`, `name`) SELECT `id`, `name` FROM `staging` ON CONFLICT (`id`) DO UPDATE SET `name` = excluded.`name`"
+      ]
+    },
+    {
+      "name": "testSQLiteUpsertSelectWithoutSource",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\SQLite",
+            "args": []
+          },
+          {
+            "call": "into",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "onConflict",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "id"
+              ],
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "upsertSelect",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\SQLite",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "No SELECT source specified. Call fromSelect() before upsertSelect()."
+          },
+          "id": 2
+        }
+      ]
+    }
+  ]
+}
