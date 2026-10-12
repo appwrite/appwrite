@@ -145,8 +145,7 @@ $platformCollections = [
             Attribute::string(key: 'name', required: true),
             Attribute::string(key: 'url', required: true),
             Attribute::string(key: 'httpUser'),
-            // TODO will the length suffice after encryption?
-            Attribute::string(key: 'httpPass', filters: ['encrypt']),
+            Attribute::text(key: 'httpPass', size: 65535, filters: ['encrypt']),
             Attribute::boolean(key: 'security', required: true),
             Attribute::string(key: 'events', required: true, array: true),
             Attribute::string(key: 'signatureKey', size: 2048),

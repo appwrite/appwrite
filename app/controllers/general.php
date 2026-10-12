@@ -1299,6 +1299,9 @@ Http::error()
             case Utopia\Database\Exception\Timeout::class:
                 $error = new AppwriteException(AppwriteException::DATABASE_TIMEOUT, previous: $error);
                 break;
+            case Utopia\Database\Exception\Structure::class:
+                $error = new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, $message, previous: $error);
+                break;
         }
 
         $code = $error->getCode();

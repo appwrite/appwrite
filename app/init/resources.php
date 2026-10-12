@@ -34,8 +34,6 @@ use Appwrite\Vcs\RepositoryWebhooks;
 use Executor\Executor;
 use OpenRuntimes\Orchestrator\Jobs;
 use Utopia\Abuse\Adapter\TimeLimit\Redis as TimeLimitRedis;
-use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\Cache\Adapter\Sharding;
 use Utopia\Cache\Cache;
 use Utopia\Client\Adapter\Curl\Client as CurlAdapter;
 use Utopia\Client\Adapter\SwooleCoroutine\Client as SwooleClientAdapter;
@@ -58,6 +56,7 @@ use Utopia\Pools\Pool as Connections;
 use Utopia\Queue\Broker\Pool as BrokerPool;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
+use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\Storage\Device\AWS;
 use Utopia\Storage\Device\Backblaze;
@@ -313,11 +312,11 @@ $container->set('publisherForNotifications', fn (Publisher $publisher) => new No
     new Queue(System::getEnv('_APP_NOTIFICATIONS_QUEUE_NAME', Event::NOTIFICATIONS_QUEUE_NAME))
 ), ['publisher']);
 
-$container->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+$container->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
     $pools,
     $cache,
     $authorization
-), ['pools', 'cache', 'authorization']);
+), ['register', 'pools', 'cache', 'authorization']);
 
 $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(
     APP_DATABASE_TIMEOUT_MILLISECONDS_API,
@@ -325,19 +324,12 @@ $container->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $datab
     ['host' => \gethostname(), 'project' => 'console']
 ), ['databaseFactory']);
 
-$container->set('cache', function (Group $pools, Telemetry $telemetry) {
-    $list = Config::getParam('pools-cache', []);
-    $adapters = [];
-
-    foreach ($list as $value) {
-        $adapters[] = new CachePool($pools->get($value));
-    }
-
-    $cache = new Cache(new Sharding($adapters));
+$container->set('cache', function (Registry $register, Telemetry $telemetry) {
+    $cache = $register->get('cache', fresh: true);
     $cache->setTelemetry($telemetry);
 
     return $cache;
-}, ['pools', 'telemetry']);
+}, ['register', 'telemetry']);
 
 $container->set('cacheControlForStorage', fn () => fn (StorageCacheControl $config): string => \sprintf('private, max-age=%d', $config->maxAge));
 

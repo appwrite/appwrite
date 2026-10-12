@@ -1,11 +1,15 @@
 <?php
 
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
 use Appwrite\PubSub\Adapter\Redis as PubSub;
 use Appwrite\URL\URL as AppwriteURL;
+use Utopia\Cache\Adapter\Pool as CachePool;
 use Utopia\Cache\Adapter\Redis as RedisCache;
+use Utopia\Cache\Adapter\Sharding;
+use Utopia\Cache\Cache;
 use Utopia\Cache\Codec\Igbinary;
 use Utopia\Config\Config;
 use Utopia\Database\Adapter\MariaDB;
@@ -13,6 +17,7 @@ use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\PDO;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -282,6 +287,26 @@ $register->set('pools', function () {
 
     return $group;
 });
+
+// The cache the databases share. Code outside a request, such as tests seeding rows, reads it here so it
+// purges the same keys the server reads; Cloud registers its own.
+$register->set('cache', function () use ($register) {
+    // Resolving the pools is what sets pools-cache
+    $pools = $register->get('pools');
+
+    return new Cache(new Sharding(\array_map(
+        fn (string $name) => new CachePool($pools->get($name)),
+        Config::getParam('pools-cache', []),
+    )));
+});
+
+// Builds the database factory every request, worker and test uses, so a host that places its databases
+// differently overrides one entry; Cloud registers its own.
+$register->set('databaseFactory', fn () => fn (Group $pools, Cache $cache, Authorization $authorization): DatabaseFactory => new DatabaseFactory(
+    $pools,
+    $cache,
+    $authorization
+));
 
 $register->set('db', function () {
     // This is usually for our workers or CLI commands scope

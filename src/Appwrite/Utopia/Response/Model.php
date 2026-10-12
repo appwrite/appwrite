@@ -176,7 +176,8 @@ abstract class Model
         $list = [];
 
         foreach ($this->rules as $key => $rule) {
-            if ($rule['required'] ?? false) {
+            // A hidden rule is left out of the schema, so it cannot be required by it either.
+            if (($rule['required'] ?? false) && !($rule['hidden'] ?? false)) {
                 $list[] = $key;
             }
         }

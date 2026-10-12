@@ -38,7 +38,7 @@ Patches leave on a schedule so that "is this worth a release?" stops being a per
 Every release is tagged from its `X.Y.x` branch, never from `main`. The branch gives a stable target to test before tagging, and it is what nightly and backports follow.
 
 1. **Minor:** cut `X.Y.x` from `main`. **Patch:** reuse the existing `X.Y.x`. `bin/release prepare` does this.
-2. Open the prep PR against `X.Y.x`, with the [version bump](#version-bump) and the [environment variable sync](#environment-variables).
+2. Open the prep PR against `X.Y.x`, with the [version bump](#version-bump), the [environment variable sync](#environment-variables) and, for a minor, the [migration library sync](#migration-library).
 3. Open a PR from `X.Y.x` into `main`. Run both [gates](#self-hosted-rc--final) locally against `X.Y.x` and record the results, with the exact commit SHA tested, in this PR, so it is the release's test record. Tag that SHA, then merge this PR after the release is published so the version bump and any release-only fixes land back on `main`.
 
 ## Version bump
@@ -82,6 +82,18 @@ Every `_APP_` variable a user can set needs a definition in [`app/config/variabl
 - Every variable the release notes tell users to set, rename or remove matches `variables.php`.
 
 `bin/release prepare` warns about the first three, and `push`, `check` and `publish` fail on them. The fourth needs a read of the notes. The console's environment variables page gets the same rows (see [Website and docs](#website-and-docs)).
+
+## Migration library
+
+Projects move between installs and to Cloud through [`utopia-php/migration`](https://github.com/utopia-php/migration). It reads the source with sdk-for-php (`appwrite/appwrite`) and writes the destination through the same SDK or straight to the database, so a field that a release adds is dropped on migration until the library carries it.
+
+For a minor, before the prep PR:
+
+1. In utopia-php/migration, bump `appwrite/appwrite` to the sdk-for-php release that covers this version, on the branch this repo's `utopia-php/migration` constraint resolves to (`2.0.x` for `^2.0`).
+2. Run its unit tests. `AppwriteSdkCoverageTest` fails for every SDK parameter or project setting that the Appwrite destination neither sends nor records as skipped. Carry each one through the resource, the Appwrite source and the Appwrite destination, or add it to the test's skip list with the reason.
+3. Release migration, then bump `utopia-php/migration` and `appwrite/appwrite` in this repo's prep PR. Cover each new field with an assertion in [`tests/e2e/Services/Migrations`](../tests/e2e/Services/Migrations).
+
+A patch needs this only when a fix changes a field that migration carries.
 
 ## Publish
 

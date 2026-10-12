@@ -30,7 +30,10 @@ use Appwrite\Utopia\Response\Model\ColumnString;
 use Appwrite\Utopia\Response\Model\Error as ErrorModel;
 use Appwrite\Utopia\Response\Model\ErrorDev;
 use Appwrite\Utopia\Response\Model\FrameworkAdapter;
+use Appwrite\Utopia\Response\Model\HealthAntivirus;
 use Appwrite\Utopia\Response\Model\HealthStatus;
+use Appwrite\Utopia\Response\Model\Installation;
+use Appwrite\Utopia\Response\Model\Message;
 use Appwrite\Utopia\Response\Model\Metric;
 use Appwrite\Utopia\Response\Model\Migration;
 use Appwrite\Utopia\Response\Model\None as NoneModel;
@@ -46,6 +49,7 @@ use Appwrite\Utopia\Response\Model\Team;
 use Appwrite\Utopia\Response\Model\TemplateFramework;
 use Appwrite\Utopia\Response\Model\TemplateSite;
 use Appwrite\Utopia\Response\Model\TemplateVariable;
+use Appwrite\Utopia\Response\Model\Topic;
 use Appwrite\Utopia\Response\Model\UsageDataPoint;
 use Appwrite\Utopia\Response\Model\UsageProject;
 use Appwrite\Utopia\Response\Model\User;
@@ -231,6 +235,11 @@ final class FormatTest extends TestCase
         }
 
         $this->assertArrayNotHasKey('enumSDKName', (new PlatformList())->getRules()['platforms']);
+    }
+
+    public function testHiddenRulesAreNotRequired(): void
+    {
+        $this->assertNotContains('key', (new PlatformWeb())->getRequired());
     }
 
     public function testExistingResponseEnumMetadataRemainsUnchanged(): void
@@ -808,6 +817,111 @@ final class FormatTest extends TestCase
         $this->assertSame('object', $openApiPrefs['type']);
         $this->assertSame([['$ref' => '#/components/schemas/preferences']], $openApiPrefs['allOf']);
 
+    }
+
+    public function testModelPropertiesEmitTheirDefaults(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/team'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTeamTest',
+                description: 'Get test.',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_TEAM,
+                    ),
+                ],
+            ));
+
+        $models = [
+            new Team(),
+            new Preferences(),
+            new ErrorModel(),
+        ];
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], ['console' => 0], 'console'))->parse();
+        $properties = $openApi['components']['schemas']['team']['properties'];
+
+        $this->assertSame('', $properties['name']['default']);
+        $this->assertSame(0, $properties['total']['default']);
+        $this->assertArrayNotHasKey('default', $properties['prefs']);
+    }
+
+    public function testModelDefaultsMustMatchTheirSchema(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $routes = [
+            (new Route('GET', '/v1/tests/message'))
+                ->desc('Get message')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'getMessageTest',
+                    description: 'Get message.',
+                    auth: [AuthType::ADMIN],
+                    responses: [new SDKResponse(code: 200, model: Response::MODEL_MESSAGE)],
+                )),
+            (new Route('GET', '/v1/tests/topic'))
+                ->desc('Get topic')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'getTopicTest',
+                    description: 'Get topic.',
+                    auth: [AuthType::ADMIN],
+                    responses: [new SDKResponse(code: 200, model: Response::MODEL_TOPIC)],
+                )),
+            (new Route('GET', '/v1/tests/installation'))
+                ->desc('Get installation')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'getInstallationTest',
+                    description: 'Get installation.',
+                    auth: [AuthType::ADMIN],
+                    responses: [new SDKResponse(code: 200, model: Response::MODEL_INSTALLATION)],
+                )),
+            (new Route('GET', '/v1/tests/antivirus'))
+                ->desc('Get antivirus')
+                ->label('sdk', new Method(
+                    namespace: 'test',
+                    group: null,
+                    name: 'getAntivirusTest',
+                    description: 'Get antivirus.',
+                    auth: [AuthType::ADMIN],
+                    responses: [new SDKResponse(code: 200, model: Response::MODEL_HEALTH_ANTIVIRUS)],
+                )),
+        ];
+
+        $models = [
+            new Message(),
+            new Topic(),
+            new Installation(),
+            new HealthAntivirus(),
+            new ErrorModel(),
+        ];
+
+        $openApi = (new OpenAPI3(new Container(), [], $routes, $models, [], ['console' => 0], 'console'))->parse();
+        $message = $openApi['components']['schemas']['message']['properties'];
+        $antivirus = $openApi['components']['schemas']['healthAntivirus']['properties'];
+
+        $this->assertSame(0, $message['deliveredTotal']['default']);
+        $this->assertEquals(new \stdClass(), $message['data']['default']);
+        $this->assertArrayNotHasKey('default', $message['topics'], 'An array property must not take a scalar default.');
+        $this->assertSame(['users'], $openApi['components']['schemas']['topic']['properties']['subscribe']['default']);
+        $this->assertArrayNotHasKey('default', $openApi['components']['schemas']['installation']['properties']['organization'], 'A default of the wrong type would be written into typed SDK models as is.');
+        $this->assertArrayNotHasKey('default', $message['scheduledAt'], 'A time-dependent default would change the spec on every build.');
+        $this->assertSame('', $antivirus['version']['default']);
+        $this->assertArrayNotHasKey('default', $antivirus['status'], 'An enum property must not take a default outside the enum.');
     }
 
     /**

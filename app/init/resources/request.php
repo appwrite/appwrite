@@ -65,6 +65,7 @@ use Utopia\Pools\Group;
 use Utopia\Query\Method;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
+use Utopia\Registry\Registry;
 use Utopia\Storage\Device;
 use Utopia\System\System;
 use Utopia\Telemetry\Adapter as Telemetry;
@@ -220,11 +221,11 @@ return function (Container $context): void {
     $context->set('buildTimeout', fn () => (int) System::getEnv('_APP_COMPUTE_BUILD_TIMEOUT', 900));
     $context->set('deployments', fn (callable $deploymentsFactory, Database $dbForProject, Document $project) => $deploymentsFactory($dbForProject, $project), ['deploymentsFactory', 'dbForProject', 'project']);
     $context->set('eventProcessor', fn () => new EventProcessor(), []);
-    $context->set('databaseFactory', fn (Group $pools, Cache $cache, Authorization $authorization) => new DatabaseFactory(
+    $context->set('databaseFactory', fn (Registry $register, Group $pools, Cache $cache, Authorization $authorization) => $register->get('databaseFactory')(
         $pools,
         $cache,
         $authorization
-    ), ['pools', 'cache', 'authorization']);
+    ), ['register', 'pools', 'cache', 'authorization']);
 
     $context->set('dbForPlatform', fn (DatabaseFactory $databaseFactory) => $databaseFactory->platform(
         APP_DATABASE_TIMEOUT_MILLISECONDS_API,
