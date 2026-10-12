@@ -1078,7 +1078,7 @@ Http::post('/v1/account/sessions/email')
         $rotation = $project->getAttribute('auths', [])['passwordRotation'] ?? [];
         if (
             ($rotation['enabled'] ?? false)
-            && \microtime(true) - (float) (new \DateTime($profile->getAttribute('passwordUpdate')))->format('U.u') > ($rotation['duration'] ?? 365) * 86400
+            && \microtime(true) - (float) (new \DateTime($profile->getAttribute('passwordUpdate')))->format('U.u') > ($rotation['maxAge'] ?? 31536000)
         ) {
             throw new Exception(Exception::USER_PASSWORD_RESET_REQUIRED);
         }

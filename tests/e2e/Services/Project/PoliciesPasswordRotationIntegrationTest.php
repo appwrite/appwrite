@@ -29,7 +29,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
 
         $this->assertSame(200, $policy['headers']['status-code']);
         $this->assertFalse($policy['body']['enabled']);
-        $this->assertSame(365, $policy['body']['duration']);
+        $this->assertSame(31536000, $policy['body']['maxAge']);
 
         $email = ID::unique() . '@localhost.test';
         $password = 'Rotation-' . ID::unique();
@@ -51,7 +51,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
         $userId = $this->createUser($email, $password);
 
         try {
-            $this->updatePolicy(true, 1);
+            $this->updatePolicy(true, 86400);
 
             foreach (['now', '-23 hours'] as $age) {
                 $this->setPasswordUpdate($userId, DateTime::format(new \DateTime($age)));
@@ -89,21 +89,21 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
             $this->assertSame(401, $session['headers']['status-code']);
             $this->assertSame('user_invalid_credentials', $session['body']['type']);
 
-            $this->updatePolicy(true, 2);
+            $this->updatePolicy(true, 172800);
             $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
                 'email' => $email,
                 'password' => $password,
             ]);
             $this->assertSame(201, $session['headers']['status-code']);
 
-            $this->updatePolicy(false, 1);
+            $this->updatePolicy(false, 86400);
             $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
                 'email' => $email,
                 'password' => $password,
             ]);
             $this->assertSame(201, $session['headers']['status-code']);
         } finally {
-            $this->updatePolicy(false, 365);
+            $this->updatePolicy(false, 31536000);
         }
     }
 
@@ -115,7 +115,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
         $this->setPasswordUpdate($userId, DateTime::format(new \DateTime('-2 days')));
 
         try {
-            $this->updatePolicy(true, 1);
+            $this->updatePolicy(true, 86400);
             $session = $this->client->call(Client::METHOD_POST, '/account/sessions/email', $this->clientHeaders(), [
                 'email' => $email,
                 'password' => $password,
@@ -151,7 +151,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
             ]);
             $this->assertSame(201, $session['headers']['status-code']);
         } finally {
-            $this->updatePolicy(false, 365);
+            $this->updatePolicy(false, 31536000);
         }
     }
 
@@ -197,11 +197,11 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
         }
     }
 
-    private function updatePolicy(bool $enabled, int $duration): void
+    private function updatePolicy(bool $enabled, int $maxAge): void
     {
         $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $this->serverHeaders(), [
             'enabled' => $enabled,
-            'duration' => $duration,
+            'maxAge' => $maxAge,
         ]);
 
         $this->assertSame(200, $response['headers']['status-code']);

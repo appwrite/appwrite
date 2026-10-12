@@ -91,7 +91,7 @@ class Create extends Action
             'passwordDictionary' => false,
             'passwordRotation' => [
                 'enabled' => false,
-                'duration' => 365,
+                'maxAge' => 31536000,
             ],
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,

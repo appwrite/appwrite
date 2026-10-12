@@ -38,7 +38,7 @@ final class PoliciesCustomServerTest extends Scope
             $serverHeaders['x-appwrite-key'] = $key['body']['secret'];
             $response = $this->client->call(Client::METHOD_PATCH, '/project/policies/password-rotation', $serverHeaders, [
                 'enabled' => true,
-                'duration' => 30,
+                'maxAge' => 2592000,
             ]);
 
             $this->assertSame(401, $response['headers']['status-code']);

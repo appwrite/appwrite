@@ -21,11 +21,11 @@ class PolicyPasswordRotation extends PolicyBase
                 'default' => false,
                 'example' => true,
             ])
-            ->addRule('duration', [
+            ->addRule('maxAge', [
                 'type' => self::TYPE_INTEGER,
-                'description' => 'Maximum password age in days.',
-                'default' => 365,
-                'example' => 365,
+                'description' => 'Maximum password age in seconds.',
+                'default' => 31536000,
+                'example' => 31536000,
             ]);
     }
 

@@ -151,7 +151,7 @@ class Get extends Action
                 new Document([
                     '$id' => 'password-rotation',
                     'enabled' => $auths['passwordRotation']['enabled'] ?? false,
-                    'duration' => $auths['passwordRotation']['duration'] ?? 365,
+                    'maxAge' => $auths['passwordRotation']['maxAge'] ?? 31536000,
                 ]),
                 Response::MODEL_POLICY_PASSWORD_ROTATION,
             ],

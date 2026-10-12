@@ -39,7 +39,7 @@ class Update extends Action
                 namespace: 'project',
                 group: 'policies',
                 name: 'updatePasswordRotationPolicy',
-                description: 'Require a password reset when an email/password sign-in uses a password older than the configured duration. Options left out keep their current value.',
+                description: 'Require a password reset when an email/password sign-in uses a password older than the configured maximum age. Options left out keep their current value.',
                 auth: [AuthType::ADMIN, AuthType::KEY],
                 responses: [
                     new SDKResponse(
@@ -49,7 +49,7 @@ class Update extends Action
                 ],
             ))
             ->param('enabled', null, new Boolean(), 'Enable password rotation. Disabled by default.', optional: true)
-            ->param('duration', null, new Range(1, PHP_INT_MAX), 'Maximum password age in days. Must be a positive integer. Defaults to 365 days.', optional: true)
+            ->param('maxAge', null, new Range(86400, 315360000), 'Maximum password age in seconds. Minimum allowed value is 86400 seconds (1 day), and maximum is 10 years, which is 315360000 seconds. Defaults to 1 year, which is 31536000 seconds.', optional: true)
             ->inject('response')
             ->inject('dbForPlatform')
             ->inject('project')
@@ -60,7 +60,7 @@ class Update extends Action
 
     public function action(
         ?bool $enabled,
-        ?int $duration,
+        ?int $maxAge,
         Response $response,
         Database $dbForPlatform,
         Document $project,
@@ -70,7 +70,7 @@ class Update extends Action
         $auths = $project->getAttribute('auths', []);
         $auths['passwordRotation'] = [
             'enabled' => $enabled ?? $auths['passwordRotation']['enabled'] ?? false,
-            'duration' => $duration ?? $auths['passwordRotation']['duration'] ?? 365,
+            'maxAge' => $maxAge ?? $auths['passwordRotation']['maxAge'] ?? 31536000,
         ];
 
         $project = $authorization->skip(fn () => $dbForPlatform->updateDocument('projects', $project->getId(), new Document([

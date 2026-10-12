@@ -126,7 +126,7 @@ class XList extends Action
             new Document([
                 '$id' => 'password-rotation',
                 'enabled' => $auths['passwordRotation']['enabled'] ?? false,
-                'duration' => $auths['passwordRotation']['duration'] ?? 365,
+                'maxAge' => $auths['passwordRotation']['maxAge'] ?? 31536000,
             ]),
             new Document([
                 '$id' => 'session-alert',
