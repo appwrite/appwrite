@@ -163,7 +163,7 @@ impl Parser {
         }
         let line = &line[..end];
         if line.is_empty() {
-            return Err(Error::Protocol("Empty protocol line received".into()));
+            return Err(Error::protocol("Empty protocol line received"));
         }
         match line {
             b"+OK" => return Ok(Op::Ok),
@@ -188,7 +188,7 @@ impl Parser {
             let frame = self.read_hmsg(transport, &args, timeout).await;
             return self.frame(frame);
         }
-        Err(Error::Protocol(format!("Unknown protocol operation: {}", String::from_utf8_lossy(line))))
+        Err(Error::protocol_bytes([b"Unknown protocol operation: ".as_slice(), line].concat()))
     }
 
     /// A frame body's outcome: a failure poisons the parser.
@@ -209,7 +209,7 @@ impl Parser {
     ) -> Result<Op> {
         let parts = split_whitespace(php_std::string::trim(args, b" \t\n\r\0\x0B"));
         if parts.len() < 3 || parts.len() > 4 {
-            return Err(Error::Protocol(format!("Invalid MSG line: MSG {}", String::from_utf8_lossy(args))));
+            return Err(Error::protocol_bytes([b"Invalid MSG line: MSG ".as_slice(), args].concat()));
         }
         let (subject, sid, reply_to, count) = match parts.as_slice() {
             [subject, sid, count] => (subject, sid, None, count),
@@ -236,7 +236,7 @@ impl Parser {
     ) -> Result<Op> {
         let parts = split_whitespace(php_std::string::trim(args, b" \t\n\r\0\x0B"));
         if parts.len() < 4 || parts.len() > 5 {
-            return Err(Error::Protocol(format!("Invalid HMSG line: HMSG {}", String::from_utf8_lossy(args))));
+            return Err(Error::protocol_bytes([b"Invalid HMSG line: HMSG ".as_slice(), args].concat()));
         }
         let (subject, sid, reply_to, header_bytes, total_bytes) = match parts.as_slice() {
             [subject, sid, header, total] => (subject, sid, None, header, total),
@@ -247,7 +247,7 @@ impl Parser {
         let total_len = php_std::format::str_to_int(total_bytes);
         let payload_len = total_len.wrapping_sub(header_len);
         if payload_len < 0 {
-            return Err(Error::Protocol(format!("Invalid HMSG byte counts: header={header_len}, total={total_len}")));
+            return Err(Error::protocol(format!("Invalid HMSG byte counts: header={header_len}, total={total_len}")));
         }
         let headers = self.read_exactly(transport, header_len, timeout).await?;
         let payload =
@@ -297,7 +297,7 @@ impl Parser {
             self.compact();
             let want = 65536.max(bytes - held) as usize;
             if transport.read(&mut self.buffer, want, timeout).await? == 0 {
-                return Err(Error::Protocol("Unexpected end of data while reading payload".into()));
+                return Err(Error::protocol("Unexpected end of data while reading payload"));
             }
         }
         let held = &self.buffer[self.start..];

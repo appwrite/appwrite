@@ -277,7 +277,7 @@ impl Connection {
     ) -> Result<()> {
         let headers = headers.filter(|h| !h.is_empty());
         if headers.is_some() && self.server_info.as_ref().is_some_and(|i| !i.headers_supported) {
-            return Err(Error::Protocol("Server does not support message headers".into()));
+            return Err(Error::protocol("Server does not support message headers"));
         }
         let header_wire = headers.map(Headers::to_wire).unwrap_or_default();
         let size = (header_wire.len() + data.len()) as i64;
@@ -462,7 +462,7 @@ impl Connection {
             )
             .await?;
             if attempt == 0
-                && let Some(Err(Error::Protocol(message))) = &outcome
+                && let Some(Err(Error::Protocol { message, .. })) = &outcome
                 && message.to_ascii_lowercase().contains("stale connection")
                 && self.options.allow_reconnect
                 && self.status == Status::Disconnected
@@ -920,10 +920,10 @@ impl Connection {
 
         let op = self.next_op(connect_timeout).await?;
         let Op::Info(data) = op else {
-            return Err(Error::Protocol(format!("Expected INFO, got {}", op.kind().as_str())));
+            return Err(Error::protocol(format!("Expected INFO, got {}", op.kind().as_str())));
         };
         if !data.is_object() {
-            return Err(Error::Protocol("Expected INFO to be an object".into()));
+            return Err(Error::protocol("Expected INFO to be an object"));
         }
         let info = ServerInfo::from_value(&data);
         for connect_url in &info.connect_urls {
@@ -1140,7 +1140,7 @@ impl Connection {
         } else if lower.contains("maximum payload") {
             Error::MaxPayload(message.to_owned())
         } else {
-            Error::Protocol(format!("Server error: {message}"))
+            Error::protocol(format!("Server error: {message}"))
         }
     }
 

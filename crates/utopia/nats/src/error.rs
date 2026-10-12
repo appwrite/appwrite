@@ -64,8 +64,14 @@ pub enum Error {
     /// protocol does not allow.
     ///
     /// PHP: `Utopia\NATS\Exception\ProtocolException`.
-    #[error("{0}")]
-    Protocol(String),
+    #[error("{message}")]
+    Protocol {
+        /// The message (lossy when [`Error::message_bytes`] is not UTF-8).
+        message: String,
+        /// The exact message, when it is not UTF-8 (a message quoting wire
+        /// bytes, such as a line read after a desynced frame).
+        raw: Option<std::sync::Arc<[u8]>>,
+    },
     /// The JetStream API answered with an error.
     ///
     /// PHP: `Utopia\NATS\Exception\JetStreamException` (`getCode()` is
@@ -149,7 +155,7 @@ impl Error {
             Error::MaxPayload(_) => "Utopia\\NATS\\Exception\\MaxPayloadException",
             Error::NoResponders(_) => "Utopia\\NATS\\Exception\\NoRespondersException",
             Error::Permission(_) => "Utopia\\NATS\\Exception\\PermissionException",
-            Error::Protocol(_) => "Utopia\\NATS\\Exception\\ProtocolException",
+            Error::Protocol { .. } => "Utopia\\NATS\\Exception\\ProtocolException",
             Error::JetStream { .. } => "Utopia\\NATS\\Exception\\JetStreamException",
             Error::KeyValue(_) => "Utopia\\NATS\\Exception\\KeyValueException",
             Error::ObjectStore(_) => "Utopia\\NATS\\Exception\\ObjectStoreException",
@@ -190,7 +196,7 @@ impl Error {
                 | Error::MaxPayload(_)
                 | Error::NoResponders(_)
                 | Error::Permission(_)
-                | Error::Protocol(_)
+                | Error::Protocol { .. }
                 | Error::JetStream { .. }
                 | Error::KeyValue(_)
                 | Error::ObjectStore(_)
@@ -214,6 +220,39 @@ impl Error {
         match self {
             Error::JetStream { api: Some(api), .. } => Some(api.err_code),
             _ => None,
+        }
+    }
+
+    /// A [`Error::Protocol`] with a UTF-8 message.
+    pub fn protocol(message: impl Into<String>) -> Error {
+        Error::Protocol { message: message.into(), raw: None }
+    }
+
+    /// A [`Error::Protocol`] whose message is bytes (PHP strings are: a
+    /// message can quote wire bytes that are not UTF-8).
+    pub fn protocol_bytes(message: Vec<u8>) -> Error {
+        match String::from_utf8(message) {
+            Ok(message) => Error::protocol(message),
+            Err(e) => {
+                let bytes = e.into_bytes();
+                Error::Protocol { message: String::from_utf8_lossy(&bytes).into_owned(), raw: Some(bytes.into()) }
+            }
+        }
+    }
+
+    /// The message as PHP has it, byte for byte (`to_string()` is the same
+    /// text, lossy where it is not UTF-8).
+    ///
+    /// PHP: `getMessage()`.
+    pub fn message_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
+        match self {
+            Error::Protocol { raw: Some(raw), .. } => std::borrow::Cow::Borrowed(raw),
+            Error::Desynced(cause) => {
+                let mut bytes = b"Failed mid-frame, parser desynced from the stream: ".to_vec();
+                bytes.extend_from_slice(&cause.message_bytes());
+                std::borrow::Cow::Owned(bytes)
+            }
+            other => std::borrow::Cow::Owned(other.to_string().into_bytes()),
         }
     }
 
