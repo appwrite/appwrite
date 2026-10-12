@@ -262,9 +262,9 @@ final class KeyTest extends TestCase
     }
 
     /**
-     * @return array<string, array{0: Document, 1: Document, 2: Document, 3: string}>
+     * @return \Iterator<string, array{Document, Document, Document, string}>
      */
-    public static function invalidKeys(): array
+    public static function invalidKeys(): \Iterator
     {
         $projectId = 'test';
         $userId = 'user123';
@@ -294,55 +294,53 @@ final class KeyTest extends TestCase
             ]),
         ]]);
 
-        return [
-            'invalid ephemeral jwt' => [
-                new Document(['$id' => $projectId]),
-                new Document(),
-                new Document(),
-                API_KEY_EPHEMERAL . '_invalid_jwt_token',
-            ],
-            'invalid dynamic jwt' => [
-                new Document(['$id' => $projectId]),
-                new Document(),
-                new Document(),
-                'dynamic_totally_invalid',
-            ],
-            'mismatched ephemeral project' => [
-                new Document(['$id' => $projectId]),
-                new Document(),
-                new Document(),
-                self::generateKey('other-project', false, ['documents.read']),
-            ],
-            'invalid standard key' => [
-                $storedStandard,
-                new Document(),
-                new Document(),
-                'standard_efgh5678',
-            ],
-            'unknown prefix' => [
-                new Document(['$id' => $projectId]),
-                new Document(),
-                new Document(),
-                'unknown_prefix_secret',
-            ],
-            'random secret' => [
-                new Document(['$id' => $projectId]),
-                new Document(),
-                new Document(),
-                'not-a-real-key',
-            ],
-            'invalid account key' => [
-                new Document(['$id' => $projectId]),
-                new Document(),
-                $storedAccount,
-                'account_efgh5678',
-            ],
-            'invalid organization key' => [
-                new Document(['$id' => $projectId]),
-                $storedOrganization,
-                new Document(),
-                'organization_efgh5678',
-            ],
+        yield 'invalid ephemeral jwt' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            API_KEY_EPHEMERAL . '_invalid_jwt_token',
+        ];
+        yield 'invalid dynamic jwt' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            'dynamic_totally_invalid',
+        ];
+        yield 'mismatched ephemeral project' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            self::generateKey('other-project', false, ['documents.read']),
+        ];
+        yield 'invalid standard key' => [
+            $storedStandard,
+            new Document(),
+            new Document(),
+            'standard_efgh5678',
+        ];
+        yield 'unknown prefix' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            'unknown_prefix_secret',
+        ];
+        yield 'random secret' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            new Document(),
+            'not-a-real-key',
+        ];
+        yield 'invalid account key' => [
+            new Document(['$id' => $projectId]),
+            new Document(),
+            $storedAccount,
+            'account_efgh5678',
+        ];
+        yield 'invalid organization key' => [
+            new Document(['$id' => $projectId]),
+            $storedOrganization,
+            new Document(),
+            'organization_efgh5678',
         ];
     }
 

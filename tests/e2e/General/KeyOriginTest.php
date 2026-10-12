@@ -142,8 +142,8 @@ final class KeyOriginTest extends Scope
                     'title' => 'session-junk-key-' . $junkKey,
                 ],
             ]);
-            $this->assertSame(401, $junk['headers']['status-code']);
-            $this->assertSame(Exception::USER_UNAUTHORIZED, $junk['body']['type']);
+            $this->assertSame(403, $junk['headers']['status-code']);
+            $this->assertSame(Exception::GENERAL_UNKNOWN_ORIGIN, $junk['body']['type']);
 
             $created = $this->client->call(Client::METHOD_GET, $documentsUrl . '/' . $junkDocumentId, [
                 'content-type' => 'application/json',
@@ -152,6 +152,20 @@ final class KeyOriginTest extends Scope
             ]);
             $this->assertSame(404, $created['headers']['status-code']);
         }
+
+        $junkWithoutOrigin = $this->client->call(Client::METHOD_POST, $documentsUrl, [
+            'content-type' => 'application/json',
+            'cookie' => $sessionCookie,
+            'x-appwrite-project' => $projectId,
+            'x-appwrite-key' => 'not-a-real-key',
+        ], [
+            'documentId' => ID::unique(),
+            'data' => [
+                'title' => 'session-junk-key-no-origin',
+            ],
+        ]);
+        $this->assertSame(401, $junkWithoutOrigin['headers']['status-code']);
+        $this->assertSame(Exception::USER_UNAUTHORIZED, $junkWithoutOrigin['body']['type']);
 
         $list = $this->client->call(Client::METHOD_GET, $documentsUrl, [
             'content-type' => 'application/json',

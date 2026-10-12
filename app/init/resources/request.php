@@ -1060,7 +1060,15 @@ return function (Container $context): void {
             return null;
         }
 
-        $key = Key::decode($project, $team, $user, $key);
+        try {
+            $key = Key::decode($project, $team, $user, $key);
+        } catch (Exception $error) {
+            if ($error->getType() === Exception::USER_UNAUTHORIZED) {
+                return null;
+            }
+
+            throw $error;
+        }
 
         $userHeader = $request->getHeaderLine('x-appwrite-user');
         $organizationHeader = $request->getHeaderLine('x-appwrite-organization');

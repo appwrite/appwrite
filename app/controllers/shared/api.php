@@ -141,6 +141,10 @@ Http::init()
         $scopes = $roles[$role]['scopes'];
 
         // Step 5: API Key Authentication
+        if ($request->getHeaderLine('x-appwrite-key') !== '' && $apiKey === null) {
+            throw new Exception(Exception::USER_UNAUTHORIZED);
+        }
+
         if (! empty($apiKey)) {
             // Check if key is expired
             if ($apiKey->isExpired()) {
