@@ -86,7 +86,7 @@ function LibraryPage() {
     ...(l.rust ? [{ id: 'install', label: 'Install' }] : []),
     ...(d.guide.length ? [{ id: 'getting-started', label: 'Getting started' }, ...guideHeadings(d.guide).map((h) => ({ id: slug(h), label: h, depth: 1 }))] : []),
     ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: d.guide.length ? 'Reference' : 'Overview' }] : []),
-    ...(d.modules.length ? [{ id: 'namespaces', label: 'Namespaces' }] : []),
+    ...(d.modules.length ? [{ id: 'modules', label: 'Modules' }] : []),
     ...(d.root.length ? [{ id: 'api', label: 'API' }] : []),
     ...(ported.length || (migration && d.tasks.length) ? [{ id: 'tasks', label: 'Tasks' }, ...ported.map((t) => ({ id: taskHash(t.name), label: t.bin ?? t.name, depth: 1 }))] : []),
     ...(migration && !l.rust && d.classes.length ? [{ id: 'php-api', label: 'PHP API' }] : []),
@@ -176,7 +176,7 @@ function LibraryPage() {
       ) : null}
 
       {d.modules.length ? (
-        <Section id="namespaces" title="Namespaces" description="Each namespace groups one concept of the library. Internal ones hold items the crate re-exports at its root.">
+        <Section id="modules" title="Modules" description="Each module groups one concept of the library. Internal ones hold items the crate re-exports at its root.">
           <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-3">
             {d.modules.map((m) => (
               <Link key={m.path} to="/$lib/$" params={{ lib: l.slug, _splat: moduleSplat(m.path) }} className="grid content-start gap-1.5 rounded-lg border border-border bg-card p-3.5 transition-colors hover:border-ring hover:bg-accent/40">

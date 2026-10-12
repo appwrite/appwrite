@@ -65,7 +65,7 @@ function Group({ label, open: initial, children, depth = 0, badge }: { label: Re
 
 const heading = 'px-2 pt-2 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase'
 
-/** A library's own menu, a second column beside the catalog: its sections, namespaces and items. */
+/** A library's own menu, a second column beside the catalog: its sections, modules (PHP: namespaces) and items. */
 export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?: () => void }) {
   const [fold, setFold] = useFold()
   const slug = nav.library.slug
@@ -107,8 +107,8 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
       </>
     )
   } else {
-    // The library's architecture: its top-level namespaces, each a page that
-    // holds its whole subtree. Sub-namespaces are sections of that page.
+    // The library's architecture: its top-level modules, each a page that
+    // holds its whole subtree. Submodules are sections of that page.
     const modules = nav.modules.filter((m) => m.path && !m.path.includes('::'))
     const below = (path: string) => nav.modules.filter((m) => m.path.startsWith(`${path}::`))
     const shown = modules
@@ -117,7 +117,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
     const hasRoot = top.some((i) => i.module === '') && hit('crate root')
     body = (
       <>
-        <div className={heading}>Namespaces</div>
+        <div className={heading}>Modules</div>
         {hasRoot ? (
           <Link to="/$lib/$" params={{ lib: slug, _splat: moduleSplat('') }} className={row}>
             <span className="truncate">Crate root</span>
@@ -131,11 +131,11 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
                 <span className="truncate font-mono text-[12.5px]">{m.path}</span>
                 {m.summary ? <span className="line-clamp-1 text-[11.5px] text-muted-foreground">{m.summary}</span> : null}
               </span>
-              {parts ? <span className="ml-auto pt-0.5 text-[10.5px] whitespace-nowrap text-muted-foreground">{parts} parts</span> : null}
+              {parts ? <span className="ml-auto pt-0.5 text-[10.5px] whitespace-nowrap text-muted-foreground">{parts} {parts === 1 ? 'submodule' : 'submodules'}</span> : null}
             </Link>
           )
         })}
-        {!hasRoot && !shown.length ? <span className="px-2 py-1 text-[12.5px] text-muted-foreground">No namespace matches.</span> : null}
+        {!hasRoot && !shown.length ? <span className="px-2 py-1 text-[12.5px] text-muted-foreground">No module matches.</span> : null}
       </>
     )
   }
@@ -159,8 +159,8 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
           type="search"
           value={q}
           onChange={(e) => setQ(e.target.value)}
-          placeholder={nav.library.rust ? 'Filter namespaces' : 'Filter classes'}
-          aria-label={nav.library.rust ? 'Filter namespaces' : 'Filter classes'}
+          placeholder={nav.library.rust ? 'Filter modules' : 'Filter classes'}
+          aria-label={nav.library.rust ? 'Filter modules' : 'Filter classes'}
           className="min-w-0 flex-1 bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
         />
       </label>

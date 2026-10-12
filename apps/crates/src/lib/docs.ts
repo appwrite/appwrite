@@ -263,19 +263,19 @@ export const STATUS: Record<Status, { label: string; note: string }> = {
 
 export const isTopLevel = (i: Item) => i.kind !== 'method'
 
-/** The crate root's namespace page (`/$lib/root`). */
+/** The crate root's module page (`/$lib/root`). */
 export const ROOT = 'root'
 
-/** A namespace's page below `/$lib`: `json` for `json`, `a/b` for `a::b`, `root` for the crate root. */
+/** A module's page below `/$lib`: `json` for `json`, `a/b` for `a::b`, `root` for the crate root. */
 export const moduleSplat = (path: string) => (path ? path.split('::').join('/') : ROOT)
 
-/** Where an item is documented: its namespace page. */
+/** Where an item is documented: its module page. */
 export const itemSplat = (i: Pick<Item, 'module'>) => moduleSplat(i.module)
 
-/** An item's anchor on its namespace page. */
+/** An item's anchor on its module page. */
 export const itemHash = (name: string) => `item.${name}`
 
-/** A method's anchor on its type's namespace page. */
+/** A method's anchor on its type's module page. */
 export const methodHash = (owner: string, name: string) => `method.${owner}.${name}`
 
 export const KIND_TITLE: Record<string, string> = {

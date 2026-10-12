@@ -26,7 +26,7 @@ const root = getRouteApi('__root__')
 const layout = getRouteApi('/$lib')
 const KINDS = new Set(['struct', 'enum', 'trait', 'fn', 'type', 'const'])
 
-/** One namespace (a Rust module, or the crate root) and everything in it. */
+/** One module (or the crate root) and everything in it. */
 async function load(params: { lib: string; _splat?: string }) {
   const lib = await loadLibrary(params.lib)
   if (!lib) throw notFound()
@@ -46,7 +46,7 @@ async function load(params: { lib: string; _splat?: string }) {
     const found = lib.items.find((i) => isTopLevel(i) && i.name === name)
     return found ? { splat: moduleSplat(found.module), hash: itemHash(found.name) } : null
   }
-  // A namespace page holds its whole subtree (the crate root only itself): own items first, then each sub-namespace's.
+  // A module page holds its whole subtree (the crate root only itself): own items first, then each submodule's.
   const inside = (m: string) => m === path || (!!path && m.startsWith(`${path}::`))
   const items = lib.items
     .filter((i) => isTopLevel(i) && inside(i.module))
@@ -76,13 +76,13 @@ async function load(params: { lib: string; _splat?: string }) {
             : [],
       }
     })
-  // Sub-namespaces with something to show: items, or words of their own.
+  // Submodules with something to show: items, or words of their own.
   const parts = lib.modules
     .filter((m) => m.path !== path && inside(m.path))
     .filter((m) => m.doc || items.some((e) => e.item.module === m.path))
     .sort((a, b) => a.path.localeCompare(b.path))
     .map((m) => ({ ...m, name: m.path.slice(path.length + 2) }))
-  // The crate root lists its top-level namespaces; the menu shows the same.
+  // The crate root lists its top-level modules; the menu shows the same.
   const children = path
     ? []
     : lib.modules.filter((m) => m.path && !m.path.includes('::')).map((m) => ({ path: m.path, summary: summary(m.doc) }))
@@ -95,7 +95,7 @@ type MethodData = Entry['inherent'][number]
 
 export const Route = createFileRoute('/$lib/$')({
   loader: ({ params }) => load(params),
-  component: NamespacePage,
+  component: ModulePage,
   notFoundComponent: () => <div className="text-muted-foreground">Nothing documented at this path.</div>,
 })
 
@@ -298,7 +298,7 @@ function Symbols({ items, base }: { items: Entry[]; base: string }) {
     [items],
   )
   const current = useCurrent(ids)
-  // Grouped by sub-namespace when the page holds several, by kind otherwise.
+  // Grouped by submodule when the page holds several, by kind otherwise.
   const modules = [...new Set(items.map((e) => e.item.module))]
   const sections =
     modules.length > 1
@@ -434,7 +434,7 @@ function Symbols({ items, base }: { items: Entry[]; base: string }) {
   )
 }
 
-/** A type, function or trait in full, as a section of its namespace page. */
+/** A type, function or trait in full, as a section of its module page. */
 function ItemSection({ entry }: { entry: Entry }) {
   const nav = layout.useLoaderData()
   const { item } = entry
@@ -506,7 +506,7 @@ function ItemSection({ entry }: { entry: Entry }) {
   )
 }
 
-function NamespacePage() {
+function ModulePage() {
   const { module, items, parts: subs, children } = Route.useLoaderData()
   const nav = layout.useLoaderData()
   const slug = nav.library.slug
@@ -539,7 +539,7 @@ function NamespacePage() {
           }
           title={module.path ? parts[parts.length - 1] : 'Crate root'}
           mono={!!module.path}
-          aside={<span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">Namespace</span>}
+          aside={<span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">Module</span>}
         >
           {module.path ? null : `What ${crate} defines at its root.`}
         </PageHeader>
@@ -549,7 +549,7 @@ function NamespacePage() {
       </div>
 
       {children.length ? (
-        <Section title="Namespaces">
+        <Section title="Modules">
           <div className="overflow-hidden rounded-lg border border-border">
             {children.map((c) => (
               <Link
@@ -567,7 +567,7 @@ function NamespacePage() {
       ) : null}
 
       {items.length && subs.length ? (
-        <Section title="Contents" description={`${subs.length} parts${own.length ? ', and what the namespace defines itself' : ''}.`}>
+        <Section title="Contents" description={`${subs.length} ${subs.length === 1 ? 'submodule' : 'submodules'}${own.length ? ', and what the module defines itself' : ''}.`}>
           <div className="grid gap-3 md:grid-cols-2">
             {groups.map((g) => (
               <div key={g.id ?? 'own'} className="grid content-start gap-1 rounded-lg border border-border p-3">
