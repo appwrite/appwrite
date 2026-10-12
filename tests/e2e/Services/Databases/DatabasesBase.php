@@ -8621,6 +8621,28 @@ trait DatabasesBase
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertCount(2, $response['body'][$this->getRecordResource()]);
 
+        // Test 4.0a: isNotNull on spatial attribute (regression: MariaDB::handleSpatialQueries threw "Unknown spatial query method: isNotNull")
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::isNotNull('pointAttr')->toString()]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(3, $response['body']['total']);
+
+        // Test 4.0b: isNull on spatial attribute (regression: MariaDB::handleSpatialQueries threw "Unknown spatial query method: isNull")
+        $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'queries' => [Query::isNull('pointAttr')->toString()]
+        ]);
+
+        $this->assertEquals(200, $response['headers']['status-code']);
+        $this->assertEquals(0, $response['body']['total']);
+
         // Test 4.1: contains on line (point on line)
         $response = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
