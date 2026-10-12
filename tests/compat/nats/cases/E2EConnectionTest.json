@@ -40,14 +40,17 @@
             "paths": [
               "/client_id",
               "/client_ip",
-              "/nonce"
+              "/nonce",
+              "/server_id",
+              "/server_name",
+              "/version"
             ],
-            "reason": "the server numbers each connection and sees the PHP driver and the Rust driver from different addresses"
+            "reason": "the server numbers each connection, sees the PHP driver and the Rust driver from different addresses, generates its id (its default name) at startup, and the nats:2.11-alpine image moves between patch releases"
           },
           "expect": {
-            "server_id": "NAM72HVVWCMP542RLIURSS3K4U52BHLIOHNJBWK6UJIZA7F337476ARL",
-            "server_name": "NAM72HVVWCMP542RLIURSS3K4U52BHLIOHNJBWK6UJIZA7F337476ARL",
-            "version": "2.11.17",
+            "server_id": "<masked>",
+            "server_name": "<masked>",
+            "version": "<masked>",
             "proto": 1,
             "host": "0.0.0.0",
             "port": 4222,

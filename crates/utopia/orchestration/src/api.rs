@@ -525,7 +525,8 @@ impl DockerApi {
             fields.push(("Hostname", text(&options.hostname)));
         }
         if !empty(&options.entrypoint) {
-            fields.push(("Entrypoint", text(&options.entrypoint)));
+            // A list: Engine 29 (API 1.52) decodes Entrypoint into []string only, earlier daemons accept both.
+            fields.push(("Entrypoint", Value::Array(Array::from_list(vec![text(&options.entrypoint)]))));
         }
         if !empty(image) {
             fields.push(("Image", text(image)));

@@ -116,7 +116,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "interop-created": "<masked>",
                   "interop-type": "runtime",
                   "owner": "a"
@@ -296,7 +295,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "interop-created": "<masked>",
                   "interop-type": "runtime",
                   "owner": "a"
@@ -476,7 +474,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "interop-created": "<masked>",
                   "interop-type": "runtime",
                   "owner": "a"
@@ -656,7 +653,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "interop-created": "<masked>",
                   "interop-type": "runtime",
                   "owner": "a"

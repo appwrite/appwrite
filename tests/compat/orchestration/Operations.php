@@ -20,6 +20,9 @@ use Utopia\Orchestration\Orchestration;
  */
 final class Operations
 {
+    /** Labels Docker Desktop adds to every container it lists. */
+    private const DAEMON_LABELS = 'desktop.docker.io/';
+
     /**
      * @param array<string, mixed> $a
      */
@@ -116,7 +119,7 @@ final class Operations
                 })(array_map(self::network(...), $keep($o->listNetworks(), static fn (Network $n) => $n->getName()))),
                 'getStats' => array_map(self::stats(...), $keep($o->getStats($a['container'] ?? null, $filters), static fn (Stats $s) => $s->getContainerName())),
                 'pull' => $o->pull($a['image']),
-                'list' => array_map(self::container(...), $keep($o->list($filters), static fn (Container $c) => $c->getName())),
+                'list' => array_map(self::listed(...), $keep($o->list($filters), static fn (Container $c) => $c->getName())),
                 'run' => $o->run(
                     $a['image'],
                     $a['name'],
@@ -171,6 +174,27 @@ final class Operations
     public static function container(Container $c): array
     {
         return ['name' => $c->getName(), 'id' => $c->getId(), 'status' => $c->getStatus(), 'labels' => (object) $c->getLabels()];
+    }
+
+    /**
+     * A container list() returned, without the labels the daemon added (Docker
+     * Desktop's port scheme and the host side of each bind, which a Linux Docker
+     * Engine never adds): the library's own labels and the caller's are
+     * compared on every daemon.
+     *
+     * @return array<string, mixed>
+     */
+    private static function listed(Container $c): array
+    {
+        $labels = array_filter(
+            $c->getLabels(),
+            static fn (int|string $key): bool => !str_starts_with((string) $key, self::DAEMON_LABELS),
+            ARRAY_FILTER_USE_KEY,
+        );
+        $out = self::container($c);
+        $out['labels'] = (object) $labels;
+
+        return $out;
     }
 
     /** @return array<string, mixed> */

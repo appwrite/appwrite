@@ -1184,12 +1184,18 @@
               "nonexistent-binary"
             ]
           },
+          "mask": {
+            "paths": [
+              "/output"
+            ],
+            "reason": "the container runtime's own error text, which differs between runtimes and versions (runc behind Docker Desktop ends it with `: unknown`, Docker Engine 29 does not); the outcome is still compared"
+          },
           "expect": {
             "error": {
               "class": "Utopia\\Orchestration\\Exception\\Orchestration",
               "message": "Failed to execute command. Exit code: 127"
             },
-            "output": "OCI runtime exec failed: exec failed: unable to start container process: exec: \"nonexistent-binary\": executable file not found in $PATH: unknown\r\n"
+            "output": "<masked>"
           }
         },
         {
@@ -1528,7 +1534,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "role": "second",
                   "utopia-created": "<masked>",
                   "utopia-type": "runtime"
@@ -1540,10 +1545,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/binds/0/Source": "/tmp/compat-fs/${ns}/resources",
-                  "desktop.docker.io/binds/0/SourceKind": "hostFile",
-                  "desktop.docker.io/binds/0/Target": "/tmp",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "utopia-created": "<masked>",
                   "utopia-type": "runtime"
                 }
@@ -1586,10 +1587,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/binds/0/Source": "/tmp/compat-fs/${ns}/resources",
-                  "desktop.docker.io/binds/0/SourceKind": "hostFile",
-                  "desktop.docker.io/binds/0/Target": "/tmp",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "utopia-created": "<masked>",
                   "utopia-type": "runtime"
                 }
@@ -1630,7 +1627,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "role": "second",
                   "utopia-created": "<masked>",
                   "utopia-type": "runtime"
@@ -1675,7 +1671,6 @@
                 "status": "<masked>",
                 "labels": {
                   "compat": "orchestration",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "role": "second",
                   "utopia-created": "<masked>",
                   "utopia-type": "runtime"
@@ -1874,7 +1869,6 @@
                 "labels": {
                   "author": "O'Brien",
                   "compat": "orchestration",
-                  "desktop.docker.io/ports.scheme": "v2",
                   "multi": "a=b",
                   "spaced": "a b+c",
                   "utopia-created": "<masked>",
