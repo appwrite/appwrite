@@ -196,10 +196,9 @@ impl Database {
         mut document: Document,
         apply_defaults: bool,
     ) -> Result<Document> {
-        let mut attributes = collection_attributes(collection);
-        attributes.extend(self.internal_attributes().into_iter().map(Value::from));
+        let attributes = collection_attribute_refs(collection).chain(self.internal_attribute_values());
         let mut known = HashSet::new();
-        for attribute in &attributes {
+        for attribute in attributes {
             let key = to_text(index(attribute, "$id"));
             known.insert(key.clone());
             let array = index(attribute, "array").truthy();
@@ -265,13 +264,13 @@ impl Database {
         mut document: Document,
         selections: &[String],
     ) -> Result<Document> {
-        let all = collection_attributes(collection);
+        let all: Vec<&Value> = collection_attribute_refs(collection).collect();
         let is_relationship =
             |a: &Value| matches!(index(a, "type"), Value::Str(s) if s.as_bytes() == Self::VAR_RELATIONSHIP.as_bytes());
-        let mut attributes: Vec<Value> = all.iter().filter(|a| !is_relationship(a)).cloned().collect();
+        let mut attributes: Vec<&Value> = all.iter().copied().filter(|a| !is_relationship(a)).collect();
         let adapter = &self.inner.adapter;
 
-        for relationship in all.iter().filter(|a| is_relationship(a)) {
+        for relationship in all.iter().copied().filter(|a| is_relationship(a)) {
             let key = to_text(index(relationship, "$id"));
             let filtered = adapter.filter(&key)?;
             if document.has(&key) || document.has(&filtered) {
@@ -284,17 +283,16 @@ impl Database {
             }
         }
 
-        let mut internal_keys = HashSet::new();
-        for attribute in self.internal_attributes() {
-            internal_keys.insert(attribute.id().to_owned());
-            attributes.push(Value::from(attribute));
-        }
+        let internal = self.internal_attribute_values();
+        let internal_keys: HashSet<String> = internal.iter().map(|a| to_text(index(a, "$id"))).collect();
+        attributes.extend(internal);
 
         let has_relationship_selections = selections.iter().any(|s| s.contains('.'));
         let all_selected = selections.iter().any(|s| s == "*");
+        // The values decoded, for relationship selections only.
         let mut filtered_values: Vec<(String, Value)> = Vec::new();
 
-        for attribute in &attributes {
+        for attribute in attributes {
             let key = to_text(index(attribute, "$id"));
             let array = index(attribute, "array").truthy();
             let filters = strings(index(attribute, "filters"));
@@ -336,9 +334,11 @@ impl Database {
             }
 
             let value = if array { value } else { nth(&value, 0).clone() };
-            match filtered_values.iter_mut().find(|(k, _)| *k == key) {
-                Some(entry) => entry.1 = value.clone(),
-                None => filtered_values.push((key.clone(), value.clone())),
+            if has_relationship_selections {
+                match filtered_values.iter_mut().find(|(k, _)| *k == key) {
+                    Some(entry) => entry.1 = value.clone(),
+                    None => filtered_values.push((key.clone(), value.clone())),
+                }
             }
             if selected {
                 document.set(key.as_str(), value);
@@ -346,7 +346,7 @@ impl Database {
         }
 
         if has_relationship_selections && !selections.is_empty() && !all_selected {
-            for attribute in &all {
+            for attribute in all {
                 let key = to_text(index(attribute, "$id"));
                 if is_relationship(attribute) || key == "$permissions" {
                     continue;
@@ -369,10 +369,9 @@ impl Database {
         if !self.inner.adapter.support_for_casting() {
             return Ok(document);
         }
-        let mut attributes = collection_attributes(collection);
-        attributes.extend(self.internal_attributes().into_iter().map(Value::from));
+        let attributes = collection_attribute_refs(collection).chain(self.internal_attribute_values());
 
-        for attribute in &attributes {
+        for attribute in attributes {
             let key = to_text(index(attribute, "$id"));
             let kind = to_text(index(attribute, "type"));
             let signed = index_or(attribute, "signed", &Value::Bool(true)).truthy();
@@ -586,10 +585,17 @@ impl Database {
 
 /// `$collection->getAttribute('attributes', [])`, as a list.
 pub(crate) fn collection_attributes(collection: &Document) -> Vec<Value> {
+    collection_attribute_refs(collection).cloned().collect()
+}
+
+/// [`collection_attributes`], borrowed.
+pub(crate) fn collection_attribute_refs(collection: &Document) -> impl Iterator<Item = &Value> {
     match collection.get("attributes") {
-        Some(Value::Array(a)) => a.values().cloned().collect(),
-        _ => Vec::new(),
+        Some(Value::Array(a)) => Some(a.values()),
+        _ => None,
     }
+    .into_iter()
+    .flatten()
 }
 
 /// The strings of a list value (`$attribute['filters'] ?? []`).

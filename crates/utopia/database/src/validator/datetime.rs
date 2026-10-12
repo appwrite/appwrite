@@ -232,4 +232,4 @@ fn standalone_year(s: &[u8]) -> Option<i64> {
     None
 }
 
-super::validator!(Datetime, utopia_validators::Type::String, false);
+super::validator!(Datetime, utopia_validators::Type::String, false, constant);

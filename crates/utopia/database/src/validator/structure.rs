@@ -18,7 +18,7 @@ use crate::validator::operator::Operator as OperatorValidator;
 use crate::validator::sequence::Sequence;
 use crate::validator::spatial::Spatial;
 use crate::validator::vector::Vector;
-use crate::validator::{Message, array_key, index, index_or, text, verdict};
+use crate::validator::{Message, array_key, index, index_or, rejection, text};
 use crate::value::{Array, ArrayKey, Ext, KeyRef, Str, Value};
 
 /// The registry of attribute formats: named validators an attribute's
@@ -138,8 +138,35 @@ impl Default for StructureOptions {
     }
 }
 
-/// The system attributes every document has (`Structure::$attributes`).
-pub(crate) fn internal_attributes() -> Vec<Value> {
+/// The system attributes every document has (`Structure::$attributes`),
+/// built once.
+pub(crate) fn internal_attributes() -> &'static [Value] {
+    static INTERNAL: std::sync::LazyLock<Vec<Value>> = std::sync::LazyLock::new(build_internal_attributes);
+    &INTERNAL
+}
+
+/// The attributes a document is checked against, by `$id` (a later
+/// attribute replaces an earlier one of the same id), borrowed from the
+/// collection: PHP's `$keys` array.
+#[derive(Default)]
+pub(crate) struct Keys<'a>(Vec<(ArrayKey, &'a Value)>);
+
+impl<'a> Keys<'a> {
+    /// `$keys[$id] = $attribute`.
+    pub(crate) fn set(&mut self, key: ArrayKey, attribute: &'a Value) {
+        match self.0.iter_mut().find(|(k, _)| *k == key) {
+            Some(entry) => entry.1 = attribute,
+            None => self.0.push((key, attribute)),
+        }
+    }
+
+    /// `$keys[$key] ?? null`.
+    pub(crate) fn get(&self, key: KeyRef<'_>) -> Option<&'a Value> {
+        self.0.iter().find(|(k, _)| k.as_ref() == key).map(|(_, a)| *a)
+    }
+}
+
+fn build_internal_attributes() -> Vec<Value> {
     let attr = |id: &str, kind: &str, size: i64, required: bool, signed: bool, array: bool, default: bool| {
         let mut a = Array::new();
         a.set(ArrayKey::from("$id"), Value::from(id));
@@ -250,10 +277,14 @@ impl Structure {
     }
 
     /// `isValid($value)` of any value: a document as
-    /// [`Structure::validate`] (on a copy), anything else invalid.
+    /// [`Structure::validate`] (leaving it as it is), anything else
+    /// invalid.
     pub fn is_valid(&self, value: &Value) -> Result<bool> {
         match value {
-            Value::Ext(Ext::Document(d)) => self.validate(&mut d.as_ref().clone()),
+            Value::Ext(Ext::Document(d)) => match self.structure_of(d) {
+                Some(structure) => self.check(&structure, None),
+                None => Ok(false),
+            },
             _ => self.fail("Value must be an instance of Document"),
         }
     }
@@ -263,23 +294,40 @@ impl Structure {
     /// Fails ([`crate::Kind::Database`]) when an attribute names a format
     /// that is not registered for its type.
     pub fn validate(&self, document: &mut Document) -> Result<bool> {
+        match self.structure_of(document) {
+            Some(structure) => self.check(&structure, Some(document)),
+            None => Ok(false),
+        }
+    }
+
+    /// The document's attributes to check (`getArrayCopy()`), or `None`
+    /// (the message set) when it names no collection or the collection is
+    /// not one.
+    fn structure_of(&self, document: &Document) -> Option<Array> {
         if document.collection().is_empty() || document.collection() == "0" {
-            return self.fail("Missing collection attribute $collection");
+            self.message.set("Missing collection attribute $collection");
+            return None;
         }
         if !self.collection_ok() {
-            return self.fail("Collection not found");
+            self.message.set("Collection not found");
+            return None;
         }
-        let structure = document.array_copy(&[], &[]);
-        let mut attributes = internal_attributes();
-        attributes.extend(self.collection_attributes());
-        let mut keys = Array::new();
-        if !self.check_required(&structure, &attributes, &mut keys) {
+        Some(document.array_copy(&[], &[]))
+    }
+
+    /// [`Structure::validate`] of a document's attributes, writing what PHP
+    /// changes in the document (normalized `bigint`s, operators'
+    /// attributes) to `write` when given.
+    fn check(&self, structure: &Array, write: Option<&mut Document>) -> Result<bool> {
+        let mut keys = Keys::default();
+        let attributes = internal_attributes().iter().chain(self.collection_attributes());
+        if !self.check_required(structure, attributes, &mut keys) {
             return Ok(false);
         }
-        if !self.check_unknown(&structure, &keys) {
+        if !self.check_unknown(structure, &keys) {
             return Ok(false);
         }
-        self.check_values(document, &structure, &keys)
+        self.check_values(write, structure, &keys)
     }
 
     /// The collection exists: it has an id and is a `_metadata` document.
@@ -289,32 +337,39 @@ impl Structure {
     }
 
     /// `$collection->getAttribute('attributes', [])`.
-    pub(crate) fn collection_attributes(&self) -> Vec<Value> {
+    pub(crate) fn collection_attributes(&self) -> impl Iterator<Item = &Value> {
         match self.collection.get("attributes") {
-            Some(Value::Array(a)) => a.values().cloned().collect(),
-            _ => Vec::new(),
+            Some(Value::Array(a)) => Some(a.values()),
+            _ => None,
         }
+        .into_iter()
+        .flatten()
     }
 
     /// `checkForAllRequiredValues`: records every attribute in `keys` and
     /// checks the required ones are set.
-    pub(crate) fn check_required(&self, structure: &Array, attributes: &[Value], keys: &mut Array) -> bool {
+    pub(crate) fn check_required<'a>(
+        &self,
+        structure: &Array,
+        attributes: impl IntoIterator<Item = &'a Value>,
+        keys: &mut Keys<'a>,
+    ) -> bool {
         if !self.support_for_attributes {
             return true;
         }
         let empty = Value::from("");
         for attribute in attributes {
-            let name = index_or(attribute, "$id", &empty).clone();
+            let name = index_or(attribute, "$id", &empty);
             let required = index(attribute, "required").truthy();
-            keys.set(array_key(&name), attribute.clone());
-            let set = structure.get(&array_key(&name)).is_some_and(|v| !matches!(v, Value::Null));
+            keys.set(array_key(name), attribute);
+            let set = structure.get(&array_key(name)).is_some_and(|v| !matches!(v, Value::Null));
             if required && !set {
                 if let Some(current) = &self.current_document
-                    && current.get(&text(&name)).is_none()
+                    && current.get(&text(name)).is_none()
                 {
                     continue;
                 }
-                self.message.set(format!("Missing required attribute \"{}\"", text(&name)));
+                self.message.set(format!("Missing required attribute \"{}\"", text(name)));
                 return false;
             }
         }
@@ -322,12 +377,12 @@ impl Structure {
     }
 
     /// `checkForUnknownAttributes`.
-    pub(crate) fn check_unknown(&self, structure: &Array, keys: &Array) -> bool {
+    pub(crate) fn check_unknown(&self, structure: &Array, keys: &Keys<'_>) -> bool {
         if !self.support_for_attributes {
             return true;
         }
         for (key, _) in structure.iter() {
-            if keys.get_ref(key).is_none() {
+            if keys.get(key).is_none() {
                 self.message.set(format!("Unknown attribute: \"{}\"", key_text(key)));
                 return false;
             }
@@ -336,13 +391,18 @@ impl Structure {
     }
 
     /// `checkForInvalidAttributeValues`.
-    pub(crate) fn check_values(&self, document: &mut Document, structure: &Array, keys: &Array) -> Result<bool> {
+    pub(crate) fn check_values(
+        &self,
+        mut document: Option<&mut Document>,
+        structure: &Array,
+        keys: &Keys<'_>,
+    ) -> Result<bool> {
         for (key, value) in structure.iter() {
             let key_name = key_text(key);
             if let Value::Ext(Ext::Operator(operator)) = value {
                 let mut operator = operator.as_ref().clone();
                 operator.set_attribute(key_name.as_str());
-                if let Some(Value::Ext(Ext::Operator(stored))) = document.get_mut(&key_name) {
+                if let Some(Value::Ext(Ext::Operator(stored))) = document.as_mut().and_then(|d| d.get_mut(&key_name)) {
                     stored.set_attribute(key_name.as_str());
                 }
                 let validator = OperatorValidator::new(&self.collection, self.current_document.clone());
@@ -353,7 +413,7 @@ impl Structure {
             }
 
             const NULL: &Value = &Value::Null;
-            let attribute = keys.get_ref(key).unwrap_or(NULL);
+            let attribute = keys.get(key).unwrap_or(NULL);
             let empty = Value::from("");
             let kind = index_or(attribute, "type", &empty).clone();
             let array = index_or(attribute, "array", &Value::Bool(false)).clone();
@@ -385,7 +445,9 @@ impl Structure {
                 && BigInt::fits_php_int(s.as_bytes(), signed)
             {
                 let normalized = Value::Int(int_cast(s.as_bytes()));
-                document.set(Str::from(key_name.as_str()), normalized.clone());
+                if let Some(document) = document.as_mut() {
+                    document.set(Str::from(key_name.as_str()), normalized.clone());
+                }
                 value = normalized;
             }
 
@@ -480,8 +542,7 @@ impl Structure {
                         continue;
                     }
                     for validator in &validators {
-                        let (valid, description) = verdict(validator.as_ref(), child);
-                        if !valid {
+                        if let Some(description) = rejection(validator.as_ref(), child) {
                             return self.fail(format!(
                                 "Attribute \"{key_name}['{}']\" has invalid {label}. {description}",
                                 key_text(x)
@@ -491,8 +552,7 @@ impl Structure {
                 }
             } else {
                 for validator in &validators {
-                    let (valid, description) = verdict(validator.as_ref(), &value);
-                    if !valid {
+                    if let Some(description) = rejection(validator.as_ref(), &value) {
                         return self.fail(format!("Attribute \"{key_name}\" has invalid {label}. {description}"));
                     }
                 }

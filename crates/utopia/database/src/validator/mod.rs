@@ -171,12 +171,15 @@ pub(crate) fn accepts(validator: &(impl utopia_validators::Validator + ?Sized), 
     validator.validate(utopia_validators::Input::Value(&plain)).is_ok_and(|v| v.valid)
 }
 
-/// What a utopia-php/validators validator reports after validating `value`.
-pub(crate) fn verdict(validator: &(impl utopia_validators::Validator + ?Sized), value: &Value) -> (bool, String) {
+/// What a utopia-php/validators validator reports after rejecting `value`
+/// (`None` when it accepts it: describing a validator can cost more than
+/// validating, so only a rejection is described).
+pub(crate) fn rejection(validator: &(impl utopia_validators::Validator + ?Sized), value: &Value) -> Option<String> {
     let plain = crate::value::to_plain(value);
     match validator.validate(utopia_validators::Input::Value(&plain)) {
-        Ok(v) => (v.valid, v.describe(validator)),
-        Err(_) => (false, validator.description()),
+        Ok(v) if v.valid => None,
+        Ok(v) => Some(v.describe(validator)),
+        Err(_) => Some(validator.description()),
     }
 }
 
@@ -201,15 +204,22 @@ pub(crate) fn decided(valid: bool, description: String) -> utopia_validators::Ve
 
 /// Implements [`utopia_validators::Validator`] for a validator with inherent
 /// `description()` and `is_valid(&Value) -> bool` (or `-> Result<bool>` with
-/// `fallible`).
+/// `fallible`). With `constant`, the description does not depend on what
+/// was validated, so a verdict leaves it to [`Validator::description`]
+/// (computed only when read) instead of computing it after each validation.
+///
+/// [`Validator::description`]: utopia_validators::Validator::description
 macro_rules! validator {
     ($ty:ty, $kind:expr, $array:expr) => {
-        $crate::validator::validator!(@impl $ty, $kind, $array, |s: &$ty, v: &$crate::value::Value| Ok::<bool, $crate::Error>(<$ty>::is_valid(s, v)));
+        $crate::validator::validator!(@impl $ty, $kind, $array, |s: &$ty, v: &$crate::value::Value| Ok::<bool, $crate::Error>(<$ty>::is_valid(s, v)), |s: &$ty, valid: bool| $crate::validator::decided(valid, <$ty>::description(s)));
+    };
+    ($ty:ty, $kind:expr, $array:expr, constant) => {
+        $crate::validator::validator!(@impl $ty, $kind, $array, |s: &$ty, v: &$crate::value::Value| Ok::<bool, $crate::Error>(<$ty>::is_valid(s, v)), |_: &$ty, valid: bool| utopia_validators::Verdict::decided(valid, None));
     };
     ($ty:ty, $kind:expr, $array:expr, fallible) => {
-        $crate::validator::validator!(@impl $ty, $kind, $array, |s: &$ty, v: &$crate::value::Value| <$ty>::is_valid(s, v));
+        $crate::validator::validator!(@impl $ty, $kind, $array, |s: &$ty, v: &$crate::value::Value| <$ty>::is_valid(s, v), |s: &$ty, valid: bool| $crate::validator::decided(valid, <$ty>::description(s)));
     };
-    (@impl $ty:ty, $kind:expr, $array:expr, $check:expr) => {
+    (@impl $ty:ty, $kind:expr, $array:expr, $check:expr, $verdict:expr) => {
         impl utopia_validators::Validator for $ty {
             fn description(&self) -> String {
                 <$ty>::description(self)
@@ -225,7 +235,7 @@ macro_rules! validator {
             ) -> Result<utopia_validators::Verdict, utopia_validators::Error> {
                 let value = $crate::validator::input_value(value);
                 let valid = ($check)(self, &value).map_err($crate::validator::engine_error)?;
-                Ok($crate::validator::decided(valid, <$ty>::description(self)))
+                Ok(($verdict)(self, valid))
             }
 
             fn is_array(&self) -> bool {

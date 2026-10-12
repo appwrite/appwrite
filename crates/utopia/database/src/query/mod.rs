@@ -578,11 +578,15 @@ impl Query {
     ///
     /// PHP: `Query::parse()`.
     pub fn parse(query: impl AsRef<[u8]>) -> Result<Query> {
-        let value =
-            php_std::json::decode(query.as_ref(), Some(true), php_std::json::DEFAULT_DEPTH, php_std::json::Flags::NONE)
-                .map_err(|e| Error::query(format!("Invalid query: {}", e.message())))?;
-        match crate::value::from_plain(value) {
-            Value::Array(a) => Self::parse_query(&a),
+        let value = php_std::json::decode_into::<crate::value::Ext>(
+            query.as_ref(),
+            Some(true),
+            php_std::json::DEFAULT_DEPTH,
+            php_std::json::Flags::NONE,
+        )
+        .map_err(|e| Error::query(format!("Invalid query: {}", e.message())))?;
+        match value {
+            Value::Array(a) => Self::parse_owned(a),
             other => Err(Error::query(format!("Invalid query. Must be an array, got {}", other.type_name()))),
         }
     }
@@ -595,10 +599,15 @@ impl Query {
     /// [`Query::is_method`] accepts, the attribute a string, the values an
     /// array, and each nested value an array or a string.
     pub fn parse_query(query: &Array) -> Result<Query> {
-        let present = |key: &str| query.get_str(key).filter(|v| !matches!(v, Value::Null));
-        let method = match present("method") {
+        Self::parse_owned(query.clone())
+    }
+
+    /// [`Query::parse_query`] of an array it may take apart.
+    fn parse_owned(mut query: Array) -> Result<Query> {
+        let present = |query: &Array, key: &str| query.get_str(key).filter(|v| !matches!(v, Value::Null)).cloned();
+        let method = match present(&query, "method") {
             None => Str::from(""),
-            Some(Value::Str(s)) => s.clone(),
+            Some(Value::Str(s)) => s,
             Some(other) => {
                 return Err(Error::query(format!("Invalid query method. Must be a string, got {}", other.type_name())));
             }
@@ -611,7 +620,7 @@ impl Query {
         if !method.is_method() {
             return Err(Error::query(format!("Invalid query method: {method_text}")));
         }
-        let attribute = match present("attribute") {
+        let attribute = match present(&query, "attribute") {
             None => String::new(),
             Some(Value::Str(s)) => String::from_utf8_lossy(s.as_bytes()).into_owned(),
             Some(other) => {
@@ -621,9 +630,16 @@ impl Query {
                 )));
             }
         };
-        let mut values = match present("values") {
+        let values = match query.get_str("values") {
+            Some(Value::Array(_)) => match query.remove(&ArrayKey::from("values")) {
+                Some(Value::Array(a)) => Some(a),
+                _ => None,
+            },
+            _ => None,
+        };
+        let mut values = match values.map(Value::Array).or_else(|| present(&query, "values")) {
             None => Array::new(),
-            Some(Value::Array(a)) => a.clone(),
+            Some(Value::Array(a)) => a,
             Some(other) => {
                 return Err(Error::query(format!("Invalid query values. Must be an array, got {}", other.type_name())));
             }
