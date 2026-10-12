@@ -1059,7 +1059,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1079,7 +1079,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.5,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1099,7 +1099,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -1155,7 +1155,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1175,7 +1175,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.29289321881345254,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1195,7 +1195,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -1251,7 +1251,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1271,7 +1271,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7071067811865476,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1291,7 +1291,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.4142135623730951,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -1349,7 +1349,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1369,7 +1369,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.29289321881345254,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -1427,7 +1427,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -1485,7 +1485,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1505,7 +1505,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.29289321881345254,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -1563,7 +1563,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.28284269614271473,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -1630,7 +1630,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.5,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1650,7 +1650,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.5,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -1755,7 +1755,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.6000000238418579,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             },
@@ -1775,7 +1775,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.5,
+                "$distance": "<masked>",
                 "$collection": "vectorQueries"
               }
             }
@@ -2115,7 +2115,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2135,7 +2135,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2155,7 +2155,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2175,7 +2175,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 2.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             }
@@ -2224,7 +2224,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2244,7 +2244,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2264,7 +2264,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.4142135623730951,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2284,7 +2284,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 2.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             }
@@ -2333,7 +2333,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -2.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2353,7 +2353,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2373,7 +2373,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2393,7 +2393,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             }
@@ -2538,7 +2538,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             }
@@ -2625,7 +2625,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2645,7 +2645,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2665,7 +2665,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2685,7 +2685,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 2.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             },
@@ -2705,7 +2705,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null,
+                "$distance": "<masked>",
                 "$collection": "vectorDistance"
               }
             }
@@ -3238,7 +3238,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorIndexes"
               }
             }
@@ -10078,7 +10078,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7526903627460491,
+                "$distance": "<masked>",
                 "$collection": "vectorLarge"
               }
             }
@@ -10631,7 +10631,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "multiVector"
               }
             },
@@ -10658,7 +10658,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "multiVector"
               }
             }
@@ -10716,7 +10716,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "multiVector"
               }
             },
@@ -10743,7 +10743,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "multiVector"
               }
             }
@@ -11330,7 +11330,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11350,7 +11350,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.04894345998764038,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11370,7 +11370,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.19098299741744995,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             }
@@ -11437,7 +11437,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.4122147560119629,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11457,7 +11457,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.69098299741745,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11477,7 +11477,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9999999999999999,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             }
@@ -11535,7 +11535,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11555,7 +11555,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.04894345998764038,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11575,7 +11575,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.19098299741744995,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11595,7 +11595,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.4122147560119629,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11615,7 +11615,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.69098299741745,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             }
@@ -11710,7 +11710,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9999999999999999,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11730,7 +11730,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.30901700258255,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11750,7 +11750,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.587785243988037,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11770,7 +11770,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.80901700258255,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             },
@@ -11790,7 +11790,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.9510565400123596,
+                "$distance": "<masked>",
                 "$collection": "vectorPagination"
               }
             }
@@ -12220,7 +12220,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorTextSearch"
               }
             },
@@ -12241,7 +12241,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548,
+                "$distance": "<masked>",
                 "$collection": "vectorTextSearch"
               }
             }
@@ -12309,7 +12309,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorTextSearch"
               }
             },
@@ -12330,7 +12330,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548,
+                "$distance": "<masked>",
                 "$collection": "vectorTextSearch"
               }
             }
@@ -12398,7 +12398,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.42426407714129816,
+                "$distance": "<masked>",
                 "$collection": "vectorTextSearch"
               }
             },
@@ -12419,7 +12419,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.5656854186272107,
+                "$distance": "<masked>",
                 "$collection": "vectorTextSearch"
               }
             },
@@ -12440,7 +12440,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7071067811865476,
+                "$distance": "<masked>",
                 "$collection": "vectorTextSearch"
               }
             }
@@ -12760,7 +12760,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.17704878482485342,
+                "$distance": "<masked>",
                 "$collection": "vectorSpecialFloats"
               }
             },
@@ -12779,7 +12779,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorSpecialFloats"
               }
             },
@@ -12798,7 +12798,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.9999999522361223,
+                "$distance": "<masked>",
                 "$collection": "vectorSpecialFloats"
               }
             },
@@ -12817,7 +12817,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 2.0,
+                "$distance": "<masked>",
                 "$collection": "vectorSpecialFloats"
               }
             }
@@ -42064,7 +42064,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.06812206267745391,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -42209,7 +42209,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.11268081808002661,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -42354,7 +42354,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2984256956236212,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -42499,7 +42499,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7098519217194909,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -42644,7 +42644,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7567907862941164,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -42789,7 +42789,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8252008597457002,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -42934,7 +42934,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8335147601636197,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -43079,7 +43079,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8509867636813522,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -43224,7 +43224,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8576827566113585,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -43369,7 +43369,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8739326934556693,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             }
@@ -43689,7 +43689,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.06812206267745391,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -43834,7 +43834,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.11268081808002661,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -43979,7 +43979,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2984256956236212,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -44124,7 +44124,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7098519217194909,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -44269,7 +44269,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7567907862941164,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -44414,7 +44414,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8252008597457002,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -44559,7 +44559,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8335147601636197,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -44704,7 +44704,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8509867636813522,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -44849,7 +44849,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8576827566113585,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             },
@@ -44994,7 +44994,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8739326934556693,
+                "$distance": "<masked>",
                 "$collection": "vectorPerf"
               }
             }
@@ -45472,7 +45472,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorNorm"
               }
             },
@@ -45491,7 +45491,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.4,
+                "$distance": "<masked>",
                 "$collection": "vectorNorm"
               }
             }
@@ -47030,7 +47030,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "children": [
                   {
                     "$document": {
@@ -47066,7 +47066,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "children": [
                   {
                     "$document": {
@@ -47185,7 +47185,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.29289321881345254,
+                "$distance": "<masked>",
                 "children": [
                   {
                     "$document": {
@@ -47624,7 +47624,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548,
+                "$distance": "<masked>",
                 "author": {
                   "$document": {
                     "name": "Author 1",
@@ -47967,7 +47967,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null,
+                "$distance": "<masked>",
                 "$collection": "vectorZeros"
               }
             },
@@ -47986,7 +47986,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null,
+                "$distance": "<masked>",
                 "$collection": "vectorZeros"
               }
             }
@@ -48034,7 +48034,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorZeros"
               }
             },
@@ -48053,7 +48053,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null,
+                "$distance": "<masked>",
                 "$collection": "vectorZeros"
               }
             }
@@ -48301,7 +48301,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null,
+                "$distance": "<masked>",
                 "$collection": "vectorCosineZero"
               }
             },
@@ -48320,7 +48320,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null,
+                "$distance": "<masked>",
                 "$collection": "vectorCosineZero"
               }
             }
@@ -49124,7 +49124,7 @@
                 "$permissions": [
                   "read(\"user:user1\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorPermissions"
               }
             },
@@ -49144,7 +49144,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.02985753301900307,
+                "$distance": "<masked>",
                 "$collection": "vectorPermissions"
               }
             }
@@ -49212,7 +49212,7 @@
                 "$permissions": [
                   "read(\"user:user2\")"
                 ],
-                "$distance": 0.006116251198662548,
+                "$distance": "<masked>",
                 "$collection": "vectorPermissions"
               }
             },
@@ -49232,7 +49232,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.02985753301900307,
+                "$distance": "<masked>",
                 "$collection": "vectorPermissions"
               }
             }
@@ -49638,7 +49638,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0808549724108476,
+                "$distance": "<masked>",
                 "$collection": "vectorPermScoring"
               }
             },
@@ -49658,7 +49658,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.16794970502633444,
+                "$distance": "<masked>",
                 "$collection": "vectorPermScoring"
               }
             }
@@ -50241,7 +50241,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorCursorBefore"
               }
             },
@@ -50261,7 +50261,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.001382167413583435,
+                "$distance": "<masked>",
                 "$collection": "vectorCursorBefore"
               }
             },
@@ -50281,7 +50281,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548,
+                "$distance": "<masked>",
                 "$collection": "vectorCursorBefore"
               }
             },
@@ -50301,7 +50301,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.015216416711181346,
+                "$distance": "<masked>",
                 "$collection": "vectorCursorBefore"
               }
             },
@@ -50321,7 +50321,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.02985753301900307,
+                "$distance": "<masked>",
                 "$collection": "vectorCursorBefore"
               }
             }
@@ -50416,7 +50416,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548,
+                "$distance": "<masked>",
                 "$collection": "vectorCursorBefore"
               }
             },
@@ -50436,7 +50436,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.001382167413583435,
+                "$distance": "<masked>",
                 "$collection": "vectorCursorBefore"
               }
             },
@@ -50456,7 +50456,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorCursorBefore"
               }
             }
@@ -51415,7 +51415,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51435,7 +51435,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.004995822906494141,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51455,7 +51455,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.01993340253829956,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51475,7 +51475,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.04466354580738696,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51495,7 +51495,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.07893899318394004,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51515,7 +51515,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.12241744995117188,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51535,7 +51535,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.17466437816619873,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51555,7 +51555,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2351577877998352,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51575,7 +51575,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.30329328775405884,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51595,7 +51595,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.37839001417160034,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51615,7 +51615,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.4596977072864086,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51635,7 +51635,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.546403871369477,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51655,7 +51655,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.6376422345638275,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51675,7 +51675,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7325011789798737,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51695,7 +51695,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8300328552722931,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51715,7 +51715,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9292628020048141,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51735,7 +51735,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0291995219886303,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51755,7 +51755,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.1288444995880127,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51775,7 +51775,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.2272020876407623,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51795,7 +51795,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.3232895731925964,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             }
@@ -51890,7 +51890,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.07893899318394004,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51910,7 +51910,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.04466354580738696,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51930,7 +51930,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.01993340253829956,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51950,7 +51950,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.004995822906494141,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -51970,7 +51970,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             }
@@ -52065,7 +52065,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.04466354580738696,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -52085,7 +52085,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.01993340253829956,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -52105,7 +52105,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.004995822906494141,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             },
@@ -52125,7 +52125,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorBackward"
               }
             }
@@ -53090,7 +53090,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorDeleteIdx"
               }
             }
@@ -53437,7 +53437,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiIdx"
               }
             }
@@ -53490,7 +53490,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiIdx"
               }
             }
@@ -53923,7 +53923,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorNoIndex"
               }
             },
@@ -53942,7 +53942,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorNoIndex"
               }
             }
@@ -54328,7 +54328,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorSingleDim"
               }
             },
@@ -54345,7 +54345,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorSingleDim"
               }
             }
@@ -58130,7 +58130,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.17157396924716073,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58149,7 +58149,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.17171331510577859,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58168,7 +58168,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.17436617773968643,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58187,7 +58187,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.17564787452698427,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58206,7 +58206,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.17577354565602943,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58225,7 +58225,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.1772606633554461,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58244,7 +58244,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.18563453280917552,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58263,7 +58263,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.18779465761160852,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58282,7 +58282,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.1884016322512998,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58301,7 +58301,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.1905502544618649,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58320,7 +58320,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2058720307859302,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58339,7 +58339,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2071556829450103,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58358,7 +58358,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2101763985275621,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58377,7 +58377,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.21109676877234973,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58396,7 +58396,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.23335744674059833,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58415,7 +58415,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2353478567738556,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58434,7 +58434,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.2383990466194822,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58453,7 +58453,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.24122453369102503,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58472,7 +58472,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.26589229462364483,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58491,7 +58491,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.27194872139542225,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58510,7 +58510,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.27421984815633305,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58529,7 +58529,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.28168243189917985,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58548,7 +58548,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.3042508158166206,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58567,7 +58567,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.3112365842594018,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58586,7 +58586,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.32250504131522595,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58605,7 +58605,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.3315403926510747,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58624,7 +58624,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.34792632724311834,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58643,7 +58643,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.35575674637731314,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58662,7 +58662,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.38004927221073403,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58681,7 +58681,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.39061249816279076,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58700,7 +58700,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.3964176073559068,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58719,7 +58719,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.40500907207988146,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58738,7 +58738,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.446497616482608,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58757,7 +58757,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.4492308765693892,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58776,7 +58776,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.45850108297955516,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58795,7 +58795,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.458507530849959,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58814,7 +58814,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.5058801998729873,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58833,7 +58833,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.5157483299051293,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58852,7 +58852,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.5212702808060513,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58871,7 +58871,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.5346060120235898,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58890,7 +58890,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.5658879983067265,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58909,7 +58909,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.576274498436461,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58928,7 +58928,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.6035469247119243,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58947,7 +58947,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.618046474629218,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58966,7 +58966,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.6287843537888478,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -58985,7 +58985,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.639610937627505,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59004,7 +59004,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.6922639195993909,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59023,7 +59023,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.694106575214419,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59042,7 +59042,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7052960436574695,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59061,7 +59061,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7077252625566344,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59080,7 +59080,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.761398109644511,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59099,7 +59099,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7728742913001114,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59118,7 +59118,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.7861281866888318,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59137,7 +59137,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8023133729273125,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59156,7 +59156,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8302076620632577,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59175,7 +59175,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.841895079371282,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59194,7 +59194,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.8836488690118066,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59213,7 +59213,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9000880294360561,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59232,7 +59232,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9002910404469321,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59251,7 +59251,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9119117851200091,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59270,7 +59270,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9705948523011676,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59289,7 +59289,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.982480456487956,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59308,7 +59308,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9831866929413186,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59327,7 +59327,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59346,7 +59346,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0412855539625383,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59365,7 +59365,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.053158662893026,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59384,7 +59384,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.0830176704927887,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59403,7 +59403,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.111718026622494,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59422,7 +59422,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.123504263313083,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59441,7 +59441,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.1814052930451937,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59460,7 +59460,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.1814494789512473,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59479,7 +59479,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.1930742201539317,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59498,7 +59498,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.2500351584889162,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59517,7 +59517,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.2614233719663297,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59536,7 +59536,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.2766741218936206,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59555,7 +59555,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.3170272528819291,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59574,7 +59574,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.3281032426939556,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59593,7 +59593,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.3672770669656074,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59612,7 +59612,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.3819736338926742,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59631,7 +59631,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.4444168543731077,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59650,7 +59650,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.4518501098915704,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59669,7 +59669,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.5038929893329511,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59688,7 +59688,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.529250039213021,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59707,7 +59707,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.5599309380583803,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59726,7 +59726,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.598574305919184,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59745,7 +59745,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.6120516630800608,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59764,7 +59764,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.6591632255581952,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59783,7 +59783,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.6597679355735293,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59802,7 +59802,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.7025846288272384,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59821,7 +59821,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.7105888618524978,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59840,7 +59840,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.7399995039223373,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59859,7 +59859,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.7526324035979193,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59878,7 +59878,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.7715050942714254,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59897,7 +59897,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.7852568080612885,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59916,7 +59916,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.7965920034052327,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59935,7 +59935,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.8085760739328627,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59954,7 +59954,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.8147533733323624,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59973,7 +59973,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.8228249271319397,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -59992,7 +59992,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.8254923676016963,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             },
@@ -60011,7 +60011,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 1.828331392116857,
+                "$distance": "<masked>",
                 "$collection": "vectorLongResults"
               }
             }
@@ -60556,7 +60556,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60575,7 +60575,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.04894345998764038,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60594,7 +60594,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.19098299741744995,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60613,7 +60613,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.4122147560119629,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60632,7 +60632,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.69098299741745,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             }
@@ -60689,7 +60689,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 6.123234243759559e-17,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60708,7 +60708,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.31286893762300044,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60727,7 +60727,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.31286893762300044,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60746,7 +60746,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.6180339754697147,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60765,7 +60765,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.6180339754697147,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             }
@@ -60822,7 +60822,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.6984010934829712,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60841,7 +60841,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.6984010934829712,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60860,7 +60860,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.6300367712974548,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60879,7 +60879,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.6300367712974548,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             },
@@ -60898,7 +60898,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": -0.5,
+                "$distance": "<masked>",
                 "$collection": "vectorMultiQuery"
               }
             }
@@ -61290,7 +61290,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": null,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeVals"
               }
             }
@@ -125663,7 +125663,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.9211857772516668,
+                "$distance": "<masked>",
                 "$collection": "vector16000"
               }
             }
@@ -183310,7 +183310,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.002013657461706009,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -183454,7 +183454,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.002014757940966949,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -183598,7 +183598,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.002026829335836422,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -183742,7 +183742,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.002030257110206657,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -183886,7 +183886,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0020543876478319456,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -184030,7 +184030,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.002060139244255521,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -184174,7 +184174,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.002096406551268304,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -184318,7 +184318,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0021043826731357296,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -184462,7 +184462,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.002152784103796157,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             },
@@ -184606,7 +184606,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0021631382764191187,
+                "$distance": "<masked>",
                 "$collection": "vectorLargeDataset"
               }
             }
@@ -184917,7 +184917,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.0,
+                "$distance": "<masked>",
                 "$collection": "vectorFilterDisabled"
               }
             },
@@ -184937,7 +184937,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.02985753301900307,
+                "$distance": "<masked>",
                 "$collection": "vectorFilterDisabled"
               }
             }
@@ -185364,7 +185364,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.006116251198662548,
+                "$distance": "<masked>",
                 "$collection": "vectorFilterOverride"
               }
             },
@@ -185385,7 +185385,7 @@
                 "$permissions": [
                   "read(\"any\")"
                 ],
-                "$distance": 0.02985753301900307,
+                "$distance": "<masked>",
                 "$collection": "vectorFilterOverride"
               }
             }
