@@ -63,6 +63,7 @@ utopia-cli = { path = "crates/utopia/cli" }
 utopia-console = { path = "crates/utopia/console" }
 utopia-platform = { path = "crates/utopia/platform" }
 utopia-servers = { path = "crates/utopia/servers" }
+utopia-mqtt = { path = "crates/utopia/mqtt" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }

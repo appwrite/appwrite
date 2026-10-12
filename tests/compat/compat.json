@@ -159,6 +159,26 @@
       "rust": "http://127.0.0.1:16623",
       "rust-container": "http://compat-smtp-implicit-rust:8025",
       "runner": "http://127.0.0.1:16623"
+    },
+    "mqtt-tcp": {
+      "php": "compat-mqtt-broker:1883",
+      "rust": "127.0.0.1:16700",
+      "runner": "127.0.0.1:16700"
+    },
+    "mqtt-ws": {
+      "php": "compat-mqtt-broker:8083",
+      "rust": "127.0.0.1:16701",
+      "runner": "127.0.0.1:16701"
+    },
+    "mqtt-tls": {
+      "php": "compat-mqtt-broker:8883",
+      "rust": "127.0.0.1:16702",
+      "runner": "127.0.0.1:16702"
+    },
+    "mqtt-host": {
+      "php": "host.docker.internal",
+      "rust": "127.0.0.1",
+      "runner": "127.0.0.1"
     }
   }
 }

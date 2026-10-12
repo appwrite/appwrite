@@ -1,0 +1,1351 @@
+{
+  "source": "packages/mqtt/tests/ConnectionTest.php",
+  "cases": [
+    {
+      "name": "testUpdateExpiresAtSetsTheDeadlineToKeepAliveTimesMultiplier",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "keep_alive": 20
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.update_expires_at",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "now": 1000.0,
+            "multiplier": 1.5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.state",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "fd": 1,
+            "protocol": 4,
+            "prefix": "",
+            "client_id": "",
+            "clean_start": true,
+            "identity": null,
+            "active": false,
+            "keep_alive": 20,
+            "expires_at": 1030.0,
+            "wheel_slot": 0,
+            "opened": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testUpdateExpiresAtIsANoOpWhenKeepAliveIsDisabled",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.update_expires_at",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "now": 1000.0,
+            "multiplier": 1.5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.state",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "fd": 1,
+            "protocol": 4,
+            "prefix": "",
+            "client_id": "",
+            "clean_start": true,
+            "identity": null,
+            "active": false,
+            "keep_alive": 0,
+            "expires_at": 0.0,
+            "wheel_slot": 0,
+            "opened": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "testClientSuppliedIdIsStoredVerbatim",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set_client_id",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "client_id": "device-tv"
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.client_id",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": "device-tv"
+        }
+      ]
+    },
+    {
+      "name": "testEmptyClientIdIsServerAssigned",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 7
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set_client_id",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "client_id": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.client_id",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": "mqtt_7"
+        }
+      ]
+    },
+    {
+      "name": "testAcknowledgeResolvesATrackedDelivery",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 7,
+            "topic": "sensors/temp",
+            "sequence": 42
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 7
+          },
+          "expect": {
+            "topic": "sensors/temp",
+            "sequence": 42,
+            "cursor": 42
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAcknowledgeAdvancesCursorOnlyToTheContiguousBoundary",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2,
+            "topic": "topic",
+            "sequence": 6
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 3,
+            "topic": "topic",
+            "sequence": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 5,
+            "cursor": 5
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 3
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 7,
+            "cursor": 5
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 6,
+            "cursor": 7
+          }
+        }
+      ]
+    },
+    {
+      "name": "testCursorStopsAtAGapInDeliveredSequences",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2,
+            "topic": "topic",
+            "sequence": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 5,
+            "cursor": 5
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 7,
+            "cursor": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "testResumeAnchorsTheCursorRegardlessOfTrackOrder",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.resume",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "topic",
+            "cursor": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1,
+            "topic": "topic",
+            "sequence": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2,
+            "topic": "topic",
+            "sequence": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 7,
+            "cursor": 4
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 2
+          },
+          "expect": {
+            "topic": "topic",
+            "sequence": 5,
+            "cursor": 5
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAcknowledgeIsIdempotentForAnUnknownOrRepeatedAck",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.track",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 7,
+            "topic": "sensors/temp",
+            "sequence": 42
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 7
+          },
+          "expect": {
+            "topic": "sensors/temp",
+            "sequence": 42,
+            "cursor": 42
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 99
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testDisconnectSendsAReasonCodeAndStringThenCloses",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "none"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 9,
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "protocol": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.disconnect",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "reason": 135,
+            "reason_string": "Session expired"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "started": false,
+            "open": [],
+            "sent": [
+              [
+                9,
+                {
+                  "$bytes": "4BSHEh8AD1Nlc3Npb24gZXhwaXJlZA=="
+                }
+              ]
+            ],
+            "closed": [
+              9
+            ],
+            "timer": [],
+            "log": []
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "s",
+              "path": "/sent/0/1"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 14,
+            "flags": 0,
+            "body": {
+              "$bytes": "hxIfAA9TZXNzaW9uIGV4cGlyZWQ="
+            },
+            "name": "disconnect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "p",
+              "path": "/body"
+            },
+            "offset": 1
+          },
+          "expect": {
+            "properties": [
+              [
+                31,
+                "Session expired"
+              ]
+            ],
+            "offset": 20,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDisconnectWithoutAReasonStringSendsOnlyTheCode",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "none"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 9,
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "protocol": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.disconnect",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "reason": 135
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "started": false,
+            "open": [],
+            "sent": [
+              [
+                9,
+                {
+                  "$bytes": "4AKHAA=="
+                }
+              ]
+            ],
+            "closed": [
+              9
+            ],
+            "timer": [],
+            "log": []
+          }
+        },
+        {
+          "op": "packet.parse",
+          "args": {
+            "data": {
+              "$ref": "s",
+              "path": "/sent/0/1"
+            }
+          },
+          "bind": "p",
+          "expect": {
+            "type": 14,
+            "flags": 0,
+            "body": {
+              "$bytes": "hwA="
+            },
+            "name": "disconnect",
+            "qos": 0,
+            "dup": false
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "p",
+              "path": "/body"
+            },
+            "offset": 1
+          },
+          "expect": {
+            "properties": [],
+            "offset": 2,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDisconnectOnA311ClientClosesWithoutSendingAPacket",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "none"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 9,
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "protocol": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.disconnect",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "reason": 135,
+            "reason_string": "Session expired"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": false,
+            "open": [],
+            "sent": [],
+            "closed": [
+              9
+            ],
+            "timer": [],
+            "log": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDisconnectWithReasonZeroClosesWithoutSendingAPacket",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "none"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 9,
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "protocol": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.disconnect",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": false,
+            "open": [],
+            "sent": [],
+            "closed": [
+              9
+            ],
+            "timer": [],
+            "log": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDisconnectClosesEvenWhenSendFails",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "none"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 9,
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "protocol": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "operation": "send",
+            "message": "transport gone"
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.disconnect",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "reason": 135,
+            "reason_string": "boom"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "transport gone"
+            }
+          }
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": false,
+            "open": [],
+            "sent": [],
+            "closed": [
+              9
+            ],
+            "timer": [],
+            "log": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "a new connection's state",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 3
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.state",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "fd": 3,
+            "protocol": 4,
+            "prefix": "",
+            "client_id": "",
+            "clean_start": true,
+            "identity": null,
+            "active": false,
+            "keep_alive": 0,
+            "expires_at": 0.0,
+            "wheel_slot": 0,
+            "opened": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "publish without an adapter does nothing; with one, QoS 1 draws packet ids and tracks sequences",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.publish",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "topic": "t",
+            "payload": "p",
+            "qos": 1,
+            "sequence": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "packet_id": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "none"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 4,
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.publish",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "topic": "a/b",
+            "payload": "x",
+            "qos": 1,
+            "sequence": 10
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.publish",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "topic": "a/b",
+            "payload": "y",
+            "qos": 1,
+            "dup": true
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.publish",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "topic": "a/b",
+            "payload": "z",
+            "qos": 0,
+            "dup": true,
+            "sequence": 11
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "protocol": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.publish",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "topic": "a/b",
+            "payload": "w",
+            "qos": 1,
+            "sequence": 12
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "packet_id": 1
+          },
+          "expect": {
+            "topic": "a/b",
+            "sequence": 10,
+            "cursor": 10
+          }
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "packet_id": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.acknowledge",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "packet_id": 3
+          },
+          "expect": {
+            "topic": "a/b",
+            "sequence": 12,
+            "cursor": 10
+          }
+        },
+        {
+          "op": "connection.puback",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "packet_id": 300
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "protocol": 4
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.puback",
+          "args": {
+            "connection": {
+              "$ref": "d"
+            },
+            "packet_id": 7
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": false,
+            "open": [],
+            "sent": [
+              [
+                4,
+                "2\b\u0000\u0003a/b\u0000\u0001x"
+              ],
+              [
+                4,
+                ":\b\u0000\u0003a/b\u0000\u0002y"
+              ],
+              [
+                4,
+                "0\u0006\u0000\u0003a/bz"
+              ],
+              [
+                4,
+                "2\t\u0000\u0003a/b\u0000\u0003\u0000w"
+              ],
+              [
+                4,
+                "@\u0002\u0001,"
+              ],
+              [
+                4,
+                "@\u0002\u0000\u0007"
+              ]
+            ],
+            "closed": [],
+            "timer": [],
+            "log": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "packet ids count up from 1",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.next_packet_id",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "connection.next_packet_id",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "connection.next_packet_id",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "connection.script",
+          "args": {
+            "steps": [
+              {
+                "op": "next"
+              },
+              {
+                "op": "next"
+              },
+              {
+                "op": "next"
+              }
+            ]
+          },
+          "expect": [
+            1,
+            2,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "name": "public properties round trip",
+      "steps": [
+        {
+          "op": "connection.new",
+          "args": {
+            "fd": 1
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "connection.set",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            },
+            "protocol": 5,
+            "prefix": "p1",
+            "clean_start": false,
+            "identity": {
+              "userId": "u1",
+              "roles": [
+                "a"
+              ]
+            },
+            "active": true,
+            "keep_alive": 30,
+            "expires_at": 12.5,
+            "wheel_slot": 99
+          },
+          "expect": null
+        },
+        {
+          "op": "connection.state",
+          "args": {
+            "connection": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "fd": 1,
+            "protocol": 5,
+            "prefix": "p1",
+            "client_id": "",
+            "clean_start": false,
+            "identity": {
+              "userId": "u1",
+              "roles": [
+                "a"
+              ]
+            },
+            "active": true,
+            "keep_alive": 30,
+            "expires_at": 12.5,
+            "wheel_slot": 99,
+            "opened": true
+          }
+        }
+      ]
+    }
+  ]
+}

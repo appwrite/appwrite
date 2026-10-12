@@ -583,6 +583,7 @@ dependencies = [
  "sha2 0.10.9",
  "syn 2.0.119",
  "tokio",
+ "tokio-tungstenite",
  "utopia-abuse",
  "utopia-auth",
  "utopia-balancer",
@@ -604,6 +605,7 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-lock",
+ "utopia-mqtt",
  "utopia-platform",
  "utopia-pools",
  "utopia-queue",
@@ -3691,6 +3693,22 @@ dependencies = [
  "rustix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-mqtt"
+version = "0.1.0"
+dependencies = [
+ "foldhash",
+ "futures-util",
+ "indexmap",
+ "php-std",
+ "rustls",
+ "thiserror",
+ "tokio",
+ "tokio-rustls",
+ "tokio-tungstenite",
+ "utopia-telemetry",
 ]
 
 [[package]]

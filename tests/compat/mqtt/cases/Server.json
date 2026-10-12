@@ -1,0 +1,4833 @@
+{
+  "cases": [
+    {
+      "name": "a v5 session: connect, subscribe, publish fan-out at QoS 1, puback, ping, unsubscribe, disconnect",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "one",
+            "keep_alive": 30,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "prefix",
+                      "p1"
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 21,
+                "value": "jwt"
+              }
+            ]
+          },
+          "bind": "c1",
+          "expect": "\u0010#\u0000\u0004MQTT\u0005\u0002\u0000\u001e\u0013&\u0000\u0006prefix\u0000\u0002p1\u0015\u0000\u0003jwt\u0000\u0003one"
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "",
+            "keep_alive": 0,
+            "clean_start": false,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "prefix",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "c2",
+          "expect": "\u0010\u001a\u0000\u0004MQTT\u0005\u0000\u0000\u0000\r&\u0000\u0006prefix\u0000\u0002p1\u0000\u0000"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "a/+",
+              "a/#",
+              "deny/x",
+              "b"
+            ],
+            "qos": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "ghwAAQAAA2EvKwEAA2EvIwEABmRlbnkveAEAAWIB"
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "a/b",
+            "payload": "hello",
+            "qos": 1,
+            "packet_id": 9,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "k",
+                      "v"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "p",
+          "expect": "2\u0014\u0000\u0003a/b\u0000\t\u0007&\u0000\u0001k\u0000\u0001vhello"
+        },
+        {
+          "op": "v5.puback",
+          "args": {
+            "packet_id": "\u0000\u0001"
+          },
+          "bind": "ack",
+          "expect": "@\u0002\u0000\u0001"
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "ping",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "v5.unsubscribe",
+          "args": {
+            "packet_id": 2,
+            "filters": [
+              "a/+",
+              "deny/y"
+            ]
+          },
+          "bind": "u",
+          "expect": {
+            "$bytes": "ohAAAgAAA2EvKwAGZGVueS95"
+          }
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$bytes": "4AIAAA=="
+          }
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "c2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.subscribers",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "prefix": "p1",
+            "topic": "a/b"
+          },
+          "expect": [
+            [
+              1,
+              1,
+              1
+            ]
+          ]
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "ack"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "ack"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "ping",
+              "path": "/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "d"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.subscribers",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "prefix": "p1",
+            "topic": "a/b"
+          },
+          "expect": []
+        },
+        {
+          "op": "server.stop",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": false,
+            "open": [
+              2
+            ],
+            "sent": [
+              [
+                1,
+                " \t\u0000\u0000\u0006\u0015\u0000\u0003jwt"
+              ],
+              [
+                2,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                1,
+                {
+                  "$bytes": "kAcAAQABAYAB"
+                }
+              ],
+              [
+                1,
+                "2\r\u0000\u0003a/b\u0000\u0001\u0000hello"
+              ],
+              [
+                2,
+                "@\u0002\u0000\t"
+              ],
+              [
+                1,
+                {
+                  "$bytes": "0AA="
+                }
+              ],
+              [
+                1,
+                {
+                  "$bytes": "sAUAAgAAAA=="
+                }
+              ]
+            ],
+            "closed": [
+              1
+            ],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                2,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                2,
+                0
+              ],
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                2,
+                0
+              ],
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "clear",
+                1
+              ],
+              [
+                "schedule",
+                1,
+                30
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                5,
+                "one",
+                true,
+                30,
+                null,
+                null,
+                null,
+                "jwt",
+                null,
+                [
+                  [
+                    "prefix",
+                    "p1"
+                  ]
+                ],
+                "one"
+              ],
+              [
+                "connect",
+                2,
+                5,
+                "",
+                false,
+                0,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [
+                  [
+                    "prefix",
+                    "p1"
+                  ]
+                ],
+                "mqtt_2"
+              ],
+              [
+                "subscribe",
+                1,
+                1,
+                [
+                  [
+                    "a/+",
+                    1
+                  ],
+                  [
+                    "a/#",
+                    1
+                  ],
+                  [
+                    "deny/x",
+                    1
+                  ],
+                  [
+                    "b",
+                    1
+                  ]
+                ]
+              ],
+              [
+                "publish",
+                2,
+                "a/b",
+                "hello",
+                1,
+                false,
+                false,
+                9,
+                [
+                  [
+                    "k",
+                    "v"
+                  ]
+                ],
+                [
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ],
+              [
+                "puback",
+                1,
+                1,
+                0,
+                {
+                  "topic": "a/b",
+                  "sequence": 1,
+                  "cursor": 1
+                }
+              ],
+              [
+                "puback",
+                1,
+                1,
+                0,
+                null
+              ],
+              [
+                "unsubscribe",
+                1,
+                2,
+                [
+                  "a/+",
+                  "deny/y"
+                ]
+              ],
+              [
+                "disconnect",
+                1,
+                0
+              ],
+              [
+                "stop"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.subscriptions",
+              [
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a v3 session: credentials, return codes for denied filters, QoS 0 delivery to itself",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "v3",
+            "keep_alive": 10,
+            "clean_session": true,
+            "username": "u",
+            "password": "p"
+          },
+          "bind": "c",
+          "expect": {
+            "$bytes": "EBQABE1RVFQEwgAKAAJ2MwABdQABcA=="
+          }
+        },
+        {
+          "op": "v3.subscribe",
+          "args": {
+            "packet_id": 3,
+            "filters": [
+              "news/tech",
+              "deny/me",
+              "short",
+              "news/#"
+            ],
+            "qos": 3
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "gikAAwAJbmV3cy90ZWNoAwAHZGVueS9tZQMABXNob3J0AwAGbmV3cy8jAw=="
+          }
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "news/tech",
+            "payload": "x",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "p",
+          "expect": "0\f\u0000\tnews/techx"
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "news/tech",
+            "payload": "y",
+            "qos": 1,
+            "packet_id": 4
+          },
+          "bind": "q",
+          "expect": "2\u000e\u0000\tnews/tech\u0000\u0004y"
+        },
+        {
+          "op": "v3.unsubscribe",
+          "args": {
+            "packet_id": 6,
+            "filters": [
+              "news/tech"
+            ]
+          },
+          "bind": "u",
+          "expect": {
+            "$bytes": "og0ABgAJbmV3cy90ZWNo"
+          }
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 5,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 5,
+            "data": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 5,
+            "data": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 5,
+            "data": {
+              "$ref": "q"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 5,
+            "data": {
+              "$ref": "u"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.disconnect",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 5
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                5,
+                " \u0002\u0000\u0000"
+              ],
+              [
+                5,
+                {
+                  "$bytes": "kAUAA4CAgA=="
+                }
+              ],
+              [
+                5,
+                "@\u0002\u0000\u0004"
+              ],
+              [
+                5,
+                {
+                  "$bytes": "sAIABg=="
+                }
+              ]
+            ],
+            "closed": [],
+            "timer": [
+              [
+                "schedule",
+                5,
+                30
+              ],
+              [
+                "schedule",
+                5,
+                10
+              ],
+              [
+                "schedule",
+                5,
+                10
+              ],
+              [
+                "schedule",
+                5,
+                10
+              ],
+              [
+                "schedule",
+                5,
+                10
+              ],
+              [
+                "schedule",
+                5,
+                10
+              ],
+              [
+                "clear",
+                5
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                5,
+                4,
+                "v3",
+                true,
+                10,
+                "u",
+                "p",
+                null,
+                null,
+                null,
+                [],
+                "v3"
+              ],
+              [
+                "subscribe",
+                5,
+                3,
+                [
+                  [
+                    "news/tech",
+                    3
+                  ],
+                  [
+                    "deny/me",
+                    3
+                  ],
+                  [
+                    "short",
+                    3
+                  ],
+                  [
+                    "news/#",
+                    3
+                  ]
+                ]
+              ],
+              [
+                "publish",
+                5,
+                "news/tech",
+                "x",
+                0,
+                false,
+                false,
+                0,
+                [],
+                []
+              ],
+              [
+                "publish",
+                5,
+                "news/tech",
+                "y",
+                1,
+                false,
+                false,
+                4,
+                [],
+                []
+              ],
+              [
+                "unsubscribe",
+                5,
+                6,
+                [
+                  "news/tech"
+                ]
+              ],
+              [
+                "disconnect",
+                5,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.subscriptions",
+              [
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "refused CONNECTs close the connection (v5 reason code, v3 return codes)",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 3
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "a",
+            "keep_alive": 60,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "jwt"
+              },
+              {
+                "id": 22,
+                "value": "deny"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": "\u0010\u001b\u0000\u0004MQTT\u0005\u0002\u0000<\r\u0015\u0000\u0003jwt\u0016\u0000\u0004deny\u0000\u0001a"
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "b",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "u",
+            "password": "deny"
+          },
+          "bind": "b",
+          "expect": {
+            "$bytes": "EBYABE1RVFQEwgA8AAFiAAF1AARkZW55"
+          }
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "c",
+            "keep_alive": 60,
+            "clean_session": true,
+            "username": "u",
+            "password": "busy"
+          },
+          "bind": "c",
+          "expect": {
+            "$bytes": "EBYABE1RVFQEwgA8AAFjAAF1AARidXN5"
+          }
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "b"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 3,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                1,
+                {
+                  "$bytes": "IAMAhwA="
+                }
+              ],
+              [
+                2,
+                " \u0002\u0000\u0005"
+              ],
+              [
+                3,
+                " \u0002\u0000\u0003"
+              ]
+            ],
+            "closed": [
+              1,
+              2,
+              3
+            ],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                2,
+                30
+              ],
+              [
+                "schedule",
+                3,
+                30
+              ],
+              [
+                "clear",
+                1
+              ],
+              [
+                "clear",
+                2
+              ],
+              [
+                "clear",
+                3
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                5,
+                "a",
+                true,
+                60,
+                null,
+                null,
+                null,
+                "jwt",
+                "deny",
+                [],
+                "a"
+              ],
+              [
+                "disconnect",
+                1,
+                null
+              ],
+              [
+                "connect",
+                2,
+                4,
+                "b",
+                true,
+                60,
+                "u",
+                "deny",
+                null,
+                null,
+                null,
+                [],
+                "b"
+              ],
+              [
+                "disconnect",
+                2,
+                null
+              ],
+              [
+                "connect",
+                3,
+                4,
+                "c",
+                true,
+                60,
+                "u",
+                "busy",
+                null,
+                null,
+                null,
+                [],
+                "c"
+              ],
+              [
+                "disconnect",
+                3,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1,
+                1,
+                1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "enhanced authentication: a challenge, then CONNACK from onAuthenticate (the connection is not marked active)",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "x",
+            "keep_alive": 20,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 21,
+                "value": "challenge"
+              }
+            ]
+          },
+          "bind": "c",
+          "expect": "\u0010\u001a\u0000\u0004MQTT\u0005\u0002\u0000\u0014\f\u0015\u0000\tchallenge\u0000\u0001x"
+        },
+        {
+          "op": "v5.auth",
+          "args": {
+            "code": 24,
+            "properties": [
+              {
+                "id": 21,
+                "value": "challenge"
+              },
+              {
+                "id": 22,
+                "value": "answer"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$bytes": "8BcYFRUACWNoYWxsZW5nZRYABmFuc3dlcg=="
+          }
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "ping",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "ping",
+              "path": "/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [
+              1
+            ],
+            "sent": [
+              [
+                1,
+                {
+                  "$bytes": "8BYYFBUACWNoYWxsZW5nZRYABW5vbmNl"
+                }
+              ],
+              [
+                1,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                1,
+                {
+                  "$bytes": "0AA="
+                }
+              ]
+            ],
+            "closed": [],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                5,
+                "x",
+                true,
+                20,
+                null,
+                null,
+                null,
+                "challenge",
+                null,
+                [],
+                "x"
+              ],
+              [
+                "auth",
+                1,
+                24,
+                "challenge",
+                "answer",
+                []
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "re-authentication: success, then a refusal with a DISCONNECT that closes",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "x",
+            "keep_alive": 20,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u000e\u0000\u0004MQTT\u0005\u0002\u0000\u0014\u0000\u0000\u0001x"
+        },
+        {
+          "op": "v5.auth",
+          "args": {
+            "code": 25,
+            "properties": [
+              {
+                "id": 21,
+                "value": "jwt"
+              },
+              {
+                "id": 22,
+                "value": "fresh"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "a",
+                      "b"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ok",
+          "expect": {
+            "$bytes": "8BcZFRUAA2p3dBYABWZyZXNoJgABYQABYg=="
+          }
+        },
+        {
+          "op": "v5.auth",
+          "args": {
+            "code": 25,
+            "properties": [
+              {
+                "id": 21,
+                "value": "jwt"
+              },
+              {
+                "id": 22,
+                "value": "deny"
+              }
+            ]
+          },
+          "bind": "bad",
+          "expect": {
+            "$bytes": "8A8ZDRUAA2p3dBYABGRlbnk="
+          }
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "ok"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "bad"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                1,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                1,
+                {
+                  "$bytes": "8AgABhUAA2p3dA=="
+                }
+              ],
+              [
+                1,
+                {
+                  "$bytes": "4AuHCR8ABmRlbmllZA=="
+                }
+              ]
+            ],
+            "closed": [
+              1
+            ],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                20
+              ],
+              [
+                "schedule",
+                1,
+                20
+              ],
+              [
+                "clear",
+                1
+              ],
+              [
+                "schedule",
+                1,
+                20
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                5,
+                "x",
+                true,
+                20,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "auth",
+                1,
+                25,
+                "jwt",
+                "fresh",
+                [
+                  [
+                    "a",
+                    "b"
+                  ]
+                ]
+              ],
+              [
+                "auth",
+                1,
+                25,
+                "jwt",
+                "deny",
+                []
+              ],
+              [
+                "disconnect",
+                1,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "an empty AUTH body is a success; a v3 connection refused by AUTH gets a v3 DISCONNECT",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "x",
+            "keep_alive": 20,
+            "clean_session": true
+          },
+          "bind": "c",
+          "expect": "\u0010\r\u0000\u0004MQTT\u0004\u0002\u0000\u0014\u0000\u0001x"
+        },
+        {
+          "op": "v5.auth",
+          "args": {
+            "code": 25,
+            "properties": [
+              {
+                "id": 22,
+                "value": "deny"
+              }
+            ]
+          },
+          "bind": "a",
+          "expect": {
+            "$bytes": "8AkZBxYABGRlbnk="
+          }
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$bytes": "8AA="
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "a"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                1,
+                " \u0002\u0000\u0000"
+              ],
+              [
+                1,
+                {
+                  "$bytes": "8AIAAA=="
+                }
+              ],
+              [
+                1,
+                {
+                  "$bytes": "4AA="
+                }
+              ]
+            ],
+            "closed": [
+              1
+            ],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                20
+              ],
+              [
+                "schedule",
+                1,
+                20
+              ],
+              [
+                "clear",
+                1
+              ],
+              [
+                "schedule",
+                1,
+                20
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                4,
+                "x",
+                true,
+                20,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "auth",
+                1,
+                0,
+                "",
+                "",
+                []
+              ],
+              [
+                "auth",
+                1,
+                25,
+                "",
+                "deny",
+                []
+              ],
+              [
+                "disconnect",
+                1,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "errors: a handler exception and an undecodable packet go to the error callbacks with stage receive and close the connection",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "x",
+            "keep_alive": 20,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u000e\u0000\u0004MQTT\u0005\u0002\u0000\u0014\u0000\u0000\u0001x"
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "boom",
+            "payload": "",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "boom",
+          "expect": "0\u0007\u0000\u0004boom\u0000"
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "boom"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$bytes": "ggUAAQJ/AA=="
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                1,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                2,
+                " \u0003\u0000\u0000\u0000"
+              ]
+            ],
+            "closed": [
+              1,
+              2
+            ],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                2,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                20
+              ],
+              [
+                "clear",
+                1
+              ],
+              [
+                "schedule",
+                2,
+                20
+              ],
+              [
+                "clear",
+                2
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                5,
+                "x",
+                true,
+                20,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "publish",
+                1,
+                "boom",
+                "",
+                0,
+                false,
+                false,
+                0,
+                [],
+                []
+              ],
+              [
+                "error",
+                "RuntimeException",
+                "boom",
+                "receive"
+              ],
+              [
+                "disconnect",
+                1,
+                null
+              ],
+              [
+                "connect",
+                2,
+                5,
+                "x",
+                true,
+                20,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "error",
+                "RuntimeException",
+                "Unknown MQTT property 0x7f",
+                "receive"
+              ],
+              [
+                "disconnect",
+                2,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1,
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                -1,
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "adapter failures: start, send and close errors",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "operation": "start",
+            "message": "cannot listen"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "operation": "shutdown",
+            "message": "already down"
+          },
+          "expect": null
+        },
+        {
+          "op": "server.stop",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "x",
+            "keep_alive": 20,
+            "clean_session": true
+          },
+          "bind": "c",
+          "expect": "\u0010\r\u0000\u0004MQTT\u0004\u0002\u0000\u0014\u0000\u0001x"
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "operation": "send",
+            "message": "transport gone"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.fail",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "operation": "close",
+            "message": "cannot close"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "cannot close"
+            }
+          }
+        },
+        {
+          "op": "server.log",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "error",
+              "RuntimeException",
+              "cannot listen",
+              "start"
+            ],
+            [
+              "error",
+              "RuntimeException",
+              "already down",
+              "shutdown"
+            ],
+            [
+              "stop"
+            ],
+            [
+              "connect",
+              1,
+              4,
+              "x",
+              true,
+              20,
+              null,
+              null,
+              null,
+              null,
+              null,
+              [],
+              "x"
+            ],
+            [
+              "error",
+              "RuntimeException",
+              "transport gone",
+              "receive"
+            ],
+            [
+              "disconnect",
+              1,
+              null
+            ],
+            [
+              "connect",
+              1,
+              4,
+              "x",
+              true,
+              20,
+              null,
+              null,
+              null,
+              null,
+              null,
+              [],
+              "x"
+            ],
+            [
+              "error",
+              "RuntimeException",
+              "transport gone",
+              "receive"
+            ]
+          ]
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": false,
+            "open": [],
+            "sent": [],
+            "closed": [
+              1
+            ],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "clear",
+                1
+              ]
+            ],
+            "log": [
+              [
+                "error",
+                "RuntimeException",
+                "cannot listen",
+                "start"
+              ],
+              [
+                "error",
+                "RuntimeException",
+                "already down",
+                "shutdown"
+              ],
+              [
+                "stop"
+              ],
+              [
+                "connect",
+                1,
+                4,
+                "x",
+                true,
+                20,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "error",
+                "RuntimeException",
+                "transport gone",
+                "receive"
+              ],
+              [
+                "disconnect",
+                1,
+                null
+              ],
+              [
+                "connect",
+                1,
+                4,
+                "x",
+                true,
+                20,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "error",
+                "RuntimeException",
+                "transport gone",
+                "receive"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "keep-alive: open schedules the CONNECT grace, packets re-arm the negotiated keep-alive, a tick closes the connection",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "k",
+            "keep_alive": 45,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u000e\u0000\u0004MQTT\u0005\u0002\u0000-\u0000\u0000\u0001k"
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "ping",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "ping",
+              "path": "/0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.tick",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "id": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.tick",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "id": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                1,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                1,
+                {
+                  "$bytes": "0AA="
+                }
+              ]
+            ],
+            "closed": [
+              1,
+              1
+            ],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                45
+              ],
+              [
+                "schedule",
+                1,
+                45
+              ],
+              [
+                "clear",
+                1
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                5,
+                "k",
+                true,
+                45,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "k"
+              ],
+              [
+                "disconnect",
+                1,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "DISCONNECT cleans up, closes, and re-arms the keep-alive of the closed connection",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "k",
+            "keep_alive": 15,
+            "clean_session": true
+          },
+          "bind": "c",
+          "expect": "\u0010\r\u0000\u0004MQTT\u0004\u0002\u0000\u000f\u0000\u0001k"
+        },
+        {
+          "op": "v3.disconnect",
+          "args": {},
+          "bind": "d",
+          "expect": {
+            "$bytes": "4AA="
+          }
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "d"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                1,
+                " \u0002\u0000\u0000"
+              ]
+            ],
+            "closed": [
+              1
+            ],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                15
+              ],
+              [
+                "clear",
+                1
+              ],
+              [
+                "schedule",
+                1,
+                15
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                4,
+                "k",
+                true,
+                15,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "k"
+              ],
+              [
+                "disconnect",
+                1,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                -1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "packets before CONNECT and unknown types; a packet from a connection never opened",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "a"
+            ],
+            "qos": 0
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "ggYAAQABYQA="
+          }
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "a",
+            "payload": "z",
+            "qos": 1,
+            "packet_id": 2
+          },
+          "bind": "p",
+          "expect": "2\u0006\u0000\u0001a\u0000\u0002z"
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "s"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": "b\u0002\u0000\u0001"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": " \u0002\u0000\u0000"
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9,
+            "data": {
+              "$bytes": "wAA="
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.disconnect",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 9
+          },
+          "expect": false
+        },
+        {
+          "op": "memory.disconnect",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                1,
+                {
+                  "$bytes": "kAMAAQA="
+                }
+              ],
+              [
+                1,
+                "0\u0004\u0000\u0001az"
+              ],
+              [
+                1,
+                "@\u0002\u0000\u0002"
+              ],
+              [
+                9,
+                {
+                  "$bytes": "0AA="
+                }
+              ]
+            ],
+            "closed": [],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "clear",
+                1
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "subscribe",
+                1,
+                1,
+                [
+                  [
+                    "a",
+                    0
+                  ]
+                ]
+              ],
+              [
+                "publish",
+                1,
+                "a",
+                "z",
+                1,
+                false,
+                false,
+                2,
+                [],
+                [
+                  [
+                    1,
+                    0
+                  ]
+                ]
+              ],
+              [
+                "disconnect",
+                1,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.subscriptions",
+              [
+                1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the Session Present flag of an accepted CONNACK is not sent",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "x",
+            "keep_alive": 5,
+            "clean_start": false
+          },
+          "bind": "c",
+          "expect": "\u0010\u000e\u0000\u0004MQTT\u0005\u0000\u0000\u0005\u0000\u0000\u0001x"
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [
+              1
+            ],
+            "sent": [
+              [
+                1,
+                " \u0003\u0000\u0000\u0000"
+              ]
+            ],
+            "closed": [],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                5
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                5,
+                "x",
+                false,
+                5,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "subscriber QoS: a publish's QoS, the granted QoS and 1, whichever is lowest; QoS 2 publishes are not acknowledged",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "timeline"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.telemetry",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.error",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "worker_start"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.on",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "hook": "stop"
+          },
+          "expect": true
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2
+          },
+          "expect": null
+        },
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "x",
+            "keep_alive": 5,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u000e\u0000\u0004MQTT\u0005\u0002\u0000\u0005\u0000\u0000\u0001x"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "t/0"
+            ],
+            "qos": 0
+          },
+          "bind": "s0",
+          "expect": {
+            "$bytes": "ggkAAQAAA3QvMAA="
+          }
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 2,
+            "filters": [
+              "t/+"
+            ],
+            "qos": 2
+          },
+          "bind": "s2",
+          "expect": {
+            "$bytes": "ggkAAgAAA3QvKwI="
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "t/0",
+            "payload": "q2",
+            "qos": 2,
+            "packet_id": 3
+          },
+          "bind": "p2",
+          "expect": "4\n\u0000\u0003t/0\u0000\u0003\u0000q2"
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "t/0",
+            "payload": "q1",
+            "qos": 1,
+            "packet_id": 4
+          },
+          "bind": "p1",
+          "expect": "2\n\u0000\u0003t/0\u0000\u0004\u0000q1"
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "s0"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 2,
+            "data": {
+              "$ref": "s2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "p2"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "p1"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [
+              1,
+              2
+            ],
+            "sent": [
+              [
+                1,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                2,
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                1,
+                {
+                  "$bytes": "kAQAAQAA"
+                }
+              ],
+              [
+                2,
+                {
+                  "$bytes": "kAQAAgAC"
+                }
+              ],
+              [
+                1,
+                "0\b\u0000\u0003t/0\u0000q2"
+              ],
+              [
+                2,
+                "2\n\u0000\u0003t/0\u0000\u0001\u0000q2"
+              ],
+              [
+                1,
+                "0\b\u0000\u0003t/0\u0000q1"
+              ],
+              [
+                2,
+                "2\n\u0000\u0003t/0\u0000\u0002\u0000q1"
+              ],
+              [
+                1,
+                "@\u0002\u0000\u0004"
+              ]
+            ],
+            "closed": [],
+            "timer": [
+              [
+                "schedule",
+                1,
+                30
+              ],
+              [
+                "schedule",
+                2,
+                30
+              ],
+              [
+                "schedule",
+                1,
+                5
+              ],
+              [
+                "schedule",
+                2,
+                5
+              ],
+              [
+                "schedule",
+                1,
+                5
+              ],
+              [
+                "schedule",
+                2,
+                5
+              ],
+              [
+                "schedule",
+                1,
+                5
+              ],
+              [
+                "schedule",
+                1,
+                5
+              ]
+            ],
+            "log": [
+              [
+                "start"
+              ],
+              [
+                "workerStart",
+                0
+              ],
+              [
+                "connect",
+                1,
+                5,
+                "x",
+                true,
+                5,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "connect",
+                2,
+                5,
+                "x",
+                true,
+                5,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "subscribe",
+                1,
+                1,
+                [
+                  [
+                    "t/0",
+                    0
+                  ]
+                ]
+              ],
+              [
+                "subscribe",
+                2,
+                2,
+                [
+                  [
+                    "t/+",
+                    2
+                  ]
+                ]
+              ],
+              [
+                "publish",
+                1,
+                "t/0",
+                "q2",
+                2,
+                false,
+                false,
+                3,
+                [],
+                [
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    2,
+                    2
+                  ]
+                ]
+              ],
+              [
+                "publish",
+                1,
+                "t/0",
+                "q1",
+                1,
+                false,
+                false,
+                4,
+                [],
+                [
+                  [
+                    1,
+                    0
+                  ],
+                  [
+                    2,
+                    2
+                  ]
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": [
+            [
+              "counter",
+              "mqtt.packets.received",
+              [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.connections.opened",
+              [
+                1,
+                1
+              ]
+            ],
+            [
+              "counter",
+              "mqtt.subscriptions",
+              [
+                1,
+                1
+              ]
+            ],
+            [
+              "up_down_counter",
+              "mqtt.connections.active",
+              [
+                1,
+                1
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "a server on a NoTimer adapter",
+      "steps": [
+        {
+          "op": "memory.new",
+          "args": {
+            "timer": "none"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "server.new",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "server.start",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.open",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "x",
+            "keep_alive": 5,
+            "clean_session": true
+          },
+          "bind": "c",
+          "expect": "\u0010\r\u0000\u0004MQTT\u0004\u0002\u0000\u0005\u0000\u0001x"
+        },
+        {
+          "op": "memory.receive",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1,
+            "data": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "memory.disconnect",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            },
+            "fd": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "memory.state",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "started": true,
+            "open": [],
+            "sent": [
+              [
+                1,
+                " \u0002\u0000\u0000"
+              ]
+            ],
+            "closed": [],
+            "timer": [],
+            "log": [
+              [
+                "connect",
+                1,
+                4,
+                "x",
+                true,
+                5,
+                null,
+                null,
+                null,
+                null,
+                null,
+                [],
+                "x"
+              ],
+              [
+                "disconnect",
+                1,
+                null
+              ]
+            ]
+          }
+        },
+        {
+          "op": "server.metrics",
+          "args": {
+            "rig": {
+              "$ref": "r"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "server.session",
+      "op": "server.session",
+      "args": {
+        "packets": [
+          [
+            1,
+            "\u0010\u000e\u0000\u0004MQTT\u0005\u0002\u0000<\u0000\u0000\u0001s"
+          ],
+          [
+            1,
+            {
+              "$bytes": "gggAAQAAA2EvYgE="
+            }
+          ],
+          [
+            2,
+            "0\u0006\u0000\u0003a/bx"
+          ]
+        ]
+      },
+      "expect": {
+        "outcomes": [
+          null,
+          null,
+          null
+        ],
+        "state": {
+          "started": true,
+          "open": [
+            1,
+            2
+          ],
+          "sent": [
+            [
+              1,
+              " \u0003\u0000\u0000\u0000"
+            ],
+            [
+              1,
+              {
+                "$bytes": "kAQAAQAA"
+              }
+            ],
+            [
+              1,
+              "0\u0007\u0000\u0003a/b\u0000x"
+            ]
+          ],
+          "closed": [],
+          "timer": [
+            [
+              "schedule",
+              1,
+              30
+            ],
+            [
+              "schedule",
+              2,
+              30
+            ],
+            [
+              "schedule",
+              1,
+              60
+            ],
+            [
+              "schedule",
+              1,
+              60
+            ]
+          ],
+          "log": [
+            [
+              "connect",
+              1,
+              5,
+              "s",
+              true,
+              60,
+              null,
+              null,
+              null,
+              null,
+              null,
+              [],
+              "s"
+            ],
+            [
+              "subscribe",
+              1,
+              1,
+              [
+                [
+                  "a/b",
+                  0
+                ]
+              ]
+            ],
+            [
+              "publish",
+              2,
+              "a/b",
+              "x",
+              0,
+              false,
+              false,
+              0,
+              [],
+              [
+                [
+                  1,
+                  0
+                ]
+              ]
+            ]
+          ]
+        },
+        "metrics": [
+          [
+            "counter",
+            "mqtt.packets.received",
+            [
+              1,
+              1,
+              1
+            ]
+          ],
+          [
+            "counter",
+            "mqtt.connections.opened",
+            [
+              1
+            ]
+          ],
+          [
+            "counter",
+            "mqtt.subscriptions",
+            [
+              1
+            ]
+          ],
+          [
+            "up_down_counter",
+            "mqtt.connections.active",
+            [
+              1
+            ]
+          ]
+        ]
+      }
+    }
+  ]
+}

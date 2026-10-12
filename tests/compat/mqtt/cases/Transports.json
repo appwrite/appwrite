@@ -1,0 +1,126 @@
+{
+  "cases": [
+    {
+      "name": "defaults",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "kind": "tcp"
+          },
+          "expect": {
+            "host": "0.0.0.0",
+            "port": 1883,
+            "tls": false,
+            "websocket": false,
+            "max_packet_size": 64000,
+            "cert": null,
+            "key": null
+          }
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "kind": "tls"
+          },
+          "expect": {
+            "host": "0.0.0.0",
+            "port": 8883,
+            "tls": true,
+            "websocket": false,
+            "max_packet_size": 64000,
+            "cert": "",
+            "key": ""
+          }
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "kind": "websocket"
+          },
+          "expect": {
+            "host": "0.0.0.0",
+            "port": 8083,
+            "tls": false,
+            "websocket": true,
+            "max_packet_size": 64000,
+            "cert": null,
+            "key": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "custom",
+      "steps": [
+        {
+          "op": "transport.new",
+          "args": {
+            "kind": "tcp",
+            "host": "127.0.0.1",
+            "port": 11883,
+            "max_packet_size": 1024
+          },
+          "expect": {
+            "host": "127.0.0.1",
+            "port": 11883,
+            "tls": false,
+            "websocket": false,
+            "max_packet_size": 1024,
+            "cert": null,
+            "key": null
+          }
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "kind": "tls",
+            "host": "::",
+            "port": 18883,
+            "cert": "/certs/a.pem",
+            "key": "/certs/a.key",
+            "max_packet_size": 2048
+          },
+          "expect": {
+            "host": "::",
+            "port": 18883,
+            "tls": true,
+            "websocket": false,
+            "max_packet_size": 2048,
+            "cert": "/certs/a.pem",
+            "key": "/certs/a.key"
+          }
+        },
+        {
+          "op": "transport.new",
+          "args": {
+            "kind": "websocket",
+            "port": 0
+          },
+          "expect": {
+            "host": "0.0.0.0",
+            "port": 0,
+            "tls": false,
+            "websocket": true,
+            "max_packet_size": 64000,
+            "cert": null,
+            "key": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "the Swoole adapter needs a transport",
+      "op": "swoole.new",
+      "args": {
+        "transports": []
+      },
+      "expect": {
+        "$error": {
+          "class": "InvalidArgumentException",
+          "message": "At least one transport is required."
+        }
+      }
+    }
+  ]
+}

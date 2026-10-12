@@ -1,0 +1,72 @@
+{
+  "source": "packages/mqtt/tests/PacketFramesTest.php",
+  "cases": [
+    {
+      "name": "testSplitsConcatenatedPackets",
+      "op": "packet.frames",
+      "args": {
+        "buffer": {
+          "$bytes": "wADAAA=="
+        }
+      },
+      "expect": [
+        [
+          {
+            "$bytes": "wAA="
+          },
+          {
+            "$bytes": "wAA="
+          }
+        ],
+        ""
+      ]
+    },
+    {
+      "name": "testKeepsTrailingPartialAsRemainder",
+      "op": "packet.frames",
+      "args": {
+        "buffer": {
+          "$bytes": "wADA"
+        }
+      },
+      "expect": [
+        [
+          {
+            "$bytes": "wAA="
+          }
+        ],
+        {
+          "$bytes": "wA=="
+        }
+      ]
+    },
+    {
+      "name": "testIncompletePacketIsAllRemainder",
+      "op": "packet.frames",
+      "args": {
+        "buffer": "0\u0005\u0000\u0003"
+      },
+      "expect": [
+        [],
+        "0\u0005\u0000\u0003"
+      ]
+    },
+    {
+      "name": "testMultiByteRemainingLength",
+      "op": "packet.frames",
+      "args": {
+        "buffer": {
+          "$bytes": "MMgBeHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg="
+        }
+      },
+      "expect": [
+        [
+          {
+            "$bytes": "MMgBeHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHg="
+          }
+        ],
+        ""
+      ]
+    }
+  ]
+}
