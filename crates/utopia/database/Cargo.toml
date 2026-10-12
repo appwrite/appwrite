@@ -11,6 +11,10 @@ publish.workspace = true
 default = ["postgres"]
 # The PostgreSQL adapter (and the legacy row-level layer, also PostgreSQL).
 postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:postgres-protocol", "dep:fallible-iterator"]
+# The Pool adapter: each call on a connection of a utopia-pools pool of adapters.
+pool = ["dep:utopia-pools"]
+# The Redis adapter: documents stored in Redis (redis-rs, as utopia-cache uses).
+redis = ["dep:redis"]
 
 [dependencies]
 async-trait.workspace = true
@@ -19,6 +23,7 @@ chrono.workspace = true
 deadpool-postgres = { workspace = true, optional = true }
 fallible-iterator = { workspace = true, optional = true }
 postgres-protocol = { workspace = true, optional = true }
+redis = { workspace = true, optional = true }
 futures-util.workspace = true
 getrandom.workspace = true
 hex.workspace = true
@@ -30,6 +35,7 @@ tokio = { workspace = true, features = ["sync", "time", "rt", "net", "io-util"] 
 tokio-postgres = { workspace = true, optional = true }
 tracing.workspace = true
 utopia-cache.workspace = true
+utopia-pools = { workspace = true, optional = true }
 utopia-validators.workspace = true
 
 [dev-dependencies]

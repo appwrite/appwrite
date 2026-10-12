@@ -25,10 +25,6 @@
     "Utopia\\Database\\Adapter\\SQLite::*": "Phase 2: the SQLite adapter is not converted yet",
     "Utopia\\Database\\Adapter\\Mongo::*": "Phase 3: the MongoDB adapter (and utopia-php/mongo) is not converted yet",
     "Utopia\\Database\\Adapter\\Memory::*": "Phase 2: the Memory adapter is not converted yet",
-    "Utopia\\Database\\Adapter\\Redis::*": "Phase 3: the Redis database adapter is not converted yet",
-    "Utopia\\Database\\Adapter\\Pool::*": "Phase 3: the Pool adapter (over utopia-php/pools) is not converted yet",
-    "Utopia\\Database\\Mirror::*": "Phase 3: Mirror (two databases kept in step) is not converted yet",
-    "Utopia\\Database\\Mirroring\\*": "Phase 3: the Mirroring filters of Mirror are not converted yet",
     "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its tokio-postgres connection (reconnect behaviour is converted with Adapter::reconnect)",
     "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
   },
@@ -41,7 +37,9 @@
       "create_documents": "One batched INSERT of ten documents on PostgreSQL: the round trip dominates the call",
       "get_document": "One SELECT on PostgreSQL (uncached): the round trip dominates the call",
       "find": "One SELECT over 100 rows on PostgreSQL: the round trip and the server's query dominate the call",
-      "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call"
+      "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call",
+      "cached_get_document": "One HGET on Redis and the decode of a small document: the round trip, the same server and network for both runtimes, dominates the call",
+      "redis_get_document": "A MULTI of the document and its permissions on Redis: the round trip dominates the call"
     }
   }
 }

@@ -19,8 +19,9 @@ use base64::engine::general_purpose::STANDARD as BASE64;
 use futures_util::future::BoxFuture;
 use php_std::datetime::{DateTime, TzInfo};
 use serde_json::{Map, Value as Json, json};
-use utopia_cache::{Cache, Memory};
+use utopia_cache::{AnyCodec, Cache, Memory, Redis};
 use utopia_database::adapter::Transform;
+use utopia_database::adapter::pool::{Pool as PoolAdapter, Pooled};
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::database::{Callback, Filter, Listener};
 use utopia_database::document::Document;
@@ -100,9 +101,10 @@ pub fn database_marker() -> Json {
     json!({"$database": true})
 }
 
-/// The adapter: `{"$adapter": "Postgres"}`.
-pub fn adapter_marker() -> Json {
-    json!({"$adapter": "Postgres"})
+/// An adapter: `{"$adapter": "<PHP class short name>"}` (`Postgres`,
+/// `Pool`, ...).
+pub fn adapter_marker(name: &str) -> Json {
+    json!({"$adapter": name})
 }
 
 /// A cache: `{"$cache": true}`.
@@ -136,6 +138,31 @@ pub struct Db {
     /// Its PostgreSQL adapter (`db.sql` runs on its connection); `None` for
     /// none of its own.
     pub postgres: Option<Arc<Postgres>>,
+    /// The short name of its adapter's PHP class (`{"$adapter": ...}`).
+    pub adapter_name: &'static str,
+    /// The pool of a Pool database and its Pool adapter (`db.pool`).
+    pub pool: Option<(Arc<PoolFixture>, Arc<PoolAdapter>)>,
+    /// The mirror a database opened with `mirror` is (its `database` is the
+    /// mirror's own).
+    pub mirror: Option<Arc<MirrorHandle>>,
+}
+
+/// A mirror and the handles of its source and destination (`db.mirror`).
+pub struct MirrorHandle {
+    /// The mirror.
+    pub mirror: utopia_database::mirror::Mirror,
+    /// Its source, with its connection for `db.sql`.
+    pub source: Db,
+    /// Its destination, if any.
+    pub destination: Option<Db>,
+}
+
+/// The connection pool of a `db.open` with `pool` (PHP's `PoolFixture`).
+pub struct PoolFixture {
+    /// The connections its `init` opened (attempts included).
+    pub opened: Arc<std::sync::atomic::AtomicI64>,
+    /// The pool.
+    pub pool: utopia_pools::Pool<Pooled, utopia_pools::Stack<Pooled>>,
 }
 
 /// What a session's databases share (PHP's `CoreState`).
@@ -459,9 +486,9 @@ impl<'a> Args<'a> {
         }
     }
 
-    /// A `Cache` parameter: `"memory"` or `"none"`.
-    pub fn cache(&self, key: &str) -> R<Arc<Cache>> {
-        cache(&self.string_or(key, "memory")?)
+    /// A `Cache` parameter: a cache kind (see [`cache`]).
+    pub async fn cache(&self, key: &str, session: &mut Session) -> R<Arc<Cache>> {
+        cache(&self.string_or(key, "memory")?, session, false).await
     }
 
     /// An `Authorization` parameter: `{"roles": [...]}` (a new one with
@@ -485,13 +512,79 @@ impl<'a> Args<'a> {
     }
 }
 
-/// A cache by kind (`Core::cache`): `"memory"` or `"none"`.
-pub fn cache(kind: &str) -> R<Arc<Cache>> {
+/// The Redis caches by kind and the compat service their entries live on
+/// (`Core::REDIS_CACHES`): `redis` and `redis-mirror` are private to each
+/// runtime, `redis-shared` is one both read and write.
+const REDIS_CACHES: &[(&str, &str)] = &[
+    ("redis", "database-redis"),
+    ("redis-mirror", "database-redis-mirror"),
+    ("redis-shared", "database-redis-shared"),
+];
+
+/// A cache by kind (`Core::cache`): `"memory"`, `"none"`, or a Redis cache
+/// ([`REDIS_CACHES`]) with Json entries, igbinary ones with the `-igbinary`
+/// suffix. `fresh` empties a private Redis cache's database first.
+pub async fn cache(kind: &str, session: &mut Session, fresh: bool) -> R<Arc<Cache>> {
     match kind {
-        "memory" => Ok(Arc::new(Cache::from_dyn(Arc::new(Memory::new())))),
-        "none" => Ok(Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)))),
-        _ => fault("cache must be \"memory\" or \"none\""),
+        "memory" => return Ok(Arc::new(Cache::from_dyn(Arc::new(Memory::new())))),
+        "none" => return Ok(Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)))),
+        _ => {}
     }
+    let (store, codec) = match kind.strip_suffix("-igbinary") {
+        Some(store) => (store, AnyCodec::Igbinary),
+        None => (kind, AnyCodec::Json),
+    };
+    let Some((_, service)) = REDIS_CACHES.iter().find(|(name, _)| *name == store) else {
+        return fault(
+            "cache must be \"memory\", \"none\" or one of \"redis\", \"redis-mirror\", \"redis-shared\" (with \"-igbinary\" for igbinary entries)",
+        );
+    };
+    let connection = redis_connection(session, service).await?;
+    if fresh && store != "redis-shared" {
+        let _: () = redis::cmd("FLUSHDB")
+            .query_async(&mut connection.clone())
+            .await
+            .map_err(|e| Fault::new(format!("{service}: {e}")))?;
+    }
+    Ok(Arc::new(Cache::from_dyn(Arc::new(Redis::with_codec(connection, codec)))))
+}
+
+/// A connection to a compat Redis service, its database selected.
+pub async fn redis_connection(session: &mut Session, service: &str) -> R<redis::aio::ConnectionManager> {
+    let url = session.service(service)?.to_owned();
+    let client = redis::Client::open(url.as_str()).map_err(|e| Fault::new(format!("{service}: {e}")))?;
+    Ok(client.get_connection_manager().await.map_err(|e| Fault::new(format!("{service}: {e}")))?)
+}
+
+/// `db.cache`: a method of the database's cache (`Core::cacheCall`). Saves
+/// report whether they stored.
+pub async fn cache_call(cache: &Cache, method: &str, a: &Args<'_>) -> R<Json> {
+    let key = a.string_or("key", "")?;
+    let hash = a.string_or("hash", "")?;
+    let failed = |e: utopia_cache::Error| Fail::Error(Error::new(Kind::Exception, e.to_string()));
+    Ok(match method {
+        "load" => {
+            let ttl = a.int_or("ttl", Database::TTL)?;
+            match cache.load(&key, ttl, &hash).await.map_err(failed)? {
+                Some(v) => encode(&utopia_database::value::from_plain(v)),
+                None => Json::Bool(false),
+            }
+        }
+        "save" => {
+            let data = utopia_database::value::to_plain(&a.value("data")?);
+            Json::Bool(cache.save(&key, &data, &hash, a.int_or("ttl", 0)?).await.map_err(failed)?)
+        }
+        "save_with_lease" => {
+            let data = utopia_database::value::to_plain(&a.value("data")?);
+            let generation = a.string_or("generation", "")?;
+            Json::Bool(cache.save_with_lease(&key, &data, &hash, &generation).await.map_err(failed)?)
+        }
+        "get_generation" => Json::String(cache.generation(&key).await.map_err(failed)?),
+        "touch" => Json::Bool(cache.touch(&key, &hash).await.map_err(failed)?),
+        "list" => strings(&cache.list(&key).await.map_err(failed)?),
+        "purge" => Json::Bool(cache.purge(&key, &hash).await.map_err(failed)?),
+        _ => return fault(format!("db.cache: no method `{method}`")),
+    })
 }
 
 // ----- Callbacks (Core::callback, Core::run) -----

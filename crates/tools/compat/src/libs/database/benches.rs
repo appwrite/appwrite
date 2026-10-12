@@ -6,8 +6,10 @@ use std::hint::black_box;
 use std::rc::Rc;
 use std::sync::Arc;
 
-use utopia_cache::Cache;
+use utopia_cache::{AnyCodec, Cache, Redis};
+use utopia_database::adapter::Adapter;
 use utopia_database::adapter::postgres::Postgres;
+use utopia_database::adapter::redis::Redis as RedisAdapter;
 use utopia_database::helpers::id;
 use utopia_database::validator::queries::documents::Documents as DocumentsQueries;
 use utopia_database::validator::structure::Structure;
@@ -63,6 +65,18 @@ pub const BENCHES: &[(&str, &str)] = &[
     ("get_document", "Read a user document by id, uncached (one SELECT round trip)"),
     ("find", "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)"),
     ("update_document", "Update one attribute of a user document (a locking read and one UPDATE)"),
+    (
+        "cached_get_document",
+        "Read a user document by id from a Redis cache (Json entries): one HGET round trip and the decode",
+    ),
+    (
+        "redis_get_document",
+        "Read a user document by id on the Redis adapter, uncached (a GET and its permissions in one MULTI)",
+    ),
+    (
+        "redis_find",
+        "Find users on the Redis adapter: load 100 documents and filter, order and limit them in the process",
+    ),
 ];
 
 fn fault(e: impl std::fmt::Display) -> Fault {
@@ -116,8 +130,28 @@ async fn database(session: &mut Session, name: &str) -> Result<(Database, Docume
 /// [`database`] on the server at `url`.
 async fn open(url: &str, name: &str) -> Result<(Database, Document), Fault> {
     let postgres = Postgres::connect(url).await.map_err(fault)?;
-    let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)));
-    let db = Database::new(Arc::new(postgres), cache, Vec::new());
+    on(Arc::new(postgres), uncached(), name).await
+}
+
+fn uncached() -> Arc<Cache> {
+    Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)))
+}
+
+/// A connection to a Redis service of `compat.json`, on its database.
+async fn redis(session: &mut Session, service: &str) -> Result<redis::aio::ConnectionManager, Fault> {
+    let url = session.service(service).map_err(fault)?.to_owned();
+    redis::Client::open(url.as_str()).map_err(fault)?.get_connection_manager().await.map_err(fault)
+}
+
+/// The benchmarks' database on the Redis adapter.
+async fn on_redis(session: &mut Session, name: &str) -> Result<(Database, Document), Fault> {
+    let adapter = RedisAdapter::new(redis(session, "database-redis-adapter").await?);
+    on(Arc::new(adapter), uncached(), name).await
+}
+
+/// The benchmarks' database and collection on `adapter` and `cache`.
+async fn on(adapter: Arc<dyn Adapter>, cache: Arc<Cache>, name: &str) -> Result<(Database, Document), Fault> {
+    let db = Database::new(adapter, cache, Vec::new());
     let authorization = Authorization::new();
     authorization.add_role("any");
     db.set_authorization(Arc::new(authorization));
@@ -140,6 +174,31 @@ fn fresh(doc: &Document) -> Document {
     let mut doc = doc.clone();
     doc.set("$id", Value::Str(Str::from(id::unique().unwrap_or_default())));
     doc
+}
+
+/// The 100 users `find` runs over: `u1`..`u100`, named Alice and Bob in
+/// turn, aged by their number.
+fn rows(doc: &Document) -> Vec<Document> {
+    (1..=100)
+        .map(|i: i64| {
+            let mut row = doc.clone();
+            row.set("$id", Value::Str(Str::from(format!("u{i}"))));
+            row.set("name", Value::from(if i % 2 == 1 { "Alice" } else { "Bob" }));
+            row.set("age", Value::Int(i));
+            row
+        })
+        .collect()
+}
+
+/// Times reading `alice` from `db`.
+fn get(db: Database) -> Bench {
+    let db = Rc::new(db);
+    Bench::future(move || {
+        let db = db.clone();
+        async move {
+            black_box(db.get_document("users", "alice", Vec::new(), false).await.ok());
+        }
+    })
 }
 
 pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
@@ -208,27 +267,13 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
         "get_document" => {
             let (db, _) = database(session, name).await?;
             db.create_document("users", document()?).await.map_err(fault)?;
-            let db = Rc::new(db);
-            Bench::future(move || {
-                let db = db.clone();
-                async move {
-                    black_box(db.get_document("users", "alice", Vec::new(), false).await.ok());
-                }
-            })
+            get(db)
         }
         "find" => {
             let (db, _) = database(session, name).await?;
-            let doc = document()?;
-            let rows = (1..=100)
-                .map(|i: i64| {
-                    let mut row = doc.clone();
-                    row.set("$id", Value::Str(Str::from(format!("u{i}"))));
-                    row.set("name", Value::from(if i % 2 == 1 { "Alice" } else { "Bob" }));
-                    row.set("age", Value::Int(i));
-                    row
-                })
-                .collect();
-            db.create_documents("users", rows, Database::INSERT_BATCH_SIZE, None, None).await.map_err(fault)?;
+            db.create_documents("users", rows(&document()?), Database::INSERT_BATCH_SIZE, None, None)
+                .await
+                .map_err(fault)?;
             let queries = Query::parse_queries(&QUERIES).map_err(fault)?;
             let state = Rc::new((db, queries));
             Bench::future(move || {
@@ -250,6 +295,34 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                     let mut changes = Document::default();
                     changes.set("age", Value::Int(age));
                     black_box(state.0.update_document("users", "alice", changes).await.ok());
+                }
+            })
+        }
+        "cached_get_document" => {
+            let url = session.service("database-postgres").map_err(fault)?.to_owned();
+            let postgres = Postgres::connect(&url).await.map_err(fault)?;
+            let cache = Redis::with_codec(redis(session, "database-redis").await?, AnyCodec::Json);
+            let (db, _) = on(Arc::new(postgres), Arc::new(Cache::from_dyn(Arc::new(cache))), name).await?;
+            db.create_document("users", document()?).await.map_err(fault)?;
+            db.get_document("users", "alice", Vec::new(), false).await.map_err(fault)?;
+            get(db)
+        }
+        "redis_get_document" => {
+            let (db, _) = on_redis(session, name).await?;
+            db.create_document("users", document()?).await.map_err(fault)?;
+            get(db)
+        }
+        "redis_find" => {
+            let (db, _) = on_redis(session, name).await?;
+            db.create_documents("users", rows(&document()?), Database::INSERT_BATCH_SIZE, None, None)
+                .await
+                .map_err(fault)?;
+            let queries = Query::parse_queries(&QUERIES).map_err(fault)?;
+            let state = Rc::new((db, queries));
+            Bench::future(move || {
+                let state = state.clone();
+                async move {
+                    black_box(state.0.find("users", state.1.clone(), Database::PERMISSION_READ).await.ok());
                 }
             })
         }

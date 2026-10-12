@@ -1,0 +1,617 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/PoolTimeoutTest.php",
+  "cases": [
+    {
+      "name": "testSetTimeoutDoesNotOpenAConnection",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1,
+              "unreachable": true
+            },
+            "create": false
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 300000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "opened"
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTimeout",
+            "args": {}
+          },
+          "expect": 300000
+        }
+      ]
+    },
+    {
+      "name": "testTimeoutIsAppliedToEveryCheckout",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 300000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 300000
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "clear"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 300000
+        }
+      ]
+    },
+    {
+      "name": "testClearedTimeoutIsClearedOnEveryCheckout",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 300000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "clearTimeout",
+            "args": {
+              "event": "*"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTimeout",
+            "args": {}
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testPerEventTimeoutReachesTheConnection",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 300000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 5000,
+              "event": "document_read"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 300000
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTimeout",
+            "args": {}
+          },
+          "expect": 300000
+        }
+      ]
+    },
+    {
+      "name": "testClearingOneEventLeavesTheGlobalTimeoutInPlace",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 300000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 5000,
+              "event": "document_read"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "clearTimeout",
+            "args": {
+              "event": "document_read"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 300000
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTimeout",
+            "args": {}
+          },
+          "expect": 300000
+        }
+      ]
+    },
+    {
+      "name": "testHandleWithNoTimeoutResetsTheConnectionItIsGiven",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1
+            }
+          },
+          "bind": "bounded",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 5000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 5000
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "of": {
+                "$ref": "bounded"
+              }
+            },
+            "create": false
+          },
+          "bind": "unbounded",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {},
+            "db": {
+              "$ref": "unbounded"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testClearingEveryTimeoutDropsPerEventEntriesToo",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 300000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 5000,
+              "event": "document_read"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "clearTimeouts",
+            "args": {}
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTimeout",
+            "args": {}
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "testTimeoutChangedInsideATransactionReachesThePinnedConnection",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 5000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "db.pool",
+                  "args": {
+                    "method": "pinned_timeout"
+                  }
+                },
+                {
+                  "op": "db.adapter",
+                  "args": {
+                    "method": "setTimeout",
+                    "args": {
+                      "milliseconds": 300000
+                    }
+                  }
+                },
+                {
+                  "op": "db.pool",
+                  "args": {
+                    "method": "pinned_timeout"
+                  }
+                },
+                {
+                  "op": "db.adapter",
+                  "args": {
+                    "method": "clearTimeout",
+                    "args": {
+                      "event": "*"
+                    }
+                  }
+                },
+                {
+                  "op": "db.pool",
+                  "args": {
+                    "method": "pinned_timeout"
+                  }
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": "row-written"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "row-written",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    5000,
+                    null,
+                    300000,
+                    null,
+                    0,
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "pinned_timeout"
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "testZeroIsHeldAsNoTimeout",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 1
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 0
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.pool",
+          "args": {
+            "method": "timeout"
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTimeout",
+            "args": {}
+          },
+          "expect": 0
+        }
+      ]
+    }
+  ]
+}

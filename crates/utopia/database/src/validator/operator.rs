@@ -58,7 +58,7 @@ pub struct Operator {
 
 /// An arithmetic operator of PHP.
 #[derive(Clone, Copy)]
-enum Arith {
+pub(crate) enum Arith {
     Add,
     Sub,
     Mul,
@@ -138,7 +138,7 @@ fn to_int(n: Number) -> i64 {
 }
 
 /// `$a <op> $b` as PHP computes it on scalars.
-fn arith(op: Arith, a: &Value, b: &Value) -> Result<Value> {
+pub(crate) fn arith(op: Arith, a: &Value, b: &Value) -> Result<Value> {
     let (Some(x), Some(y)) = (operand(a), operand(b)) else {
         return Err(Error::new(
             Kind::TypeError,

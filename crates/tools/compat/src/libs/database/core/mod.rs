@@ -21,6 +21,7 @@ use crate::adapter::{Fault, OpResult, Session};
 
 pub mod args;
 mod documents;
+mod mirror;
 mod relationships;
 mod schema;
 
@@ -45,6 +46,7 @@ pub const OPS: &[&str] = &[
     "database.create_documents",
     "database.create_index",
     "database.create_relationship",
+    "database.create_upgrades",
     "database.decode",
     "database.decrease_document_attribute",
     "database.delete",
@@ -75,6 +77,7 @@ pub const OPS: &[&str] = &[
     "database.get_database",
     "database.get_document",
     "database.get_document_type",
+    "database.get_destination",
     "database.get_drop_unknown_attributes",
     "database.get_global_collections",
     "database.get_id_attribute_type",
@@ -93,16 +96,19 @@ pub const OPS: &[&str] = &[
     "database.get_schema_attributes",
     "database.get_schema_indexes",
     "database.get_shared_tables",
+    "database.get_source",
     "database.get_size_of_collection",
     "database.get_size_of_collection_on_disk",
     "database.get_tenant",
     "database.get_tenant_per_document",
+    "database.get_write_filters",
     "database.increase_document_attribute",
     "database.is_migrating",
     "database.iterate",
     "database.list",
     "database.list_collections",
     "database.on",
+    "database.on_error",
     "database.ping",
     "database.purge_cached_collection",
     "database.purge_cached_document",
@@ -173,8 +179,12 @@ pub const OPS: &[&str] = &[
     "db.authorization.set_default_status",
     "db.authorization.set_status",
     "db.authorization.skip",
+    "db.cache",
+    "db.mirror",
     "db.log",
     "db.open",
+    "db.pool",
+    "db.redis",
     "db.select",
     "db.sql",
 ];
@@ -182,6 +192,24 @@ pub const OPS: &[&str] = &[
 /// Runs one operation: in the area that owns it.
 pub async fn call(op: &str, json: &Json, session: &mut Session) -> OpResult {
     args::enter(session);
+    // What a Mirror overrides, or adds, goes to the mirror.
+    if op == "db.mirror" || mirror::OPS.contains(&op) {
+        let handle = args::db_handle(json, session).ok().and_then(|h| h.mirror);
+        match handle {
+            Some(handle) => {
+                let result = if op == "db.mirror" {
+                    mirror::handle(&args::Args::new(json), session, &handle)
+                } else {
+                    mirror::call(op, json, session, &handle.mirror).await
+                };
+                return args::outcome(result);
+            }
+            None if mirror::OWN.contains(&op) => {
+                return Err(Fault::new(format!("{op}: the database is not a mirror")));
+            }
+            None => {}
+        }
+    }
     let result = if documents::OPS.contains(&op) {
         documents::call(op, json, session).await
     } else if relationships::OPS.contains(&op) {
@@ -202,9 +230,12 @@ mod tests {
     #[test]
     fn areas_partition_the_operations() {
         for op in OPS {
-            let owners = [schema::OPS, documents::OPS, relationships::OPS].iter().filter(|a| a.contains(op)).count();
+            let owners = [schema::OPS, documents::OPS, relationships::OPS, mirror::OWN]
+                .iter()
+                .filter(|a| a.contains(op))
+                .count();
             assert_eq!(owners, 1, "{op}");
         }
-        assert_eq!(schema::OPS.len() + documents::OPS.len() + relationships::OPS.len(), OPS.len());
+        assert_eq!(schema::OPS.len() + documents::OPS.len() + relationships::OPS.len() + mirror::OWN.len(), OPS.len());
     }
 }

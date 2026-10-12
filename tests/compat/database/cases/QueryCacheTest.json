@@ -1,0 +1,5369 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/QueryCacheTest.php",
+  "cases": [
+    {
+      "name": "testWithCacheUsesCallbackOnMissAndCachesResult",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "value": "fresh"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "value": "fresh"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "value": "new"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "value": "fresh"
+            },
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheCachesEmptyValues",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": []
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "value": "miss"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheCachesNullValues",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": null
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": "miss"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheSeparatesPayloadsByHashField",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "hash": "first-field",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "value": "first"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "value": "first"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "hash": "second-field",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "value": "second"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "value": "second"
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "hash": "first-field",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "value": "miss"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "value": "first"
+            },
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "list",
+            "args": {
+              "key": "key"
+            }
+          },
+          "expect": [
+            "first-field",
+            "second-field"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheDoesNotCacheFalseValues",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": false
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "list",
+            "args": {
+              "key": "key"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": "fresh"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "fresh",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheBypassesCacheForNullHash",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "hash": null,
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": "first"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "first",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "hash": null,
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": "second"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": "second",
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "list",
+            "args": {
+              "key": "key"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheDoesNotCacheCollectionlessDocuments",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "$document": {
+                        "$id": "first"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "first"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "$document": {
+                        "$id": "second"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$id": "second"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "list",
+            "args": {
+              "key": "key"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheDoesNotCacheMixedDocumentArrays",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "wafRules",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "wafRules",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "wafRules",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "wafRules",
+                    "id": "rule-a"
+                  },
+                  "bind": "rule"
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": [
+                      "prefix",
+                      {
+                        "$local": "rule"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              "prefix",
+              {
+                "$document": {
+                  "$sequence": "1",
+                  "$id": "rule-a",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$sequence": "1",
+                        "$id": "rule-a",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "wafRules"
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "key",
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "wafRules",
+                    "id": "rule-a"
+                  },
+                  "bind": "rule"
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": [
+                      "prefix",
+                      {
+                        "$local": "rule"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              "prefix",
+              {
+                "$document": {
+                  "$sequence": "1",
+                  "$id": "rule-a",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$sequence": "1",
+                        "$id": "rule-a",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "wafRules"
+                      }
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "list",
+            "args": {
+              "key": "key"
+            }
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheCachesSingleDocument",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "wafRules",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "wafRules",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "wafRules",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "col",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "col",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "key",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "col"
+            },
+            "field": "document"
+          },
+          "bind": "hash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "hash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "wafRules",
+                    "id": "rule-a"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$sequence": "1",
+                "$id": "rule-a",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "wafRules"
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$sequence": "1",
+                        "$id": "rule-a",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [],
+                        "$collection": "wafRules"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "hash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_document",
+                  "args": {
+                    "collection": "wafRules",
+                    "id": "missing"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "$sequence": "1",
+                "$id": "rule-a",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$collection": "wafRules"
+              }
+            },
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWithCacheCachesStaticQueryValues",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "wafRules",
+            "permissions": [
+              "read(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "wafRules",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "wafRules",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "col",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "col",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "key",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "col"
+            },
+            "field": "count"
+          },
+          "bind": "hash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "hash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": 10
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 10,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "hash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": 20
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 10,
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheUsesCacheUntilPurged",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "wafRules",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "projectId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "wafRules",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-a",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-a",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "acol",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "acol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "akey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "acol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ahash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "akey"
+            },
+            "hash": {
+              "$ref": "ahash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "wafRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-b",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-b",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "bcol",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "bcol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "bkey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "bcol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "bhash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "bkey"
+            },
+            "hash": {
+              "$ref": "bhash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "wafRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "database.purge_cached_queries",
+          "args": {
+            "collection": "wafRules",
+            "namespace": "_39"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "ccol",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "ccol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "ckey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "ccol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "chash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "ckey"
+            },
+            "hash": {
+              "$ref": "chash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "wafRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              },
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-b",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-b",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheSeparatesEntriesByAuthorizationContext",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "wafRules",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "projectId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "wafRules",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-a",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-a",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "acol",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "acol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "akey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "acol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ahash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "akey"
+            },
+            "hash": {
+              "$ref": "ahash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "wafRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-b",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-b",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "bcol",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "bcol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "bkey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "bcol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "bhash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "bkey"
+            },
+            "hash": {
+              "$ref": "bhash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "wafRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user-1"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "ccol",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "ccol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "ckey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "ccol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "chash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "ckey"
+            },
+            "hash": {
+              "$ref": "chash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "wafRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              },
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-b",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-b",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheRecastsCacheHits",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "metrics",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "value",
+                  "type": "double",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "metrics",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "metrics",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "metrics",
+            "document": {
+              "$id": "metric-a",
+              "value": 1.0
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "metric-a",
+              "value": 1.0,
+              "$collection": "metrics",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "metrics"
+          },
+          "bind": "acol",
+          "expect": {
+            "$document": {
+              "name": "metrics",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "metrics",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "acol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "akey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:metrics:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "acol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ahash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "akey"
+            },
+            "hash": {
+              "$ref": "ahash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "metrics",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "value": 1.0,
+                  "$id": "metric-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "metrics"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "value": 1.0,
+                          "$id": "metric-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "metrics"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "metrics"
+          },
+          "bind": "bcol",
+          "expect": {
+            "$document": {
+              "name": "metrics",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "value",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "metrics",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "bcol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "bkey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:metrics:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "bcol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "bhash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "bkey"
+            },
+            "hash": {
+              "$ref": "bhash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "metrics",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "value": 1.0,
+                  "$id": "metric-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "metrics"
+                }
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheDoesNotDoubleDecodeCustomFilters",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary",
+            "filters": {
+              "wrapped": "operator_double_decode"
+            }
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "secrets",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "secret",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": [
+                    "wrapped"
+                  ]
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "secrets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "secrets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "secret",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": [
+                      "wrapped"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "secrets",
+            "document": {
+              "$id": "secret-a",
+              "secret": "value"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "secret-a",
+              "secret": "value",
+              "$collection": "secrets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "secrets"
+          },
+          "bind": "acol",
+          "expect": {
+            "$document": {
+              "name": "secrets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "secret",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": [
+                      "wrapped"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "secrets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "acol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "akey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:secrets:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "acol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ahash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "akey"
+            },
+            "hash": {
+              "$ref": "ahash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "secrets",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "secret": "value",
+                  "$id": "secret-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "secrets"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "secret": "value",
+                          "$id": "secret-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "secrets"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "secrets"
+          },
+          "bind": "bcol",
+          "expect": {
+            "$document": {
+              "name": "secrets",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "secret",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": [
+                      "wrapped"
+                    ]
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "secrets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "bcol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "bkey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:secrets:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "bcol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "bhash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "bkey"
+            },
+            "hash": {
+              "$ref": "bhash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "secrets",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "secret": "value",
+                  "$id": "secret-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "secrets"
+                }
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "filter": "operator_double_decode",
+              "call": "encode"
+            },
+            {
+              "filter": "operator_double_decode",
+              "call": "decode"
+            },
+            {
+              "filter": "operator_double_decode",
+              "call": "decode"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheBypassesCacheForRandomOrder",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "wafRules",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "projectId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "wafRules",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-a",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-a",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "wafRules",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderRandom",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*"
+            ],
+            "reason": "Query::orderRandom() orders the documents at random; their count is compared"
+          },
+          "expect": [
+            "<masked>"
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-b",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-b",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "wafRules",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderRandom",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/*"
+            ],
+            "reason": "Query::orderRandom() orders the documents at random; their count is compared"
+          },
+          "expect": [
+            "<masked>",
+            "<masked>"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheReliesOnPurgeForDocumentSecurityCollections",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "id": "secureRules",
+                    "attributes": [
+                      {
+                        "$document": {
+                          "$id": "projectId",
+                          "type": "string",
+                          "size": 255,
+                          "required": false,
+                          "signed": true,
+                          "array": false,
+                          "filters": []
+                        }
+                      }
+                    ],
+                    "permissions": [
+                      "create(\"any\")"
+                    ],
+                    "documentSecurity": true
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "secureRules",
+                    "document": {
+                      "$id": "rule-a",
+                      "$permissions": [
+                        "read(\"user:user-1\")",
+                        "update(\"any\")"
+                      ],
+                      "projectId": "project-a"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "secureRules",
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "name": "secureRules",
+                        "attributes": [
+                          {
+                            "$document": {
+                              "$id": "projectId",
+                              "type": "string",
+                              "size": 255,
+                              "required": false,
+                              "signed": true,
+                              "array": false,
+                              "filters": []
+                            }
+                          }
+                        ],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "rule-a",
+                        "$permissions": [
+                          "read(\"user:user-1\")",
+                          "update(\"any\")"
+                        ],
+                        "projectId": "project-a",
+                        "$collection": "secureRules",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user-1"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "secureRules"
+          },
+          "bind": "acol",
+          "expect": {
+            "$document": {
+              "name": "secureRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "secureRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "acol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "akey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:secureRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "acol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ahash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "akey"
+            },
+            "hash": {
+              "$ref": "ahash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "secureRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"user:user-1\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "secureRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [
+                            "read(\"user:user-1\")",
+                            "update(\"any\")"
+                          ],
+                          "$collection": "secureRules"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.update_document",
+                  "args": {
+                    "collection": "secureRules",
+                    "id": "rule-a",
+                    "document": {
+                      "$permissions": [
+                        "read(\"user:user-2\")",
+                        "update(\"any\")"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "projectId": "project-a",
+                        "$sequence": "1",
+                        "$id": "rule-a",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$permissions": [
+                          "read(\"user:user-2\")",
+                          "update(\"any\")"
+                        ],
+                        "$collection": "secureRules"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "secureRules"
+          },
+          "bind": "bcol",
+          "expect": {
+            "$document": {
+              "name": "secureRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "secureRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "bcol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "bkey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:secureRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "bcol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "bhash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "bkey"
+            },
+            "hash": {
+              "$ref": "bhash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "secureRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [
+                    "read(\"user:user-1\")",
+                    "update(\"any\")"
+                  ],
+                  "$collection": "secureRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "database.purge_cached_queries",
+          "args": {
+            "collection": "secureRules",
+            "namespace": "_39"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "secureRules"
+          },
+          "bind": "ccol",
+          "expect": {
+            "$document": {
+              "name": "secureRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "secureRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "ccol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "ckey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:secureRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "ccol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "chash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "ckey"
+            },
+            "hash": {
+              "$ref": "chash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "secureRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    []
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheFiltersDocumentSecurityPayloadsOnHit",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "id": "secureRules",
+                    "permissions": [
+                      "create(\"any\")"
+                    ],
+                    "documentSecurity": true
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$document": {
+                        "$id": "secureRules",
+                        "$permissions": [
+                          "create(\"any\")"
+                        ],
+                        "name": "secureRules",
+                        "attributes": [],
+                        "indexes": [],
+                        "documentSecurity": true,
+                        "$collection": "_metadata",
+                        "$createdAt": "<now>",
+                        "$updatedAt": "<now>",
+                        "$sequence": "1"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "user:user-1"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "secureRules"
+          },
+          "bind": "col",
+          "expect": {
+            "$document": {
+              "name": "secureRules",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "secureRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "col",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "key",
+          "expect": "default-cache-compat-database-postgres:_39::collection:secureRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "col"
+            }
+          },
+          "bind": "hash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "save",
+            "args": {
+              "key": {
+                "$ref": "key"
+              },
+              "hash": {
+                "$ref": "hash"
+              },
+              "data": {
+                "collection": {
+                  "$ref": "col",
+                  "path": "/$document/$id"
+                },
+                "type": "documents",
+                "value": [
+                  {
+                    "$id": "rule-a",
+                    "$permissions": [
+                      "read(\"user:user-2\")"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "hash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": [
+                      {
+                        "$document": {
+                          "$id": "fresh"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [],
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheRehydratesNestedDocumentPayloads",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "parents",
+            "permissions": [
+              "read(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "parents",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "parents",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "parents"
+          },
+          "bind": "col",
+          "expect": {
+            "$document": {
+              "name": "parents",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "parents",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "col",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "key",
+          "expect": "default-cache-compat-database-postgres:_39::collection:parents:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "col"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "hash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "save",
+            "args": {
+              "key": {
+                "$ref": "key"
+              },
+              "hash": {
+                "$ref": "hash"
+              },
+              "data": {
+                "collection": {
+                  "$ref": "col",
+                  "path": "/$document/$id"
+                },
+                "type": "documents",
+                "value": [
+                  {
+                    "$id": "parent-a",
+                    "child": {
+                      "$id": "child-a",
+                      "$collection": "children",
+                      "name": "Child A"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "parents"
+          },
+          "bind": "acol",
+          "expect": {
+            "$document": {
+              "name": "parents",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "parents",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "acol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "akey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:parents:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "acol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ahash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "akey"
+            },
+            "hash": {
+              "$ref": "ahash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "parents",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "$id": "parent-a",
+                  "child": {
+                    "$document": {
+                      "$id": "child-a",
+                      "$collection": "children",
+                      "name": "Child A"
+                    }
+                  }
+                }
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheRefreshesInvalidPayload",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "wafRules",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "projectId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "wafRules",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-a",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-a",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "col",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "col",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "key",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "col"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "hash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "save",
+            "args": {
+              "key": {
+                "$ref": "key"
+              },
+              "hash": {
+                "$ref": "hash"
+              },
+              "data": {
+                "collection": {
+                  "$ref": "col",
+                  "path": "/$document/$id"
+                },
+                "type": "documents",
+                "value": "invalid"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "acol",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "acol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "akey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "acol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ahash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "akey"
+            },
+            "hash": {
+              "$ref": "ahash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "wafRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testQueryCacheRefreshesInvalidPayloadEntry",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "cache": "redis-igbinary"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "wafRules",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "projectId",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "wafRules",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-a",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-a",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "wafRules",
+            "document": {
+              "$id": "rule-b",
+              "projectId": "project-a"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "rule-b",
+              "projectId": "project-a",
+              "$collection": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "col",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "col",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "key",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "col"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "hash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "db.cache",
+          "args": {
+            "method": "save",
+            "args": {
+              "key": {
+                "$ref": "key"
+              },
+              "hash": {
+                "$ref": "hash"
+              },
+              "data": {
+                "collection": {
+                  "$ref": "col",
+                  "path": "/$document/$id"
+                },
+                "type": "documents",
+                "value": [
+                  {
+                    "$id": "rule-a",
+                    "projectId": "project-a"
+                  },
+                  "invalid"
+                ]
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "wafRules"
+          },
+          "bind": "acol",
+          "expect": {
+            "$document": {
+              "name": "wafRules",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "projectId",
+                    "type": "string",
+                    "size": 255,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "wafRules",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": {
+              "$ref": "acol",
+              "path": "/$document/$id"
+            },
+            "namespace": "_39"
+          },
+          "bind": "akey",
+          "expect": "default-cache-compat-database-postgres:_39::collection:wafRules:query"
+        },
+        {
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "acol"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "projectId",
+                  "values": [
+                    "project-a"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "$id",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "ahash",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the case namespace, which differs between the runtimes; CacheKeyTest.json pins the hash over a fixed name"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "akey"
+            },
+            "hash": {
+              "$ref": "ahash"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "wafRules",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "projectId",
+                          "values": [
+                            "project-a"
+                          ]
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "orderAsc",
+                          "attribute": "$id",
+                          "values": []
+                        }
+                      },
+                      {
+                        "$query": {
+                          "method": "limit",
+                          "attribute": "",
+                          "values": [
+                            25
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-a",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              },
+              {
+                "$document": {
+                  "projectId": "project-a",
+                  "$id": "rule-b",
+                  "$sequence": "2",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "wafRules"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-a",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      },
+                      {
+                        "$document": {
+                          "projectId": "project-a",
+                          "$id": "rule-b",
+                          "$sequence": "2",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "wafRules"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

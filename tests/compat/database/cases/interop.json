@@ -1,0 +1,1171 @@
+{
+  "source": "interop",
+  "cases": [
+    {
+      "name": "igbinary entries one runtime writes, the other reads",
+      "interop": true,
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "side": "a",
+          "op": "db.open",
+          "args": {
+            "cache": "redis-shared-igbinary"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.set_cache_name",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.create_collection",
+          "args": {
+            "id": "people",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "name",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "score",
+            "type": "double",
+            "size": 0,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "tags",
+            "type": "string",
+            "size": 32,
+            "required": false,
+            "array": true
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "database.create_document",
+          "args": {
+            "collection": "people",
+            "document": {
+              "$id": "ada",
+              "name": "Ada",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ]
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "name": "Ada",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ],
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada"
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ],
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "db.open",
+          "args": {
+            "cache": "redis-shared-igbinary",
+            "create": false
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "database.set_cache_name",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "db.sql",
+          "args": {
+            "sql": "UPDATE \"${ns}\".\"compat_people\" SET \"name\" = 'Grace' WHERE _uid = 'ada' RETURNING _uid"
+          },
+          "expect": [
+            {
+              "_uid": "ada"
+            }
+          ]
+        },
+        {
+          "side": "b",
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada"
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ],
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "name": "Grace",
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "database.purge_cached_document",
+          "args": {
+            "collectionId": "people",
+            "id": "ada"
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada"
+          },
+          "expect": {
+            "$document": {
+              "name": "Grace",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ],
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.get_collection",
+          "args": {
+            "id": "people"
+          },
+          "bind": "col",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": "people"
+          },
+          "bind": "key",
+          "expect": "${ns}-cache-compat-database-postgres:compat::collection:people:query"
+        },
+        {
+          "side": "a",
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "col"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "name",
+                  "values": [
+                    "Ada"
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "field",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the namespace each direction of the interop case runs in"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "side": "a",
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "field"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "people",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "name",
+                          "values": [
+                            "Grace"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "name": "Grace",
+                  "score": 1.0,
+                  "tags": [
+                    "math",
+                    "engines"
+                  ],
+                  "$id": "ada",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "people"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "name": "Grace",
+                          "score": 1.0,
+                          "tags": [
+                            "math",
+                            "engines"
+                          ],
+                          "$id": "ada",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "people"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "field"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": []
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "name": "Grace",
+                  "score": 1.0,
+                  "tags": [
+                    "math",
+                    "engines"
+                  ],
+                  "$id": "ada",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "people"
+                }
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "db.cache",
+          "args": {
+            "method": "list",
+            "args": {
+              "key": {
+                "$ref": "key"
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the namespace each direction of the interop case runs in"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "side": "a",
+          "op": "db.cache",
+          "args": {
+            "method": "get_generation",
+            "args": {
+              "key": {
+                "$ref": "key"
+              }
+            }
+          },
+          "bind": "lease",
+          "expect": "0"
+        },
+        {
+          "side": "b",
+          "op": "database.purge_cached_queries",
+          "args": {
+            "collection": "people"
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "db.cache",
+          "args": {
+            "method": "save_with_lease",
+            "args": {
+              "key": {
+                "$ref": "key"
+              },
+              "hash": {
+                "$ref": "field"
+              },
+              "data": {
+                "value": "stale"
+              },
+              "generation": {
+                "$ref": "lease"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "side": "b",
+          "op": "db.cache",
+          "args": {
+            "method": "load",
+            "args": {
+              "key": {
+                "$ref": "key"
+              },
+              "hash": {
+                "$ref": "field"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "json entries one runtime writes, the other reads",
+      "interop": true,
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "side": "a",
+          "op": "db.open",
+          "args": {
+            "cache": "redis-shared"
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.set_cache_name",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.create_collection",
+          "args": {
+            "id": "people",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "name",
+            "type": "string",
+            "size": 64,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "score",
+            "type": "double",
+            "size": 0,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "tags",
+            "type": "string",
+            "size": 32,
+            "required": false,
+            "array": true
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "database.create_document",
+          "args": {
+            "collection": "people",
+            "document": {
+              "$id": "ada",
+              "name": "Ada",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ]
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "name": "Ada",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ],
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada"
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ],
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "db.open",
+          "args": {
+            "cache": "redis-shared",
+            "create": false
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "database.set_cache_name",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "db.sql",
+          "args": {
+            "sql": "UPDATE \"${ns}\".\"compat_people\" SET \"name\" = 'Grace' WHERE _uid = 'ada' RETURNING _uid"
+          },
+          "expect": [
+            {
+              "_uid": "ada"
+            }
+          ]
+        },
+        {
+          "side": "b",
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada"
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ],
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "name"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "name": "Grace",
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "database.purge_cached_document",
+          "args": {
+            "collectionId": "people",
+            "id": "ada"
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada"
+          },
+          "expect": {
+            "$document": {
+              "name": "Grace",
+              "score": 1.0,
+              "tags": [
+                "math",
+                "engines"
+              ],
+              "$sequence": "1",
+              "$id": "ada",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$collection": "people"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.get_collection",
+          "args": {
+            "id": "people"
+          },
+          "bind": "col",
+          "expect": {
+            "$document": {
+              "name": "people",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 64,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "score",
+                    "key": "score",
+                    "type": "double",
+                    "size": 0,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": false,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "tags",
+                    "key": "tags",
+                    "type": "string",
+                    "size": 32,
+                    "required": false,
+                    "default": null,
+                    "signed": true,
+                    "array": true,
+                    "format": null,
+                    "formatOptions": [],
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$sequence": "1",
+              "$id": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata"
+            }
+          }
+        },
+        {
+          "side": "a",
+          "op": "database.get_query_cache_key",
+          "args": {
+            "collectionId": "people"
+          },
+          "bind": "key",
+          "expect": "${ns}-cache-compat-database-postgres:compat::collection:people:query"
+        },
+        {
+          "side": "a",
+          "op": "database.get_query_cache_field",
+          "args": {
+            "collection": {
+              "$ref": "col"
+            },
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "name",
+                  "values": [
+                    "Ada"
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "field",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the namespace each direction of the interop case runs in"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "side": "a",
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "field"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.find",
+                  "args": {
+                    "collection": "people",
+                    "queries": [
+                      {
+                        "$query": {
+                          "method": "equal",
+                          "attribute": "name",
+                          "values": [
+                            "Grace"
+                          ]
+                        }
+                      }
+                    ]
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "name": "Grace",
+                  "score": 1.0,
+                  "tags": [
+                    "math",
+                    "engines"
+                  ],
+                  "$id": "ada",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "people"
+                }
+              }
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      {
+                        "$document": {
+                          "name": "Grace",
+                          "score": 1.0,
+                          "tags": [
+                            "math",
+                            "engines"
+                          ],
+                          "$id": "ada",
+                          "$sequence": "1",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$permissions": [],
+                          "$collection": "people"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "database.with_cache",
+          "args": {
+            "key": {
+              "$ref": "key"
+            },
+            "hash": {
+              "$ref": "field"
+            },
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": []
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              {
+                "$document": {
+                  "name": "Grace",
+                  "score": 1.0,
+                  "tags": [
+                    "math",
+                    "engines"
+                  ],
+                  "$id": "ada",
+                  "$sequence": "1",
+                  "$createdAt": "<now>",
+                  "$updatedAt": "<now>",
+                  "$permissions": [],
+                  "$collection": "people"
+                }
+              }
+            ],
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "side": "b",
+          "op": "db.cache",
+          "args": {
+            "method": "list",
+            "args": {
+              "key": {
+                "$ref": "key"
+              }
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the query cache field hashes the database name, the namespace each direction of the interop case runs in"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "side": "a",
+          "op": "db.cache",
+          "args": {
+            "method": "get_generation",
+            "args": {
+              "key": {
+                "$ref": "key"
+              }
+            }
+          },
+          "bind": "lease",
+          "expect": "0"
+        },
+        {
+          "side": "b",
+          "op": "database.purge_cached_queries",
+          "args": {
+            "collection": "people"
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "db.cache",
+          "args": {
+            "method": "save_with_lease",
+            "args": {
+              "key": {
+                "$ref": "key"
+              },
+              "hash": {
+                "$ref": "field"
+              },
+              "data": {
+                "value": "stale"
+              },
+              "generation": {
+                "$ref": "lease"
+              }
+            }
+          },
+          "expect": false
+        },
+        {
+          "side": "b",
+          "op": "db.cache",
+          "args": {
+            "method": "load",
+            "args": {
+              "key": {
+                "$ref": "key"
+              },
+              "hash": {
+                "$ref": "field"
+              }
+            }
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

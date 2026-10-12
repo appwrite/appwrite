@@ -1,0 +1,166 @@
+{
+  "source": "vendor/utopia-php/database/tests/e2e/Adapter/PoolTest.php",
+  "cases": [
+    {
+      "name": "testOrphanedPermissionsRecovery",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "pool": {
+              "size": 10
+            },
+            "cache": "redis"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "orphanedPermsRecovery"
+          },
+          "expect": {
+            "$document": {
+              "$id": "orphanedPermsRecovery",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "orphanedPermsRecovery",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "orphanedPermsRecovery",
+            "id": "title",
+            "type": "string",
+            "size": 128,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "orphanedPermsRecovery",
+            "document": {
+              "$id": "orphan_test",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Original"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "orphan_test",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "title": "Original",
+              "$collection": "orphanedPermsRecovery",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "orphanedPermsRecovery",
+            "id": "orphan_test"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "orphanedPermsRecovery",
+            "id": "orphan_test"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "db.sql",
+          "args": {
+            "sql": "INSERT INTO \"${ns}\".\"compat_orphanedPermsRecovery_perms\" (_type, _permission, _document) VALUES ('read', 'any', 'orphan_test') RETURNING _document"
+          },
+          "expect": [
+            {
+              "_document": "orphan_test"
+            }
+          ]
+        },
+        {
+          "op": "db.sql",
+          "args": {
+            "sql": "INSERT INTO \"${ns}\".\"compat_orphanedPermsRecovery_perms\" (_type, _permission, _document) VALUES ('update', 'any', 'orphan_test') RETURNING _document"
+          },
+          "expect": [
+            {
+              "_document": "orphan_test"
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "orphanedPermsRecovery",
+            "document": {
+              "$id": "orphan_test",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "title": "Recreated"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "orphanedPermsRecovery",
+            "id": "orphan_test"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "orphanedPermsRecovery"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

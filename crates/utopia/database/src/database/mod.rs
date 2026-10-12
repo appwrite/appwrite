@@ -175,12 +175,13 @@ mod relationships;
 mod transaction;
 
 use std::collections::HashSet;
-use std::sync::{Arc, Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard, OnceLock, Weak};
 
 use async_trait::async_trait;
 use php_std::datetime::DateTime;
 use utopia_cache::Cache;
 
+pub use futures_util::future::BoxFuture;
 pub use futures_util::stream::BoxStream;
 
 pub use filters::Filter;
@@ -235,6 +236,27 @@ where
     }
 }
 
+/// Where a database's own calls to methods a PHP subclass overrides go: the
+/// database a [`crate::mirror::Mirror`] is built on hands its events to the
+/// mirror's source and its relationship writes to the mirror, as PHP's
+/// `$this->...` reaches `Mirror`'s overrides.
+pub(crate) trait Overrides: Send + Sync {
+    /// The database whose listeners and silencing apply (`Mirror::on`,
+    /// `silent` and `trigger` go to the source).
+    fn events(&self) -> Database;
+    /// `$this->createDocument(...)`.
+    fn create_document<'a>(&'a self, collection: &'a str, document: Document) -> BoxFuture<'a, Result<Document>>;
+    /// `$this->updateDocument(...)`.
+    fn update_document<'a>(
+        &'a self,
+        collection: &'a str,
+        id: &'a str,
+        document: Document,
+    ) -> BoxFuture<'a, Result<Document>>;
+    /// `$this->deleteDocument(...)`.
+    fn delete_document<'a>(&'a self, collection: &'a str, id: &'a str) -> BoxFuture<'a, Result<bool>>;
+}
+
 /// The database. See the [module docs](self).
 ///
 /// PHP: `Utopia\Database\Database`.
@@ -251,6 +273,9 @@ struct Inner {
     instance_filters: Vec<(String, Arc<dyn Filter>)>,
     /// Everything PHP's methods change after construction.
     state: Mutex<State>,
+    /// Where its own calls to overridden methods go (set once, by a
+    /// [`crate::mirror::Mirror`] on the database it is built on).
+    overrides: OnceLock<Weak<dyn Overrides>>,
 }
 
 /// The mutable properties of PHP's `Database`.
@@ -314,6 +339,10 @@ pub(crate) struct State {
     pub(crate) document_types: Vec<(String, String)>,
     /// `$authorization`.
     pub(crate) authorization: Arc<Authorization>,
+    /// Where the bulk writes leave the documents they were given, as PHP's
+    /// caller sees its objects after the call (`Some` to capture them: a
+    /// [`crate::mirror::Mirror`] copies them to its destination).
+    pub(crate) capture: Option<Vec<Document>>,
 }
 
 impl Database {
@@ -332,6 +361,7 @@ impl Database {
             inner: Arc::new(Inner {
                 adapter,
                 instance_filters: filters,
+                overrides: OnceLock::new(),
                 state: Mutex::new(State {
                     cache,
                     cache_name: "default".to_owned(),
@@ -359,6 +389,7 @@ impl Database {
                     relationship_delete_stack: Vec::new(),
                     document_types: Vec::new(),
                     authorization,
+                    capture: None,
                 }),
             }),
         };
@@ -377,6 +408,56 @@ impl Database {
     /// PHP: `Database::getAdapter()`.
     pub fn adapter(&self) -> &Arc<dyn Adapter> {
         &self.inner.adapter
+    }
+
+    /// Where this database's own calls to overridden methods go, if
+    /// anywhere.
+    pub(crate) fn overrides(&self) -> Option<Arc<dyn Overrides>> {
+        self.inner.overrides.get()?.upgrade()
+    }
+
+    /// Hands this database's own calls to overridden methods to `overrides`
+    /// from now on (once).
+    pub(crate) fn set_overrides(&self, overrides: Weak<dyn Overrides>) {
+        let _ = self.inner.overrides.set(overrides);
+    }
+
+    /// `$this->createDocument(...)` from within: the override's when there
+    /// is one.
+    pub(crate) fn dispatch_create_document<'a>(
+        &'a self,
+        collection: &'a str,
+        document: Document,
+    ) -> BoxFuture<'a, Result<Document>> {
+        match self.overrides() {
+            Some(o) => Box::pin(async move { o.create_document(collection, document).await }),
+            None => self.create_document(collection, document),
+        }
+    }
+
+    /// `$this->updateDocument(...)` from within.
+    pub(crate) fn dispatch_update_document<'a>(
+        &'a self,
+        collection: &'a str,
+        id: &'a str,
+        document: Document,
+    ) -> BoxFuture<'a, Result<Document>> {
+        match self.overrides() {
+            Some(o) => Box::pin(async move { o.update_document(collection, id, document).await }),
+            None => self.update_document(collection, id, document),
+        }
+    }
+
+    /// `$this->deleteDocument(...)` from within.
+    pub(crate) fn dispatch_delete_document<'a>(
+        &'a self,
+        collection: &'a str,
+        id: &'a str,
+    ) -> BoxFuture<'a, Result<bool>> {
+        match self.overrides() {
+            Some(o) => Box::pin(async move { o.delete_document(collection, id).await }),
+            None => self.delete_document(collection, id),
+        }
     }
 }
 

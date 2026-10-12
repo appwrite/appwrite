@@ -16,6 +16,14 @@
 # The extensions and the `utf8_ci_ai` collation Postgres::create() installs
 # are server- and database-wide; they are created here once, so the two
 # runtimes' concurrent CREATE ... IF NOT EXISTS never race each other.
+#
+# A Redis next to it (compat-database-redis, the dev stack's image) holds
+# the Redis caches and the Redis database adapter's keys (`database-redis*`
+# in compat.json): database 0 is PHP's private cache, 1 Rust's, 4 and 5
+# their second ones (a Mirror's destination), 2 a cache both runtimes share
+# (interop) and 3 the Redis adapter's keyspace, whose keys carry the case
+# namespace. It is the cases' own server, so `db.open`
+# may flush a private cache database.
 set -euo pipefail
 network="${COMPAT_NETWORK:-appwrite}"
 image="${COMPAT_POSTGRES_IMAGE:-appwrite/postgres:0.1.0}"
@@ -27,10 +35,26 @@ up)
             -e POSTGRES_USER=root -e POSTGRES_PASSWORD=password -e POSTGRES_DB=root \
             -p 16432:5432 "$image" postgres -c max_connections=500 >/dev/null
     fi
+    if ! docker ps --format '{{.Names}}' | grep -qx compat-database-redis; then
+        docker run -d --rm --network "$network" --name compat-database-redis \
+            -p 16479:6379 "${COMPAT_REDIS_IMAGE:-redis:7.4.7-alpine}" >/dev/null
+    fi
     for _ in $(seq 1 90); do
-        if docker exec compat-database-postgres pg_isready -U root -d root >/dev/null 2>&1 \
+        if docker exec compat-database-redis redis-cli ping >/dev/null 2>&1 \
+            && docker exec compat-database-postgres pg_isready -U root -d root >/dev/null 2>&1 \
             && docker exec compat-database-postgres psql -U root -d root -Atc 'select 1' >/dev/null 2>&1; then
             docker exec compat-database-postgres psql -U root -d root -q -v ON_ERROR_STOP=1 \
+                -c 'CREATE EXTENSION IF NOT EXISTS postgis' \
+                -c 'CREATE EXTENSION IF NOT EXISTS vector' \
+                -c 'CREATE EXTENSION IF NOT EXISTS pg_trgm' \
+                -c "CREATE COLLATION IF NOT EXISTS utf8_ci_ai (provider = icu, locale = 'und-u-ks-level1', deterministic = false)" \
+                >/dev/null
+            # A second database for a Mirror's destination
+            # (`database-postgres-mirror`), set up the same way.
+            if [ "$(docker exec compat-database-postgres psql -U root -d root -Atc "SELECT 1 FROM pg_database WHERE datname = 'mirror'")" != 1 ]; then
+                docker exec compat-database-postgres psql -U root -d root -q -c 'CREATE DATABASE mirror' >/dev/null
+            fi
+            docker exec compat-database-postgres psql -U root -d mirror -q -v ON_ERROR_STOP=1 \
                 -c 'CREATE EXTENSION IF NOT EXISTS postgis' \
                 -c 'CREATE EXTENSION IF NOT EXISTS vector' \
                 -c 'CREATE EXTENSION IF NOT EXISTS pg_trgm' \
@@ -40,11 +64,11 @@ up)
         fi
         sleep 1
     done
-    echo "compat-database-postgres did not become ready" >&2
+    echo "compat-database-postgres or compat-database-redis did not become ready" >&2
     exit 1
     ;;
 down)
-    docker stop compat-database-postgres >/dev/null 2>&1 || true
+    docker stop compat-database-postgres compat-database-redis >/dev/null 2>&1 || true
     ;;
 *)
     echo "usage: $0 up|down" >&2

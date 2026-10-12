@@ -12,9 +12,10 @@
 //! embeds; its abstract methods are the required ones. Capability getters
 //! (`getSupportFor*`) keep their names in snake case.
 //!
-//! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`). The
-//! others PHP ships (MariaDB, MySQL, SQLite, MongoDB, Memory, Redis, Pool,
-//! Mirror) are not converted yet (see the crate guide).
+//! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`),
+//! [`redis::Redis`] (feature `redis`) and [`pool::Pool`] (feature `pool`),
+//! over a pool of adapters. The others PHP ships are converted in their
+//! phases (see the crate guide).
 
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -29,8 +30,12 @@ use crate::query::Query;
 use crate::validator::authorization::Authorization;
 use crate::value::{Array, Value};
 
+#[cfg(feature = "pool")]
+pub mod pool;
 #[cfg(feature = "postgres")]
 pub mod postgres;
+#[cfg(feature = "redis")]
+pub mod redis;
 
 /// A statement transform registered with [`Adapter::before`]: receives the
 /// SQL about to run and returns the SQL to run instead.
@@ -148,6 +153,23 @@ impl State {
 /// duplicate, restricted, authorization, relationship, conflict, limit and
 /// timeout errors are retried twice, after 50 ms and 100 ms.
 pub async fn with_transaction<A, T, F, Fut>(adapter: &A, mut f: F) -> Result<T>
+where
+    A: Adapter + ?Sized,
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<T>>,
+{
+    // An adapter over a pool holds one connection for the whole
+    // transaction, retries included (PHP's `Pool::withTransaction`).
+    let pinned = adapter.pin_connection().await?;
+    let result = run_transaction(adapter, &mut f).await;
+    if pinned {
+        adapter.unpin_connection(result.is_err()).await;
+    }
+    result
+}
+
+/// The attempts of [`with_transaction`].
+async fn run_transaction<A, T, F, Fut>(adapter: &A, f: &mut F) -> Result<T>
 where
     A: Adapter + ?Sized,
     F: FnMut() -> Fut,
@@ -401,6 +423,20 @@ pub trait Adapter: Send + Sync {
     }
 
     // ----- Transactions -----
+
+    /// Before [`with_transaction`] runs its attempts: an adapter over a pool
+    /// of connections pins one for the whole transaction and returns `true`
+    /// (`false` when one is pinned already). Other adapters own their
+    /// connection and pin nothing.
+    ///
+    /// PHP: the pinning in `Pool::withTransaction()`.
+    async fn pin_connection(&self) -> Result<bool> {
+        Ok(false)
+    }
+
+    /// After a transaction [`Adapter::pin_connection`] pinned a connection
+    /// for: hands it back (`failed` when the transaction failed).
+    async fn unpin_connection(&self, _failed: bool) {}
 
     /// `startTransaction()`.
     async fn start_transaction(&self) -> Result<bool>;

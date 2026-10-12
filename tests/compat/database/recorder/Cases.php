@@ -50,7 +50,7 @@ final class Cases
      * @param array<int, list<array<string, mixed>>> $dirty steps restoring the settings each test started with, when they differ from a fresh database's
      */
     public function __construct(
-        private string $profile,
+        private Profile $profile,
         private array $stream,
         private array $tests,
         private array|\stdClass $open,
@@ -433,7 +433,9 @@ final class Cases
                 $this->problems[] = "{$trait}::{$test['name']} made no calls ({$test['status']}: {$test['message']})";
                 continue;
             }
-            $steps = [['op' => 'db.open', 'args' => $this->open, 'bind' => 'db'], ...($this->dirty[$t] ?? [])];
+            // Restoring steps name the recorder's schema as the tests left it.
+            $dirty = $this->renamed($this->dirty[$t] ?? []);
+            $steps = [['op' => 'db.open', 'args' => $this->open, 'bind' => 'db'], ...$this->profile->opening, ...$dirty];
             $present = array_flip($indexes);
             foreach ($indexes as $i) {
                 $s = $this->stream[$i];
@@ -449,28 +451,43 @@ final class Cases
                 if (($mask = self::mask($s)) !== null) {
                     $entry['mask'] = $mask;
                 }
+                if (\in_array($s->op, ['database.get_size_of_collection', 'database.get_size_of_collection_on_disk'], true) && \in_array($this->profile->name, ['redis', 'shared-redis'], true)) {
+                    $entry['mask'] = ['paths' => [''], 'reason' => "the Redis adapter sizes a collection by MEMORY USAGE of its keys, whose names carry the case namespace, so a size depends on the namespace's length"];
+                }
+                // A list of the databases (in the step or a callback of it) under
+                // the shared Redis adapter, and what listeners logged of it.
+                $lists = $this->profile->name === 'shared-redis' && str_contains((string) json_encode($entry['args']), '"op":"database.list"') || ($s->op === 'database.list' && $this->profile->name === 'shared-redis');
+                $listMask = ['paths' => [''], 'reason' => 'the shared Redis adapter lists every database of the empty namespace, those of other cases and runtimes included'];
+                if ($lists) {
+                    $entry['mask'] = $listMask;
+                }
                 $steps[] = $entry;
                 if ($s->logged) {
-                    $steps[] = ['op' => 'db.log', 'args' => new \stdClass()];
+                    $steps[] = $lists ? ['op' => 'db.log', 'args' => new \stdClass(), 'mask' => $listMask] : ['op' => 'db.log', 'args' => new \stdClass()];
                 }
             }
-            $case = ['name' => "{$trait}::{$test['name']}", 'state' => ['postgres@database-postgres'], 'steps' => $steps];
+            $case = ['name' => "{$trait}::{$test['name']}", 'state' => $this->profile->state, 'steps' => $steps];
             $files[$file]['cases'][] = $case;
             $files[$file]['steps'] += \count($steps);
         }
         $written = [];
         foreach ($files as $file => $data) {
-            $adapter = $this->profile === 'shared' ? 'tests/e2e/Adapter/SharedTables/PostgresTest.php' : 'tests/e2e/Adapter/PostgresTest.php';
+            $adapter = 'tests/e2e/Adapter/' . $this->profile->suite;
             $base = 'vendor/utopia-php/database/';
-            if ($file === 'PostgresTest.php') {
-                $name = 'PostgresTest.json';
-                $source = [$base . 'tests/e2e/Adapter/PostgresTest.php'];
+            if (!str_starts_with($file, 'Scopes/')) {
+                // The suite's own tests.
+                $name = basename($file, '.php') . '.json';
+                $source = [$base . 'tests/e2e/Adapter/' . $file];
             } else {
                 $relative = substr($file, \strlen('Scopes/'));
-                $name = 'Scope-' . ($this->profile === 'shared' ? 'SharedTables-' : '') . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
+                $name = 'Scope-' . $this->profile->prefix . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
                 $source = [$base . 'tests/e2e/Adapter/' . $file, $base . $adapter];
             }
             if ($filter !== null && array_filter(explode(',', $filter), fn (string $f) => str_contains($name, $f)) === []) {
+                continue;
+            }
+            // A suite's own tests that all skip (RedisTest's) make no file.
+            if ($data['cases'] === []) {
                 continue;
             }
             fwrite(STDERR, "writing {$name}: " . \count($data["cases"]) . " cases, {$data["steps"]} steps\n");
@@ -481,6 +498,18 @@ final class Cases
         }
 
         return $written;
+    }
+
+    /**
+     * `$value` with the recorder's schema in its strings as `${ns}`.
+     */
+    private function renamed(mixed $value): mixed
+    {
+        return match (true) {
+            \is_string($value) && $this->schema !== '' => str_replace($this->schema, '${ns}', $value),
+            \is_array($value) => array_map($this->renamed(...), $value),
+            default => $value,
+        };
     }
 
     /**

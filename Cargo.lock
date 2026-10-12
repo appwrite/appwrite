@@ -3626,12 +3626,14 @@ dependencies = [
  "md-5 0.10.6",
  "php-std",
  "postgres-protocol",
+ "redis",
  "serde_json",
  "thiserror",
  "tokio",
  "tokio-postgres",
  "tracing",
  "utopia-cache",
+ "utopia-pools",
  "utopia-validators",
 ]
 
