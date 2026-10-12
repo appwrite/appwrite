@@ -2240,12 +2240,14 @@ class Videos extends Action
     /**
      * Publishes a document change on the project's realtime channels.
      *
-     * Video child rows (and timeline payloads) carry no ACL of their own, and
-     * the Realtime adapter derives delivery roles from the payload's read
-     * permissions — an empty set means the event is silently dropped. Stamp the
-     * roles from the video document when set, otherwise from the source
-     * bucket/file (see sourceReadPermissions()) so only ACL readers receive the
-     * event. Console updates are routed via setSubscribers(['console', …]).
+     * The Realtime adapter derives delivery roles from the payload's read
+     * permissions — an empty set means the event is silently dropped. A payload
+     * with its own `$permissions` (a video with an ACL) keeps them. Otherwise
+     * (video child rows, timeline payloads, a video without an ACL) the given
+     * $permissions are stamped on: the video's read roles when it has an ACL,
+     * else the source bucket's and file's read roles combined (see
+     * sourceReadPermissions()). Console updates are routed via
+     * setSubscribers(['console', …]).
      *
      * @param array<string, string> $params
      * @param array<string> $permissions
