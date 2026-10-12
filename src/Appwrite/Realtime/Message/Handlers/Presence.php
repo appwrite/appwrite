@@ -107,6 +107,7 @@ class Presence extends Action
         $presence->removeAttribute('userInternalId');
 
         $realtime->connections[$connectionId]['presences'][$presence->getId()] = true;
+        $presenceState->hold($database, $project->getId(), $user->getId(), $connectionId);
 
         $presenceState->triggerEvent(
             $queueForEvents,

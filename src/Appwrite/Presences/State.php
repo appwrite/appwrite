@@ -183,15 +183,51 @@ class State
     }
 
     /**
-     * Renews the lease of the realtime presences open connections hold.
+     * Records that a realtime connection holds its user's presence. Every connection of the
+     * user that upserted it holds the same presence, on this server or another one.
+     */
+    public function hold(Database $dbForProject, string $projectId, string $userId, int $connection): void
+    {
+        try {
+            $dbForProject->getCache()->save(
+                'presence-holders:' . $projectId . ':' . $userId,
+                '1',
+                (\gethostname() ?: '') . ':' . $connection,
+                self::LEASE,
+            );
+        } catch (\Throwable) {
+        }
+    }
+
+    /**
+     * Forgets a closed connection that held its user's presence, and returns whether another
+     * connection still holds it. Holders whose server stopped renewing them do not count, and
+     * when the cache cannot answer, nothing does.
+     */
+    public function release(Database $dbForProject, string $projectId, string $userId, int $connection): bool
+    {
+        $key = 'presence-holders:' . $projectId . ':' . $userId;
+
+        try {
+            $dbForProject->getCache()->purge($key, (\gethostname() ?: '') . ':' . $connection);
+
+            return !empty($dbForProject->getCache()->loadMany($key, self::LEASE));
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    /**
+     * Renews the lease of the realtime presences open connections hold, and their holders.
      *
      * @param array<string, array<int, array<int|string, true>>> $holders userId => connection => set of presence IDs
      */
     public function renew(Database $dbForProject, string $projectId, array $holders): void
     {
         $presenceIds = [];
-        foreach ($holders as $connections) {
-            foreach ($connections as $presences) {
+        foreach ($holders as $userId => $connections) {
+            foreach ($connections as $connection => $presences) {
+                $this->hold($dbForProject, $projectId, (string) $userId, $connection);
                 $presenceIds += $presences;
             }
         }

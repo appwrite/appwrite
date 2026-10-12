@@ -1528,7 +1528,7 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
                 && !empty($projectId)
                 && $projectId !== 'console'
             ) {
-                go(function () use ($presencesById, $projectId, $userId, $container, $presenceState): void {
+                go(function () use ($connection, $presencesById, $projectId, $userId, $container, $presenceState): void {
                     // Fresh span: the parent realtime.close span finishes before this coroutine
                     Span::init('realtime.close.presenceCleanup');
                     Span::add('project.id', $projectId);
@@ -1545,6 +1545,13 @@ $server->onClose(function (int $connection) use ($realtime, $stats, $register, $
 
                         $presenceIds = \array_map(strval(...), \array_keys($presencesById));
                         $dbForProject = getProjectDB($project);
+
+                        // The user's presence stays while another of their connections, here
+                        // or on another server, still holds it.
+                        if ($presenceState->release($dbForProject, $projectId, (string) $userId, $connection)) {
+                            Span::add('presence.held', true);
+                            return;
+                        }
 
                         $user = new User([]);
                         if (!empty($userId)) {
