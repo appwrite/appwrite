@@ -45,6 +45,7 @@ class Create extends Action
             ->groups(['api', 'webhooks'])
             ->label('scope', 'webhooks.write')
             ->label('event', 'webhooks.[webhookId].create')
+            ->label('limits', ['webhooks'])
             ->label('audits.event', 'webhook.create')
             ->label('audits.resource', 'webhook/{response.$id}')
             ->label('sdk', new Method(

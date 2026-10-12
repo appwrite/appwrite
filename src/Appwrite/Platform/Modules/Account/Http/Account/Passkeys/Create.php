@@ -11,6 +11,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\CustomId;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
@@ -62,6 +63,7 @@ class Create extends Action
             ->label('abuse-key', 'url:{url},userId:{userId}')
             ->param('passkeyId', 'unique()', new CustomId(), 'Passkey ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('name', '', new Text(128, 0), 'Passkey name, shown when listing passkeys. Max length: 128 chars.', true)
+            ->inject('request')
             ->inject('response')
             ->inject('user')
             ->inject('session')
@@ -74,6 +76,7 @@ class Create extends Action
     public function action(
         string $passkeyId,
         string $name,
+        Request $request,
         Response $response,
         Document $user,
         Document $session,
@@ -81,9 +84,9 @@ class Create extends Action
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $ceremony = Ceremony::fromProject($project);
+        $ceremony = Ceremony::fromProject($project, $request->getOrigin());
         if ($ceremony === null) {
-            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID and origins in the passkey policy.');
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID in the passkey policy and add your app\'s domain as a web platform.');
         }
 
         // Shown by the authenticator when picking a passkey; passkey-only accounts have no email or phone

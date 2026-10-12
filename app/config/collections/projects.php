@@ -113,6 +113,7 @@ return [
             Attribute::string(key: 'scheduleInternalId'),
             Attribute::string(key: 'scheduleId'),
             Attribute::string(key: 'schedule', size: 128),
+            Attribute::integer(key: 'interval', signed: false, default: 0),
             Attribute::integer(key: 'timeout'),
             Attribute::string(key: 'search', size: 16384),
             Attribute::string(key: 'version', size: 8, default: 'v5'),

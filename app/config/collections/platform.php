@@ -74,6 +74,7 @@ $platformCollections = [
             Attribute::string(key: 'projectId'),
             Attribute::id(key: 'projectInternalId'),
             Attribute::string(key: 'schedule', size: 100),
+            Attribute::integer(key: 'interval', signed: false, default: 0),
             Attribute::string(key: 'data', size: 65535, default: new \stdClass(), filters: [Filter::Json, 'encrypt']),
             Attribute::boolean(key: 'active'),
             Attribute::string(key: 'region', size: 10, required: true),

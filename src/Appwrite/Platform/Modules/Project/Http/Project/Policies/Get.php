@@ -2,6 +2,7 @@
 
 namespace Appwrite\Platform\Modules\Project\Http\Project\Policies;
 
+use Appwrite\Auth\Passkey\Ceremony;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
@@ -236,7 +237,7 @@ class Get extends Action
                 new Document([
                     '$id' => 'passkey',
                     'rpId' => $auths['passkeyRpId'] ?? '',
-                    'origins' => $auths['passkeyOrigins'] ?? [],
+                    'origins' => Ceremony::getOrigins($project),
                 ]),
                 Response::MODEL_POLICY_PASSKEY,
             ],

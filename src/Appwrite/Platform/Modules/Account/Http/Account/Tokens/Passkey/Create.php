@@ -10,6 +10,7 @@ use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Utopia\Request;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -53,6 +54,7 @@ class Create extends Action
             ))
             ->label('abuse-limit', 10)
             ->label('abuse-key', 'url:{url},ip:{ip}')
+            ->inject('request')
             ->inject('response')
             ->inject('project')
             ->inject('dbForProject')
@@ -61,14 +63,15 @@ class Create extends Action
     }
 
     public function action(
+        Request $request,
         Response $response,
         Document $project,
         Database $dbForProject,
         Authorization $authorization,
     ): void {
-        $ceremony = Ceremony::fromProject($project);
+        $ceremony = Ceremony::fromProject($project, $request->getOrigin());
         if ($ceremony === null) {
-            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID and origins in the passkey policy.');
+            throw new Exception(Exception::USER_AUTH_METHOD_UNSUPPORTED, 'Passkeys are not configured for this project. Set a relying party ID in the passkey policy and add your app\'s domain as a web platform.');
         }
 
         $challenge = $ceremony->authenticate();
