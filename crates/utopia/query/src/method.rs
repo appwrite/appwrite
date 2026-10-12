@@ -55,7 +55,7 @@ macro_rules! backed_enum {
 
             /// The case with backing value `value`.
             ///
-            /// PHP: `from()`, which throws `ValueError` ([`Error::InvalidValue`]) with the same message.
+            /// PHP: `from()`, which throws `ValueError` ([`Error::InvalidValue`](crate::Error::InvalidValue)) with the same message.
             pub fn from_value(value: &str) -> Result<Self, $crate::Error> {
                 Self::try_from_value(value).ok_or_else(|| {
                     $crate::Error::InvalidValue(format!(

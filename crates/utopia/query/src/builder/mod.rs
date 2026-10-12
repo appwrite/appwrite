@@ -9,6 +9,11 @@
 //! |---|---|
 //! | `Builder` (abstract), `Builder\SQL` (abstract) | [`Builder`], [`Dialect`], [`SqlDialect`] |
 //! | `Builder\MySQL` | [`MySql`] ([`MySqlDialect`]) |
+//! | `Builder\MariaDB` | [`MariaDb`] ([`MariaDbDialect`]) |
+//! | `Builder\PostgreSQL`, `PostgreSQL\UpdateFrom`, `PostgreSQL\DeleteUsing`, `PostgreSQL\MergeTarget` | [`PostgreSql`] ([`PostgreSqlDialect`]), [`UpdateFrom`], [`DeleteUsing`], [`MergeTarget`] |
+//! | `Builder\SQLite` | [`Sqlite`] ([`SqliteDialect`]) |
+//! | `Builder\ClickHouse`, `ClickHouse\AsofOperator`, `ClickHouse\Format`, `ClickHouse\FormattedInsertStatement`, `ClickHouse::DELETE_MODE_*` | [`ClickHouse`] ([`ClickHouseDialect`]), [`AsofOperator`], [`Format`], [`FormattedInsertStatement`], [`DeleteMode`] |
+//! | `Builder\MongoDB`, `MongoDB\Operation`, `MongoDB\PipelineStage`, `MongoDB\UpdateOperation`, `MongoDB\UpdateOperator`, `hint()`'s `string\|array` | [`MongoDb`] ([`MongoDbDialect`]), [`Operation`], [`PipelineStage`], [`UpdateOperation`], [`UpdateOperator`], [`IndexHint`] |
 //! | `Builder\Statement` | [`Statement`] |
 //! | `Builder\Condition`, `Builder\Binding` | [`Condition`], [`Binding`] |
 //! | `Builder\JoinBuilder`, `Builder\JoinOn`, `Builder\JoinType` | [`JoinBuilder`], [`JoinOn`], [`JoinType`] |

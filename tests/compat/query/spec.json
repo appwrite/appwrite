@@ -1,7 +1,7 @@
 {
   "lib": "query",
-  "description": "utopia-php/query: queries as data (filters, ordering, pagination, aggregation, joins), compiled to SQL for MySQL, MariaDB, PostgreSQL, SQLite and ClickHouse and to MongoDB commands; schema (DDL) builders; a SQL tokenizer, parser, AST serializer and statement classifier.",
-  "complete": false,
+  "description": "utopia-php/query: queries as data (filters, ordering, pagination, aggregation, joins), compiled to SQL for MySQL, MariaDB, PostgreSQL, SQLite and ClickHouse and to MongoDB commands; schema (DDL) builders; a SQL tokenizer, parser, AST serializer and statement classifier. The PHP tests are ported by recording (tests/compat/query/record): each test runs rewritten so every call it makes on the library is recorded as a program, which Replay.php and the Rust adapter replay. The integration tests (tests/E2E) are recorded without their databases: the statements they build are compared byte for byte, the rows a database returns for them are not the library's behaviour.",
+  "complete": true,
   "php": {
     "src": [
       "packages/query/src"
@@ -2590,5 +2590,59 @@
     "Utopia\\Query\\Tokenizer\\Token::__construct": "Accessor subsumed: an internal value the library builds itself; built by Tokenizer::tokenize(), whose cases compare every token's properties"
   },
   "tests_waived": {},
-  "quirks": []
+  "quirks": [
+    {
+      "symbol": "Utopia\\Query\\Builder\\PostgreSQL::update",
+      "description": "UPDATE ... FROM and DELETE ... USING bind the extra condition's values before the WHERE values, but append its SQL after the WHERE.",
+      "case": "Builder.PostgreSQLTest.json#testUpdateFromWithBindings"
+    },
+    {
+      "symbol": "Utopia\\Query\\Builder\\ClickHouse::fromNone",
+      "description": "ClickHouse's table clause has no tableless check, so fromNone() emits FROM ``.",
+      "case": "Builder.ClickHouseTest.json#testFromNoneEmitsEmptyPlaceholder"
+    },
+    {
+      "symbol": "Utopia\\Query\\Classifier\\SQL::classifySQL",
+      "description": "Keywords end at space, tab, newline, carriage return, ( and ;, not at a form feed although leading form feeds are skipped; nested block comments end at the first */; COPY direction is found by searching the whole text for ' TO ' and ' FROM '.",
+      "case": "Classifier.SQLTest.json#testClassifyNestedBlockComment"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Query\\Query::fingerprint",
+      "php": "An element that is neither a query nor a JSON string (an int) throws Utopia\\Query\\Exception.",
+      "reason": "Rust takes QueryOrJson, which cannot hold anything else; the case is masked (masks.json)."
+    },
+    {
+      "symbol": "Utopia\\Query\\Query::cursorAfter",
+      "php": "A scalar cursor throws TypeError naming the calling file and line.",
+      "reason": "Rust's cursor is a row Value built by the caller; the replay reports the same TypeError class, the message is masked (masks.json)."
+    },
+    {
+      "symbol": "Utopia\\Query\\Schema::table",
+      "php": "A table shares its schema object, so a setExecutor() after table() still reaches the table's statements.",
+      "reason": "A Rust Table owns a copy of its schema's settings, taken when table() is called; no case sets the executor afterwards."
+    },
+    {
+      "symbol": "Utopia\\Query\\Schema\\PostgreSQL::createIndex",
+      "php": "$type is a string checked after the method and operator class, so an invalid type is reported after their errors.",
+      "reason": "Rust takes IndexType, so an invalid type cannot be expressed; the replay converts it first (same ValueError message)."
+    },
+    {
+      "symbol": "Utopia\\Query\\AST\\Parser::parse",
+      "php": "Chains of prefix operators (NOT, -, +) recurse until PHP's stack limit.",
+      "reason": "Rust parses them in a loop and refuses more than 1024 with \"Expression nesting too deep\", to keep trees safe to drop and serialize."
+    },
+    {
+      "symbol": "Utopia\\Query\\Builder\\ClickHouse::bulkInsert",
+      "php": "DateTimeInterface values infer DateTime64(3) named parameters; integer row keys stay integers in the column list; TabSeparated bodies keep non-UTF-8 bytes.",
+      "reason": "Value has no date-time object; column names and the body are Rust strings (UTF-8)."
+    },
+    {
+      "symbol": "Utopia\\Query\\Builder::build",
+      "php": "PHP warnings and deprecations (\"Array to string conversion\", \"Undefined array key\") are printed while compiling odd values.",
+      "reason": "Rust does not print them; the values PHP continues with are reproduced, so results are the same."
+    }
+  ],
+  "bench": {}
 }

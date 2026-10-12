@@ -6,7 +6,7 @@
 //! [`Table`] blueprint whose terminal methods ([`Table::create`],
 //! [`Table::alter`], [`Table::drop`], ...) compile it. Each dialect only has
 //! the column and table methods it can express (marker traits in
-//! [`column`] and [`table`]), and the statements beyond tables are
+//! [`column`](mod@column) and [`table`]), and the statements beyond tables are
 //! capability traits in [`feature`].
 //!
 //! ```
@@ -47,7 +47,7 @@
 //! | `Schema\Table`, `Table\*` | [`Table`] (`Table<MySql>`, ...), [`TableDefinition`] (its properties) |
 //! | `Table\Trait\*` | marker traits in [`table`] ([`table::Serial`], [`table::Checks`], ...) |
 //! | `Schema\Column`, `Column\*` | [`Column`] (`Column<MySql>`, ...), [`ColumnDefinition`] (its properties) |
-//! | `Column\Trait\*` | marker traits in [`column`] ([`column::Unique`], [`column::Collation`], ...) |
+//! | `Column\Trait\*` | marker traits in [`column`](mod@column) ([`column::Unique`], [`column::Collation`], ...) |
 //! | `Schema\ForeignKey`, `ForeignKey\*` | [`ForeignKey`] |
 //! | `Schema\Forwarder\*` | none: a column or key handle borrows its table, so table methods are called on the table |
 //! | `Schema\Index`, `CheckConstraint`, `RenameColumn` | [`Index`], [`CheckConstraint`], [`RenameColumn`] |
