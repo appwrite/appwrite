@@ -30,6 +30,7 @@ pub mod query;
 pub mod queue;
 pub mod registry;
 pub mod span;
+pub mod storage;
 pub mod system;
 pub mod telemetry;
 pub mod user_agent;
@@ -56,6 +57,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("queue", queue::OPS),
     ("registry", registry::OPS),
     ("span", span::OPS),
+    ("storage", storage::OPS),
     ("system", system::OPS),
     ("telemetry", telemetry::OPS),
     ("user-agent", user_agent::OPS),
@@ -84,6 +86,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "queue" => queue::call(op, args, session).await,
         "registry" => registry::call(op, args, session).await,
         "span" => span::call(op, args, session).await,
+        "storage" => storage::call(op, args, session).await,
         "system" => system::call(op, args, session).await,
         "telemetry" => telemetry::call(op, args, session).await,
         "user-agent" => user_agent::call(op, args, session).await,
@@ -112,6 +115,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "queue" => queue::BENCHES,
         "registry" => registry::BENCHES,
         "span" => span::BENCHES,
+        "storage" => storage::BENCHES,
         "system" => system::BENCHES,
         "telemetry" => telemetry::BENCHES,
         "user-agent" => user_agent::BENCHES,
@@ -140,6 +144,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "queue" => queue::bench(name, session).await,
         "registry" => registry::bench(name, session).await,
         "span" => span::bench(name, session).await,
+        "storage" => storage::bench(name, session).await,
         "system" => system::bench(name, session).await,
         "telemetry" => telemetry::bench(name, session).await,
         "user-agent" => user_agent::bench(name, session).await,

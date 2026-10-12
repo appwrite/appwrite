@@ -99,6 +99,11 @@
       "rust-container": "redis-cluster://compat-queue-cluster-php:17000,compat-queue-cluster-php:17001,compat-queue-cluster-php:17002",
       "runner": "redis-cluster://127.0.0.1:17200,127.0.0.1:17201,127.0.0.1:17202"
     },
+    "storage-minio": {
+      "php": "http://compat-storage-minio:9000",
+      "rust": "http://localhost:16805",
+      "runner": "http://localhost:16805"
+    },
     "queue-nats": {
       "php": "nats://compat-queue-nats:4222",
       "rust": "nats://localhost:14422",

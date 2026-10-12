@@ -1,0 +1,190 @@
+{
+  "source": "packages/storage/tests/Validator/FileNameTest.php",
+  "cases": [
+    {
+      "name": "values",
+      "steps": [
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": ""
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": false
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "../test"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "test.png"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "test"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "test-test"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "test_test"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "test.test-test_test"
+          },
+          "expect": {
+            "valid": true,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "0"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "..."
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "a b"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "ñ.png"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": 7
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "file_name.validate",
+          "args": {
+            "value": "x/y"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Filename is not valid",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,649 @@
+{
+  "source": "packages/storage/tests/E2E/S3Test.php",
+  "cases": [
+    {
+      "name": "a path-style endpoint shares the bucket",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "/",
+            "bucket": "compat"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "p"
+            },
+            "path": "${ns}/endpoint/path.txt",
+            "data": "path-style",
+            "content_type": "text/plain"
+          },
+          "expect": "18a86ec6d2b009163fe76d8b951f798e"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/endpoint/path.txt"
+          },
+          "expect": "path-style"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/endpoint/virtual.txt",
+            "data": "virtual-hosted",
+            "content_type": "text/plain"
+          },
+          "expect": "1adcfa39b0dca89f7fd1cf822ea5a5f2"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "p"
+            },
+            "path": "${ns}/endpoint/virtual.txt"
+          },
+          "expect": "virtual-hosted"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "p"
+            },
+            "prefix": "${ns}/endpoint"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "${ns}/endpoint/path.txt",
+                "size": 10,
+                "modified": "<masked>",
+                "etag": "18a86ec6d2b009163fe76d8b951f798e"
+              },
+              {
+                "path": "${ns}/endpoint/virtual.txt",
+                "size": 14,
+                "modified": "<masked>",
+                "etag": "1adcfa39b0dca89f7fd1cf822ea5a5f2"
+              }
+            ],
+            "cursor": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "conditional writes have one winner",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock",
+            "data": "first",
+            "content_type": "text/plain"
+          },
+          "bind": "e",
+          "expect": "8b04d5e3775d298e78455efc5ca404d5"
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock",
+            "data": "second",
+            "content_type": "text/plain",
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/message"
+            ],
+            "reason": "MinIO puts a random request ID in every error message"
+          },
+          "expect": {
+            "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+            "message": "<masked>",
+            "code": 412,
+            "error_code": null,
+            "previous": false
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock"
+          },
+          "expect": "first"
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock",
+            "data": "second",
+            "etag": {
+              "$ref": "e"
+            },
+            "content_type": "text/plain"
+          },
+          "bind": "f",
+          "expect": "a9f0e61a137d86aa9db53465e0801612"
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock",
+            "data": "third",
+            "etag": {
+              "$ref": "e"
+            },
+            "content_type": "text/plain",
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/message"
+            ],
+            "reason": "MinIO puts a random request ID in every error message"
+          },
+          "expect": {
+            "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+            "message": "<masked>",
+            "code": 412,
+            "error_code": null,
+            "previous": false
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock"
+          },
+          "expect": "second"
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock"
+          },
+          "mask": {
+            "paths": [
+              "/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "path": "${ns}/conditional/lock",
+            "size": 6,
+            "modified": "<masked>",
+            "etag": "a9f0e61a137d86aa9db53465e0801612"
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock",
+            "offset": 0,
+            "length": 3,
+            "etag": {
+              "$ref": "f"
+            }
+          },
+          "expect": "sec"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock",
+            "offset": 0,
+            "length": 3,
+            "etag": {
+              "$ref": "e"
+            },
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/message"
+            ],
+            "reason": "MinIO puts a random request ID in every error message"
+          },
+          "expect": {
+            "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+            "message": "<masked>",
+            "code": 412,
+            "error_code": null,
+            "previous": false
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/conditional/lock"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "a multipart upload replaces an existing object",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin",
+            "data": "old",
+            "content_type": "text/plain"
+          },
+          "expect": "149603e6c03516362a8da23f624db945"
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 0,
+            "data": "tail",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 0,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 5242880
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin"
+          },
+          "expect": "old"
+        },
+        {
+          "op": "s3.list_uploads",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/replaced.bin"
+          },
+          "mask": {
+            "paths": [
+              "/uploads/*/upload_id",
+              "/uploads/*/initiated"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "uploads": [
+              {
+                "path": "${ns}/replaced.bin",
+                "upload_id": "<masked>",
+                "initiated": "<masked>"
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin"
+          },
+          "expect": 5242884
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin",
+            "offset": 5242880
+          },
+          "expect": "tail"
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "s3.list_uploads",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/replaced.bin"
+          },
+          "expect": {
+            "uploads": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/replaced.bin"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "abandoned uploads are listed and aborted",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.prepare",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/abandoned/a.bin",
+            "content_type": "application/octet-stream",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "s3.list_uploads",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/abandoned/a.bin"
+          },
+          "mask": {
+            "paths": [
+              "/uploads/*/upload_id",
+              "/uploads/*/initiated"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "uploads": [
+              {
+                "path": "${ns}/abandoned/a.bin",
+                "upload_id": "<masked>",
+                "initiated": "<masked>"
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "bind": "md",
+          "mask": {
+            "paths": [
+              "/uploadId"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "parts": [],
+            "chunks": 0,
+            "content_type": "application/octet-stream",
+            "uploadId": "<masked>"
+          }
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/abandoned/a.bin",
+            "upload_id": {
+              "$ref": "md",
+              "path": "/uploadId"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "s3.list_uploads",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/abandoned/a.bin"
+          },
+          "expect": {
+            "uploads": [],
+            "cursor": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "writes without an ACL",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "acl": null,
+            "bucket": "compat"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/no-acl.txt",
+            "data": "no acl",
+            "content_type": "text/plain"
+          },
+          "expect": "a7c24d9207d5298746f746bb2787fc36"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/no-acl.txt"
+          },
+          "expect": "no acl"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/no-acl.txt"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

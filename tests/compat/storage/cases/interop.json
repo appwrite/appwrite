@@ -1,0 +1,550 @@
+{
+  "cases": [
+    {
+      "name": "a file written by one runtime is read by the other",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/shared"
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/shared"
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/hello.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "side": "a",
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/hello.txt"
+          },
+          "side": "b",
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/hello.txt"
+          },
+          "side": "b",
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/hello.txt",
+            "data": "Bye",
+            "etag": "b10a8db164e0754105b7a99be72e3fe5"
+          },
+          "side": "b",
+          "expect": "b665d826e919381052ec23b9eaec3b62"
+        },
+        {
+          "side": "a",
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/shared",
+            "max": 10
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/shared/hello.txt",
+                "size": 3,
+                "modified": "<masked>",
+                "etag": null
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/hello.txt",
+            "etag": "31692cd5df9d8b2c4a2f6c1d9bb4e9b2",
+            "catch": true
+          },
+          "side": "a",
+          "expect": {
+            "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+            "message": "File /tmp/compat-fs/${ns}/shared/hello.txt no longer has ETag 31692cd5df9d8b2c4a2f6c1d9bb4e9b2",
+            "code": 0,
+            "error_code": null,
+            "previous": false
+          }
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a chunked upload started by one runtime is finished by the other",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/shared"
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/shared"
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/c.bin",
+            "data": "AAAA",
+            "chunk": 1,
+            "chunks": 3
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/c.bin",
+            "data": "CCCC",
+            "chunk": 3,
+            "chunks": 3
+          },
+          "side": "b",
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/c.bin",
+            "data": "BBBB",
+            "chunk": 2,
+            "chunks": 3
+          },
+          "side": "a",
+          "expect": 3
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/c.bin"
+          },
+          "side": "b",
+          "expect": "AAAABBBBCCCC"
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "an unknown-count upload is finalized by the other runtime",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/shared"
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/shared"
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {},
+          "bind": "ma",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {},
+          "bind": "mb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/u.bin",
+            "data": "one ",
+            "chunk": 1,
+            "chunks": 0,
+            "metadata": {
+              "$ref": "ma"
+            }
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/u.bin",
+            "data": "two",
+            "chunk": 2,
+            "chunks": 0,
+            "metadata": {
+              "$ref": "ma"
+            }
+          },
+          "side": "a",
+          "expect": 2
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/u.bin",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "mb"
+            }
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/u.bin"
+          },
+          "side": "a",
+          "expect": "one two"
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/shared/u.bin"
+          },
+          "side": "b",
+          "expect": true
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "an object written to MinIO by one runtime is read by the other",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "${ns}/interop.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "side": "a",
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "${ns}/interop.txt"
+          },
+          "side": "b",
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "${ns}/interop.txt"
+          },
+          "side": "b",
+          "expect": "text/plain"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "source": "${ns}/interop.txt",
+            "target": "${ns}/copied.txt"
+          },
+          "side": "b",
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "${ns}/copied.txt"
+          },
+          "side": "a",
+          "expect": "Hello World"
+        }
+      ],
+      "interop": true
+    },
+    {
+      "name": "a multipart upload started by one runtime is completed by the other",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {},
+          "bind": "ma",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "${ns}/mp.bin",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 2,
+            "metadata": {
+              "$ref": "ma"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 5242880
+          },
+          "side": "a",
+          "expect": 1
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "ma"
+            }
+          },
+          "bind": "state",
+          "mask": {
+            "paths": [
+              "/uploadId",
+              "/parts"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "side": "a",
+          "expect": {
+            "parts": "<masked>",
+            "chunks": 1,
+            "content_type": "application/octet-stream",
+            "uploadId": "<masked>"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {
+              "$ref": "state"
+            }
+          },
+          "bind": "mb",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "${ns}/mp.bin",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 2,
+            "metadata": {
+              "$ref": "mb"
+            },
+            "data": "tail"
+          },
+          "side": "b",
+          "expect": 2
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "a"
+            },
+            "path": "${ns}/mp.bin"
+          },
+          "side": "a",
+          "expect": 5242884
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "${ns}/mp.bin"
+          },
+          "side": "b",
+          "expect": "486dded789d0c7f1cd341e180846887e-2"
+        }
+      ],
+      "interop": true
+    }
+  ]
+}

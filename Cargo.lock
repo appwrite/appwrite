@@ -413,8 +413,10 @@ name = "compat"
 version = "0.1.0"
 dependencies = [
  "async-nats",
+ "async-trait",
  "base64",
  "bytes",
+ "chrono",
  "futures-util",
  "httparse",
  "indexmap",
@@ -446,6 +448,7 @@ dependencies = [
  "utopia-queue",
  "utopia-registry",
  "utopia-span",
+ "utopia-storage",
  "utopia-system",
  "utopia-telemetry",
  "utopia-user-agent",
@@ -1714,6 +1717,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "quick-xml"
+version = "0.38.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b66c2058c55a409d601666cffe35f04333cf1013010882cec174a7467cd4e21c"
+dependencies = [
+ "memchr",
+]
+
+[[package]]
 name = "quote"
 version = "1.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2849,6 +2861,34 @@ dependencies = [
  "rustls",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-storage"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "chrono",
+ "futures-util",
+ "hex",
+ "hmac 0.12.1",
+ "http-body-util",
+ "hyper",
+ "hyper-rustls",
+ "hyper-util",
+ "indexmap",
+ "md-5 0.10.6",
+ "php-std",
+ "quick-xml",
+ "rand 0.10.3",
+ "rustix",
+ "sha2 0.10.9",
+ "thiserror",
+ "tokio",
+ "utopia-telemetry",
+ "utopia-validators",
 ]
 
 [[package]]

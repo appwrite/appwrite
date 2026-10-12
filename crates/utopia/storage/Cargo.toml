@@ -1,0 +1,48 @@
+[package]
+name = "utopia-storage"
+description = "File storage devices: the local disk and S3-compatible object stores (AWS, DigitalOcean Spaces, Backblaze, Linode, Wasabi), with chunked uploads, conditional writes, telemetry and upload validators."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[features]
+default = ["s3", "telemetry"]
+# S3 and the S3-compatible devices: SigV4 over HTTP(S), with retries.
+s3 = ["dep:http-body-util", "dep:hyper", "dep:hyper-rustls", "dep:hyper-util", "dep:quick-xml", "dep:rand"]
+# The `Telemetry` decorator recording a histogram around every operation.
+telemetry = ["dep:utopia-telemetry"]
+
+[dependencies]
+async-trait.workspace = true
+base64.workspace = true
+bytes.workspace = true
+chrono.workspace = true
+futures-util.workspace = true
+hex.workspace = true
+hmac.workspace = true
+http-body-util = { workspace = true, optional = true }
+hyper = { workspace = true, features = ["client", "http1"], optional = true }
+hyper-rustls = { workspace = true, optional = true }
+hyper-util = { workspace = true, features = ["client-legacy", "http1", "tokio"], optional = true }
+indexmap.workspace = true
+md-5.workspace = true
+php-std.workspace = true
+quick-xml = { workspace = true, optional = true }
+rand = { workspace = true, optional = true }
+rustix.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["fs", "io-util", "rt", "rt-multi-thread", "time"] }
+utopia-telemetry = { workspace = true, optional = true }
+utopia-validators.workspace = true
+
+[dev-dependencies.utopia-telemetry]
+workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "fs", "io-util", "time"] }
+
+[package.metadata.utopia]
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

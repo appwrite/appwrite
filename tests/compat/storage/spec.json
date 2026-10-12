@@ -1,0 +1,1233 @@
+{
+  "lib": "storage",
+  "description": "utopia-php/storage: the Device abstraction (Local, S3 and the S3-compatible providers, Telemetry), chunked and multipart uploads, conditional writes, the S3 retry strategy, and the upload validators.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/storage/src"
+    ],
+    "tests": [
+      "packages/storage/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/storage"
+  },
+  "services": [
+    "storage-minio"
+  ],
+  "state": [
+    "files"
+  ],
+  "ops": {
+    "local.new": {
+      "doc": "new Local(root)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::__construct"
+      ]
+    },
+    "s3.new": {
+      "doc": "new S3(root, accessKey, secretKey, host, region, acl?, client: scripted client (optionally in Retry with RetryStrategy(delay: retry_delay)), bucket?); or the MinIO service with `minio: true`",
+      "covers": [
+        "Utopia\\Storage\\Device\\S3::__construct"
+      ]
+    },
+    "provider.new": {
+      "doc": "new AWS|Backblaze|DOSpaces|Linode|Wasabi(root, accessKey, secretKey, bucket, region?, acl?, client?)",
+      "covers": [
+        "Utopia\\Storage\\Device\\AWS::__construct",
+        "Utopia\\Storage\\Device\\Backblaze::__construct",
+        "Utopia\\Storage\\Device\\DOSpaces::__construct",
+        "Utopia\\Storage\\Device\\Linode::__construct",
+        "Utopia\\Storage\\Device\\Wasabi::__construct"
+      ]
+    },
+    "telemetry.new": {
+      "doc": "new Telemetry(new Test(), device)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Telemetry::__construct"
+      ]
+    },
+    "scripted.new": {
+      "doc": "fixture: a PSR-18 client replaying `responses` ({status, headers: [[name, value]], body} or {error: dns|connection|timeout|tls|network, message, code})"
+    },
+    "scripted.requests": {
+      "doc": "fixture: the requests the scripted client received: method, URL, headers (lowercase names, sorted) and body",
+      "mask": {
+        "paths": [
+          "/*/headers/authorization",
+          "/*/headers/date",
+          "/*/headers/x-amz-date"
+        ],
+        "reason": "the signature and dates depend on the time of the request"
+      }
+    },
+    "metadata.new": {
+      "doc": "fixture: an upload metadata array ($metadata by reference): {parts: [[chunk, true|etag]], chunks, content_type, uploadId, whole}"
+    },
+    "metadata.get": {
+      "doc": "fixture: the metadata array now, keys in a fixed order"
+    },
+    "device.type": {
+      "doc": "$device->getType()->value",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getType",
+        "Utopia\\Storage\\Device\\S3::getType",
+        "Utopia\\Storage\\Device\\Telemetry::getType",
+        "Utopia\\Storage\\Device\\AWS::getType",
+        "Utopia\\Storage\\Device\\Backblaze::getType",
+        "Utopia\\Storage\\Device\\DOSpaces::getType",
+        "Utopia\\Storage\\Device\\Linode::getType",
+        "Utopia\\Storage\\Device\\Wasabi::getType"
+      ]
+    },
+    "device.root": {
+      "doc": "$device->getRoot()",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getRoot",
+        "Utopia\\Storage\\Device\\S3::getRoot",
+        "Utopia\\Storage\\Device\\Telemetry::getRoot"
+      ]
+    },
+    "device.path": {
+      "doc": "$device->getPath(filename)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getPath",
+        "Utopia\\Storage\\Device\\S3::getPath",
+        "Utopia\\Storage\\Device\\Telemetry::getPath"
+      ]
+    },
+    "device.absolute_path": {
+      "doc": "$device->getAbsolutePath(path)",
+      "covers": [
+        "Utopia\\Storage\\Device::getAbsolutePath"
+      ],
+      "fuzz": [
+        {
+          "name": "paths",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "path": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "min": 1,
+                    "max": 20,
+                    "alphabet": "ab./\\-_ ?%+&#09"
+                  },
+                  {
+                    "gen": "string",
+                    "max": 24,
+                    "tricky": 0.4
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "device.prepare": {
+      "doc": "$device->prepare(path, content_type, chunks, $metadata)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::prepare",
+        "Utopia\\Storage\\Device\\S3::prepare",
+        "Utopia\\Storage\\Device\\Telemetry::prepare"
+      ]
+    },
+    "device.upload": {
+      "doc": "$device->upload(body, path, content_type, chunk, chunks, $metadata); the body is `data`, the fixture `file`, a stream `failing` after one chunk, an `unseekable` one, or `data` read `consumed` bytes into",
+      "covers": [
+        "Utopia\\Storage\\Device::upload"
+      ]
+    },
+    "device.finalize": {
+      "doc": "$device->finalize(path, chunks, $metadata)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::finalize",
+        "Utopia\\Storage\\Device\\S3::finalize",
+        "Utopia\\Storage\\Device\\Telemetry::finalize"
+      ]
+    },
+    "device.abort": {
+      "doc": "$device->abort(path, upload_id)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::abort",
+        "Utopia\\Storage\\Device\\S3::abort",
+        "Utopia\\Storage\\Device\\Telemetry::abort"
+      ]
+    },
+    "device.read": {
+      "doc": "(string) $device->read(path, offset, length, etag)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::read",
+        "Utopia\\Storage\\Device\\S3::read",
+        "Utopia\\Storage\\Device\\Telemetry::read"
+      ]
+    },
+    "device.read_digest": {
+      "doc": "read() of a large file: {size, md5}"
+    },
+    "device.read_stream": {
+      "doc": "$device->read(...) kept open as a handle"
+    },
+    "stream.read": {
+      "doc": "$stream->read(length) on a handle from device.read_stream"
+    },
+    "device.write": {
+      "doc": "$device->write(path, body, content_type)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::write",
+        "Utopia\\Storage\\Device\\S3::write",
+        "Utopia\\Storage\\Device\\Telemetry::write"
+      ]
+    },
+    "device.create": {
+      "doc": "$device->create(path, body, content_type)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::create",
+        "Utopia\\Storage\\Device\\S3::create",
+        "Utopia\\Storage\\Device\\Telemetry::create"
+      ]
+    },
+    "device.replace": {
+      "doc": "$device->replace(path, body, etag, content_type)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::replace",
+        "Utopia\\Storage\\Device\\S3::replace",
+        "Utopia\\Storage\\Device\\Telemetry::replace"
+      ]
+    },
+    "device.copy": {
+      "doc": "$device->copy(source, target, to?, chunk_size?)",
+      "covers": [
+        "Utopia\\Storage\\Device::copy",
+        "Utopia\\Storage\\Device\\S3::copy",
+        "Utopia\\Storage\\Device\\Telemetry::copy"
+      ]
+    },
+    "device.move": {
+      "doc": "$device->move(source, target)",
+      "covers": [
+        "Utopia\\Storage\\Device::move",
+        "Utopia\\Storage\\Device\\Local::move"
+      ]
+    },
+    "device.delete": {
+      "doc": "$device->delete(path, recursive)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::delete",
+        "Utopia\\Storage\\Device\\S3::delete",
+        "Utopia\\Storage\\Device\\Telemetry::delete"
+      ]
+    },
+    "device.delete_path": {
+      "doc": "$device->deletePath(path)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::deletePath",
+        "Utopia\\Storage\\Device\\S3::deletePath",
+        "Utopia\\Storage\\Device\\Telemetry::deletePath"
+      ]
+    },
+    "device.exists": {
+      "doc": "$device->exists(path)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::exists",
+        "Utopia\\Storage\\Device\\S3::exists",
+        "Utopia\\Storage\\Device\\Telemetry::exists"
+      ]
+    },
+    "device.list_files": {
+      "doc": "$device->listFiles(prefix, max, cursor): {files: [{path, size, modified, etag}], cursor}",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::listFiles",
+        "Utopia\\Storage\\Device\\S3::listFiles",
+        "Utopia\\Storage\\Device\\Telemetry::listFiles",
+        "Utopia\\Storage\\FileList::__construct",
+        "Utopia\\Storage\\FileInfo::__construct"
+      ]
+    },
+    "device.file_info": {
+      "doc": "$device->getFileInfo(path): {path, size, modified (Y-m-d\\TH:i:s.uP), etag}",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getFileInfo",
+        "Utopia\\Storage\\Device\\S3::getFileInfo",
+        "Utopia\\Storage\\Device\\Telemetry::getFileInfo"
+      ]
+    },
+    "device.file_size": {
+      "doc": "$device->getFileSize(path)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getFileSize",
+        "Utopia\\Storage\\Device\\S3::getFileSize",
+        "Utopia\\Storage\\Device\\Telemetry::getFileSize"
+      ]
+    },
+    "device.file_mime_type": {
+      "doc": "$device->getFileMimeType(path)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getFileMimeType",
+        "Utopia\\Storage\\Device\\S3::getFileMimeType",
+        "Utopia\\Storage\\Device\\Telemetry::getFileMimeType"
+      ]
+    },
+    "device.file_hash": {
+      "doc": "$device->getFileHash(path)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getFileHash",
+        "Utopia\\Storage\\Device\\S3::getFileHash",
+        "Utopia\\Storage\\Device\\Telemetry::getFileHash"
+      ]
+    },
+    "local.create_directory": {
+      "doc": "$local->createDirectory(path)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::createDirectory"
+      ]
+    },
+    "local.directory_size": {
+      "doc": "$local->getDirectorySize(path)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getDirectorySize"
+      ]
+    },
+    "local.partition_free_space": {
+      "doc": "$local->getPartitionFreeSpace()",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getPartitionFreeSpace"
+      ]
+    },
+    "local.partition_total_space": {
+      "doc": "$local->getPartitionTotalSpace()",
+      "covers": [
+        "Utopia\\Storage\\Device\\Local::getPartitionTotalSpace"
+      ]
+    },
+    "s3.list_uploads": {
+      "doc": "$s3->listUploads(prefix, max, cursor): {uploads: [{path, upload_id, initiated}], cursor}",
+      "covers": [
+        "Utopia\\Storage\\Device\\S3::listUploads",
+        "Utopia\\Storage\\UploadList::__construct",
+        "Utopia\\Storage\\UploadInfo::__construct"
+      ]
+    },
+    "telemetry.list_uploads": {
+      "doc": "$telemetry->listUploads(prefix, max, cursor)",
+      "covers": [
+        "Utopia\\Storage\\Device\\Telemetry::listUploads"
+      ]
+    },
+    "telemetry.device_is": {
+      "doc": "$telemetry->getDevice() === the handle `of`",
+      "covers": [
+        "Utopia\\Storage\\Device\\Telemetry::getDevice"
+      ]
+    },
+    "telemetry.recorded": {
+      "doc": "the Test adapter's histograms: name => number of values recorded"
+    },
+    "retry.delay": {
+      "doc": "(new RetryStrategy(retries, delay, max_delay, fn () => random))->delay(request, attempt, response?, error?)",
+      "covers": [
+        "Utopia\\Storage\\Device\\S3\\RetryStrategy::__construct",
+        "Utopia\\Storage\\Device\\S3\\RetryStrategy::delay"
+      ],
+      "fuzz": [
+        {
+          "name": "outcomes",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "optional": [
+              "response",
+              "error",
+              "retries",
+              "max_delay"
+            ],
+            "fields": {
+              "retries": {
+                "gen": "int",
+                "min": -1,
+                "max": 5
+              },
+              "delay": {
+                "gen": "pick",
+                "from": [
+                  0.0,
+                  0.5,
+                  1.0,
+                  2.5
+                ]
+              },
+              "max_delay": {
+                "gen": "pick",
+                "from": [
+                  0.0,
+                  1.5,
+                  20.0
+                ]
+              },
+              "random": {
+                "gen": "pick",
+                "from": [
+                  0.0,
+                  0.25,
+                  0.5,
+                  0.999
+                ]
+              },
+              "attempt": {
+                "gen": "int",
+                "min": 0,
+                "max": 7
+              },
+              "request": {
+                "gen": "object",
+                "fields": {
+                  "method": {
+                    "gen": "pick",
+                    "from": [
+                      "GET",
+                      "HEAD",
+                      "PUT",
+                      "POST",
+                      "DELETE"
+                    ]
+                  },
+                  "url": {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "const",
+                        "value": "https://s3.example.com/root/file.txt"
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "",
+                          "?uploads=",
+                          "?uploadId=u",
+                          "?delete=",
+                          "?partNumber=1&uploadId=u",
+                          "?uploadId",
+                          "?a=1&uploadId[]=x"
+                        ]
+                      }
+                    ]
+                  },
+                  "headers": {
+                    "gen": "array",
+                    "min": 0,
+                    "max": 2,
+                    "items": {
+                      "gen": "pick",
+                      "from": [
+                        [
+                          "If-Match",
+                          "\"e\""
+                        ],
+                        [
+                          "If-None-Match",
+                          "*"
+                        ],
+                        [
+                          "x-other",
+                          "1"
+                        ]
+                      ]
+                    }
+                  }
+                }
+              },
+              "response": {
+                "gen": "object",
+                "fields": {
+                  "status": {
+                    "gen": "int",
+                    "min": 100,
+                    "max": 599
+                  },
+                  "headers": {
+                    "gen": "array",
+                    "min": 0,
+                    "max": 1,
+                    "items": {
+                      "gen": "pick",
+                      "from": [
+                        [
+                          "Retry-After",
+                          "2"
+                        ],
+                        [
+                          "Retry-After",
+                          "0.5"
+                        ],
+                        [
+                          "Retry-After",
+                          "-1"
+                        ],
+                        [
+                          "Retry-After",
+                          "1e1"
+                        ],
+                        [
+                          "Retry-After",
+                          " 3 "
+                        ],
+                        [
+                          "Retry-After",
+                          "soon"
+                        ],
+                        [
+                          "Retry-After",
+                          ""
+                        ],
+                        [
+                          "Retry-After",
+                          "0x1A"
+                        ],
+                        [
+                          "Retry-After",
+                          ".5"
+                        ]
+                      ]
+                    }
+                  },
+                  "body": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "concat",
+                        "parts": [
+                          {
+                            "gen": "pick",
+                            "from": [
+                              "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+                              "",
+                              " "
+                            ]
+                          },
+                          {
+                            "gen": "const",
+                            "value": "<Error><Code>"
+                          },
+                          {
+                            "gen": "pick",
+                            "from": [
+                              "NoSuchKey",
+                              "PreconditionFailed",
+                              "AccessDenied",
+                              "SlowDown",
+                              ""
+                            ]
+                          },
+                          {
+                            "gen": "const",
+                            "value": "</Code><Message>"
+                          },
+                          {
+                            "gen": "string",
+                            "min": 0,
+                            "max": 12,
+                            "alphabet": "abcXYZ019 -_./\"'"
+                          },
+                          {
+                            "gen": "const",
+                            "value": "</Message></Error>"
+                          }
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "max": 8
+                      }
+                    ]
+                  }
+                }
+              },
+              "error": {
+                "gen": "object",
+                "fields": {
+                  "error": {
+                    "gen": "pick",
+                    "from": [
+                      "dns",
+                      "connection",
+                      "timeout",
+                      "tls",
+                      "network"
+                    ]
+                  },
+                  "message": {
+                    "gen": "const",
+                    "value": "failed"
+                  },
+                  "code": {
+                    "gen": "pick",
+                    "from": [
+                      0,
+                      6,
+                      7,
+                      28,
+                      35,
+                      56,
+                      111
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "file_ext.validate": {
+      "doc": "new FileExt(allowed): {valid: isValid(value), description, type, array}",
+      "covers": [
+        "Utopia\\Storage\\Validator\\FileExt::getDescription",
+        "Utopia\\Storage\\Validator\\FileExt::getType",
+        "Utopia\\Storage\\Validator\\FileExt::isArray",
+        "Utopia\\Storage\\Validator\\FileExt::isValid",
+        "Utopia\\Storage\\Validator\\FileExt::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "names",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "allowed": {
+                "gen": "array",
+                "min": 0,
+                "max": 3,
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "gif",
+                    "gz",
+                    "zip",
+                    "JPG",
+                    "10",
+                    "1e1",
+                    "",
+                    "png"
+                  ]
+                }
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "concat",
+                    "parts": [
+                      {
+                        "gen": "string",
+                        "max": 8,
+                        "alphabet": "ab./"
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          ".gif",
+                          ".GZ",
+                          ".Zip",
+                          ".10",
+                          ".1e1",
+                          ".",
+                          "",
+                          ".png/"
+                        ]
+                      }
+                    ]
+                  },
+                  {
+                    "gen": "string",
+                    "max": 24,
+                    "tricky": 0.4
+                  },
+                  {
+                    "gen": "any",
+                    "depth": 1
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "file_name.validate": {
+      "doc": "new FileName(): {valid, description, type, array}",
+      "covers": [
+        "Utopia\\Storage\\Validator\\FileName::getDescription",
+        "Utopia\\Storage\\Validator\\FileName::getType",
+        "Utopia\\Storage\\Validator\\FileName::isArray",
+        "Utopia\\Storage\\Validator\\FileName::isValid"
+      ],
+      "fuzz": [
+        {
+          "name": "names",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "max": 16,
+                    "alphabet": "aZ09.-_ /é\t"
+                  },
+                  {
+                    "gen": "string",
+                    "max": 24,
+                    "tricky": 0.4
+                  },
+                  {
+                    "gen": "any",
+                    "depth": 1
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "file_size.validate": {
+      "doc": "new FileSize(max): {valid, description, type, array}",
+      "covers": [
+        "Utopia\\Storage\\Validator\\FileSize::getDescription",
+        "Utopia\\Storage\\Validator\\FileSize::getType",
+        "Utopia\\Storage\\Validator\\FileSize::isArray",
+        "Utopia\\Storage\\Validator\\FileSize::isValid",
+        "Utopia\\Storage\\Validator\\FileSize::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "sizes",
+          "iterations": 2000,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "max": {
+                "gen": "int"
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int"
+                  },
+                  {
+                    "gen": "float",
+                    "min": -10,
+                    "max": 10
+                  },
+                  {
+                    "gen": "any",
+                    "depth": 1
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "file_type.validate": {
+      "doc": "new FileType(allowed): {valid, description, type, array}",
+      "covers": [
+        "Utopia\\Storage\\Validator\\FileType::getDescription",
+        "Utopia\\Storage\\Validator\\FileType::getType",
+        "Utopia\\Storage\\Validator\\FileType::isArray",
+        "Utopia\\Storage\\Validator\\FileType::isValid",
+        "Utopia\\Storage\\Validator\\FileType::__construct"
+      ]
+    },
+    "upload.validate": {
+      "doc": "new Upload(): {valid, description, type, array}",
+      "covers": [
+        "Utopia\\Storage\\Validator\\Upload::getDescription",
+        "Utopia\\Storage\\Validator\\Upload::getType",
+        "Utopia\\Storage\\Validator\\Upload::isArray",
+        "Utopia\\Storage\\Validator\\Upload::isValid"
+      ]
+    },
+    "fs.put": {
+      "doc": "fixture: file_put_contents(path, data repeated `repeat` times), creating the directory"
+    },
+    "fs.get": {
+      "doc": "fixture: file_get_contents(path), false when no file"
+    },
+    "fs.exists": {
+      "doc": "fixture: file_exists(path)"
+    },
+    "fs.is_dir": {
+      "doc": "fixture: is_dir(path)"
+    },
+    "fs.mkdir": {
+      "doc": "fixture: mkdir -p"
+    },
+    "fs.perms": {
+      "doc": "fixture: the permission bits of a path, in octal"
+    },
+    "fs.md5": {
+      "doc": "fixture: md5_file(path)"
+    },
+    "fs.unlink": {
+      "doc": "fixture: unlink(path)"
+    },
+    "local.write_read": {
+      "doc": "fuzz: a Local device under the run's directory writes `data` to `path`, then reads `length` bytes from `offset`: {etag, read, size, hash}",
+      "fuzz": [
+        {
+          "name": "binary",
+          "iterations": 300,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "path": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "string",
+                    "min": 1,
+                    "max": 12,
+                    "alphabet": "abcxyz-_"
+                  },
+                  {
+                    "gen": "const",
+                    "value": ".bin"
+                  }
+                ]
+              },
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 4096
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 5000
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 5000
+                  }
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    "s3.wire": {
+      "doc": "fuzz: one S3 call (write, read, delete, list, info) on a device whose scripted client answers `response`: {result or error, requests}",
+      "mask": {
+        "paths": [
+          "/requests/*/headers/authorization",
+          "/requests/*/headers/date",
+          "/requests/*/headers/x-amz-date"
+        ],
+        "reason": "the signature and dates depend on the time of the request"
+      },
+      "fuzz": [
+        {
+          "name": "calls",
+          "iterations": 400,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "call": {
+                "gen": "pick",
+                "from": [
+                  "write",
+                  "read",
+                  "delete",
+                  "list",
+                  "info"
+                ]
+              },
+              "host": {
+                "gen": "pick",
+                "from": [
+                  "https://s3.example.com",
+                  "http://minio:9000/bucket/",
+                  "s3.example.com:8443",
+                  "HTTP://Host.Example:80/a//b/"
+                ]
+              },
+              "region": {
+                "gen": "pick",
+                "from": [
+                  "us-east-1",
+                  "eu-central-003",
+                  ""
+                ]
+              },
+              "path": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "min": 1,
+                    "max": 20,
+                    "alphabet": "ab./\\-_ ?%+&#09"
+                  },
+                  {
+                    "gen": "string",
+                    "max": 24,
+                    "tricky": 0.4
+                  }
+                ]
+              },
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 64
+                  },
+                  {
+                    "gen": "string",
+                    "max": 16,
+                    "alphabet": "abc019"
+                  }
+                ]
+              },
+              "content_type": {
+                "gen": "pick",
+                "from": [
+                  "text/plain",
+                  "",
+                  " text/plain ",
+                  "application/xml"
+                ]
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 20
+              },
+              "cursor": {
+                "gen": "pick",
+                "from": [
+                  null,
+                  "",
+                  "0",
+                  "tok",
+                  "1"
+                ]
+              },
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "null"
+                  },
+                  {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 20
+                  }
+                ]
+              },
+              "response": {
+                "gen": "object",
+                "fields": {
+                  "status": {
+                    "gen": "pick",
+                    "from": [
+                      200,
+                      204,
+                      206,
+                      400,
+                      403,
+                      404,
+                      409,
+                      412,
+                      500
+                    ]
+                  },
+                  "headers": {
+                    "gen": "array",
+                    "min": 0,
+                    "max": 3,
+                    "items": {
+                      "gen": "pick",
+                      "from": [
+                        [
+                          "etag",
+                          "\"abc\""
+                        ],
+                        [
+                          "etag",
+                          "x"
+                        ],
+                        [
+                          "content-length",
+                          "11"
+                        ],
+                        [
+                          "content-length",
+                          "12abc"
+                        ],
+                        [
+                          "content-type",
+                          "application/xml"
+                        ],
+                        [
+                          "content-type",
+                          "image/svg+xml"
+                        ],
+                        [
+                          "x-amz-request-id",
+                          "R1"
+                        ],
+                        [
+                          "x-amz-id-2",
+                          "0"
+                        ],
+                        [
+                          "last-modified",
+                          "Fri, 18 Sep 2026 08:41:25 GMT"
+                        ],
+                        [
+                          "last-modified",
+                          "garbage"
+                        ]
+                      ]
+                    }
+                  },
+                  "body": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "concat",
+                        "parts": [
+                          {
+                            "gen": "pick",
+                            "from": [
+                              "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+                              "",
+                              "  "
+                            ]
+                          },
+                          {
+                            "gen": "const",
+                            "value": "<ListBucketResult><IsTruncated>"
+                          },
+                          {
+                            "gen": "pick",
+                            "from": [
+                              "true",
+                              "false",
+                              "TRUE",
+                              ""
+                            ]
+                          },
+                          {
+                            "gen": "const",
+                            "value": "</IsTruncated><NextContinuationToken>"
+                          },
+                          {
+                            "gen": "string",
+                            "min": 0,
+                            "max": 12,
+                            "alphabet": "abcXYZ019 -_./\"'"
+                          },
+                          {
+                            "gen": "const",
+                            "value": "</NextContinuationToken>"
+                          },
+                          {
+                            "gen": "repeat",
+                            "part": {
+                              "gen": "concat",
+                              "parts": [
+                                {
+                                  "gen": "const",
+                                  "value": "<Contents><Key>"
+                                },
+                                {
+                                  "gen": "string",
+                                  "min": 0,
+                                  "max": 12,
+                                  "alphabet": "abcXYZ019 -_./\"'"
+                                },
+                                {
+                                  "gen": "const",
+                                  "value": "</Key><Size>"
+                                },
+                                {
+                                  "gen": "pick",
+                                  "from": [
+                                    "1",
+                                    "0",
+                                    "+3",
+                                    "12abc",
+                                    "",
+                                    "1.5",
+                                    "99999999999999999999",
+                                    " 7"
+                                  ]
+                                },
+                                {
+                                  "gen": "const",
+                                  "value": "</Size><ETag>"
+                                },
+                                {
+                                  "gen": "string",
+                                  "min": 0,
+                                  "max": 12,
+                                  "alphabet": "abcXYZ019 -_./\"'"
+                                },
+                                {
+                                  "gen": "const",
+                                  "value": "</ETag></Contents>"
+                                }
+                              ]
+                            },
+                            "sep": "",
+                            "min": 0,
+                            "max": 3
+                          },
+                          {
+                            "gen": "const",
+                            "value": "</ListBucketResult>"
+                          }
+                        ]
+                      },
+                      {
+                        "gen": "concat",
+                        "parts": [
+                          {
+                            "gen": "pick",
+                            "from": [
+                              "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
+                              "",
+                              " "
+                            ]
+                          },
+                          {
+                            "gen": "const",
+                            "value": "<Error><Code>"
+                          },
+                          {
+                            "gen": "pick",
+                            "from": [
+                              "NoSuchKey",
+                              "PreconditionFailed",
+                              "AccessDenied",
+                              "SlowDown",
+                              ""
+                            ]
+                          },
+                          {
+                            "gen": "const",
+                            "value": "</Code><Message>"
+                          },
+                          {
+                            "gen": "string",
+                            "min": 0,
+                            "max": 12,
+                            "alphabet": "abcXYZ019 -_./\"'"
+                          },
+                          {
+                            "gen": "const",
+                            "value": "</Message></Error>"
+                          }
+                        ]
+                      },
+                      {
+                        "gen": "string",
+                        "max": 16
+                      },
+                      {
+                        "gen": "const",
+                        "value": ""
+                      }
+                    ]
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  },
+  "generators": {},
+  "waivers": {
+    "Utopia\\Storage\\Device\\S3\\Response::__construct": "Internal value object of S3::call() (a protected method); its contents are covered by every S3 operation's cases",
+    "Utopia\\Storage\\Exception\\RemoteException::__construct": "Accessor subsumed by Rust types: Error::Remote is built by the device, and its message, code and errorCode are covered by the `catch` results of the S3 cases"
+  },
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Storage\\Validator\\FileType::isValid",
+      "description": "The signature of `gz` is the text `application/x-gzip`, which no file's first seven bytes (what fgets($handle, 8) reads) can start with, so no gzip file is ever valid.",
+      "case": "FileTypeTest.json#other types and paths"
+    },
+    {
+      "symbol": "Utopia\\Storage\\Device\\S3::write",
+      "description": "Writes, multipart operations and aborts turn the `%3F` rawurlencode() made of a `?` in the path back into `?`, so the rest of the object key becomes part of the query string.",
+      "case": "S3Test.json#endpoints"
+    },
+    {
+      "symbol": "Utopia\\Storage\\Device\\S3::delete",
+      "description": "An S3 error code or message of \"0\" counts as missing (`(string) $xml->Code ?: null`), so the generic message is used instead.",
+      "case": "S3Test.json#error bodies"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Storage\\Device\\Local::getFileMimeType",
+      "php": "mime_content_type(): libmagic and its compiled database of several thousand rules.",
+      "reason": "There is no pure-Rust libmagic, and linking the system libmagic would not give PHP's bundled database either. utopia_storage::mime detects the formats storage buckets hold (images, audio, video, archives, documents, fonts) by signature and tells text, JSON, XML, SVG, HTML, PHP and scripts apart as libmagic does; the cases pin every fixture and common format. Content outside that table can get another type than libmagic gives (truncated archives are application/octet-stream in PHP, by signature in Rust), so mime detection is not fuzzed."
+    },
+    {
+      "symbol": "Utopia\\Storage\\Device\\S3::listFiles",
+      "php": "A listing entry with a negative numeric <Size> (`-3`) gives a FileInfo with that negative size.",
+      "reason": "FileInfo::size is a u64 in Rust; a negative object size is malformed service output, reported as 0."
+    },
+    {
+      "symbol": "Utopia\\Storage\\Device\\Local::deletePath",
+      "php": "Subdirectories are recursed into by stripping strlen($root . \"/\") bytes from realpath()'d paths, which only works when the root is already canonical: under a symlinked root (macOS /tmp) PHP recurses into wrong paths, leaves the subdirectories and returns false.",
+      "reason": "Rust strips the canonical root instead, so it also works under a symlinked root; with a canonical root (every case, and every Linux deployment) both behave the same."
+    },
+    {
+      "symbol": "Utopia\\Storage\\Validator\\Upload::isValid",
+      "php": "is_uploaded_file(): whether the SAPI received the path as an upload of the current request (always false in the CLI, as in the cases).",
+      "reason": "Rust has no SAPI upload registry: the HTTP layer gives Upload::new() the paths it stored the request's uploads at, and the default validator accepts none, as PHP's CLI."
+    },
+    {
+      "symbol": "Utopia\\Storage\\Device\\S3::__construct",
+      "php": "Without a client, utopia-php/client's cURL adapter with no overall deadline, a 60 s low-speed abort and TCP keepalive, wrapped in Retry with RetryStrategy.",
+      "reason": "The default Rust client (s3::HttpClient over hyper, wrapped in s3::Retry with RetryStrategy) has no low-speed watchdog; callers that need one pass their own s3::Client. Requests, signing, retries and responses are the same."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "s3_write": "A MinIO round trip (PUT of 64 KB, hashing included), the same on both runtimes, dominates the call",
+      "local_write": "File system calls (create, write, rename) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
+      "local_read": "File system calls (open, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call",
+      "local_read_range": "File system calls (open, seek, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+    }
+  }
+}
