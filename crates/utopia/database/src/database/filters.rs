@@ -928,4 +928,58 @@ mod tests {
         assert_eq!(signatures_json(&[("a/b".to_owned(), "x".to_owned())]), r#"{"a\/b":"x"}"#);
         assert_eq!(signatures_json(&[]), "[]");
     }
+
+    /// The default filters' signatures against the PHP source they name:
+    /// `vendor/utopia-php/database/src/Database/Database.php` in the
+    /// checkout (present where `composer install` ran), or the file
+    /// `UTOPIA_DATABASE_PHP` names (`docker cp` it out of the PHP image).
+    /// Each `self::addFilter(` of `registerDefaultFilters()`, in order,
+    /// gives the start lines of its two closures. Without the file this
+    /// test has nothing to read; the compat cases that record
+    /// `getCacheKeys` from PHP still catch a moved closure.
+    #[test]
+    fn default_signatures_match_the_php_source() {
+        let path = std::env::var("UTOPIA_DATABASE_PHP").unwrap_or_else(|_| {
+            concat!(env!("CARGO_MANIFEST_DIR"), "/../../../vendor/utopia-php/database/src/Database/Database.php")
+                .to_owned()
+        });
+        let Ok(source) = std::fs::read_to_string(&path) else {
+            return;
+        };
+        let lines: Vec<&str> = source.lines().collect();
+        let start = lines
+            .iter()
+            .position(|l| l.contains("function registerDefaultFilters("))
+            .expect("registerDefaultFilters() in Database.php");
+        let mut closures: Vec<(u32, u32)> = Vec::new();
+        let mut current: Vec<u32> = Vec::new();
+        let mut depth = 0i32;
+        for (i, line) in lines.iter().enumerate().skip(start) {
+            let trimmed = line.trim_start();
+            if trimmed.starts_with("self::addFilter(") {
+                current.clear();
+            } else if trimmed.starts_with("static function (") || trimmed.starts_with("function (") {
+                current.push(i as u32 + 1);
+                if current.len() == 2 {
+                    closures.push((current[0], current[1]));
+                }
+            }
+            depth += line.matches('{').count() as i32 - line.matches('}').count() as i32;
+            if i > start && depth <= 0 && trimmed == "}" {
+                break;
+            }
+        }
+        let defaults: [&dyn Filter; 7] = [
+            &JsonFilter,
+            &DatetimeFilter,
+            &PointFilter,
+            &LinestringFilter,
+            &PolygonFilter,
+            &VectorFilter,
+            &ObjectFilter,
+        ];
+        let ours: Vec<String> = defaults.iter().map(|f| f.signature()).collect();
+        let php: Vec<String> = closures.iter().map(|&(e, d)| default_signature(e, d)).collect();
+        assert_eq!(ours, php, "update the default filters' default_signature() lines to {path}'s closures");
+    }
 }

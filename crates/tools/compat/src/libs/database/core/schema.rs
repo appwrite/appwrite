@@ -627,6 +627,12 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
             }
         }
     }
+    // The fixture filters are process-wide and cache keys carry every
+    // registered filter's signature: registering them all as a database
+    // opens keeps a case's keys independent of the cases run before it.
+    for name in args::FILTERS {
+        Database::add_filter(name, args::filter(name)?);
+    }
     let peer = a.given("adapter");
     let (adapter, postgres): (Arc<dyn Adapter>, Option<Arc<Postgres>>) = if peer {
         let db = session

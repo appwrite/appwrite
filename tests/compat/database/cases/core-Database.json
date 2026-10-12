@@ -2141,7 +2141,7 @@
           "expect": [
             "default-cache-compat-database-postgres:compat::collection:movies",
             "default-cache-compat-database-postgres:compat::collection:movies:alien",
-            "default-cache-compat-database-postgres:compat::collection:movies:alien:f17e506aed1d2dabf46272c74d73b9c1"
+            "default-cache-compat-database-postgres:compat::collection:movies:alien:345021504255cccae42e6b02a79e31bc"
           ]
         },
         {
@@ -2168,6 +2168,12 @@
                 }
               }
             ]
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "the field hashes the database name, which is each runtime's own schema (${ns})"
           },
           "expect": "<masked>"
         },
@@ -3260,8 +3266,8 @@
                         "year": null,
                         "$id": "old",
                         "$sequence": "9",
-                        "$createdAt": "2000-01-01 00:00:00.000",
-                        "$updatedAt": "2000-01-01 00:00:00.000",
+                        "$createdAt": "2000-01-01T00:00:00.000+00:00",
+                        "$updatedAt": "2000-01-01T00:00:00.000+00:00",
                         "$permissions": [],
                         "$collection": "movies"
                       }

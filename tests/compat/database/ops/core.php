@@ -38,7 +38,7 @@ final class Invocation
     public array $steps = [];
 
     /**
-     * @param list<mixed> $args the arguments, as PHP values
+     * @param list<mixed> $args the arguments, encoded as the call received them
      */
     public function __construct(public readonly array $args)
     {
@@ -67,6 +67,9 @@ final class CoreState
 
 final class Core
 {
+    /** The filter fixtures (Core::filter), registered by every `db.open`. */
+    public const FILTERS = ['encrypt', 'subQueryProbe', 'operator_double_decode'];
+
     /** @var array<string, callable(array<string, mixed>, Session): mixed> operations returning PHP values */
     public static array $raw = [];
 
@@ -135,6 +138,14 @@ final class Core
             }
         }
         $state = self::state($s);
+        // The fixture filters are process-wide (Database::$filters) and cache
+        // keys carry every registered filter's signature: registering them all
+        // as a database opens keeps a case's keys independent of the cases the
+        // driver ran before it.
+        foreach (self::FILTERS as $name) {
+            $filter = self::filter($name);
+            Database::addFilter($name, $filter['encode'], $filter['decode']);
+        }
         if (isset($a['adapter'])) {
             $peer = $s->get($a['adapter']);
             if (!$peer instanceof Database) {
@@ -371,7 +382,11 @@ final class Core
         }
 
         return function (mixed ...$args) use ($s, $steps, &$calls) {
-            $invocation = new Invocation(array_values($args));
+            // Encoded as the callback receives them: the library may change a
+            // document after the call (iterate() encodes its last document in
+            // place as the next page's cursor), which a Rust callback, given
+            // its own copy, never sees.
+            $invocation = new Invocation(array_map(self::result(...), array_values($args)));
             $calls[] = $invocation;
 
             return self::run($s, $steps, $invocation);
@@ -455,7 +470,7 @@ final class Core
         if (isset($value['$arg']) && \is_int($value['$arg'])) {
             $arg = $invocation->args[$value['$arg']] ?? throw new Fault("the callback has no argument {$value['$arg']}");
 
-            return self::pointer(self::result($arg), (string) ($value['path'] ?? ''));
+            return self::pointer($arg, (string) ($value['path'] ?? ''));
         }
 
         return array_map(fn ($v) => self::locals($v, $locals, $invocation), $value);
@@ -492,7 +507,7 @@ final class Core
                 'result' => self::result($value->result),
                 'calls' => array_map(
                     fn (array $invocations) => array_map(fn (Invocation $i) => [
-                        'args' => array_map(self::result(...), $i->args),
+                        'args' => $i->args,
                         'steps' => $i->steps,
                     ], $invocations),
                     $value->calls,

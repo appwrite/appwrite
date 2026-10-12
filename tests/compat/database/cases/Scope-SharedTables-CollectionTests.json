@@ -109668,7 +109668,7 @@
           "expect": [
             "default-cache-compat-database-postgres:::collection:_metadata",
             "default-cache-compat-database-postgres:::collection:_metadata:globalCollection",
-            "default-cache-compat-database-postgres:::collection:_metadata:globalCollection:f17e506aed1d2dabf46272c74d73b9c1"
+            "default-cache-compat-database-postgres:::collection:_metadata:globalCollection:345021504255cccae42e6b02a79e31bc"
           ]
         },
         {
@@ -109693,7 +109693,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:_metadata",
             "default-cache-compat-database-postgres::1:collection:_metadata:nonGlobalCollection",
-            "default-cache-compat-database-postgres::1:collection:_metadata:nonGlobalCollection:f17e506aed1d2dabf46272c74d73b9c1"
+            "default-cache-compat-database-postgres::1:collection:_metadata:nonGlobalCollection:345021504255cccae42e6b02a79e31bc"
           ]
         },
         {
@@ -109718,7 +109718,7 @@
           "expect": [
             "default-cache-compat-database-postgres::1:collection:globalCollection",
             "default-cache-compat-database-postgres::1:collection:globalCollection:u0000000000000000004",
-            "default-cache-compat-database-postgres::1:collection:globalCollection:u0000000000000000004:f17e506aed1d2dabf46272c74d73b9c1"
+            "default-cache-compat-database-postgres::1:collection:globalCollection:u0000000000000000004:345021504255cccae42e6b02a79e31bc"
           ]
         },
         {

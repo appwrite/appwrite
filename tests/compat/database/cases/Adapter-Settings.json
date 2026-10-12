@@ -3423,7 +3423,7 @@
             "adapter": {
               "$ref": "a"
             },
-            "milliseconds": 1
+            "milliseconds": 60000
           },
           "expect": null
         },

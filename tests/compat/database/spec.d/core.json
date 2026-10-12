@@ -382,13 +382,7 @@
       "doc": "$db->getQueryCacheField(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
         "Utopia\\Database\\Database::getQueryCacheField"
-      ],
-      "mask": {
-        "paths": [
-          ""
-        ],
-        "reason": "hashes the filters' signatures, which are the PHP source locations (file:line) of their closures"
-      }
+      ]
     },
     "database.get_query_cache_key": {
       "doc": "$db->getQueryCacheKey(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",

@@ -776,8 +776,14 @@ fn pointer(value: &Json, path: &str) -> Result<Json, Fault> {
 /// (`file:line` of their closures) name it.
 const CORE_PHP: &str = "/usr/src/code/tests/compat/database/ops/core.php";
 
-/// The line of the logging closure every fixture filter's callables are.
-const FIXTURE_LINE: u32 = 536;
+/// The line of the logging closure every fixture filter's callables are
+/// (`$logged = fn ...` in `Core::filter`). A test below reads `ops/core.php`
+/// and fails when it moves.
+const FIXTURE_LINE: u32 = 551;
+
+/// The filter fixtures, which every `db.open` registers (PHP's
+/// `Core::FILTERS`).
+pub const FILTERS: [&str; 3] = ["encrypt", "subQueryProbe", "operator_double_decode"];
 
 /// A filter fixture of the e2e suite (`Core::filter`): `encrypt`,
 /// `subQueryProbe` or `operator_double_decode`, logging each call
@@ -920,4 +926,22 @@ pub fn transform(event: &str, name: &str, spec: Option<&Json>) -> R<Option<Trans
         log(json!({"transform": event, "name": name, "sql": sql}));
         sql
     })))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Fixture filters' signatures name the line of their closure in the PHP
+    /// driver; cache keys carry them, so a moved line must move here too.
+    #[test]
+    fn fixture_line_matches_core_php() {
+        let path = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../tests/compat/database/ops/core.php");
+        let source = std::fs::read_to_string(path).expect("ops/core.php");
+        let line = source
+            .lines()
+            .position(|l| l.trim_start().starts_with("$logged = fn (string $call, callable $fn) => function"))
+            .map(|i| i as u32 + 1);
+        assert_eq!(line, Some(FIXTURE_LINE), "update FIXTURE_LINE to the line of `$logged = fn` in {path}");
+    }
 }
