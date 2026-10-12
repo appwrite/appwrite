@@ -180,15 +180,17 @@ class Upsert extends Action
 
         try {
             $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collection, $collectionTableId, $documents, $plan, &$upserted) {
-                return $this->withIntegerOperatorsResolved($dbForDatabases, $collectionTableId, $collection, $documents, fn (array $documents): int => $dbForDatabases->upsertDocuments(
-                    $collectionTableId,
-                    $documents,
-                    onNext: function (Document $document) use ($plan, &$upserted) {
-                        if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                            $upserted[] = $document;
-                        }
-                    },
-                ));
+                return $this->withIntegerOperatorsResolved($dbForDatabases, $collectionTableId, $collection, $documents, function (array $documents) use ($dbForDatabases, $collectionTableId, $plan, &$upserted): int {
+                    return $dbForDatabases->upsertDocuments(
+                        $collectionTableId,
+                        $documents,
+                        onNext: function (Document $document) use ($plan, &$upserted) {
+                            if (\count($upserted) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                                $upserted[] = $document;
+                            }
+                        },
+                    );
+                });
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

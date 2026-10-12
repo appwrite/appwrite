@@ -275,13 +275,15 @@ class Upsert extends Action
                     function (array $documents) use (&$upserted, $dbForDatabases, $collection, $collectionTableId) {
                         $upserted = [];
 
-                        return $this->withIntegerOperatorsResolved($dbForDatabases, $collectionTableId, $collection, $documents, fn (array $documents): int => $dbForDatabases->upsertDocuments(
-                            $collectionTableId,
-                            $documents,
-                            onNext: function (Document $document) use (&$upserted) {
-                                $upserted[] = $document;
-                            },
-                        ));
+                        return $this->withIntegerOperatorsResolved($dbForDatabases, $collectionTableId, $collection, $documents, function (array $documents) use ($dbForDatabases, $collectionTableId, &$upserted): int {
+                            return $dbForDatabases->upsertDocuments(
+                                $collectionTableId,
+                                $documents,
+                                onNext: function (Document $document) use (&$upserted) {
+                                    $upserted[] = $document;
+                                },
+                            );
+                        });
                     }
                 );
             });
