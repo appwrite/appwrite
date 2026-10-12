@@ -37,6 +37,8 @@ serde_json.workspace = true
 sha2.workspace = true
 syn.workspace = true
 tokio = { workspace = true, features = ["fs", "io-std", "io-util", "rt", "macros"] }
+# A WebSocket client for the mqtt cases' MQTT-over-WebSocket steps.
+tokio-tungstenite.workspace = true
 
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
@@ -63,6 +65,7 @@ utopia-locale.workspace = true
 utopia-lock.workspace = true
 utopia-openapi.workspace = true
 utopia-nats.workspace = true
+utopia-mqtt.workspace = true
 utopia-queue.workspace = true
 async-nats.workspace = true
 utopia-system.workspace = true

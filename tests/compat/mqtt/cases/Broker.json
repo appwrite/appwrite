@@ -1,0 +1,485 @@
+{
+  "cases": [
+    {
+      "name": "a Server with the Recorder handler on the network: v5 and v3 clients, prefix isolation, QoS 1 delivery and PUBACKs",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "one",
+            "keep_alive": 30,
+            "clean_start": true,
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "prefix",
+                      "p1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "c1",
+          "expect": "\u0010\u001d\u0000\u0004MQTT\u0005\u0002\u0000\u001e\r&\u0000\u0006prefix\u0000\u0002p1\u0000\u0003one"
+        },
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "two",
+            "keep_alive": 30,
+            "clean_session": true
+          },
+          "bind": "c2",
+          "expect": "\u0010\u000f\u0000\u0004MQTT\u0004\u0002\u0000\u001e\u0000\u0003two"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 1,
+            "filters": [
+              "a/#"
+            ],
+            "qos": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "ggkAAQAAA2EvIwE="
+          }
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "a/b",
+            "payload": "net",
+            "qos": 1,
+            "packet_id": 5
+          },
+          "bind": "p",
+          "expect": "2\n\u0000\u0003a/b\u0000\u0005net"
+        },
+        {
+          "op": "v5.puback",
+          "args": {
+            "packet_id": "\u0000\u0001"
+          },
+          "bind": "ack",
+          "expect": "@\u0002\u0000\u0001"
+        },
+        {
+          "op": "packet.ping",
+          "args": {},
+          "bind": "ping",
+          "expect": [
+            {
+              "$bytes": "wAA="
+            },
+            {
+              "$bytes": "0AA="
+            }
+          ]
+        },
+        {
+          "op": "v5.disconnect",
+          "args": {
+            "code": 0
+          },
+          "bind": "d",
+          "expect": {
+            "$bytes": "4AIAAA=="
+          }
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "broker",
+            "steps": [
+              {
+                "connect": "a"
+              },
+              {
+                "send": "a",
+                "data": {
+                  "$ref": "c1"
+                }
+              },
+              {
+                "receive": "a"
+              },
+              {
+                "send": "a",
+                "data": {
+                  "$ref": "s"
+                }
+              },
+              {
+                "receive": "a"
+              },
+              {
+                "connect": "b"
+              },
+              {
+                "send": "b",
+                "data": {
+                  "$ref": "c2"
+                }
+              },
+              {
+                "receive": "b"
+              },
+              {
+                "send": "b",
+                "data": {
+                  "$ref": "p"
+                }
+              },
+              {
+                "receive": "b"
+              },
+              {
+                "receive": "a"
+              },
+              {
+                "send": "a",
+                "data": {
+                  "$ref": "ack"
+                }
+              },
+              {
+                "send": "b",
+                "data": {
+                  "$ref": "ping",
+                  "path": "/0"
+                }
+              },
+              {
+                "receive": "b"
+              },
+              {
+                "send": "a",
+                "data": {
+                  "$ref": "d"
+                }
+              },
+              {
+                "receive": "a"
+              },
+              {
+                "connected": "a"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u0003\u0000\u0000\u0000",
+            null,
+            {
+              "$bytes": "kAQAAQAB"
+            },
+            null,
+            null,
+            " \u0002\u0000\u0000",
+            null,
+            "@\u0002\u0000\u0005",
+            null,
+            null,
+            null,
+            {
+              "$bytes": "0AA="
+            },
+            null,
+            null,
+            false
+          ]
+        }
+      ]
+    },
+    {
+      "name": "keep-alive: a client silent past its keep-alive is reaped by the timing wheel",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "k",
+            "keep_alive": 1,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u000e\u0000\u0004MQTT\u0005\u0002\u0000\u0001\u0000\u0000\u0001k"
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "broker",
+            "steps": [
+              {
+                "connect": "a"
+              },
+              {
+                "send": "a",
+                "data": {
+                  "$ref": "c"
+                }
+              },
+              {
+                "receive": "a"
+              },
+              {
+                "send": "a",
+                "data": {
+                  "$ref": "c"
+                }
+              },
+              {
+                "listen": "a"
+              },
+              {
+                "connected": "a"
+              },
+              {
+                "log": "a"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u0003\u0000\u0000\u0000",
+            null,
+            null,
+            false,
+            [
+              [
+                "open"
+              ],
+              [
+                "receive",
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                "receive",
+                " \u0003\u0000\u0000\u0000"
+              ],
+              [
+                "close"
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "WebSocket and TLS clients of the Server; a handler error closes the connection",
+      "steps": [
+        {
+          "op": "v5.connect",
+          "args": {
+            "client_id": "w",
+            "keep_alive": 30,
+            "clean_start": true
+          },
+          "bind": "c",
+          "expect": "\u0010\u000e\u0000\u0004MQTT\u0005\u0002\u0000\u001e\u0000\u0000\u0001w"
+        },
+        {
+          "op": "v5.subscribe",
+          "args": {
+            "packet_id": 7,
+            "filters": [
+              "w/+"
+            ],
+            "qos": 1
+          },
+          "bind": "s",
+          "expect": {
+            "$bytes": "ggkABwAAA3cvKwE="
+          }
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "w/1",
+            "payload": "loop",
+            "qos": 1,
+            "packet_id": 8
+          },
+          "bind": "p",
+          "expect": "2\f\u0000\u0003w/1\u0000\b\u0000loop"
+        },
+        {
+          "op": "v5.publish",
+          "args": {
+            "topic": "boom",
+            "payload": "",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "x",
+          "expect": "0\u0007\u0000\u0004boom\u0000"
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "broker",
+            "steps": [
+              {
+                "ws_connect": "w",
+                "protocol": "mqtt"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "c"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "s"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_send": "w",
+                "data": {
+                  "$ref": "p"
+                }
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "ws_receive": "w"
+              },
+              {
+                "connect": "t",
+                "transport": "tls"
+              },
+              {
+                "send": "t",
+                "data": {
+                  "$ref": "c"
+                }
+              },
+              {
+                "receive": "t"
+              },
+              {
+                "send": "t",
+                "data": {
+                  "$ref": "x"
+                }
+              },
+              {
+                "receive": "t"
+              },
+              {
+                "connected": "t"
+              },
+              {
+                "ws_close": "w"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "upgraded": true,
+              "protocol": "mqtt"
+            },
+            true,
+            " \u0003\u0000\u0000\u0000",
+            true,
+            {
+              "$bytes": "kAQABwAB"
+            },
+            true,
+            "2\f\u0000\u0003w/1\u0000\u0001\u0000loop",
+            "@\u0002\u0000\b",
+            null,
+            null,
+            " \u0003\u0000\u0000\u0000",
+            null,
+            null,
+            false,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "stop() shuts the adapter down and closes its connections",
+      "steps": [
+        {
+          "op": "v3.connect",
+          "args": {
+            "client_id": "s",
+            "keep_alive": 30,
+            "clean_session": true
+          },
+          "bind": "c",
+          "expect": "\u0010\r\u0000\u0004MQTT\u0004\u0002\u0000\u001e\u0000\u0001s"
+        },
+        {
+          "op": "v3.publish",
+          "args": {
+            "topic": "compat/shutdown",
+            "payload": "",
+            "qos": 0,
+            "packet_id": 0
+          },
+          "bind": "stop",
+          "expect": "0\u0011\u0000\u000fcompat/shutdown"
+        },
+        {
+          "op": "e2e.run",
+          "args": {
+            "mode": "broker",
+            "steps": [
+              {
+                "connect": "a"
+              },
+              {
+                "send": "a",
+                "data": {
+                  "$ref": "c"
+                }
+              },
+              {
+                "receive": "a"
+              },
+              {
+                "send": "a",
+                "data": {
+                  "$ref": "stop"
+                }
+              },
+              {
+                "receive": "a"
+              },
+              {
+                "connected": "a"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            null,
+            " \u0002\u0000\u0000",
+            null,
+            null,
+            false
+          ]
+        }
+      ]
+    }
+  ]
+}

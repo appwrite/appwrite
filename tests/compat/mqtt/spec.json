@@ -1,0 +1,2208 @@
+{
+  "lib": "mqtt",
+  "description": "utopia-php/mqtt: MQTT 5.0 and 3.1.1 brokers: the packet codec (V3/V5 encoders, decoded packets, properties), a subscription trie, per-connection delivery state, a broker over adapters (Swoole on TCP, TLS and WebSocket with a timing wheel; Rust: Tokio, Memory), and a client.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/mqtt/src"
+    ],
+    "tests": [
+      "packages/mqtt/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/mqtt"
+  },
+  "services": [
+    "mqtt-tcp",
+    "mqtt-ws",
+    "mqtt-tls",
+    "mqtt-host"
+  ],
+  "state": [],
+  "ops": {
+    "length.decode": {
+      "doc": "Packet::decodeLength(data, offset): [value (int, or float past nine bytes), bytes read]",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::decodeLength"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "varint"
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "length.encode": {
+      "doc": "Packet::encodeLength(length)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::encodeLength"
+      ],
+      "fuzz": [
+        {
+          "name": "lengths",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "length": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 300
+                  },
+                  {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 268435455
+                  },
+                  {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 9223372036854775807
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.read": {
+      "doc": "Packet::readString(data, offset): [value, offset past it]",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::readString"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 24
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 26
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "string.encode": {
+      "doc": "Packet::encodeString(value)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::encodeString"
+      ],
+      "fuzz": [
+        {
+          "name": "strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 40,
+                    "alphabet": "unicode",
+                    "tricky": 0.3
+                  },
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 40
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "int16.read": {
+      "doc": "Packet::readInt16(data, offset): [value, offset + 2]",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::readInt16"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 6
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 7
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "byte.read": {
+      "doc": "Packet::readByte(data, offset): [value, offset + 1]",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::readByte"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 4
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 5
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "packet.parse": {
+      "doc": "Packet::parse(data): {type, flags, body, name(), qos(), dup()}",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::parse",
+        "Utopia\\Mqtt\\Packet::name",
+        "Utopia\\Mqtt\\Packet::qos",
+        "Utopia\\Mqtt\\Packet::dup"
+      ],
+      "fuzz": [
+        {
+          "name": "frames",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "data"
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "packet.new": {
+      "doc": "new Packet(type, flags, body): {type, flags, body, name(), qos(), dup()}",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "fields",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "int",
+                "min": 0,
+                "max": 255
+              },
+              "flags": {
+                "gen": "int",
+                "min": 0,
+                "max": 255
+              },
+              "body": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "packet.clean_start": {
+      "doc": "Packet::isCleanStart(body)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::isCleanStart"
+      ]
+    },
+    "packet.client_id": {
+      "doc": "Packet::getClientId(body)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::getClientId"
+      ],
+      "mask": {
+        "paths": [
+          "/$error/message"
+        ],
+        "reason": "the only errors are TypeErrors, whose PHP message ends with the PHP call site (`, called in .../Packet.php on line 106`); Rust reports the same class and the message up to it"
+      }
+    },
+    "packet.frames": {
+      "doc": "Packet::frames(buffer): [whole packets, remainder]",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::frames"
+      ],
+      "fuzz": [
+        {
+          "name": "streams",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "buffer": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 40
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "stream"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "packet.ping": {
+      "doc": "[Packet::pingreq(), Packet::pingresp()]",
+      "covers": [
+        "Utopia\\Mqtt\\Packet::pingreq",
+        "Utopia\\Mqtt\\Packet::pingresp"
+      ]
+    },
+    "decode.all": {
+      "doc": "every decoder on one frame (`data`, or `base` with `edits` and `cut`, see data() in Adapter.php): decodeLength(data, 1), frames(), parse(), then on its body isCleanStart, getClientId, Connect/Auth/Disconnect/Publish/Puback/Subscribe/Unsubscribe::decode, Properties::parse(body, 0) and skip(body, 0); each a value or {$error: {class, message}}",
+      "fuzz": [
+        {
+          "name": "random",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 48
+              },
+              "protocol": {
+                "gen": "pick",
+                "from": [
+                  4,
+                  5
+                ]
+              }
+            }
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "mutated",
+          "args": {
+            "gen": "ref",
+            "name": "mutated"
+          },
+          "iterations": 10000
+        },
+        {
+          "name": "varints",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "base": {
+                "gen": "ref",
+                "name": "frame"
+              },
+              "edits": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "op": {
+                      "gen": "pick",
+                      "from": [
+                        "insert"
+                      ]
+                    },
+                    "at": {
+                      "gen": "int",
+                      "min": 1,
+                      "max": 30
+                    },
+                    "byte": {
+                      "gen": "pick",
+                      "from": [
+                        128,
+                        255,
+                        129,
+                        200,
+                        255
+                      ]
+                    }
+                  }
+                },
+                "min": 4,
+                "max": 14
+              },
+              "protocol": {
+                "gen": "pick",
+                "from": [
+                  4,
+                  5
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ],
+      "mask": {
+        "paths": [
+          "/client_id/$error/message"
+        ],
+        "reason": "getClientId's only errors are TypeErrors, whose PHP message ends with the PHP call site; Rust reports the same class and the message up to it"
+      }
+    },
+    "property.wire_type": {
+      "doc": "Property::wireType(id)",
+      "covers": [
+        "Utopia\\Mqtt\\Property::wireType"
+      ],
+      "fuzz": [
+        {
+          "name": "ids",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "id": {
+                "gen": "int",
+                "min": 0,
+                "max": 255
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "property.encode": {
+      "doc": "(new Property(id, value))->encode(); value: int, float, string or {pair: [[key, value]]}",
+      "covers": [
+        "Utopia\\Mqtt\\Property::__construct",
+        "Utopia\\Mqtt\\Property::encode"
+      ],
+      "fuzz": [
+        {
+          "name": "properties",
+          "args": {
+            "gen": "ref",
+            "name": "property"
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "properties.encode": {
+      "doc": "(new Properties())->add(new Property(id, value))... ->encode() for properties [{id, value}]",
+      "covers": [
+        "Utopia\\Mqtt\\Properties::add",
+        "Utopia\\Mqtt\\Properties::encode"
+      ],
+      "fuzz": [
+        {
+          "name": "blocks",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "properties": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "property_pair"
+                },
+                "min": 0,
+                "max": 6
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "properties.parse": {
+      "doc": "Properties::parse(data, offset): {properties: all() as [id, value], offset, user()}",
+      "covers": [
+        "Utopia\\Mqtt\\Properties::parse",
+        "Utopia\\Mqtt\\Properties::all",
+        "Utopia\\Mqtt\\Properties::user"
+      ],
+      "fuzz": [
+        {
+          "name": "random",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 32
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "properties.get": {
+      "doc": "Properties::get(id) for each of ids, on a block built from properties",
+      "covers": [
+        "Utopia\\Mqtt\\Properties::get"
+      ],
+      "fuzz": [
+        {
+          "name": "lookups",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "properties": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "property_pair"
+                },
+                "min": 0,
+                "max": 5
+              },
+              "ids": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "property_id"
+                },
+                "min": 1,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "properties.skip": {
+      "doc": "Properties::skip(data, offset)",
+      "covers": [
+        "Utopia\\Mqtt\\Properties::skip"
+      ],
+      "fuzz": [
+        {
+          "name": "random",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "varint"
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "connect.decode": {
+      "doc": "Connect::decode(body): every property, the will as [topic, payload, qos, retain], userProperties()",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Connect::decode",
+        "Utopia\\Mqtt\\Packet\\Connect::userProperties"
+      ]
+    },
+    "auth.decode": {
+      "doc": "Auth::decode(body)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Auth::decode",
+        "Utopia\\Mqtt\\Packet\\Auth::userProperties"
+      ]
+    },
+    "auth.new": {
+      "doc": "Auth::success(method?) / Auth::challenge(method, data)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Auth::success",
+        "Utopia\\Mqtt\\Packet\\Auth::challenge"
+      ]
+    },
+    "connack.new": {
+      "doc": "Connack::accept(session_present, properties) / Connack::refuse(reason_code, properties), with accepted()",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Connack::accept",
+        "Utopia\\Mqtt\\Packet\\Connack::refuse",
+        "Utopia\\Mqtt\\Packet\\Connack::accepted"
+      ]
+    },
+    "disconnect.decode": {
+      "doc": "Disconnect::decode(body)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Disconnect::decode"
+      ]
+    },
+    "disconnect.new": {
+      "doc": "Disconnect::refuse(reason_code?, reason?) / Disconnect::normal(reason?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Disconnect::refuse",
+        "Utopia\\Mqtt\\Packet\\Disconnect::normal"
+      ],
+      "fuzz": [
+        {
+          "name": "reasons",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "kind": {
+                "gen": "pick",
+                "from": [
+                  "refuse",
+                  "normal"
+                ]
+              },
+              "reason_code": {
+                "gen": "int",
+                "min": 0,
+                "max": 255
+              },
+              "reason": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 12,
+                    "alphabet": "unicode",
+                    "tricky": 0.3
+                  },
+                  {
+                    "gen": "null"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "reason_code",
+              "reason"
+            ]
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "publish.decode": {
+      "doc": "Publish::decode(Packet::parse(data), protocol)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Publish::decode",
+        "Utopia\\Mqtt\\Packet\\Publish::userProperties"
+      ]
+    },
+    "puback.decode": {
+      "doc": "Puback::decode(body)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Puback::decode"
+      ]
+    },
+    "subscribe.decode": {
+      "doc": "Subscribe::decode(body, protocol): filters() as [topic, qos]",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Subscribe::decode",
+        "Utopia\\Mqtt\\Packet\\Subscribe::filters"
+      ]
+    },
+    "unsubscribe.decode": {
+      "doc": "Unsubscribe::decode(body, protocol)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Unsubscribe::decode",
+        "Utopia\\Mqtt\\Packet\\Unsubscribe::filters"
+      ]
+    },
+    "filter.new": {
+      "doc": "new Filter(topic, qos) as [topic, qos]",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Filter::__construct"
+      ]
+    },
+    "will.new": {
+      "doc": "new Will(topic, payload, qos, retain) as a list",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Will::__construct"
+      ]
+    },
+    "suback.build": {
+      "doc": "(new Suback())->grant(qos) / ->deny(code?) for each step, chained; codes()",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Suback::grant",
+        "Utopia\\Mqtt\\Packet\\Suback::deny",
+        "Utopia\\Mqtt\\Packet\\Suback::codes"
+      ]
+    },
+    "unsuback.build": {
+      "doc": "(new Unsuback())->success() / ->fail(code?) for each step, chained; codes()",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Unsuback::success",
+        "Utopia\\Mqtt\\Packet\\Unsuback::fail",
+        "Utopia\\Mqtt\\Packet\\Unsuback::codes"
+      ]
+    },
+    "v3.connect": {
+      "doc": "V3::connect(client_id, keep_alive?, clean_session?, username?, password?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::connect"
+      ],
+      "fuzz": [
+        {
+          "name": "connects",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "client_id": {
+                "gen": "ref",
+                "name": "text"
+              },
+              "keep_alive": {
+                "gen": "int",
+                "min": 0,
+                "max": 65535
+              },
+              "clean_session": {
+                "gen": "bool"
+              },
+              "username": {
+                "gen": "ref",
+                "name": "text"
+              },
+              "password": {
+                "gen": "ref",
+                "name": "text"
+              }
+            },
+            "optional": [
+              "keep_alive",
+              "clean_session",
+              "username",
+              "password"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "v3.subscribe": {
+      "doc": "V3::subscribe(packet_id, filters, qos?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::subscribe"
+      ],
+      "fuzz": [
+        {
+          "name": "subscribes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "packet_id": {
+                "gen": "int",
+                "min": 0,
+                "max": 65535
+              },
+              "filters": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "topic"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "qos": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              }
+            },
+            "optional": [
+              "qos"
+            ]
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "v3.unsubscribe": {
+      "doc": "V3::unsubscribe(packet_id, filters)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::unsubscribe"
+      ]
+    },
+    "v3.connack": {
+      "doc": "V3::connack(code)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::connack"
+      ]
+    },
+    "v3.publish": {
+      "doc": "V3::publish(topic, payload, qos, packet_id, dup?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::publish"
+      ],
+      "fuzz": [
+        {
+          "name": "publishes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "topic": {
+                "gen": "ref",
+                "name": "topic"
+              },
+              "payload": {
+                "gen": "ref",
+                "name": "payload"
+              },
+              "qos": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              },
+              "packet_id": {
+                "gen": "int",
+                "min": 0,
+                "max": 65535
+              },
+              "dup": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "dup"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "v3.puback": {
+      "doc": "V3::puback(packet_id bytes)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::puback"
+      ]
+    },
+    "v3.suback": {
+      "doc": "V3::suback(packet_id bytes, codes bytes)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::suback"
+      ]
+    },
+    "v3.unsuback": {
+      "doc": "V3::unsuback(packet_id bytes)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::unsuback"
+      ]
+    },
+    "v3.disconnect": {
+      "doc": "V3::disconnect()",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V3::disconnect"
+      ]
+    },
+    "v5.connect": {
+      "doc": "V5::connect(client_id, keep_alive?, clean_start?, properties?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::connect"
+      ],
+      "fuzz": [
+        {
+          "name": "connects",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "client_id": {
+                "gen": "ref",
+                "name": "text"
+              },
+              "keep_alive": {
+                "gen": "int",
+                "min": 0,
+                "max": 65535
+              },
+              "clean_start": {
+                "gen": "bool"
+              },
+              "properties": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "property_pair"
+                },
+                "min": 0,
+                "max": 4
+              }
+            },
+            "optional": [
+              "keep_alive",
+              "clean_start",
+              "properties"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "v5.subscribe": {
+      "doc": "V5::subscribe(packet_id, filters, qos?, properties?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::subscribe"
+      ],
+      "fuzz": [
+        {
+          "name": "subscribes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "packet_id": {
+                "gen": "int",
+                "min": 0,
+                "max": 65535
+              },
+              "filters": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "topic"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "qos": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              },
+              "properties": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "property_pair"
+                },
+                "min": 0,
+                "max": 3
+              }
+            },
+            "optional": [
+              "qos",
+              "properties"
+            ]
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "v5.unsubscribe": {
+      "doc": "V5::unsubscribe(packet_id, filters, properties?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::unsubscribe"
+      ]
+    },
+    "v5.connack": {
+      "doc": "V5::connack(code, properties?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::connack"
+      ]
+    },
+    "v5.publish": {
+      "doc": "V5::publish(topic, payload, qos, packet_id, properties?, dup?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::publish"
+      ],
+      "fuzz": [
+        {
+          "name": "publishes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "topic": {
+                "gen": "ref",
+                "name": "topic"
+              },
+              "payload": {
+                "gen": "ref",
+                "name": "payload"
+              },
+              "qos": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              },
+              "packet_id": {
+                "gen": "int",
+                "min": 0,
+                "max": 65535
+              },
+              "properties": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "property_pair"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "dup": {
+                "gen": "bool"
+              }
+            },
+            "optional": [
+              "properties",
+              "dup"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "v5.puback": {
+      "doc": "V5::puback(packet_id bytes)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::puback"
+      ]
+    },
+    "v5.suback": {
+      "doc": "V5::suback(packet_id bytes, codes bytes, properties?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::suback"
+      ]
+    },
+    "v5.unsuback": {
+      "doc": "V5::unsuback(packet_id bytes, count, properties?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::unsuback"
+      ]
+    },
+    "v5.disconnect": {
+      "doc": "V5::disconnect(code, properties?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::disconnect"
+      ]
+    },
+    "v5.auth": {
+      "doc": "V5::auth(code, properties?)",
+      "covers": [
+        "Utopia\\Mqtt\\Packet\\Specs\\V5::auth"
+      ]
+    },
+    "store.new": {
+      "doc": "new Store()",
+      "covers": [
+        "Utopia\\Mqtt\\Subscription\\Store::__construct"
+      ]
+    },
+    "store.subscribe": {
+      "doc": "$store->subscribe(prefix, user, topic, fd, qos?)",
+      "covers": [
+        "Utopia\\Mqtt\\Subscription\\Store::subscribe"
+      ]
+    },
+    "store.unsubscribe": {
+      "doc": "$store->unsubscribe(topic, fd)",
+      "covers": [
+        "Utopia\\Mqtt\\Subscription\\Store::unsubscribe"
+      ]
+    },
+    "store.close": {
+      "doc": "$store->close(fd)",
+      "covers": [
+        "Utopia\\Mqtt\\Subscription\\Store::close"
+      ]
+    },
+    "store.connection": {
+      "doc": "$store->getConnection(fd): {prefix, user_id, subs: [[topic, qos]]} or null",
+      "covers": [
+        "Utopia\\Mqtt\\Subscription\\Store::getConnection"
+      ]
+    },
+    "store.subscribers": {
+      "doc": "$store->getSubscribers(prefix, topic) as [[fd, qos]]",
+      "covers": [
+        "Utopia\\Mqtt\\Subscription\\Store::getSubscribers"
+      ]
+    },
+    "store.script": {
+      "doc": "a new Store driven by steps {op: subscribe|unsubscribe|close|connection|subscribers, prefix, user, topic, fd, qos} (each op reads the fields it takes): each step's result",
+      "fuzz": [
+        {
+          "name": "scripts",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "store_step"
+                },
+                "min": 1,
+                "max": 14
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "connection.new": {
+      "doc": "new Connection(fd, rig's Memory adapter?)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::__construct"
+      ]
+    },
+    "connection.set": {
+      "doc": "sets the public properties given (protocol, prefix, cleanStart, identity, active, keepAlive, expiresAt, wheelSlot)"
+    },
+    "connection.state": {
+      "doc": "the public properties and getClientId(); openedAt as whether it is positive"
+    },
+    "connection.publish": {
+      "doc": "$connection->publish(topic, payload, qos?, dup?, sequence?)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::publish"
+      ]
+    },
+    "connection.puback": {
+      "doc": "$connection->puback(packet_id)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::puback"
+      ]
+    },
+    "connection.disconnect": {
+      "doc": "$connection->disconnect(reason?, reason_string?)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::disconnect"
+      ]
+    },
+    "connection.update_expires_at": {
+      "doc": "$connection->updateExpiresAt(now, multiplier)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::updateExpiresAt"
+      ]
+    },
+    "connection.next_packet_id": {
+      "doc": "$connection->nextPacketId()",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::nextPacketId"
+      ]
+    },
+    "connection.resume": {
+      "doc": "$connection->resume(topic, cursor)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::resume"
+      ]
+    },
+    "connection.track": {
+      "doc": "$connection->track(packet_id, topic, sequence)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::track"
+      ]
+    },
+    "connection.acknowledge": {
+      "doc": "$connection->acknowledge(packet_id): {topic, sequence, cursor} or null",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::acknowledge"
+      ]
+    },
+    "connection.set_client_id": {
+      "doc": "$connection->setClientId(client_id)",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::setClientId"
+      ]
+    },
+    "connection.client_id": {
+      "doc": "$connection->getClientId()",
+      "covers": [
+        "Utopia\\Mqtt\\Connection::getClientId"
+      ]
+    },
+    "connection.script": {
+      "doc": "a new Connection(1) driven by steps {op: track|resume|acknowledge|next, packet_id, topic, sequence, cursor} (each op reads the fields it takes): each step's result",
+      "fuzz": [
+        {
+          "name": "deliveries",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "delivery_step"
+                },
+                "min": 1,
+                "max": 16
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "memory.new": {
+      "doc": "a rig: the in-process adapter (tests/compat/mqtt/Memory.php; Rust: utopia_mqtt::Memory) on a Timeline timer recording schedule/clear (timer: 'none' for NoTimer)"
+    },
+    "memory.fail": {
+      "doc": "Memory::fail(operation, message): send, close, start or shutdown throws RuntimeException(message)"
+    },
+    "memory.open": {
+      "doc": "Memory::open(fd): a client connects"
+    },
+    "memory.receive": {
+      "doc": "Memory::receive(fd, data): a client sends one packet"
+    },
+    "memory.disconnect": {
+      "doc": "Memory::disconnect(fd): the client goes away; whether it was open"
+    },
+    "memory.tick": {
+      "doc": "the Timeline timer's tick hook for id (the adapter closes the connection)"
+    },
+    "memory.state": {
+      "doc": "{started, open, sent: [[fd, bytes]], closed, timer: the Timeline log, log: the broker log}"
+    },
+    "server.new": {
+      "doc": "new Server(rig's adapter, Recorder handler logging into the rig's log)",
+      "covers": [
+        "Utopia\\Mqtt\\Server::__construct"
+      ]
+    },
+    "server.telemetry": {
+      "doc": "$server->setTelemetry(new Test()) === $server (Rust: MemoryTelemetry)",
+      "covers": [
+        "Utopia\\Mqtt\\Server::setTelemetry"
+      ]
+    },
+    "server.on": {
+      "doc": "$server->onStart / onWorkerStart / onStop(recording hook) === $server",
+      "covers": [
+        "Utopia\\Mqtt\\Server::onStart",
+        "Utopia\\Mqtt\\Server::onWorkerStart",
+        "Utopia\\Mqtt\\Server::onStop"
+      ]
+    },
+    "server.error": {
+      "doc": "$server->error(recording callback) === $server",
+      "covers": [
+        "Utopia\\Mqtt\\Server::error"
+      ]
+    },
+    "server.start": {
+      "doc": "$server->start()",
+      "covers": [
+        "Utopia\\Mqtt\\Server::start"
+      ]
+    },
+    "server.stop": {
+      "doc": "$server->stop()",
+      "covers": [
+        "Utopia\\Mqtt\\Server::stop"
+      ]
+    },
+    "server.subscribers": {
+      "doc": "$server->subscribers(prefix, topic) as [[fd, connection fd, qos]]",
+      "covers": [
+        "Utopia\\Mqtt\\Server::subscribers"
+      ]
+    },
+    "server.log": {
+      "doc": "the rig's log: handler calls, hooks and errors, oldest first"
+    },
+    "server.metrics": {
+      "doc": "the telemetry values: [[counter|up_down_counter, name, values]]"
+    },
+    "server.session": {
+      "doc": "a broker with telemetry and an error log on a fresh rig, connections `open` (1 and 2) opened, then each packet ([fd, bytes], or {fd, base, edits, cut}) received: {outcomes, state, metrics}",
+      "fuzz": [
+        {
+          "name": "sessions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "packets": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "session_packet"
+                },
+                "min": 1,
+                "max": 10
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "wheel.new": {
+      "doc": "new TimingWheel(interval?, multiplier?, time() + now_offset?) with logging onTick/onClear: {wheel, interval, multiplier, chained}",
+      "covers": [
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\TimingWheel::__construct",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\TimingWheel::onTick",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\TimingWheel::onClear"
+      ]
+    },
+    "wheel.schedule": {
+      "doc": "$wheel->schedule(id, keep_alive) (PHP clears the Swoole heartbeat timer after)",
+      "covers": [
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\TimingWheel::schedule"
+      ]
+    },
+    "wheel.clear": {
+      "doc": "$wheel->clear(id)",
+      "covers": [
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\TimingWheel::clear"
+      ]
+    },
+    "wheel.drain": {
+      "doc": "$wheel->drain(time() + offset)",
+      "covers": [
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\TimingWheel::drain"
+      ]
+    },
+    "wheel.log": {
+      "doc": "what the wheel's hooks saw: [tick, id] / [clear, id]"
+    },
+    "notimer.run": {
+      "doc": "NoTimer: onTick and onClear chain, schedule and clear do nothing",
+      "covers": [
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\NoTimer::onTick",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\NoTimer::onClear",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\NoTimer::schedule",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Timers\\NoTimer::clear"
+      ]
+    },
+    "transport.new": {
+      "doc": "new Tcp / Tls / WebSocket(host?, port?, cert?, key?, maxPacketSize?): {host, port, tls (getSockType() has SWOOLE_SSL), websocket, max_packet_size, cert, key} from getSettings()",
+      "covers": [
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Transport::__construct",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Tcp::__construct",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Tcp::getSettings",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Tcp::getSockType",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Tls::__construct",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Tls::getSettings",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\Tls::getSockType",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\WebSocket::__construct",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\WebSocket::getSettings",
+        "Utopia\\Mqtt\\Adapter\\Swoole\\WebSocket::getSockType"
+      ]
+    },
+    "swoole.new": {
+      "doc": "new Swoole([]) (Rust: Tokio::new): the constructor's argument check; with listeners it is exercised by e2e.run",
+      "covers": [
+        "Utopia\\Mqtt\\Adapter\\Swoole::__construct"
+      ]
+    },
+    "client.new": {
+      "doc": "new Client(url, [timeout]): {client, host, port, tls, timeout} (private state read by reflection, the timeout as float seconds)",
+      "covers": [
+        "Utopia\\Mqtt\\Client::__construct"
+      ]
+    },
+    "client.hooks": {
+      "doc": "$client->onOpen()->onReceive()->onClose()->onError() === $client",
+      "covers": [
+        "Utopia\\Mqtt\\Client::onOpen",
+        "Utopia\\Mqtt\\Client::onReceive",
+        "Utopia\\Mqtt\\Client::onClose",
+        "Utopia\\Mqtt\\Client::onError"
+      ]
+    },
+    "client.send": {
+      "doc": "$client->send(data)",
+      "covers": [
+        "Utopia\\Mqtt\\Client::send"
+      ]
+    },
+    "client.receive": {
+      "doc": "$client->receive()",
+      "covers": [
+        "Utopia\\Mqtt\\Client::receive"
+      ]
+    },
+    "client.is_connected": {
+      "doc": "$client->isConnected()",
+      "covers": [
+        "Utopia\\Mqtt\\Client::isConnected"
+      ]
+    },
+    "client.close": {
+      "doc": "$client->close()",
+      "covers": [
+        "Utopia\\Mqtt\\Client::close"
+      ]
+    },
+    "client.connect": {
+      "doc": "$client->connect() in a coroutine, with error and open hooks logging: {error, log, connected}",
+      "covers": [
+        "Utopia\\Mqtt\\Client::connect"
+      ]
+    },
+    "e2e.run": {
+      "doc": "starts a broker on the network adapter, runs client steps against it and stops it. mode `fixture`: tests/compat/mqtt/server.php's fixture handlers (packages/mqtt's E2E fixture) on Swoole (Rust: the same handlers on Tokio); mode `broker`: a Server with the Recorder handler and a one-second TimingWheel. Listeners: TCP, WebSocket and, when services.sh wrote the certificate, TLS. Steps (see session() in Adapter.php): connect, send, receive, connected, close, listen, log, ws_connect, ws_send, ws_receive, ws_close, sleep",
+      "covers": [
+        "Utopia\\Mqtt\\Adapter\\Swoole::start",
+        "Utopia\\Mqtt\\Adapter\\Swoole::shutdown",
+        "Utopia\\Mqtt\\Adapter\\Swoole::send",
+        "Utopia\\Mqtt\\Adapter\\Swoole::close",
+        "Utopia\\Mqtt\\Adapter\\Swoole::onStart",
+        "Utopia\\Mqtt\\Adapter\\Swoole::onWorkerStart",
+        "Utopia\\Mqtt\\Adapter\\Swoole::onOpen",
+        "Utopia\\Mqtt\\Adapter\\Swoole::onReceive",
+        "Utopia\\Mqtt\\Adapter\\Swoole::onClose",
+        "Utopia\\Mqtt\\Adapter\\Swoole::timer",
+        "Utopia\\Mqtt\\Client::listen"
+      ]
+    },
+    "broker.start": {
+      "doc": "interop: PHP names the services.sh fixture broker ({runtime: php}); Rust starts the fixture on 0.0.0.0 ({runtime: rust, tcp, ws, tls ports, broker handle})"
+    },
+    "broker.stop": {
+      "doc": "interop: stops a broker broker.start started (Rust); PHP's is the services.sh container"
+    },
+    "client.session": {
+      "doc": "interop: runs e2e.run's client steps against a broker.start result: PHP's broker at the mqtt-tcp/ws/tls services, Rust's at mqtt-host and its ports"
+    }
+  },
+  "generators": {
+    "varint": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 14
+        },
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 14
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "//////////9/"
+            },
+            {
+              "$bytes": "////////////AQ=="
+            },
+            {
+              "$bytes": "gICAgICAgICAAGFi"
+            },
+            {
+              "$bytes": "gICAgICAgICAAQ=="
+            },
+            {
+              "$bytes": "////////////////AQ=="
+            },
+            {
+              "$bytes": "gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAAA=="
+            },
+            {
+              "$bytes": "gICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIAB"
+            },
+            {
+              "$bytes": "////fw=="
+            },
+            {
+              "$bytes": "gICAgAE="
+            },
+            {
+              "$bytes": "//////////////////////////8="
+            }
+          ]
+        }
+      ]
+    },
+    "frame": {
+      "gen": "pick",
+      "from": [
+        {
+          "$bytes": "EBoABE1RVFQEwgA8AAJjMQAEdXNlcgAEcGFzcw=="
+        },
+        {
+          "$bytes": "EAwABE1RVFQEAAAAAAA="
+        },
+        {
+          "$bytes": "EBoABE1RVFQEwgAKAAJ2MwAEdXNlcgAEZGVueQ=="
+        },
+        {
+          "$bytes": "ECkABE1RVFQFAgAeGRUACWNoYWxsZW5nZSYABnByZWZpeAACcDEAA2Rldg=="
+        },
+        {
+          "$bytes": "EB4ABE1RVFQFAAAFDRUAA2p3dBYABGRlbnkABGRldjI="
+        },
+        {
+          "$bytes": "ECgABE1RVFQFAgA8GyYAATcAAWEmAAFrAAFiJgACayAAAWMRAAAOEAAA"
+        },
+        {
+          "$bytes": "ECUABE1RVFQFzgA8AAACdzUCGAAABndpbGwvdAADYnllAAF1AAFw"
+        },
+        {
+          "$bytes": "EBoABE1RVFQELgA8AAJ3MwAEd2lsbAAEZ29uZQ=="
+        },
+        {
+          "$bytes": "giAAAQILBQADYS8rAQAGZGVueS94AQAFc2hvcnQBAAEjAQ=="
+        },
+        {
+          "$bytes": "ghcAAgADYS9iAgAGJFNZUy8jAgADYS8jAg=="
+        },
+        {
+          "$bytes": "ggkAAwAAA2EvYgA="
+        },
+        {
+          "$bytes": "ohAABAAAA2EvKwAGZGVueS95"
+        },
+        {
+          "$bytes": "ogcABQADYS9i"
+        },
+        {
+          "$bytes": "OiEAA2EvYgAHFCYAAWsAAXYDAAp0ZXh0L3BsYWluaGVsbG8="
+        },
+        {
+          "$bytes": "MAcAA2EvYwB4"
+        },
+        {
+          "$bytes": "MhEAA2EvYgAJdjMgcGF5bG9hZA=="
+        },
+        {
+          "$bytes": "MAoAByRTWVMvdXAx"
+        },
+        {
+          "$bytes": "MAcABGJvb20A"
+        },
+        {
+          "$bytes": "QAIAAQ=="
+        },
+        {
+          "$bytes": "QAIABw=="
+        },
+        {
+          "$bytes": "wAA="
+        },
+        {
+          "$bytes": "4AiHBh8AA2J5ZQ=="
+        },
+        {
+          "$bytes": "4AA="
+        },
+        {
+          "$bytes": "8BAZDhUAA2p3dBYABWZyZXNo"
+        },
+        {
+          "$bytes": "8BUYExUACWNoYWxsZW5nZRYABGRlbnk="
+        },
+        {
+          "$bytes": "8AIYAA=="
+        },
+        {
+          "$bytes": "8AA="
+        },
+        {
+          "$bytes": "IAMAAAA="
+        },
+        {
+          "$bytes": "YgIAAQ=="
+        },
+        {
+          "$bytes": "MBIAA2EvYgUL////f3BheWxvYWQ="
+        }
+      ]
+    },
+    "data": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 48
+        },
+        {
+          "gen": "ref",
+          "name": "frame"
+        }
+      ]
+    },
+    "mutated": {
+      "gen": "object",
+      "fields": {
+        "base": {
+          "gen": "ref",
+          "name": "frame"
+        },
+        "edits": {
+          "gen": "array",
+          "items": {
+            "gen": "object",
+            "fields": {
+              "op": {
+                "gen": "pick",
+                "from": [
+                  "set",
+                  "insert",
+                  "delete"
+                ]
+              },
+              "at": {
+                "gen": "int",
+                "min": 0,
+                "max": 64
+              },
+              "byte": {
+                "gen": "int",
+                "min": 0,
+                "max": 255
+              }
+            }
+          },
+          "min": 0,
+          "max": 4
+        },
+        "cut": {
+          "gen": "int",
+          "min": 0,
+          "max": 80
+        },
+        "protocol": {
+          "gen": "pick",
+          "from": [
+            4,
+            5
+          ]
+        }
+      },
+      "optional": [
+        "cut"
+      ]
+    },
+    "stream": {
+      "gen": "pick",
+      "from": [
+        {
+          "$bytes": "EBoABE1RVFQEwgA8AAJjMQAEdXNlcgAEcGFzcw=="
+        },
+        {
+          "$bytes": "EAwABE1RVFQEAAAAAAA="
+        },
+        {
+          "$bytes": "EBoABE1RVFQEwgAKAAJ2MwAEdXNlcgAEZGVueQ=="
+        },
+        {
+          "$bytes": "ECkABE1RVFQFAgAeGRUACWNoYWxsZW5nZSYABnByZWZpeAACcDEAA2Rldg=="
+        },
+        {
+          "$bytes": "EB4ABE1RVFQFAAAFDRUAA2p3dBYABGRlbnkABGRldjI="
+        },
+        {
+          "$bytes": "ECgABE1RVFQFAgA8GyYAATcAAWEmAAFrAAFiJgACayAAAWMRAAAOEAAA"
+        },
+        {
+          "$bytes": "ECUABE1RVFQFzgA8AAACdzUCGAAABndpbGwvdAADYnllAAF1AAFw"
+        },
+        {
+          "$bytes": "EBoABE1RVFQELgA8AAJ3MwAEd2lsbAAEZ29uZQ=="
+        },
+        {
+          "$bytes": "giAAAQILBQADYS8rAQAGZGVueS94AQAFc2hvcnQBAAEjAQ=="
+        },
+        {
+          "$bytes": "ghcAAgADYS9iAgAGJFNZUy8jAgADYS8jAg=="
+        },
+        {
+          "$bytes": "ggkAAwAAA2EvYgA="
+        },
+        {
+          "$bytes": "ohAABAAAA2EvKwAGZGVueS95"
+        },
+        {
+          "$bytes": "ogcABQADYS9i"
+        },
+        {
+          "$bytes": "OiEAA2EvYgAHFCYAAWsAAXYDAAp0ZXh0L3BsYWluaGVsbG8="
+        },
+        {
+          "$bytes": "MAcAA2EvYwB4"
+        },
+        {
+          "$bytes": "MhEAA2EvYgAJdjMgcGF5bG9hZA=="
+        },
+        {
+          "$bytes": "MAoAByRTWVMvdXAx"
+        },
+        {
+          "$bytes": "MAcABGJvb20A"
+        },
+        {
+          "$bytes": "QAIAAQ=="
+        },
+        {
+          "$bytes": "QAIABw=="
+        },
+        {
+          "$bytes": "wAA="
+        },
+        {
+          "$bytes": "4AiHBh8AA2J5ZQ=="
+        },
+        {
+          "$bytes": "4AA="
+        },
+        {
+          "$bytes": "8BAZDhUAA2p3dBYABWZyZXNo"
+        },
+        {
+          "$bytes": "8BUYExUACWNoYWxsZW5nZRYABGRlbnk="
+        },
+        {
+          "$bytes": "8AIYAA=="
+        },
+        {
+          "$bytes": "8AA="
+        },
+        {
+          "$bytes": "IAMAAAA="
+        },
+        {
+          "$bytes": "YgIAAQ=="
+        },
+        {
+          "$bytes": "MBIAA2EvYgUL////f3BheWxvYWQ="
+        }
+      ]
+    },
+    "text": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "alphabet": "alnum"
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "alphabet": "unicode",
+          "tricky": 0.3
+        },
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 8
+        }
+      ]
+    },
+    "topic": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "pick",
+            "from": [
+              "a",
+              "b",
+              "sport",
+              "+",
+              "#",
+              "",
+              "$SYS",
+              "x y",
+              "é",
+              "0",
+              "5",
+              "-1",
+              "deny",
+              "short",
+              "boom"
+            ]
+          },
+          "sep": "/",
+          "min": 1,
+          "max": 5
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 10,
+          "alphabet": "unicode",
+          "tricky": 0.3
+        }
+      ]
+    },
+    "payload": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 40
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 30,
+          "alphabet": "unicode",
+          "tricky": 0.2
+        }
+      ]
+    },
+    "property_id": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            1,
+            2,
+            3,
+            8,
+            9,
+            11,
+            17,
+            18,
+            19,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            28,
+            31,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42
+          ]
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 127
+        }
+      ]
+    },
+    "property_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 300
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 4294967295
+        },
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 5
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 268435455
+        },
+        {
+          "gen": "float",
+          "min": -1000,
+          "max": 1000
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 10,
+          "alphabet": "unicode",
+          "tricky": 0.3
+        },
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 6
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "pair": {
+              "gen": "array",
+              "items": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "string",
+                      "min": 0,
+                      "max": 6,
+                      "alphabet": "alnum"
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "7",
+                        "-1",
+                        "01",
+                        "prefix",
+                        "k",
+                        ""
+                      ]
+                    }
+                  ]
+                },
+                "min": 2,
+                "max": 2
+              },
+              "min": 1,
+              "max": 1
+            }
+          }
+        }
+      ]
+    },
+    "property": {
+      "gen": "object",
+      "fields": {
+        "id": {
+          "gen": "ref",
+          "name": "property_id"
+        },
+        "value": {
+          "gen": "ref",
+          "name": "property_value"
+        }
+      }
+    },
+    "property_pair": {
+      "gen": "object",
+      "fields": {
+        "id": {
+          "gen": "ref",
+          "name": "property_id"
+        },
+        "value": {
+          "gen": "ref",
+          "name": "property_value"
+        }
+      }
+    },
+    "store_step": {
+      "gen": "object",
+      "fields": {
+        "op": {
+          "gen": "pick",
+          "from": [
+            "subscribe",
+            "subscribe",
+            "subscribe",
+            "unsubscribe",
+            "close",
+            "connection",
+            "subscribers",
+            "subscribers"
+          ]
+        },
+        "prefix": {
+          "gen": "ref",
+          "name": "store_prefix"
+        },
+        "user": {
+          "gen": "pick",
+          "from": [
+            "u",
+            "v"
+          ]
+        },
+        "topic": {
+          "gen": "ref",
+          "name": "store_topic"
+        },
+        "fd": {
+          "gen": "int",
+          "min": 1,
+          "max": 4
+        },
+        "qos": {
+          "gen": "int",
+          "min": 0,
+          "max": 2
+        }
+      }
+    },
+    "store_prefix": {
+      "gen": "pick",
+      "from": [
+        "p",
+        "q",
+        "+",
+        "#",
+        ""
+      ]
+    },
+    "store_topic": {
+      "gen": "repeat",
+      "part": {
+        "gen": "pick",
+        "from": [
+          "a",
+          "b",
+          "+",
+          "#",
+          "$SYS",
+          "",
+          "c"
+        ]
+      },
+      "sep": "/",
+      "min": 1,
+      "max": 4
+    },
+    "delivery_step": {
+      "gen": "object",
+      "fields": {
+        "op": {
+          "gen": "pick",
+          "from": [
+            "track",
+            "track",
+            "acknowledge",
+            "acknowledge",
+            "resume",
+            "next"
+          ]
+        },
+        "packet_id": {
+          "gen": "int",
+          "min": 1,
+          "max": 6
+        },
+        "topic": {
+          "gen": "pick",
+          "from": [
+            "t",
+            "u"
+          ]
+        },
+        "sequence": {
+          "gen": "int",
+          "min": 1,
+          "max": 12
+        },
+        "cursor": {
+          "gen": "int",
+          "min": 0,
+          "max": 12
+        }
+      }
+    },
+    "session_packet": {
+      "gen": "object",
+      "fields": {
+        "fd": {
+          "gen": "int",
+          "min": 1,
+          "max": 3
+        },
+        "base": {
+          "gen": "ref",
+          "name": "frame"
+        },
+        "edits": {
+          "gen": "array",
+          "items": {
+            "gen": "object",
+            "fields": {
+              "op": {
+                "gen": "pick",
+                "from": [
+                  "set",
+                  "insert",
+                  "delete"
+                ]
+              },
+              "at": {
+                "gen": "int",
+                "min": 0,
+                "max": 64
+              },
+              "byte": {
+                "gen": "int",
+                "min": 0,
+                "max": 255
+              }
+            }
+          },
+          "min": 0,
+          "max": 1
+        }
+      }
+    }
+  },
+  "waivers": {
+    "Utopia\\Mqtt\\Subscription\\Node::*": "Accessors subsumed by Rust types: the trie node of Store (hasNode() and addNode() look up and insert a child level). Rust keeps the node private to Store; its behaviour is covered by every Store case (StoreTest.json, store.script fuzzing)."
+  },
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\Mqtt\\Properties::user",
+      "description": "User Properties are merged with array_merge(), so a key that is a decimal integer (\"7\", \"-1\", \"0\"; not \"07\") becomes an integer array key and is renumbered by its position among such keys (\"0\", \"1\", ...), never replacing another. The same holds wherever userProperties() is read (Connect, Auth, Publish), and the fixture broker's echo re-encodes the renumbered keys.",
+      "case": "Codec.json#User Properties: integer keys are renumbered by array_merge(), string keys replace in place"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Server::start",
+      "description": "The Session Present flag of an accepted Connack is never encoded: CONNACK's acknowledge flags are always 0 (V3::connack and V5::connack have no parameter for it).",
+      "case": "Server.json#the Session Present flag of an accepted CONNACK is not sent"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Server::start",
+      "description": "A CONNACK a handler returns from onAuthenticate (the end of enhanced authentication) does not mark the connection active: it is not counted in mqtt.connections.active or mqtt.connections.opened, and its packets do not re-arm the keep-alive (only the 30-second CONNECT grace stays scheduled).",
+      "case": "Server.json#enhanced authentication: a challenge, then CONNACK from onAuthenticate (the connection is not marked active)"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Server::start",
+      "description": "A 5.0 UNSUBACK reports success for every filter, whatever codes the handler's Unsuback holds (only their count is used).",
+      "case": "Server.json#a v5 session: connect, subscribe, publish fan-out at QoS 1, puback, ping, unsubscribe, disconnect"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Server::start",
+      "description": "A Suback with fewer codes than the SUBSCRIBE has filters sends only those codes (the SUBACK is short), while the store treats the missing ones as denied; a granted QoS above 2 is a failure in the store and on a 3.1.1 SUBACK but is sent as is to a 5.0 client.",
+      "case": "Server.json#a v3 session: credentials, return codes for denied filters, QoS 0 delivery to itself"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Server::start",
+      "description": "After a DISCONNECT, receive() re-schedules the keep-alive of the connection it has just cleaned up and closed (the Connection object it holds is still active), so the timer later ticks for a closed connection.",
+      "case": "Server.json#DISCONNECT cleans up, closes, and re-arms the keep-alive of the closed connection"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Server::start",
+      "description": "Packets are dispatched before a CONNECT: a SUBSCRIBE or PUBLISH from a connection that never connected reaches the handler (as MQTT 3.1.1 at the default protocol level), and a packet from a connection that was never opened creates it.",
+      "case": "Server.json#packets before CONNECT and unknown types; a packet from a connection never opened"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Subscription\\Store::getSubscribers",
+      "description": "The prefix is the trie's first level, walked like a topic level: a subscription under the prefix \"+\" matches the same topic under every prefix (\"#\" does not, as a filter always has a level below the prefix).",
+      "case": "StoreTest.json#a + prefix matches every prefix (the prefix is level 0 of the trie); a # prefix does not"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Packet::decodeLength",
+      "description": "A variable byte integer is decoded past MQTT's four bytes: up to nine bytes it stays an integer, from the tenth PHP's arithmetic overflows into a float (INF and NAN for long runs), which parse() rejects with substr()'s TypeError and Properties::skip() with its return type's TypeError, while Properties::parse() reads zeros past the end until an unknown identifier 0x0.",
+      "case": "Codec.json#variable byte integers past four bytes: nine stay integers, ten overflow into floats"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Packet::parse",
+      "description": "Every decoder reads past the end of its input as zero bytes and empty strings (PHP warns, `Uninitialized string offset`), so a truncated packet decodes rather than failing.",
+      "case": "Codec.json#decoders on short and odd bodies"
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Client::connect",
+      "description": "An mqtts:// connection does not verify the broker's certificate (Swoole's client sets no ssl_verify_peer by default); the Rust client accepts any certificate too.",
+      "case": "AdapterTest.json#the same session over TLS (mqtts://)"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\Mqtt\\Packet::getClientId",
+      "php": "A TypeError raised for a PHP function's parameter (readString()'s offset, once a property length overflows into a float) ends with `, called in /usr/src/code/packages/mqtt/src/Packet.php on line 106`.",
+      "reason": "Rust raises Error::Type (TypeError) with the same message up to that PHP source location, which it has no counterpart for; packet.client_id and decode.all compare the class and mask the message."
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Packet\\Specs\\V5::publish",
+      "php": "Packet ids, keep-alives, QoS values, reason and return codes, property identifiers, protocol levels and SUBACK codes are any int: chr() wraps values outside 0-255 modulo 256 (and warns), `>> 8` of a value above 65,535 keeps more bits, and str_repeat() raises a ValueError for a negative UNSUBACK count.",
+      "reason": "Rust types them as u16 (packet ids, keep-alives), u8 (QoS, codes, identifiers, levels) and usize (counts, offsets, lengths): a value outside the range cannot be passed. Every encoder, decoder and builder taking one is affected the same way; the fuzz generates values in range."
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Packet::encodeLength",
+      "php": "A negative length encodes to one byte, its remainder by 128 as chr() wraps it.",
+      "reason": "wire::encode_length takes a u64. A Property's Varint value, which PHP casts with (int), keeps PHP's encoding of negatives (Codec.json#property values are cast to their identifier's wire type)."
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Property::__construct",
+      "php": "A User Property's value is an array of any number of key/value pairs (each encoded as one wire pair; an empty array encodes nothing).",
+      "reason": "A Rust User Property holds one pair (Property::user): a PHP User Property of n pairs is n Rust properties, which encode to the same bytes, and an empty one is none. Parsing gives one pair per property in both."
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Connection::__construct",
+      "php": "The public properties are plain PHP properties of any type (identity is an array of anything).",
+      "reason": "Rust keeps them in Connection::state() (State: protocol u8, prefix bytes, keep_alive u16, identity as Option<Arc<dyn Any + Send + Sync>>, expires_at f64, wheel_slot i64), behind a lock so one connection can be shared by the broker and its handler."
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Client::__construct",
+      "php": "The timeout option is kept as given: an int (30 by default) or a float.",
+      "reason": "client::Options::timeout is seconds as an f64; client.new reports PHP's as a float."
+    },
+    {
+      "symbol": "Utopia\\Mqtt\\Adapter\\Swoole::__construct",
+      "php": "The Swoole server runs `workers` worker processes (one Swoole\\Server per process, bound when constructed; a WebSocket transport is made the primary port), and a TLS listener's certificate errors are Swoole's at start.",
+      "reason": "Tokio serves every listener on the runtime it starts on, binds in start() (Error::Runtime `Could not listen on host:port.` for an address in use, or for a certificate it cannot load), and calls the worker start hook once per worker id."
+    }
+  ],
+  "bench": {
+    "bound": {}
+  }
+}

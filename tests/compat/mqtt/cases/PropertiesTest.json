@@ -1,0 +1,358 @@
+{
+  "source": "packages/mqtt/tests/PropertiesTest.php",
+  "cases": [
+    {
+      "name": "testEmptyBlockIsASingleZeroLengthByte",
+      "op": "properties.encode",
+      "args": {
+        "properties": []
+      },
+      "expect": "\u0000"
+    },
+    {
+      "name": "testEncodesAndParsesEveryWireType",
+      "steps": [
+        {
+          "op": "properties.encode",
+          "args": {
+            "properties": [
+              {
+                "id": 36,
+                "value": 1
+              },
+              {
+                "id": 33,
+                "value": 10
+              },
+              {
+                "id": 17,
+                "value": 3600
+              },
+              {
+                "id": 11,
+                "value": 268435455
+              },
+              {
+                "id": 31,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "proj-1"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": {
+            "$bytes": "KCQBIQAKEQAADhAL////fx8AAm9rJgAJcHJvamVjdElkAAZwcm9qLTE="
+          }
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            },
+            "offset": 0
+          },
+          "expect": {
+            "properties": [
+              [
+                36,
+                1
+              ],
+              [
+                33,
+                10
+              ],
+              [
+                17,
+                3600
+              ],
+              [
+                11,
+                268435455
+              ],
+              [
+                31,
+                "ok"
+              ],
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "projectId",
+                      "proj-1"
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "offset": 41,
+            "user": [
+              [
+                "projectId",
+                "proj-1"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "properties.get",
+          "args": {
+            "properties": [
+              {
+                "id": 36,
+                "value": 1
+              },
+              {
+                "id": 33,
+                "value": 10
+              },
+              {
+                "id": 17,
+                "value": 3600
+              },
+              {
+                "id": 11,
+                "value": 268435455
+              },
+              {
+                "id": 31,
+                "value": "ok"
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "proj-1"
+                    ]
+                  ]
+                }
+              }
+            ],
+            "ids": [
+              36,
+              33,
+              17,
+              11,
+              31
+            ]
+          },
+          "expect": [
+            1,
+            10,
+            3600,
+            268435455,
+            "ok"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testUserPropertiesMerge",
+      "steps": [
+        {
+          "op": "properties.encode",
+          "args": {
+            "properties": [
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "projectId",
+                      "proj-1"
+                    ]
+                  ]
+                }
+              },
+              {
+                "id": 38,
+                "value": {
+                  "pair": [
+                    [
+                      "subId",
+                      "orders"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": "$&\u0000\tprojectId\u0000\u0006proj-1&\u0000\u0005subId\u0000\u0006orders"
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            },
+            "offset": 0
+          },
+          "expect": {
+            "properties": [
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "projectId",
+                      "proj-1"
+                    ]
+                  ]
+                }
+              ],
+              [
+                38,
+                {
+                  "pair": [
+                    [
+                      "subId",
+                      "orders"
+                    ]
+                  ]
+                }
+              ]
+            ],
+            "offset": 37,
+            "user": [
+              [
+                "projectId",
+                "proj-1"
+              ],
+              [
+                "subId",
+                "orders"
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAuthMethodAndDataRoundTrip",
+      "steps": [
+        {
+          "op": "properties.encode",
+          "args": {
+            "properties": [
+              {
+                "id": 21,
+                "value": "appwrite-jwt"
+              },
+              {
+                "id": 22,
+                "value": "the-token"
+              }
+            ]
+          },
+          "bind": "b",
+          "expect": "\u001b\u0015\u0000\fappwrite-jwt\u0016\u0000\tthe-token"
+        },
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": {
+              "$ref": "b"
+            },
+            "offset": 0
+          },
+          "expect": {
+            "properties": [
+              [
+                21,
+                "appwrite-jwt"
+              ],
+              [
+                22,
+                "the-token"
+              ]
+            ],
+            "offset": 28,
+            "user": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "testGetReturnsNullWhenAbsent",
+      "steps": [
+        {
+          "op": "properties.parse",
+          "args": {
+            "data": "\u0000",
+            "offset": 0
+          },
+          "expect": {
+            "properties": [],
+            "offset": 1,
+            "user": []
+          }
+        },
+        {
+          "op": "properties.get",
+          "args": {
+            "properties": [],
+            "ids": [
+              31
+            ]
+          },
+          "expect": [
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testSkipAdvancesPastTheBlock",
+      "steps": [
+        {
+          "op": "properties.encode",
+          "args": {
+            "properties": [
+              {
+                "id": 17,
+                "value": 60
+              }
+            ]
+          },
+          "expect": "\u0005\u0011\u0000\u0000\u0000<"
+        },
+        {
+          "op": "properties.skip",
+          "args": {
+            "data": "\u0005\u0011\u0000\u0000\u0000<PAYLOAD",
+            "offset": 0
+          },
+          "expect": 6
+        }
+      ]
+    },
+    {
+      "name": "testUnknownPropertyIdThrows",
+      "op": "property.encode",
+      "args": {
+        "id": 127,
+        "value": "x"
+      },
+      "expect": {
+        "$error": {
+          "class": "RuntimeException",
+          "message": "Unknown MQTT property 0x7f"
+        }
+      }
+    }
+  ]
+}

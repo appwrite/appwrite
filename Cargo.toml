@@ -67,6 +67,7 @@ utopia-openapi = { path = "crates/utopia/openapi" }
 utopia-psr7 = { path = "crates/utopia/psr7" }
 utopia-dns = { path = "crates/utopia/dns" }
 utopia-nats = { path = "crates/utopia/nats" }
+utopia-mqtt = { path = "crates/utopia/mqtt" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }

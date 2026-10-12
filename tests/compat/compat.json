@@ -188,6 +188,26 @@
       "rust": "ws://localhost:16903",
       "rust-container": "ws://compat-nats-ws:8080",
       "runner": "ws://localhost:16903"
+    },
+    "mqtt-tcp": {
+      "php": "compat-mqtt-broker:1883",
+      "rust": "127.0.0.1:16700",
+      "runner": "127.0.0.1:16700"
+    },
+    "mqtt-ws": {
+      "php": "compat-mqtt-broker:8083",
+      "rust": "127.0.0.1:16701",
+      "runner": "127.0.0.1:16701"
+    },
+    "mqtt-tls": {
+      "php": "compat-mqtt-broker:8883",
+      "rust": "127.0.0.1:16702",
+      "runner": "127.0.0.1:16702"
+    },
+    "mqtt-host": {
+      "php": "host.docker.internal",
+      "rust": "127.0.0.1",
+      "runner": "127.0.0.1"
     }
   }
 }
