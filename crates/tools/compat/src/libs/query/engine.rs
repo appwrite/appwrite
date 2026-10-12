@@ -172,7 +172,7 @@ struct Queue {
 struct State {
     slots: Vec<Slot>,
     /// Objects being called: data address and number.
-    locked: Vec<(usize, i64)>,
+    locked: Vec<(usize, i64, String)>,
     out: Vec<Json>,
     queues: Vec<Queue>,
     declared: HashMap<i64, Vec<String>>,
@@ -296,10 +296,11 @@ impl Cx {
             Err(TryLockError::WouldBlock) => return Err(fault(format!("object {id} is in use (re-entrant call)"))),
         };
         let address = data_address(&**guard);
-        self.state().locked.push((address, id));
+        let class = guard.class();
+        self.state().locked.push((address, id, class));
         let result = f(&mut **guard);
         let mut state = self.state();
-        if let Some(i) = state.locked.iter().rposition(|(a, i)| *a == address && *i == id) {
+        if let Some(i) = state.locked.iter().rposition(|(a, i, _)| *a == address && *i == id) {
             state.locked.remove(i);
         }
         Ok(result)
@@ -356,6 +357,11 @@ impl Cx {
         }
         if let Some(class) = event.get("is").and_then(Json::as_str) {
             let on = event.get("on").cloned().unwrap_or(Json::Null);
+            if let Some(case) = on.get("$enum").and_then(Json::as_str) {
+                let (enum_class, _) = split_enum(case)?;
+                let is = enum_class == class || class == "\\UnitEnum" || class == "\\BackedEnum";
+                return Ok((Ret::bool(is), None));
+            }
             let id = object_id(&on)?;
             let is = self.with_object(id, lent, |object| {
                 object.class() == class || object.parents().contains(&class) || object.interfaces().contains(&class)
@@ -398,24 +404,9 @@ impl Cx {
             Ret::Obj(object) => self.export_object(object),
             Ret::This => {
                 let id = receiver.ok_or_else(|| Fault::new("`this` without a receiver"))?;
-                let slot = self.slot(id).map_err(|_| Fault::new("unknown receiver"))?;
-                let copy = {
-                    let guard = slot.lock().unwrap_or_else(|e| e.into_inner());
-                    if guard.is_value() { guard.clone_object() } else { None }
-                };
-                match copy {
-                    Some(copy) => self.export_object(copy),
-                    None => {
-                        let class = slot.lock().unwrap_or_else(|e| e.into_inner()).class();
-                        json!({"$object": class, "id": id})
-                    }
-                }
+                self.export_existing(id, true)?
             }
-            Ret::Existing(id) => {
-                let slot = self.slot(id).map_err(|_| Fault::new("unknown object"))?;
-                let class = slot.lock().unwrap_or_else(|e| e.into_inner()).class();
-                json!({"$object": class, "id": id})
-            }
+            Ret::Existing(id) => self.export_existing(id, false)?,
             Ret::Enum(class, case) => json!({"$enum": format!("{class}::{case}")}),
             Ret::List(items) => {
                 let mut out = Vec::with_capacity(items.len());
@@ -445,6 +436,25 @@ impl Cx {
         })
     }
 
+    /// An object already numbered: an entity keeps its number; a value
+    /// (`return $this` of a query) is copied with a new one. An object being
+    /// called right now (a callback's builder) is not locked again.
+    fn export_existing(&self, id: i64, this: bool) -> Result<Json, Fault> {
+        let busy = self.state().locked.iter().rev().find(|(_, i, _)| *i == id).map(|(_, _, c)| c.clone());
+        if let Some(class) = busy {
+            return Ok(json!({"$object": class, "id": id}));
+        }
+        let slot = self.slot(id).map_err(|_| Fault::new("unknown object"))?;
+        let (class, copy) = {
+            let guard = slot.lock().unwrap_or_else(|e| e.into_inner());
+            (guard.class(), if this && guard.is_value() { guard.clone_object() } else { None })
+        };
+        Ok(match copy {
+            Some(copy) => self.export_object(copy),
+            None => json!({"$object": class, "id": id}),
+        })
+    }
+
     fn export_object(&self, object: Box<dyn Object>) -> Json {
         let class = object.class();
         if object.is_value() {
@@ -454,7 +464,7 @@ impl Cx {
             for (name, value) in props {
                 out.insert(name.to_owned(), self.export(value, None).unwrap_or(Json::Null));
             }
-            json!({"$value": class, "id": id, "props": Json::Object(out)})
+            json!({"$value": class, "id": id, "props": if out.is_empty() { Json::Array(Vec::new()) } else { Json::Object(out) }})
         } else {
             let id = self.register(object);
             json!({"$object": class, "id": id})
@@ -475,7 +485,7 @@ impl Cx {
                 for (k, v) in a.iter() {
                     out.insert(key_string(&k.to_owned()), self.export_value(v));
                 }
-                json!({"$std": Json::Object(out)})
+                json!({"$std": if out.is_empty() { Json::Array(Vec::new()) } else { Json::Object(out) }})
             }
             Value::Ext(Ext::Query(q)) => self.export_object(Box::new((**q).clone())),
             Value::Ext(Ext::Nulls(n)) => json!({"$enum": format!("NullsPosition::{}", n.name())}),
@@ -516,7 +526,7 @@ impl Cx {
                 && let Some(object) = lent_object.as_deref()
             {
                 let address = data_address(object);
-                let known = self.state().locked.iter().rev().find(|(a, _)| *a == address).map(|(_, id)| *id);
+                let known = self.state().locked.iter().rev().find(|(a, _, _)| *a == address).map(|(_, id, _)| *id);
                 let id = match known {
                     Some(id) => id,
                     None => match object.clone_object() {
@@ -949,9 +959,8 @@ impl<'a> Args<'a> {
     /// A program value that must be a query.
     pub fn query_of(&self, raw: &Json) -> Result<Query, Failure> {
         let id = object_id(raw)?;
-        let slot = self.cx.slot(id)?;
-        let guard = slot.lock().unwrap_or_else(|e| e.into_inner());
-        guard.as_any().downcast_ref::<Query>().cloned().ok_or_else(|| fault(format!("object {id} is not a query")))
+        self.with_id(id, |o| o.as_any().downcast_ref::<Query>().cloned())?
+            .ok_or_else(|| fault(format!("object {id} is not a query")))
     }
 
     /// An `array` of `Query` argument.
