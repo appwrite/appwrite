@@ -1,0 +1,526 @@
+{
+  "cases": [
+    {
+      "name": "documents one runtime writes the other reads",
+      "interop": true,
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.new",
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "collection": "shared",
+            "document": {
+              "_id": "shared-1",
+              "title": "Inception",
+              "year": 2010,
+              "big": 3408048000,
+              "rating": 8.8,
+              "tags": [
+                "a",
+                "b"
+              ],
+              "director": {
+                "name": "Nolan"
+              },
+              "empty": {},
+              "none": null,
+              "flag": true
+            }
+          },
+          "side": "a",
+          "expect": {
+            "_id": "shared-1",
+            "title": "Inception",
+            "year": 2010,
+            "big": 3408048000,
+            "rating": 8.8,
+            "tags": [
+              "a",
+              "b"
+            ],
+            "director": {
+              "name": "Nolan"
+            },
+            "empty": {},
+            "none": null,
+            "flag": true
+          }
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "collection": "shared",
+            "documents": [
+              {
+                "n": 1
+              },
+              {
+                "n": 2
+              }
+            ]
+          },
+          "side": "a",
+          "expect": [
+            {
+              "n": 1,
+              "_id": "<uuid7>"
+            },
+            {
+              "n": 2,
+              "_id": "<uuid7>"
+            }
+          ]
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "b"
+            },
+            "collection": "shared",
+            "options": {
+              "sort": {
+                "_id": 1
+              }
+            }
+          },
+          "side": "b",
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "n": 1
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "n": 2
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "shared-1",
+                        "title": "Inception",
+                        "year": 2010,
+                        "big": 3408048000,
+                        "rating": 8.8,
+                        "tags": [
+                          "a",
+                          "b"
+                        ],
+                        "director": {
+                          "$object": {
+                            "name": "Nolan"
+                          }
+                        },
+                        "empty": {},
+                        "none": null,
+                        "flag": true
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.shared"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.update",
+          "args": {
+            "client": {
+              "$ref": "b"
+            },
+            "collection": "shared",
+            "where": {
+              "_id": "shared-1"
+            },
+            "updates": {
+              "$inc": {
+                "year": 1
+              },
+              "$set": {
+                "director.born": 1970
+              }
+            }
+          },
+          "side": "b",
+          "expect": 1
+        },
+        {
+          "op": "client.last_document",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "collection": "shared"
+          },
+          "side": "a",
+          "expect": {
+            "_id": "shared-1",
+            "title": "Inception",
+            "year": 2011,
+            "big": 3408048000,
+            "rating": 8.8,
+            "tags": [
+              "a",
+              "b"
+            ],
+            "director": {
+              "name": "Nolan",
+              "born": 1970
+            },
+            "empty": {},
+            "none": null,
+            "flag": true
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "collection": "shared",
+            "filters": {
+              "_id": "shared-1"
+            }
+          },
+          "side": "a",
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "shared-1",
+                        "title": "Inception",
+                        "year": 2011,
+                        "big": 3408048000,
+                        "rating": 8.8,
+                        "tags": [
+                          "a",
+                          "b"
+                        ],
+                        "director": {
+                          "$object": {
+                            "name": "Nolan",
+                            "born": 1970
+                          }
+                        },
+                        "empty": {},
+                        "none": null,
+                        "flag": true
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.shared"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "b"
+            },
+            "collection": "shared",
+            "filters": {
+              "n": {
+                "$gte": 1
+              }
+            }
+          },
+          "side": "b",
+          "expect": 2
+        }
+      ]
+    },
+    {
+      "name": "a transaction one runtime commits the other reads after",
+      "interop": true,
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.new",
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "name": "tx"
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "client.start_session",
+          "args": {
+            "client": {
+              "$ref": "a"
+            }
+          },
+          "bind": "s",
+          "side": "a",
+          "expect": {
+            "id": "<masked>",
+            "sessionId": "<masked>"
+          }
+        },
+        {
+          "op": "client.start_transaction",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "side": "a",
+          "expect": true
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "collection": "tx",
+            "document": {
+              "_id": 1
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "side": "a",
+          "expect": {
+            "_id": 1
+          }
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "b"
+            },
+            "collection": "tx"
+          },
+          "side": "b",
+          "expect": 1
+        },
+        {
+          "op": "client.commit_transaction",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "session": {
+              "$ref": "s"
+            }
+          },
+          "side": "a",
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "b"
+            },
+            "collection": "tx"
+          },
+          "side": "b",
+          "expect": 1
+        },
+        {
+          "op": "client.end_sessions",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "sessions": [
+              {
+                "$ref": "s"
+              }
+            ]
+          },
+          "side": "a",
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "ids made by either runtime",
+      "interop": true,
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "a",
+          "side": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.new",
+          "bind": "b",
+          "side": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_uuid",
+          "args": {
+            "client": {
+              "$ref": "a"
+            }
+          },
+          "side": "a",
+          "expect": "<uuid7>"
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "collection": "ids",
+            "document": {
+              "by": "a"
+            }
+          },
+          "side": "a",
+          "expect": {
+            "by": "a",
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "b"
+            },
+            "collection": "ids",
+            "document": {
+              "by": "b"
+            }
+          },
+          "side": "b",
+          "expect": {
+            "by": "b",
+            "_id": "<uuid7>"
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "a"
+            },
+            "collection": "ids",
+            "options": {
+              "sort": {
+                "_id": 1
+              }
+            }
+          },
+          "side": "a",
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "by": "a"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": "<uuid7>",
+                        "by": "b"
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.ids"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -63,6 +63,7 @@ utopia-cli = { path = "crates/utopia/cli" }
 utopia-console = { path = "crates/utopia/console" }
 utopia-platform = { path = "crates/utopia/platform" }
 utopia-servers = { path = "crates/utopia/servers" }
+utopia-mongo = { path = "crates/utopia/mongo" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -157,6 +158,12 @@ lzma-rust2 = { version = "0.22", default-features = false, features = ["std", "e
 icu_normalizer = { version = "2.3", default-features = false, features = ["compiled_data"] }
 icu_properties = { version = "2.3", default-features = false, features = ["compiled_data"] }
 md-5 = "0.10"
+# The official MongoDB driver (utopia-mongo, and utopia-database's Mongo
+# adapter through it) and its BSON library; pure Rust, maintained by MongoDB,
+# TLS on the workspace's rustls (ring). No SRV resolver: hosts are dialled
+# directly, as utopia-php/mongo dials them.
+mongodb = { version = "3.9", default-features = false, features = ["compat-3-3-0", "bson-3", "rustls-tls"] }
+bson = { version = "3.1", features = ["serde_json-1"] }
 md2 = "0.10"
 # Byte search (utopia-user-agent: case-insensitive token scans); pure Rust,
 # already a dependency of regex.

@@ -22,6 +22,18 @@
       "rust-container": "postgres://root:password@compat-database-postgres:5432/root",
       "runner": "postgres://root:password@localhost:16432/root"
     },
+    "mongo": {
+      "php": "mongodb://root:password@compat-mongo:27017",
+      "rust": "mongodb://root:password@localhost:16017",
+      "rust-container": "mongodb://root:password@compat-mongo:27017",
+      "runner": "mongodb://root:password@localhost:16017"
+    },
+    "database-mongo": {
+      "php": "mongodb://root:password@compat-database-mongo:27017",
+      "rust": "mongodb://root:password@localhost:16018",
+      "rust-container": "mongodb://root:password@compat-database-mongo:27017",
+      "runner": "mongodb://root:password@localhost:16018"
+    },
     "domains-http": {
       "php": "http://compat-domains-http:8080",
       "rust": "http://localhost:9590",

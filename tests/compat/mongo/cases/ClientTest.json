@@ -1,0 +1,1665 @@
+{
+  "source": "vendor/utopia-php/mongo/tests/ClientTest.php",
+  "cases": [
+    {
+      "name": "testDecodedMongoCommandErrorDoesNotCloseTransport",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "nonexistent": 1
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E59 CommandNotFound: no such command: 'nonexistent'",
+              "code": 59,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "ping": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E72 InvalidOptions: afterClusterTime is not allowed for this command"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPermanentWriteErrorDoesNotCloseTransport",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "c",
+            "document": {
+              "_id": "dup"
+            }
+          },
+          "expect": {
+            "_id": "dup"
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "c",
+            "document": {
+              "_id": "dup"
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E11000 duplicate key error collection: ${ns}.c index: _id_ dup key: { _id: \"dup\" }",
+              "code": 11000,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": true,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "Duplicate Key Error"
+            }
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "c"
+          },
+          "expect": 1
+        }
+      ]
+    },
+    {
+      "name": "testConnectPassesConfiguredTimeout",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "timeout": 5.0,
+            "connect_timeout": 2.5
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.get_connection_info",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "connected": true,
+            "host": "compat-mongo",
+            "port": 27017,
+            "database": "${ns}",
+            "activeSessions": 0,
+            "clusterTimeSet": true,
+            "operationTimeSet": true
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "timeout": 0,
+            "connect": false
+          },
+          "bind": "z",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Timeout must be greater than 0"
+            }
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "connect_timeout": -1,
+            "connect": false
+          },
+          "bind": "z",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Connect timeout must be greater than 0"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "constructor arguments are checked",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "database": "",
+            "connect": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Database name cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "host": "",
+            "connect": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Host cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "port": 0,
+            "connect": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Port must be between 1 and 65535"
+            }
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "port": 65536,
+            "connect": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Port must be between 1 and 65535"
+            }
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "user": "",
+            "connect": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Username cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "password": "",
+            "connect": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Password cannot be empty"
+            }
+          }
+        },
+        {
+          "op": "client.new",
+          "args": {
+            "database": "0",
+            "connect": false
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Database name cannot be empty"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "wrong password",
+      "steps": [
+        {
+          "op": "client.new",
+          "args": {
+            "password": "wrong",
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E18 AuthenticationFailed: Authentication failed.",
+              "code": 18,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "commands, replies and counts",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.select_database",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$client": true
+          }
+        },
+        {
+          "op": "client.create_database",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$client": true
+          }
+        },
+        {
+          "op": "client.select_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "anything"
+          },
+          "expect": {
+            "$client": true
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "ping": 1
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E72 InvalidOptions: afterClusterTime is not allowed for this command"
+            }
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "ping": 1,
+              "skipReadConcern": true
+            }
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "insert": "q",
+              "documents": [
+                {
+                  "_id": 1
+                },
+                {
+                  "_id": 2
+                }
+              ]
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "count": "q"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "listCollections": 1,
+              "nameOnly": true
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "id": 0,
+                  "ns": "${ns}.$cmd.listCollections",
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "name": "q",
+                        "type": "collection"
+                      }
+                    }
+                  ]
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "ping": 1
+            },
+            "db": "admin"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E72 InvalidOptions: afterClusterTime is not allowed for this command"
+            }
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "dropDatabase": 1
+            },
+            "db": "${ns}_other"
+          },
+          "expect": {
+            "$object": {
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.list_collection_names",
+          "args": {
+            "client": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "id": 0,
+                  "ns": "${ns}.$cmd.listCollections",
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "name": "q",
+                        "type": "collection"
+                      }
+                    }
+                  ]
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.list_collection_names",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "filter": {
+              "name": "q"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "id": 0,
+                  "ns": "${ns}.$cmd.listCollections",
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "name": "q",
+                        "type": "collection"
+                      }
+                    }
+                  ]
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find_and_modify",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "q",
+            "update": {
+              "$set": {
+                "x": 1
+              }
+            },
+            "filters": {
+              "_id": 1
+            },
+            "options": {
+              "new": true
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E40415 IDLUnknownField: BSON field 'findAndModify.filter' is an unknown field."
+            }
+          }
+        },
+        {
+          "op": "client.find_and_modify",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "q",
+            "remove": true,
+            "filters": {
+              "_id": 2
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E40415 IDLUnknownField: BSON field 'findAndModify.filter' is an unknown field."
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "q"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 1
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 2
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.q"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.delete",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "q",
+            "filters": {
+              "_id": 1
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "client.delete",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "q",
+            "filters": {
+              "_id": 1
+            }
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "indexes",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.create_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "ix"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.create_indexes",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "ix",
+            "indexes": [
+              {
+                "key": {
+                  "a": 1
+                },
+                "name": "a_unique",
+                "unique": true
+              },
+              {
+                "key": {
+                  "b": -1
+                },
+                "name": "b_key"
+              },
+              {
+                "key": {
+                  "c": 1
+                },
+                "name": "c_partial",
+                "unique": true,
+                "partialFilterExpression": {
+                  "c": {
+                    "$exists": true
+                  }
+                }
+              },
+              {
+                "key": {
+                  "d": "text"
+                },
+                "name": "d_text",
+                "default_language": "none"
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "ix",
+            "document": {
+              "_id": 1,
+              "a": 1
+            }
+          },
+          "expect": {
+            "_id": 1,
+            "a": 1
+          }
+        },
+        {
+          "op": "client.insert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "ix",
+            "document": {
+              "_id": 2,
+              "a": 1
+            },
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E11000 duplicate key error collection: ${ns}.ix index: a_unique dup key: { a: 1 }",
+              "code": 11000,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": true,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "Duplicate Key Error"
+            }
+          }
+        },
+        {
+          "op": "client.query",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "command": {
+              "listIndexes": "ix"
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "id": 0,
+                  "ns": "${ns}.ix",
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "v": 2,
+                        "key": {
+                          "$object": {
+                            "_id": 1
+                          }
+                        },
+                        "name": "_id_"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "v": 2,
+                        "key": {
+                          "$object": {
+                            "a": 1
+                          }
+                        },
+                        "name": "a_unique",
+                        "unique": true,
+                        "sparse": true
+                      }
+                    },
+                    {
+                      "$object": {
+                        "v": 2,
+                        "key": {
+                          "$object": {
+                            "b": -1
+                          }
+                        },
+                        "name": "b_key"
+                      }
+                    },
+                    {
+                      "$object": {
+                        "v": 2,
+                        "key": {
+                          "$object": {
+                            "c": 1
+                          }
+                        },
+                        "name": "c_partial",
+                        "unique": true,
+                        "partialFilterExpression": {
+                          "$object": {
+                            "c": {
+                              "$object": {
+                                "$exists": true
+                              }
+                            }
+                          }
+                        }
+                      }
+                    },
+                    {
+                      "$object": {
+                        "v": 2,
+                        "key": {
+                          "$object": {
+                            "_fts": "text",
+                            "_ftsx": 1
+                          }
+                        },
+                        "name": "d_text",
+                        "weights": {
+                          "$object": {
+                            "d": 1
+                          }
+                        },
+                        "default_language": "none",
+                        "language_override": "language",
+                        "textIndexVersion": 3
+                      }
+                    }
+                  ]
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.drop_indexes",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "ix",
+            "indexes": [
+              "b_key"
+            ]
+          },
+          "expect": {
+            "$client": true
+          }
+        },
+        {
+          "op": "client.drop_indexes",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "ix",
+            "indexes": [
+              "missing"
+            ],
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E27 IndexNotFound: index not found with name [missing]",
+              "code": 27,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.create_indexes",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "ix",
+            "indexes": [
+              {
+                "key": {
+                  "a": 1
+                },
+                "name": "a_unique",
+                "unique": false
+              }
+            ],
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E86 IndexKeySpecsConflict: An existing index has the same name as the requested index. When index names are not specified, they are auto generated and can cause conflicts. Please refer to our documentation. Requested index: { v: 2, key: { a: 1 }, name: \"a_unique\" }, existing index: { v: 2, unique: true, key: { a: 1 }, name: \"a_unique\", sparse: true }",
+              "code": 86,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "batches, cursors and deletes",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "documents": [
+              {
+                "_id": 0,
+                "n": 0
+              },
+              {
+                "_id": 1,
+                "n": 1
+              },
+              {
+                "_id": 2,
+                "n": 2
+              },
+              {
+                "_id": 3,
+                "n": 0
+              },
+              {
+                "_id": 4,
+                "n": 1
+              },
+              {
+                "_id": 5,
+                "n": 2
+              },
+              {
+                "_id": 6,
+                "n": 0
+              }
+            ],
+            "options": {
+              "batchSize": 3,
+              "ordered": false
+            }
+          },
+          "expect": [
+            {
+              "_id": 0,
+              "n": 0
+            },
+            {
+              "_id": 1,
+              "n": 1
+            },
+            {
+              "_id": 2,
+              "n": 2
+            },
+            {
+              "_id": 3,
+              "n": 0
+            },
+            {
+              "_id": 4,
+              "n": 1
+            },
+            {
+              "_id": 5,
+              "n": 2
+            },
+            {
+              "_id": 6,
+              "n": 0
+            }
+          ]
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "documents": []
+          },
+          "expect": []
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "options": {
+              "batchSize": 2,
+              "sort": {
+                "_id": 1
+              }
+            }
+          },
+          "bind": "first",
+          "mask": {
+            "paths": [
+              "/$object/cursor/$object/id"
+            ],
+            "reason": "cursor ids are the server's"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 0,
+                        "n": 0
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 1,
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "id": "<masked>",
+                  "ns": "${ns}.b"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_more",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "cursor_id": {
+              "$ref": "first",
+              "path": "/$object/cursor/$object/id"
+            },
+            "collection": "b",
+            "batch_size": 3
+          },
+          "mask": {
+            "paths": [
+              "/$object/cursor/$object/id"
+            ],
+            "reason": "cursor ids are the server's"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "nextBatch": [
+                    {
+                      "$object": {
+                        "_id": 2,
+                        "n": 2
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 3,
+                        "n": 0
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 4,
+                        "n": 1
+                      }
+                    }
+                  ],
+                  "id": "<masked>",
+                  "ns": "${ns}.b"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_more",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "cursor_id": {
+              "$ref": "first",
+              "path": "/$object/cursor/$object/id"
+            },
+            "collection": "b"
+          },
+          "mask": {
+            "paths": [
+              "/$object/cursor/$object/id"
+            ],
+            "reason": "cursor ids are the server's"
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "nextBatch": [
+                    {
+                      "$object": {
+                        "_id": 5,
+                        "n": 2
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 6,
+                        "n": 0
+                      }
+                    }
+                  ],
+                  "id": "<masked>",
+                  "ns": "${ns}.b"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.get_more",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "cursor_id": 12345,
+            "collection": "b",
+            "inspect": true
+          },
+          "expect": {
+            "$exception": {
+              "class": "Utopia\\Mongo\\Exception",
+              "message": "E14 TypeMismatch: BSON field 'getMore.getMore' is the wrong type 'int', expected type 'long'",
+              "code": 14,
+              "transient": false,
+              "network": false,
+              "retryable_write": false,
+              "duplicate_key": false,
+              "write_concern": false,
+              "unsent": false,
+              "timeout": false,
+              "error_labels": [],
+              "write_errors": null,
+              "write_concern_errors": null,
+              "operation_type": null,
+              "category": "MongoDB Error"
+            }
+          }
+        },
+        {
+          "op": "client.delete",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "filters": {
+              "n": 1
+            },
+            "limit": 0
+          },
+          "expect": 2
+        },
+        {
+          "op": "client.delete",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "filters": {
+              "n": 2
+            },
+            "limit": 1,
+            "delete_options": {
+              "collation": {
+                "locale": "en",
+                "strength": 1
+              }
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b"
+          },
+          "expect": 4
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "options": {
+              "skip": 2,
+              "limit": 10,
+              "maxTimeMS": 1000
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "filters": {
+              "$and": [
+                {
+                  "n": 0
+                },
+                {
+                  "_id": {
+                    "$gt": 0
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 3,
+                        "n": 0
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 6,
+                        "n": 0
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.b"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "filters": {
+              "$nor": [
+                {
+                  "n": 0
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 5,
+                        "n": 2
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.b"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b",
+            "options": {
+              "projection": {
+                "_id": 1
+              },
+              "limit": 2,
+              "skip": 1,
+              "sort": {
+                "_id": -1
+              }
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "_id": 5
+                      }
+                    },
+                    {
+                      "$object": {
+                        "_id": 3
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.b"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.drop_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "b"
+          },
+          "expect": true
+        },
+        {
+          "op": "client.drop_collection",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "name": "b",
+            "inspect": true
+          },
+          "expect": true
+        },
+        {
+          "op": "client.count",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "b"
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "upserts with multi and options",
+      "steps": [
+        {
+          "op": "client.new",
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "client.insert_many",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "u",
+            "documents": [
+              {
+                "g": 1,
+                "n": 1
+              },
+              {
+                "g": 1,
+                "n": 2
+              }
+            ]
+          },
+          "expect": [
+            {
+              "g": 1,
+              "n": 1,
+              "_id": "<uuid7>"
+            },
+            {
+              "g": 1,
+              "n": 2,
+              "_id": "<uuid7>"
+            }
+          ]
+        },
+        {
+          "op": "client.upsert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "u",
+            "operations": [
+              {
+                "filter": {
+                  "g": 1
+                },
+                "update": {
+                  "$inc": {
+                    "n": 10
+                  }
+                },
+                "multi": true
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "client.upsert",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "u",
+            "operations": [
+              {
+                "filter": {
+                  "_id": "x"
+                },
+                "update": {
+                  "$setOnInsert": {
+                    "n": 0
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "client.update",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "u",
+            "where": {
+              "_id": "y"
+            },
+            "updates": {
+              "$set": {
+                "n": 5
+              }
+            },
+            "options": {
+              "upsert": true
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "c"
+            },
+            "collection": "u",
+            "options": {
+              "sort": {
+                "n": 1
+              },
+              "projection": {
+                "_id": 0
+              }
+            }
+          },
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
+                    {
+                      "$object": {
+                        "n": 0
+                      }
+                    },
+                    {
+                      "$object": {
+                        "n": 5
+                      }
+                    },
+                    {
+                      "$object": {
+                        "g": 1,
+                        "n": 11
+                      }
+                    },
+                    {
+                      "$object": {
+                        "g": 1,
+                        "n": 12
+                      }
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.u"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

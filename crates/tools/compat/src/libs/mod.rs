@@ -32,6 +32,7 @@ pub mod http;
 pub mod image;
 pub mod locale;
 pub mod lock;
+pub mod mongo;
 pub mod php_std;
 pub mod platform;
 pub mod pools;
@@ -71,6 +72,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("http", http::OPS),
     ("image", image::OPS),
     ("locale", locale::OPS),
+    ("mongo", mongo::OPS),
     ("lock", lock::OPS),
     ("php-std", php_std::OPS),
     ("platform", platform::OPS),
@@ -113,6 +115,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "http" => http::call(op, args, session).await,
         "image" => image::call(op, args, session).await,
         "locale" => locale::call(op, args, session).await,
+        "mongo" => mongo::call(op, args, session).await,
         "lock" => lock::call(op, args, session).await,
         "php-std" => php_std::call(op, args, session).await,
         "platform" => platform::call(op, args, session).await,
@@ -157,6 +160,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "http" => http::BENCHES,
         "image" => image::BENCHES,
         "locale" => locale::BENCHES,
+        "mongo" => mongo::BENCHES,
         "lock" => lock::BENCHES,
         "php-std" => php_std::BENCHES,
         "platform" => platform::BENCHES,
@@ -200,6 +204,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "http" => http::bench(name, session).await,
         "image" => image::bench(name, session).await,
         "locale" => locale::bench(name, session).await,
+        "mongo" => mongo::bench(name, session).await,
         "lock" => lock::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
         "platform" => platform::bench(name, session).await,
