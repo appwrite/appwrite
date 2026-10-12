@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
+import { ArrowRight, Boxes, Gauge, Server, SquareTerminal } from 'lucide-react'
 import { CodeBlock, CopyButton } from './Code'
-import { useMigration } from '@/lib/prefs'
 import type { Index } from '@/lib/docs'
 
 // The first example of the HTTP guide, as it compiles and runs in CI.
@@ -41,45 +41,52 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 `
 
-const number = new Intl.NumberFormat('en-US')
+/** What the libraries give you, each a claim the site and the repository back up. */
+const VALUES = [
+  {
+    icon: Boxes,
+    title: 'One problem per crate',
+    text: 'Depend on validators without pulling in a web server. Each crate is small and documents its own API.',
+  },
+  {
+    icon: Gauge,
+    title: 'Built on Tokio',
+    text: 'The HTTP framework runs on hyper, and the cache and queue clients are async, ready for servers under load.',
+  },
+  {
+    icon: SquareTerminal,
+    title: 'Examples that run',
+    text: 'Every guide example is a complete program, compiled and run in CI, so what you copy works.',
+  },
+  {
+    icon: Server,
+    title: 'Proven in production code',
+    text: "Appwrite's Rust API is built on these crates: HTTP, authentication, databases, caches and queues.",
+  },
+]
 
-/** The home page's opening: what Utopia is, a real example, and the catalog in numbers. */
+/** The home page's opening: what Utopia is for, a real example, and what the libraries give you. */
 export function Hero({ index }: { index: Index }) {
-  const migration = useMigration()
-  const crates = index.libraries.filter((l) => l.rust)
-  const http = crates.find((l) => l.slug === 'http')
-  const examples = crates.reduce((n, l) => n + l.counts.examples, 0)
-  const items = crates.reduce((n, l) => n + l.counts.documented, 0)
-  const speedups = crates.flatMap((l) => (l.bench ? [l.bench.speedup] : []))
-  // Geometric mean, as each library's own figure is.
-  const speedup = speedups.length ? Math.exp(speedups.reduce((n, s) => n + Math.log(s), 0) / speedups.length) : null
-  const cases = crates.reduce((n, l) => n + (l.compat?.cases ?? 0), 0)
-  const stats: { value: string; label: string; migration?: boolean }[] = [
-    { value: number.format(crates.length), label: 'Libraries' },
-    { value: number.format(index.categories.length), label: 'Categories' },
-    { value: number.format(examples), label: 'Examples' },
-    { value: number.format(items), label: 'Documented items' },
-    ...(migration && speedup ? [{ value: `${speedup.toFixed(1)}×`, label: 'Faster than PHP', migration: true }] : []),
-    ...(migration && cases ? [{ value: number.format(cases), label: 'Cases proven vs PHP', migration: true }] : []),
-  ]
+  const http = index.libraries.find((l) => l.slug === 'http' && l.rust)
   // The crates live in the Appwrite repository, not on crates.io.
   const install = `cargo add ${http?.rust?.name ?? 'utopia-http'} --git https://github.com/appwrite/appwrite`
   return (
-    <section className="overflow-hidden rounded-xl border border-border">
-      <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-8 px-5 py-8 md:px-8 md:py-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start justify-items-start gap-4">
-          <h1 className="m-0 text-[30px] leading-tight sm:text-[34px]">Utopia for Rust</h1>
-          <p className="m-0 max-w-[56ch] text-[15px] text-muted-foreground">
-            Single-purpose libraries for building services: HTTP, validation, authentication, databases, queues, storage and more. Each library solves
-            one problem and documents it with examples that compile and run in CI.
+    <section className="grid gap-10 pt-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-12">
+        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start justify-items-start gap-5">
+          <h1 className="m-0 text-[34px] leading-[1.1] sm:text-[42px]">Rust libraries for building backend services</h1>
+          <p className="m-0 max-w-[54ch] text-[15.5px] leading-relaxed text-muted-foreground">
+            Small, focused crates for HTTP, validation, authentication, databases, queues and storage. Use one on its own, or combine them into a
+            complete API server.
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <a href="#libraries" className="inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground hover:opacity-90">
               Browse libraries
             </a>
             {http ? (
-              <Link to="/$lib" params={{ lib: http.slug }} className="inline-flex h-9 items-center rounded-md border border-border px-3.5 text-[13.5px] font-medium hover:bg-accent">
-                Read the HTTP guide
+              <Link to="/$lib" params={{ lib: http.slug }} className="inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-[13.5px] font-medium hover:bg-accent">
+                Start with HTTP
+                <ArrowRight className="size-3.5" />
               </Link>
             ) : null}
           </div>
@@ -94,14 +101,17 @@ export function Hero({ index }: { index: Index }) {
         </div>
       </div>
 
-      <dl className="m-0 grid grid-cols-2 border-t border-border sm:grid-cols-3 lg:auto-cols-fr lg:grid-flow-col lg:grid-cols-none">
-        {stats.map((s) => (
-          <div key={s.label} className="grid gap-0.5 border-border px-5 py-3.5 not-last:border-r max-lg:border-b md:px-6">
-            <dt className={`order-2 text-[12px] ${s.migration ? 'text-migration-ink' : 'text-muted-foreground'}`}>{s.label}</dt>
-            <dd className="order-1 m-0 font-display text-[20px] font-medium tracking-tight tabular-nums">{s.value}</dd>
-          </div>
+      <ul className="m-0 grid list-none gap-x-8 gap-y-6 border-t border-border p-0 pt-8 sm:grid-cols-2 lg:grid-cols-4">
+        {VALUES.map(({ icon: Icon, title, text }) => (
+          <li key={title} className="grid content-start gap-2">
+            <span className="inline-flex size-8 items-center justify-center rounded-md border border-border text-foreground">
+              <Icon className="size-4" strokeWidth={1.75} />
+            </span>
+            <h3 className="m-0 text-[14.5px]">{title}</h3>
+            <p className="m-0 text-[13px] leading-relaxed text-muted-foreground">{text}</p>
+          </li>
         ))}
-      </dl>
+      </ul>
     </section>
   )
 }
