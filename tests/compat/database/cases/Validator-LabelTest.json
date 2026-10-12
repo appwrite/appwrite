@@ -1,0 +1,414 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/LabelTest.php",
+  "cases": [
+    {
+      "name": "testValues",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": false
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": null
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": [
+              "value"
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": 0
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": 1.5
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "asdas7as9as"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "5f058a8925807"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "_asdasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": ".as5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "-as5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as5dadasdas_"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as_5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as5dasdasdas."
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as.5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as5dasdasdas-"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as-5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "dasda asdasd"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "asd\"asd6sdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "asd'as0asdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as!5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as@5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as#5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as$5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as%5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as^5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as&5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as*5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as(5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as)5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as+5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "as=5dasdasdas"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: lengths, unicode, internal",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": ""
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "0"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "é"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "aé"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "a\n"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "ABCxyz019"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": "$id"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "value": " a"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "allowInternal": true,
+            "value": "$id"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "allowInternal": true,
+            "value": "$createdAt"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "allowInternal": true,
+            "value": "appwrite_"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "allowInternal": true,
+            "value": "$"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "maxLength": 3,
+            "value": "abc"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "maxLength": 3,
+            "value": "abcd"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "label",
+            "maxLength": 0,
+            "value": "a"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: description and meta",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "label",
+            "maxLength": 12
+          },
+          "bind": "l"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "l"
+            }
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "l"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "l"
+            },
+            "value": "a_b"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "l"
+            },
+            "value": "ab"
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,609 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/PermissionTest.php",
+  "cases": [
+    {
+      "name": "testOutputFromString",
+      "steps": [
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"users\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"user:123\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"team:123/admin\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"guests\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "create(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "create(\"users\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "create(\"user:123\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "create(\"team:123/admin\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "create(\"guests\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "update(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "update(\"users\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "update(\"user:123\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "update(\"team:123/admin\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "update(\"guests\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "delete(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "delete(\"users\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "delete(\"user:123\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "delete(\"team:123/admin\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "delete(\"guests\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"users/verified\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"users/unverified\")"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInputFromParameters",
+      "steps": [
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "read",
+            "role": "any"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "read",
+            "role": "users"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "read",
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "read",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "create",
+            "role": "any"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "create",
+            "role": "users"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "create",
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "create",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "update",
+            "role": "any"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "update",
+            "role": "users"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "update",
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "update",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "delete",
+            "role": "any"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "delete",
+            "role": "users"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "delete",
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "permission.new",
+          "args": {
+            "permission": "delete",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInputFromRoles",
+      "steps": [
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "read",
+            "role": "any"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "read",
+            "role": "users"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "read",
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "read",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "read",
+            "role": "guests"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "create",
+            "role": "any"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "create",
+            "role": "users"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "create",
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "create",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "create",
+            "role": "guests"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "update",
+            "role": "any"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "update",
+            "role": "users"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "update",
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "update",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "update",
+            "role": "guests"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "delete",
+            "role": "any"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "delete",
+            "role": "users"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "delete",
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "delete",
+            "role": "team",
+            "identifier": "123",
+            "dimension": "admin"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "delete",
+            "role": "guests"
+          }
+        },
+        {
+          "op": "permission.of",
+          "args": {
+            "kind": "write",
+            "role": "any"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidFormats",
+      "steps": [
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read((\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"users/un/verified\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"users/\")"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAggregation",
+      "steps": [
+        {
+          "op": "permission.aggregate",
+          "args": {
+            "permissions": [
+              "write(\"any\")"
+            ]
+          }
+        },
+        {
+          "op": "permission.aggregate",
+          "args": {
+            "permissions": [
+              "write(\"any\")"
+            ],
+            "allowed": [
+              "update",
+              "delete"
+            ]
+          }
+        },
+        {
+          "op": "permission.aggregate",
+          "args": {
+            "permissions": [
+              "read(\"any\")",
+              "read(\"user:123\")",
+              "read(\"user:123\")",
+              "write(\"user:123\")",
+              "update(\"user:123\")",
+              "delete(\"user:123\")"
+            ],
+            "allowed": [
+              "create",
+              "read",
+              "update",
+              "delete"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: parse write and odd strings",
+      "steps": [
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "write(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "write(\"team:1/owner\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "Read(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": ""
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"any\")x"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"any"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"a(\"b\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"user:1:2\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"team:1/2/3\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"team:a/b:c\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(any)"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": " read(\"any\")"
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"any\") "
+          }
+        },
+        {
+          "op": "permission.parse",
+          "args": {
+            "permission": "read(\"é:ü/ß\")"
+          }
+        }
+      ]
+    }
+  ]
+}

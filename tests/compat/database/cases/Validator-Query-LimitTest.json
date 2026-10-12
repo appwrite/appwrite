@@ -1,0 +1,608 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/Query/LimitTest.php",
+  "cases": [
+    {
+      "name": "testValueSuccess",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_limit",
+            "maxLimit": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  100
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValueFailure",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_limit",
+            "maxLimit": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  0
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  0
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  -1
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  101
+                ]
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: default max and description",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_limit"
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  9223372036854775807
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  0
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: odd values",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_limit",
+            "maxLimit": 100
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  "5"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  "0"
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  5.0
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  5.5
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  null
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  true
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": []
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  5,
+                  6
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "attr",
+                "values": [
+                  5
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  5
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "limit"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": null
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: tiny max",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_limit",
+            "maxLimit": 1
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  2
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: thousands separator",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_limit",
+            "maxLimit": 1234567
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  1234568
+                ]
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

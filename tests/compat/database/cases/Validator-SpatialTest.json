@@ -1,0 +1,1295 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/SpatialTest.php",
+  "cases": [
+    {
+      "name": "testValidPoint",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point"
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              10,
+              20
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              -180.0,
+              90.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              10
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              10,
+              "a"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                10,
+                20
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidLineString",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "linestring"
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                10,
+                10
+              ],
+              [
+                20,
+                20
+              ],
+              [
+                30,
+                30
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                10,
+                10
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                10,
+                10
+              ],
+              [
+                20
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                10,
+                10
+              ],
+              [
+                "x",
+                "y"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValidPolygon",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon"
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ],
+                [
+                  4,
+                  4
+                ],
+                [
+                  4,
+                  0
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              [
+                [
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  2
+                ],
+                [
+                  2,
+                  2
+                ],
+                [
+                  2,
+                  1
+                ],
+                [
+                  1,
+                  1
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": []
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                2,
+                2
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  0
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  "a"
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testWKTStrings",
+      "steps": [
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "POINT(1 2)"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "LINESTRING(0 0,1 1)"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "POLYGON((0 0,1 0,1 1,0 1,0 0))"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "CIRCLE(0 0,1)"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "POINT1(1 2)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidCoordinate",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point"
+          },
+          "bind": "a"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": [
+              200,
+              10
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point"
+          },
+          "bind": "b"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "b"
+            },
+            "value": [
+              10,
+              -100
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "b"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "linestring"
+          },
+          "bind": "c"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "c"
+            },
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                181,
+                45
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "c"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  190,
+                  5
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: WKT strings",
+      "steps": [
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "  point (1 2)"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "Polygon("
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "POINT"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "POINT 1 2"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": ""
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "MULTIPOINT(1 2)"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "\nLINESTRING\t("
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "POINT()"
+          }
+        },
+        {
+          "op": "validator.spatial_wkt",
+          "args": {
+            "value": "xPOINT(1 2)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": "POINT(1 2)"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": "garbage"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": ""
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": null
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": "LINESTRING(0 0,1 1)"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: point values",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              180,
+              90
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              -180,
+              -90
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              180.0001,
+              0
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              0,
+              90.5
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              "10",
+              "20"
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              "1e2",
+              "0x1"
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              " 1",
+              "2 "
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              1.5e+20,
+              0
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              -0.0,
+              0
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              true,
+              1
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              null,
+              1
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": [
+              1,
+              2,
+              3
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": []
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": 5
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": 1.5
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": true
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "point",
+            "value": {
+              "$object": {
+                "a": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: linestring and polygon values",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "linestring",
+            "value": []
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "linestring",
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "linestring",
+            "value": [
+              [
+                0,
+                0
+              ],
+              5
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "linestring",
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "linestring",
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                "1",
+                "1"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "linestring",
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                -90.01
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                0
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                0,
+                0.0
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                "0",
+                "0"
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                "0",
+                "0"
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ],
+                [
+                  4,
+                  4
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              []
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ],
+                [
+                  4,
+                  4
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              [
+                [
+                  1,
+                  1
+                ],
+                [
+                  1,
+                  2
+                ],
+                [
+                  2,
+                  2
+                ],
+                [
+                  2,
+                  1
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ],
+                [
+                  4,
+                  4
+                ],
+                [
+                  0,
+                  0
+                ]
+              ],
+              7
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ],
+                [
+                  4,
+                  4,
+                  4
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  4
+                ],
+                [
+                  4,
+                  4
+                ],
+                [
+                  0,
+                  0
+                ],
+                [
+                  0,
+                  91
+                ]
+              ]
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon",
+            "value": [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                1
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                200,
+                0
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: unknown spatial type and meta",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "circle"
+          },
+          "bind": "u"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            },
+            "value": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            },
+            "value": null
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            },
+            "value": "POINT(1 2)"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "u"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "spatial",
+            "spatialType": "polygon"
+          },
+          "bind": "m"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

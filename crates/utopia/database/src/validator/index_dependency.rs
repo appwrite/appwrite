@@ -35,6 +35,11 @@ impl IndexDependency {
         Self { indexes, cast_index_support }
     }
 
+    /// Whether the adapter indexes array attributes through casts.
+    pub fn cast_index_support(&self) -> bool {
+        self.cast_index_support
+    }
+
     /// `getDescription()`.
     pub fn description(&self) -> String {
         "Attribute can't be deleted or renamed because it is used in an index".to_owned()

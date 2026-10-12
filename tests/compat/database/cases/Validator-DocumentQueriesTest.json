@@ -1,0 +1,501 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/DocumentQueriesTest.php",
+  "cases": [
+    {
+      "name": "testValidQueries",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_document",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ]
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "price.relation"
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidQueries",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_document",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ]
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: descriptions and odd selections",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_document",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ]
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "dne"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "title",
+                    "title"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "title",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "{\"method\":\"select\",\"values\":[\"title\"]}"
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "$id",
+                    "*"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": []
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "x"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: supportForAttributes false",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "queries_document",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "title",
+                  "key": "title",
+                  "type": "string",
+                  "size": 256,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "price",
+                  "key": "price",
+                  "type": "double",
+                  "size": 5,
+                  "required": true,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "supportForAttributes": false
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "dne"
+                  ]
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

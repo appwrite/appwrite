@@ -1,0 +1,1114 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/DateTimeTest.php",
+  "cases": [
+    {
+      "name": "testCreateDatetime",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59"
+          },
+          "bind": "d"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "2022-12-04"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "2022-1-4 11:31"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "2022-12-04 11:31:52"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "2022-1-4 11:31:52.123456789"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "2022-07-02 18:31:52.680"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "2022-12-04 11:31:52.680+02:00"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "2022-13-04 11:31:52.680"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "-0001-13-04 00:00:00"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "0000-00-00 00:00:00"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "d"
+            },
+            "value": "10000-01-01 00:00:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testPastDateValidation",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "requireDateInFuture": true
+          },
+          "bind": "f"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            },
+            "value": "2000-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            },
+            "value": "2200-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "f"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "requireDateInFuture": false
+          },
+          "bind": "p"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": "2000-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            },
+            "value": "2200-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "p"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testDatePrecision",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "precision": "seconds"
+          },
+          "bind": "s"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "s"
+            },
+            "value": "2019-04-08 19:36:26.255"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "s"
+            },
+            "value": "2019-04-08 19:36:26.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "s"
+            },
+            "value": "2019-04-08 19:36:26.000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "s"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "precision": "minutes"
+          },
+          "bind": "m"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            },
+            "value": "2019-04-08 19:36:26.255"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            },
+            "value": "2019-04-08 19:36:26.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            },
+            "value": "2019-04-08 19:36:26.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            },
+            "value": "2019-04-08 19:36:00.000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "precision": "hours"
+          },
+          "bind": "h"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "h"
+            },
+            "value": "2019-04-08 19:36:26.255"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "h"
+            },
+            "value": "2019-04-08 19:36:26.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "h"
+            },
+            "value": "2019-04-08 19:36:26.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "h"
+            },
+            "value": "2019-04-08 19:36:00.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "h"
+            },
+            "value": "2019-04-08 19:00:00.000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "h"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "precision": "days"
+          },
+          "bind": "dd"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "dd"
+            },
+            "value": "2019-04-08 19:36:26.255"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "dd"
+            },
+            "value": "2019-04-08 19:36:26.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "dd"
+            },
+            "value": "2019-04-08 19:36:26.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "dd"
+            },
+            "value": "2019-04-08 19:36:00.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "dd"
+            },
+            "value": "2019-04-08 19:00:00.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "dd"
+            },
+            "value": "2019-04-08 00:00:00.000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "dd"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "precision": "minutes"
+          },
+          "bind": "m2"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m2"
+            },
+            "value": "2019-04-08 19:36:26.255"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m2"
+            },
+            "value": "2100-04-08 19:36:26.255"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "m2"
+            },
+            "value": "2100-04-08 19:36:00.000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "m2"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testOffset",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "offset": 60
+          },
+          "bind": "o"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "o"
+            },
+            "value": "2000-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "o"
+            },
+            "value": "2020-06-01 12:00:50.000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "o"
+            },
+            "value": "2200-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "o"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "requireDateInFuture": true,
+            "offset": 60
+          },
+          "bind": "of"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "of"
+            },
+            "value": "2200-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "of"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "offset": -60
+          },
+          "bind": "neg"
+        }
+      ]
+    },
+    {
+      "name": "edge: non-strings and empties",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": ""
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "0"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": null
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": 0
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": 20220101
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": 1.5
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": true
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": [
+              "2022-01-01"
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "now"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "tomorrow"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": " "
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "abc"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: formats and year overflow",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-02-30"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-02-29"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2024-02-29"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-12-04T11:31:52Z"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-12-04T11:31:52.123+14:00"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-12-04 11:31:52 UTC"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "1 January 2022"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "@1700000000"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "12345-01-01"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "0999-01-01"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "999-01-01"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "9999-12-31 23:59:59"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "9999-12-31 23:59:59.5"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "9999-12-31 23:59:60"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "0000-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "0000-01-01"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-12-04 24:00:00"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-12-04 23:60:00"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022/12/04"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "04-12-2022"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-12-04 11:31:52.680-02:00"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "value": "2022-12-04\n"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: custom bounds",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "2000-01-01",
+            "max": "2010-01-01",
+            "value": "1999-12-31 23:59:59"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "2000-01-01",
+            "max": "2010-01-01",
+            "value": "2000-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "2000-01-01",
+            "max": "2010-01-01",
+            "value": "2005-06-06"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "2000-01-01",
+            "max": "2010-01-01",
+            "value": "2010-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "2000-01-01",
+            "max": "2010-01-01",
+            "value": "2010-01-01 00:00:01"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "datetime",
+            "min": "2000-01-01",
+            "max": "2010-01-01",
+            "value": "2009-12-31 23:00:00-02:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: defaults and descriptions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime"
+          },
+          "bind": "def"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "def"
+            }
+          }
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "def"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "def"
+            },
+            "value": "9999-12-31 12:00:00"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "def"
+            },
+            "value": "0000-01-01 00:00:00"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "precision": "any"
+          },
+          "bind": "any"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "any"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "offset": 0,
+            "requireDateInFuture": true,
+            "precision": "days"
+          },
+          "bind": "fd"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "fd"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "fd"
+            },
+            "value": "2200-01-01"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "fd"
+            },
+            "value": "2200-01-01 01:00:00"
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "offset": 1,
+            "precision": "hours"
+          },
+          "bind": "oh"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "oh"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "oh"
+            },
+            "value": "2200-01-01 05:00:00"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "oh"
+            },
+            "value": "1990-01-01 05:00:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: unknown precision",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "datetime",
+            "min": "0000-01-01 00:00:00",
+            "max": "9999-12-31 23:59:59",
+            "precision": "weeks"
+          },
+          "bind": "w"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "w"
+            },
+            "value": "2019-04-08 19:36:26.255"
+          }
+        }
+      ]
+    }
+  ]
+}

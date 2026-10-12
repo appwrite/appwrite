@@ -11,7 +11,7 @@ use crate::value::Value;
 /// The finest unit a date may set ([`Datetime`]).
 ///
 /// PHP: `Datetime::PRECISION_*`.
-#[derive(Clone, Copy, PartialEq, Eq, Debug, Default)]
+#[derive(Clone, PartialEq, Eq, Debug, Default)]
 pub enum Precision {
     /// `days`: no hours, minutes, seconds or milliseconds.
     Days,
@@ -24,41 +24,44 @@ pub enum Precision {
     /// `any`: no restriction.
     #[default]
     Any,
+    /// Another name: no restriction, but the description names it (PHP
+    /// takes any string).
+    Other(String),
 }
 
 impl Precision {
     /// The precision as PHP spells it.
-    pub fn as_str(self) -> &'static str {
+    pub fn as_str(&self) -> &str {
         match self {
             Precision::Days => "days",
             Precision::Hours => "hours",
             Precision::Minutes => "minutes",
             Precision::Seconds => "seconds",
             Precision::Any => "any",
+            Precision::Other(s) => s,
         }
     }
 
-    /// The precision a name names. PHP accepts any string and treats an
-    /// unknown one as `any` except in the description; `None` here.
-    pub fn from_name(name: &str) -> Option<Precision> {
-        Some(match name {
+    /// The precision a name names; another name is [`Precision::Other`].
+    pub fn from_name(name: &str) -> Precision {
+        match name {
             "days" => Precision::Days,
             "hours" => Precision::Hours,
             "minutes" => Precision::Minutes,
             "seconds" => Precision::Seconds,
             "any" => Precision::Any,
-            _ => return None,
-        })
+            other => Precision::Other(other.to_owned()),
+        }
     }
 
     /// The `DateTime::format` characters that must read 0.
-    fn denied(self) -> &'static [&'static [u8]] {
+    fn denied(&self) -> &'static [&'static [u8]] {
         match self {
             Precision::Days => &[b"H", b"i", b"s", b"v"],
             Precision::Hours => &[b"i", b"s", b"v"],
             Precision::Minutes => &[b"s", b"v"],
             Precision::Seconds => &[b"v"],
-            Precision::Any => &[],
+            Precision::Any | Precision::Other(_) => &[],
         }
     }
 }

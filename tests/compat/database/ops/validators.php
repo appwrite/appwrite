@@ -68,7 +68,7 @@ $make = static function (mixed $spec) use (&$make): object {
             $spec[$k] = Values::documents($spec[$k]);
         }
     }
-    foreach (['min', 'max', 'minAllowedDate', 'maxAllowedDate'] as $k) {
+    foreach ($name === 'datetime' ? ['min', 'max'] : ['minAllowedDate', 'maxAllowedDate'] as $k) {
         if (\array_key_exists($k, $spec)) {
             $spec[$k] = new \DateTime((string) $spec[$k]);
         }
@@ -240,7 +240,11 @@ return [
 
         return ['type' => $format['type']];
     },
-    'validator.formats' => static fn (array $a, Session $s) => array_map(static fn (array $f) => $f['type'], Structure::getFormats()),
+    'validator.formats' => static fn (array $a, Session $s) => array_filter(
+        array_map(static fn (array $f) => $f['type'], Structure::getFormats()),
+        static fn (string $name) => str_starts_with($name, (string) ($a['prefix'] ?? '')),
+        ARRAY_FILTER_USE_KEY,
+    ),
 
     'role.parse' => static fn (array $a, Session $s) => $role(Role::parse((string) ($a['role'] ?? ''))),
     'role.new' => static fn (array $a, Session $s) => $role(new Role((string) ($a['role'] ?? ''), (string) ($a['identifier'] ?? ''), (string) ($a['dimension'] ?? ''))),

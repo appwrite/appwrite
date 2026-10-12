@@ -1,0 +1,443 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/ObjectTest.php",
+  "cases": [
+    {
+      "name": "testValidAssociativeObjects",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "object"
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "key": "value"
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "a": {
+                "b": {
+                  "c": 123
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "author": "Arnab",
+              "metadata": {
+                "rating": 4.5,
+                "info": {
+                  "category": "science"
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "key1": null,
+              "key2": {
+                "nested": null
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "meta": {
+                "$object": {
+                  "x": 1
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "a": 1,
+              "2": "b"
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInvalidStructures",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "object"
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "a",
+              "b",
+              "c"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "not an array"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "value"
+            ]
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testEmptyCases",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "object"
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": []
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {}
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "sldfjsdlfj"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: scalars and json strings",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": null
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": false
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": true
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": 0
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": 1
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": 0.0
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": 1.5
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": "0"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": ""
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": " "
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": "null"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": "[1,2]"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": "{\"a\":1}"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": "{\"a\":"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": "\"str\""
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": "1e5"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": "{'a':1}"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: keyed lists",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": {
+              "0": "a",
+              "1": "b"
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": {
+              "1": "a"
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": {
+              "1": "a",
+              "0": "b"
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": {
+              "0": "a",
+              "2": "b"
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": {
+              "": 1
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": {
+              "$object": {
+                "0": 1
+              }
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": [
+              null
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "object",
+            "value": [
+              []
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: meta",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "object"
+          },
+          "bind": "m"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "m"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

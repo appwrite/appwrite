@@ -1,0 +1,288 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/RoleTest.php",
+  "cases": [
+    {
+      "name": "testOutputFromString",
+      "steps": [
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "any"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "guests"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "users"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "user:123"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:123"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:123/456"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:123/project-456-owner"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "team:123/project-456"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "user:123/verified"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "users/verified"
+          }
+        },
+        {
+          "op": "role.parse",
+          "args": {
+            "role": "label:vip"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInputFromParameters",
+      "steps": [
+        {
+          "op": "role.new",
+          "args": {
+            "role": "any"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "guests"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "users"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "456"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456-owner"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "team",
+            "identifier": "123",
+            "dimension": "project-456"
+          }
+        },
+        {
+          "op": "role.new",
+          "args": {
+            "role": "label",
+            "identifier": "vip"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInputFromRoles",
+      "steps": [
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "any"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "guests"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "users"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123",
+            "dimension": "456"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123",
+            "dimension": "project-456-owner"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123",
+            "dimension": "project-456"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "label",
+            "identifier": "vip"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testInputFromID",
+      "steps": [
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "user",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "123",
+            "dimension": "456"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: factories",
+      "steps": [
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "users",
+            "dimension": "verified"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "user",
+            "identifier": "1",
+            "dimension": "unverified"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "member",
+            "identifier": "m1"
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "label",
+            "identifier": ""
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "user",
+            "identifier": ""
+          }
+        },
+        {
+          "op": "role.of",
+          "args": {
+            "kind": "team",
+            "identifier": "",
+            "dimension": "owner"
+          }
+        }
+      ]
+    }
+  ]
+}

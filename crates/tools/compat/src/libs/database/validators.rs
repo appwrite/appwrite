@@ -149,6 +149,7 @@ impl V {
             V::Index(v) => v.is_valid(value),
             V::IndexDependency(v) => match value {
                 DbValue::Ext(Ext::Document(_)) => v.is_valid(value),
+                _ if !v.cast_index_support() => v.is_valid(value),
                 _ => return Err(Fault::new("IndexDependency validates documents (PHP fails on other values)")),
             },
             V::IndexedQueries(v) => v.is_valid(value),
@@ -343,10 +344,7 @@ fn make(spec: &Value) -> Result<V, Fault> {
         "big_int" => V::BigInt(BigInt::new(bool_arg(a, "signed", true), bool_arg(a, "supportUnsigned64Bit", true))),
         "byte_length" => V::ByteLength(ByteLength::new(int_arg(a, "max", 0))),
         "datetime" => {
-            let precision = match str_arg(a, "precision") {
-                None => Precision::Any,
-                Some(p) => Precision::from_name(p).ok_or_else(|| Fault::new("unknown precision (a deviation)"))?,
-            };
+            let precision = str_arg(a, "precision").map_or(Precision::Any, Precision::from_name);
             match Datetime::new(
                 date_arg(a, "min", default_min)?,
                 date_arg(a, "max", default_max)?,
@@ -684,7 +682,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
             }
         }
         "validator.formats" => {
-            let all = formats::all();
+            let prefix = str_arg(a, "prefix").unwrap_or("");
+            let all: Vec<_> = formats::all().into_iter().filter(|f| f.name.starts_with(prefix)).collect();
             if all.is_empty() {
                 return Ok(Outcome::Ok(json!([])));
             }

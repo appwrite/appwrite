@@ -1,0 +1,777 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/VectorTest.php",
+  "cases": [
+    {
+      "name": "testVector",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "vector",
+            "size": 3
+          },
+          "bind": "v"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              1.0,
+              2.0,
+              3.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              0,
+              0,
+              0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              -1.5,
+              0.0,
+              2.5
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              1.0,
+              2.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              1.0,
+              2.0,
+              3.0,
+              4.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "not an array"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              "1",
+              "2",
+              "3"
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              1.0,
+              "not numeric",
+              3.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              1.0,
+              null,
+              3.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": []
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "x": 1.0,
+              "y": 2.0,
+              "z": 3.0
+            }
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": [
+              1.0,
+              true,
+              3.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorWithDifferentDimensions",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "vector",
+            "size": 1
+          },
+          "bind": "a"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": [
+              5.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            },
+            "value": [
+              1.0,
+              2.0
+            ]
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "vector",
+            "size": 5
+          },
+          "bind": "b"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "b"
+            },
+            "value": [
+              1.0,
+              2.0,
+              3.0,
+              4.0,
+              5.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "b"
+            },
+            "value": [
+              1.0,
+              2.0,
+              3.0
+            ]
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "vector",
+            "size": 128
+          },
+          "bind": "c"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "c"
+            },
+            "value": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "c"
+            },
+            "value": [
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0,
+              1.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorDescription",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "vector",
+            "size": 3
+          },
+          "bind": "a"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "vector",
+            "size": 256
+          },
+          "bind": "b"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "b"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testVectorType",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "vector",
+            "size": 3
+          },
+          "bind": "a"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "a"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: json strings and odd values",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": "[1,2,3]"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": "[1.5,2,3]"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": "[\"1\",2,3]"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": "[1,2]"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": "{\"0\":1,\"1\":2,\"2\":3}"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": ""
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": "null"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": "[1,2,3"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": null
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": 3
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": 1.5
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": {
+              "0": 1,
+              "1": 2,
+              "2": 3
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": {
+              "1": 1,
+              "0": 2,
+              "2": 3
+            }
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": [
+              [
+                1
+              ],
+              2,
+              3
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 3,
+            "value": [
+              1e+308,
+              -1e+308,
+              0.0
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: zero and negative sizes",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 0,
+            "value": []
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 0,
+            "value": "[]"
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": 0,
+            "value": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "vector",
+            "size": -1,
+            "value": []
+          }
+        },
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "vector",
+            "size": -1
+          },
+          "bind": "n"
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "n"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}
