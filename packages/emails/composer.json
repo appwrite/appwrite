@@ -46,7 +46,7 @@
     "require-dev": {
         "utopia-php/cli": "^0.24.4",
         "utopia-php/console": "0.*",
-        "utopia-php/fetch": "^1.1"
+        "utopia-php/client": "^0.6"
     },
     "minimum-stability": "stable",
     "config": {
