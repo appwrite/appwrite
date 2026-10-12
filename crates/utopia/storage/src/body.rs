@@ -143,6 +143,149 @@ async fn read_some<R: AsyncRead + Unpin>(reader: &mut R, max: usize) -> io::Resu
     Ok(Bytes::from(buffer))
 }
 
+/// What a [`Spool`] keeps in memory before it moves to a temporary file:
+/// `php://temp`'s default.
+#[cfg(feature = "s3")]
+const SPOOL_MEMORY: u64 = 2 << 20;
+
+/// A body read once, kept as it is read so it can be rewound: in memory up
+/// to [`SPOOL_MEMORY`], then in an anonymous temporary file. Bytes are
+/// handed over as they arrive; a rewind replays what was kept, then goes on
+/// reading the source.
+///
+/// PHP: the `php://temp` stream `S3::read()` copies a response into.
+#[cfg(feature = "s3")]
+struct Spool {
+    /// `None` once it ended.
+    source: Option<Body>,
+    kept: Kept,
+    /// How many bytes were kept.
+    length: u64,
+    position: u64,
+}
+
+#[cfg(feature = "s3")]
+enum Kept {
+    Memory(Vec<Bytes>),
+    File {
+        file: tokio::fs::File,
+        /// Where the file is positioned.
+        cursor: u64,
+    },
+}
+
+#[cfg(feature = "s3")]
+impl Spool {
+    async fn keep(&mut self, chunk: &Bytes) -> io::Result<()> {
+        use tokio::io::AsyncWriteExt;
+
+        if let Kept::Memory(chunks) = &mut self.kept {
+            if self.length + chunk.len() as u64 <= SPOOL_MEMORY {
+                chunks.push(chunk.clone());
+                return Ok(());
+            }
+            let mut file = spool_file().await?;
+            for kept in chunks.iter() {
+                file.write_all(kept).await?;
+            }
+            self.kept = Kept::File { file, cursor: self.length };
+        }
+        let Kept::File { file, cursor } = &mut self.kept else { unreachable!("moved to a file above") };
+        if *cursor != self.length {
+            *cursor = file.seek(io::SeekFrom::Start(self.length)).await?;
+        }
+        file.write_all(chunk).await?;
+        file.flush().await?;
+        *cursor += chunk.len() as u64;
+        Ok(())
+    }
+
+    /// Up to `max` kept bytes from the position.
+    async fn replay(&mut self, max: usize) -> io::Result<Bytes> {
+        let max = (self.length - self.position).min(max.min(1 << 20) as u64) as usize;
+        match &mut self.kept {
+            Kept::Memory(chunks) => {
+                let mut start = self.position as usize;
+                for chunk in chunks.iter() {
+                    if start < chunk.len() {
+                        let part = chunk.slice(start..chunk.len().min(start + max));
+                        self.position += part.len() as u64;
+                        return Ok(part);
+                    }
+                    start -= chunk.len();
+                }
+                Ok(Bytes::new())
+            }
+            Kept::File { file, cursor } => {
+                if *cursor != self.position {
+                    *cursor = file.seek(io::SeekFrom::Start(self.position)).await?;
+                }
+                let mut buffer = vec![0; max];
+                file.read_exact(&mut buffer).await?;
+                *cursor += max as u64;
+                self.position += max as u64;
+                Ok(Bytes::from(buffer))
+            }
+        }
+    }
+}
+
+#[cfg(feature = "s3")]
+#[async_trait]
+impl Source for Spool {
+    async fn read(&mut self, max: usize) -> io::Result<Bytes> {
+        if max == 0 {
+            return Ok(Bytes::new());
+        }
+        if self.position < self.length {
+            return self.replay(max).await;
+        }
+        let Some(source) = &mut self.source else { return Ok(Bytes::new()) };
+        let chunk = source.read(max).await?;
+        if chunk.is_empty() {
+            self.source = None;
+            return Ok(chunk);
+        }
+        self.keep(&chunk).await?;
+        self.length += chunk.len() as u64;
+        self.position = self.length;
+        Ok(chunk)
+    }
+
+    fn is_seekable(&self) -> bool {
+        true
+    }
+
+    async fn rewind(&mut self) -> io::Result<()> {
+        self.position = 0;
+        Ok(())
+    }
+}
+
+/// A new temporary file, removed from its directory as soon as it is open,
+/// so it goes away with its handle.
+#[cfg(feature = "s3")]
+async fn spool_file() -> io::Result<tokio::fs::File> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static COUNTER: AtomicU64 = AtomicU64::new(0);
+
+    let dir = std::env::temp_dir();
+    loop {
+        let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap_or_default().as_nanos();
+        let name =
+            format!("utopia-storage-spool-{}-{}-{nanos}", std::process::id(), COUNTER.fetch_add(1, Ordering::Relaxed));
+        let path = dir.join(name);
+        match tokio::fs::OpenOptions::new().read(true).write(true).create_new(true).open(&path).await {
+            Ok(file) => {
+                tokio::fs::remove_file(&path).await?;
+                return Ok(file);
+            }
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => continue,
+            Err(e) => return Err(e),
+        }
+    }
+}
+
 /// The contents of a file, as a stream: what [`Device::write`](crate::Device::write)
 /// and the other writes take, and what [`Device::read`](crate::Device::read)
 /// returns.
@@ -201,6 +344,13 @@ impl Body {
     /// A body read once from `reader`; it cannot be rewound.
     pub fn from_reader(reader: impl AsyncRead + Send + Unpin + 'static) -> Self {
         Body(Box::new(Reader(reader)))
+    }
+
+    /// The body kept as it is read, so it can be rewound however it was
+    /// made: in memory up to 2 MiB, then in a temporary file.
+    #[cfg(feature = "s3")]
+    pub(crate) fn spooled(self) -> Self {
+        Body(Box::new(Spool { source: Some(self), kept: Kept::Memory(Vec::new()), length: 0, position: 0 }))
     }
 
     /// Up to `max` more bytes; empty at the end.

@@ -7,7 +7,7 @@ use std::sync::{Arc, Mutex};
 use async_trait::async_trait;
 use bytes::Bytes;
 use serde_json::{Map, Value, json};
-use utopia_storage::s3::{Client, Method, Request, Response, Retry, RetryStrategy, TransportError};
+use utopia_storage::s3::{Client, Method, Payload, Request, Response, Retry, RetryStrategy, TransportError};
 use utopia_storage::validator::{FileExt, FileName, FileSize, FileType, Upload};
 use utopia_storage::{
     Acl, Body, COPY_CHUNK_SIZE, Device, Error, FileInfo, FileList, Local, Metadata, Part, S3, Source, Telemetry,
@@ -170,17 +170,20 @@ struct Handle {
     telemetry: Option<Arc<MemoryTelemetry>>,
 }
 
-/// Replays scripted responses and records every request.
+/// Replays scripted responses and records every request, with the body it
+/// sent.
 #[derive(Default)]
 struct Scripted {
     responses: Mutex<VecDeque<Value>>,
-    requests: Mutex<Vec<Request>>,
+    requests: Mutex<Vec<(Request, Bytes)>>,
 }
 
 #[async_trait]
 impl Client for Scripted {
     async fn send(&self, request: &Request) -> Result<Response, TransportError> {
-        self.requests.lock().unwrap_or_else(|e| e.into_inner()).push(request.clone());
+        let body =
+            request.body.bytes().await.map_err(|e| TransportError::Network { message: e.to_string(), code: 0 })?;
+        self.requests.lock().unwrap_or_else(|e| e.into_inner()).push((request.clone(), body));
         let next = self.responses.lock().unwrap_or_else(|e| e.into_inner()).pop_front();
         let Some(next) = next else {
             return Err(TransportError::Network { message: "No scripted response left".into(), code: 0 });
@@ -243,7 +246,7 @@ fn request(r: &Value) -> Result<Request, Fault> {
         method: method(r.get("method").and_then(Value::as_str).unwrap_or_default())?,
         url: r.get("url").and_then(Value::as_str).unwrap_or_default().to_owned(),
         headers: pairs(r.get("headers")),
-        body: Bytes::new(),
+        body: Payload::default(),
     })
 }
 
@@ -258,7 +261,7 @@ fn method(name: &str) -> Result<Method, Fault> {
     })
 }
 
-fn request_json(r: &Request) -> Value {
+fn request_json((r, body): &(Request, Bytes)) -> Value {
     let mut headers: Vec<(String, String)> = Vec::new();
     for (name, value) in &r.headers {
         let name = name.to_ascii_lowercase();
@@ -276,7 +279,7 @@ fn request_json(r: &Request) -> Value {
         "method": r.method.as_str(),
         "url": r.url,
         "headers": headers,
-        "body": bytes_value(&r.body),
+        "body": bytes_value(body),
     })
 }
 

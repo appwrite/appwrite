@@ -3,6 +3,8 @@
 
 mod client;
 mod retry;
+#[cfg(test)]
+mod tests;
 mod uri;
 pub(crate) mod xml;
 
@@ -18,7 +20,7 @@ use indexmap::IndexMap;
 use md5::Md5;
 use sha2::{Digest, Sha256};
 
-pub use client::{Client, HttpClient, Method, Request, Response, Retry, TransportError};
+pub use client::{Client, HttpClient, Method, Payload, Request, Response, Retry, TransportError};
 pub use retry::RetryStrategy;
 
 use crate::device::{self, Acl, Device, DeviceType, FileInfo, FileList, Metadata, Part, UploadInfo, UploadList};
@@ -127,6 +129,8 @@ struct S3Response {
 enum ResponseBody {
     Raw(Bytes),
     Xml(Decoded),
+    /// A streamed response's body, still to read.
+    Stream(Body),
 }
 
 impl ResponseBody {
@@ -384,7 +388,7 @@ impl S3 {
             parameters.push(("upload-id-marker".to_owned(), upload));
         }
         let response = self
-            .call(Method::Get, "/", Bytes::new(), &parameters, &[("content-type", "text/plain")], &[], true, false)
+            .call(Method::Get, "/", Hashed::empty(), &parameters, &[("content-type", "text/plain")], &[], true, false)
             .await?;
         let body = response.body.decoded().ok_or_else(|| Error::remote("Unexpected S3 upload listing response"))?;
         let mut uploads = Vec::new();
@@ -410,7 +414,7 @@ impl S3 {
     }
 
     async fn info(&self, path: &str) -> Result<IndexMap<String, String>> {
-        Ok(self.call(Method::Head, &read_uri(path), Bytes::new(), &[], &[], &[], true, false).await?.headers)
+        Ok(self.call(Method::Head, &read_uri(path), Hashed::empty(), &[], &[], &[], true, false).await?.headers)
     }
 
     async fn create_multipart_upload(&self, path: &str, content_type: &str) -> Result<String> {
@@ -418,7 +422,7 @@ impl S3 {
             .call(
                 Method::Post,
                 &write_uri(path),
-                Bytes::new(),
+                Hashed::empty(),
                 &[("uploads".into(), String::new())],
                 &[("content-type", content_type)],
                 &self.acl_headers(),
@@ -436,7 +440,7 @@ impl S3 {
 
     async fn upload_part(
         &self,
-        data: Bytes,
+        data: Hashed,
         path: &str,
         content_type: &str,
         chunk: i64,
@@ -472,7 +476,7 @@ impl S3 {
         self.call(
             Method::Post,
             &write_uri(path),
-            Bytes::from(body),
+            Hashed::from(Bytes::from(body)),
             &[("uploadId".into(), upload_id.to_owned())],
             &[("content-type", "application/xml")],
             &[],
@@ -484,7 +488,7 @@ impl S3 {
     }
 
     async fn put(&self, path: &str, data: Body, content_type: &str, condition: Option<(&str, &str)>) -> Result<String> {
-        let data = body_bytes(data).await?;
+        let data = Hashed::body(data).await?;
         let mut headers = vec![("content-type", content_type)];
         headers.extend(condition);
         let response =
@@ -506,7 +510,7 @@ impl S3 {
             parameters.push(("continuation-token".to_owned(), token.to_owned()));
         }
         let response = self
-            .call(Method::Get, "/", Bytes::new(), &parameters, &[("content-type", "text/plain")], &[], true, false)
+            .call(Method::Get, "/", Hashed::empty(), &parameters, &[("content-type", "text/plain")], &[], true, false)
             .await?;
         match response.body {
             ResponseBody::Xml(d @ Decoded::Array(_)) => Ok(d),
@@ -523,7 +527,7 @@ impl S3 {
         if size <= MAX_COPY_OBJECT_SIZE as i64 {
             let mut amz = vec![("x-amz-copy-source", copy_source.as_str()), ("x-amz-metadata-directive", "COPY")];
             amz.extend(self.acl_headers());
-            let response = self.call(Method::Put, &uri, Bytes::new(), &[], &[], &amz, true, false).await?;
+            let response = self.call(Method::Put, &uri, Hashed::empty(), &[], &[], &amz, true, false).await?;
             // S3 reports CopyObject failures in a 200 body, so success is the ETag.
             if response.body.decoded().and_then(|b| b.get("ETag")).is_none() {
                 return Err(Error::remote("Unexpected S3 copy response"));
@@ -544,7 +548,7 @@ impl S3 {
                     .call(
                         Method::Put,
                         &uri,
-                        Bytes::new(),
+                        Hashed::empty(),
                         &[("partNumber".into(), part.to_string()), ("uploadId".into(), upload_id.clone())],
                         &[],
                         &[("x-amz-copy-source", copy_source.as_str()), ("x-amz-copy-source-range", range.as_str())],
@@ -571,15 +575,16 @@ impl S3 {
     }
 
     /// Sends a signed request and returns its response; an error status
-    /// becomes the matching [`Error`].
+    /// becomes the matching [`Error`]. A `streamed` response's body is left
+    /// to read ([`ResponseBody::Stream`]), but for the head of an error.
     ///
-    /// PHP: the protected `call()`.
+    /// PHP: the protected `call()`, `$sink` standing for `streamed`.
     #[allow(clippy::too_many_arguments)]
     async fn call(
         &self,
         method: Method,
         uri: &str,
-        data: Bytes,
+        data: Hashed,
         parameters: &[(String, String)],
         headers: &[(&str, &str)],
         amz_headers: &[(&str, &str)],
@@ -594,8 +599,7 @@ impl S3 {
             url.pop();
         }
         let url = uri::Uri::parse(&url)?.to_string();
-        let md5 = base64::engine::general_purpose::STANDARD.encode(Md5::digest(&data));
-        let sha256 = hex::encode(Sha256::digest(&data));
+        let Hashed { payload, md5, sha256, length } = data;
         let now = chrono::Utc::now();
 
         let mut headers: Vec<(String, String)> =
@@ -603,7 +607,7 @@ impl S3 {
         set(&mut headers, "host", self.host.clone());
         set(&mut headers, "date", now.format("%a, %d %b %Y %H:%M:%S GMT").to_string());
         set(&mut headers, "content-md5", md5);
-        set(&mut headers, "content-length", data.len().to_string());
+        set(&mut headers, "content-length", length.to_string());
         let mut amz: Vec<(String, String)> = amz_headers
             .iter()
             .filter(|(_, v)| !v.is_empty())
@@ -619,31 +623,32 @@ impl S3 {
         }
         all.push(("authorization".into(), authorization));
         all.push(("user-agent".into(), "utopia-php/storage".into()));
-        let request = Request { method, url, headers: all, body: data };
+        let request = Request { method, url, headers: all, body: payload };
+        let transport = |e: TransportError| Error::Transport { message: e.to_string(), code: e.code() };
 
-        let response = self
-            .client
-            .send(&request)
-            .await
-            .map_err(|e| Error::Transport { message: e.to_string(), code: e.code() })?;
-        let mut response_headers: IndexMap<String, String> = IndexMap::new();
-        for (name, value) in &response.headers {
-            let name = name.to_ascii_lowercase();
-            match response_headers.get_mut(&name) {
-                Some(existing) => {
-                    existing.push_str(", ");
-                    existing.push_str(value);
+        if streamed {
+            let response = self.client.stream(&request).await.map_err(transport)?;
+            let response_headers = merge_headers(&response.headers);
+            let mut body = response.body;
+            if response.status >= 400 {
+                // Only the head of a streamed error is kept to read the error from.
+                let mut head = Vec::new();
+                while head.len() < ERROR_BODY_BUFFER_SIZE {
+                    let chunk = body.read(ERROR_BODY_BUFFER_SIZE - head.len()).await.map_err(Error::Body)?;
+                    if chunk.is_empty() {
+                        break;
+                    }
+                    head.extend_from_slice(&chunk);
                 }
-                None => {
-                    response_headers.insert(name, value.clone());
-                }
+                return Err(s3_error(&head, response.status, &response_headers));
             }
+            return Ok(S3Response { headers: response_headers, body: ResponseBody::Stream(body) });
         }
-        let mut body = response.body;
+
+        let response = self.client.send(&request).await.map_err(transport)?;
+        let response_headers = merge_headers(&response.headers);
+        let body = response.body;
         if response.status >= 400 {
-            if streamed && body.len() > ERROR_BODY_BUFFER_SIZE {
-                body.truncate(ERROR_BODY_BUFFER_SIZE);
-            }
             return Err(s3_error(&body, response.status, &response_headers));
         }
         let content_type = response_headers.get("content-type").map(String::as_str).unwrap_or_default();
@@ -748,7 +753,7 @@ impl Device for S3 {
         };
         metadata.parts_mut();
         metadata.chunks.get_or_insert(0);
-        let data = body_bytes(data).await?;
+        let data = Hashed::body(data).await?;
         let etag = self.upload_part(data, path, &content_type, chunk, &upload_id).await?;
         // A chunk uploaded again is not counted twice.
         if !metadata.parts_mut().contains_key(&chunk) {
@@ -790,7 +795,7 @@ impl Device for S3 {
         self.call(
             Method::Delete,
             &write_uri(path),
-            Bytes::new(),
+            Hashed::empty(),
             &[("uploadId".into(), upload_id.to_owned())],
             &[],
             &[],
@@ -815,8 +820,13 @@ impl Device for S3 {
             headers.push(("if-match", quote(etag)));
         }
         let headers: Vec<(&str, &str)> = headers.iter().map(|(k, v)| (*k, v.as_str())).collect();
-        let response = self.call(Method::Get, &read_uri(path), Bytes::new(), &[], &headers, &[], false, true).await?;
+        let response =
+            self.call(Method::Get, &read_uri(path), Hashed::empty(), &[], &headers, &[], false, true).await?;
         match response.body {
+            // Streamed as it arrives, and kept as it is read, so the body
+            // rewinds like PHP's `php://temp` copy of the response; memory
+            // holds 2 MiB of it at most, the rest goes to a temporary file.
+            ResponseBody::Stream(body) => Ok(body.spooled()),
             ResponseBody::Raw(bytes) => Ok(Body::from(bytes)),
             ResponseBody::Xml(_) => Ok(Body::empty()),
         }
@@ -848,7 +858,7 @@ impl Device for S3 {
     }
 
     async fn delete(&self, path: &str, _recursive: bool) -> Result<bool> {
-        self.call(Method::Delete, &read_uri(path), Bytes::new(), &[], &[], &[], true, false).await?;
+        self.call(Method::Delete, &read_uri(path), Hashed::empty(), &[], &[], &[], true, false).await?;
         Ok(true)
     }
 
@@ -870,7 +880,7 @@ impl Device for S3 {
             self.call(
                 Method::Post,
                 "/",
-                Bytes::from(body),
+                Hashed::from(Bytes::from(body)),
                 &[("delete".into(), String::new())],
                 &[("content-type", "application/xml")],
                 &[],
@@ -1015,14 +1025,94 @@ fn date(text: &str) -> Option<DateTime<FixedOffset>> {
     DateTime::from_timestamp(d.timestamp(), (d.microsecond() * 1000) as u32).map(|t| t.with_timezone(&offset))
 }
 
-/// Reads a whole body to sign and send it; S3 needs to hash it first, so it
-/// must be seekable.
-async fn body_bytes(mut data: Body) -> Result<Bytes> {
-    if !data.is_seekable() {
-        return Err(Error::InvalidArgument("S3 requires a seekable stream so the payload can be signed".into()));
+/// Response headers by lowercase name, repeated ones joined by `, `.
+fn merge_headers(headers: &[(String, String)]) -> IndexMap<String, String> {
+    let mut merged: IndexMap<String, String> = IndexMap::new();
+    for (name, value) in headers {
+        let name = name.to_ascii_lowercase();
+        match merged.get_mut(&name) {
+            Some(existing) => {
+                existing.push_str(", ");
+                existing.push_str(value);
+            }
+            None => {
+                merged.insert(name, value.clone());
+            }
+        }
     }
-    data.rewind().await.map_err(Error::Body)?;
-    data.bytes().await.map_err(Error::Body)
+    merged
+}
+
+/// A request payload with the digests its signature covers: the base64
+/// MD5 (`Content-MD5`), the hex SHA-256 (`x-amz-content-sha256`, signed:
+/// PHP signs the payload's hash, never `UNSIGNED-PAYLOAD`) and the length
+/// (`Content-Length`).
+struct Hashed {
+    payload: Payload,
+    md5: String,
+    sha256: String,
+    length: u64,
+}
+
+impl Hashed {
+    /// No payload.
+    fn empty() -> Self {
+        Hashed::from(Bytes::new())
+    }
+
+    /// Hashes a body without holding it in memory. The digests are signed,
+    /// so they must be known before the first byte goes out: a first pass
+    /// reads the body chunk by chunk to hash it, then the body is sent as a
+    /// [`Payload`] that rewinds it and streams it again (on every retry
+    /// too), so at most a chunk or two is in memory either way. This is why
+    /// S3 needs a seekable body. A body that fits in one chunk is kept
+    /// and sent from memory, without a second read.
+    ///
+    /// PHP: `hashBody()`.
+    async fn body(mut data: Body) -> Result<Self> {
+        if !data.is_seekable() {
+            return Err(Error::InvalidArgument("S3 requires a seekable stream so the payload can be signed".into()));
+        }
+        data.rewind().await.map_err(Error::Body)?;
+        let (mut md5, mut sha256) = (Md5::new(), Sha256::new());
+        let mut length = 0u64;
+        let mut first = None;
+        loop {
+            let chunk = data.read(client::CHUNK_SIZE).await.map_err(Error::Body)?;
+            if chunk.is_empty() {
+                break;
+            }
+            md5.update(&chunk);
+            sha256.update(&chunk);
+            length += chunk.len() as u64;
+            first = (length == chunk.len() as u64).then_some(chunk);
+        }
+        let payload = match first {
+            Some(chunk) => Payload::from(chunk),
+            None if length == 0 => Payload::default(),
+            None => {
+                data.rewind().await.map_err(Error::Body)?;
+                Payload::from_body(data)
+            }
+        };
+        Ok(Hashed {
+            payload,
+            md5: base64::engine::general_purpose::STANDARD.encode(md5.finalize()),
+            sha256: hex::encode(sha256.finalize()),
+            length,
+        })
+    }
+}
+
+impl From<Bytes> for Hashed {
+    fn from(data: Bytes) -> Self {
+        Hashed {
+            md5: base64::engine::general_purpose::STANDARD.encode(Md5::digest(&data)),
+            sha256: hex::encode(Sha256::digest(&data)),
+            length: data.len() as u64,
+            payload: Payload::from(data),
+        }
+    }
 }
 
 /// `json_encode(['key' => $key, 'upload' => $upload])`.
