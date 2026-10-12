@@ -148,6 +148,13 @@ impl Server {
         self.jobs.keys().map(String::as_str).collect()
     }
 
+    /// The job registered for a queue.
+    ///
+    /// PHP: `jobs()[$queue]`.
+    pub fn get_job(&self, queue: &str) -> Option<&Job> {
+        self.jobs.get(queue).map(|r| &r.job)
+    }
+
     /// The handler cap of a queue (1 when unregistered).
     pub fn coroutines(&self, queue: &str) -> usize {
         self.jobs.get(queue).map_or(1, |j| j.coroutines)
