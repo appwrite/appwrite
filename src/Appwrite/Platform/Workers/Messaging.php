@@ -337,7 +337,7 @@ class Messaging extends Action
             // For topic sends, send the wake-up signal to this page's Appwrite-push users on their other
             // devices (user/target sends do this once after the loop instead).
             if (!$perUser && \count($pageMqttUsers) > 0) {
-                foreach ($this->wakeTasks($pageMqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
+                foreach ($this->buildWakeTasks($pageMqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
                     $tasks[] = $task;
                 }
             }
@@ -389,7 +389,7 @@ class Messaging extends Action
         // Send the wake-up signal to every device of the Appwrite-push users, so a device that wasn't
         // named in the send still gets woken.
         if (\count($mqttUsers) > 0) {
-            foreach (batch($this->wakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
+            foreach (batch($this->buildWakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
                 $wakeSignals += $result['delivered'];
             }
         }
@@ -758,7 +758,7 @@ class Messaging extends Action
      * @param array<string, Document> $providers  resolved-provider cache, shared with the send loop
      * @return array<callable>
      */
-    private function wakeTasks(
+    private function buildWakeTasks(
         array $mqttUsers,
         array &$providers,
         Document $default,
