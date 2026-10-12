@@ -83,6 +83,9 @@ pub enum Kind {
     /// `Error`: an engine error (using an object as an array, a string
     /// offset that cannot be assigned or unset, ...).
     Error,
+    /// `RuntimeException`: raised by a caller's callback (a transaction's
+    /// body, an `onNext`) and passed through.
+    Runtime,
 }
 
 impl Kind {
@@ -117,13 +120,14 @@ impl Kind {
             Kind::Exception => "Exception",
             Kind::DateMalformedIntervalString => "DateMalformedIntervalStringException",
             Kind::Error => "Error",
+            Kind::Runtime => "RuntimeException",
         }
     }
 
     /// The kind of errors of the PHP class `class` (the inverse of
     /// [`Kind::php_class`]); `None` for a class no kind stands for.
     pub fn from_php_class(class: &str) -> Option<Kind> {
-        const ALL: [Kind; 27] = [
+        const ALL: [Kind; 29] = [
             Kind::Database,
             Kind::Authorization,
             Kind::Character,
@@ -148,9 +152,11 @@ impl Kind {
             Kind::TypeError,
             Kind::ValueError,
             Kind::Json,
+            Kind::DivisionByZero,
             Kind::Exception,
             Kind::DateMalformedIntervalString,
             Kind::Error,
+            Kind::Runtime,
         ];
         let class = class.strip_prefix('\\').unwrap_or(class);
         ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
@@ -170,7 +176,8 @@ impl Kind {
             | Kind::DivisionByZero
             | Kind::Exception
             | Kind::DateMalformedIntervalString
-            | Kind::Error => None,
+            | Kind::Error
+            | Kind::Runtime => None,
             _ => Some(Kind::Database),
         }
     }
