@@ -53,8 +53,22 @@ const DOCUMENT_CLASSES: &[&str] =
 /// Other classes that exist in the PHP driver and that tests name.
 const OTHER_CLASSES: &[&str] = &["stdClass", "ArrayObject", "Exception", "Utopia\\Database\\Database"];
 
+/// `setDocumentType()`'s check of the class: it must exist and extend
+/// `Document` (the PHP driver's classes, by name).
+pub(super) fn check_document_class(class: &str) -> R<()> {
+    if !DOCUMENT_CLASSES.contains(&class) {
+        let message = if OTHER_CLASSES.contains(&class) {
+            format!("Class {class} must extend Utopia\\Database\\Document")
+        } else {
+            format!("Class {class} does not exist")
+        };
+        return Err(Error::database(message).into());
+    }
+    Ok(())
+}
+
 /// `true` for an `int` / `float` argument, `default` when absent.
-fn number_or(a: &Args<'_>, key: &str, default: Value) -> R<Value> {
+pub(super) fn number_or(a: &Args<'_>, key: &str, default: Value) -> R<Value> {
     Ok(a.opt_value(key)?.filter(|v| !matches!(v, Value::Null)).unwrap_or(default))
 }
 
@@ -265,14 +279,7 @@ async fn more(op: &str, a: &Args<'_>, db: &Database, session: &mut Session) -> R
         }
         "database.set_document_type" => {
             let (collection, class) = (a.string("collection")?, a.string("className")?);
-            if !DOCUMENT_CLASSES.contains(&class.as_str()) {
-                let message = if OTHER_CLASSES.contains(&class.as_str()) {
-                    format!("Class {class} must extend Utopia\\Database\\Document")
-                } else {
-                    format!("Class {class} does not exist")
-                };
-                return Err(Error::database(message).into());
-            }
+            check_document_class(&class)?;
             db.set_document_type(&collection, &class)?;
             Ok(database_marker())
         }

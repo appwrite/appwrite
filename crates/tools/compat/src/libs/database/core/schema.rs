@@ -10,6 +10,8 @@ use serde_json::{Map, Value as Json, json};
 use utopia_database::adapter::Adapter;
 use utopia_database::adapter::pool::{Pool as PoolAdapter, Pooled};
 use utopia_database::adapter::postgres::Postgres;
+use utopia_database::adapter::redis::Redis as RedisAdapter;
+use utopia_database::mirror::Mirror;
 use utopia_database::value::{Array, Ext, Value};
 use utopia_database::{Authorization, Database};
 
@@ -140,6 +142,7 @@ pub const OPS: &[&str] = &[
     "db.sql",
     "db.cache",
     "db.pool",
+    "db.redis",
 ];
 
 /// `true` as JSON.
@@ -159,7 +162,7 @@ fn returned(r: Result<Option<Value>, utopia_database::Error>) -> R<Json> {
 
 /// The arrays of an `array<array>` argument (`$document` tags are taken as
 /// their attributes).
-fn arrays(a: &Args<'_>, key: &str) -> R<Vec<Array>> {
+pub(super) fn arrays(a: &Args<'_>, key: &str) -> R<Vec<Array>> {
     a.array(key)?
         .values()
         .map(|v| match v {
@@ -172,7 +175,7 @@ fn arrays(a: &Args<'_>, key: &str) -> R<Vec<Array>> {
 }
 
 /// The values of a list argument.
-fn list(a: &Args<'_>, key: &str) -> R<Vec<Value>> {
+pub(super) fn list(a: &Args<'_>, key: &str) -> R<Vec<Value>> {
     Ok(a.array(key)?.values().cloned().collect())
 }
 
@@ -210,6 +213,21 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
         "db.adapter" => adapter(&a, &db).await,
         "db.sql" => sql(&a, &handle).await,
         "db.pool" => pool_call(&a, &handle).await,
+        "db.redis" => {
+            // A raw command on the Redis adapter's database; its reply is not
+            // reported.
+            let command = a.strings("command")?;
+            let Some((name, rest)) = command.split_first() else {
+                return fault("db.redis: `command` is a non-empty list");
+            };
+            let mut connection = args::redis_connection(session, "database-redis-adapter").await?;
+            let mut cmd = redis::cmd(name);
+            for arg in rest {
+                cmd.arg(arg);
+            }
+            let _: redis::Value = cmd.query_async(&mut connection).await.map_err(|e| Fault::new(e.to_string()))?;
+            Ok(Json::Null)
+        }
         "db.cache" => {
             let method = a.string_or("method", "")?;
             let call = Args::new(a.raw("args").unwrap_or(&Json::Null));
@@ -634,6 +652,8 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         "adapter",
         "filters",
         "pool",
+        "mirror",
+        "redis",
     ];
     if let Some(o) = a.raw_object() {
         for key in o.keys() {
@@ -650,6 +670,9 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     }
     let peer = a.given("adapter");
     let target = postgres_target(session)?;
+    if let Some(spec) = a.raw("mirror").filter(|j| !j.is_null()) {
+        return open_mirror(a, &Args::new(spec), &target, session).await;
+    }
     let (adapter, postgres, adapter_name, pool): (Arc<dyn Adapter>, Option<Arc<Postgres>>, &'static str, _) = if peer {
         let db = session
             .get::<Db>(a.raw("adapter").unwrap_or(&Json::Null))
@@ -663,6 +686,11 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         let adapter = Arc::new(PoolAdapter::new(fixture.pool.clone()));
         let postgres = if spec.bool_or("unreachable", false)? { None } else { Some(Arc::new(target.connect().await?)) };
         (adapter.clone(), postgres, "Pool", Some((fixture, adapter)))
+    } else if a.bool_or("redis", false)? {
+        // The Redis adapter, on compat Redis database
+        // `database-redis-adapter` (keys carry the case namespace).
+        let connection = args::redis_connection(session, "database-redis-adapter").await?;
+        (Arc::new(RedisAdapter::new(connection)), None, "Redis", None)
     } else {
         let postgres = Arc::new(target.connect().await?);
         (postgres.clone(), Some(postgres), "Postgres", None)
@@ -710,7 +738,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     if !peer || a.has("namespace") {
         db.set_namespace(&a.string_or("namespace", "compat")?)?;
     }
-    let handle = Db { database: db.clone(), postgres, adapter_name, pool };
+    let handle = Db { database: db.clone(), postgres, adapter_name, pool, mirror: None };
     if !peer {
         args::state(session).current = Some(handle.clone());
         if a.bool_or("create", true)? {
@@ -870,6 +898,9 @@ async fn adapter(a: &Args<'_>, db: &Database) -> R<Json> {
                 .await?,
         )),
         "ping" => Ok(Json::Bool(adapter.ping().await?)),
+        "startTransaction" => Ok(Json::Bool(adapter.start_transaction().await?)),
+        "commitTransaction" => Ok(Json::Bool(adapter.commit_transaction().await?)),
+        "rollbackTransaction" => Ok(Json::Bool(adapter.rollback_transaction().await?)),
         "getTimeout" => Ok(Json::from(adapter.timeout())),
         "setTimeout" => {
             adapter.set_timeout(args.int("milliseconds")?, &args.string_or("event", "*")?)?;
@@ -911,6 +942,64 @@ async fn sql(a: &Args<'_>, handle: &Db) -> R<Json> {
     };
     let rows = postgres.driver_query(&sql).await?;
     Ok(Json::Array(rows.into_iter().map(|r| encode(&Value::Array(r))).collect()))
+}
+
+/// `db.open` with `mirror` (`Core::mirror`): a Mirror whose source is a
+/// PostgreSQL database with the cache `cache`, and whose destination (unless
+/// `"destination": false`) is one on service `database-postgres-mirror` with
+/// the cache `mirror.cache` (default `redis-mirror`), with the Mirroring
+/// filter fixtures `mirror.filters`; then set up as any database.
+async fn open_mirror(a: &Args<'_>, spec: &Args<'_>, target: &PostgresTarget, session: &mut Session) -> R<Json> {
+    let source_pg = Arc::new(target.connect().await?);
+    let cache = args::cache(&a.string_or("cache", "memory")?, session, true).await?;
+    let source = Database::new(source_pg.clone(), cache, Vec::new());
+    let source =
+        Db { database: source, postgres: Some(source_pg.clone()), adapter_name: "Postgres", pool: None, mirror: None };
+    let destination = if spec.bool_or("destination", true)? {
+        let mut mirror_target = postgres_target(session)?;
+        mirror_target.url = session.service("database-postgres-mirror")?.to_owned();
+        let pg = Arc::new(mirror_target.connect().await?);
+        let cache = args::cache(&spec.string_or("cache", "redis-mirror")?, session, true).await?;
+        let database = Database::new(pg.clone(), cache, Vec::new());
+        Some(Db { database, postgres: Some(pg), adapter_name: "Postgres", pool: None, mirror: None })
+    } else {
+        None
+    };
+    let filters = spec.strings("filters")?.iter().map(|f| super::mirror::filter(f)).collect::<R<Vec<_>>>()?;
+    let mirror = Mirror::new(source.database.clone(), destination.as_ref().map(|d| d.database.clone()), filters);
+    let authorization = Authorization::new();
+    let roles = match a.opt_strings("roles")? {
+        Some(roles) => roles,
+        None => vec!["any".to_owned()],
+    };
+    for role in roles {
+        authorization.add_role(&role);
+    }
+    mirror.set_authorization(Arc::new(authorization));
+    let ns = session.ns.clone();
+    mirror.set_database(&a.string_or("database", &ns)?).await?;
+    if a.has("shared_tables") {
+        mirror.set_shared_tables(a.bool_or("shared_tables", false)?).await?;
+    }
+    if a.has("tenant") {
+        mirror.set_tenant(a.value("tenant")?).await?;
+    }
+    if a.has("tenant_per_document") {
+        mirror.database().set_tenant_per_document(a.bool_or("tenant_per_document", false)?);
+    }
+    mirror.set_namespace(&a.string_or("namespace", "compat")?).await?;
+    let handle = Db {
+        database: mirror.database().clone(),
+        postgres: Some(source_pg),
+        adapter_name: "Postgres",
+        pool: None,
+        mirror: Some(Arc::new(args::MirrorHandle { mirror: mirror.clone(), source, destination })),
+    };
+    args::state(session).current = Some(handle.clone());
+    if a.bool_or("create", true)? {
+        mirror.create(None).await?;
+    }
+    Ok(session.handle(handle))
 }
 
 /// Where this driver reaches PostgreSQL service `database-postgres`, and the

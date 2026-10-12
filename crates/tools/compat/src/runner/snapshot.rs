@@ -8,6 +8,7 @@
 //! | `files` | every file under `/tmp/compat-fs/<namespace>/` (shared with the PHP driver's container): relative path and content |
 //! | `redis@<service>[/<db>[,<db>...]]` | like `redis`, on another Redis service of `compat.json` (its database, or the databases listed, merged into one snapshot); cache envelope timestamps are masked |
 //! | `postgres@<service>` | the PostgreSQL schema named after the namespace: tables, columns, indexes, constraints and rows (see [`super::snapshot_postgres`]) |
+//! | `redis-json@<service>[/<db>[,<db>...]]` | like `redis@`, as a list of `{key, type, value}` entries in which strings (and hash fields) holding a JSON object or array are `{"$json": <decoded>}`, so the scrubs reach the values inside; entries, and set members, are sorted as they read once the namespace is `${ns}` and ids and times near the clock are scrubbed (a store keyed by generated ids, such as the database's Redis adapter) |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.
@@ -24,6 +25,14 @@ pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
         "files" => files_snapshot(ns),
         other if other.starts_with("postgres@") => {
             super::snapshot_postgres::snapshot(&cfg.runner_service(&other["postgres@".len()..])?, ns)
+        }
+        other if other.starts_with("redis-json@") => {
+            let mut entries = Vec::new();
+            for url in service_urls(cfg, &other["redis-json".len()..].replacen('@', "redis@", 1))? {
+                entries.extend(redis_json_snapshot(&url, ns)?);
+            }
+            sort_by_shape(&mut entries, ns);
+            Ok(Value::Array(entries))
         }
         other if other.starts_with("redis@") => {
             // Several databases are one snapshot: where a key lands may
@@ -125,6 +134,12 @@ pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
             }
             Ok(())
         }
+        other if other.starts_with("redis-json@") => {
+            for url in service_urls(cfg, &other["redis-json".len()..].replacen('@', "redis@", 1))? {
+                redis_cleanup(&url, ns)?;
+            }
+            Ok(())
+        }
         other => Err(no_kind(other)),
     }
 }
@@ -201,6 +216,86 @@ fn redis_snapshot(url: &str, ns: &str) -> Result<Value, String> {
         );
     }
     Ok(Value::Object(out))
+}
+
+/// A string as stored, or `{"$json": <decoded>}` when it is a JSON object
+/// or array.
+fn json_or_bytes(b: &[u8]) -> Value {
+    match serde_json::from_slice::<Value>(b) {
+        Ok(v @ (Value::Object(_) | Value::Array(_))) => json!({ "$json": v }),
+        _ => bytes(b),
+    }
+}
+
+/// How a value reads once the namespace is `${ns}` and ids and times near
+/// the clock are scrubbed: the order of entries and members.
+fn shape(value: &Value, ns: &str) -> String {
+    let scrubber = super::scrub::Scrubber::new(&[
+        super::scrub::Scrub { kind: super::scrub::Kind::Uniqid, reason: String::new(), seconds: None },
+        super::scrub::Scrub { kind: super::scrub::Kind::Now, reason: String::new(), seconds: Some(180_000) },
+    ]);
+    let mut v = super::compare::normalize(value, ns);
+    scrubber.apply(&mut v);
+    v.to_string()
+}
+
+/// Sorts values by [`shape`], then as they are.
+fn sort_by_shape(values: &mut [Value], ns: &str) {
+    values.sort_by_cached_key(|v| (shape(v, ns), v.to_string()));
+}
+
+/// The `redis-json@` snapshot of one database: `{key, type, expires,
+/// value}` entries (see the module docs).
+fn redis_json_snapshot(url: &str, ns: &str) -> Result<Vec<Value>, String> {
+    let mut conn = redis_conn(url)?;
+    let mut out = Vec::new();
+    for key in redis_keys(&mut conn, ns)? {
+        let q = |conn: &mut redis::Connection, cmd: &str, extra: &[&str]| -> Result<redis::Value, String> {
+            let mut c = redis::cmd(cmd);
+            c.arg(&key);
+            for e in extra {
+                c.arg(*e);
+            }
+            c.query(conn).map_err(|e| e.to_string())
+        };
+        let kind: String = redis::cmd("TYPE").arg(&key).query(&mut conn).map_err(|e| e.to_string())?;
+        let value = match kind.as_str() {
+            "string" => match q(&mut conn, "GET", &[])? {
+                redis::Value::BulkString(b) => json_or_bytes(&b),
+                other => Value::String(format!("{other:?}")),
+            },
+            "hash" => {
+                let mut pairs = flat(q(&mut conn, "HGETALL", &[])?);
+                let mut fields: Vec<(Vec<u8>, Vec<u8>)> = Vec::new();
+                while pairs.len() >= 2 {
+                    let v = pairs.pop().unwrap_or_default();
+                    let k = pairs.pop().unwrap_or_default();
+                    fields.push((k, v));
+                }
+                fields.sort();
+                let mut m = Map::new();
+                for (k, v) in fields {
+                    m.insert(String::from_utf8_lossy(&k).into_owned(), json_or_bytes(&v));
+                }
+                Value::Object(m)
+            }
+            "set" => {
+                let mut items: Vec<Value> = flat(q(&mut conn, "SMEMBERS", &[])?).iter().map(|b| bytes(b)).collect();
+                sort_by_shape(&mut items, ns);
+                Value::Array(items)
+            }
+            "list" => Value::Array(flat(q(&mut conn, "LRANGE", &["0", "-1"])?).iter().map(|b| bytes(b)).collect()),
+            other => Value::String(format!("<{other}>")),
+        };
+        let pttl: i64 = redis::cmd("PTTL").arg(&key).query(&mut conn).map_err(|e| e.to_string())?;
+        out.push(json!({
+            "key": String::from_utf8_lossy(&key).into_owned(),
+            "type": kind,
+            "expires": pttl >= 0,
+            "value": value,
+        }));
+    }
+    Ok(out)
 }
 
 fn flat(v: redis::Value) -> Vec<Vec<u8>> {

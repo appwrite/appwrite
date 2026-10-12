@@ -142,6 +142,19 @@ pub struct Db {
     pub adapter_name: &'static str,
     /// The pool of a Pool database and its Pool adapter (`db.pool`).
     pub pool: Option<(Arc<PoolFixture>, Arc<PoolAdapter>)>,
+    /// The mirror a database opened with `mirror` is (its `database` is the
+    /// mirror's own).
+    pub mirror: Option<Arc<MirrorHandle>>,
+}
+
+/// A mirror and the handles of its source and destination (`db.mirror`).
+pub struct MirrorHandle {
+    /// The mirror.
+    pub mirror: utopia_database::mirror::Mirror,
+    /// Its source, with its connection for `db.sql`.
+    pub source: Db,
+    /// Its destination, if any.
+    pub destination: Option<Db>,
 }
 
 /// The connection pool of a `db.open` with `pool` (PHP's `PoolFixture`).

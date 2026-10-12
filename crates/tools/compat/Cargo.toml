@@ -47,7 +47,7 @@ utopia-auth.workspace = true
 utopia-balancer.workspace = true
 utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }
 utopia-compression.workspace = true
-utopia-database = { workspace = true, features = ["pool"] }
+utopia-database = { workspace = true, features = ["pool", "redis"] }
 utopia-detector.workspace = true
 utopia-domains.workspace = true
 utopia-dsn.workspace = true

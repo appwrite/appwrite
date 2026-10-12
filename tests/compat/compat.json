@@ -22,6 +22,12 @@
       "rust-container": "postgres://root:password@compat-database-postgres:5432/root",
       "runner": "postgres://root:password@localhost:16432/root"
     },
+    "database-postgres-mirror": {
+      "php": "postgres://root:password@compat-database-postgres:5432/mirror",
+      "rust": "postgres://root:password@localhost:16432/mirror",
+      "rust-container": "postgres://root:password@compat-database-postgres:5432/mirror",
+      "runner": "postgres://root:password@localhost:16432/mirror"
+    },
     "database-redis": {
       "php": "redis://compat-database-redis:6379/0",
       "rust": "redis://localhost:16479/1",

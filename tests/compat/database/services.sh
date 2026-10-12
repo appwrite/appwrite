@@ -49,6 +49,17 @@ up)
                 -c 'CREATE EXTENSION IF NOT EXISTS pg_trgm' \
                 -c "CREATE COLLATION IF NOT EXISTS utf8_ci_ai (provider = icu, locale = 'und-u-ks-level1', deterministic = false)" \
                 >/dev/null
+            # A second database for a Mirror's destination
+            # (`database-postgres-mirror`), set up the same way.
+            if [ "$(docker exec compat-database-postgres psql -U root -d root -Atc "SELECT 1 FROM pg_database WHERE datname = 'mirror'")" != 1 ]; then
+                docker exec compat-database-postgres psql -U root -d root -q -c 'CREATE DATABASE mirror' >/dev/null
+            fi
+            docker exec compat-database-postgres psql -U root -d mirror -q -v ON_ERROR_STOP=1 \
+                -c 'CREATE EXTENSION IF NOT EXISTS postgis' \
+                -c 'CREATE EXTENSION IF NOT EXISTS vector' \
+                -c 'CREATE EXTENSION IF NOT EXISTS pg_trgm' \
+                -c "CREATE COLLATION IF NOT EXISTS utf8_ci_ai (provider = icu, locale = 'und-u-ks-level1', deterministic = false)" \
+                >/dev/null
             exit 0
         fi
         sleep 1
