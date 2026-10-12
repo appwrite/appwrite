@@ -745,7 +745,7 @@ $raw = [
         $filter = Core::filter($name);
         Database::addFilter($name, $filter['encode'], $filter['decode']);
 
-        return null;
+        return;
     },
     'database.on' => fn (array $a, Session $s) => Core::db($a, $s)->on((string) ($a['event'] ?? ''), (string) ($a['name'] ?? ''), Core::listener((string) ($a['name'] ?? ''), $a['callback'] ?? null)),
     'database.before' => fn (array $a, Session $s) => Core::db($a, $s)->before((string) ($a['event'] ?? ''), (string) ($a['name'] ?? ''), Core::transform((string) ($a['event'] ?? ''), (string) ($a['name'] ?? ''), $a['callback'] ?? null)),
