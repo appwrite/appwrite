@@ -25,9 +25,6 @@
     "Utopia\\Database\\Adapter\\SQLite::*": "Phase 2: the SQLite adapter is not converted yet",
     "Utopia\\Database\\Adapter\\Mongo::*": "Phase 3: the MongoDB adapter (and utopia-php/mongo) is not converted yet",
     "Utopia\\Database\\Adapter\\Memory::*": "Phase 2: the Memory adapter is not converted yet",
-    "Utopia\\Database\\Adapter\\Redis::*": "Phase 3: the Redis database adapter is not converted yet",
-    "Utopia\\Database\\Mirror::*": "Phase 3: Mirror (two databases kept in step) is not converted yet",
-    "Utopia\\Database\\Mirroring\\*": "Phase 3: the Mirroring filters of Mirror are not converted yet",
     "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its tokio-postgres connection (reconnect behaviour is converted with Adapter::reconnect)",
     "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
   },
