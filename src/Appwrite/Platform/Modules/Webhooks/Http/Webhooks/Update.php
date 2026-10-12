@@ -66,7 +66,7 @@ class Update extends Action
             ->param('events', null, new ArrayList(new Event(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Events list. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' events are allowed.', example: '["users.*.create"]')
             ->param('enabled', true, new Boolean(), 'Enable or disable a webhook.', true)
             ->param('tls', false, new Boolean(), 'Certificate verification, false for disabled or true for enabled.', true)
-            ->param('authUsername', '', new Text(256), 'Webhook HTTP user. Max length: 256 chars.', true)
+            ->param('authUsername', '', new Text(255), 'Webhook HTTP user. Max length: 255 chars.', true)
             ->param('authPassword', null, new Nullable(new PasswordFormat(new Text(2048))), 'Webhook HTTP password. Max length: 2048 chars. Omit to keep the current password; it is cleared when the URL changes or TLS verification is disabled.', true)
             ->inject('response')
             ->inject('project')

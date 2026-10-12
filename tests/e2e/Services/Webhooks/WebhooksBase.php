@@ -249,7 +249,21 @@ trait WebhooksBase
         $this->assertSame(400, $tooLongPassword['headers']['status-code']);
         $this->assertSame('general_argument_invalid', $tooLongPassword['body']['type']);
 
-        // 256 chars passes the request validator but not the 255-char column, which must still be a 400.
+        // The username column holds 255 chars, so that is the longest the API accepts.
+        $longestUsername = $this->createWebhook(
+            ID::unique(),
+            'Webhook With Longest Username',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            true,
+            \str_repeat('u', 255),
+            'password'
+        );
+        $this->assertSame(201, $longestUsername['headers']['status-code']);
+        $this->assertSame(\str_repeat('u', 255), $longestUsername['body']['authUsername']);
+        $this->deleteWebhook($longestUsername['body']['$id']);
+
         $tooLongUsername = $this->createWebhook(
             ID::unique(),
             'Webhook With Too Long Username',
@@ -566,10 +580,11 @@ trait WebhooksBase
             null,
             'https://appwrite.io',
             true,
-            'newuser',
+            \str_repeat('u', 255),
             \str_repeat('🔑', 2048)
         );
         $this->assertSame(200, $longest['headers']['status-code']);
+        $this->assertSame(\str_repeat('u', 255), $longest['body']['authUsername']);
         $this->assertSame('', $longest['body']['authPassword']);
 
         $tooLongPassword = $this->updateWebhook(
