@@ -149,12 +149,14 @@ trait WebhooksBase
             'https://appwrite.io',
             null,
             null,
-            null
+            null,
+            description: 'Notifies the billing service about new users.'
         );
 
         $this->assertEquals(201, $webhook['headers']['status-code']);
         $this->assertNotEmpty($webhook['body']['$id']);
         $this->assertEquals('Test Webhook', $webhook['body']['name']);
+        $this->assertSame('Notifies the billing service about new users.', $webhook['body']['description']);
         $this->assertEquals('https://appwrite.io', $webhook['body']['url']);
         $this->assertContains('users.*.create', $webhook['body']['events']);
         $this->assertCount(1, $webhook['body']['events']);
@@ -176,6 +178,7 @@ trait WebhooksBase
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals($webhook['body']['$id'], $get['body']['$id']);
         $this->assertEquals('Test Webhook', $get['body']['name']);
+        $this->assertSame('Notifies the billing service about new users.', $get['body']['description']);
 
         // Verify via LIST
         $list = $this->listWebhooks(null, true);
@@ -350,6 +353,24 @@ trait WebhooksBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    public function testCreateWebhookInvalidDescription(): void
+    {
+        $response = $this->createWebhook(
+            ID::unique(),
+            'Invalid Description Webhook',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null,
+            description: \str_repeat('a', 1025)
+        );
+
+        $this->assertEquals(400, $response['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $response['body']['type']);
+    }
+
     public function testCreateWebhookDuplicateId(): void
     {
         $webhookId = ID::unique();
@@ -450,6 +471,60 @@ trait WebhooksBase
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals('Updated Webhook', $get['body']['name']);
         $this->assertEquals('https://appwrite.io/new', $get['body']['url']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookDescription(): void
+    {
+        $name = 'Description Webhook ' . ID::unique();
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            $name,
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null,
+            description: 'Notifies the billing service about new users.'
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $updated = $this->updateWebhook($webhookId, $name, ['users.*.create'], null, 'https://appwrite.io', null, null, null);
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame('Notifies the billing service about new users.', $updated['body']['description']);
+
+        $updated = $this->updateWebhook($webhookId, $name, ['users.*.create'], null, 'https://appwrite.io', null, null, null, 'Also notifies the CRM.');
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame('Also notifies the CRM.', $updated['body']['description']);
+
+        $rotated = $this->updateWebhookSecret($webhookId);
+
+        $this->assertEquals(200, $rotated['headers']['status-code']);
+        $this->assertSame('Also notifies the CRM.', $rotated['body']['description']);
+
+        $list = $this->listWebhooks([
+            Query::equal('name', [$name])->toString(),
+        ], true);
+
+        $this->assertEquals(200, $list['headers']['status-code']);
+        $this->assertCount(1, $list['body']['webhooks']);
+        $this->assertSame('Also notifies the CRM.', $list['body']['webhooks'][0]['description']);
+
+        $updated = $this->updateWebhook($webhookId, $name, ['users.*.create'], null, 'https://appwrite.io', null, null, null, '');
+
+        $this->assertEquals(200, $updated['headers']['status-code']);
+        $this->assertSame('', $updated['body']['description']);
+
+        $get = $this->getWebhook($webhookId);
+        $this->assertEquals(200, $get['headers']['status-code']);
+        $this->assertSame('', $get['body']['description']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -722,6 +797,31 @@ trait WebhooksBase
         ]);
 
         $this->assertEquals(400, $response['headers']['status-code']);
+
+        // Cleanup
+        $this->deleteWebhook($webhookId);
+    }
+
+    public function testUpdateWebhookInvalidDescription(): void
+    {
+        $webhook = $this->createWebhook(
+            ID::unique(),
+            'Invalid Description Update',
+            ['users.*.create'],
+            null,
+            'https://appwrite.io',
+            null,
+            null,
+            null
+        );
+
+        $this->assertEquals(201, $webhook['headers']['status-code']);
+        $webhookId = $webhook['body']['$id'];
+
+        $updated = $this->updateWebhook($webhookId, 'Invalid Description Update', ['users.*.create'], null, 'https://appwrite.io', null, null, null, \str_repeat('a', 1025));
+
+        $this->assertEquals(400, $updated['headers']['status-code']);
+        $this->assertSame('general_argument_invalid', $updated['body']['type']);
 
         // Cleanup
         $this->deleteWebhook($webhookId);
@@ -1619,6 +1719,7 @@ trait WebhooksBase
         $this->assertEquals(200, $get['headers']['status-code']);
         $this->assertEquals($webhookId, $get['body']['$id']);
         $this->assertEquals('Get Test Webhook', $get['body']['name']);
+        $this->assertSame('', $get['body']['description']);
         $this->assertEquals('https://appwrite.io', $get['body']['url']);
         $this->assertContains('users.*.create', $get['body']['events']);
         $this->assertContains('users.*.update.email', $get['body']['events']);
@@ -2493,7 +2594,7 @@ trait WebhooksBase
         return $webhook;
     }
 
-    protected function createWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $tls, ?string $authUsername, ?string $authPassword, ?string $secret = null): mixed
+    protected function createWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $tls, ?string $authUsername, ?string $authPassword, ?string $secret = null, ?string $description = null): mixed
     {
         $params = [
             'webhookId' => $webhookId,
@@ -2517,6 +2618,9 @@ trait WebhooksBase
         if ($secret !== null) {
             $params['secret'] = $secret;
         }
+        if ($description !== null) {
+            $params['description'] = $description;
+        }
 
         $webhook = $this->client->call(Client::METHOD_POST, '/webhooks', array_merge([
             'content-type' => 'application/json',
@@ -2526,7 +2630,7 @@ trait WebhooksBase
         return $webhook;
     }
 
-    protected function updateWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $tls, ?string $authUsername, ?string $authPassword): mixed
+    protected function updateWebhook(string $webhookId, string $name, array $events, ?bool $enabled, ?string $url, ?bool $tls, ?string $authUsername, ?string $authPassword, ?string $description = null): mixed
     {
         $params = [
             'name' => $name,
@@ -2545,6 +2649,9 @@ trait WebhooksBase
         }
         if ($authPassword !== null) {
             $params['authPassword'] = $authPassword;
+        }
+        if ($description !== null) {
+            $params['description'] = $description;
         }
 
         $webhook = $this->client->call(Client::METHOD_PUT, '/webhooks/' . $webhookId, array_merge([
