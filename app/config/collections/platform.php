@@ -880,9 +880,9 @@ $platformCollections = [
             ],
             [
                 '$id' => ID::custom('httpPass'),
-                'type' => Database::VAR_STRING,
+                'type' => Database::VAR_TEXT,
                 'format' => '',
-                'size' => Database::LENGTH_KEY, // TODO will the length suffice after encryption?
+                'size' => 65535,
                 'signed' => true,
                 'required' => false,
                 'default' => null,
