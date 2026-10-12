@@ -28,6 +28,8 @@
 //! | `Utopia\Database\Validator\Authorization` | [`Authorization`] |
 //! | `Utopia\Database\Adapter` | [`Adapter`] |
 //! | `Utopia\Database\Adapter\Postgres` (with `Adapter\SQL`) | [`adapter::postgres::Postgres`] |
+//! | `Utopia\Database\Adapter\SQLite` (with `Adapter\MariaDB`, `Adapter\SQL`; feature `sqlite`) | `adapter::sqlite::Sqlite` |
+//! | `Utopia\Database\Adapter\Memory` (feature `memory`) | `adapter::memory::Memory` |
 //! | `Utopia\Database\Exception` and `Exception\*` | [`Error`], [`Kind`] |
 //! | PHP values (`mixed`) | [`Value`] (`php_std::Value` with [`value::Ext`]) |
 //!
