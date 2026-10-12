@@ -71,6 +71,18 @@
 //! `index_support` (`collections.rs`, the adapter's `IndexSupport` for the
 //! `Index` validator). Their owners may reshape them.
 //!
+//! The documents area (`documents.rs`, `find.rs`) is implemented: reads
+//! (with the document cache), creates, updates, upserts, increments,
+//! deletes, finds, counts, sums and iteration. It calls the relationships
+//! area only for collections with relationship attributes (PHP's
+//! relationship methods do nothing for the others).
+//! [`Database::get_document`], [`Database::create_document`],
+//! [`Database::update_document`], [`Database::delete_document`] and
+//! [`Database::find`] return a [`futures_util::future::BoxFuture`]: they
+//! recurse (a collection is read as a document; relationships read and
+//! write related documents), and a named future type breaks the cycle of
+//! async types.
+//!
 //! `get_collection(METADATA)` returns `Database::metadata_collection`
 //! itself rather than calling `get_document`: PHP's `getDocument` returns
 //! `new Document(COLLECTION)` for that id before anything else, so the
@@ -226,7 +238,8 @@ struct Inner {
 }
 
 /// The mutable properties of PHP's `Database`.
-// TEMPORARY (phase A skeleton): fields are read once the areas are implemented.
+// TEMPORARY (phase B): the relationship stacks are read once the relationships
+// area is implemented.
 #[allow(dead_code)]
 pub(crate) struct State {
     /// `$cache`.
