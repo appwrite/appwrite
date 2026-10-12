@@ -2,7 +2,7 @@
 
 /**
  * Area `core`: the Database orchestration (db.*, database.*), the twin of
- * crates/tools/compat/src/libs/database/core.rs. See tests/compat/README.md
+ * crates/tools/compat/src/libs/database/core/ (mod.rs). See tests/compat/README.md
  * (`database`: the core vocabulary) for every operation, its arguments and
  * its result.
  */

@@ -191,7 +191,7 @@ A library that writes to another service adds a kind there (PostgreSQL tables, M
 
 ## database
 
-utopia-php/database is converted area by area (`tests/compat/database/ops/<area>.php`, `crates/tools/compat/src/libs/database/<area>.rs`, `spec.d/<area>.json`). Values cross through `Values.php` and `codec.rs`.
+utopia-php/database is converted area by area (`tests/compat/database/ops/<area>.php`, `crates/tools/compat/src/libs/database/<area>.rs` (`core/`, split by the `Database` area that implements each operation: `schema.rs`, `documents.rs`, `relationships.rs`, sharing `args.rs`), `spec.d/<area>.json`). Values cross through `Values.php` and `codec.rs`.
 
 ### The `core` vocabulary
 
