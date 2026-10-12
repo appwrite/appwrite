@@ -29,8 +29,8 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 
 FROM gcr.io/distroless/cc-debian12:nonroot AS production
 
-# Static data shared with the PHP API (same files, same semantics).
-COPY packages/emails/data/free-domains.php packages/emails/data/disposable-domains.php /usr/src/code/packages/emails/data/
+# Static data shared with the PHP API (same files, same semantics). The
+# Utopia crates embed their own data (domain lists, the Public Suffix List).
 COPY app/config/locale/translations /usr/src/code/app/config/locale/translations
 COPY app/assets/security/10k-common-passwords /usr/src/code/app/assets/security/10k-common-passwords
 

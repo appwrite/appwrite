@@ -96,11 +96,9 @@ impl State {
         let console = console.ok_or("no database configured")?;
         pools.insert("console".to_owned(), console.clone());
 
-        let lists = utopia_emails::Lists::load(&config.asset("packages/emails/data")).unwrap_or_else(|e| {
-            tracing::warn!(error = %e, "email domain lists unavailable");
-            utopia_emails::Lists::default()
-        });
-        lists.install();
+        // The email domain lists are embedded in utopia-emails: parse them
+        // now rather than on the first request that needs them.
+        let _ = utopia_emails::Lists::global();
         let translations = Translations::load(&config.asset("app/config/locale/translations")).await;
         let dictionary = crate::validators::load_dictionary(&config.asset("app/assets/security/10k-common-passwords"));
         let geo = Geo::new(config.geo_endpoint.clone(), config.geo_secret.clone());

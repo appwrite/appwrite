@@ -16,7 +16,8 @@
 //! | `getCanonical()`, `isCanonicalSupported()`, `getCanonicalDomain()` | [`Email::canonical`], [`Email::is_canonical_supported`], [`Email::canonical_domain`] (and `*_with` for other providers) |
 //! | `getFormatted($format)`, `Email::FORMAT_*` | [`Email::formatted`], [`Format`] |
 //! | `Email::LOCAL_MAX_LENGTH`, `DOMAIN_MAX_LENGTH` | [`LOCAL_MAX_LENGTH`], [`DOMAIN_MAX_LENGTH`] |
-//! | `data/free-domains.php`, `data/disposable-domains.php` | [`Lists`] |
+//! | `data/free-domains.php`, `data/disposable-domains.php` | [`Lists`] ([`Lists::FREE`], [`Lists::DISPOSABLE`]) |
+//! | `import.php` (`composer import:*`) | the `emails-import` binary |
 //! | `Utopia\Emails\Canonicals\Provider` (abstract) | [`Provider`] (trait) |
 //! | `Canonicals\Providers\{Gmail, Outlook, Yahoo, Icloud, Protonmail, Fastmail, Yandex, Walla, Generic}` | [`Gmail`], [`Outlook`], [`Yahoo`], [`Icloud`], [`Protonmail`], [`Fastmail`], [`Yandex`], [`Walla`], [`Generic`] |
 //! | `getCanonical()` result `['local' => ..., 'domain' => ...]` | [`Canonical`] |
@@ -28,13 +29,15 @@
 //!
 //! Domain parsing (provider, subdomain, known suffixes) is `utopia-domains`.
 //!
-//! The free and disposable lists are read on first use from
-//! [`Lists::default_dir`], unless a server installs lists loaded from its
-//! assets with [`Lists::install`] at startup.
+//! The free and disposable lists are embedded in the crate
+//! (`data/free-domains.txt`, `data/disposable-domains.txt`) and parsed on
+//! first use, unless a server installs other lists with [`Lists::install`]
+//! at startup. The `emails-import` task refreshes them from their sources
+//! (see the guide).
 //!
-//! PHP: `utopia-php/emails` uses `utopia-php/domains` the same way. The lists
-//! are the PHP package's data files, which PHP includes from the package
-//! directory on first use.
+//! PHP: `utopia-php/emails` uses `utopia-php/domains` the same way. PHP's
+//! lists are the package's data files (`data/*-domains.php`, written by
+//! `import.php`), which hold the same domains in the same order.
 
 #![warn(missing_docs)]
 
@@ -42,7 +45,6 @@ mod canonicals;
 mod email;
 mod error;
 mod lists;
-mod literal;
 mod validator;
 
 pub use canonicals::{

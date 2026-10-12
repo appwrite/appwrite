@@ -4,13 +4,11 @@
 //! PHP: `data/free-domains.php` and `data/disposable-domains.php`.
 
 use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::OnceLock;
 
 use php_std::value;
 use serde_json::Value;
-
-use crate::literal::{self, Literal};
 
 /// A set of domains.
 ///
@@ -79,35 +77,45 @@ pub struct Lists {
 static GLOBAL: OnceLock<Lists> = OnceLock::new();
 
 impl Lists {
-    /// The directory the lists are read from by default.
+    /// The free domains the crate embeds, `data/free-domains.txt`: one
+    /// domain per line, written by the `emails-import` task.
     ///
-    /// PHP: `data/` of the PHP package in this repository, where PHP includes
-    /// them from.
-    pub fn default_dir() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../packages/emails/data")
+    /// PHP: `data/free-domains.php`, the same domains in the same order.
+    pub const FREE: &'static str = include_str!("../data/free-domains.txt");
+
+    /// The disposable domains the crate embeds,
+    /// `data/disposable-domains.txt`, in the format of [`Self::FREE`].
+    ///
+    /// PHP: `data/disposable-domains.php`.
+    pub const DISPOSABLE: &'static str = include_str!("../data/disposable-domains.txt");
+
+    /// Parses one list: a domain per line (empty lines are skipped).
+    ///
+    /// ```
+    /// use utopia_emails::Lists;
+    ///
+    /// let list = Lists::parse("gmail.com\nyahoo.com\n");
+    /// assert_eq!(list.len(), 2);
+    /// assert!(list.contains("gmail.com"));
+    /// ```
+    pub fn parse(source: &str) -> DomainList {
+        source.split('\n').filter(|line| !line.is_empty()).collect()
     }
 
-    /// Parses one data file, a list of domains.
-    ///
-    /// PHP: the file is PHP source, `<?php return ['domain', ...];`.
-    pub fn parse(source: &str) -> Result<DomainList, String> {
-        match literal::parse(source)? {
-            Literal::Array(entries) => {
-                Ok(entries.into_iter().filter_map(|(_, v)| v.as_str().map(str::to_owned)).collect())
-            }
-            Literal::Str(_) => Err("the data file must return an array".into()),
-        }
+    /// The embedded lists ([`Self::FREE`], [`Self::DISPOSABLE`]), parsed.
+    pub fn embedded() -> Self {
+        Self { free: Self::parse(Self::FREE), disposable: Self::parse(Self::DISPOSABLE) }
     }
 
-    /// Reads both lists from `dir`, from `free-domains.php` and
-    /// `disposable-domains.php`.
+    /// Reads both lists from `dir`, from `free-domains.txt` and
+    /// `disposable-domains.txt` (the embedded lists' format).
     pub fn load(dir: &Path) -> Result<Self, String> {
         let read = |name: &str| -> Result<DomainList, String> {
             let path = dir.join(name);
             let source = std::fs::read_to_string(&path).map_err(|e| format!("{}: {e}", path.display()))?;
-            Self::parse(&source).map_err(|e| format!("{}: {e}", path.display()))
+            Ok(Self::parse(&source))
         };
-        Ok(Self { free: read("free-domains.php")?, disposable: read("disposable-domains.php")? })
+        Ok(Self { free: read("free-domains.txt")?, disposable: read("disposable-domains.txt")? })
     }
 
     /// Installs the process-wide lists. The first lists installed (or
@@ -116,10 +124,10 @@ impl Lists {
         GLOBAL.set(self).is_ok()
     }
 
-    /// The process-wide lists: the installed ones, else those in
-    /// [`Self::default_dir`] (empty when they cannot be read).
+    /// The process-wide lists: the installed ones, else the embedded ones,
+    /// parsed on first use.
     pub fn global() -> &'static Self {
-        GLOBAL.get_or_init(|| Self::load(&Self::default_dir()).unwrap_or_default())
+        GLOBAL.get_or_init(Self::embedded)
     }
 }
 
@@ -129,22 +137,19 @@ mod tests {
 
     #[test]
     fn parse() {
-        let list = Lists::parse(
-            "<?php\n/** header */\nreturn [\n    'gmail.com',\n    'it\\'s.com', // note\n    '1000',\n];\n",
-        )
-        .unwrap();
+        let list = Lists::parse("gmail.com\nit's.com\n\n1000\n");
         assert_eq!(list.len(), 3);
         assert!(list.contains("gmail.com") && list.contains("it's.com"));
         // in_array() compares numeric strings as numbers.
         assert!(list.contains("1e3") && list.contains(" 1000") && !list.contains("1e4"));
         assert!(!list.contains("GMAIL.COM"));
-        assert!(Lists::parse("<?php return 'x';").is_err());
     }
 
     #[test]
-    fn data_files() {
-        let lists = Lists::load(&Lists::default_dir()).unwrap();
+    fn embedded() {
+        let lists = Lists::embedded();
         assert!(lists.free.contains("gmail.com") && lists.disposable.contains("mailinator.com"));
         assert!(lists.disposable.len() > 10_000);
+        assert_eq!(lists.free.len(), Lists::FREE.lines().count());
     }
 }
