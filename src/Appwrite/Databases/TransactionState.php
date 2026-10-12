@@ -226,40 +226,6 @@ class TransactionState
     }
 
     /**
-     * Apply bulk update to documents in transaction state that match queries
-     *
-     * This allows bulk operations within a transaction to see each other's changes.
-     *
-     * @param string $collectionId Collection ID
-     * @param Document $updateData Document with update values
-     * @param array $queries Query filters to match documents
-     * @param array &$state Transaction state (passed by reference)
-     * @return void
-     */
-    public function applyBulkUpdateToState(
-        string $collectionId,
-        Document $updateData,
-        array $queries,
-        array &$state
-    ): void {
-        if (!isset($state[$collectionId])) {
-            return;
-        }
-
-        $filters = $this->extractFilters($queries);
-
-        foreach ($state[$collectionId] as $docId => $doc) {
-            if ($this->documentMatchesFilters($doc, $filters)) {
-                foreach ($updateData->getArrayCopy() as $key => $value) {
-                    if ($key !== '$id') {
-                        $doc->setAttribute($key, $value);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Apply bulk delete to documents in transaction state that match queries
      *
      * This allows bulk operations within a transaction to see each other's changes.

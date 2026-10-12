@@ -51,23 +51,6 @@ final class TransactionStateTest extends TestCase
     /**
      * @param array<Query> $queries
      */
-    private function bulkUpdateTouchesRow(array $queries): bool
-    {
-        $state = [self::COLLECTION => ['a' => $this->row()]];
-
-        $this->state->applyBulkUpdateToState(
-            self::COLLECTION,
-            new Document(['ds' => 'BULK']),
-            $queries,
-            $state
-        );
-
-        return $state[self::COLLECTION]['a']->getAttribute('ds') === 'BULK';
-    }
-
-    /**
-     * @param array<Query> $queries
-     */
     private function bulkDeleteRemovesRow(array $queries): bool
     {
         $state = [self::COLLECTION => ['a' => $this->row()]];
@@ -136,48 +119,8 @@ final class TransactionStateTest extends TestCase
      * @param array<Query> $queries
      */
     #[DataProvider('filters')]
-    public function testBulkUpdateOnlyTouchesMatchingRows(array $queries, bool $shouldMatch): void
-    {
-        $this->assertSame($shouldMatch, $this->bulkUpdateTouchesRow($queries));
-    }
-
-    /**
-     * @param array<Query> $queries
-     */
-    #[DataProvider('filters')]
     public function testBulkDeleteOnlyRemovesMatchingRows(array $queries, bool $shouldMatch): void
     {
         $this->assertSame($shouldMatch, $this->bulkDeleteRemovesRow($queries));
-    }
-
-    public function testBulkUpdateKeepsUnmatchedRowUntouched(): void
-    {
-        $state = [self::COLLECTION => ['a' => $this->row()]];
-
-        $this->state->applyBulkUpdateToState(
-            self::COLLECTION,
-            new Document(['ds' => 'BULK', 'n' => 101]),
-            [Query::equal('grp', ['g']), Query::notStartsWith('ix', 'ke')],
-            $state
-        );
-
-        $this->assertSame('orig', $state[self::COLLECTION]['a']->getAttribute('ds'));
-        $this->assertSame(1, $state[self::COLLECTION]['a']->getAttribute('n'));
-    }
-
-    public function testBulkUpdateOnlyChangesTheMatchingRow(): void
-    {
-        $other = new Document(['$id' => 'b', 'grp' => 'g', 'ix' => 'other', 'n' => 9, 'ds' => 'orig']);
-        $state = [self::COLLECTION => ['a' => $this->row(), 'b' => $other]];
-
-        $this->state->applyBulkUpdateToState(
-            self::COLLECTION,
-            new Document(['ds' => 'BULK']),
-            [Query::equal('grp', ['g']), Query::notStartsWith('ix', 'ke')],
-            $state
-        );
-
-        $this->assertSame('orig', $state[self::COLLECTION]['a']->getAttribute('ds'));
-        $this->assertSame('BULK', $state[self::COLLECTION]['b']->getAttribute('ds'));
     }
 }
