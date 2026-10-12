@@ -22,10 +22,12 @@ export function PasskeyOrigins({
       {origins
         .filter((origin) => !LOCALHOST_ORIGINS.includes(origin))
         .map((origin) => (
-          <li key={origin} className="break-all">
-            {origin}
+          <li key={origin} className="flex min-w-0 gap-1">
+            <span className="truncate" title={origin}>
+              {origin}
+            </span>{' '}
             {origin.startsWith(ANDROID_ORIGIN) && (
-              <span className="font-sans"> {t('(Android app)')}</span>
+              <span className="shrink-0 font-sans">{t('(Android app)')}</span>
             )}
           </li>
         ))}
