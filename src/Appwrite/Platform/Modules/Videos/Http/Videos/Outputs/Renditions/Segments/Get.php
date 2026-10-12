@@ -88,7 +88,13 @@ class Get extends Base
 
         $rendition = $authorization->skip(fn () => $dbForProject->getDocument('videos_renditions', $renditionId));
 
-        if ($rendition->isEmpty() || $rendition->getAttribute('videoInternalId') !== $video->getSequence()) {
+        // Same gate as the media playlist: segment rows are written before the
+        // rendition reaches `ready`, and those bytes must stay unpublished.
+        if (
+            $rendition->isEmpty()
+            || $rendition->getAttribute('videoInternalId') !== $video->getSequence()
+            || $rendition->getAttribute('status') !== self::STATUS_READY
+        ) {
             throw new Exception(Exception::VIDEO_RENDITION_NOT_FOUND);
         }
 

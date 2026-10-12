@@ -1131,12 +1131,18 @@ class Deletes extends Action
             }
 
             try {
+                // Older workers wrote scratch under videos-tmp/app-{project}.
                 $deviceForVideosTmp = getDevice(APP_STORAGE_VIDEOS_TMP . '/app-' . $projectId);
                 $deviceForVideosTmp->delete($deviceForVideosTmp->getRoot(), true);
             } catch (Throwable $th) {
                 Console::error('Failed to delete videos temp storage directory: ' . $th->getMessage());
             }
 
+            try {
+                $this->deleteVideoTmpJobs($projectId);
+            } catch (Throwable $th) {
+                Console::error('Failed to delete videos temp jobs: ' . $th->getMessage());
+            }
         } finally {
             $dbForProject->enableValidation();
         }
@@ -1478,18 +1484,12 @@ class Deletes extends Action
                 continue;
             }
 
-            $stdout = '';
-            $stderr = '';
-            $code = Console::execute('rm -rf ' . \escapeshellarg($path), '', $stdout, $stderr, 30);
-
-            if ($code !== 0) {
+            if (!$this->removeVideoTmp($path)) {
                 $failed++;
-                Console::error('Failed removing video tmp [' . $path . ']: ' . $stderr);
                 continue;
             }
 
             $removed++;
-            Console::info('Removed video tmp [' . $path . ']');
         }
 
         Span::add('videos.tmp.scanned', $scanned);
@@ -1974,7 +1974,7 @@ class Deletes extends Action
     /**
      * Cascades a video deletion across its timelines, renditions and captions —
      * including the per-rendition and per-caption segment rows — then removes the
-     * whole transcoded output tree from the videos device.
+     * transcoded output tree and this video's scratch jobs under videos-tmp/jobs.
      *
      * @param callable $getProjectDB
      * @param Device $deviceForVideos
@@ -2022,11 +2022,69 @@ class Deletes extends Action
         }
 
         try {
+            // Older workers wrote scratch under videos-tmp/app-{project}/{video}.
             $deviceForVideosTmp = getDevice(APP_STORAGE_VIDEOS_TMP . '/app-' . $project->getId());
             $deviceForVideosTmp->deletePath($document->getId());
         } catch (Throwable $th) {
             Console::error('Failed to delete video temp storage directory: ' . $th->getMessage());
         }
+
+        try {
+            $this->deleteVideoTmpJobs($project->getId(), $document->getId());
+        } catch (Throwable $th) {
+            Console::error('Failed to delete video temp jobs: ' . $th->getMessage());
+        }
+    }
+
+    /**
+     * Remove scratch folders under videos-tmp/jobs for a project, or one video.
+     *
+     * Folder names are `{YmdHi}~{projectId}~{videoId}~{type}-{jobId}`. An empty
+     * `$videoId` removes every job for the project. The legacy
+     * `videos-tmp/app-{project}` tree is cleaned by the callers.
+     */
+    private function deleteVideoTmpJobs(string $projectId, string $videoId = ''): void
+    {
+        $root = VideosBase::tmpJobsRoot();
+        if (!\is_dir($root)) {
+            return;
+        }
+
+        $tmpRoot = \rtrim(APP_STORAGE_VIDEOS_TMP, '/') . '/';
+
+        foreach (\scandir($root) ?: [] as $name) {
+            if ($name[0] === '.') {
+                continue;
+            }
+
+            if (!VideosBase::jobMatches($name, $projectId, $videoId)) {
+                continue;
+            }
+
+            $path = $root . '/' . $name;
+            if (!\str_starts_with($path, $tmpRoot)) {
+                continue;
+            }
+
+            $this->removeVideoTmp($path);
+        }
+    }
+
+    private function removeVideoTmp(string $path): bool
+    {
+        $stdout = '';
+        $stderr = '';
+        $code = Console::execute('rm -rf ' . \escapeshellarg($path), '', $stdout, $stderr, 30);
+
+        if ($code !== 0) {
+            Console::error('Failed removing video tmp [' . $path . ']: ' . $stderr);
+
+            return false;
+        }
+
+        Console::info('Removed video tmp [' . $path . ']');
+
+        return true;
     }
 
     /**
