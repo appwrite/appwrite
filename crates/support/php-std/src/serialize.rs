@@ -56,7 +56,7 @@ pub fn serialize_into<X: Extension>(out: &mut Vec<u8>, value: &Value<X>) {
         }
         Value::Float(f) => {
             out.extend_from_slice(b"d:");
-            out.extend_from_slice(number::gcvt(*f, -1, 'E').as_bytes());
+            number::gcvt_into(out, *f, -1, b'E');
             out.push(b';');
         }
         Value::Str(s) => serialize_string(out, s),

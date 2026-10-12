@@ -1,10 +1,10 @@
 //! [`Array`]: a PHP array (an ordered map with integer and string keys).
 
 use std::fmt;
-use std::hash::{Hash, Hasher};
+use std::hash::{BuildHasher, Hash, Hasher};
 use std::sync::Arc;
 
-use indexmap::{Equivalent, IndexMap};
+use hashbrown::{HashTable, hash_table};
 
 use super::{Extension, Never, Str, Value};
 
@@ -93,13 +93,6 @@ impl Hash for KeyRef<'_> {
             KeyRef::Int(i) => state.write_u64(*i as u64),
             KeyRef::Str(s) => state.write(s),
         }
-    }
-}
-
-impl Equivalent<ArrayKey> for KeyRef<'_> {
-    /// Whether this borrowed key equals `key`.
-    fn equivalent(&self, key: &ArrayKey) -> bool {
-        *self == key.as_ref()
     }
 }
 
@@ -218,118 +211,171 @@ impl<X: Extension> Clone for Array<X> {
     }
 }
 
-/// The large table: insertion-ordered, with a fast hasher seeded randomly
-/// (keys come from requests).
-type Map<X> = IndexMap<ArrayKey, Value<X>, foldhash::fast::RandomState>;
-
 /// Up to this many entries, a hash array's table is a list searched in
 /// order: no index to allocate and no keys to hash.
 const SMALL: usize = 8;
 
-/// The hash representation's entries, in order.
+/// The hash representation's entries, in order, and past [`SMALL`] entries
+/// an index of their positions by key.
+///
+/// The entries are kept as they were added (an object decoded with its
+/// members in order is taken as it is), and the index only holds positions.
 #[derive(Clone)]
-enum Table<X: Extension> {
-    /// At most [`SMALL`] entries.
-    Small(Vec<(ArrayKey, Value<X>)>),
-    Large(Map<X>),
+struct Table<X: Extension> {
+    entries: Vec<(ArrayKey, Value<X>)>,
+    index: Option<Index>,
+}
+
+/// Positions of a table's entries by key, with a fast hasher seeded randomly
+/// (keys come from requests).
+#[derive(Clone)]
+struct Index {
+    positions: HashTable<usize>,
+    hasher: foldhash::fast::RandomState,
+}
+
+impl Index {
+    fn with_capacity(n: usize) -> Self {
+        Index { positions: HashTable::with_capacity(n), hasher: Default::default() }
+    }
+
+    fn hash(&self, k: KeyRef<'_>) -> u64 {
+        self.hasher.hash_one(k)
+    }
+
+    /// The index of `entries`, or `None` when two have the same key.
+    fn of<X: Extension>(entries: &[(ArrayKey, Value<X>)], capacity: usize) -> Option<Index> {
+        let mut index = Index::with_capacity(capacity);
+        for (i, (k, _)) in entries.iter().enumerate() {
+            let hash = index.hash(k.as_ref());
+            match index.positions.entry(
+                hash,
+                |&j| entries[j].0 == *k,
+                |&j| index.hasher.hash_one(entries[j].0.as_ref()),
+            ) {
+                hash_table::Entry::Occupied(_) => return None,
+                hash_table::Entry::Vacant(slot) => {
+                    slot.insert(i);
+                }
+            }
+        }
+        Some(index)
+    }
 }
 
 impl<X: Extension> Table<X> {
     fn with_capacity(n: usize) -> Self {
-        if n <= SMALL { Table::Small(Vec::with_capacity(n)) } else { Table::Large(map_with_capacity(n)) }
+        let index = (n > SMALL).then(|| Index::with_capacity(n));
+        Table { entries: Vec::with_capacity(n), index }
+    }
+
+    /// A table of `entries` as they are, when their keys are all different
+    /// (`entries` back otherwise).
+    fn of(entries: Vec<(ArrayKey, Value<X>)>) -> Result<Self, Vec<(ArrayKey, Value<X>)>> {
+        if entries.len() <= SMALL {
+            let distinct =
+                entries.iter().enumerate().all(|(i, (k, _))| entries[..i].iter().all(|(other, _)| other != k));
+            return if distinct { Ok(Table { entries, index: None }) } else { Err(entries) };
+        }
+        match Index::of(&entries, entries.len()) {
+            Some(index) => Ok(Table { entries, index: Some(index) }),
+            None => Err(entries),
+        }
     }
 
     fn len(&self) -> usize {
-        match self {
-            Table::Small(v) => v.len(),
-            Table::Large(m) => m.len(),
-        }
+        self.entries.len()
     }
 
-    fn position(v: &[(ArrayKey, Value<X>)], k: KeyRef<'_>) -> Option<usize> {
-        v.iter().position(|(key, _)| key.as_ref() == k)
+    /// Where `k` is in the entries.
+    fn position(&self, k: KeyRef<'_>) -> Option<usize> {
+        match &self.index {
+            None => self.entries.iter().position(|(key, _)| key.as_ref() == k),
+            Some(index) => index.positions.find(index.hash(k), |&i| self.entries[i].0.as_ref() == k).copied(),
+        }
     }
 
     fn get(&self, k: KeyRef<'_>) -> Option<&Value<X>> {
-        match self {
-            Table::Small(v) => Self::position(v, k).map(|i| &v[i].1),
-            Table::Large(m) => m.get(&k),
-        }
+        self.position(k).map(|i| &self.entries[i].1)
     }
 
     fn get_mut(&mut self, k: KeyRef<'_>) -> Option<&mut Value<X>> {
-        match self {
-            Table::Small(v) => Self::position(v, k).map(|i| &mut v[i].1),
-            Table::Large(m) => m.get_mut(&k),
-        }
+        self.position(k).map(|i| &mut self.entries[i].1)
     }
 
     fn contains_key(&self, k: KeyRef<'_>) -> bool {
-        self.get(k).is_some()
+        self.position(k).is_some()
     }
 
     /// Sets `k` (in place when it exists, at the end otherwise); returns the previous value.
+    #[inline]
     fn insert(&mut self, k: ArrayKey, value: Value<X>) -> Option<Value<X>> {
-        match self {
-            Table::Small(v) => {
-                if let Some(i) = Self::position(v, k.as_ref()) {
-                    return Some(std::mem::replace(&mut v[i].1, value));
-                }
-                if v.len() < SMALL {
-                    v.push((k, value));
-                    return None;
-                }
-                let mut m = map_with_capacity(SMALL * 2);
-                m.extend(std::mem::take(v));
-                m.insert(k, value);
-                *self = Table::Large(m);
-                None
-            }
-            Table::Large(m) => m.insert(k, value),
+        if let Some(i) = self.position(k.as_ref()) {
+            return Some(std::mem::replace(&mut self.entries[i].1, value));
         }
+        let i = self.entries.len();
+        self.entries.push((k, value));
+        match &mut self.index {
+            Some(index) => {
+                let entries = &self.entries;
+                let hash = index.hash(entries[i].0.as_ref());
+                let hasher = &index.hasher;
+                index.positions.insert_unique(hash, i, |&j| hasher.hash_one(entries[j].0.as_ref()));
+            }
+            None if i == SMALL => self.reindex(),
+            None => {}
+        }
+        None
+    }
+
+    /// Indexes the entries (their keys are different).
+    #[cold]
+    fn reindex(&mut self) {
+        self.index = Index::of(&self.entries, self.entries.capacity().max(SMALL * 2));
     }
 
     /// Removes `k`, shifting the entries after it.
     fn shift_remove(&mut self, k: &ArrayKey) -> Option<Value<X>> {
-        match self {
-            Table::Small(v) => Self::position(v, k.as_ref()).map(|i| v.remove(i).1),
-            Table::Large(m) => m.shift_remove(k),
+        let i = self.position(k.as_ref())?;
+        if let Some(index) = &mut self.index {
+            if let Ok(slot) = index.positions.find_entry(index.hasher.hash_one(k.as_ref()), |&j| j == i) {
+                slot.remove();
+            }
+            if i + 1 < self.entries.len() {
+                index.positions.iter_mut().filter(|j| **j > i).for_each(|j| *j -= 1);
+            }
         }
+        Some(self.entries.remove(i).1)
     }
 
     fn last_key(&self) -> Option<&ArrayKey> {
-        match self {
-            Table::Small(v) => v.last().map(|(k, _)| k),
-            Table::Large(m) => m.last().map(|(k, _)| k),
-        }
+        self.entries.last().map(|(k, _)| k)
     }
 
     fn reserve(&mut self, additional: usize) {
-        match self {
-            Table::Small(v) if v.len() + additional <= SMALL => v.reserve(additional),
-            Table::Small(v) => {
-                let mut m = map_with_capacity(v.len() + additional);
-                m.extend(std::mem::take(v));
-                *self = Table::Large(m);
+        self.entries.reserve(additional);
+        match &mut self.index {
+            Some(index) => {
+                let entries = &self.entries;
+                let hasher = &index.hasher;
+                index.positions.reserve(additional, |&j| hasher.hash_one(entries[j].0.as_ref()));
             }
-            Table::Large(m) => m.reserve(additional),
+            None if self.entries.len() + additional > SMALL => self.reindex(),
+            None => {}
         }
     }
 
     /// Keeps the entries `keep` accepts, in order.
     fn retain(&mut self, mut keep: impl FnMut() -> bool) {
-        match self {
-            Table::Small(v) => v.retain(|_| keep()),
-            Table::Large(m) => m.retain(|_, _| keep()),
+        self.entries.retain(|_| keep());
+        if self.index.is_some() {
+            self.reindex();
         }
     }
 
     /// Calls `f` with each value.
     fn for_each_value(&mut self, f: impl FnMut(&mut Value<X>)) {
-        match self {
-            Table::Small(v) => v.iter_mut().map(|(_, v)| v).for_each(f),
-            Table::Large(m) => m.values_mut().for_each(f),
-        }
+        self.entries.iter_mut().map(|(_, v)| v).for_each(f);
     }
 }
 
@@ -353,18 +399,10 @@ impl<X: Extension> Repr<X> {
             let next = if v.is_empty() { None } else { Some(v.len() as i64) };
             let packed = Some(Packed { used: v.len() as u64, table: table_size(v.len()) });
             // The room the list had, and at least room for the entry being added.
-            let table = Table::with_capacity(v.capacity().max(v.len() + 1));
-            let entries = std::mem::take(v).into_iter().enumerate().map(|(i, v)| (ArrayKey::Int(i as i64), v));
-            let map = match table {
-                Table::Small(mut t) => {
-                    t.extend(entries);
-                    Table::Small(t)
-                }
-                Table::Large(mut m) => {
-                    m.extend(entries);
-                    Table::Large(m)
-                }
-            };
+            let mut map = Table::with_capacity(v.capacity().max(v.len() + 1));
+            for (i, v) in std::mem::take(v).into_iter().enumerate() {
+                map.insert(ArrayKey::Int(i as i64), v);
+            }
             *repr = Repr::Hash { map, next, packed };
         }
         match repr {
@@ -441,11 +479,6 @@ struct Packed {
 /// `zend_hash_check_size`: the table size of an array created for `n` elements.
 fn table_size(n: usize) -> u64 {
     (n as u64).max(8).next_power_of_two()
-}
-
-/// An empty table with room for `n` entries.
-fn map_with_capacity<X: Extension>(n: usize) -> Map<X> {
-    IndexMap::with_capacity_and_hasher(n, foldhash::fast::RandomState::default())
 }
 
 impl<X: Extension> Default for Array<X> {
@@ -635,8 +668,7 @@ impl<X: Extension> Array<X> {
     pub fn iter(&self) -> Iter<'_, X> {
         match self.view() {
             View::Packed(v) => Iter::Packed(v.iter().enumerate()),
-            View::Hash(Table::Small(v)) => Iter::Small(v.iter()),
-            View::Hash(Table::Large(m)) => Iter::Hash(m.iter()),
+            View::Hash(map) => Iter::Hash(map.entries.iter()),
         }
     }
 
@@ -673,9 +705,7 @@ pub enum Iter<'a, X: Extension> {
     /// Over a packed array: the keys are the positions.
     Packed(std::iter::Enumerate<std::slice::Iter<'a, Value<X>>>),
     /// Over a hash array.
-    Hash(indexmap::map::Iter<'a, ArrayKey, Value<X>>),
-    /// Over a small hash array.
-    Small(std::slice::Iter<'a, (ArrayKey, Value<X>)>),
+    Hash(std::slice::Iter<'a, (ArrayKey, Value<X>)>),
 }
 
 impl<'a, X: Extension> Iterator for Iter<'a, X> {
@@ -686,7 +716,6 @@ impl<'a, X: Extension> Iterator for Iter<'a, X> {
         match self {
             Iter::Packed(it) => it.next().map(|(i, v)| (KeyRef::Int(i as i64), v)),
             Iter::Hash(it) => it.next().map(|(k, v)| (k.as_ref(), v)),
-            Iter::Small(it) => it.next().map(|(k, v)| (k.as_ref(), v)),
         }
     }
 
@@ -695,7 +724,6 @@ impl<'a, X: Extension> Iterator for Iter<'a, X> {
         match self {
             Iter::Packed(it) => it.size_hint(),
             Iter::Hash(it) => it.size_hint(),
-            Iter::Small(it) => it.size_hint(),
         }
     }
 }
@@ -706,7 +734,6 @@ impl<X: Extension> DoubleEndedIterator for Iter<'_, X> {
         match self {
             Iter::Packed(it) => it.next_back().map(|(i, v)| (KeyRef::Int(i as i64), v)),
             Iter::Hash(it) => it.next_back().map(|(k, v)| (k.as_ref(), v)),
-            Iter::Small(it) => it.next_back().map(|(k, v)| (k.as_ref(), v)),
         }
     }
 }
@@ -724,8 +751,7 @@ impl<X: Extension> IntoIterator for Array<X> {
         match this.repr.take().map(Arc::unwrap_or_clone) {
             None => Box::new(std::iter::empty()),
             Some(Repr::Packed(v)) => Box::new(v.into_iter().enumerate().map(|(i, v)| (ArrayKey::Int(i as i64), v))),
-            Some(Repr::Hash { map: Table::Small(v), .. }) => Box::new(v.into_iter()),
-            Some(Repr::Hash { map: Table::Large(m), .. }) => Box::new(m.into_iter()),
+            Some(Repr::Hash { map, .. }) => Box::new(map.entries.into_iter()),
         }
     }
 }
@@ -747,7 +773,30 @@ impl<X: Extension> FromIterator<(ArrayKey, Value<X>)> for Array<X> {
     /// Built unshared and presized: a list for an integer first key, a hash
     /// for a string one (what assigning to an empty array leads to).
     fn from_iter<T: IntoIterator<Item = (ArrayKey, Value<X>)>>(iter: T) -> Self {
-        let mut iter = iter.into_iter();
+        let iter = iter.into_iter();
+        if iter.size_hint().1.is_some_and(|n| n <= SMALL) {
+            return Self::from_pairs(iter.collect());
+        }
+        Self::assign(iter)
+    }
+}
+
+impl<X: Extension> Array<X> {
+    /// Each pair assigned in order to a new array, as `$a[$k] = $v`
+    /// ([`FromIterator`]). String keys, all different (a decoded object),
+    /// make the table as they are, with no copy.
+    pub(crate) fn from_pairs(entries: Vec<(ArrayKey, Value<X>)>) -> Self {
+        if entries.is_empty() || !entries.iter().all(|(k, _)| matches!(k, ArrayKey::Str(_))) {
+            return Self::assign(entries.into_iter());
+        }
+        match Table::of(entries) {
+            Ok(map) => Array { repr: Some(Arc::new(Repr::Hash { map, next: None, packed: None })) },
+            Err(entries) => Self::assign(entries.into_iter()),
+        }
+    }
+
+    /// Each pair assigned in order to a new array, as `$a[$k] = $v`.
+    fn assign(mut iter: impl Iterator<Item = (ArrayKey, Value<X>)>) -> Self {
         let Some((k, v)) = iter.next() else { return Array::new() };
         let n = iter.size_hint().0 + 1;
         let mut repr = match k {
@@ -756,7 +805,16 @@ impl<X: Extension> FromIterator<(ArrayKey, Value<X>)> for Array<X> {
         };
         repr.set(k, v);
         for (k, v) in iter {
-            repr.set(k, v);
+            match (&mut repr, k) {
+                // A string key on a hash only goes into its table.
+                (Repr::Hash { map, packed, .. }, k @ ArrayKey::Str(_)) => {
+                    *packed = None;
+                    map.insert(k, v);
+                }
+                (repr, k) => {
+                    repr.set(k, v);
+                }
+            }
         }
         Array { repr: Some(Arc::new(repr)) }
     }
@@ -908,6 +966,38 @@ mod tests {
         let mut c = A::new();
         c.set(ArrayKey::Int(i64::MAX), Value::Null);
         assert_eq!(c.push(Value::Null), Err(ArrayFull));
+    }
+
+    #[test]
+    fn large_tables_find_keys_after_removals_and_repeats() {
+        // Past eight entries the table is indexed: lookups, repeated keys
+        // (kept in place, as decoded objects assign them) and removals in the
+        // middle must keep every position right.
+        let pairs: Vec<(ArrayKey, Value)> =
+            (0..20).map(|i| (ArrayKey::from(format!("k{i}").as_str()), Value::Int(i))).collect();
+        let mut a = A::from_pairs(pairs.clone());
+        assert_eq!(a.len(), 20);
+        assert_eq!(a.get_str("k13"), Some(&Value::Int(13)));
+        a.remove(&ArrayKey::from("k3"));
+        a.remove(&ArrayKey::from("k19"));
+        a.set("k3".into(), Value::Null);
+        assert_eq!(a.get_str("k4"), Some(&Value::Int(4)));
+        assert_eq!(a.get_str("k18"), Some(&Value::Int(18)));
+        assert_eq!(keys(&a).last(), Some(&ArrayKey::from("k3")));
+        assert_eq!(a.get_str("k19"), None);
+        let mut repeated = pairs;
+        repeated.push((ArrayKey::from("k5"), Value::Bool(true)));
+        let b = A::from_pairs(repeated);
+        assert_eq!(b.len(), 20);
+        assert_eq!(keys(&b)[5], ArrayKey::from("k5"));
+        assert_eq!(b.get_str("k5"), Some(&Value::Bool(true)));
+        let mut grown = A::new();
+        for i in 0..12 {
+            grown.set(ArrayKey::from(format!("g{i}").as_str()), Value::Int(i));
+        }
+        grown.retain(|k, _| k != KeyRef::Str(b"g2"));
+        assert_eq!(grown.get_str("g11"), Some(&Value::Int(11)));
+        assert_eq!(grown.get_str("g2"), None);
     }
 
     #[test]

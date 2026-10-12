@@ -492,6 +492,8 @@ impl Regex {
         let num_subpats = self.capture_count as usize + 1;
         let ov = session.ovector(count);
         let count = ov.len() / 2;
+        // Room for every group (named ones twice), as PHP sizes the array.
+        out.entries.reserve(if self.names.is_some() { 2 * num_subpats } else { num_subpats });
         if let Some(names) = &self.names {
             if offset_capture {
                 for i in 0..count {

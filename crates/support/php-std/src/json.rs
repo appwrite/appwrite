@@ -312,13 +312,43 @@ pub(crate) fn push_int(out: &mut Vec<u8>, i: i64) {
     out.extend_from_slice(&buf[pos..]);
 }
 
-/// Bytes `php_json_escape_string` cannot copy verbatim: controls, `"`, `&`,
-/// `'`, `/`, `<`, `>`, `\` and everything from 0x80.
-const SPECIAL: [u32; 8] =
-    [0xffffffff, 0x500080c4, 0x10000000, 0x00000000, 0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff];
-
-fn special(b: u8) -> bool {
-    SPECIAL[(b >> 5) as usize] & (1 << (b & 31)) != 0
+/// Appends the bytes of `s` from `pos` that `php_json_escape_string` copies
+/// verbatim, eight at a time, and returns where the first byte it does not
+/// copy is (or the end). `<`, `>`, `&` and `'` stop the copy only when `hex`
+/// (some `JSON_HEX_*` option is set).
+#[inline]
+fn verbatim(out: &mut Vec<u8>, s: &[u8], mut pos: usize, hex: bool) -> usize {
+    let stops = |w: u64| {
+        let mut stop = bytes_ctrl_or_high(w) | bytes_eq(w, b'"') | bytes_eq(w, b'\\') | bytes_eq(w, b'/');
+        if hex {
+            stop |= bytes_eq(w, b'<') | bytes_eq(w, b'>') | bytes_eq(w, b'&') | bytes_eq(w, b'\'');
+        }
+        stop
+    };
+    while let Some(w) = word(s, pos) {
+        let stop = stops(w);
+        // The whole word (a fixed-size copy), then only its plain bytes kept.
+        out.extend_from_slice(&w.to_le_bytes());
+        if stop != 0 {
+            let plain = (stop.trailing_zeros() / 8) as usize;
+            out.truncate(out.len() - (8 - plain));
+            return pos + plain;
+        }
+        pos += 8;
+    }
+    // The last bytes, padded to a word with a plain byte.
+    let rest = s.len() - pos;
+    if rest == 0 {
+        return pos;
+    }
+    let w = match s.len().checked_sub(8).and_then(|last| word(s, last)) {
+        Some(last) => last >> (8 * (8 - rest)),
+        None => s[pos..].iter().rev().fold(0, |w, &b| w << 8 | u64::from(b)),
+    } | (ONES * u64::from(b'a')) << (8 * rest);
+    let plain = ((stops(w).trailing_zeros() / 8) as usize).min(rest);
+    out.extend_from_slice(&w.to_le_bytes());
+    out.truncate(out.len() - (8 - plain));
+    pos + plain
 }
 
 impl Encoder {
@@ -364,9 +394,9 @@ impl Encoder {
 
     /// `php_json_encode_double`.
     fn double(&mut self, d: f64, flags: Flags) {
-        let num = number::serialize(d);
-        self.out.extend_from_slice(num.as_bytes());
-        if flags.contains(Flags::PRESERVE_ZERO_FRACTION) && !num.contains('.') {
+        let start = self.out.len();
+        number::serialize_into(&mut self.out, d);
+        if flags.contains(Flags::PRESERVE_ZERO_FRACTION) && !self.out[start..].contains(&b'.') {
             self.out.extend_from_slice(b".0");
         }
     }
@@ -448,40 +478,47 @@ impl Encoder {
         Ok(())
     }
 
-    /// `php_json_escape_string`.
+    /// `php_json_escape_string`. Inlined up to the first byte that is not
+    /// copied as it is; [`Encoder::escape`] goes on from there.
+    #[inline]
     fn string(&mut self, s: &[u8], flags: Flags) -> Result<(), Failed> {
         if s.is_empty() {
             self.out.extend_from_slice(b"\"\"");
             return Ok(());
         }
-        if flags.contains(Flags::NUMERIC_CHECK)
-            && let Some(n) = std::str::from_utf8(s).ok().and_then(value::numeric_str)
-        {
-            match n {
-                value::Number::Int(i) => {
-                    push_int(&mut self.out, i);
-                    return Ok(());
-                }
-                value::Number::Float(d) if d.is_finite() => {
-                    self.double(d, flags);
-                    return Ok(());
-                }
-                value::Number::Float(_) => {}
-            }
+        if flags.contains(Flags::NUMERIC_CHECK) && self.numeric(s, flags) {
+            return Ok(());
         }
         let checkpoint = self.out.len();
         self.out.reserve(s.len() + 2);
         self.out.push(b'"');
-        let mut pos = 0;
-        while pos < s.len() {
-            let start = pos;
-            while pos < s.len() && !special(s[pos]) {
-                pos += 1;
-            }
-            self.out.extend_from_slice(&s[start..pos]);
-            if pos == s.len() {
-                break;
-            }
+        let hex = flags.intersects(Flags::HEX_TAG | Flags::HEX_AMP | Flags::HEX_APOS);
+        let pos = verbatim(&mut self.out, s, 0, hex);
+        if pos == s.len() {
+            self.out.push(b'"');
+            return Ok(());
+        }
+        self.escape(s, pos, checkpoint, flags)
+    }
+
+    /// `JSON_NUMERIC_CHECK`: writes `s` as a number when it is a numeric
+    /// string PHP encodes as one, and says whether it did.
+    #[inline(never)]
+    fn numeric(&mut self, s: &[u8], flags: Flags) -> bool {
+        match std::str::from_utf8(s).ok().and_then(value::numeric_str) {
+            Some(value::Number::Int(i)) => push_int(&mut self.out, i),
+            Some(value::Number::Float(d)) if d.is_finite() => self.double(d, flags),
+            _ => return false,
+        }
+        true
+    }
+
+    /// The rest of [`Encoder::string`] from `pos`, a byte to escape (or to
+    /// check, from 0x80), after the opening quote at `checkpoint`.
+    #[inline(never)]
+    fn escape(&mut self, s: &[u8], mut pos: usize, checkpoint: usize, flags: Flags) -> Result<(), Failed> {
+        let hex = flags.intersects(Flags::HEX_TAG | Flags::HEX_AMP | Flags::HEX_APOS);
+        loop {
             let us = s[pos];
             if us >= 0x80 {
                 match next_utf8_char(&s[pos..]) {
@@ -519,25 +556,32 @@ impl Encoder {
                         pos += len;
                     }
                 }
-                continue;
-            }
-            pos += 1;
-            match us {
-                b'"' => self.out.extend_from_slice(if flags.contains(Flags::HEX_QUOT) { b"\\u0022" } else { b"\\\"" }),
-                b'\\' => self.out.extend_from_slice(b"\\\\"),
-                b'/' => {
-                    self.out.extend_from_slice(if flags.contains(Flags::UNESCAPED_SLASHES) { b"/" } else { b"\\/" })
+            } else {
+                pos += 1;
+                // Each escape a fixed-size copy (a slice chosen at run time
+                // would be a `memcpy` call).
+                match us {
+                    b'"' if flags.contains(Flags::HEX_QUOT) => self.out.extend_from_slice(b"\\u0022"),
+                    b'"' => self.out.extend_from_slice(b"\\\""),
+                    b'\\' => self.out.extend_from_slice(b"\\\\"),
+                    b'/' if flags.contains(Flags::UNESCAPED_SLASHES) => self.out.push(b'/'),
+                    b'/' => self.out.extend_from_slice(b"\\/"),
+                    0x08 => self.out.extend_from_slice(b"\\b"),
+                    0x0c => self.out.extend_from_slice(b"\\f"),
+                    b'\n' => self.out.extend_from_slice(b"\\n"),
+                    b'\r' => self.out.extend_from_slice(b"\\r"),
+                    b'\t' => self.out.extend_from_slice(b"\\t"),
+                    b'<' if flags.contains(Flags::HEX_TAG) => self.out.extend_from_slice(b"\\u003C"),
+                    b'>' if flags.contains(Flags::HEX_TAG) => self.out.extend_from_slice(b"\\u003E"),
+                    b'&' if flags.contains(Flags::HEX_AMP) => self.out.extend_from_slice(b"\\u0026"),
+                    b'\'' if flags.contains(Flags::HEX_APOS) => self.out.extend_from_slice(b"\\u0027"),
+                    b'<' | b'>' | b'&' | b'\'' => self.out.push(us),
+                    c => self.unicode_escape(u32::from(c)),
                 }
-                0x08 => self.out.extend_from_slice(b"\\b"),
-                0x0c => self.out.extend_from_slice(b"\\f"),
-                b'\n' => self.out.extend_from_slice(b"\\n"),
-                b'\r' => self.out.extend_from_slice(b"\\r"),
-                b'\t' => self.out.extend_from_slice(b"\\t"),
-                b'<' => self.out.extend_from_slice(if flags.contains(Flags::HEX_TAG) { b"\\u003C" } else { b"<" }),
-                b'>' => self.out.extend_from_slice(if flags.contains(Flags::HEX_TAG) { b"\\u003E" } else { b">" }),
-                b'&' => self.out.extend_from_slice(if flags.contains(Flags::HEX_AMP) { b"\\u0026" } else { b"&" }),
-                b'\'' => self.out.extend_from_slice(if flags.contains(Flags::HEX_APOS) { b"\\u0027" } else { b"'" }),
-                c => self.unicode_escape(u32::from(c)),
+            }
+            pos = verbatim(&mut self.out, s, pos, hex);
+            if pos == s.len() {
+                break;
             }
         }
         self.out.push(b'"');
@@ -683,24 +727,34 @@ fn decode_depth(json: &[u8], depth: i64, argument: &str) -> Result<i32, Error> {
 }
 
 /// The text of a string token: the input bytes when the string has no
-/// escapes (valid UTF-8, as the scanner checked), or the decoded bytes.
+/// escapes (valid UTF-8, as the scanner checked), or the decoded bytes (a
+/// short string inline, a longer one in a buffer of its size).
 enum Text<'a> {
     Raw(&'a [u8]),
+    Short(Str),
     Decoded(Vec<u8>),
 }
 
 impl Text<'_> {
+    /// The decoded bytes in `buf`, copied out.
+    fn decoded(buf: &[u8]) -> Self {
+        if buf.len() <= Str::INLINE { Text::Short(Str::copy_from(buf)) } else { Text::Decoded(buf.to_vec()) }
+    }
+
     fn as_bytes(&self) -> &[u8] {
         match self {
             Text::Raw(b) => b,
+            Text::Short(s) => s,
             Text::Decoded(v) => v,
         }
     }
 
     /// The text as a PHP string (no copy of decoded bytes).
+    #[inline(always)]
     fn into_str(self) -> Str {
         match self {
             Text::Raw(b) => Str::copy_from(b),
+            Text::Short(s) => s,
             Text::Decoded(v) => Str::from(v),
         }
     }
@@ -709,6 +763,7 @@ impl Text<'_> {
     fn into_string(self) -> String {
         match self {
             Text::Raw(b) => String::from_utf8_lossy(b).into_owned(),
+            Text::Short(s) => String::from_utf8_lossy(&s).into_owned(),
             Text::Decoded(v) => {
                 String::from_utf8(v).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
             }
@@ -716,8 +771,10 @@ impl Text<'_> {
     }
 }
 
-/// A token of PHP's JSON scanner.
-enum Token<'a> {
+/// A token of PHP's JSON scanner. A number's or a string's value stays in
+/// the [`Scanner`] until it is taken, so a token fits in a register.
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum Token {
     LBrace,
     RBrace,
     LBracket,
@@ -727,12 +784,24 @@ enum Token<'a> {
     Null,
     True,
     False,
-    Int(i64),
-    Double(f64),
-    /// A string (also a big integer with `JSON_BIGINT_AS_STRING`).
-    Str(Text<'a>),
+    /// [`Scanner::int`].
+    Int,
+    /// [`Scanner::double`].
+    Double,
+    /// [`Scanner::text`]: a string (also a big integer with `JSON_BIGINT_AS_STRING`).
+    Str,
     /// The end of the input.
     End,
+}
+
+/// The value of a scalar token, as the builders take it.
+enum Scalar<'a> {
+    Null,
+    True,
+    False,
+    Int(i64),
+    Double(f64),
+    Str(Text<'a>),
 }
 
 struct Scanner<'a> {
@@ -740,7 +809,15 @@ struct Scanner<'a> {
     pos: usize,
     flags: Flags,
     /// Whether string tokens need their text (not when only validating).
-    text: bool,
+    keep: bool,
+    /// Where strings with escapes are decoded (reused for each).
+    buf: Vec<u8>,
+    /// The value of the last [`Token::Int`].
+    int: i64,
+    /// The value of the last [`Token::Double`].
+    double: f64,
+    /// The text of the last [`Token::Str`].
+    text: Text<'a>,
 }
 
 /// Length of the valid UTF-8 sequence (scanner byte ranges) at the start of
@@ -761,24 +838,51 @@ fn utf8_len(s: &[u8]) -> Option<usize> {
     }
 }
 
-/// Where the first eight-byte chunk from `pos` that may hold a special
-/// string byte starts (a quote, a backslash, a control character, or a byte
-/// from 0x80), stepping eight plain bytes at a time; the bytes from there are
-/// read one by one.
+const ONES: u64 = 0x0101_0101_0101_0101;
+const HIGH: u64 = 0x8080_8080_8080_8080;
+
+/// The eight bytes of `s` at `pos`, little-endian, when there are eight.
+#[inline(always)]
+fn word(s: &[u8], pos: usize) -> Option<u64> {
+    let chunk: [u8; 8] = s.get(pos..pos + 8)?.try_into().ok()?;
+    Some(u64::from_le_bytes(chunk))
+}
+
+/// The high bit of each byte of `w` equal to `b`. Exact up to the first match:
+/// a borrow can only mark bytes after a byte that matched.
+#[inline(always)]
+fn bytes_eq(w: u64, b: u8) -> u64 {
+    let x = w ^ (ONES * u64::from(b));
+    x.wrapping_sub(ONES) & !x & HIGH
+}
+
+/// The high bit of each byte of `w` below 0x20 or from 0x80 (exact up to the
+/// first match, as in [`bytes_eq`]).
+#[inline(always)]
+fn bytes_ctrl_or_high(w: u64) -> u64 {
+    (w | w.wrapping_sub(ONES * 0x20)) & HIGH
+}
+
+/// Where the first byte from `pos` that is not JSON whitespace (space, tab,
+/// CR, LF) is.
+#[inline(always)]
+fn whitespace(s: &[u8], mut pos: usize) -> usize {
+    while let Some(b' ' | b'\t' | b'\r' | b'\n') = s.get(pos) {
+        pos += 1;
+    }
+    pos
+}
+
+/// Where the first special string byte from `pos` is (a quote, a backslash,
+/// a control character, or a byte from 0x80), stepping eight bytes at a
+/// time; within the last seven bytes of `s`, `pos` itself (the caller reads
+/// those one by one).
 #[inline]
 fn plain(s: &[u8], mut pos: usize) -> usize {
-    const ONES: u64 = 0x0101_0101_0101_0101;
-    const HIGH: u64 = 0x8080_8080_8080_8080;
-    while let Some(chunk) = s.get(pos..pos + 8) {
-        let w = u64::from_le_bytes([chunk[0], chunk[1], chunk[2], chunk[3], chunk[4], chunk[5], chunk[6], chunk[7]]);
-        let quote = w ^ (ONES * u64::from(b'"'));
-        let slash = w ^ (ONES * u64::from(b'\\'));
-        let special = w
-            | (w.wrapping_sub(ONES * 0x20) & !w)
-            | (quote.wrapping_sub(ONES) & !quote)
-            | (slash.wrapping_sub(ONES) & !slash);
-        if special & HIGH != 0 {
-            break;
+    while let Some(w) = word(s, pos) {
+        let special = bytes_ctrl_or_high(w) | bytes_eq(w, b'"') | bytes_eq(w, b'\\');
+        if special != 0 {
+            return pos + (special.trailing_zeros() / 8) as usize;
         }
         pos += 8;
     }
@@ -798,59 +902,74 @@ fn hex4(s: &[u8]) -> Option<u32> {
 
 impl<'a> Scanner<'a> {
     /// `php_json_scan`: the next token, or the scanner's error.
-    fn next(&mut self) -> Result<Token<'a>, ErrorCode> {
+    fn next(&mut self) -> Result<Token, ErrorCode> {
         let s = self.s;
-        loop {
-            let Some(&c) = s.get(self.pos) else {
-                // The NUL terminator after the input.
-                return Ok(Token::End);
-            };
-            let token = match c {
-                b' ' | b'\t' | b'\r' | b'\n' => {
-                    self.pos += 1;
-                    continue;
+        self.pos = whitespace(s, self.pos);
+        let Some(&c) = s.get(self.pos) else {
+            // The NUL terminator after the input.
+            return Ok(Token::End);
+        };
+        let token = match c {
+            b'{' => Token::LBrace,
+            b'}' => Token::RBrace,
+            b'[' => Token::LBracket,
+            b']' => Token::RBracket,
+            b':' => Token::Colon,
+            b',' => Token::Comma,
+            b'"' => {
+                self.pos += 1;
+                return self.string();
+            }
+            b'-' | b'0'..=b'9' => {
+                if let Some(t) = self.number() {
+                    return Ok(t);
                 }
-                b'{' => Token::LBrace,
-                b'}' => Token::RBrace,
-                b'[' => Token::LBracket,
-                b']' => Token::RBracket,
-                b':' => Token::Colon,
-                b',' => Token::Comma,
-                b'"' => {
-                    self.pos += 1;
-                    return self.string();
-                }
-                b'-' | b'0'..=b'9' => {
-                    if let Some(t) = self.number() {
-                        return Ok(t);
-                    }
-                    return Err(ErrorCode::Syntax);
-                }
-                _ if s[self.pos..].starts_with(b"null") => {
-                    self.pos += 4;
-                    return Ok(Token::Null);
-                }
-                _ if s[self.pos..].starts_with(b"true") => {
-                    self.pos += 4;
-                    return Ok(Token::True);
-                }
-                _ if s[self.pos..].starts_with(b"false") => {
-                    self.pos += 5;
-                    return Ok(Token::False);
-                }
-                0x00..=0x1f => return Err(ErrorCode::CtrlChar),
-                _ => {
-                    return Err(if utf8_len(&s[self.pos..]).is_some() { ErrorCode::Syntax } else { ErrorCode::Utf8 });
-                }
-            };
-            self.pos += 1;
-            return Ok(token);
-        }
+                return Err(ErrorCode::Syntax);
+            }
+            _ if s[self.pos..].starts_with(b"null") => {
+                self.pos += 4;
+                return Ok(Token::Null);
+            }
+            _ if s[self.pos..].starts_with(b"true") => {
+                self.pos += 4;
+                return Ok(Token::True);
+            }
+            _ if s[self.pos..].starts_with(b"false") => {
+                self.pos += 5;
+                return Ok(Token::False);
+            }
+            0x00..=0x1f => return Err(ErrorCode::CtrlChar),
+            _ => {
+                return Err(if utf8_len(&s[self.pos..]).is_some() { ErrorCode::Syntax } else { ErrorCode::Utf8 });
+            }
+        };
+        self.pos += 1;
+        Ok(token)
+    }
+
+    /// The text of the last [`Token::Str`], taken.
+    #[inline]
+    fn take_text(&mut self) -> Text<'a> {
+        std::mem::replace(&mut self.text, Text::Raw(b""))
+    }
+
+    /// The value of a scalar token just read (`None` for other tokens).
+    #[inline]
+    fn scalar(&mut self, token: Token) -> Option<Scalar<'a>> {
+        Some(match token {
+            Token::Null => Scalar::Null,
+            Token::True => Scalar::True,
+            Token::False => Scalar::False,
+            Token::Int => Scalar::Int(self.int),
+            Token::Double => Scalar::Double(self.double),
+            Token::Str => Scalar::Str(self.take_text()),
+            _ => return None,
+        })
     }
 
     /// `INT`, `FLOAT` or `EXP` at the cursor (longest match), or `None` when
     /// none matches (a lone `-`).
-    fn number(&mut self) -> Option<Token<'a>> {
+    fn number(&mut self) -> Option<Token> {
         let s = self.s;
         let start = self.pos;
         let mut i = start;
@@ -893,7 +1012,8 @@ impl<'a> Scanner<'a> {
         // The token is ASCII digits, signs, '.', 'e': valid UTF-8.
         let text = || std::str::from_utf8(&s[start..i]).unwrap_or("0");
         if is_double {
-            return Some(Token::Double(text().parse().unwrap_or(0.0)));
+            self.double = text().parse().unwrap_or(0.0);
+            return Some(Token::Double);
         }
         debug_assert_eq!(int_end, i);
         let digits = &s[start + usize::from(negative)..int_end];
@@ -904,16 +1024,19 @@ impl<'a> Scanner<'a> {
             // At most 19 digits within the range of `i64` (or its minimum).
             let magnitude = digits.iter().fold(0u64, |m, d| m * 10 + u64::from(d - b'0'));
             let i = if negative { 0u64.wrapping_sub(magnitude) as i64 } else { magnitude as i64 };
-            return Some(Token::Int(i));
+            self.int = i;
+            return Some(Token::Int);
         }
         if self.flags.contains(Flags::BIGINT_AS_STRING) {
-            return Some(Token::Str(Text::Raw(&s[start..i])));
+            self.text = Text::Raw(&s[start..i]);
+            return Some(Token::Str);
         }
-        Some(Token::Double(text().parse().unwrap_or(0.0)))
+        self.double = text().parse().unwrap_or(0.0);
+        Some(Token::Double)
     }
 
     /// A string after its opening quote (`STR_P1`, then `STR_P2`).
-    fn string(&mut self) -> Result<Token<'a>, ErrorCode> {
+    fn string(&mut self) -> Result<Token, ErrorCode> {
         let s = self.s;
         let start = self.pos;
         // The common case: no escapes and valid UTF-8, borrowed from the input.
@@ -928,7 +1051,8 @@ impl<'a> Scanner<'a> {
                 b'"' => {
                     let raw = &s[start..self.pos];
                     self.pos += 1;
-                    return Ok(Token::Str(Text::Raw(raw)));
+                    self.text = Text::Raw(raw);
+                    return Ok(Token::Str);
                 }
                 b'\\' => break,
                 0x20..=0x7f => self.pos += 1,
@@ -941,15 +1065,16 @@ impl<'a> Scanner<'a> {
         self.decode_string(start)
     }
 
-    /// The rest of a string that has escapes or invalid UTF-8, decoded.
-    fn decode_string(&mut self, start: usize) -> Result<Token<'a>, ErrorCode> {
+    /// The rest of a string that has escapes or invalid UTF-8, decoded into
+    /// the scanner's buffer, then copied out at its size.
+    fn decode_string(&mut self, start: usize) -> Result<Token, ErrorCode> {
         let s = self.s;
         let substitute = self.flags.contains(Flags::INVALID_UTF8_SUBSTITUTE);
         let tolerant = self.flags.intersects(Flags::INVALID_UTF8_IGNORE | Flags::INVALID_UTF8_SUBSTITUTE);
-        let keep = self.text;
-        let mut out: Vec<u8> = Vec::new();
+        let keep = self.keep;
+        let out = &mut self.buf;
+        out.clear();
         if keep {
-            out.reserve(self.pos - start + 16);
             out.extend_from_slice(&s[start..self.pos]);
         }
         let push_char = |out: &mut Vec<u8>, c: char| {
@@ -968,11 +1093,12 @@ impl<'a> Scanner<'a> {
             match c {
                 0x00..=0x1f => return Err(ErrorCode::CtrlChar),
                 b'"' => {
-                    if keep {
-                        out.extend_from_slice(&s[run..self.pos]);
-                    }
                     self.pos += 1;
-                    return Ok(Token::Str(Text::Decoded(out)));
+                    if keep {
+                        out.extend_from_slice(&s[run..self.pos - 1]);
+                        self.text = Text::decoded(out);
+                    }
+                    return Ok(Token::Str);
                 }
                 b'\\' => {
                     if keep {
@@ -998,14 +1124,14 @@ impl<'a> Scanner<'a> {
                                 && let Some(low) = hex4(&s[self.pos + 8..]).filter(|l| (0xdc00..=0xdfff).contains(l))
                             {
                                 let c = 0x10000 + ((code & 0x3ff) << 10) + (low & 0x3ff);
-                                push_char(&mut out, char::from_u32(c).unwrap_or('\u{fffd}'));
+                                push_char(out, char::from_u32(c).unwrap_or('\u{fffd}'));
                                 self.pos += 12;
                                 run = self.pos;
                                 continue;
                             }
                             match char::from_u32(code) {
                                 Some(ch) => {
-                                    push_char(&mut out, ch);
+                                    push_char(out, ch);
                                     self.pos += 6;
                                     run = self.pos;
                                     continue;
@@ -1029,7 +1155,7 @@ impl<'a> Scanner<'a> {
                             out.extend_from_slice(&s[run..self.pos]);
                         }
                         if substitute {
-                            push_char(&mut out, '\u{fffd}');
+                            push_char(out, '\u{fffd}');
                         }
                         self.pos += 1;
                         run = self.pos;
@@ -1053,13 +1179,13 @@ trait Build {
         true
     }
     /// The value of a scalar token.
-    fn scalar(&self, token: Token<'_>) -> Result<Self::Value, ParseError>;
+    fn scalar(&self, token: Scalar<'_>) -> Result<Self::Value, ParseError>;
     /// The key of a member, when the member is complete (`php_json_parser_object_update`'s checks).
     fn key(&self, key: Text<'_>) -> Result<Self::Key, ParseError>;
     /// An array of these elements.
-    fn array(&self, items: std::vec::Drain<'_, Self::Value>) -> Self::Value;
+    fn array(&self, items: Vec<Self::Value>) -> Self::Value;
     /// An object of these members, assigned in order.
-    fn object(&self, members: std::vec::Drain<'_, (Self::Key, Self::Value)>) -> Self::Value;
+    fn object(&self, members: Vec<(Self::Key, Self::Value)>) -> Self::Value;
 }
 
 enum ParseError {
@@ -1092,15 +1218,15 @@ impl Build for PhpBuilder {
     type Key = ArrayKey;
 
     /// The PHP value of a scalar token.
-    fn scalar(&self, token: Token<'_>) -> Result<Value, ParseError> {
+    #[inline(always)]
+    fn scalar(&self, token: Scalar<'_>) -> Result<Value, ParseError> {
         Ok(match token {
-            Token::Null => Value::Null,
-            Token::True => Value::Bool(true),
-            Token::False => Value::Bool(false),
-            Token::Int(i) => Value::Int(i),
-            Token::Double(d) => Value::Float(d),
-            Token::Str(s) => Value::Str(s.into_str()),
-            _ => Value::Null,
+            Scalar::Null => Value::Null,
+            Scalar::True => Value::Bool(true),
+            Scalar::False => Value::Bool(false),
+            Scalar::Int(i) => Value::Int(i),
+            Scalar::Double(d) => Value::Float(d),
+            Scalar::Str(s) => Value::Str(s.into_str()),
         })
     }
 
@@ -1120,17 +1246,17 @@ impl Build for PhpBuilder {
     }
 
     /// The decoded list as a PHP array.
-    fn array(&self, items: std::vec::Drain<'_, Value>) -> Value {
-        if items.len() == 0 {
+    fn array(&self, items: Vec<Value>) -> Value {
+        if items.is_empty() {
             return Value::Array(Array::new());
         }
-        Value::Array(Array::from_list(items.collect()))
+        Value::Array(Array::from_list(items))
     }
 
     /// The object as a PHP array (assoc mode) or a `stdClass`.
-    fn object(&self, members: std::vec::Drain<'_, (ArrayKey, Value)>) -> Value {
+    fn object(&self, members: Vec<(ArrayKey, Value)>) -> Value {
         // Each member assigned in order, as `$a[$k] = $v`.
-        let object: Array = members.collect();
+        let object = Array::from_pairs(members);
         if self.assoc { Value::Array(object) } else { Value::Object(object) }
     }
 }
@@ -1142,15 +1268,14 @@ impl Build for ValueBuilder {
     type Key = String;
 
     /// The `serde_json::Value` of a scalar token (`Unrepresentable` for `INF`).
-    fn scalar(&self, token: Token<'_>) -> Result<Json, ParseError> {
+    fn scalar(&self, token: Scalar<'_>) -> Result<Json, ParseError> {
         Ok(match token {
-            Token::Null => Json::Null,
-            Token::True => Json::Bool(true),
-            Token::False => Json::Bool(false),
-            Token::Int(i) => Json::from(i),
-            Token::Double(d) => Json::Number(Number::from_f64(d).ok_or(ParseError::Unrepresentable)?),
-            Token::Str(s) => Json::String(s.into_string()),
-            _ => Json::Null,
+            Scalar::Null => Json::Null,
+            Scalar::True => Json::Bool(true),
+            Scalar::False => Json::Bool(false),
+            Scalar::Int(i) => Json::from(i),
+            Scalar::Double(d) => Json::Number(Number::from_f64(d).ok_or(ParseError::Unrepresentable)?),
+            Scalar::Str(s) => Json::String(s.into_string()),
         })
     }
 
@@ -1160,14 +1285,14 @@ impl Build for ValueBuilder {
     }
 
     /// The JSON array.
-    fn array(&self, items: std::vec::Drain<'_, Json>) -> Json {
-        Json::Array(items.collect())
+    fn array(&self, items: Vec<Json>) -> Json {
+        Json::Array(items)
     }
 
     /// The JSON object (a repeated key replaces the value in place, as
     /// `zend_symtable_update` does), or a JSON array when its keys are
     /// `0, 1, 2...` (as PHP's array would be a list).
-    fn object(&self, members: std::vec::Drain<'_, (String, Json)>) -> Json {
+    fn object(&self, members: Vec<(String, Json)>) -> Json {
         let mut object = Map::with_capacity(members.len());
         for (k, v) in members {
             object.insert(k, v);
@@ -1189,7 +1314,7 @@ impl Build for Validator {
     }
 
     /// Accepts any scalar.
-    fn scalar(&self, _: Token<'_>) -> Result<(), ParseError> {
+    fn scalar(&self, _: Scalar<'_>) -> Result<(), ParseError> {
         Ok(())
     }
 
@@ -1199,10 +1324,10 @@ impl Build for Validator {
     }
 
     /// Builds nothing.
-    fn array(&self, _: std::vec::Drain<'_, ()>) {}
+    fn array(&self, _: Vec<()>) {}
 
     /// Builds nothing.
-    fn object(&self, _: std::vec::Drain<'_, ((), ())>) {}
+    fn object(&self, _: Vec<((), ())>) {}
 }
 
 /// `YYMAXDEPTH`: the bison parser stack never holds this many states; the
@@ -1211,11 +1336,11 @@ const PARSER_STACK_LIMIT: usize = 10000;
 
 /// An open array or object, where its entries start on the parser's
 /// value stacks, and how many parser-stack entries it holds.
-enum Frame<'a> {
+enum Frame {
     /// `'[' $@ element ','?`
     Array { start: usize, entries: usize },
-    /// `'{' $@ (member ',')? key ':'`
-    Object { start: usize, key: Option<Text<'a>>, entries: usize },
+    /// `'{' $@ (member ',')? key ':'`, the key on the parser's key stack.
+    Object { start: usize, entries: usize },
 }
 
 struct Parser<'a> {
@@ -1245,17 +1370,39 @@ impl Parser<'_> {
     }
 }
 
+/// The entries of `stack` from `start`, moved out in one copy into a buffer
+/// of their size (the stack keeps its buffer for the entries to come).
+fn tail<T>(stack: &mut Vec<T>, start: usize) -> Vec<T> {
+    if start > 0 {
+        return stack.split_off(start);
+    }
+    let mut all = Vec::with_capacity(stack.len());
+    all.append(stack);
+    all
+}
+
 /// `php_json_yyparse`, without recursion: the same tokens are read in the
 /// same order and the same error is reported first.
 fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Result<B::Value, ParseError> {
     let mut p = Parser {
-        scanner: Scanner { s: json, pos: 0, flags, text: builder.text() },
+        scanner: Scanner {
+            s: json,
+            pos: 0,
+            flags,
+            keep: builder.text(),
+            buf: Vec::new(),
+            int: 0,
+            double: 0.0,
+            text: Text::Raw(b""),
+        },
         depth: 1,
         max_depth,
         // State 0.
         stack: 1,
     };
-    let mut frames: Vec<Frame<'_>> = Vec::new();
+    let mut frames: Vec<Frame> = Vec::new();
+    // The key of the member being parsed in each open object, innermost last.
+    let mut keys: Vec<Text<'_>> = Vec::new();
     // The elements and members of the open containers, innermost last.
     let mut items: Vec<B::Value> = Vec::new();
     let mut members: Vec<(B::Key, B::Value)> = Vec::with_capacity((json.len() / 16).min(64));
@@ -1279,7 +1426,7 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                         p.push()?;
                         p.depth -= 1;
                         p.stack -= 3;
-                        builder.array(items.drain(items.len()..))
+                        builder.array(Vec::new())
                     }
                     Token::RBrace => {
                         p.push()?;
@@ -1303,21 +1450,23 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                         p.push()?;
                         p.depth -= 1;
                         p.stack -= 3;
-                        builder.object(members.drain(members.len()..))
+                        builder.object(Vec::new())
                     }
                     Token::RBracket => {
                         p.push()?;
                         p.push()?;
                         return Err(ErrorCode::StateMismatch.into());
                     }
-                    Token::Str(key) => {
+                    Token::Str => {
                         // The key, then `:`.
+                        let key = p.scanner.take_text();
                         p.push()?;
                         if !matches!(p.scanner.next()?, Token::Colon) {
                             return Err(ErrorCode::Syntax.into());
                         }
                         p.push()?;
-                        frames.push(Frame::Object { start: members.len(), key: Some(key), entries: 4 });
+                        keys.push(key);
+                        frames.push(Frame::Object { start: members.len(), entries: 4 });
                         continue;
                     }
                     _ => return Err(ErrorCode::Syntax.into()),
@@ -1326,9 +1475,12 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
             Token::RBrace | Token::RBracket | Token::Colon | Token::Comma | Token::End => {
                 return Err(ErrorCode::Syntax.into());
             }
-            scalar => {
+            token => {
                 p.push()?;
-                builder.scalar(scalar)?
+                match p.scanner.scalar(token) {
+                    Some(scalar) => builder.scalar(scalar)?,
+                    None => builder.scalar(Scalar::Null)?,
+                }
             }
         };
         // `value` is complete and occupies one stack entry: close every
@@ -1359,7 +1511,7 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                             p.depth -= 1;
                             p.stack -= 3;
                             frames.pop();
-                            value = builder.array(items.drain(start..));
+                            value = builder.array(tail(&mut items, start));
                         }
                         Token::RBrace => {
                             p.push()?;
@@ -1368,20 +1520,20 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                         _ => return Err(ErrorCode::Syntax.into()),
                     }
                 }
-                Frame::Object { start, key, entries } => {
+                Frame::Object { start, entries } => {
                     // `member: key ':' value` or `member: member ',' key ':' value`.
                     p.stack -= *entries - 2;
                     *entries = 3;
                     let start = *start;
-                    let k = builder.key(key.take().unwrap_or(Text::Raw(b"")))?;
+                    let k = builder.key(keys.pop().unwrap_or(Text::Raw(b"")))?;
                     members.push((k, value));
                     match p.scanner.next()? {
                         Token::Comma => {
                             p.push()?;
                             match p.scanner.next()? {
-                                Token::Str(k) => {
+                                Token::Str => {
                                     p.push()?;
-                                    *key = Some(k);
+                                    keys.push(p.scanner.take_text());
                                 }
                                 _ => return Err(ErrorCode::Syntax.into()),
                             }
@@ -1397,7 +1549,7 @@ fn parse<B: Build>(json: &[u8], flags: Flags, max_depth: i32, builder: &B) -> Re
                             p.depth -= 1;
                             p.stack -= 3;
                             frames.pop();
-                            value = builder.object(members.drain(start..));
+                            value = builder.object(tail(&mut members, start));
                         }
                         Token::RBracket => {
                             p.push()?;

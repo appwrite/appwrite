@@ -1,8 +1,8 @@
 {
   "lib": "php-std",
   "environment": {
-    "date": "2026-10-12T01:40:52Z",
-    "commit": "0b04d277f5",
+    "date": "2026-10-12T04:52:43Z",
+    "commit": "bd2f40b48d",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,22 +31,22 @@
       "name": "json_encode",
       "description": "json_encode() a 40-attribute user document",
       "php": {
-        "ns": 2186.5782956208486,
-        "min": 1965.4443318698638,
-        "max": 2328.5441855229087,
+        "ns": 1921.2257784633182,
+        "min": 1853.6143834956135,
+        "max": 2002.7957196568013,
         "samples": 15,
-        "calls": 8883
+        "calls": 10373
       },
       "rust": {
-        "ns": 1831.5317763500607,
-        "min": 1664.9555478381662,
-        "max": 1927.8013544018058,
+        "ns": 1050.3294117647058,
+        "min": 1013.3960784313725,
+        "max": 12932.188235294117,
         "samples": 15,
-        "calls": 11518,
-        "allocations": 12.000005788041905,
-        "bytes": 3665.0006945650284
+        "calls": 255,
+        "allocations": 3.0002614379084966,
+        "bytes": 3584.0313725490196
       },
-      "speedup": 1.1938522300597683,
+      "speedup": 1.8291649809514332,
       "bound": null,
       "compat": null
     },
@@ -54,22 +54,22 @@
       "name": "json_decode",
       "description": "json_decode() a 40-attribute user document into an array",
       "php": {
-        "ns": 5430.097492251339,
-        "min": 5022.447731755424,
-        "max": 5899.349675965061,
+        "ns": 5042.124814264487,
+        "min": 4879.531946508172,
+        "max": 6078.182169390788,
         "samples": 15,
-        "calls": 3549
+        "calls": 3365
       },
       "rust": {
-        "ns": 5414.623916292974,
-        "min": 5295.827204783259,
-        "max": 5801.457399103139,
+        "ns": 3681.06524822695,
+        "min": 3545.2053191489363,
+        "max": 4009.2567375886524,
         "samples": 15,
-        "calls": 3345,
-        "allocations": 49.00001993024414,
-        "bytes": 14640.002391629298
+        "calls": 5640,
+        "allocations": 45.00001182033097,
+        "bytes": 14355.001418439717
       },
-      "speedup": 1.0028577378960344,
+      "speedup": 1.3697461126757031,
       "bound": null,
       "compat": null
     },
@@ -77,22 +77,22 @@
       "name": "unserialize",
       "description": "unserialize() a 40-attribute user document",
       "php": {
-        "ns": 1831.0256247015757,
-        "min": 1676.1698233328027,
-        "max": 1939.9172369886996,
+        "ns": 1695.7874737945492,
+        "min": 1623.5004367575123,
+        "max": 2065.149720475192,
         "samples": 15,
-        "calls": 6283
+        "calls": 11448
       },
       "rust": {
-        "ns": 5780.261969286359,
-        "min": 5387.533875338753,
-        "max": 7184.5203252032525,
+        "ns": 3838.3106686701726,
+        "min": 3756.793200601052,
+        "max": 4949.802779864764,
         "samples": 15,
-        "calls": 3321,
-        "allocations": 39.000020074274815,
-        "bytes": 9646.002408912978
+        "calls": 5324,
+        "allocations": 39.00001252191335,
+        "bytes": 9390.001502629602
       },
-      "speedup": 0.3167720830700753,
+      "speedup": 0.4418056848905549,
       "bound": null,
       "compat": "PHP's serialize() format, read only where PHP wrote the value (PHP-shared cache entries, Memcached's serialized values); no Rust hot path decodes it, as Rust's own caches use the native codec"
     },
@@ -100,22 +100,22 @@
       "name": "igbinary_unserialize",
       "description": "igbinary_unserialize() a 40-attribute user document",
       "php": {
-        "ns": 1686.4761484807184,
-        "min": 1618.0449771506453,
-        "max": 1750.4209091637938,
+        "ns": 1620.51012729165,
+        "min": 1572.1352173564967,
+        "max": 2115.6499079337123,
         "samples": 15,
-        "calls": 12473
+        "calls": 12491
       },
       "rust": {
-        "ns": 4994.71330099566,
-        "min": 4890.498851161603,
-        "max": 5170.644881286699,
+        "ns": 4274.919317463661,
+        "min": 4138.40320202233,
+        "max": 4967.54097324626,
         "samples": 15,
-        "calls": 3917,
-        "allocations": 28.0000170198281,
-        "bytes": 16840.002042379372
+        "calls": 4747,
+        "allocations": 32.000014043957584,
+        "bytes": 17624.00168527491
       },
-      "speedup": 0.3376522428513628,
+      "speedup": 0.37907385074418426,
       "bound": null,
       "compat": "PHP's igbinary format, kept for entries shared with PHP; Rust's own caches use the native codec"
     },
@@ -123,45 +123,45 @@
       "name": "preg_match",
       "description": "preg_match() an email address against a case-insensitive pattern with two groups",
       "php": {
-        "ns": 84.59843046045891,
-        "min": 80.77429167012772,
-        "max": 87.15467163476562,
+        "ns": 86.8992362826551,
+        "min": 81.6176590239013,
+        "max": 94.43120882070467,
         "samples": 15,
-        "calls": 252813
+        "calls": 238439
       },
       "rust": {
-        "ns": 83.67170617527033,
-        "min": 78.84665787033444,
-        "max": 87.30734194175629,
+        "ns": 83.6567832260578,
+        "min": 81.27486022405597,
+        "max": 90.16308505920532,
         "samples": 15,
-        "calls": 244799,
-        "allocations": 4.000000272332267,
-        "bytes": 301.00003267987205
+        "calls": 241279,
+        "allocations": 4.0000002763053,
+        "bytes": 301.0000331566361
       },
-      "speedup": 1.0110757187530912,
-      "bound": null,
+      "speedup": 1.0387589975559486,
+      "bound": "One pcre2_jit_match() call on the same PCRE2 10.44 JIT code in both runtimes; what surrounds it (the compiled-pattern cache lookup, the shared match data, the three captured strings and the $matches array) is the work PHP does too",
       "compat": null
     },
     {
       "name": "sprintf",
       "description": "sprintf() a path with two strings, a padded integer and a float",
       "php": {
-        "ns": 146.93826556383382,
-        "min": 137.51999147619648,
-        "max": 152.81680136380857,
+        "ns": 152.66766104074276,
+        "min": 147.2979772197939,
+        "max": 161.87293813610694,
         "samples": 15,
-        "calls": 126704
+        "calls": 125372
       },
       "rust": {
-        "ns": 86.60801696943327,
-        "min": 82.35781405584517,
-        "max": 88.99190437540268,
+        "ns": 81.5806040174873,
+        "min": 78.69988598800823,
+        "max": 87.72412789028601,
         "samples": 15,
-        "calls": 239018,
-        "allocations": 2.0000002789190217,
-        "bytes": 109.00003347028257
+        "calls": 243834,
+        "allocations": 2.0000002734100524,
+        "bytes": 109.00003280920626
       },
-      "speedup": 1.6965896542313517,
+      "speedup": 1.871372036029759,
       "bound": null,
       "compat": null
     },
@@ -169,22 +169,22 @@
       "name": "mb_strtolower",
       "description": "mb_strtolower() a 60-character multilingual name",
       "php": {
-        "ns": 228.4306532307547,
-        "min": 219.6556260914712,
-        "max": 239.8291641100675,
+        "ns": 217.9587335586867,
+        "min": 205.00928188136595,
+        "max": 235.778752077825,
         "samples": 15,
-        "calls": 84748
+        "calls": 89637
       },
       "rust": {
-        "ns": 137.8871528519319,
-        "min": 131.46315169014446,
-        "max": 188.2259334876688,
+        "ns": 123.34694022250584,
+        "min": 120.70367147516468,
+        "max": 129.89954364388754,
         "samples": 15,
-        "calls": 117061,
-        "allocations": 1.0000005695036491,
-        "bytes": 113.00006834043789
+        "calls": 155142,
+        "allocations": 1.0000004297138536,
+        "bytes": 113.00005156566243
       },
-      "speedup": 1.6566492853475017,
+      "speedup": 1.7670380243361565,
       "bound": null,
       "compat": null
     },
@@ -192,22 +192,22 @@
       "name": "sort",
       "description": "sort() a copy of 300 mixed ints, floats, numeric and other strings",
       "php": {
-        "ns": 36255.037906137186,
-        "min": 35512.333935018054,
-        "max": 39111.839350180504,
+        "ns": 35670.326164874554,
+        "min": 35331.76523297491,
+        "max": 36333.03405017921,
         "samples": 15,
-        "calls": 554
+        "calls": 558
       },
       "rust": {
-        "ns": 27722.539229671896,
-        "min": 26999.108416547788,
-        "max": 28668.212553495006,
+        "ns": 24361.42943305187,
+        "min": 23855.799758745477,
+        "max": 26593.9384800965,
         "samples": 15,
-        "calls": 701,
-        "allocations": 243.0000951022349,
-        "bytes": 97154.01141226818
+        "calls": 829,
+        "allocations": 73.0000804181745,
+        "bytes": 94784.00965018095
       },
-      "speedup": 1.307782003869718,
+      "speedup": 1.4642131843248725,
       "bound": null,
       "compat": null
     },
@@ -215,22 +215,22 @@
       "name": "filter_email",
       "description": "filter_var() an email address with FILTER_VALIDATE_EMAIL",
       "php": {
-        "ns": 1015.9755971461069,
-        "min": 985.095078068452,
-        "max": 1138.8106193775204,
+        "ns": 1014.2277982402292,
+        "min": 1003.0330980151422,
+        "max": 1056.135359116022,
         "samples": 15,
-        "calls": 19342
+        "calls": 19548
       },
       "rust": {
-        "ns": 115.71879382048732,
-        "min": 112.68307225811091,
-        "max": 124.50886297445977,
+        "ns": 113.65461714490836,
+        "min": 109.4893938034236,
+        "max": 123.91353509972404,
         "samples": 15,
-        "calls": 166874,
-        "allocations": 1.0000003995030182,
-        "bytes": 39.00004794036219
+        "calls": 178292,
+        "allocations": 1.0000003739184409,
+        "bytes": 39.00004487021291
       },
-      "speedup": 8.779693977126769,
+      "speedup": 8.923771191337526,
       "bound": null,
       "compat": null
     },
@@ -238,22 +238,22 @@
       "name": "filter_url",
       "description": "filter_var() an API URL with a query and a fragment with FILTER_VALIDATE_URL",
       "php": {
-        "ns": 382.58148441152144,
-        "min": 359.94566507245855,
-        "max": 408.7585493904851,
+        "ns": 354.5664853139268,
+        "min": 345.87787554886904,
+        "max": 384.4131343701345,
         "samples": 15,
-        "calls": 55618
+        "calls": 57163
       },
       "rust": {
-        "ns": 269.6637631358133,
-        "min": 266.24133935349823,
-        "max": 304.423449341378,
+        "ns": 263.5241472565058,
+        "min": 255.8987180676892,
+        "max": 274.5018758368353,
         "samples": 15,
-        "calls": 75081,
-        "allocations": 1.0000008879299245,
-        "bytes": 100.00010655159095
+        "calls": 75433,
+        "allocations": 1.0000008837864949,
+        "bytes": 100.00010605437939
       },
-      "speedup": 1.4187352425948245,
+      "speedup": 1.3454800594376022,
       "bound": null,
       "compat": null
     }

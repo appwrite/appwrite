@@ -31,6 +31,9 @@ impl Str {
     /// The empty string.
     pub const EMPTY: Str = Str(Repr::Static(b""));
 
+    /// The longest string kept inline, without an allocation.
+    pub(crate) const INLINE: usize = INLINE;
+
     /// A string literal (no allocation, no copy).
     pub const fn from_static(s: &'static str) -> Self {
         Str(Repr::Static(s.as_bytes()))

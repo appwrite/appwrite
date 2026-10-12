@@ -128,6 +128,7 @@ image = { version = "0.25.10", default-features = false, features = ["jpeg", "pn
 # WebP frames and the lossless encoder (utopia-image writes animated WebP
 # containers around it); pure Rust, the WebP codec of the image crate.
 image-webp = "0.2"
+hashbrown = { version = "0.17", default-features = false }
 indexmap = "2"
 # EXIF orientation of JPEG, PNG and WebP images (utopia-image, as Imagick's
 # exif:Orientation property); pure Rust.
@@ -192,6 +193,7 @@ regex = "1"
 ripemd = "0.1"
 rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
 rustix = { version = "1", default-features = false, features = ["std", "fs", "system"] }
+ryu = "1"
 scrypt = { version = "0.11", default-features = false }
 serde = { version = "1", features = ["derive"] }
 serde_json = { version = "1", features = ["raw_value", "preserve_order", "float_roundtrip"] }
