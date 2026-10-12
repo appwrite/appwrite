@@ -1,0 +1,5728 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/Postgres.php",
+  "cases": [
+    {
+      "name": "operators in updates",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "o",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "n",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "b",
+                  "type": "integer",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "f",
+                  "type": "double",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t",
+                  "type": "string",
+                  "size": 64,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "on",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "l",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "signed": true,
+                  "array": true
+                }
+              },
+              {
+                "$document": {
+                  "$id": "d",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_documents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "o1",
+                  "$permissions": [],
+                  "n": 10,
+                  "b": 10,
+                  "f": 2.5,
+                  "t": "abc",
+                  "on": true,
+                  "l": [
+                    "a",
+                    "b",
+                    "a"
+                  ],
+                  "d": "2020-01-01 00:00:00.000"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "o2",
+                  "$permissions": [],
+                  "n": null,
+                  "b": 10,
+                  "f": null,
+                  "t": null,
+                  "on": null,
+                  "l": null,
+                  "d": null
+                }
+              },
+              {
+                "$document": {
+                  "$id": "o3",
+                  "$permissions": [],
+                  "n": -4,
+                  "b": 10,
+                  "f": 2.5,
+                  "t": "abc",
+                  "on": true,
+                  "l": [],
+                  "d": "2020-01-01 00:00:00.000"
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "$id": "o1",
+                "$permissions": [],
+                "n": 10,
+                "b": 10,
+                "f": 2.5,
+                "t": "abc",
+                "on": true,
+                "l": [
+                  "a",
+                  "b",
+                  "a"
+                ],
+                "d": "2020-01-01 00:00:00.000"
+              }
+            },
+            {
+              "$document": {
+                "$id": "o2",
+                "$permissions": [],
+                "n": null,
+                "b": 10,
+                "f": null,
+                "t": null,
+                "on": null,
+                "l": null,
+                "d": null
+              }
+            },
+            {
+              "$document": {
+                "$id": "o3",
+                "$permissions": [],
+                "n": -4,
+                "b": 10,
+                "f": 2.5,
+                "t": "abc",
+                "on": true,
+                "l": [],
+                "d": "2020-01-01 00:00:00.000"
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      5,
+                      12
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    5,
+                    12
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      5,
+                      12
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    5,
+                    12
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      5,
+                      12
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    5,
+                    12
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      1,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    1,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      1,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    1,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      1,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    1,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "decrement",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "decrement",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "decrement",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "decrement",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "decrement",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "decrement",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "decrement",
+                    "attribute": "",
+                    "values": [
+                      30,
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "decrement",
+                  "attribute": "",
+                  "values": [
+                    30,
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "decrement",
+                    "attribute": "",
+                    "values": [
+                      30,
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "decrement",
+                  "attribute": "",
+                  "values": [
+                    30,
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "decrement",
+                    "attribute": "",
+                    "values": [
+                      30,
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "decrement",
+                  "attribute": "",
+                  "values": [
+                    30,
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "multiply",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "multiply",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "multiply",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "multiply",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "multiply",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "multiply",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "multiply",
+                    "attribute": "",
+                    "values": [
+                      10,
+                      50
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "multiply",
+                  "attribute": "",
+                  "values": [
+                    10,
+                    50
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "multiply",
+                    "attribute": "",
+                    "values": [
+                      10,
+                      50
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "multiply",
+                  "attribute": "",
+                  "values": [
+                    10,
+                    50
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "multiply",
+                    "attribute": "",
+                    "values": [
+                      10,
+                      50
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "multiply",
+                  "attribute": "",
+                  "values": [
+                    10,
+                    50
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      4
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "divide",
+                  "attribute": "",
+                  "values": [
+                    4
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      4
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "divide",
+                  "attribute": "",
+                  "values": [
+                    4
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      4
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "divide",
+                  "attribute": "",
+                  "values": [
+                    4
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22012]: Division by zero: 7 ERROR:  division by zero"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22012]: Division by zero: 7 ERROR:  division by zero"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22012]: Division by zero: 7 ERROR:  division by zero"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      2,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "divide",
+                  "attribute": "",
+                  "values": [
+                    2,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      2,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "divide",
+                  "attribute": "",
+                  "values": [
+                    2,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "divide",
+                    "attribute": "",
+                    "values": [
+                      2,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "divide",
+                  "attribute": "",
+                  "values": [
+                    2,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "modulo",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "modulo",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "modulo",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "modulo",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "modulo",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "modulo",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "modulo",
+                    "attribute": "",
+                    "values": [
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22012]: Division by zero: 7 ERROR:  division by zero"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "modulo",
+                    "attribute": "",
+                    "values": [
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22012]: Division by zero: 7 ERROR:  division by zero"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "modulo",
+                    "attribute": "",
+                    "values": [
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22012]: Division by zero: 7 ERROR:  division by zero"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      2,
+                      50
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2,
+                    50
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      2,
+                      50
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2,
+                    50
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      2,
+                      50
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    2,
+                    50
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      -1,
+                      5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    -1,
+                    5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      -1,
+                      5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    -1,
+                    5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      -1,
+                      5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    -1,
+                    5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      0.5,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    0.5,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      0.5,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    0.5,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      0.5,
+                      100
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    0.5,
+                    100
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      0,
+                      0.5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    0,
+                    0.5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      0,
+                      0.5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    0,
+                    0.5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      0,
+                      0.5
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    0,
+                    0.5
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      3,
+                      10
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    3,
+                    10
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      3,
+                      10
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    3,
+                    10
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "power",
+                    "attribute": "",
+                    "values": [
+                      3,
+                      10
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o3",
+              "$sequence": "3",
+              "$permissions": [],
+              "f": {
+                "$operator": {
+                  "method": "power",
+                  "attribute": "",
+                  "values": [
+                    3,
+                    10
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: \"x\"\nLINE 3:    SET \"n\" = COALESCE(\"n\", 0) + 'x',\"_createdAt\"=NULL,\"_upda...\n                                        ^"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: \"x\"\nLINE 3:    SET \"n\" = COALESCE(\"n\", 0) + 'x',\"_createdAt\"=NULL,\"_upda...\n                                        ^"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o3",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o3",
+                "$sequence": "3",
+                "$permissions": [],
+                "f": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      "x"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type double precision: \"x\"\nLINE 3:    SET \"f\" = COALESCE(\"f\", 0) + 'x',\"_createdAt\"=NULL,\"_upda...\n                                        ^"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT _uid, n, f FROM \"${ns}\".ns_o ORDER BY _id"
+          },
+          "expect": [
+            {
+              "_uid": "o1",
+              "n": "1",
+              "f": "2.5"
+            },
+            {
+              "_uid": "o2",
+              "n": "1",
+              "f": null
+            },
+            {
+              "_uid": "o3",
+              "n": "-4",
+              "f": "0.000244140625"
+            }
+          ]
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "stringConcat",
+                    "attribute": "",
+                    "values": [
+                      "!"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "t": {
+                "$operator": {
+                  "method": "stringConcat",
+                  "attribute": "",
+                  "values": [
+                    "!"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "stringConcat",
+                    "attribute": "",
+                    "values": [
+                      "!"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "t": {
+                "$operator": {
+                  "method": "stringConcat",
+                  "attribute": "",
+                  "values": [
+                    "!"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "stringConcat",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "t": {
+                "$operator": {
+                  "method": "stringConcat",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "stringConcat",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "t": {
+                "$operator": {
+                  "method": "stringConcat",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "stringReplace",
+                    "attribute": "",
+                    "values": [
+                      "b",
+                      "B"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "t": {
+                "$operator": {
+                  "method": "stringReplace",
+                  "attribute": "",
+                  "values": [
+                    "b",
+                    "B"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "stringReplace",
+                    "attribute": "",
+                    "values": [
+                      "b",
+                      "B"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "t": {
+                "$operator": {
+                  "method": "stringReplace",
+                  "attribute": "",
+                  "values": [
+                    "b",
+                    "B"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "stringReplace",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "t": {
+                "$operator": {
+                  "method": "stringReplace",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "stringReplace",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "t": {
+                "$operator": {
+                  "method": "stringReplace",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "on": {
+                  "$operator": {
+                    "method": "toggle",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "on": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "on": {
+                  "$operator": {
+                    "method": "toggle",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "on": {
+                "$operator": {
+                  "method": "toggle",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayAppend",
+                    "attribute": "",
+                    "values": [
+                      "x",
+                      1,
+                      null
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayAppend",
+                  "attribute": "",
+                  "values": [
+                    "x",
+                    1,
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayAppend",
+                    "attribute": "",
+                    "values": [
+                      "x",
+                      1,
+                      null
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayAppend",
+                  "attribute": "",
+                  "values": [
+                    "x",
+                    1,
+                    null
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayPrepend",
+                    "attribute": "",
+                    "values": [
+                      "p"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayPrepend",
+                  "attribute": "",
+                  "values": [
+                    "p"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayPrepend",
+                    "attribute": "",
+                    "values": [
+                      "p"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayPrepend",
+                  "attribute": "",
+                  "values": [
+                    "p"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayUnique",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayUnique",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayUnique",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayUnique",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayRemove",
+                    "attribute": "",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayRemove",
+                    "attribute": "",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayRemove",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayRemove",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayRemove",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayInsert",
+                    "attribute": "",
+                    "values": [
+                      1,
+                      "i"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayInsert",
+                  "attribute": "",
+                  "values": [
+                    1,
+                    "i"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayInsert",
+                    "attribute": "",
+                    "values": [
+                      1,
+                      "i"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayInsert",
+                  "attribute": "",
+                  "values": [
+                    1,
+                    "i"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayInsert",
+                    "attribute": "",
+                    "values": [
+                      99,
+                      "e"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayInsert",
+                  "attribute": "",
+                  "values": [
+                    99,
+                    "e"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayInsert",
+                    "attribute": "",
+                    "values": [
+                      99,
+                      "e"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayInsert",
+                  "attribute": "",
+                  "values": [
+                    99,
+                    "e"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayIntersect",
+                    "attribute": "",
+                    "values": [
+                      "a",
+                      "x"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayIntersect",
+                  "attribute": "",
+                  "values": [
+                    "a",
+                    "x"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayIntersect",
+                    "attribute": "",
+                    "values": [
+                      "a",
+                      "x"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayIntersect",
+                  "attribute": "",
+                  "values": [
+                    "a",
+                    "x"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayDiff",
+                    "attribute": "",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayDiff",
+                  "attribute": "",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayDiff",
+                    "attribute": "",
+                    "values": [
+                      "a"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayDiff",
+                  "attribute": "",
+                  "values": [
+                    "a"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "equal",
+                      "b"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "equal",
+                    "b"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "equal",
+                      "b"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "equal",
+                    "b"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "notEqual",
+                      "b"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "notEqual",
+                    "b"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "notEqual",
+                      "b"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "notEqual",
+                    "b"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "isNull"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "isNull"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "isNull"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "isNull"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "isNotNull"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "isNotNull"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "isNotNull"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "isNotNull"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "greaterThan",
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "greaterThan",
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "greaterThan",
+                      0
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "greaterThan",
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "other",
+                      "x"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "other",
+                    "x"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "l": {
+                  "$operator": {
+                    "method": "arrayFilter",
+                    "attribute": "",
+                    "values": [
+                      "other",
+                      "x"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "l": {
+                "$operator": {
+                  "method": "arrayFilter",
+                  "attribute": "",
+                  "values": [
+                    "other",
+                    "x"
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "d": {
+                  "$operator": {
+                    "method": "dateAddDays",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "d": {
+                "$operator": {
+                  "method": "dateAddDays",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "d": {
+                  "$operator": {
+                    "method": "dateAddDays",
+                    "attribute": "",
+                    "values": [
+                      3
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "d": {
+                "$operator": {
+                  "method": "dateAddDays",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "d": {
+                  "$operator": {
+                    "method": "dateSubDays",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "d": {
+                "$operator": {
+                  "method": "dateSubDays",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "d": {
+                  "$operator": {
+                    "method": "dateSubDays",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "d": {
+                "$operator": {
+                  "method": "dateSubDays",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "d": {
+                  "$operator": {
+                    "method": "dateAddDays",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "d": {
+                "$operator": {
+                  "method": "dateAddDays",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "d": {
+                  "$operator": {
+                    "method": "dateAddDays",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o2",
+              "$sequence": "2",
+              "$permissions": [],
+              "d": {
+                "$operator": {
+                  "method": "dateAddDays",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "nope",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: nope"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "t": {
+                  "$operator": {
+                    "method": "nope",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Operator",
+              "message": "Invalid operator: nope"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "b": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      9223372036854775807
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Numeric value out of range"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "b": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      9223372036854775807
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Numeric value out of range"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "multiply",
+                    "attribute": "",
+                    "values": [
+                      1e+300
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: \"1.0E+300\"\nLINE 3:    SET \"n\" = COALESCE(\"n\", 0) * '1.0E+300',\"_createdAt\"=NULL...\n                                        ^"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o2",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o2",
+                "$sequence": "2",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "multiply",
+                    "attribute": "",
+                    "values": [
+                      1e+300
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22P02]: Invalid text representation: 7 ERROR:  invalid input syntax for type integer: \"1.0E+300\"\nLINE 3:    SET \"n\" = COALESCE(\"n\", 0) * '1.0E+300',\"_createdAt\"=NULL...\n                                        ^"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT _uid, t, \"on\", l, d, b FROM \"${ns}\".ns_o ORDER BY _id"
+          },
+          "expect": [
+            {
+              "_uid": "o1",
+              "t": "aBc!",
+              "on": "0",
+              "l": "[]",
+              "d": "2020-01-03 00:00:00",
+              "b": "10"
+            },
+            {
+              "_uid": "o2",
+              "t": "!",
+              "on": "1",
+              "l": "[]",
+              "d": null,
+              "b": "10"
+            },
+            {
+              "_uid": "o3",
+              "t": "abc",
+              "on": "1",
+              "l": "[]",
+              "d": "2020-01-01 00:00:00",
+              "b": "10"
+            }
+          ]
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      1
+                    ]
+                  }
+                },
+                "t": {
+                  "$operator": {
+                    "method": "stringConcat",
+                    "attribute": "",
+                    "values": [
+                      "?"
+                    ]
+                  }
+                },
+                "f": 1.25
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "n": {
+                "$operator": {
+                  "method": "increment",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              "t": {
+                "$operator": {
+                  "method": "stringConcat",
+                  "attribute": "",
+                  "values": [
+                    "?"
+                  ]
+                }
+              },
+              "f": 1.25
+            }
+          }
+        },
+        {
+          "op": "adapter.update_documents",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "updates": {
+              "$document": {
+                "n": {
+                  "$operator": {
+                    "method": "increment",
+                    "attribute": "",
+                    "values": [
+                      100
+                    ]
+                  }
+                },
+                "l": {
+                  "$operator": {
+                    "method": "arrayAppend",
+                    "attribute": "",
+                    "values": [
+                      "z"
+                    ]
+                  }
+                },
+                "t": "bulk"
+              }
+            },
+            "documents": [
+              {
+                "$document": {
+                  "$id": "o1",
+                  "$sequence": "1"
+                }
+              },
+              {
+                "$document": {
+                  "$id": "o3",
+                  "$sequence": "3"
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "adapter.update_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "o",
+            "id": "o1",
+            "skip_permissions": true,
+            "document": {
+              "$document": {
+                "$id": "o1",
+                "$sequence": "1",
+                "$permissions": [],
+                "d": {
+                  "$operator": {
+                    "method": "dateSetNow",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "o1",
+              "$sequence": "1",
+              "$permissions": [],
+              "d": {
+                "$operator": {
+                  "method": "dateSetNow",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT _uid, n, t, l FROM \"${ns}\".ns_o ORDER BY _id"
+          },
+          "expect": [
+            {
+              "_uid": "o1",
+              "n": "102",
+              "t": "bulk",
+              "l": "[\"z\"]"
+            },
+            {
+              "_uid": "o2",
+              "n": "1",
+              "t": "!",
+              "l": "[]"
+            },
+            {
+              "_uid": "o3",
+              "n": "96",
+              "t": "bulk",
+              "l": "[\"z\"]"
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_o\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"n\" INTEGER,  \"b\" BIGINT,  \"f\" DOUBLE PRECISION,  \"t\" VARCHAR(64),  \"on\" BOOLEAN,  \"l\" JSONB,  \"d\" TIMESTAMP(3), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_o_uid\" ON \"${ns}\".\"ns_o\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_o_created\" ON \"${ns}\".\"ns_o\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_o_updated\" ON \"${ns}\".\"ns_o\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_o_permissions\" ON \"${ns}\".\"ns_o\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_o_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_o_ukey\" \n                    ON \"${ns}\".\"ns_o_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_o_permission\" \n                    ON \"${ns}\".\"ns_o_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = COALESCE(\"f\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = COALESCE(\"f\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN COALESCE(\"n\", 0) + CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) + CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN COALESCE(\"n\", 0) + CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) + CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE\n                        WHEN COALESCE(\"f\", 0) + CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"f\", 0)\n                        ELSE COALESCE(\"f\", 0) + CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN COALESCE(\"n\", 0) + CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) + CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN COALESCE(\"n\", 0) + CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) + CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE\n                        WHEN COALESCE(\"f\", 0) + CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"f\", 0)\n                        ELSE COALESCE(\"f\", 0) + CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) - :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) - :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = COALESCE(\"f\", 0) - :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN COALESCE(\"n\", 0) - CAST(:<id> AS NUMERIC) < CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) - CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN COALESCE(\"n\", 0) - CAST(:<id> AS NUMERIC) < CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) - CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE\n                        WHEN COALESCE(\"f\", 0) - CAST(:<id> AS NUMERIC) < CAST(:<id> AS NUMERIC) THEN COALESCE(\"f\", 0)\n                        ELSE COALESCE(\"f\", 0) - CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) * :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) * :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = COALESCE(\"f\", 0) * :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN COALESCE(\"n\", 0) * CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) * CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN COALESCE(\"n\", 0) * CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) * CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE\n                        WHEN COALESCE(\"f\", 0) * CAST(:<id> AS NUMERIC) > CAST(:<id> AS NUMERIC) THEN COALESCE(\"f\", 0)\n                        ELSE COALESCE(\"f\", 0) * CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) / :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) / :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = COALESCE(\"f\", 0) / :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) / :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) / :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = COALESCE(\"f\", 0) / :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN CAST(:<id> AS NUMERIC) != 0 AND COALESCE(\"n\", 0) / CAST(:<id> AS NUMERIC) < CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) / CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE\n                        WHEN CAST(:<id> AS NUMERIC) != 0 AND COALESCE(\"n\", 0) / CAST(:<id> AS NUMERIC) < CAST(:<id> AS NUMERIC) THEN COALESCE(\"n\", 0)\n                        ELSE COALESCE(\"n\", 0) / CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE\n                        WHEN CAST(:<id> AS NUMERIC) != 0 AND COALESCE(\"f\", 0) / CAST(:<id> AS NUMERIC) < CAST(:<id> AS NUMERIC) THEN COALESCE(\"f\", 0)\n                        ELSE COALESCE(\"f\", 0) / CAST(:<id> AS NUMERIC)\n                    END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = MOD(COALESCE(\"n\"::numeric, 0), :<id>::numeric),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = MOD(COALESCE(\"n\"::numeric, 0), :<id>::numeric),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = MOD(COALESCE(\"f\"::numeric, 0), :<id>::numeric),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = MOD(COALESCE(\"n\"::numeric, 0), :<id>::numeric),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = MOD(COALESCE(\"n\"::numeric, 0), :<id>::numeric),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = MOD(COALESCE(\"f\"::numeric, 0), :<id>::numeric),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = POWER(COALESCE(\"n\", 0), :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = POWER(COALESCE(\"n\", 0), :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = POWER(COALESCE(\"f\", 0), :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN COALESCE(\"n\", 0) <> 0 AND :<id> * LN(ABS(COALESCE(\"n\", 0))) > LN(:<id>) THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN COALESCE(\"n\", 0) <> 0 AND :<id> * LN(ABS(COALESCE(\"n\", 0))) > LN(:<id>) THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE WHEN COALESCE(\"f\", 0) <> 0 AND :<id> * LN(ABS(COALESCE(\"f\", 0))) > LN(:<id>) THEN COALESCE(\"f\", 0) ELSE POWER(COALESCE(\"f\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN COALESCE(\"n\", 0) = 0 THEN COALESCE(\"n\", 0) WHEN COALESCE(\"n\", 0) > 0 AND :<id> * LN(COALESCE(\"n\", 0)) > LN(:<id>) THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN COALESCE(\"n\", 0) = 0 THEN COALESCE(\"n\", 0) WHEN COALESCE(\"n\", 0) > 0 AND :<id> * LN(COALESCE(\"n\", 0)) > LN(:<id>) THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE WHEN COALESCE(\"f\", 0) = 0 THEN COALESCE(\"f\", 0) WHEN COALESCE(\"f\", 0) > 0 AND :<id> * LN(COALESCE(\"f\", 0)) > LN(:<id>) THEN COALESCE(\"f\", 0) ELSE POWER(COALESCE(\"f\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN COALESCE(\"n\", 0) < 0 THEN COALESCE(\"n\", 0) WHEN COALESCE(\"n\", 0) <> 0 AND :<id> * LN(ABS(COALESCE(\"n\", 0))) > LN(:<id>) THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN COALESCE(\"n\", 0) < 0 THEN COALESCE(\"n\", 0) WHEN COALESCE(\"n\", 0) <> 0 AND :<id> * LN(ABS(COALESCE(\"n\", 0))) > LN(:<id>) THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE WHEN COALESCE(\"f\", 0) < 0 THEN COALESCE(\"f\", 0) WHEN COALESCE(\"f\", 0) <> 0 AND :<id> * LN(ABS(COALESCE(\"f\", 0))) > LN(:<id>) THEN COALESCE(\"f\", 0) ELSE POWER(COALESCE(\"f\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN LN(:<id>) < 0 THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN LN(:<id>) < 0 THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE WHEN LN(:<id>) < 0 THEN COALESCE(\"f\", 0) ELSE POWER(COALESCE(\"f\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN COALESCE(\"n\", 0) > 0 AND :<id> * LN(COALESCE(\"n\", 0)) > LN(:<id>) THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = CASE WHEN COALESCE(\"n\", 0) > 0 AND :<id> * LN(COALESCE(\"n\", 0)) > LN(:<id>) THEN COALESCE(\"n\", 0) ELSE POWER(COALESCE(\"n\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = CASE WHEN COALESCE(\"f\", 0) > 0 AND :<id> * LN(COALESCE(\"f\", 0)) > LN(:<id>) THEN COALESCE(\"f\", 0) ELSE POWER(COALESCE(\"f\", 0), :<id>) END,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"f\" = COALESCE(\"f\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"t\" = CONCAT(COALESCE(\"t\", ''), :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"t\" = CONCAT(COALESCE(\"t\", ''), :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"t\" = CONCAT(COALESCE(\"t\", ''), :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"t\" = CONCAT(COALESCE(\"t\", ''), :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"t\" = REPLACE(COALESCE(\"t\", ''), :<id>, :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"t\" = REPLACE(COALESCE(\"t\", ''), :<id>, :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"t\" = REPLACE(COALESCE(\"t\", ''), :<id>, :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"t\" = REPLACE(COALESCE(\"t\", ''), :<id>, :<id>),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"on\" = NOT COALESCE(\"on\", FALSE),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"on\" = NOT COALESCE(\"on\", FALSE),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE(\"l\", '[]'::jsonb) || :<id>::jsonb,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE(\"l\", '[]'::jsonb) || :<id>::jsonb,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = :<id>::jsonb || COALESCE(\"l\", '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = :<id>::jsonb || COALESCE(\"l\", '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(DISTINCT value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(DISTINCT value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE value != :<id>::jsonb\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE value != :<id>::jsonb\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE value != :<id>::jsonb\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE value != :<id>::jsonb\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = (\n                    SELECT jsonb_agg(value ORDER BY idx)\n                    FROM (\n                        SELECT value, idx\n                        FROM jsonb_array_elements(\"l\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 < :<id>\n                        UNION ALL\n                        SELECT :<id>::jsonb AS value, :<id> + 1 AS idx\n                        UNION ALL\n                        SELECT value, idx + 1\n                        FROM jsonb_array_elements(\"l\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 >= :<id>\n                    ) AS combined\n                ),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = (\n                    SELECT jsonb_agg(value ORDER BY idx)\n                    FROM (\n                        SELECT value, idx\n                        FROM jsonb_array_elements(\"l\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 < :<id>\n                        UNION ALL\n                        SELECT :<id>::jsonb AS value, :<id> + 1 AS idx\n                        UNION ALL\n                        SELECT value, idx + 1\n                        FROM jsonb_array_elements(\"l\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 >= :<id>\n                    ) AS combined\n                ),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = (\n                    SELECT jsonb_agg(value ORDER BY idx)\n                    FROM (\n                        SELECT value, idx\n                        FROM jsonb_array_elements(\"l\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 < :<id>\n                        UNION ALL\n                        SELECT :<id>::jsonb AS value, :<id> + 1 AS idx\n                        UNION ALL\n                        SELECT value, idx + 1\n                        FROM jsonb_array_elements(\"l\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 >= :<id>\n                    ) AS combined\n                ),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = (\n                    SELECT jsonb_agg(value ORDER BY idx)\n                    FROM (\n                        SELECT value, idx\n                        FROM jsonb_array_elements(\"l\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 < :<id>\n                        UNION ALL\n                        SELECT :<id>::jsonb AS value, :<id> + 1 AS idx\n                        UNION ALL\n                        SELECT value, idx + 1\n                        FROM jsonb_array_elements(\"l\") WITH ORDINALITY AS t(value, idx)\n                        WHERE idx - 1 >= :<id>\n                    ) AS combined\n                ),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE value IN (SELECT jsonb_array_elements(:<id>::jsonb))\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE value IN (SELECT jsonb_array_elements(:<id>::jsonb))\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE value NOT IN (SELECT jsonb_array_elements(:<id>::jsonb))\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE value NOT IN (SELECT jsonb_array_elements(:<id>::jsonb))\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"l\" = COALESCE((\n                    SELECT jsonb_agg(value)\n                    FROM jsonb_array_elements(\"l\") AS value\n                    WHERE CASE :<id>\n                        WHEN 'equal' THEN value = :<id>::jsonb\n                        WHEN 'notEqual' THEN value != :<id>::jsonb\n                        WHEN 'greaterThan' THEN (value::text)::numeric > trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'greaterThanEqual' THEN (value::text)::numeric >= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThan' THEN (value::text)::numeric < trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'lessThanEqual' THEN (value::text)::numeric <= trim(both '\"' from :<id>::text)::numeric\n                        WHEN 'isNull' THEN value = 'null'::jsonb\n                        WHEN 'isNotNull' THEN value != 'null'::jsonb\n                        ELSE TRUE\n                    END\n                ), '[]'::jsonb),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"d\" = \"d\" + (:<id> || ' days')::INTERVAL,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"d\" = \"d\" + (:<id> || ' days')::INTERVAL,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"d\" = \"d\" - (:<id> || ' days')::INTERVAL,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"d\" = \"d\" - (:<id> || ' days')::INTERVAL,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"d\" = \"d\" + (:<id> || ' days')::INTERVAL,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"d\" = \"d\" + (:<id> || ' days')::INTERVAL,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"b\" = COALESCE(\"b\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"b\" = COALESCE(\"b\", 0) + :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) * :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) * :<id>,\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"n\" = COALESCE(\"n\", 0) + :<id>,\"t\" = CONCAT(COALESCE(\"t\", ''), :<id>),\"f\"=:key_0,\"_createdAt\"=:key_1,\"_updatedAt\"=:key_2,\"_permissions\"=:key_3,\"_uid\"=:key_4\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ],
+            [
+              "*",
+              "\n            UPDATE \"${ns}\".\"ns_o\"\n            SET \"n\" = COALESCE(\"n\", 0) + :<id>,\"l\" = COALESCE(\"l\", '[]'::jsonb) || :<id>::jsonb,\"t\" = :key_0\n            WHERE _id IN (:_id_0, :_id_1)\n            \n        "
+            ],
+            [
+              "*",
+              "\n\t\t\tUPDATE \"${ns}\".\"ns_o\"\n\t\t\tSET \"d\" = NOW(),\"_createdAt\"=:key_0,\"_updatedAt\"=:key_1,\"_permissions\"=:key_2,\"_uid\"=:key_3\n\t\t\tWHERE _id=:_sequence\n\t\t\t\n\t\t"
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

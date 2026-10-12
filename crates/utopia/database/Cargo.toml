@@ -10,13 +10,15 @@ publish.workspace = true
 [features]
 default = ["postgres"]
 # The PostgreSQL adapter (and the legacy row-level layer, also PostgreSQL).
-postgres = ["dep:tokio-postgres", "dep:deadpool-postgres"]
+postgres = ["dep:tokio-postgres", "dep:deadpool-postgres", "dep:postgres-protocol", "dep:fallible-iterator"]
 
 [dependencies]
 async-trait.workspace = true
 bytes.workspace = true
 chrono.workspace = true
 deadpool-postgres = { workspace = true, optional = true }
+fallible-iterator = { workspace = true, optional = true }
+postgres-protocol = { workspace = true, optional = true }
 futures-util.workspace = true
 getrandom.workspace = true
 hex.workspace = true
@@ -24,7 +26,7 @@ md-5.workspace = true
 php-std.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
-tokio = { workspace = true, features = ["sync", "time", "rt"] }
+tokio = { workspace = true, features = ["sync", "time", "rt", "net", "io-util"] }
 tokio-postgres = { workspace = true, optional = true }
 tracing.workspace = true
 utopia-cache.workspace = true
