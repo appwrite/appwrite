@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "c942a08750c365aba96ea946facb6e78",
+    "content-hash": "6d25793eaa210c24d9b8622ae15d87cb",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -4421,16 +4421,16 @@
         },
         {
             "name": "utopia-php/database",
-            "version": "8.0.0",
+            "version": "8.0.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/database.git",
-                "reference": "e4c46dfe9b5fad60d8b47e09ecb0f134b90c47f7"
+                "reference": "176dd252116b004b02a843b259da223ae4d5c0d8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/database/zipball/e4c46dfe9b5fad60d8b47e09ecb0f134b90c47f7",
-                "reference": "e4c46dfe9b5fad60d8b47e09ecb0f134b90c47f7",
+                "url": "https://api.github.com/repos/utopia-php/database/zipball/176dd252116b004b02a843b259da223ae4d5c0d8",
+                "reference": "176dd252116b004b02a843b259da223ae4d5c0d8",
                 "shasum": ""
             },
             "require": {
@@ -4488,9 +4488,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/database/issues",
-                "source": "https://github.com/utopia-php/database/tree/8.0.0"
+                "source": "https://github.com/utopia-php/database/tree/8.0.1"
             },
-            "time": "2026-10-09T08:45:12+00:00"
+            "time": "2026-10-12T03:52:49+00:00"
         },
         {
             "name": "utopia-php/migration",
