@@ -1,0 +1,358 @@
+{
+  "source": "packages/nats/tests/ReconnectBackoffTest.php",
+  "cases": [
+    {
+      "name": "the first attempt is immediate",
+      "steps": [
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 0,
+            "base": 2.0,
+            "cap": 30.0
+          },
+          "expect": 0.0
+        }
+      ]
+    },
+    {
+      "name": "backoff grows exponentially",
+      "steps": [
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 1,
+            "base": 2.0,
+            "cap": 100.0
+          },
+          "expect": 2.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 2,
+            "base": 2.0,
+            "cap": 100.0
+          },
+          "expect": 4.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 3,
+            "base": 2.0,
+            "cap": 100.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 4,
+            "base": 2.0,
+            "cap": 100.0
+          },
+          "expect": 16.0
+        }
+      ]
+    },
+    {
+      "name": "backoff is capped",
+      "steps": [
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 1,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 2.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 2,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 4.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 3,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 4,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 5,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 6,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 7,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 8,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 9,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 10,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 11,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 12,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 13,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 14,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 15,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 16,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 17,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 18,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 19,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 20,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 8.0
+        }
+      ]
+    },
+    {
+      "name": "custom factor",
+      "steps": [
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 1,
+            "base": 1.0,
+            "cap": 100.0,
+            "factor": 3.0
+          },
+          "expect": 1.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 2,
+            "base": 1.0,
+            "cap": 100.0,
+            "factor": 3.0
+          },
+          "expect": 3.0
+        },
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": 3,
+            "base": 1.0,
+            "cap": 100.0,
+            "factor": 3.0
+          },
+          "expect": 9.0
+        }
+      ]
+    },
+    {
+      "name": "negative attempts are immediate",
+      "steps": [
+        {
+          "op": "connection.reconnect_backoff",
+          "args": {
+            "attempt": -2,
+            "base": 2.0,
+            "cap": 8.0
+          },
+          "expect": 0.0
+        }
+      ]
+    },
+    {
+      "name": "buffer accepts until the cap",
+      "steps": [
+        {
+          "op": "connection.reconnect_buffer_accepts",
+          "args": {
+            "current": 0,
+            "incoming": 50,
+            "cap": 100
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.reconnect_buffer_accepts",
+          "args": {
+            "current": 50,
+            "incoming": 50,
+            "cap": 100
+          },
+          "expect": true
+        },
+        {
+          "op": "connection.reconnect_buffer_accepts",
+          "args": {
+            "current": 50,
+            "incoming": 51,
+            "cap": 100
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.reconnect_buffer_accepts",
+          "args": {
+            "current": 100,
+            "incoming": 1,
+            "cap": 100
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a cap of zero or less disables buffering",
+      "steps": [
+        {
+          "op": "connection.reconnect_buffer_accepts",
+          "args": {
+            "current": 0,
+            "incoming": 1,
+            "cap": 0
+          },
+          "expect": false
+        },
+        {
+          "op": "connection.reconnect_buffer_accepts",
+          "args": {
+            "current": 0,
+            "incoming": 1,
+            "cap": -5
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

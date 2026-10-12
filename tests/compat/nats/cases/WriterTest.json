@@ -1,0 +1,198 @@
+{
+  "source": "packages/nats/tests/Protocol/WriterTest.php",
+  "cases": [
+    {
+      "name": "connect",
+      "steps": [
+        {
+          "op": "writer.connect",
+          "args": {
+            "options": {
+              "verbose": false,
+              "lang": "php"
+            }
+          },
+          "expect": "CONNECT {\"verbose\":false,\"lang\":\"php\"}\r\n"
+        }
+      ]
+    },
+    {
+      "name": "connect escapes slashes and non-ASCII as json_encode does",
+      "steps": [
+        {
+          "op": "writer.connect",
+          "args": {
+            "options": {
+              "name": "a/b café 😀",
+              "n": 1.0,
+              "f": 0.1,
+              "list": [
+                1,
+                "x",
+                null
+              ],
+              "map": {
+                "0": "a",
+                "1": "b"
+              },
+              "obj": {}
+            }
+          },
+          "expect": "CONNECT {\"name\":\"a\\/b caf\\u00e9 \\ud83d\\ude00\",\"n\":1,\"f\":0.1,\"list\":[1,\"x\",null],\"map\":[\"a\",\"b\"],\"obj\":{}}\r\n"
+        }
+      ]
+    },
+    {
+      "name": "pub",
+      "steps": [
+        {
+          "op": "writer.pub",
+          "args": {
+            "subject": "foo.bar",
+            "payload": "hello"
+          },
+          "expect": "PUB foo.bar 5\r\nhello\r\n"
+        }
+      ]
+    },
+    {
+      "name": "pub empty",
+      "steps": [
+        {
+          "op": "writer.pub",
+          "args": {
+            "subject": "foo",
+            "payload": ""
+          },
+          "expect": "PUB foo 0\r\n\r\n"
+        }
+      ]
+    },
+    {
+      "name": "pub with reply",
+      "steps": [
+        {
+          "op": "writer.pub",
+          "args": {
+            "subject": "foo",
+            "payload": "world",
+            "reply": "_INBOX.abc"
+          },
+          "expect": "PUB foo _INBOX.abc 5\r\nworld\r\n"
+        }
+      ]
+    },
+    {
+      "name": "pub counts bytes, not characters",
+      "steps": [
+        {
+          "op": "writer.pub",
+          "args": {
+            "subject": "foo",
+            "payload": "café"
+          },
+          "expect": "PUB foo 5\r\ncafé\r\n"
+        }
+      ]
+    },
+    {
+      "name": "hpub",
+      "steps": [
+        {
+          "op": "writer.hpub",
+          "args": {
+            "subject": "foo",
+            "headers": "NATS/1.0\r\nX-Key: value\r\n\r\n",
+            "payload": "hello"
+          },
+          "expect": "HPUB foo 26 31\r\nNATS/1.0\r\nX-Key: value\r\n\r\nhello\r\n"
+        }
+      ]
+    },
+    {
+      "name": "hpub with reply",
+      "steps": [
+        {
+          "op": "writer.hpub",
+          "args": {
+            "subject": "foo",
+            "headers": "NATS/1.0\r\n\r\n",
+            "payload": "data",
+            "reply": "reply"
+          },
+          "expect": "HPUB foo reply 12 16\r\nNATS/1.0\r\n\r\ndata\r\n"
+        }
+      ]
+    },
+    {
+      "name": "sub",
+      "steps": [
+        {
+          "op": "writer.sub",
+          "args": {
+            "subject": "foo.>",
+            "sid": "1"
+          },
+          "expect": "SUB foo.> 1\r\n"
+        }
+      ]
+    },
+    {
+      "name": "sub with queue",
+      "steps": [
+        {
+          "op": "writer.sub",
+          "args": {
+            "subject": "foo",
+            "sid": "5",
+            "queue": "workers"
+          },
+          "expect": "SUB foo workers 5\r\n"
+        }
+      ]
+    },
+    {
+      "name": "unsub",
+      "steps": [
+        {
+          "op": "writer.unsub",
+          "args": {
+            "sid": "3"
+          },
+          "expect": "UNSUB 3\r\n"
+        }
+      ]
+    },
+    {
+      "name": "unsub with max",
+      "steps": [
+        {
+          "op": "writer.unsub",
+          "args": {
+            "sid": "3",
+            "max": 10
+          },
+          "expect": "UNSUB 3 10\r\n"
+        }
+      ]
+    },
+    {
+      "name": "ping",
+      "steps": [
+        {
+          "op": "writer.ping",
+          "expect": "PING\r\n"
+        }
+      ]
+    },
+    {
+      "name": "pong",
+      "steps": [
+        {
+          "op": "writer.pong",
+          "expect": "PONG\r\n"
+        }
+      ]
+    }
+  ]
+}

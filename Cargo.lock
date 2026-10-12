@@ -604,6 +604,7 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-lock",
+ "utopia-nats",
  "utopia-platform",
  "utopia-pools",
  "utopia-queue",
@@ -3691,6 +3692,28 @@ dependencies = [
  "rustix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-nats"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "futures-util",
+ "indexmap",
+ "php-std",
+ "rand 0.10.3",
+ "ring",
+ "rustls",
+ "serde_json",
+ "sha1 0.10.7",
+ "sha2 0.10.9",
+ "thiserror",
+ "tokio",
+ "tokio-rustls",
+ "webpki-roots 1.0.9",
 ]
 
 [[package]]

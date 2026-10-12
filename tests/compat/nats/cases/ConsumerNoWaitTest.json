@@ -1,0 +1,656 @@
+{
+  "source": "packages/nats/tests/E2E/ConsumerNoWaitTest.php",
+  "cases": [
+    {
+      "name": "a no_wait fetch on an empty consumer returns without waiting out the timeout",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "NW_${ns}",
+              "subjects": [
+                "nowait.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "NW_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "nowait.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "NW_${ns}",
+            "config": {
+              "durableName": "nowait",
+              "ackPolicy": "explicit",
+              "filterSubject": "nowait.${ns}"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "NW_${ns}",
+              "name": "nowait",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "nowait",
+                "durable_name": "nowait",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "filter_subject": "nowait.${ns}",
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 1,
+            "timeout": 2.0,
+            "no_wait": true,
+            "within": 0.5
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": [],
+            "within": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "NW_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a no_wait fetch still returns a waiting message",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "NW_${ns}",
+              "subjects": [
+                "nowait.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "NW_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "nowait.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "NW_${ns}",
+            "config": {
+              "durableName": "nowait",
+              "ackPolicy": "explicit",
+              "filterSubject": "nowait.${ns}"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "NW_${ns}",
+              "name": "nowait",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "nowait",
+                "durable_name": "nowait",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "filter_subject": "nowait.${ns}",
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "nowait.${ns}",
+            "data": "payload"
+          },
+          "expect": {
+            "stream": "NW_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 1,
+            "timeout": 2.0,
+            "no_wait": true
+          },
+          "bind": "b",
+          "expect": {
+            "count": 1,
+            "listed": 1,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "nowait.${ns}",
+                "data": "payload",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "jsmsg.ack",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "b",
+              "path": "/messages/0/handle"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "NW_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a waiting fetch honours its timeout on an empty consumer",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "NW_${ns}",
+              "subjects": [
+                "nowait.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "NW_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "nowait.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "NW_${ns}",
+            "config": {
+              "durableName": "waiting",
+              "ackPolicy": "explicit",
+              "filterSubject": "nowait.${ns}"
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "NW_${ns}",
+              "name": "waiting",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "waiting",
+                "durable_name": "waiting",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "filter_subject": "nowait.${ns}",
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 1,
+            "timeout": 0.5,
+            "at_least": 0.25,
+            "within": 1.5
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": [],
+            "within": true,
+            "at_least": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "NW_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4374 @@
+{
+  "source": "packages/nats/tests/E2E/JetStreamExtraTest.php",
+  "cases": [
+    {
+      "name": "a push consumer delivers and acknowledges",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "push.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "push.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.push_subscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "config": {
+              "ackPolicy": "explicit",
+              "durableName": "pd"
+            }
+          },
+          "bind": "push",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "push.get",
+          "args": {
+            "push": {
+              "$ref": "push"
+            }
+          },
+          "expect": {
+            "consumer": "pd",
+            "info_name": "pd",
+            "subject": "_INBOX.*"
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "push.${ns}",
+            "data": "hello-push"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 3.0,
+            "quiet": true
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/0/1/headers"
+            ],
+            "reason": "none"
+          },
+          "expect": [
+            [
+              "push",
+              {
+                "subject": "push.${ns}",
+                "data": "hello-push",
+                "headers": "<masked>",
+                "reply": true
+              }
+            ]
+          ]
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.3,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "js.get_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "name": "pd"
+          },
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "JSX_${ns}",
+              "name": "pd",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "pd",
+                "durable_name": "pd",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "deliver_subject": "_INBOX.*",
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 1,
+                "stream_seq": 1
+              },
+              "ack_floor": {
+                "consumer_seq": 1,
+                "stream_seq": 1
+              },
+              "push_bound": true,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "push.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "push": {
+              "$ref": "push"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an ordered consumer preserves the sequence",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "ordered.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "ordered.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-1"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-2"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-3"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 3,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-4"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 4,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-5"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 5,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-6"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 6,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-7"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 7,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-8"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 8,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-9"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 9,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-10"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 10,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-11"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 11,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-12"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 12,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-13"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 13,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-14"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 14,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-15"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 15,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-16"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 16,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-17"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 17,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-18"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 18,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-19"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 19,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-20"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 20,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-21"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 21,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-22"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 22,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-23"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 23,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-24"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 24,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ordered.${ns}",
+            "data": "msg-25"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 25,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.ordered_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}"
+          },
+          "bind": "oc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-1",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 1,
+            "consumer_seq": 1
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-2",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 2,
+            "consumer_seq": 2
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-3",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 3,
+            "consumer_seq": 3
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-4",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 4,
+            "consumer_seq": 4
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-5",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 5,
+            "consumer_seq": 5
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-6",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 6,
+            "consumer_seq": 6
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-7",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 7,
+            "consumer_seq": 7
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-8",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 8,
+            "consumer_seq": 8
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-9",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 9,
+            "consumer_seq": 9
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-10",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 10,
+            "consumer_seq": 10
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-11",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 11,
+            "consumer_seq": 11
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-12",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 12,
+            "consumer_seq": 12
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-13",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 13,
+            "consumer_seq": 13
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-14",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 14,
+            "consumer_seq": 14
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-15",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 15,
+            "consumer_seq": 15
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-16",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 16,
+            "consumer_seq": 16
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-17",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 17,
+            "consumer_seq": 17
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-18",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 18,
+            "consumer_seq": 18
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-19",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 19,
+            "consumer_seq": 19
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-20",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 20,
+            "consumer_seq": 20
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-21",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 21,
+            "consumer_seq": 21
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-22",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 22,
+            "consumer_seq": 22
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-23",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 23,
+            "consumer_seq": 23
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-24",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 24,
+            "consumer_seq": 24
+          }
+        },
+        {
+          "op": "ordered.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            },
+            "timeout": 3.0
+          },
+          "expect": {
+            "subject": "ordered.${ns}",
+            "data": "msg-25",
+            "headers": null,
+            "reply": true,
+            "stream_seq": 25,
+            "consumer_seq": 25
+          }
+        },
+        {
+          "op": "ordered.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "ordered": {
+              "$ref": "oc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ackSync confirms and prevents redelivery",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "acksync.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "acksync.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "acksync.${ns}",
+            "data": "ack-me"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "config": {
+              "durableName": "c_${ns}",
+              "ackPolicy": "explicit",
+              "filterSubject": "acksync.${ns}",
+              "ackWait": 1.0
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "JSX_${ns}",
+              "name": "c_${ns}",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "c_${ns}",
+                "durable_name": "c_${ns}",
+                "ack_wait": 1000000000,
+                "max_deliver": -1,
+                "filter_subject": "acksync.${ns}",
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 1,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 1,
+            "timeout": 2.0
+          },
+          "bind": "b",
+          "expect": {
+            "count": 1,
+            "listed": 1,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "acksync.${ns}",
+                "data": "ack-me",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "jsmsg.ack_sync",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "b",
+              "path": "/messages/0/handle"
+            },
+            "timeout": 2.0
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.3,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 1,
+            "timeout": 1.0
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ackBatch confirms only the selected messages",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "ackbatch.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "ackbatch.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ackbatch.${ns}",
+            "data": "first"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ackbatch.${ns}",
+            "data": "unfinished"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "ackbatch.${ns}",
+            "data": "third"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 3,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "config": {
+              "durableName": "c_${ns}",
+              "ackPolicy": "explicit",
+              "filterSubject": "ackbatch.${ns}",
+              "ackWait": 0.2
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "JSX_${ns}",
+              "name": "c_${ns}",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "c_${ns}",
+                "durable_name": "c_${ns}",
+                "ack_wait": 200000000,
+                "max_deliver": -1,
+                "filter_subject": "ackbatch.${ns}",
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 3,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 3,
+            "timeout": 2.0
+          },
+          "bind": "b",
+          "expect": {
+            "count": 3,
+            "listed": 3,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "ackbatch.${ns}",
+                "data": "first",
+                "headers": null,
+                "reply": true
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "ackbatch.${ns}",
+                "data": "unfinished",
+                "headers": null,
+                "reply": true
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "ackbatch.${ns}",
+                "data": "third",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "js.ack_batch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "messages": [
+              {
+                "$ref": "b",
+                "path": "/messages/0/handle"
+              },
+              {
+                "$ref": "b",
+                "path": "/messages/2/handle"
+              }
+            ]
+          },
+          "expect": [
+            [
+              0,
+              null
+            ],
+            [
+              1,
+              null
+            ]
+          ]
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.3,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 3,
+            "timeout": 0.5,
+            "no_wait": true
+          },
+          "bind": "r",
+          "expect": {
+            "count": 1,
+            "listed": 1,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "ackbatch.${ns}",
+                "data": "unfinished",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "jsmsg.ack_sync",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "r",
+              "path": "/messages/0/handle"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "metadata, stream operations and pending counts",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "meta.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "meta.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "meta.${ns}",
+            "data": "payload-1"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "meta.${ns}",
+            "data": "payload-2"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "meta.${ns}",
+            "data": "payload-3"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 3,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "seq": 2
+          },
+          "expect": {
+            "subject": "meta.${ns}",
+            "seq": 2,
+            "data": "payload-2",
+            "time": true,
+            "headers": null
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "config": {
+              "durableName": "m_${ns}",
+              "ackPolicy": "explicit",
+              "filterSubject": "meta.${ns}",
+              "ackWait": 30.0
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "JSX_${ns}",
+              "name": "m_${ns}",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "m_${ns}",
+                "durable_name": "m_${ns}",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "filter_subject": "meta.${ns}",
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 3,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "consumer.info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "refresh": true
+          },
+          "expect": {
+            "stream_name": "JSX_${ns}",
+            "name": "m_${ns}",
+            "config": {
+              "deliver_policy": "all",
+              "ack_policy": "explicit",
+              "replay_policy": "instant",
+              "name": "m_${ns}",
+              "durable_name": "m_${ns}",
+              "ack_wait": 30000000000,
+              "max_deliver": -1,
+              "filter_subject": "meta.${ns}",
+              "max_waiting": 512,
+              "max_ack_pending": 1000,
+              "num_replicas": 0,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            },
+            "created": true,
+            "num_ack_pending": 0,
+            "num_redelivered": 0,
+            "num_waiting": 0,
+            "num_pending": 3,
+            "delivered": {
+              "consumer_seq": 0,
+              "stream_seq": 0
+            },
+            "ack_floor": {
+              "consumer_seq": 0,
+              "stream_seq": 0
+            },
+            "push_bound": false,
+            "cluster": null,
+            "metadata": {
+              "_nats.level": "1",
+              "_nats.req.level": "0",
+              "_nats.ver": "2.11.17"
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 2,
+            "timeout": 2.0
+          },
+          "bind": "b",
+          "expect": {
+            "count": 2,
+            "listed": 2,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "meta.${ns}",
+                "data": "payload-1",
+                "headers": null,
+                "reply": true
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "meta.${ns}",
+                "data": "payload-2",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "jsmsg.metadata",
+          "args": {
+            "msg": {
+              "$ref": "b",
+              "path": "/messages/0/handle"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/timestamp"
+            ],
+            "reason": "the time the server stored the message"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "consumer": "m_${ns}",
+            "delivered": 1,
+            "stream_seq": 1,
+            "consumer_seq": 1,
+            "timestamp": "<masked>",
+            "pending": 2,
+            "domain": null
+          }
+        },
+        {
+          "op": "consumer.info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "refresh": true
+          },
+          "expect": {
+            "stream_name": "JSX_${ns}",
+            "name": "m_${ns}",
+            "config": {
+              "deliver_policy": "all",
+              "ack_policy": "explicit",
+              "replay_policy": "instant",
+              "name": "m_${ns}",
+              "durable_name": "m_${ns}",
+              "ack_wait": 30000000000,
+              "max_deliver": -1,
+              "filter_subject": "meta.${ns}",
+              "max_waiting": 512,
+              "max_ack_pending": 1000,
+              "num_replicas": 0,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            },
+            "created": true,
+            "num_ack_pending": 2,
+            "num_redelivered": 0,
+            "num_waiting": 0,
+            "num_pending": 1,
+            "delivered": {
+              "consumer_seq": 2,
+              "stream_seq": 2
+            },
+            "ack_floor": {
+              "consumer_seq": 0,
+              "stream_seq": 0
+            },
+            "push_bound": false,
+            "cluster": null,
+            "metadata": {
+              "_nats.level": "1",
+              "_nats.req.level": "0",
+              "_nats.ver": "2.11.17"
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 10,
+            "timeout": 2.0,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 1,
+            "listed": 1,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "meta.${ns}",
+                "data": "payload-3",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "js.delete_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "seq": 1
+          },
+          "expect": null
+        },
+        {
+          "op": "js.get_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "seq": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "no message found"
+            }
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "nak, in progress and term",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "nak.${ns}"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "nak.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "nak.${ns}",
+            "data": "a"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "nak.${ns}",
+            "data": "b"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "config": {
+              "durableName": "n_${ns}",
+              "ackPolicy": "explicit",
+              "filterSubject": "nak.${ns}",
+              "ackWait": 30.0,
+              "maxDeliver": 5
+            }
+          },
+          "bind": "k",
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "JSX_${ns}",
+              "name": "n_${ns}",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "n_${ns}",
+                "durable_name": "n_${ns}",
+                "ack_wait": 30000000000,
+                "max_deliver": 5,
+                "filter_subject": "nak.${ns}",
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 2,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 2,
+            "timeout": 2.0
+          },
+          "bind": "b",
+          "expect": {
+            "count": 2,
+            "listed": 2,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "nak.${ns}",
+                "data": "a",
+                "headers": null,
+                "reply": true
+              },
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "nak.${ns}",
+                "data": "b",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "jsmsg.in_progress",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "b",
+              "path": "/messages/0/handle"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "jsmsg.nak",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "b",
+              "path": "/messages/0/handle"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "jsmsg.term",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "b",
+              "path": "/messages/1/handle"
+            },
+            "reason": "bad input"
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 2,
+            "timeout": 1.0
+          },
+          "bind": "again",
+          "expect": {
+            "count": 1,
+            "listed": 1,
+            "messages": [
+              {
+                "handle": {
+                  "$handle": "*"
+                },
+                "subject": "nak.${ns}",
+                "data": "a",
+                "headers": null,
+                "reply": true
+              }
+            ]
+          }
+        },
+        {
+          "op": "jsmsg.metadata",
+          "args": {
+            "msg": {
+              "$ref": "again",
+              "path": "/messages/0/handle"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/timestamp"
+            ],
+            "reason": "the time the server stored the message"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "consumer": "n_${ns}",
+            "delivered": 2,
+            "stream_seq": 1,
+            "consumer_seq": 3,
+            "timestamp": "<masked>",
+            "pending": 0,
+            "domain": null
+          }
+        },
+        {
+          "op": "jsmsg.nak",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "msg": {
+              "$ref": "again",
+              "path": "/messages/0/handle"
+            },
+            "delay": 0.5
+          },
+          "expect": null
+        },
+        {
+          "op": "consumer.fetch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "batch": 2,
+            "timeout": 0.2,
+            "no_wait": true
+          },
+          "expect": {
+            "count": 0,
+            "listed": 0,
+            "messages": []
+          }
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.6,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "consumer.next",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "consumer": {
+              "$ref": "k",
+              "path": "/consumer"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "handle": {
+              "$handle": "*"
+            },
+            "subject": "nak.${ns}",
+            "data": "a",
+            "headers": null,
+            "reply": true
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "stream and consumer management",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "mg.${ns}.>"
+              ],
+              "storage": "memory"
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "mg.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "stream.get",
+          "args": {
+            "stream": {
+              "$ref": "st",
+              "path": "/stream"
+            }
+          },
+          "expect": {
+            "name": "JSX_${ns}",
+            "config": {
+              "name": "JSX_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "memory",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "subjects": [
+                "mg.${ns}.>"
+              ],
+              "max_msg_size": -1,
+              "max_age": 0,
+              "duplicate_window": 120000000000,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              },
+              "compression": "none",
+              "consumer_limits": []
+            },
+            "state": {
+              "messages": 0,
+              "bytes": false,
+              "first_seq": 0,
+              "last_seq": 0,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 0
+            }
+          }
+        },
+        {
+          "op": "stream.create_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": {
+              "$ref": "st",
+              "path": "/stream"
+            },
+            "config": {
+              "durableName": "one"
+            }
+          },
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "JSX_${ns}",
+              "name": "one",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "one",
+                "durable_name": "one",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "stream.get_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": {
+              "$ref": "st",
+              "path": "/stream"
+            },
+            "name": "one"
+          },
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "JSX_${ns}",
+              "name": "one",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "one",
+                "durable_name": "one",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "js.get_consumer_names",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}"
+          },
+          "expect": [
+            "one"
+          ]
+        },
+        {
+          "op": "js.update_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "config": {
+              "durableName": "one",
+              "description": "changed"
+            }
+          },
+          "expect": {
+            "consumer": {
+              "$handle": "*"
+            },
+            "info": {
+              "stream_name": "JSX_${ns}",
+              "name": "one",
+              "config": {
+                "deliver_policy": "all",
+                "ack_policy": "explicit",
+                "replay_policy": "instant",
+                "name": "one",
+                "durable_name": "one",
+                "description": "changed",
+                "ack_wait": 30000000000,
+                "max_deliver": -1,
+                "max_waiting": 512,
+                "max_ack_pending": 1000,
+                "num_replicas": 0,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                }
+              },
+              "created": true,
+              "num_ack_pending": 0,
+              "num_redelivered": 0,
+              "num_waiting": 0,
+              "num_pending": 0,
+              "delivered": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "ack_floor": {
+                "consumer_seq": 0,
+                "stream_seq": 0
+              },
+              "push_bound": false,
+              "cluster": null,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              }
+            }
+          }
+        },
+        {
+          "op": "stream.delete_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": {
+              "$ref": "st",
+              "path": "/stream"
+            },
+            "name": "one"
+          },
+          "expect": null
+        },
+        {
+          "op": "js.get_consumer",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "name": "one"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "consumer not found"
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "mg.${ns}.a",
+            "data": "1"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "mg.${ns}.b",
+            "data": "2"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "stream.info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": {
+              "$ref": "st",
+              "path": "/stream"
+            },
+            "refresh": true
+          },
+          "expect": {
+            "config": {
+              "name": "JSX_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "memory",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "subjects": [
+                "mg.${ns}.>"
+              ],
+              "max_msg_size": -1,
+              "max_age": 0,
+              "duplicate_window": 120000000000,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              },
+              "compression": "none",
+              "consumer_limits": []
+            },
+            "state": {
+              "messages": 2,
+              "bytes": true,
+              "first_seq": 1,
+              "last_seq": 2,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 2
+            },
+            "created": true
+          }
+        },
+        {
+          "op": "stream.purge",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": {
+              "$ref": "st",
+              "path": "/stream"
+            },
+            "subject": "mg.${ns}.a"
+          },
+          "expect": null
+        },
+        {
+          "op": "js.get_stream_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": {
+            "config": {
+              "name": "JSX_${ns}",
+              "retention": "limits",
+              "max_consumers": -1,
+              "max_msgs": -1,
+              "max_bytes": -1,
+              "max_msgs_per_subject": -1,
+              "storage": "memory",
+              "num_replicas": 1,
+              "discard": "old",
+              "no_ack": false,
+              "allow_direct": false,
+              "mirror_direct": false,
+              "sealed": false,
+              "deny_delete": false,
+              "deny_purge": false,
+              "allow_rollup_hdrs": false,
+              "subjects": [
+                "mg.${ns}.>"
+              ],
+              "max_msg_size": -1,
+              "max_age": 0,
+              "duplicate_window": 120000000000,
+              "metadata": {
+                "_nats.level": "1",
+                "_nats.req.level": "0",
+                "_nats.ver": "2.11.17"
+              },
+              "compression": "none",
+              "consumer_limits": []
+            },
+            "state": {
+              "messages": 1,
+              "bytes": true,
+              "first_seq": 2,
+              "last_seq": 2,
+              "consumer_count": 0,
+              "num_deleted": 0,
+              "num_subjects": 1
+            },
+            "created": true
+          }
+        },
+        {
+          "op": "js.get_last_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "subject": "mg.${ns}.b"
+          },
+          "expect": {
+            "subject": "mg.${ns}.b",
+            "seq": 2,
+            "data": "2",
+            "time": true,
+            "headers": null
+          }
+        },
+        {
+          "op": "js.purge_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "js.get_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "mg.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 3,
+                "last_seq": 2,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.get_stream_names",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "contains": "${ns}"
+          },
+          "expect": [
+            "JSX_${ns}"
+          ]
+        },
+        {
+          "op": "js.get_stream_names",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "mg.${ns}.x",
+            "contains": "${ns}"
+          },
+          "expect": [
+            "JSX_${ns}"
+          ]
+        },
+        {
+          "op": "js.list_streams",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "contains": "${ns}"
+          },
+          "expect": [
+            "JSX_${ns}"
+          ]
+        },
+        {
+          "op": "js.update_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "mg.${ns}.>"
+              ],
+              "storage": "memory",
+              "description": "updated"
+            }
+          },
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "mg.${ns}.>"
+                ],
+                "description": "updated",
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 3,
+                "last_seq": 2,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.create_or_update_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "mg.${ns}.>"
+              ],
+              "storage": "memory",
+              "maxMsgs": 5
+            }
+          },
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": 5,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "mg.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 3,
+                "last_seq": 2,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "stream.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "stream": {
+              "$ref": "st",
+              "path": "/stream"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "js.get_stream_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "stream not found"
+            }
+          }
+        },
+        {
+          "op": "js.create_or_update_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "mg.${ns}.>"
+              ],
+              "storage": "memory"
+            }
+          },
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "mg.${ns}.>"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 120000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "stream not found"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "publishing with expectations and deduplication",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "name": "JSX_${ns}",
+              "subjects": [
+                "exp.${ns}"
+              ],
+              "storage": "memory",
+              "duplicateWindow": 60.0
+            }
+          },
+          "bind": "st",
+          "expect": {
+            "stream": {
+              "$handle": "*"
+            },
+            "info": {
+              "config": {
+                "name": "JSX_${ns}",
+                "retention": "limits",
+                "max_consumers": -1,
+                "max_msgs": -1,
+                "max_bytes": -1,
+                "max_msgs_per_subject": -1,
+                "storage": "memory",
+                "num_replicas": 1,
+                "discard": "old",
+                "no_ack": false,
+                "allow_direct": false,
+                "mirror_direct": false,
+                "sealed": false,
+                "deny_delete": false,
+                "deny_purge": false,
+                "allow_rollup_hdrs": false,
+                "subjects": [
+                  "exp.${ns}"
+                ],
+                "max_msg_size": -1,
+                "max_age": 0,
+                "duplicate_window": 60000000000,
+                "metadata": {
+                  "_nats.level": "1",
+                  "_nats.req.level": "0",
+                  "_nats.ver": "2.11.17"
+                },
+                "compression": "none",
+                "consumer_limits": []
+              },
+              "state": {
+                "messages": 0,
+                "bytes": false,
+                "first_seq": 0,
+                "last_seq": 0,
+                "consumer_count": 0,
+                "num_deleted": 0,
+                "num_subjects": 0
+              },
+              "created": true
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "exp.${ns}",
+            "data": "a",
+            "msg_id": "id-1"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "exp.${ns}",
+            "data": "a",
+            "msg_id": "id-1"
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 1,
+            "domain": null,
+            "duplicate": true
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "exp.${ns}",
+            "data": "b",
+            "expected_last_seq": 1
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 2,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "exp.${ns}",
+            "data": "c",
+            "expected_last_seq": 1
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "wrong last sequence: 2"
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "exp.${ns}",
+            "data": "c",
+            "expected_stream": "OTHER"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "expected stream does not match"
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "exp.${ns}",
+            "data": "c",
+            "expected_last_msg_id": "id-1",
+            "expected_last_subject_seq": 2,
+            "expected_stream": "JSX_${ns}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\JetStreamException",
+              "message": "wrong last msg ID: "
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "exp.${ns}",
+            "data": "d",
+            "headers": [
+              [
+                "set",
+                "X-Trace",
+                "t"
+              ]
+            ]
+          },
+          "expect": {
+            "stream": "JSX_${ns}",
+            "seq": 3,
+            "domain": null,
+            "duplicate": false
+          }
+        },
+        {
+          "op": "js.get_last_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "stream": "JSX_${ns}",
+            "subject": "exp.${ns}"
+          },
+          "expect": {
+            "subject": "exp.${ns}",
+            "seq": 3,
+            "data": "d",
+            "time": true,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "X-Trace",
+                  [
+                    "t"
+                  ]
+                ]
+              ],
+              "count": 1,
+              "all_count": 1,
+              "wire": "NATS/1.0\r\nX-Trace: t\r\n\r\n"
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "nostream.${ns}",
+            "data": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\NoRespondersException",
+              "message": "No responders for request"
+            }
+          }
+        },
+        {
+          "op": "js.publish",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "subject": "nostream.${ns}",
+            "data": "x",
+            "retry": 2
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\NoRespondersException",
+              "message": "No responders for request"
+            }
+          }
+        },
+        {
+          "op": "js.delete_stream",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "name": "JSX_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a domain context answers through its prefix",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "prefix": "$JS.API"
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.account_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            }
+          },
+          "expect": {
+            "streams_ge_1": false,
+            "memory_ge_0": true,
+            "api_total_ge_0": true,
+            "raw_has_memory": true,
+            "limits_is_array": true
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "domain": "nowhere"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.account_info",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\NoRespondersException",
+              "message": "No responders for request"
+            }
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

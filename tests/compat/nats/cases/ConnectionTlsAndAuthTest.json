@@ -1,0 +1,443 @@
+{
+  "source": "packages/nats/tests/ConnectionTlsAndAuthTest.php",
+  "cases": [
+    {
+      "name": "TLS option defaults",
+      "steps": [
+        {
+          "op": "options.defaults",
+          "expect": {
+            "servers": [
+              "nats://127.0.0.1:4222"
+            ],
+            "name": "",
+            "user": null,
+            "pass": null,
+            "token": null,
+            "nkey": null,
+            "nkeySeed": null,
+            "credentialsFile": null,
+            "tls": false,
+            "tlsCaFile": null,
+            "tlsCertFile": null,
+            "tlsKeyFile": null,
+            "tlsVerify": true,
+            "tlsServerName": null,
+            "allowReconnect": true,
+            "maxReconnectAttempts": 60,
+            "reconnectWait": 2.0,
+            "maxReconnectWait": 8.0,
+            "reconnectJitter": 0.1,
+            "reconnectBufSize": 8388608,
+            "subPendingMsgsLimit": 65536,
+            "subPendingBytesLimit": 67108864,
+            "connectTimeout": 2.0,
+            "requestTimeout": 5.0,
+            "drainTimeout": 30.0,
+            "pingInterval": 120.0,
+            "maxPingsOut": 2,
+            "verbose": false,
+            "pedantic": false,
+            "echo": true,
+            "noRandomize": false,
+            "inboxPrefix": "_INBOX"
+          }
+        },
+        {
+          "op": "options.defaults",
+          "args": {
+            "servers": "nats://h:1"
+          },
+          "expect": {
+            "servers": [
+              "nats://h:1"
+            ],
+            "name": "",
+            "user": null,
+            "pass": null,
+            "token": null,
+            "nkey": null,
+            "nkeySeed": null,
+            "credentialsFile": null,
+            "tls": false,
+            "tlsCaFile": null,
+            "tlsCertFile": null,
+            "tlsKeyFile": null,
+            "tlsVerify": true,
+            "tlsServerName": null,
+            "allowReconnect": true,
+            "maxReconnectAttempts": 60,
+            "reconnectWait": 2.0,
+            "maxReconnectWait": 8.0,
+            "reconnectJitter": 0.1,
+            "reconnectBufSize": 8388608,
+            "subPendingMsgsLimit": 65536,
+            "subPendingBytesLimit": 67108864,
+            "connectTimeout": 2.0,
+            "requestTimeout": 5.0,
+            "drainTimeout": 30.0,
+            "pingInterval": 120.0,
+            "maxPingsOut": 2,
+            "verbose": false,
+            "pedantic": false,
+            "echo": true,
+            "noRandomize": false,
+            "inboxPrefix": "_INBOX"
+          }
+        },
+        {
+          "op": "options.defaults",
+          "args": {
+            "servers": [
+              "a:1",
+              "b:2"
+            ]
+          },
+          "expect": {
+            "servers": [
+              "a:1",
+              "b:2"
+            ],
+            "name": "",
+            "user": null,
+            "pass": null,
+            "token": null,
+            "nkey": null,
+            "nkeySeed": null,
+            "credentialsFile": null,
+            "tls": false,
+            "tlsCaFile": null,
+            "tlsCertFile": null,
+            "tlsKeyFile": null,
+            "tlsVerify": true,
+            "tlsServerName": null,
+            "allowReconnect": true,
+            "maxReconnectAttempts": 60,
+            "reconnectWait": 2.0,
+            "maxReconnectWait": 8.0,
+            "reconnectJitter": 0.1,
+            "reconnectBufSize": 8388608,
+            "subPendingMsgsLimit": 65536,
+            "subPendingBytesLimit": 67108864,
+            "connectTimeout": 2.0,
+            "requestTimeout": 5.0,
+            "drainTimeout": 30.0,
+            "pingInterval": 120.0,
+            "maxPingsOut": 2,
+            "verbose": false,
+            "pedantic": false,
+            "echo": true,
+            "noRandomize": false,
+            "inboxPrefix": "_INBOX"
+          }
+        }
+      ]
+    },
+    {
+      "name": "the connection maps TLS options",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "tlsVerify": false,
+              "tlsServerName": "example.com"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.tls_options",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "cafile": null,
+            "local_cert": null,
+            "local_pk": null,
+            "peer_name": "example.com",
+            "verify_peer": false,
+            "verify_peer_name": false
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "tlsCaFile": "ca.pem",
+              "tlsCertFile": "c.pem",
+              "tlsKeyFile": "k.pem"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.tls_options",
+          "args": {
+            "conn": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "cafile": "ca.pem",
+            "local_cert": "c.pem",
+            "local_pk": "k.pem",
+            "verify_peer": true,
+            "verify_peer_name": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "the TLS transport applies verification and SNI",
+      "steps": [
+        {
+          "op": "tls_transport.options",
+          "args": {
+            "options": {
+              "verify_peer": false,
+              "verify_peer_name": false,
+              "peer_name": "example.com"
+            }
+          },
+          "expect": {
+            "peer_name": "example.com",
+            "verify_peer": false,
+            "verify_peer_name": false
+          }
+        },
+        {
+          "op": "tls_transport.options",
+          "args": {
+            "options": {}
+          },
+          "expect": {
+            "verify_peer": true,
+            "verify_peer_name": true
+          }
+        },
+        {
+          "op": "tls_transport.options",
+          "args": {
+            "options": {
+              "cafile": "ca.pem",
+              "local_cert": "c",
+              "local_pk": "k"
+            }
+          },
+          "expect": {
+            "cafile": "ca.pem",
+            "local_cert": "c",
+            "local_pk": "k",
+            "verify_peer": true,
+            "verify_peer_name": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "the token provider is resolved at connect",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "tokenProvider": true
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "tokenProvider",
+              1
+            ]
+          ]
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true,
+            "auth_token": "token-1"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the token provider is resolved again at reconnect",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "tokenProvider": true,
+              "reconnectWait": 0.0,
+              "reconnectJitter": 0.0
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.push",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "data": "-ERR 'Stale Connection'\r\n"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 1.0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\ProtocolException",
+              "message": "Server error: Stale Connection"
+            }
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "tokenProvider",
+              1
+            ],
+            [
+              "transport",
+              "nats"
+            ],
+            [
+              "tokenProvider",
+              2
+            ]
+          ]
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the JWT provider is resolved at connect",
+      "steps": [
+        {
+          "op": "fake.connect",
+          "args": {
+            "options": {
+              "jwtProvider": "my.jwt.token"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fake.connect_payload",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": {
+            "verbose": false,
+            "pedantic": false,
+            "lang": "php",
+            "version": "0.1.0",
+            "protocol": 1,
+            "echo": true,
+            "headers": true,
+            "no_responders": true,
+            "jwt": "my.jwt.token"
+          }
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

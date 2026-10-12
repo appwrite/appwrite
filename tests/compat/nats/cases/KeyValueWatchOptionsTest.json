@@ -1,0 +1,1208 @@
+{
+  "source": "packages/nats/tests/E2E/KeyValueWatchOptionsTest.php",
+  "cases": [
+    {
+      "name": "include history, then live updates",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvwo_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v1"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v2"
+          },
+          "expect": 2
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v3"
+          },
+          "expect": 3
+        },
+        {
+          "op": "kv.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "pattern": "k",
+            "options": {
+              "include_history": true
+            },
+            "init": true
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v4"
+          },
+          "expect": 5
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "w"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "k",
+                "value": "v1",
+                "revision": 1,
+                "created": true,
+                "operation": "PUT"
+              }
+            ],
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "k",
+                "value": "v2",
+                "revision": 2,
+                "created": true,
+                "operation": "PUT"
+              }
+            ],
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "k",
+                "value": "v3",
+                "revision": 3,
+                "created": true,
+                "operation": "PUT"
+              }
+            ],
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "k",
+                "value": "",
+                "revision": 4,
+                "created": true,
+                "operation": "DEL"
+              }
+            ],
+            [
+              "init",
+              4
+            ],
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "k",
+                "value": "v4",
+                "revision": 5,
+                "created": true,
+                "operation": "PUT"
+              }
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvwo_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "ignore deletes skips markers",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvwo_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "v1"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k"
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "pattern": "k",
+            "options": {
+              "include_history": true,
+              "ignore_deletes": true
+            },
+            "init": true
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "w"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "k",
+                "value": "v1",
+                "revision": 1,
+                "created": true,
+                "operation": "PUT"
+              }
+            ],
+            [
+              "init",
+              1
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvwo_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "meta only delivers no value",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvwo_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "k",
+            "value": "a-real-value"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "pattern": "k",
+            "options": {
+              "include_history": true,
+              "meta_only": true
+            },
+            "init": true
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "conn.unsubscribe",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "sub": {
+              "$ref": "w"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "k",
+                "value": "",
+                "revision": 1,
+                "created": true,
+                "operation": "PUT"
+              }
+            ],
+            [
+              "init",
+              1
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvwo_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "last per subject, and no history calls onInitDone at once",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvwo_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "a",
+            "value": "1"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "a",
+            "value": "2"
+          },
+          "expect": 2
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "b",
+            "value": "3"
+          },
+          "expect": 3
+        },
+        {
+          "op": "kv.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "pattern": "*",
+            "options": {},
+            "init": true
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.flush",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.process_message",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "timeout": 0.5,
+            "quiet": true
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "whether something arrived during the pause depends on timing"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "kv.watch",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "pattern": "none",
+            "options": {
+              "updates_only": true
+            },
+            "init": true
+          },
+          "bind": "w2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "conn.log",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": [
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "a",
+                "value": "2",
+                "revision": 2,
+                "created": true,
+                "operation": "PUT"
+              }
+            ],
+            [
+              "entry",
+              {
+                "bucket": "kvwo_${ns}",
+                "key": "b",
+                "value": "3",
+                "revision": 3,
+                "created": true,
+                "operation": "PUT"
+              }
+            ],
+            [
+              "init",
+              2
+            ],
+            [
+              "init",
+              3
+            ]
+          ]
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvwo_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "purgeDeletes removes tombstones",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvwo_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "a",
+            "value": "1"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "b",
+            "value": "2"
+          },
+          "expect": 2
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "c",
+            "value": "3"
+          },
+          "expect": 3
+        },
+        {
+          "op": "kv.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.purge",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "b"
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.keys",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": [
+            "a",
+            "b",
+            "c"
+          ]
+        },
+        {
+          "op": "kv.status",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": {
+            "bucket": "kvwo_${ns}",
+            "values": 4,
+            "bytes_gt_0": true,
+            "history": 10,
+            "ttl": 0.0,
+            "stream": "KV_kvwo_${ns}"
+          }
+        },
+        {
+          "op": "kv.purge_deletes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "kv.keys",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": [
+            "c"
+          ]
+        },
+        {
+          "op": "kv.status",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": {
+            "bucket": "kvwo_${ns}",
+            "values": 1,
+            "bytes_gt_0": true,
+            "history": 10,
+            "ttl": 0.0,
+            "stream": "KV_kvwo_${ns}"
+          }
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvwo_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "purgeDeletes respects the threshold",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "bind": "js",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "js.create_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "config": {
+              "bucket": "kvwo_${ns}",
+              "history": 10
+            }
+          },
+          "bind": "kv",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "kv.put",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "a",
+            "value": "1"
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.delete",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "key": "a"
+          },
+          "expect": null
+        },
+        {
+          "op": "kv.purge_deletes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "threshold": 60.0
+          },
+          "expect": 0
+        },
+        {
+          "op": "kv.keys",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": [
+            "a"
+          ]
+        },
+        {
+          "op": "kv.purge_deletes",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            },
+            "threshold": 0.0
+          },
+          "expect": 1
+        },
+        {
+          "op": "kv.keys",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "kv": {
+              "$ref": "kv"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "js.delete_key_value",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "js": {
+              "$ref": "js"
+            },
+            "bucket": "kvwo_${ns}"
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

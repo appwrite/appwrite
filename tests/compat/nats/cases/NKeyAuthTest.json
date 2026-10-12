@@ -1,0 +1,320 @@
+{
+  "source": "packages/nats/tests/Auth/NKeyAuthTest.php",
+  "cases": [
+    {
+      "name": "derives the public key of a user seed",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY",
+            "nonce": "n",
+            "public_key": true
+          },
+          "expect": {
+            "public_key": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+            "fields": {
+              "nkey": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+              "sig": "ADIK45EKTUOBVEPZKBKNE6VJZGG65SPZEOAZDQVXFMUHHWRSMCZEH3SDB7YJ3UYDPLGOHHMXBD3RL6AHSP75JV7P5REDV6AOD7AHEDY"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "SUADIYF6GEQB42P63KQO52FZTF7VY7BJTH627ZMTEU6NMVFPJX5NOFGHXQ",
+            "nonce": "n",
+            "public_key": true
+          },
+          "expect": {
+            "public_key": "UAHG6BEYSLX2DEIBWCAM5CLYZO5PEUDLQQ3BPM66LDFMCEMDXWH6P6JG",
+            "fields": {
+              "nkey": "UAHG6BEYSLX2DEIBWCAM5CLYZO5PEUDLQQ3BPM66LDFMCEMDXWH6P6JG",
+              "sig": "DR7AEN6F2PSXEYKAMZWZI6ISGJJB34JRU264UKXQ2O7BHJQFC7A7TBW7NEVUX3ABFL53XHNYTAQVGELASQC3NVOYBP2BRI5NW3NUYBA"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "the signature of a nonce (Ed25519 is deterministic)",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY",
+            "nonce": "server-nonce-0123456789abcdef"
+          },
+          "expect": {
+            "fields": {
+              "nkey": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+              "sig": "BGVMGYWUDY5FJYKXG755YR46YYQIYEPB765Q74SQT6EW3PPS6JEWH5YOTKNUUURAL3WKO5HWGUXGHZVOJMHDU3KDP2IO2E2UVSAGACY"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "an explicit public key is preserved",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "public": "UEXPLICITKEY",
+            "seed": "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY",
+            "nonce": "n",
+            "public_key": true
+          },
+          "expect": {
+            "public_key": "UEXPLICITKEY",
+            "fields": {
+              "nkey": "UEXPLICITKEY",
+              "sig": "ADIK45EKTUOBVEPZKBKNE6VJZGG65SPZEOAZDQVXFMUHHWRSMCZEH3SDB7YJ3UYDPLGOHHMXBD3RL6AHSP75JV7P5REDV6AOD7AHEDY"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a seed in lower case or with padding",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "suakktokdastboy5nujszxwwen5s5wi6h5zb7syzoelujfgwje6j2xgboy",
+            "nonce": "n",
+            "public_key": true
+          },
+          "expect": {
+            "public_key": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+            "fields": {
+              "nkey": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+              "sig": "ADIK45EKTUOBVEPZKBKNE6VJZGG65SPZEOAZDQVXFMUHHWRSMCZEH3SDB7YJ3UYDPLGOHHMXBD3RL6AHSP75JV7P5REDV6AOD7AHEDY"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY===",
+            "nonce": "n"
+          },
+          "expect": {
+            "fields": {
+              "nkey": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+              "sig": "ADIK45EKTUOBVEPZKBKNE6VJZGG65SPZEOAZDQVXFMUHHWRSMCZEH3SDB7YJ3UYDPLGOHHMXBD3RL6AHSP75JV7P5REDV6AOD7AHEDY"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid seeds",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "not base32!",
+            "nonce": "n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "Invalid base32 character in NKey seed"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "SUA",
+            "nonce": "n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "Invalid NKey seed"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "SUAAAAAAAAAAAAAA",
+            "nonce": "n"
+          },
+          "expect": {
+            "$error": {
+              "class": "SodiumException",
+              "message": "sodium_crypto_sign_seed_keypair(): Argument #1 ($seed) must be SODIUM_CRYPTO_SIGN_SEEDBYTES bytes long"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "SUAAAAAAAAAAAAAA",
+            "nonce": "n",
+            "public": "U",
+            "public_key": true
+          },
+          "expect": {
+            "$error": {
+              "class": "SodiumException",
+              "message": "sodium_crypto_sign_seed_keypair(): Argument #1 ($seed) must be SODIUM_CRYPTO_SIGN_SEEDBYTES bytes long"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a nonce is required",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "nkey",
+            "seed": "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "NKey authentication requires a server nonce"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "other authenticators",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "none"
+          },
+          "expect": {
+            "fields": []
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "token",
+            "token": "t0k"
+          },
+          "expect": {
+            "fields": {
+              "auth_token": "t0k"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "user_pass",
+            "user": "alice",
+            "pass": "secret"
+          },
+          "expect": {
+            "fields": {
+              "user": "alice",
+              "pass": "secret"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a credentials file",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "credentials",
+            "contents": "-----BEGIN NATS USER JWT-----\neyJhbGciOi.jwt.token\n------END NATS USER JWT------\n\n************************* IMPORTANT *************************\n-----BEGIN USER NKEY SEED-----\nSUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY\n------END USER NKEY SEED------\n",
+            "nonce": "n"
+          },
+          "expect": {
+            "fields": {
+              "jwt": "eyJhbGciOi.jwt.token",
+              "nkey": "UAX2HRTQ4H5S6EX3NM6AJIYBJXDCP6P3T3AJTBAMXYJ2Q6H7OPQ53Z6W",
+              "sig": "ADIK45EKTUOBVEPZKBKNE6VJZGG65SPZEOAZDQVXFMUHHWRSMCZEH3SDB7YJ3UYDPLGOHHMXBD3RL6AHSP75JV7P5REDV6AOD7AHEDY"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "credentials files without a JWT or a seed, or missing",
+      "steps": [
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "credentials",
+            "contents": "-----BEGIN USER NKEY SEED-----\nx\n------END USER NKEY SEED------\n",
+            "nonce": "n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "No JWT found in credentials file"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "credentials",
+            "contents": "-----BEGIN NATS USER JWT-----\nj\n------END NATS USER JWT------\n",
+            "nonce": "n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "No NKey seed found in credentials file"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "credentials",
+            "path": "/tmp/compat-fs/missing/nope.creds",
+            "nonce": "n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "Credentials file not found: /tmp/compat-fs/missing/nope.creds"
+            }
+          }
+        },
+        {
+          "op": "auth.fields",
+          "args": {
+            "kind": "credentials",
+            "contents": "-----BEGIN NATS USER JWT-----\nj",
+            "nonce": "n"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\NATS\\Exception\\AuthenticationException",
+              "message": "No JWT found in credentials file"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

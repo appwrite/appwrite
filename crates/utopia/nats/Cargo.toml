@@ -1,0 +1,32 @@
+[package]
+name = "utopia-nats"
+description = "A NATS client: publish, subscribe, request-reply and batched requests over TCP, TLS and WebSockets, with JetStream streams and consumers, a key-value store, an object store and NATS micro services."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+async-trait.workspace = true
+base64.workspace = true
+bytes.workspace = true
+futures-util.workspace = true
+indexmap.workspace = true
+php-std.workspace = true
+rand.workspace = true
+ring.workspace = true
+rustls.workspace = true
+serde_json.workspace = true
+sha1.workspace = true
+sha2.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["io-util", "net", "time", "fs"] }
+tokio-rustls.workspace = true
+webpki-roots.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "macros", "io-util", "net", "time"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

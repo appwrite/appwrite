@@ -159,6 +159,24 @@
       "rust": "http://127.0.0.1:16623",
       "rust-container": "http://compat-smtp-implicit-rust:8025",
       "runner": "http://127.0.0.1:16623"
+    },
+    "nats": {
+      "php": "nats://compat-nats:4222",
+      "rust": "nats://localhost:16901",
+      "rust-container": "nats://compat-nats:4222",
+      "runner": "nats://localhost:16901"
+    },
+    "nats-tls": {
+      "php": "tls://compat-nats-tls:4222",
+      "rust": "tls://localhost:16902",
+      "rust-container": "tls://compat-nats-tls:4222",
+      "runner": "tls://localhost:16902"
+    },
+    "nats-ws": {
+      "php": "ws://compat-nats-ws:8080",
+      "rust": "ws://localhost:16903",
+      "rust-container": "ws://compat-nats-ws:8080",
+      "runner": "ws://localhost:16903"
     }
   }
 }

@@ -1,0 +1,785 @@
+{
+  "source": "packages/nats/tests/E2E/ServiceExtrasTest.php",
+  "cases": [
+    {
+      "name": "a grouped endpoint is reachable at its prefixed subject",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svcx_${ns}",
+            "version": "1.0.0",
+            "description": "Extras service",
+            "metadata": {
+              "owner": "levi",
+              "env": "test"
+            }
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_group",
+          "args": {
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "svcx_${ns}"
+          },
+          "bind": "g0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add_group",
+          "args": {
+            "group": {
+              "$ref": "g0"
+            },
+            "name": "math"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "group": {
+              "$ref": "g"
+            },
+            "name": "add",
+            "handler": {
+              "kind": "echo",
+              "prefix": "sum:"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "group.add_group",
+          "args": {
+            "group": {
+              "$ref": "g"
+            },
+            "name": "trig"
+          },
+          "bind": "sub",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "group": {
+              "$ref": "sub"
+            },
+            "name": "sin",
+            "handler": {
+              "kind": "echo",
+              "prefix": "sin:"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svcx_${ns}.math.add",
+            "data": "2",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "sum:2",
+            "reply": null,
+            "headers": null,
+            "sid": "12"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svcx_${ns}.math.trig.sin",
+            "data": "0",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "sin:0",
+            "reply": null,
+            "headers": null,
+            "sid": "12"
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a custom error code surfaces in headers and counts as an error",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svcx_${ns}",
+            "version": "1.0.0",
+            "description": "Extras service",
+            "metadata": {
+              "owner": "levi",
+              "env": "test"
+            }
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "fail",
+            "subject": "svcx_${ns}.fail",
+            "handler": {
+              "kind": "throw",
+              "error": {
+                "class": "ServiceException",
+                "code": "418",
+                "message": "I am a teapot"
+              }
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svcx_${ns}.fail",
+            "data": "x",
+            "timeout": 2.0
+          },
+          "expect": {
+            "subject": "_INBOX.*.*",
+            "data": "",
+            "reply": null,
+            "headers": {
+              "status": "",
+              "description": "",
+              "all": [
+                [
+                  "Nats-Service-Error",
+                  [
+                    "I am a teapot"
+                  ]
+                ],
+                [
+                  "Nats-Service-Error-Code",
+                  [
+                    "418"
+                  ]
+                ]
+              ],
+              "count": 2,
+              "all_count": 2,
+              "wire": "NATS/1.0\r\nNats-Service-Error: I am a teapot\r\nNats-Service-Error-Code: 418\r\n\r\n"
+            },
+            "sid": "11"
+          }
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "$SRV.STATS.svcx_${ns}",
+            "timeout": 2.0,
+            "json": true
+          },
+          "mask": {
+            "paths": [
+              "/json/id",
+              "/json/started",
+              "/json/endpoints/*/processing_time",
+              "/json/endpoints/*/average_processing_time"
+            ],
+            "reason": "handling times and the start time"
+          },
+          "expect": {
+            "json": {
+              "type": "io.nats.micro.v1.stats_response",
+              "name": "svcx_${ns}",
+              "id": "<masked>",
+              "version": "1.0.0",
+              "started": "<masked>",
+              "metadata": {
+                "owner": "levi",
+                "env": "test"
+              },
+              "endpoints": [
+                {
+                  "name": "fail",
+                  "subject": "svcx_${ns}.fail",
+                  "queue_group": "q",
+                  "metadata": [],
+                  "num_requests": 1,
+                  "num_errors": 1,
+                  "last_error": "I am a teapot",
+                  "processing_time": "<masked>",
+                  "average_processing_time": "<masked>"
+                }
+              ]
+            },
+            "headers": null
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "INFO includes endpoints with subjects and metadata",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svcx_${ns}",
+            "version": "1.0.0",
+            "description": "Extras service",
+            "metadata": {
+              "owner": "levi",
+              "env": "test"
+            }
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_group",
+          "args": {
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "svcx_${ns}"
+          },
+          "bind": "g0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add_group",
+          "args": {
+            "group": {
+              "$ref": "g0"
+            },
+            "name": "v1"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "group": {
+              "$ref": "g"
+            },
+            "name": "status",
+            "handler": {
+              "kind": "fixed",
+              "payload": "ok"
+            },
+            "metadata": {
+              "visibility": "public"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "$SRV.INFO.svcx_${ns}",
+            "timeout": 2.0,
+            "json": true
+          },
+          "mask": {
+            "paths": [
+              "/json/id"
+            ],
+            "reason": "a random id"
+          },
+          "expect": {
+            "json": {
+              "type": "io.nats.micro.v1.info_response",
+              "name": "svcx_${ns}",
+              "id": "<masked>",
+              "version": "1.0.0",
+              "description": "Extras service",
+              "metadata": {
+                "owner": "levi",
+                "env": "test"
+              },
+              "endpoints": [
+                {
+                  "name": "status",
+                  "subject": "svcx_${ns}.v1.status",
+                  "queue_group": "q",
+                  "metadata": {
+                    "visibility": "public"
+                  }
+                }
+              ]
+            },
+            "headers": null
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a custom queue group is honoured",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svcx_${ns}",
+            "version": "1.0.0",
+            "description": "Test service",
+            "metadata": {}
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_group",
+          "args": {
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "jobs_${ns}",
+            "queue": "workers_${ns}"
+          },
+          "bind": "g",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "group.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "group": {
+              "$ref": "g"
+            },
+            "name": "run",
+            "handler": {
+              "kind": "fixed",
+              "payload": "done"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "direct",
+            "subject": "svcx_${ns}.direct",
+            "handler": {
+              "kind": "fixed",
+              "payload": "direct"
+            },
+            "queue": "workers_${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "$SRV.INFO.svcx_${ns}",
+            "timeout": 2.0,
+            "json": true
+          },
+          "mask": {
+            "paths": [
+              "/json/id"
+            ],
+            "reason": "a random id"
+          },
+          "expect": {
+            "json": {
+              "type": "io.nats.micro.v1.info_response",
+              "name": "svcx_${ns}",
+              "id": "<masked>",
+              "version": "1.0.0",
+              "description": "Test service",
+              "metadata": [],
+              "endpoints": [
+                {
+                  "name": "run",
+                  "subject": "jobs_${ns}.run",
+                  "queue_group": "workers_${ns}",
+                  "metadata": []
+                },
+                {
+                  "name": "direct",
+                  "subject": "svcx_${ns}.direct",
+                  "queue_group": "workers_${ns}",
+                  "metadata": []
+                }
+              ]
+            },
+            "headers": null
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a queue group balances across instances",
+      "steps": [
+        {
+          "op": "conn.connect",
+          "args": {
+            "service": "nats"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.new",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "name": "svcx_${ns}",
+            "version": "1.0.0",
+            "description": "Test service",
+            "metadata": {}
+          },
+          "bind": "svc",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "a",
+            "subject": "svcx_${ns}.work",
+            "handler": {
+              "kind": "fixed",
+              "payload": "a"
+            },
+            "queue": "lb_${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "service.add_endpoint",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            },
+            "name": "b",
+            "subject": "svcx_${ns}.work",
+            "handler": {
+              "kind": "fixed",
+              "payload": "b"
+            },
+            "queue": "lb_${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "service.start",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "conn.request_tally",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "subject": "svcx_${ns}.work",
+            "count": 30,
+            "timeout": 2.0
+          },
+          "expect": {
+            "total": 30,
+            "distinct": [
+              "a",
+              "b"
+            ]
+          }
+        },
+        {
+          "op": "service.stop",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            },
+            "service": {
+              "$ref": "svc"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "conn.close",
+          "args": {
+            "conn": {
+              "$ref": "c"
+            }
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

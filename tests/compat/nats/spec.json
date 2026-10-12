@@ -1,0 +1,4454 @@
+{
+  "lib": "nats",
+  "description": "utopia-php/nats: a NATS client (publish, subscribe, request-reply and batched requests over TCP, TLS and WebSockets), JetStream streams and consumers, a key-value store, an object store and NATS micro services.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/nats/src"
+    ],
+    "tests": [
+      "packages/nats/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/nats"
+  },
+  "services": [
+    "nats",
+    "nats-tls",
+    "nats-ws"
+  ],
+  "state": [],
+  "ops": {
+    "headers.build": {
+      "doc": "new Headers() then each step [set|add|delete|status, ...] (each must return the headers): {status, description, all: [[name, values]], count, all_count, wire, query: [[name, get, getAll, has]]}",
+      "covers": [
+        "Utopia\\NATS\\Headers::set",
+        "Utopia\\NATS\\Headers::add",
+        "Utopia\\NATS\\Headers::delete",
+        "Utopia\\NATS\\Headers::setStatus",
+        "Utopia\\NATS\\Headers::get",
+        "Utopia\\NATS\\Headers::getAll",
+        "Utopia\\NATS\\Headers::has",
+        "Utopia\\NATS\\Headers::all",
+        "Utopia\\NATS\\Headers::count",
+        "Utopia\\NATS\\Headers::getIterator",
+        "Utopia\\NATS\\Headers::getStatus",
+        "Utopia\\NATS\\Headers::getDescription",
+        "Utopia\\NATS\\Headers::toWire"
+      ],
+      "fuzz": [
+        {
+          "name": "steps",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "steps": {
+                "gen": "array",
+                "min": 0,
+                "max": 8,
+                "items": {
+                  "gen": "ref",
+                  "name": "header_step"
+                }
+              },
+              "query": {
+                "gen": "array",
+                "min": 0,
+                "max": 3,
+                "items": {
+                  "gen": "ref",
+                  "name": "header_name"
+                }
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "headers.from_wire": {
+      "doc": "Headers::fromWire(raw), as headers.build reports it",
+      "covers": [
+        "Utopia\\NATS\\Headers::fromWire"
+      ],
+      "fuzz": [
+        {
+          "name": "blocks",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "raw": {
+                "gen": "ref",
+                "name": "header_block"
+              },
+              "query": {
+                "gen": "array",
+                "min": 0,
+                "max": 2,
+                "items": {
+                  "gen": "ref",
+                  "name": "header_name"
+                }
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "inbox.create": {
+      "doc": "Inbox::create(prefix?): {prefix, length, alnum, unique (a second inbox differs)}",
+      "covers": [
+        "Utopia\\NATS\\Inbox::create"
+      ]
+    },
+    "inbox.generate_id": {
+      "doc": "Inbox::generateId(): {length, alnum, unique}",
+      "covers": [
+        "Utopia\\NATS\\Inbox::generateId"
+      ]
+    },
+    "request.new": {
+      "doc": "new Request(subject, data?, headers?): {subject, data, headers}",
+      "covers": [
+        "Utopia\\NATS\\Request::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "subjects",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "subject": {
+                "gen": "ref",
+                "name": "subject"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "writer.connect": {
+      "doc": "(new Writer())->connect(options)",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Writer::connect"
+      ],
+      "fuzz": [
+        {
+          "name": "options",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "options": {
+                "gen": "ref",
+                "name": "connect_options"
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "writer.pub": {
+      "doc": "(new Writer())->pub(subject, payload, reply?)",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Writer::pub"
+      ],
+      "fuzz": [
+        {
+          "name": "pub",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "subject": {
+                "gen": "ref",
+                "name": "subject"
+              },
+              "payload": {
+                "gen": "ref",
+                "name": "payload"
+              },
+              "reply": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": null
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "subject"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "writer.hpub": {
+      "doc": "(new Writer())->hpub(subject, headers, payload, reply?)",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Writer::hpub"
+      ],
+      "fuzz": [
+        {
+          "name": "hpub",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "subject": {
+                "gen": "ref",
+                "name": "subject"
+              },
+              "headers": {
+                "gen": "ref",
+                "name": "header_block"
+              },
+              "payload": {
+                "gen": "ref",
+                "name": "payload"
+              },
+              "reply": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": null
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "subject"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "writer.sub": {
+      "doc": "(new Writer())->sub(subject, sid, queue?)",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Writer::sub"
+      ],
+      "fuzz": [
+        {
+          "name": "sub",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "subject": {
+                "gen": "ref",
+                "name": "subject"
+              },
+              "sid": {
+                "gen": "string",
+                "alphabet": "digits",
+                "min": 1,
+                "max": 4
+              },
+              "queue": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": null
+                  },
+                  {
+                    "gen": "string",
+                    "alphabet": "alnum",
+                    "min": 1,
+                    "max": 8
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "writer.unsub": {
+      "doc": "(new Writer())->unsub(sid, max?)",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Writer::unsub"
+      ],
+      "fuzz": [
+        {
+          "name": "unsub",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "sid": {
+                "gen": "string",
+                "alphabet": "digits",
+                "min": 1,
+                "max": 4
+              },
+              "max": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": null
+                  },
+                  {
+                    "gen": "int",
+                    "min": -5,
+                    "max": 100000
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "writer.ping": {
+      "doc": "(new Writer())->ping()",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Writer::ping"
+      ]
+    },
+    "writer.pong": {
+      "doc": "(new Writer())->pong()",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Writer::pong"
+      ]
+    },
+    "parser.run": {
+      "doc": "new Parser(transport) over the fake transport holding `inbound` (reads fail with TimeoutException when it is empty): next(0.01) until an error or `limit` ops, then, with `then`, push it and call next() once more: {ops: [[op, data]], error, then, buffered (hasBufferedData)}. MSG/HMSG data is [subject, sid, replyTo, payload, headers]",
+      "covers": [
+        "Utopia\\NATS\\Protocol\\Parser::__construct",
+        "Utopia\\NATS\\Protocol\\Parser::next",
+        "Utopia\\NATS\\Protocol\\Parser::hasBufferedData"
+      ],
+      "fuzz": [
+        {
+          "name": "streams",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "inbound": {
+                "gen": "ref",
+                "name": "wire"
+              },
+              "then": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "const",
+                    "value": "PING\r\n"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "wire_op"
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "server_info.from_array": {
+      "doc": "ServerInfo::fromArray(data), every property",
+      "covers": [
+        "Utopia\\NATS\\ServerInfo::__construct",
+        "Utopia\\NATS\\ServerInfo::fromArray"
+      ],
+      "fuzz": [
+        {
+          "name": "info",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "server_info"
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "connection.closes_connection": {
+      "doc": "Connection::closesConnection(message)",
+      "covers": [
+        "Utopia\\NATS\\Connection::closesConnection"
+      ],
+      "fuzz": [
+        {
+          "name": "errors",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "message": {
+                "gen": "ref",
+                "name": "server_error"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "connection.reconnects_after": {
+      "doc": "Connection::reconnectsAfter(message)",
+      "covers": [
+        "Utopia\\NATS\\Connection::reconnectsAfter"
+      ],
+      "fuzz": [
+        {
+          "name": "errors",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "message": {
+                "gen": "ref",
+                "name": "server_error"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "connection.map_server_error": {
+      "doc": "Connection::mapServerError(message): [class, message]",
+      "covers": [
+        "Utopia\\NATS\\Connection::mapServerError"
+      ],
+      "fuzz": [
+        {
+          "name": "errors",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "message": {
+                "gen": "ref",
+                "name": "server_error"
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "connection.reconnect_backoff": {
+      "doc": "Connection::reconnectBackoff(attempt, base, cap, factor?). The fuzz keeps factor^(attempt-1) exact (attempts up to 34 with factors 1, 1.5, 2 and 3), so the result is one IEEE multiplication: beyond that both runtimes call the C library's pow(), and the macOS libm the Rust driver uses natively rounds a few results differently from the glibc PHP (and Rust on Linux) uses",
+      "covers": [
+        "Utopia\\NATS\\Connection::reconnectBackoff"
+      ],
+      "fuzz": [
+        {
+          "name": "backoff",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "attempt": {
+                "gen": "int",
+                "min": -3,
+                "max": 34
+              },
+              "base": {
+                "gen": "pick",
+                "from": [
+                  0.0,
+                  0.1,
+                  0.5,
+                  1.0,
+                  2.0,
+                  2.5,
+                  10.0
+                ]
+              },
+              "cap": {
+                "gen": "pick",
+                "from": [
+                  0.0,
+                  1.0,
+                  8.0,
+                  30.0,
+                  100.0,
+                  1000000.0
+                ]
+              },
+              "factor": {
+                "gen": "pick",
+                "from": [
+                  1.0,
+                  1.5,
+                  2.0,
+                  3.0
+                ]
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "connection.reconnect_buffer_accepts": {
+      "doc": "Connection::reconnectBufferAccepts(current, incoming, cap)",
+      "covers": [
+        "Utopia\\NATS\\Connection::reconnectBufferAccepts"
+      ],
+      "fuzz": [
+        {
+          "name": "buffer",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "current": {
+                "gen": "int",
+                "min": 0,
+                "max": 200
+              },
+              "incoming": {
+                "gen": "int",
+                "min": 0,
+                "max": 200
+              },
+              "cap": {
+                "gen": "int",
+                "min": -5,
+                "max": 300
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "options.defaults": {
+      "doc": "new ConnectionOptions(servers?): every property (Rust: ConnectionOptions::default / new)",
+      "covers": [
+        "Utopia\\NATS\\ConnectionOptions::__construct"
+      ]
+    },
+    "tls_transport.options": {
+      "doc": "new TlsTransport(options) then buildSslOptions() (private, by reflection, as ConnectionTlsAndAuthTest does), keys sorted",
+      "covers": [
+        "Utopia\\NATS\\Transport\\TlsTransport::__construct"
+      ]
+    },
+    "auth.fields": {
+      "doc": "An authenticator (kind: none, token, user_pass, nkey, credentials (contents written to /tmp/compat-fs/${ns}/user.creds, or a path)) and authenticate(nonce): {public_key? (NKeyAuth::publicKey), fields}",
+      "covers": [
+        "Utopia\\NATS\\Auth\\NoAuth::authenticate",
+        "Utopia\\NATS\\Auth\\TokenAuth::__construct",
+        "Utopia\\NATS\\Auth\\TokenAuth::authenticate",
+        "Utopia\\NATS\\Auth\\UserPassAuth::__construct",
+        "Utopia\\NATS\\Auth\\UserPassAuth::authenticate",
+        "Utopia\\NATS\\Auth\\NKeyAuth::__construct",
+        "Utopia\\NATS\\Auth\\NKeyAuth::authenticate",
+        "Utopia\\NATS\\Auth\\NKeyAuth::publicKey",
+        "Utopia\\NATS\\Auth\\CredentialsAuth::__construct",
+        "Utopia\\NATS\\Auth\\CredentialsAuth::authenticate"
+      ],
+      "fuzz": [
+        {
+          "name": "nkey",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "kind": {
+                "gen": "const",
+                "value": "nkey"
+              },
+              "seed": {
+                "gen": "ref",
+                "name": "seed"
+              },
+              "nonce": {
+                "gen": "string",
+                "alphabet": "alnum",
+                "min": 0,
+                "max": 24
+              },
+              "public_key": {
+                "gen": "const",
+                "value": true
+              }
+            }
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "nanos.from_seconds": {
+      "doc": "StreamConfig::secondsToNanos(seconds)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\StreamConfig::secondsToNanos"
+      ],
+      "fuzz": [
+        {
+          "name": "seconds",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "seconds": {
+                "gen": "ref",
+                "name": "seconds"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "nanos.to_seconds": {
+      "doc": "StreamConfig::nanosToSeconds(nanos)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\StreamConfig::nanosToSeconds"
+      ],
+      "fuzz": [
+        {
+          "name": "nanos",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "nanos": {
+                "gen": "ref",
+                "name": "nanos"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "config.new": {
+      "doc": "new <type>(...named args) then toArray() (KeyValueConfig/ObjectStoreConfig: toStreamConfig()->toArray(); KeyValueEntry, KeyValueWatchOptions: their properties)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\StreamConfig::__construct",
+        "Utopia\\NATS\\JetStream\\ConsumerConfig::__construct",
+        "Utopia\\NATS\\JetStream\\ConsumerLimits::__construct",
+        "Utopia\\NATS\\JetStream\\Placement::__construct",
+        "Utopia\\NATS\\JetStream\\Republish::__construct",
+        "Utopia\\NATS\\JetStream\\SubjectTransform::__construct",
+        "Utopia\\NATS\\JetStream\\ExternalStream::__construct",
+        "Utopia\\NATS\\JetStream\\StreamSource::__construct",
+        "Utopia\\NATS\\JetStream\\StreamConfig::toArray",
+        "Utopia\\NATS\\JetStream\\ConsumerConfig::toArray",
+        "Utopia\\NATS\\JetStream\\ConsumerLimits::toArray",
+        "Utopia\\NATS\\JetStream\\Placement::toArray",
+        "Utopia\\NATS\\JetStream\\Republish::toArray",
+        "Utopia\\NATS\\JetStream\\SubjectTransform::toArray",
+        "Utopia\\NATS\\JetStream\\ExternalStream::toArray",
+        "Utopia\\NATS\\JetStream\\StreamSource::toArray",
+        "Utopia\\NATS\\KeyValue\\KeyValueConfig::__construct",
+        "Utopia\\NATS\\KeyValue\\KeyValueConfig::toStreamConfig",
+        "Utopia\\NATS\\ObjectStore\\ObjectStoreConfig::__construct",
+        "Utopia\\NATS\\ObjectStore\\ObjectStoreConfig::toStreamConfig",
+        "Utopia\\NATS\\ObjectStore\\ObjectLink::__construct",
+        "Utopia\\NATS\\ObjectStore\\ObjectLink::toArray",
+        "Utopia\\NATS\\ObjectStore\\ObjectMeta::__construct",
+        "Utopia\\NATS\\ObjectStore\\ObjectMeta::toArray",
+        "Utopia\\NATS\\KeyValue\\KeyValueEntry::__construct",
+        "Utopia\\NATS\\KeyValue\\KeyValueWatchOptions::__construct"
+      ]
+    },
+    "config.from": {
+      "doc": "<type>::fromArray(data): {array: toArray()} plus the seconds fields of StreamConfig and ConsumerConfig",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\StreamConfig::fromArray",
+        "Utopia\\NATS\\JetStream\\ConsumerConfig::fromArray",
+        "Utopia\\NATS\\JetStream\\ConsumerLimits::fromArray",
+        "Utopia\\NATS\\JetStream\\Placement::fromArray",
+        "Utopia\\NATS\\JetStream\\Republish::fromArray",
+        "Utopia\\NATS\\JetStream\\SubjectTransform::fromArray",
+        "Utopia\\NATS\\JetStream\\ExternalStream::fromArray",
+        "Utopia\\NATS\\JetStream\\StreamSource::fromArray",
+        "Utopia\\NATS\\ObjectStore\\ObjectLink::fromArray",
+        "Utopia\\NATS\\ObjectStore\\ObjectMeta::fromArray"
+      ],
+      "fuzz": [
+        {
+          "name": "stream",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "StreamConfig"
+              },
+              "data": {
+                "gen": "ref",
+                "name": "stream_config"
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "consumer",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "ConsumerConfig"
+              },
+              "data": {
+                "gen": "ref",
+                "name": "consumer_config"
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "meta",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "ObjectMeta"
+              },
+              "data": {
+                "gen": "ref",
+                "name": "object_meta"
+              }
+            }
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "decode.info": {
+      "doc": "<type>::fromArray(data) (MsgMetadata::fromReplySubject(data)), its properties",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\MsgMetadata::__construct",
+        "Utopia\\NATS\\JetStream\\MsgMetadata::fromReplySubject",
+        "Utopia\\NATS\\JetStream\\StreamMessage::__construct",
+        "Utopia\\NATS\\JetStream\\StreamMessage::fromArray",
+        "Utopia\\NATS\\JetStream\\StreamInfo::__construct",
+        "Utopia\\NATS\\JetStream\\StreamInfo::fromArray",
+        "Utopia\\NATS\\JetStream\\StreamState::__construct",
+        "Utopia\\NATS\\JetStream\\StreamState::fromArray",
+        "Utopia\\NATS\\JetStream\\ConsumerInfo::__construct",
+        "Utopia\\NATS\\JetStream\\ConsumerInfo::fromArray",
+        "Utopia\\NATS\\JetStream\\SequenceInfo::__construct",
+        "Utopia\\NATS\\JetStream\\SequenceInfo::fromArray",
+        "Utopia\\NATS\\JetStream\\AccountInfo::__construct",
+        "Utopia\\NATS\\JetStream\\AccountInfo::fromArray",
+        "Utopia\\NATS\\JetStream\\ApiError::__construct",
+        "Utopia\\NATS\\JetStream\\ApiError::fromArray",
+        "Utopia\\NATS\\JetStream\\PubAck::__construct",
+        "Utopia\\NATS\\JetStream\\PubAck::fromArray"
+      ],
+      "fuzz": [
+        {
+          "name": "reply",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "MsgMetadata"
+              },
+              "data": {
+                "gen": "ref",
+                "name": "reply_subject"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "stream_message",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "StreamMessage"
+              },
+              "data": {
+                "gen": "ref",
+                "name": "stream_message"
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "jetstream.check_error": {
+      "doc": "JetStream::checkError(data): nothing, or the JetStreamException",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::checkError",
+        "Utopia\\NATS\\Exception\\JetStreamException::__construct"
+      ]
+    },
+    "jetstream.prefix": {
+      "doc": "new JetStream(connection, domain?, apiPrefix?) and its API prefix (private, by reflection)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::__construct"
+      ]
+    },
+    "endpoint.new": {
+      "doc": "new Endpoint(name, subject, handler, queue?, metadata?): {info(), stats()}",
+      "covers": [
+        "Utopia\\NATS\\Services\\Endpoint::__construct",
+        "Utopia\\NATS\\Services\\Endpoint::info",
+        "Utopia\\NATS\\Services\\Endpoint::stats"
+      ]
+    },
+    "service_exception.new": {
+      "doc": "new ServiceException(code, message): [class, getErrorCode(), getMessage()]",
+      "covers": [
+        "Utopia\\NATS\\Services\\ServiceException::__construct",
+        "Utopia\\NATS\\Services\\ServiceException::getErrorCode"
+      ]
+    },
+    "subscription.new": {
+      "doc": "new Subscription(sid, subject, queue?, callback (mode callback records), msgsLimit, bytesLimit, onSlowConsumer (slow: true records)) on its own",
+      "covers": [
+        "Utopia\\NATS\\Subscription::__construct"
+      ]
+    },
+    "subscription.deliver": {
+      "doc": "$subscription->deliver(new Message(subject, data))",
+      "covers": [
+        "Utopia\\NATS\\Subscription::deliver",
+        "Utopia\\NATS\\Message::__construct"
+      ]
+    },
+    "subscription.next": {
+      "doc": "$subscription->nextMessage(0.0) (no connection: the queue only)",
+      "covers": [
+        "Utopia\\NATS\\Subscription::nextMessage"
+      ]
+    },
+    "subscription.set_max": {
+      "doc": "$subscription->setMaxMessages(max)",
+      "covers": [
+        "Utopia\\NATS\\Subscription::setMaxMessages"
+      ]
+    },
+    "subscription.set_inactive": {
+      "doc": "$subscription->setInactive()",
+      "covers": [
+        "Utopia\\NATS\\Subscription::setInactive"
+      ]
+    },
+    "subscription.state": {
+      "doc": "{active, received, pending_count, pending_bytes, has_callback, sid, subject, queue, log}",
+      "covers": [
+        "Utopia\\NATS\\Subscription::isActive",
+        "Utopia\\NATS\\Subscription::getReceived",
+        "Utopia\\NATS\\Subscription::getPendingCount",
+        "Utopia\\NATS\\Subscription::getPendingBytes",
+        "Utopia\\NATS\\Subscription::hasCallback"
+      ]
+    },
+    "fake.connect": {
+      "doc": "Connection::connect(new ConnectionOptions(...options, transportFactory: the fake transport (Fake.php) serving INFO merged with `info`, with `rules`))",
+      "covers": [
+        "Utopia\\NATS\\Connection::connect"
+      ]
+    },
+    "fake.push": {
+      "doc": "queue bytes for the connection to read"
+    },
+    "fake.rules": {
+      "doc": "replace the rules the fake runs on each write"
+    },
+    "fake.answer_pings": {
+      "doc": "whether the fake answers PINGs"
+    },
+    "fake.fail_reads": {
+      "doc": "make every read fail with {class, message} (null: stop)"
+    },
+    "fake.count": {
+      "doc": "substr_count of `needle` in what was written (from byte `from`)"
+    },
+    "fake.mark": {
+      "doc": "how many bytes were written"
+    },
+    "fake.written": {
+      "doc": "what was written (from byte `from`), random 22-character ids as *"
+    },
+    "fake.writes": {
+      "doc": "each transport write, random ids as *"
+    },
+    "fake.connect_payload": {
+      "doc": "the first CONNECT payload, decoded (key order kept)"
+    },
+    "fake.state": {
+      "doc": "{connected, connects, tls_upgrades}"
+    },
+    "fake.tls_options": {
+      "doc": "the connection's TLS options (Connection::tlsOptions(), private, by reflection), keys sorted"
+    },
+    "conn.connect": {
+      "doc": "Connection::connect(options) to the service (or url) given",
+      "covers": [
+        "Utopia\\NATS\\Connection::connect"
+      ]
+    },
+    "conn.publish": {
+      "doc": "$connection->publish(subject, data, reply?, headers?)",
+      "covers": [
+        "Utopia\\NATS\\Connection::publish"
+      ]
+    },
+    "conn.subscribe": {
+      "doc": "$connection->subscribe(subject, callback by mode: queue (none), silent, record (log), count (logs [count]), echo (logs, then publishes prefix+data to the reply subject), throw (error)), queue?)",
+      "covers": [
+        "Utopia\\NATS\\Connection::subscribe"
+      ]
+    },
+    "conn.queue_subscribe": {
+      "doc": "$connection->queueSubscribe(subject, queue, callback by mode)",
+      "covers": [
+        "Utopia\\NATS\\Connection::queueSubscribe"
+      ]
+    },
+    "conn.unsubscribe": {
+      "doc": "$connection->unsubscribe(subscription, max?) (via: $subscription->unsubscribe(max?))",
+      "covers": [
+        "Utopia\\NATS\\Connection::unsubscribe",
+        "Utopia\\NATS\\Subscription::unsubscribe"
+      ]
+    },
+    "conn.next_message": {
+      "doc": "$subscription->nextMessage(timeout?)",
+      "covers": [
+        "Utopia\\NATS\\Subscription::nextMessage"
+      ]
+    },
+    "conn.sub_state": {
+      "doc": "a connection subscription's isActive/getReceived/getPendingCount/getPendingBytes/hasCallback"
+    },
+    "conn.process_message": {
+      "doc": "$connection->processMessage(timeout?)",
+      "covers": [
+        "Utopia\\NATS\\Connection::processMessage"
+      ]
+    },
+    "conn.wait": {
+      "doc": "$connection->wait(count, timeout?)",
+      "covers": [
+        "Utopia\\NATS\\Connection::wait"
+      ]
+    },
+    "conn.request": {
+      "doc": "$connection->request(subject, data, timeout?, headers?) (json: the reply decoded, with its headers)",
+      "covers": [
+        "Utopia\\NATS\\Connection::request"
+      ]
+    },
+    "conn.request_batch": {
+      "doc": "$connection->requestBatch(requests, callback: record (each [index, message or {error: [class, message]}]), throw (records, then throws `error`), sleep_first (records, sleeps `sleep_ms` after index 0), timeout?)",
+      "covers": [
+        "Utopia\\NATS\\Connection::requestBatch"
+      ]
+    },
+    "conn.request_many": {
+      "doc": "$connection->requestMany(subject, data, {max, timeout, stall}): {bodies (sorted), within?, at_least?}",
+      "covers": [
+        "Utopia\\NATS\\Connection::requestMany"
+      ]
+    },
+    "conn.request_tally": {
+      "doc": "`count` requests to subject (data the index): {total, distinct replies sorted}"
+    },
+    "conn.flush": {
+      "doc": "$connection->flush(timeout?)",
+      "covers": [
+        "Utopia\\NATS\\Connection::flush"
+      ]
+    },
+    "conn.drain": {
+      "doc": "$connection->drain(timeout?): {within?, at_least?}",
+      "covers": [
+        "Utopia\\NATS\\Connection::drain"
+      ]
+    },
+    "conn.close": {
+      "doc": "$connection->close()",
+      "covers": [
+        "Utopia\\NATS\\Connection::close"
+      ]
+    },
+    "conn.tick": {
+      "doc": "$connection->tick()",
+      "covers": [
+        "Utopia\\NATS\\Connection::tick"
+      ]
+    },
+    "conn.state": {
+      "doc": "{connected: isConnected(), closed: isClosed(), reconnecting: isReconnecting(), status: getStatus(), subscriptions (count, by reflection)}",
+      "covers": [
+        "Utopia\\NATS\\Connection::isConnected",
+        "Utopia\\NATS\\Connection::isClosed",
+        "Utopia\\NATS\\Connection::isReconnecting",
+        "Utopia\\NATS\\Connection::getStatus"
+      ]
+    },
+    "conn.server_info": {
+      "doc": "$connection->getServerInfo(), every property",
+      "covers": [
+        "Utopia\\NATS\\Connection::getServerInfo"
+      ]
+    },
+    "conn.new_inbox": {
+      "doc": "$connection->newInbox(): {prefix, length, alnum}",
+      "covers": [
+        "Utopia\\NATS\\Connection::newInbox"
+      ]
+    },
+    "conn.options": {
+      "doc": "$connection->getOptions(): servers, name, inboxPrefix",
+      "covers": [
+        "Utopia\\NATS\\Connection::getOptions"
+      ]
+    },
+    "conn.log": {
+      "doc": "what the connection's hooks and callbacks recorded"
+    },
+    "transport.round_trip": {
+      "doc": "A transport (tcp, tls, ws) against a service: connect, isConnected, readLine (INFO), upgradeTls?, write (CONNECT + PING), readLine (PONG), write, read, close, isConnected, write and read after close; each step [name, result or error]",
+      "covers": [
+        "Utopia\\NATS\\Transport\\TcpTransport::connect",
+        "Utopia\\NATS\\Transport\\TcpTransport::write",
+        "Utopia\\NATS\\Transport\\TcpTransport::read",
+        "Utopia\\NATS\\Transport\\TcpTransport::readLine",
+        "Utopia\\NATS\\Transport\\TcpTransport::upgradeTls",
+        "Utopia\\NATS\\Transport\\TcpTransport::isConnected",
+        "Utopia\\NATS\\Transport\\TcpTransport::close",
+        "Utopia\\NATS\\Transport\\TlsTransport::connect",
+        "Utopia\\NATS\\Transport\\TlsTransport::write",
+        "Utopia\\NATS\\Transport\\TlsTransport::read",
+        "Utopia\\NATS\\Transport\\TlsTransport::readLine",
+        "Utopia\\NATS\\Transport\\TlsTransport::upgradeTls",
+        "Utopia\\NATS\\Transport\\TlsTransport::isConnected",
+        "Utopia\\NATS\\Transport\\TlsTransport::close",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::connect",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::write",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::read",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::readLine",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::upgradeTls",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::isConnected",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::close",
+        "Utopia\\NATS\\Transport\\WebSocketTransport::__construct"
+      ]
+    },
+    "js.new": {
+      "doc": "$connection->jetStream(domain?, prefix?)",
+      "covers": [
+        "Utopia\\NATS\\Connection::jetStream"
+      ]
+    },
+    "js.create_stream": {
+      "doc": "$js->createStream(new StreamConfig(...config)): {stream (handle), info}",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::createStream",
+        "Utopia\\NATS\\JetStream\\Stream::__construct"
+      ]
+    },
+    "js.update_stream": {
+      "doc": "$js->updateStream(config)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::updateStream"
+      ]
+    },
+    "js.create_or_update_stream": {
+      "doc": "$js->createOrUpdateStream(config)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::createOrUpdateStream"
+      ]
+    },
+    "js.delete_stream": {
+      "doc": "$js->deleteStream(name)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::deleteStream"
+      ]
+    },
+    "js.get_stream": {
+      "doc": "$js->getStream(name)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getStream"
+      ]
+    },
+    "js.get_stream_info": {
+      "doc": "$js->getStreamInfo(name)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getStreamInfo"
+      ]
+    },
+    "js.get_stream_names": {
+      "doc": "$js->getStreamNames(subject?), those containing `contains`, sorted",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getStreamNames"
+      ]
+    },
+    "js.list_streams": {
+      "doc": "$js->listStreams(subject?) names, those containing `contains`, sorted",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::listStreams"
+      ]
+    },
+    "js.purge_stream": {
+      "doc": "$js->purgeStream(name, subject?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::purgeStream"
+      ]
+    },
+    "js.create_consumer": {
+      "doc": "$js->createConsumer(stream, new ConsumerConfig(...config)): {consumer (handle), info}",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::createConsumer"
+      ]
+    },
+    "js.update_consumer": {
+      "doc": "$js->updateConsumer(stream, config)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::updateConsumer"
+      ]
+    },
+    "js.delete_consumer": {
+      "doc": "$js->deleteConsumer(stream, name)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::deleteConsumer"
+      ]
+    },
+    "js.get_consumer": {
+      "doc": "$js->getConsumer(stream, name)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getConsumer"
+      ]
+    },
+    "js.get_consumer_names": {
+      "doc": "$js->getConsumerNames(stream), sorted",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getConsumerNames"
+      ]
+    },
+    "js.get_consumers": {
+      "doc": "$js->getConsumers(stream): [[streamName, name]] sorted",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getConsumers"
+      ]
+    },
+    "js.push_subscribe": {
+      "doc": "$js->pushSubscribe(stream, config, callback recording each message and acking it unless ack: false)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::pushSubscribe",
+        "Utopia\\NATS\\JetStream\\PushSubscription::__construct"
+      ]
+    },
+    "js.ordered_consumer": {
+      "doc": "$js->orderedConsumer(stream, deliverPolicy, filter, heartbeat)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::orderedConsumer",
+        "Utopia\\NATS\\JetStream\\OrderedConsumer::__construct"
+      ]
+    },
+    "js.get_message": {
+      "doc": "$js->getMessage(stream, seq)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getMessage"
+      ]
+    },
+    "js.get_last_message": {
+      "doc": "$js->getLastMessage(stream, subject)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getLastMessage"
+      ]
+    },
+    "js.delete_message": {
+      "doc": "$js->deleteMessage(stream, seq, noErase?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::deleteMessage"
+      ]
+    },
+    "js.publish": {
+      "doc": "$js->publish(subject, data, headers?, msgId?, expected..., ttl?, retryOnNoResponders?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::publish"
+      ]
+    },
+    "js.publish_many": {
+      "doc": "$js->publishMany(messages, timeout?, window?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::publishMany"
+      ]
+    },
+    "js.create_key_value": {
+      "doc": "$js->createKeyValue(new KeyValueConfig(...config))",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::createKeyValue",
+        "Utopia\\NATS\\KeyValue\\KeyValue::__construct"
+      ]
+    },
+    "js.get_key_value": {
+      "doc": "$js->getKeyValue(bucket)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getKeyValue"
+      ]
+    },
+    "js.delete_key_value": {
+      "doc": "$js->deleteKeyValue(bucket)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::deleteKeyValue"
+      ]
+    },
+    "js.get_object_store": {
+      "doc": "$js->getObjectStore(bucket)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::getObjectStore"
+      ]
+    },
+    "js.delete_object_store": {
+      "doc": "$js->deleteObjectStore(bucket)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::deleteObjectStore"
+      ]
+    },
+    "js.account_info": {
+      "doc": "$js->accountInfo(), what holds on a shared server",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::accountInfo"
+      ]
+    },
+    "js.ack_batch": {
+      "doc": "$js->ackBatch(messages, callback recording [index, error], timeout?), sorted",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStream::ackBatch"
+      ]
+    },
+    "stream.get": {
+      "doc": "getName(), getConfig()->toArray(), getState()",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Stream::getName",
+        "Utopia\\NATS\\JetStream\\Stream::getConfig",
+        "Utopia\\NATS\\JetStream\\Stream::getState"
+      ]
+    },
+    "stream.info": {
+      "doc": "$stream->info(refresh?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Stream::info"
+      ]
+    },
+    "stream.create_consumer": {
+      "doc": "$stream->createConsumer(config)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Stream::createConsumer"
+      ]
+    },
+    "stream.get_consumer": {
+      "doc": "$stream->getConsumer(name)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Stream::getConsumer"
+      ]
+    },
+    "stream.delete_consumer": {
+      "doc": "$stream->deleteConsumer(name)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Stream::deleteConsumer"
+      ]
+    },
+    "stream.purge": {
+      "doc": "$stream->purge(subject?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Stream::purge"
+      ]
+    },
+    "stream.delete": {
+      "doc": "$stream->delete()",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Stream::delete"
+      ]
+    },
+    "consumer.new": {
+      "doc": "new Consumer(connection, stream, ConsumerInfo::fromArray(info), prefix?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Consumer::__construct"
+      ]
+    },
+    "consumer.fetch": {
+      "doc": "$consumer->fetch(batch, timeout?, noWait?, maxBytes?): {count, listed, messages (handles and data), within?, at_least?}",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Consumer::fetch",
+        "Utopia\\NATS\\JetStream\\MessageBatch::__construct",
+        "Utopia\\NATS\\JetStream\\MessageBatch::addMessage",
+        "Utopia\\NATS\\JetStream\\MessageBatch::count",
+        "Utopia\\NATS\\JetStream\\MessageBatch::getIterator",
+        "Utopia\\NATS\\JetStream\\MessageBatch::getMessages"
+      ]
+    },
+    "consumer.next": {
+      "doc": "$consumer->next(timeout?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Consumer::next"
+      ]
+    },
+    "consumer.info": {
+      "doc": "$consumer->info(refresh?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Consumer::info"
+      ]
+    },
+    "consumer.names": {
+      "doc": "[getName(), getStream()]",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\Consumer::getName",
+        "Utopia\\NATS\\JetStream\\Consumer::getStream"
+      ]
+    },
+    "jsmsg.new": {
+      "doc": "new JetStreamMessage(connection, new Message(subject, data, reply?))",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::__construct"
+      ]
+    },
+    "jsmsg.ack": {
+      "doc": "$message->ack()",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::ack",
+        "Utopia\\NATS\\JetStream\\respond()"
+      ]
+    },
+    "jsmsg.ack_sync": {
+      "doc": "$message->ackSync(timeout?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::ackSync"
+      ]
+    },
+    "jsmsg.nak": {
+      "doc": "$message->nak(delay?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::nak"
+      ]
+    },
+    "jsmsg.in_progress": {
+      "doc": "$message->inProgress()",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::inProgress",
+        "Utopia\\NATS\\JetStream\\inProgress()"
+      ]
+    },
+    "jsmsg.term": {
+      "doc": "$message->term(reason?)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::term",
+        "Utopia\\NATS\\JetStream\\term()"
+      ]
+    },
+    "jsmsg.metadata": {
+      "doc": "$message->metadata()",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::metadata",
+        "Utopia\\NATS\\JetStream\\metadata()"
+      ]
+    },
+    "jsmsg.get": {
+      "doc": "getSubject(), getData(), getHeaders(), whether it has a reply subject",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::getData",
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::getSubject",
+        "Utopia\\NATS\\JetStream\\JetStreamMessage::getHeaders",
+        "Utopia\\NATS\\JetStream\\getData()",
+        "Utopia\\NATS\\JetStream\\getHeaders()",
+        "Utopia\\NATS\\JetStream\\getSubject()"
+      ]
+    },
+    "batch.new": {
+      "doc": "new MessageBatch(connection) and addMessage() of each message",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\MessageBatch::__construct",
+        "Utopia\\NATS\\JetStream\\MessageBatch::addMessage"
+      ]
+    },
+    "push.get": {
+      "doc": "getConsumerName(), getConsumerInfo()->name, getSubscription()->subject",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\PushSubscription::getConsumerName",
+        "Utopia\\NATS\\JetStream\\PushSubscription::getConsumerInfo",
+        "Utopia\\NATS\\JetStream\\PushSubscription::getSubscription"
+      ]
+    },
+    "push.unsubscribe": {
+      "doc": "$push->unsubscribe()",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\PushSubscription::unsubscribe"
+      ]
+    },
+    "push.handle_control": {
+      "doc": "PushSubscription::handleControl(connection, message)",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\PushSubscription::handleControl"
+      ]
+    },
+    "ordered.next": {
+      "doc": "$ordered->next(timeout?): the message and its stream and consumer sequences",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\OrderedConsumer::next"
+      ]
+    },
+    "ordered.name": {
+      "doc": "$ordered->getConsumerName()",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\OrderedConsumer::getConsumerName"
+      ]
+    },
+    "ordered.stop": {
+      "doc": "$ordered->stop()",
+      "covers": [
+        "Utopia\\NATS\\JetStream\\OrderedConsumer::stop"
+      ]
+    },
+    "ordered.skip": {
+      "doc": "move the expected consumer sequence forward by `by` (OrderedConsumerTest sets the private property by reflection)"
+    },
+    "kv.get": {
+      "doc": "$kv->get(key)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::get",
+        "Utopia\\NATS\\KeyValue\\KeyValueEntry::__construct"
+      ]
+    },
+    "kv.put": {
+      "doc": "$kv->put(key, value)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::put"
+      ]
+    },
+    "kv.create": {
+      "doc": "$kv->create(key, value)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::create"
+      ]
+    },
+    "kv.update": {
+      "doc": "$kv->update(key, value, revision)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::update"
+      ]
+    },
+    "kv.delete": {
+      "doc": "$kv->delete(key)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::delete"
+      ]
+    },
+    "kv.purge": {
+      "doc": "$kv->purge(key)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::purge"
+      ]
+    },
+    "kv.keys": {
+      "doc": "$kv->keys(), sorted",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::keys"
+      ]
+    },
+    "kv.status": {
+      "doc": "$kv->status()",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::status",
+        "Utopia\\NATS\\KeyValue\\KeyValueStatus::__construct"
+      ]
+    },
+    "kv.get_revision": {
+      "doc": "$kv->getRevision(key, seq)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::getRevision"
+      ]
+    },
+    "kv.history": {
+      "doc": "$kv->history(key)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::history"
+      ]
+    },
+    "kv.watch": {
+      "doc": "$kv->watch(pattern, callback recording entries, options?, onInitDone? (init: true records [init, entries so far]))",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::watch"
+      ]
+    },
+    "kv.purge_deletes": {
+      "doc": "$kv->purgeDeletes(threshold?)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::purgeDeletes"
+      ]
+    },
+    "kv.bucket": {
+      "doc": "$kv->getBucket()",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::getBucket"
+      ]
+    },
+    "kv.new": {
+      "doc": "new KeyValue(connection, js, bucket)",
+      "covers": [
+        "Utopia\\NATS\\KeyValue\\KeyValue::__construct"
+      ]
+    },
+    "obj.new": {
+      "doc": "new ObjectStore(connection, js, bucket)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::__construct"
+      ]
+    },
+    "obj.create_or_update": {
+      "doc": "ObjectStore::createOrUpdate(connection, js, new ObjectStoreConfig(...config))",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::createOrUpdate"
+      ]
+    },
+    "obj.put": {
+      "doc": "$store->put(name, data (repeated `repeat` times)) (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::put"
+      ]
+    },
+    "obj.get": {
+      "doc": "$store->get(name): {size, sha256, data (up to 256 bytes)} (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::get"
+      ]
+    },
+    "obj.get_meta": {
+      "doc": "$store->getMeta(name) (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::getMeta"
+      ]
+    },
+    "obj.delete": {
+      "doc": "$store->delete(name) (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::delete"
+      ]
+    },
+    "obj.list": {
+      "doc": "$store->list() names, sorted (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::list"
+      ]
+    },
+    "obj.status": {
+      "doc": "$store->status(): {name, messages} (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::status"
+      ]
+    },
+    "obj.watch": {
+      "doc": "$store->watch(callback recording metas, includeHistory?) (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::watch"
+      ]
+    },
+    "obj.add_link": {
+      "doc": "$store->addLink(name, target) (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::addLink"
+      ]
+    },
+    "obj.add_bucket_link": {
+      "doc": "$store->addBucketLink(name, bucket) (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::addBucketLink"
+      ]
+    },
+    "obj.update_meta": {
+      "doc": "$store->updateMeta(name, description?, metadata?) (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::updateMeta"
+      ]
+    },
+    "obj.seal": {
+      "doc": "$store->seal() (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::seal"
+      ]
+    },
+    "obj.bucket": {
+      "doc": "$store->getBucket() (meta records with nuid and mtime as *)",
+      "covers": [
+        "Utopia\\NATS\\ObjectStore\\ObjectStore::getBucket"
+      ]
+    },
+    "obj.read_meta": {
+      "doc": "the store's readMetaWithSeq(name) (private, by reflection, as ObjectStoreTest does): {meta (handle), seq}"
+    },
+    "obj.write_version": {
+      "doc": "the store's writeVersion(name, data, previous meta handle, seq) (private, by reflection)"
+    },
+    "obj.delete_version": {
+      "doc": "the store's deleteVersion(meta handle, seq) (private, by reflection)"
+    },
+    "service.new": {
+      "doc": "new Service(connection, name, version, description?, metadata?)",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::__construct"
+      ]
+    },
+    "service.add_endpoint": {
+      "doc": "$service->addEndpoint(name, subject, handler (echo prefix+data, fixed payload, throw error), queue?, metadata?) === $service",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::addEndpoint"
+      ]
+    },
+    "service.register_endpoint": {
+      "doc": "$service->registerEndpoint(name, subject, handler, queue?, metadata?)",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::registerEndpoint"
+      ]
+    },
+    "service.add_group": {
+      "doc": "$service->addGroup(name, queue?)",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::addGroup",
+        "Utopia\\NATS\\Services\\Group::__construct"
+      ]
+    },
+    "group.add_group": {
+      "doc": "$group->addGroup(name, queue?)",
+      "covers": [
+        "Utopia\\NATS\\Services\\Group::addGroup"
+      ]
+    },
+    "group.add_endpoint": {
+      "doc": "$group->addEndpoint(name, handler, subject?, queue?, metadata?) === $group",
+      "covers": [
+        "Utopia\\NATS\\Services\\Group::addEndpoint"
+      ]
+    },
+    "service.start": {
+      "doc": "$service->start() === $service",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::start"
+      ]
+    },
+    "service.run": {
+      "doc": "$service->run() (on a connection whose reads fail, so it returns)",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::run"
+      ]
+    },
+    "service.stop": {
+      "doc": "$service->stop()",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::stop"
+      ]
+    },
+    "service.get": {
+      "doc": "{name: getName(), id_length, id_hex: the id is upper-case hex}",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::getName",
+        "Utopia\\NATS\\Services\\Service::getId"
+      ]
+    },
+    "service.id": {
+      "doc": "$service->getId()",
+      "covers": [
+        "Utopia\\NATS\\Services\\Service::getId"
+      ]
+    }
+  },
+  "generators": {
+    "header_name": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "X-Key",
+            "Nats-Msg-Id",
+            "Content-Type",
+            "x-key",
+            "KV-Operation",
+            "A",
+            "B",
+            "a b",
+            ""
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 1,
+          "max": 6
+        }
+      ]
+    },
+    "header_value": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "value",
+            "a b",
+            " padded",
+            "  two",
+            "DEL",
+            "503",
+            "é",
+            "tab\there"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 10
+        }
+      ]
+    },
+    "header_step": {
+      "gen": "object",
+      "fields": {
+        "op": {
+          "gen": "pick",
+          "from": [
+            "set",
+            "add",
+            "delete",
+            "status"
+          ]
+        },
+        "name": {
+          "gen": "ref",
+          "name": "header_name"
+        },
+        "value": {
+          "gen": "ref",
+          "name": "header_value"
+        }
+      }
+    },
+    "status": {
+      "gen": "pick",
+      "from": [
+        "503",
+        "100",
+        "404 No Messages",
+        "408",
+        "503 No Responders",
+        "100 Idle Heartbeat",
+        "x"
+      ]
+    },
+    "header_line": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "ref",
+              "name": "header_name"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                ": ",
+                ":",
+                ":  ",
+                " : ",
+                ":\t",
+                ":\u000b"
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "header_value"
+            },
+            {
+              "gen": "const",
+              "value": "\r\n"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 0,
+              "max": 8
+            },
+            {
+              "gen": "const",
+              "value": "\r\n"
+            }
+          ]
+        },
+        {
+          "gen": "const",
+          "value": "\r\n"
+        }
+      ]
+    },
+    "header_block": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "NATS/1.0",
+                "NATS/1.0 ",
+                "NATS/1.0  ",
+                "NATS/1.1",
+                "NATS/1.0\t",
+                "nats/1.0",
+                "NATS/1.0x"
+              ]
+            },
+            {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "const",
+                  "value": ""
+                },
+                {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "status"
+                    }
+                  ]
+                },
+                {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "status"
+                    },
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "string",
+                      "alphabet": "ascii",
+                      "min": 0,
+                      "max": 10
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "\r\n"
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "ref",
+                "name": "header_line"
+              },
+              "sep": "",
+              "min": 0,
+              "max": 4
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\r\n",
+                "",
+                "\r\n\r\n",
+                "\n"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 16,
+          "tricky": 0.3
+        },
+        {
+          "gen": "const",
+          "value": ""
+        }
+      ]
+    },
+    "subject": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "abc.*> \t\u000b\f\r\n\u0000",
+          "min": 0,
+          "max": 8
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "string",
+            "alphabet": "alnum",
+            "min": 1,
+            "max": 4
+          },
+          "sep": ".",
+          "min": 1,
+          "max": 4
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            ".",
+            "a.",
+            ".a",
+            "a..b",
+            "a.b",
+            "work",
+            "_INBOX.x",
+            "a>b",
+            "a*"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 10,
+          "tricky": 0.3
+        }
+      ]
+    },
+    "payload": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 20,
+          "tricky": 0.3
+        },
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 20
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 8
+        }
+      ]
+    },
+    "connect_options": {
+      "gen": "object",
+      "fields": {
+        "verbose": {
+          "gen": "bool"
+        },
+        "name": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "unicode",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 0,
+              "max": 8,
+              "tricky": 0.3
+            },
+            {
+              "gen": "const",
+              "value": "a/b"
+            },
+            {
+              "gen": "const",
+              "value": "café"
+            }
+          ]
+        },
+        "protocol": {
+          "gen": "int",
+          "min": -1,
+          "max": 2
+        },
+        "extra": {
+          "gen": "any",
+          "depth": 2
+        }
+      },
+      "optional": [
+        "name",
+        "protocol",
+        "extra"
+      ]
+    },
+    "wire_op": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "PING\r\n",
+            "PONG\r\n",
+            "+OK\r\n",
+            "PING\n",
+            "\r\n",
+            "BOGUS\r\n",
+            "MSG\r\n",
+            "INFO\r\n"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "-ERR"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                " 'Stale Connection'",
+                " Authorization Violation",
+                " 'x'",
+                "",
+                " \"q\"",
+                "\t'Permissions Violation for Publish to \"a\"'"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "\r\n"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "INFO "
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "{\"server_id\":\"x\",\"max_payload\":5}",
+                "{}",
+                "[1]",
+                "nope",
+                "{\"a\":1.5,\"b\":[true,null]}",
+                "\"str\"",
+                "{\"ldm\":true}",
+                "{\"x\":\"\\u00e9\\/\"}"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "\r\n"
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "MSG "
+            },
+            {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "repeat",
+                      "part": {
+                        "gen": "string",
+                        "alphabet": "alnum",
+                        "min": 1,
+                        "max": 3
+                      },
+                      "sep": ".",
+                      "min": 1,
+                      "max": 2
+                    },
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "string",
+                      "alphabet": "digits",
+                      "min": 1,
+                      "max": 2
+                    },
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "1",
+                        "3",
+                        "5",
+                        "7",
+                        "12",
+                        "-3",
+                        "x",
+                        "",
+                        "99",
+                        " 5",
+                        "5abc",
+                        "1e1",
+                        "00004"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "repeat",
+                      "part": {
+                        "gen": "string",
+                        "alphabet": "alnum",
+                        "min": 1,
+                        "max": 3
+                      },
+                      "sep": ".",
+                      "min": 1,
+                      "max": 2
+                    },
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "string",
+                      "alphabet": "digits",
+                      "min": 1,
+                      "max": 2
+                    },
+                    {
+                      "gen": "const",
+                      "value": " _INBOX.r "
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "1",
+                        "3",
+                        "5",
+                        "7",
+                        "12",
+                        "-3",
+                        "x",
+                        "",
+                        "99",
+                        " 5",
+                        "5abc",
+                        "1e1",
+                        "00004"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "pick",
+                      "from": [
+                        " ",
+                        "\t",
+                        "  ",
+                        "\f",
+                        ""
+                      ]
+                    },
+                    {
+                      "gen": "string",
+                      "alphabet": "alnum",
+                      "min": 1,
+                      "max": 3
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        " ",
+                        "  ",
+                        "\t"
+                      ]
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "1",
+                        "3",
+                        "5",
+                        "7",
+                        "12",
+                        "-3",
+                        "x",
+                        "",
+                        "99",
+                        " 5",
+                        "5abc",
+                        "1e1",
+                        "00004"
+                      ]
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "",
+                        " ",
+                        "\f"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "string",
+                  "alphabet": "ascii",
+                  "min": 0,
+                  "max": 12
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "\r\n"
+            },
+            {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 0,
+              "max": 8
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\r\n",
+                "",
+                "xy",
+                "\r\n\r\n"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "HMSG "
+            },
+            {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "string",
+                      "alphabet": "alnum",
+                      "min": 1,
+                      "max": 3
+                    },
+                    {
+                      "gen": "const",
+                      "value": " 1 "
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "1",
+                        "3",
+                        "5",
+                        "7",
+                        "12",
+                        "-3",
+                        "x",
+                        "",
+                        "99",
+                        " 5",
+                        "5abc",
+                        "1e1",
+                        "00004"
+                      ]
+                    },
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "1",
+                        "3",
+                        "5",
+                        "7",
+                        "12",
+                        "-3",
+                        "x",
+                        "",
+                        "99",
+                        " 5",
+                        "5abc",
+                        "1e1",
+                        "00004"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "string",
+                      "alphabet": "alnum",
+                      "min": 1,
+                      "max": 3
+                    },
+                    {
+                      "gen": "const",
+                      "value": " 1 reply "
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "1",
+                        "3",
+                        "5",
+                        "7",
+                        "12",
+                        "-3",
+                        "x",
+                        "",
+                        "99",
+                        " 5",
+                        "5abc",
+                        "1e1",
+                        "00004"
+                      ]
+                    },
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "1",
+                        "3",
+                        "5",
+                        "7",
+                        "12",
+                        "-3",
+                        "x",
+                        "",
+                        "99",
+                        " 5",
+                        "5abc",
+                        "1e1",
+                        "00004"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "concat",
+                  "parts": [
+                    {
+                      "gen": "string",
+                      "alphabet": "alnum",
+                      "min": 1,
+                      "max": 3
+                    },
+                    {
+                      "gen": "const",
+                      "value": " "
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "0",
+                        "1",
+                        "3",
+                        "5",
+                        "7",
+                        "12",
+                        "-3",
+                        "x",
+                        "",
+                        "99",
+                        " 5",
+                        "5abc",
+                        "1e1",
+                        "00004"
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "gen": "string",
+                  "alphabet": "ascii",
+                  "min": 0,
+                  "max": 12
+                }
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "\r\n"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "NATS/1.0\r\nA: b\r\n\r\n",
+                "NATS/1.0 503\r\n\r\n",
+                "BAD\r\n\r\n",
+                "",
+                "NATS/1.0\r\n\r\n"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\r\n",
+                "",
+                "xy"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 0,
+              "max": 12,
+              "tricky": 0.2
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\r\n",
+                "\n",
+                ""
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "wire": {
+      "gen": "repeat",
+      "part": {
+        "gen": "ref",
+        "name": "wire_op"
+      },
+      "sep": "",
+      "min": 0,
+      "max": 6
+    },
+    "server_info": {
+      "gen": "object",
+      "fields": {
+        "server_id": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 0,
+          "max": 8
+        },
+        "server_name": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 0,
+          "max": 8
+        },
+        "version": {
+          "gen": "pick",
+          "from": [
+            "2.10.0",
+            "2.11.1",
+            ""
+          ]
+        },
+        "proto": {
+          "gen": "int",
+          "min": 0,
+          "max": 2
+        },
+        "host": {
+          "gen": "pick",
+          "from": [
+            "127.0.0.1",
+            "0.0.0.0",
+            ""
+          ]
+        },
+        "port": {
+          "gen": "int",
+          "min": 0,
+          "max": 65535
+        },
+        "headers": {
+          "gen": "bool"
+        },
+        "auth_required": {
+          "gen": "bool"
+        },
+        "tls_required": {
+          "gen": "bool"
+        },
+        "tls_available": {
+          "gen": "bool"
+        },
+        "max_payload": {
+          "gen": "int",
+          "min": 0,
+          "max": 8388608
+        },
+        "connect_urls": {
+          "gen": "array",
+          "items": {
+            "gen": "pick",
+            "from": [
+              "10.0.0.1:4222",
+              "nats://10.0.0.2:4222",
+              "tls://h:1"
+            ]
+          },
+          "min": 0,
+          "max": 3
+        },
+        "nonce": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 1,
+              "max": 10
+            }
+          ]
+        },
+        "jetstream": {
+          "gen": "bool"
+        },
+        "client_id": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 1000
+            }
+          ]
+        },
+        "client_ip": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "127.0.0.1",
+                "::1"
+              ]
+            }
+          ]
+        }
+      },
+      "optional": [
+        "server_id",
+        "server_name",
+        "version",
+        "proto",
+        "host",
+        "port",
+        "headers",
+        "auth_required",
+        "tls_required",
+        "tls_available",
+        "max_payload",
+        "connect_urls",
+        "nonce",
+        "jetstream",
+        "client_id",
+        "client_ip"
+      ]
+    },
+    "server_error": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "Stale Connection",
+            "stale connection",
+            "Slow Consumer",
+            "Maximum Payload Exceeded",
+            "Invalid Client Protocol",
+            "Authorization Violation",
+            "Authentication Expired",
+            "Authentication Timeout",
+            "User Authentication Expired",
+            "Secure Connection - TLS Required",
+            "Maximum Connections Exceeded",
+            "Maximum Control Line Exceeded",
+            "Unknown Protocol Operation",
+            "Parser Error",
+            "Permissions Violation for Publish to 'foo'",
+            "Permissions Violation for Subscription to 'foo.bar'",
+            "Maximum Subscriptions Exceeded",
+            "Invalid Subject",
+            "",
+            "AUTHORIZATION",
+            "authentication",
+            "STALE CONNECTION"
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "stale connection",
+                "Authorization",
+                "maximum payload",
+                "permissions violation",
+                "PARSER ERROR",
+                "slow consumer"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 0,
+              "max": 6
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "unicode",
+          "min": 0,
+          "max": 10
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.3
+        }
+      ]
+    },
+    "seconds": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "float",
+          "min": -1000.0,
+          "max": 1000000.0
+        },
+        {
+          "gen": "float",
+          "min": 0.0,
+          "max": 2.0
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0.1,
+            0.2,
+            0.3,
+            1e-09,
+            5e-10,
+            1.5,
+            86400.0,
+            9300000000.0,
+            10000000000.0,
+            -0.5,
+            0.0,
+            2.0,
+            0.018,
+            0.045,
+            4.9
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {
+            "$float": "INF"
+          }
+        },
+        {
+          "gen": "const",
+          "value": {
+            "$float": "NAN"
+          }
+        },
+        {
+          "gen": "const",
+          "value": {
+            "$float": "-INF"
+          }
+        }
+      ]
+    },
+    "nanos": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -1000000000000000000,
+          "max": 1000000000000000000
+        },
+        {
+          "gen": "pick",
+          "from": [
+            0,
+            1,
+            1000000000,
+            5000000000,
+            1500000000,
+            999999999,
+            -1000000000,
+            9223372036854775807,
+            -9223372036854775808
+          ]
+        }
+      ]
+    },
+    "stream_config": {
+      "gen": "object",
+      "fields": {
+        "name": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 0,
+          "max": 8
+        },
+        "subjects": {
+          "gen": "array",
+          "items": {
+            "gen": "repeat",
+            "part": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 1,
+              "max": 3
+            },
+            "sep": ".",
+            "min": 1,
+            "max": 3
+          },
+          "min": 0,
+          "max": 3
+        },
+        "description": {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 10,
+          "tricky": 0.2
+        },
+        "retention": {
+          "gen": "pick",
+          "from": [
+            "limits",
+            "interest",
+            "workqueue",
+            "bogus"
+          ]
+        },
+        "max_consumers": {
+          "gen": "int",
+          "min": -1,
+          "max": 10
+        },
+        "max_msgs": {
+          "gen": "int",
+          "min": -1,
+          "max": 1000
+        },
+        "max_bytes": {
+          "gen": "int",
+          "min": -1,
+          "max": 100000
+        },
+        "max_msgs_per_subject": {
+          "gen": "int",
+          "min": -1,
+          "max": 10
+        },
+        "max_msg_size": {
+          "gen": "int",
+          "min": -1,
+          "max": 1000
+        },
+        "max_age": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 100000000000
+            },
+            {
+              "gen": "pick",
+              "from": [
+                0,
+                1000000000,
+                1500000000,
+                300000000
+              ]
+            }
+          ]
+        },
+        "storage": {
+          "gen": "pick",
+          "from": [
+            "file",
+            "memory",
+            "bogus"
+          ]
+        },
+        "num_replicas": {
+          "gen": "int",
+          "min": 1,
+          "max": 3
+        },
+        "discard": {
+          "gen": "pick",
+          "from": [
+            "old",
+            "new",
+            "bogus"
+          ]
+        },
+        "no_ack": {
+          "gen": "bool"
+        },
+        "duplicate_window": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 100000000000
+            },
+            {
+              "gen": "pick",
+              "from": [
+                0,
+                1000000000,
+                1500000000,
+                300000000
+              ]
+            }
+          ]
+        },
+        "allow_direct": {
+          "gen": "bool"
+        },
+        "mirror_direct": {
+          "gen": "bool"
+        },
+        "sealed": {
+          "gen": "bool"
+        },
+        "deny_delete": {
+          "gen": "bool"
+        },
+        "deny_purge": {
+          "gen": "bool"
+        },
+        "allow_rollup_hdrs": {
+          "gen": "bool"
+        },
+        "metadata": {
+          "gen": "object",
+          "fields": {
+            "env": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 5
+            },
+            "team": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 5
+            }
+          },
+          "optional": [
+            "env",
+            "team"
+          ]
+        },
+        "mirror": {
+          "gen": "object",
+          "fields": {
+            "name": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 1,
+              "max": 6
+            },
+            "opt_start_seq": {
+              "gen": "int",
+              "min": 0,
+              "max": 100
+            },
+            "opt_start_time": {
+              "gen": "pick",
+              "from": [
+                "2024-01-01T00:00:00Z"
+              ]
+            },
+            "filter_subject": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 1,
+              "max": 5
+            },
+            "subject_transforms": {
+              "gen": "array",
+              "items": {
+                "gen": "object",
+                "fields": {
+                  "src": {
+                    "gen": "string",
+                    "alphabet": "alnum",
+                    "min": 0,
+                    "max": 5
+                  },
+                  "dest": {
+                    "gen": "string",
+                    "alphabet": "alnum",
+                    "min": 0,
+                    "max": 5
+                  }
+                },
+                "optional": [
+                  "src",
+                  "dest"
+                ]
+              },
+              "min": 0,
+              "max": 2
+            },
+            "external": {
+              "gen": "object",
+              "fields": {
+                "api": {
+                  "gen": "string",
+                  "alphabet": "alnum",
+                  "min": 0,
+                  "max": 5
+                },
+                "deliver": {
+                  "gen": "string",
+                  "alphabet": "alnum",
+                  "min": 0,
+                  "max": 5
+                }
+              },
+              "optional": [
+                "api",
+                "deliver"
+              ]
+            }
+          },
+          "optional": [
+            "opt_start_seq",
+            "opt_start_time",
+            "filter_subject",
+            "subject_transforms",
+            "external"
+          ]
+        },
+        "sources": {
+          "gen": "array",
+          "items": {
+            "gen": "object",
+            "fields": {
+              "name": {
+                "gen": "string",
+                "alphabet": "alnum",
+                "min": 1,
+                "max": 6
+              },
+              "opt_start_seq": {
+                "gen": "int",
+                "min": 0,
+                "max": 100
+              },
+              "opt_start_time": {
+                "gen": "pick",
+                "from": [
+                  "2024-01-01T00:00:00Z"
+                ]
+              },
+              "filter_subject": {
+                "gen": "string",
+                "alphabet": "alnum",
+                "min": 1,
+                "max": 5
+              },
+              "subject_transforms": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "src": {
+                      "gen": "string",
+                      "alphabet": "alnum",
+                      "min": 0,
+                      "max": 5
+                    },
+                    "dest": {
+                      "gen": "string",
+                      "alphabet": "alnum",
+                      "min": 0,
+                      "max": 5
+                    }
+                  },
+                  "optional": [
+                    "src",
+                    "dest"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "external": {
+                "gen": "object",
+                "fields": {
+                  "api": {
+                    "gen": "string",
+                    "alphabet": "alnum",
+                    "min": 0,
+                    "max": 5
+                  },
+                  "deliver": {
+                    "gen": "string",
+                    "alphabet": "alnum",
+                    "min": 0,
+                    "max": 5
+                  }
+                },
+                "optional": [
+                  "api",
+                  "deliver"
+                ]
+              }
+            },
+            "optional": [
+              "opt_start_seq",
+              "opt_start_time",
+              "filter_subject",
+              "subject_transforms",
+              "external"
+            ]
+          },
+          "min": 0,
+          "max": 2
+        },
+        "republish": {
+          "gen": "object",
+          "fields": {
+            "src": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 4
+            },
+            "dest": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 4
+            },
+            "headers_only": {
+              "gen": "bool"
+            }
+          },
+          "optional": [
+            "src",
+            "dest",
+            "headers_only"
+          ]
+        },
+        "subject_transform": {
+          "gen": "object",
+          "fields": {
+            "src": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 5
+            },
+            "dest": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 5
+            }
+          },
+          "optional": [
+            "src",
+            "dest"
+          ]
+        },
+        "placement": {
+          "gen": "object",
+          "fields": {
+            "cluster": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 4
+            },
+            "tags": {
+              "gen": "array",
+              "items": {
+                "gen": "string",
+                "alphabet": "alnum",
+                "min": 1,
+                "max": 4
+              },
+              "min": 0,
+              "max": 2
+            }
+          },
+          "optional": [
+            "cluster",
+            "tags"
+          ]
+        },
+        "compression": {
+          "gen": "pick",
+          "from": [
+            "none",
+            "s2"
+          ]
+        },
+        "first_seq": {
+          "gen": "int",
+          "min": 0,
+          "max": 1000
+        },
+        "consumer_limits": {
+          "gen": "object",
+          "fields": {
+            "inactive_threshold": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "int",
+                  "min": 0,
+                  "max": 100000000000
+                },
+                {
+                  "gen": "pick",
+                  "from": [
+                    0,
+                    1000000000,
+                    1500000000,
+                    300000000
+                  ]
+                }
+              ]
+            },
+            "max_ack_pending": {
+              "gen": "int",
+              "min": -1,
+              "max": 1000
+            }
+          },
+          "optional": [
+            "inactive_threshold",
+            "max_ack_pending"
+          ]
+        },
+        "allow_msg_ttl": {
+          "gen": "bool"
+        },
+        "subject_delete_marker_ttl": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 100000000000
+            },
+            {
+              "gen": "pick",
+              "from": [
+                0,
+                1000000000,
+                1500000000,
+                300000000
+              ]
+            }
+          ]
+        }
+      },
+      "optional": [
+        "name",
+        "subjects",
+        "description",
+        "retention",
+        "max_consumers",
+        "max_msgs",
+        "max_bytes",
+        "max_msgs_per_subject",
+        "max_msg_size",
+        "max_age",
+        "storage",
+        "num_replicas",
+        "discard",
+        "no_ack",
+        "duplicate_window",
+        "allow_direct",
+        "mirror_direct",
+        "sealed",
+        "deny_delete",
+        "deny_purge",
+        "allow_rollup_hdrs",
+        "metadata",
+        "mirror",
+        "sources",
+        "republish",
+        "subject_transform",
+        "placement",
+        "compression",
+        "first_seq",
+        "consumer_limits",
+        "allow_msg_ttl",
+        "subject_delete_marker_ttl"
+      ]
+    },
+    "consumer_config": {
+      "gen": "object",
+      "fields": {
+        "name": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 0,
+          "max": 6
+        },
+        "durable_name": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 0,
+          "max": 6
+        },
+        "description": {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 8
+        },
+        "deliver_policy": {
+          "gen": "pick",
+          "from": [
+            "all",
+            "last",
+            "new",
+            "by_start_sequence",
+            "by_start_time",
+            "last_per_subject",
+            "bogus"
+          ]
+        },
+        "ack_policy": {
+          "gen": "pick",
+          "from": [
+            "none",
+            "all",
+            "explicit",
+            "bogus"
+          ]
+        },
+        "ack_wait": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 100000000000
+            },
+            {
+              "gen": "pick",
+              "from": [
+                0,
+                1000000000,
+                1500000000,
+                300000000
+              ]
+            }
+          ]
+        },
+        "max_deliver": {
+          "gen": "int",
+          "min": -1,
+          "max": 10
+        },
+        "filter_subject": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 1,
+          "max": 5
+        },
+        "filter_subjects": {
+          "gen": "array",
+          "items": {
+            "gen": "string",
+            "alphabet": "alnum",
+            "min": 1,
+            "max": 4
+          },
+          "min": 0,
+          "max": 3
+        },
+        "replay_policy": {
+          "gen": "pick",
+          "from": [
+            "instant",
+            "original",
+            "bogus"
+          ]
+        },
+        "max_waiting": {
+          "gen": "int",
+          "min": 0,
+          "max": 512
+        },
+        "max_ack_pending": {
+          "gen": "int",
+          "min": -1,
+          "max": 1000
+        },
+        "inactive_threshold": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 100000000000
+            },
+            {
+              "gen": "pick",
+              "from": [
+                0,
+                1000000000,
+                1500000000,
+                300000000
+              ]
+            }
+          ]
+        },
+        "opt_start_seq": {
+          "gen": "int",
+          "min": 0,
+          "max": 100
+        },
+        "opt_start_time": {
+          "gen": "pick",
+          "from": [
+            "2024-01-01T00:00:00Z"
+          ]
+        },
+        "max_batch": {
+          "gen": "int",
+          "min": 0,
+          "max": 100
+        },
+        "max_bytes": {
+          "gen": "int",
+          "min": 0,
+          "max": 10000
+        },
+        "mem_storage": {
+          "gen": "bool"
+        },
+        "num_replicas": {
+          "gen": "int",
+          "min": 0,
+          "max": 3
+        },
+        "deliver_subject": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 1,
+          "max": 6
+        },
+        "deliver_group": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 1,
+          "max": 6
+        },
+        "flow_control": {
+          "gen": "bool"
+        },
+        "idle_heartbeat": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 100000000000
+            },
+            {
+              "gen": "pick",
+              "from": [
+                0,
+                1000000000,
+                1500000000,
+                300000000
+              ]
+            }
+          ]
+        },
+        "metadata": {
+          "gen": "object",
+          "fields": {
+            "env": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 5
+            },
+            "team": {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 5
+            }
+          },
+          "optional": [
+            "env",
+            "team"
+          ]
+        },
+        "backoff": {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "int",
+                "min": 0,
+                "max": 100000000000
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  0,
+                  1000000000,
+                  1500000000,
+                  300000000
+                ]
+              }
+            ]
+          },
+          "min": 0,
+          "max": 3
+        }
+      },
+      "optional": [
+        "name",
+        "durable_name",
+        "description",
+        "deliver_policy",
+        "ack_policy",
+        "ack_wait",
+        "max_deliver",
+        "filter_subject",
+        "filter_subjects",
+        "replay_policy",
+        "max_waiting",
+        "max_ack_pending",
+        "inactive_threshold",
+        "opt_start_seq",
+        "opt_start_time",
+        "max_batch",
+        "max_bytes",
+        "mem_storage",
+        "num_replicas",
+        "deliver_subject",
+        "deliver_group",
+        "flow_control",
+        "idle_heartbeat",
+        "metadata",
+        "backoff"
+      ]
+    },
+    "object_meta": {
+      "gen": "object",
+      "fields": {
+        "name": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "bucket": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "nuid": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "size": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "chunks": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "digest": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "description": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "mtime": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "deleted": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 0,
+              "max": 6
+            },
+            {
+              "gen": "int",
+              "min": -5,
+              "max": 100
+            },
+            {
+              "gen": "bool"
+            },
+            {
+              "gen": "const",
+              "value": null
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "12abc",
+                "0",
+                "",
+                " 7",
+                "1.5",
+                "1e2"
+              ]
+            }
+          ]
+        },
+        "metadata": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "k": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "string",
+                      "alphabet": "alnum",
+                      "min": 0,
+                      "max": 6
+                    },
+                    {
+                      "gen": "int",
+                      "min": -5,
+                      "max": 100
+                    },
+                    {
+                      "gen": "bool"
+                    },
+                    {
+                      "gen": "const",
+                      "value": null
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "12abc",
+                        "0",
+                        "",
+                        " 7",
+                        "1.5",
+                        "1e2"
+                      ]
+                    }
+                  ]
+                },
+                "v": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "string",
+                      "alphabet": "alnum",
+                      "min": 0,
+                      "max": 6
+                    },
+                    {
+                      "gen": "int",
+                      "min": -5,
+                      "max": 100
+                    },
+                    {
+                      "gen": "bool"
+                    },
+                    {
+                      "gen": "const",
+                      "value": null
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "12abc",
+                        "0",
+                        "",
+                        " 7",
+                        "1.5",
+                        "1e2"
+                      ]
+                    }
+                  ]
+                }
+              },
+              "optional": [
+                "k",
+                "v"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "scalar"
+            }
+          ]
+        },
+        "options": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "link": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "bucket": {
+                          "gen": "one_of",
+                          "of": [
+                            {
+                              "gen": "string",
+                              "alphabet": "alnum",
+                              "min": 0,
+                              "max": 6
+                            },
+                            {
+                              "gen": "int",
+                              "min": -5,
+                              "max": 100
+                            },
+                            {
+                              "gen": "bool"
+                            },
+                            {
+                              "gen": "const",
+                              "value": null
+                            },
+                            {
+                              "gen": "pick",
+                              "from": [
+                                "12abc",
+                                "0",
+                                "",
+                                " 7",
+                                "1.5",
+                                "1e2"
+                              ]
+                            }
+                          ]
+                        },
+                        "name": {
+                          "gen": "one_of",
+                          "of": [
+                            {
+                              "gen": "string",
+                              "alphabet": "alnum",
+                              "min": 0,
+                              "max": 6
+                            },
+                            {
+                              "gen": "int",
+                              "min": -5,
+                              "max": 100
+                            },
+                            {
+                              "gen": "bool"
+                            },
+                            {
+                              "gen": "const",
+                              "value": null
+                            },
+                            {
+                              "gen": "pick",
+                              "from": [
+                                "12abc",
+                                "0",
+                                "",
+                                " 7",
+                                "1.5",
+                                "1e2"
+                              ]
+                            }
+                          ]
+                        }
+                      },
+                      "optional": [
+                        "bucket",
+                        "name"
+                      ]
+                    },
+                    {
+                      "gen": "const",
+                      "value": "x"
+                    }
+                  ]
+                }
+              },
+              "optional": [
+                "link"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": 3
+            }
+          ]
+        }
+      },
+      "optional": [
+        "name",
+        "bucket",
+        "nuid",
+        "size",
+        "chunks",
+        "digest",
+        "description",
+        "mtime",
+        "deleted",
+        "metadata",
+        "options"
+      ]
+    },
+    "reply_subject": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "$JS.ACK."
+            },
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 1,
+              "max": 5
+            },
+            {
+              "gen": "const",
+              "value": "."
+            },
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 1,
+              "max": 5
+            },
+            {
+              "gen": "const",
+              "value": "."
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "3",
+                "5",
+                "7",
+                "12",
+                "-3",
+                "x",
+                "",
+                "99",
+                " 5",
+                "5abc",
+                "1e1",
+                "00004"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "."
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "3",
+                "5",
+                "7",
+                "12",
+                "-3",
+                "x",
+                "",
+                "99",
+                " 5",
+                "5abc",
+                "1e1",
+                "00004"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "."
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "3",
+                "5",
+                "7",
+                "12",
+                "-3",
+                "x",
+                "",
+                "99",
+                " 5",
+                "5abc",
+                "1e1",
+                "00004"
+              ]
+            },
+            {
+              "gen": "const",
+              "value": "."
+            },
+            {
+              "gen": "string",
+              "alphabet": "digits",
+              "min": 0,
+              "max": 19
+            },
+            {
+              "gen": "const",
+              "value": "."
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "1",
+                "3",
+                "5",
+                "7",
+                "12",
+                "-3",
+                "x",
+                "",
+                "99",
+                " 5",
+                "5abc",
+                "1e1",
+                "00004"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "$JS.ACK."
+            },
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 1,
+              "max": 4
+            },
+            {
+              "gen": "const",
+              "value": "."
+            },
+            {
+              "gen": "string",
+              "alphabet": "alnum",
+              "min": 1,
+              "max": 4
+            },
+            {
+              "gen": "const",
+              "value": "."
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "alphabet": "alnum",
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "0",
+                      "1",
+                      "3",
+                      "5",
+                      "7",
+                      "12",
+                      "-3",
+                      "x",
+                      "",
+                      "99",
+                      " 5",
+                      "5abc",
+                      "1e1",
+                      "00004"
+                    ]
+                  }
+                ]
+              },
+              "sep": ".",
+              "min": 7,
+              "max": 9
+            }
+          ]
+        },
+        {
+          "gen": "repeat",
+          "part": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "string",
+                "alphabet": "alnum",
+                "min": 0,
+                "max": 4
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "$JS",
+                  "ACK",
+                  "$JS.ACK"
+                ]
+              }
+            ]
+          },
+          "sep": ".",
+          "min": 0,
+          "max": 12
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 20,
+          "tricky": 0.3
+        }
+      ]
+    },
+    "stream_message": {
+      "gen": "object",
+      "fields": {
+        "subject": {
+          "gen": "string",
+          "alphabet": "alnum",
+          "min": 0,
+          "max": 6
+        },
+        "seq": {
+          "gen": "int",
+          "min": 0,
+          "max": 1000
+        },
+        "data": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "pick",
+              "from": [
+                "dGhlLXBheWxvYWQ=",
+                "MA==",
+                "",
+                "//4=",
+                "not base64!",
+                "YQ",
+                "YQ==="
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ascii",
+              "min": 0,
+              "max": 8
+            }
+          ]
+        },
+        "time": {
+          "gen": "pick",
+          "from": [
+            "2024-01-01T00:00:00Z"
+          ]
+        },
+        "hdrs": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "pick",
+              "from": [
+                "TkFUUy8xLjANClgtS2V5OiB2YWx1ZQ0KDQo=",
+                "TkFUUy8xLjAgNTAzDQoNCg==",
+                "TkFUUy8xLjANCk5hdHMtVFRMOiAycw0KDQo=",
+                "Tk9QRS8xLjANCg0K",
+                "",
+                "!!"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "!@#$%^&*()",
+              "min": 1,
+              "max": 6
+            }
+          ]
+        }
+      },
+      "optional": [
+        "subject",
+        "seq",
+        "data",
+        "time",
+        "hdrs"
+      ]
+    },
+    "seed": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY",
+            "SUADIYF6GEQB42P63KQO52FZTF7VY7BJTH627ZMTEU6NMVFPJX5NOFGHXQ",
+            "SUACPIFOWP7OSIZPRLZCCH464SI4LMIL5S2VMO74DZXZGQT6ZPEP4KPPDU",
+            "SAAFLZONRZDNZDWUW7BHMTJKLJGXM5YG7BOYNEACJLLL3I2ADPU4RS7QH4",
+            "SBAMZSJV63GR6YJCNLQVGOFODI2AATJTXIGSI2WAJSA3DOXSHY57T3SQHA",
+            "suakktokdastboy5nujszxwwen5s5wi6h5zb7syzoelujfgwje6j2xgboy",
+            "SUAKKTOKDASTBOY5NUJSZXWWEN5S5WI6H5ZB7SYZOELUJFGWJE6J2XGBOY==="
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567",
+          "min": 0,
+          "max": 60
+        },
+        {
+          "gen": "string",
+          "alphabet": "ascii",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.3
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\NATS\\Transport\\SwooleTransport::*": "PHP runtime plumbing: the transport on Swoole's coroutine client, for PHP processes that disable Swoole's stream hooks. Every Rust transport is async on tokio, so TcpTransport and TlsTransport (whose behaviour transport.round_trip and every connection case cover) are what it is in Rust.",
+    "Utopia\\NATS\\Internal\\CallbackException::__construct": "PHP runtime plumbing: an @internal wrapper marking exceptions raised by callbacks while a request batch collects, so the batch rethrows them instead of reporting them as request outcomes. Rust carries the same distinction in Error::Callback; the behaviour is covered by the RequestsTest cases.",
+    "Utopia\\NATS\\Subscription::setConnection": "Accessor subsumed by Rust types: PHP links a Subscription back to its Connection after constructing it; a Rust subscription belongs to the connection that created it (Connection::subscribe), and the methods that need the connection are Connection methods."
+  },
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\NATS\\Headers::fromWire",
+      "php": "Header names, values, the status line and the \"Invalid header version\" message keep whatever bytes the block holds, UTF-8 or not.",
+      "reason": "utopia_nats::Headers holds String names and values (NATS headers are ASCII, MIME-style text). Bytes that are not UTF-8 become U+FFFD, in the parsed headers and in the error message. The fuzz profiles generate UTF-8 header blocks."
+    },
+    {
+      "symbol": "Utopia\\NATS\\Protocol\\Parser::next",
+      "php": "The subject, sid and reply subject of a MSG/HMSG line, an -ERR text and the line quoted in an \"Unknown protocol operation\" message keep their bytes, UTF-8 or not.",
+      "reason": "utopia_nats::protocol::RawMessage and Message hold String subjects (NATS subjects are UTF-8 text); bytes that are not UTF-8 become U+FFFD. Payloads stay bytes exactly. The fuzz profiles generate UTF-8 control lines with arbitrary payloads."
+    },
+    {
+      "symbol": "Utopia\\NATS\\Connection::requestBatch",
+      "php": "Requests that are not Request objects, or not a list, and an infinite or NaN timeout raise InvalidArgumentException; a callback that reads the connection (request, processMessage, requestMany, wait, flush, tick, drain, requestBatch) while the batch collects raises LogicException.",
+      "reason": "request_batch takes &[Request] and an Option<Duration>, so the first are unrepresentable (a zero timeout still raises InvalidArgument, as in PHP), and the reply callback borrows nothing of the connection: the borrow checker rejects a nested read at compile time rather than at run time."
+    },
+    {
+      "symbol": "Utopia\\NATS\\Transport\\TcpTransport::upgradeTls",
+      "php": "After a failed STARTTLS handshake the stream stays open in plain text, holding whatever the TLS attempt left unread.",
+      "reason": "tokio-rustls consumes the TCP stream for the handshake and drops it when the handshake fails, so the Rust transport is closed afterwards (writes and reads fail with \"Not connected\"). Both raise \"Failed to upgrade connection to TLS\"; the case stops there."
+    },
+    {
+      "symbol": "Utopia\\NATS\\ConnectionOptions::__construct",
+      "php": "Timeouts, intervals and waits are float seconds; negative, infinite and NaN values are accepted (and make the PHP stream calls misbehave).",
+      "reason": "utopia_nats::ConnectionOptions uses std::time::Duration, which is finite and non-negative. The cases use the float values Duration represents."
+    }
+  ],
+  "bench": {
+    "bound": {
+      "server_request": "A round trip to the NATS server (out to the subscriber and back), the same on both runtimes, dominates the call"
+    }
+  }
+}
