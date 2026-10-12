@@ -50,7 +50,14 @@ A function uses either an interval or a cron expression:
 
 # Set an interval in the Console
 
-Open your function, go to **Settings** > **Schedule**, and choose **Interval**. Pick a preset such as every 15 minutes, every hour or every day, or enter your own number of minutes.
+Open your function, go to **Settings** > **Executions** > **Schedule**, and choose **Interval**. Pick a preset such as every 15 minutes, hourly or daily, or choose **Custom** and enter a number of minutes, hours or days. Click **Update** to save.
+
+{% only_dark %}
+![Interval selected in the Schedule card of a function's Executions settings](/images/docs/functions/execution/dark/interval-schedule.avif)
+{% /only_dark %}
+{% only_light %}
+![Interval selected in the Schedule card of a function's Executions settings](/images/docs/functions/execution/interval-schedule.avif)
+{% /only_light %}
 
 # Set an interval with a Server SDK or the CLI
 
