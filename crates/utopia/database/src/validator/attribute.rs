@@ -176,7 +176,7 @@ impl Attribute {
     pub fn check_duplicate_id(&self, attribute: &Document) -> Result<bool> {
         let id = lower(&attribute_key(attribute));
         if self.attributes.iter().any(|(_, existing)| existing.id().to_ascii_lowercase() == id) {
-            return self.fail(|m| Error::duplicate(m), "Attribute already exists in metadata".to_owned());
+            return self.fail(Error::duplicate, "Attribute already exists in metadata".to_owned());
         }
         Ok(true)
     }
@@ -194,7 +194,7 @@ impl Attribute {
                 None => schema.id().to_owned(),
             };
             if schema_id.to_ascii_lowercase() == id {
-                return self.fail(|m| Error::duplicate(m), "Attribute already exists in schema".to_owned());
+                return self.fail(Error::duplicate, "Attribute already exists in schema".to_owned());
             }
         }
         Ok(true)
@@ -246,7 +246,7 @@ impl Attribute {
         let max_attributes = self.options.max_attributes;
         if max_attributes > 0 && count > max_attributes {
             return self.fail(
-                |m| Error::limit(m),
+                Error::limit,
                 format!(
                     "Column limit reached. Cannot create new attribute. Current attribute count is {count} but the maximum is {max_attributes}. Remove some attributes to free up space."
                 ),
@@ -255,7 +255,7 @@ impl Attribute {
         let max_width = self.options.max_width;
         if max_width > 0 && width >= max_width {
             return self.fail(
-                |m| Error::limit(m),
+                Error::limit,
                 format!(
                     "Row width limit reached. Cannot create new attribute. Current row width is {width} bytes but the maximum is {max_width} bytes. Reduce the size of existing attributes or remove some attributes to free up space."
                 ),

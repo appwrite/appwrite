@@ -737,7 +737,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "permission.aggregate" => {
             let permissions = match a.get("permissions") {
                 None | Some(Value::Null) => return Ok(Outcome::Ok(Value::Null)),
-                Some(p) => codec::list(p)?.into_iter().map(|v| plain_string(v)).collect::<Vec<String>>(),
+                Some(p) => codec::list(p)?.into_iter().map(plain_string).collect::<Vec<String>>(),
             };
             let allowed: Vec<PermissionType> = match a.get("allowed") {
                 Some(l) => {

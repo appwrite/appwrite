@@ -108,7 +108,9 @@ impl Spatial {
     }
 }
 
-/// `isValidCoordinate((float) $x, (float) $y)`.
+/// `isValidCoordinate((float) $x, (float) $y)`. NaN passes, as in PHP
+/// (hence comparisons, not `contains`).
+#[allow(clippy::manual_range_contains)]
 fn coordinate(x: &Value, y: &Value) -> Result<(), String> {
     let (x, y) = (x.to_double(), y.to_double());
     if x < -180.0 || x > 180.0 {

@@ -132,7 +132,7 @@ fn operand(value: &Value) -> Option<Number> {
 fn to_int(n: Number) -> i64 {
     match n {
         Number::Int(i) => i,
-        Number::Float(f) if f.is_finite() && f >= -9.223_372_036_854_776e18 && f < 9.223_372_036_854_776e18 => f as i64,
+        Number::Float(f) if (-9.223_372_036_854_776e18..9.223_372_036_854_776e18).contains(&f) => f as i64,
         Number::Float(_) => 0,
     }
 }
