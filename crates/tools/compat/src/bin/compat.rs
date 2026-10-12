@@ -132,7 +132,11 @@ fn seed(cli: &Cli) -> u64 {
 }
 
 fn libs_or_all(cli: &Cli, root: &std::path::Path) -> Vec<String> {
-    if cli.positional.len() > 1 { cli.positional[1..].to_vec() } else { spec::libs(root) }
+    let args = cli.positional.get(1..).unwrap_or_default();
+    // `!name` leaves a library out of all of them, so CI can shard a long one into its own job.
+    let (except, only): (Vec<&String>, Vec<&String>) = args.iter().partition(|a| a.starts_with('!'));
+    let libs = if only.is_empty() { spec::libs(root) } else { only.into_iter().cloned().collect() };
+    libs.into_iter().filter(|l| !except.iter().any(|e| e[1..] == *l)).collect()
 }
 
 fn main() -> ExitCode {
@@ -232,7 +236,7 @@ fn real_main(args: &[String]) -> Result<bool, String> {
         }
         "ci" => {
             let mut ok = true;
-            for lib in spec::libs(&root) {
+            for lib in libs_or_all(&cli, &root) {
                 let s = spec::load(&root, &lib)?;
                 if s.complete {
                     let c = coverage(&mut engine, &lib)?;
