@@ -108,7 +108,7 @@ final class Adapter implements Base, Benchmarks
             'client.close' => function (array $a, Session $s) {
                 self::c($a, $s)->close();
 
-                return null;
+                return;
             },
             'client.is_transient_transaction_error' => fn (array $a, Session $s) => self::client($s, [])->isTransientTransactionError(self::exception($a)),
             'client.is_unknown_transaction_commit_result' => fn (array $a, Session $s) => self::client($s, [])->isUnknownTransactionCommitResult(self::exception($a)),
@@ -121,7 +121,7 @@ final class Adapter implements Base, Benchmarks
             'client.cleanup_stale_sessions' => function (array $a, Session $s) {
                 self::c($a, $s)->cleanupStaleSessions();
 
-                return null;
+                return;
             },
 
             'exception.new' => fn (array $a, Session $s) => self::inspect(self::exception($a)),
@@ -433,7 +433,10 @@ final class Adapter implements Base, Benchmarks
                 return (object) ($inner instanceof \stdClass ? [] : array_map(self::decode(...), (array) $inner));
             }
             if (\count($value) === 1 && \array_key_exists('$bson', $value)) {
-                return Document::fromJSON(json_encode(['v' => $value['$bson']], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION))->toPHP()->v;
+                /** @var \stdClass $decoded */
+                $decoded = Document::fromJSON(json_encode(['v' => $value['$bson']], JSON_THROW_ON_ERROR | JSON_PRESERVE_ZERO_FRACTION))->toPHP();
+
+                return $decoded->v;
             }
 
             return array_map(self::decode(...), $value);

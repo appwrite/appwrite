@@ -92,7 +92,7 @@ use utopia_mongo::bson::{Bson, doc};
 use utopia_mongo::{Client, Config};
 
 let client = Client::new(Config::new("app", "localhost", 27017, "root", "password"))?;
-assert_eq!(client.create_write_concern(&Bson::String("majority".into()))?, doc! { "w": "majority" });
+assert_eq!(client.create_write_concern(&Bson::String("majority".into()))?.to_document(), doc! { "w": "majority" });
 assert_eq!(
     client.create_read_concern(&Bson::String("dirty".into())).unwrap_err().message(),
     "Invalid read concern level: dirty"

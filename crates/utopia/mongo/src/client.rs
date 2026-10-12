@@ -8,8 +8,8 @@ use bson::{Bson, Document, doc};
 use mongodb::ClientSession;
 use mongodb::error::ErrorKind;
 use mongodb::options::{
-    AuthMechanism, ClientOptions, Credential, ReadConcern, ServerAddress, SessionOptions, Tls, TlsOptions,
-    TransactionOptions,
+    AuthMechanism, ClientOptions, Credential, ReadConcern as DriverReadConcern, ServerAddress, SessionOptions, Tls,
+    TlsOptions, TransactionOptions,
 };
 use tokio::sync::Mutex;
 
@@ -279,6 +279,61 @@ pub struct Upsert {
     pub multi: bool,
 }
 
+/// A write concern a command carries (`writeConcern`).
+///
+/// PHP: the array `createWriteConcern()` returns.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct WriteConcern {
+    /// `w`: how many members (or `"majority"`) acknowledge the write.
+    pub w: Option<Bson>,
+    /// `j`: whether the write is journaled first.
+    pub j: Option<bool>,
+    /// `wtimeout`: milliseconds to wait for the acknowledgements.
+    pub wtimeout: Option<Bson>,
+}
+
+impl WriteConcern {
+    /// The concern as the command's document (set fields only, in order).
+    pub fn to_document(&self) -> Document {
+        let mut out = Document::new();
+        if let Some(w) = &self.w {
+            out.insert("w", w.clone());
+        }
+        if let Some(j) = self.j {
+            out.insert("j", j);
+        }
+        if let Some(timeout) = &self.wtimeout {
+            out.insert("wtimeout", timeout.clone());
+        }
+        out
+    }
+}
+
+/// A read concern a command carries (`readConcern`).
+///
+/// PHP: the array `createReadConcern()` returns.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ReadConcern {
+    /// `level`: one of [`READ_CONCERNS`].
+    pub level: Option<Bson>,
+    /// `afterClusterTime`: read at or after this cluster time.
+    pub after_cluster_time: Option<Bson>,
+}
+
+impl ReadConcern {
+    /// The concern as the command's document (set fields only, in order).
+    pub fn to_document(&self) -> Document {
+        let mut out = Document::new();
+        if let Some(level) = &self.level {
+            out.insert("level", level.clone());
+        }
+        if let Some(after) = &self.after_cluster_time {
+            out.insert("afterClusterTime", after.clone());
+        }
+        out
+    }
+}
+
 /// A session the client tracks.
 struct Tracked {
     id: Document,
@@ -487,8 +542,10 @@ impl Client {
         let driver = mongodb::Client::with_options(options).map_err(|_| unreachable())?;
         // The handshake: server selection dials and authenticates; the
         // client then reads at the cluster time its reply carries, as PHP's
-        // does after the replies to its SCRAM commands.
-        let hello = tokio::time::timeout(budget, driver.database("admin").run_command(doc! { "ping": 1 })).await;
+        // does after the replies to its SCRAM commands. Server selection
+        // gives up within the budget (unsent); the reply gets one more
+        // budget, so a refused dial never races the receive timeout.
+        let hello = tokio::time::timeout(budget * 2, driver.database("admin").run_command(doc! { "ping": 1 })).await;
         match hello {
             Ok(Ok(reply)) => self.update_causal_consistency(&reply),
             Ok(Err(e)) => {
@@ -885,12 +942,12 @@ impl Client {
     /// its first command, and every other option but `skip`.
     fn concerns(&self, command: &mut Document, options: &Options, write: bool, skip: &[&str]) -> Result<()> {
         if write && let Some(concern) = options.fields.get("writeConcern").filter(|v| set(Some(v))) {
-            command.insert("writeConcern", self.create_write_concern(concern)?);
+            command.insert("writeConcern", self.create_write_concern(concern)?.to_document());
         }
         if let Some(concern) = options.fields.get("readConcern").filter(|v| set(Some(v)))
             && !self.should_skip_read_concern(options)
         {
-            command.insert("readConcern", self.create_read_concern(concern)?);
+            command.insert("readConcern", self.create_read_concern(concern)?.to_document());
         }
         if !write && let Some(preference) = options.fields.get("readPreference").filter(|v| set(Some(v))) {
             command.insert("$readPreference", preference.clone());
@@ -1107,7 +1164,7 @@ impl Client {
         if let Some(concern) = options.fields.get("readConcern").filter(|v| set(Some(v)))
             && !self.should_skip_read_concern(&options)
         {
-            command.insert("readConcern", self.create_read_concern(concern)?);
+            command.insert("readConcern", self.create_read_concern(concern)?.to_document());
         }
         if let Some(preference) = options.fields.get("readPreference").filter(|v| set(Some(v))) {
             command.insert("$readPreference", preference.clone());
@@ -1200,9 +1257,9 @@ impl Client {
         if let Some(Bson::Document(rc)) = options.get("readConcern")
             && let Some(Bson::String(level)) = rc.get("level")
         {
-            transaction.read_concern = Some(ReadConcern::custom(level.clone()));
+            transaction.read_concern = Some(DriverReadConcern::custom(level.clone()));
         } else if let Some(Bson::String(level)) = options.get("readConcern") {
-            transaction.read_concern = Some(ReadConcern::custom(level.clone()));
+            transaction.read_concern = Some(DriverReadConcern::custom(level.clone()));
         }
         let mut driver = handle.lock().await;
         if driver.start_transaction().with_options(transaction.clone()).await.is_err() {
@@ -1470,45 +1527,42 @@ impl Client {
     /// `wtimeout` from a document.
     ///
     /// PHP: `createWriteConcern($writeConcern)`.
-    pub fn create_write_concern(&self, concern: &Bson) -> Result<Document> {
+    pub fn create_write_concern(&self, concern: &Bson) -> Result<WriteConcern> {
         let negative = || Error::exception("Write concern w value must be >= 0", 0);
+        let level = |w: i64| -> Result<WriteConcern> {
+            if w < 0 {
+                return Err(negative());
+            }
+            Ok(WriteConcern { w: Some(int(w)), ..WriteConcern::default() })
+        };
         // A bool or a float in range is juggled to the union's int
         // (truncated), any other float to its string.
-        let concern = match concern {
-            Bson::Boolean(b) => &Bson::Int64(i64::from(*b)),
-            Bson::Double(f) if f.is_finite() && f.abs() < 9.2e18 => &Bson::Int64(*f as i64),
-            Bson::Double(f) => &Bson::String(php_std::number::to_string(*f)),
-            other => other,
-        };
         match concern {
-            Bson::String(w) => Ok(doc! { "w": w.clone() }),
-            Bson::Int32(_) | Bson::Int64(_) => {
-                let w = integer(concern);
-                if w < 0 {
-                    return Err(negative());
-                }
-                Ok(doc! { "w": int(w) })
+            Bson::String(w) => Ok(WriteConcern { w: Some(Bson::String(w.clone())), ..WriteConcern::default() }),
+            Bson::Int32(_) | Bson::Int64(_) => level(integer(concern)),
+            Bson::Boolean(b) => level(i64::from(*b)),
+            Bson::Double(f) if f.is_finite() && f.abs() < 9.2e18 => level(*f as i64),
+            Bson::Double(f) => {
+                Ok(WriteConcern { w: Some(Bson::String(php_std::number::to_string(*f))), ..WriteConcern::default() })
             }
-            Bson::Document(_) | Bson::Array(_) => {
-                let spec = keyed(concern);
-                let mut out = Document::new();
-                if let Some(w) = spec.get("w").filter(|v| set(Some(v))) {
-                    if matches!(w, Bson::Int32(_) | Bson::Int64(_)) && integer(w) < 0 {
-                        return Err(negative());
+            Bson::Document(spec) => {
+                // One pass over the (few) fields, no hashing.
+                let (mut w, mut j, mut wtimeout) = (None, None, None);
+                for (key, value) in spec {
+                    match key.as_str() {
+                        "w" => w = Some(value),
+                        "j" => j = Some(value),
+                        "wtimeout" => wtimeout = Some(value),
+                        _ => {}
                     }
-                    out.insert("w", w.clone());
                 }
-                if let Some(j) = spec.get("j").filter(|v| set(Some(v))) {
-                    out.insert("j", truthy(j));
-                }
-                if let Some(timeout) = spec.get("wtimeout").filter(|v| set(Some(v))) {
-                    if !matches!(timeout, Bson::Int32(_) | Bson::Int64(_)) || integer(timeout) < 0 {
-                        return Err(Error::exception("Write concern wtimeout must be a non-negative integer", 0));
-                    }
-                    out.insert("wtimeout", timeout.clone());
-                }
-                Ok(out)
+                Self::write_concern_of(|key| match key {
+                    "w" => w,
+                    "j" => j,
+                    _ => wtimeout,
+                })
             }
+            Bson::Array(items) => Self::write_concern_of(|key| key.parse::<usize>().ok().and_then(|i| items.get(i))),
             other => Err(Error::Engine {
                 class: "TypeError",
                 message: format!(
@@ -1519,11 +1573,32 @@ impl Client {
         }
     }
 
+    /// The write concern of an array's `w`, `j` and `wtimeout`.
+    fn write_concern_of<'a>(get: impl Fn(&str) -> Option<&'a Bson>) -> Result<WriteConcern> {
+        let mut out = WriteConcern::default();
+        if let Some(w) = get("w").filter(|v| set(Some(v))) {
+            if matches!(w, Bson::Int32(_) | Bson::Int64(_)) && integer(w) < 0 {
+                return Err(Error::exception("Write concern w value must be >= 0", 0));
+            }
+            out.w = Some(w.clone());
+        }
+        if let Some(j) = get("j").filter(|v| set(Some(v))) {
+            out.j = Some(truthy(j));
+        }
+        if let Some(timeout) = get("wtimeout").filter(|v| set(Some(v))) {
+            if !matches!(timeout, Bson::Int32(_) | Bson::Int64(_)) || integer(timeout) < 0 {
+                return Err(Error::exception("Write concern wtimeout must be a non-negative integer", 0));
+            }
+            out.wtimeout = Some(timeout.clone());
+        }
+        Ok(out)
+    }
+
     /// `level` from a string or a document (one of [`READ_CONCERNS`]), and
     /// `afterClusterTime` from a document.
     ///
     /// PHP: `createReadConcern($readConcern)`.
-    pub fn create_read_concern(&self, concern: &Bson) -> Result<Document> {
+    pub fn create_read_concern(&self, concern: &Bson) -> Result<ReadConcern> {
         let valid = |level: &Bson| match level {
             Bson::String(s) => READ_CONCERNS.contains(&s.as_str()),
             Bson::Boolean(true) => true,
@@ -1539,19 +1614,19 @@ impl Client {
                 if !valid(concern) {
                     return Err(Error::exception(format!("Invalid read concern level: {level}"), 0));
                 }
-                Ok(doc! { "level": level.clone() })
+                Ok(ReadConcern { level: Some(concern.clone()), after_cluster_time: None })
             }
             Bson::Document(_) | Bson::Array(_) => {
                 let spec = keyed(concern);
-                let mut out = Document::new();
+                let mut out = ReadConcern::default();
                 if let Some(level) = spec.get("level").filter(|v| set(Some(v))) {
                     if !valid(level) {
                         return Err(Error::exception(format!("Invalid read concern level: {}", text(level)), 0));
                     }
-                    out.insert("level", level.clone());
+                    out.level = Some(level.clone());
                 }
                 if let Some(after) = spec.get("afterClusterTime").filter(|v| set(Some(v))) {
-                    out.insert("afterClusterTime", after.clone());
+                    out.after_cluster_time = Some(after.clone());
                 }
                 Ok(out)
             }
@@ -1658,10 +1733,13 @@ mod tests {
     #[test]
     fn concerns() {
         let c = client();
-        assert_eq!(c.create_write_concern(&Bson::String("majority".into())).unwrap(), doc! { "w": "majority" });
+        assert_eq!(
+            c.create_write_concern(&Bson::String("majority".into())).unwrap().to_document(),
+            doc! { "w": "majority" }
+        );
         assert!(c.create_write_concern(&Bson::Int32(-1)).is_err());
         assert_eq!(
-            c.create_write_concern(&Bson::Document(doc! { "w": 1, "j": 1, "wtimeout": 5 })).unwrap(),
+            c.create_write_concern(&Bson::Document(doc! { "w": 1, "j": 1, "wtimeout": 5 })).unwrap().to_document(),
             doc! { "w": 1, "j": true, "wtimeout": 5 }
         );
         assert_eq!(

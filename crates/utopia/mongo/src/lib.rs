@@ -42,7 +42,10 @@ mod uuid;
 
 pub use auth::{Auth, Credentials};
 pub use bson;
-pub use client::{Client, Config, ConnectionInfo, Options, Reply, Session, SessionState, TransactionState, Upsert};
+pub use client::{
+    Client, Config, ConnectionInfo, Options, ReadConcern, Reply, Session, SessionState, TransactionState, Upsert,
+    WriteConcern,
+};
 pub use error::{Error, Failure, Result};
 pub use mongodb;
 

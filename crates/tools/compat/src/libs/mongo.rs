@@ -572,11 +572,11 @@ async fn client_op(op: &str, a: &Json, session: &mut Session) -> Result<Result<J
             }
             "client.create_write_concern" => {
                 let concern = decode(a.get("concern").unwrap_or(&Json::Null))?;
-                return Ok(c.create_write_concern(&concern).map(|d| encode_array(&d)));
+                return Ok(c.create_write_concern(&concern).map(|d| encode_array(&d.to_document())));
             }
             _ => {
                 let concern = decode(a.get("concern").unwrap_or(&Json::Null))?;
-                return Ok(c.create_read_concern(&concern).map(|d| encode_array(&d)));
+                return Ok(c.create_read_concern(&concern).map(|d| encode_array(&d.to_document())));
             }
         }));
     }

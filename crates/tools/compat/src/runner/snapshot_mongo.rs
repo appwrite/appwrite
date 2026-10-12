@@ -4,17 +4,21 @@
 //!
 //! ```json
 //! {
-//!   "<database>": {
-//!     "<collection>": {
+//!   "<database>": [
+//!     {
+//!       "name": "<collection>",
 //!       "indexes": {"<name>": {"key": {...}, "unique": true, ...}},
 //!       "documents": [{"_id": ..., ...}, ...]
 //!     }
-//!   }
+//!   ]
 //! }
 //! ```
 //!
-//! Databases, collections and indexes are sorted by name (`system.*`
-//! collections left out), documents by `_id`; every value is canonical
+//! Databases, collections (a list, so that names holding generated ids are
+//! scrubbed like values) and indexes are sorted by name (`system.*`
+//! collections left out), documents by `_id` and their top-level fields by
+//! name (`_id` first: upserts store fields in an order of the server's own
+//! choosing, see [`fields`]); every value is canonical
 //! extended JSON, so BSON types are compared too (`{"$numberInt": "1"}` is
 //! not `{"$numberLong": "1"}`). Index specs keep every field but `ns`.
 //! Cleanup drops the databases.
@@ -98,6 +102,15 @@ fn json(value: Bson) -> Value {
     }
 }
 
+/// A stored document, `_id` first and its other fields by name: the server
+/// orders the fields an upsert inserts by itself (the query's equality
+/// fields, then the update's), not always the same way from run to run.
+fn fields(document: Document) -> Value {
+    let mut fields: Vec<(String, Bson)> = document.into_iter().collect();
+    fields.sort_by(|a, b| (a.0 != "_id", &a.0).cmp(&(b.0 != "_id", &b.0)));
+    Value::Object(fields.into_iter().map(|(k, v)| (k, json(v))).collect())
+}
+
 pub fn snapshot(url: &str, ns: &str) -> Result<Value, String> {
     let ns = ns.to_owned();
     with_client(url, move |client| {
@@ -113,7 +126,7 @@ pub fn snapshot(url: &str, ns: &str) -> Result<Value, String> {
                     .filter(|c| !c.starts_with("system."))
                     .collect();
                 collections.sort();
-                let mut tables = Map::new();
+                let mut tables = Vec::new();
                 for collection in collections {
                     let coll = db.collection::<Document>(&collection);
                     let mut indexes: Vec<(String, Value)> = Vec::new();
@@ -134,13 +147,13 @@ pub fn snapshot(url: &str, ns: &str) -> Result<Value, String> {
                         .map_err(err)?;
                     let mut table = Map::new();
                     table.insert("indexes".into(), Value::Object(indexes.into_iter().collect()));
-                    table.insert(
-                        "documents".into(),
-                        Value::Array(documents.into_iter().map(|d| json(Bson::Document(d))).collect()),
-                    );
-                    tables.insert(collection, Value::Object(table));
+                    table.insert("documents".into(), Value::Array(documents.into_iter().map(fields).collect()));
+                    let mut entry = Map::new();
+                    entry.insert("name".into(), Value::String(collection));
+                    entry.extend(table);
+                    tables.push(Value::Object(entry));
                 }
-                out.insert(name, Value::Object(tables));
+                out.insert(name, Value::Array(tables));
             }
             Ok(Value::Object(out))
         })

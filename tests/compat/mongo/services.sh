@@ -25,14 +25,15 @@ port="${COMPAT_MONGO_PORT:-16017}"
 case "${1:-up}" in
 up)
     if ! docker ps --format '{{.Names}}' | grep -qx "$name"; then
-        # A replica set with authentication needs a keyfile its members share.
+        # A replica set with authentication needs a keyfile its members share;
+        # a small cache keeps it within the dev VM's memory.
         docker run -d --rm --network "$network" --name "$name" -p "$port:27017" \
             -e MONGO_INITDB_ROOT_USERNAME=root -e MONGO_INITDB_ROOT_PASSWORD=password \
             --entrypoint bash "$image" -c '
                 openssl rand -base64 756 > /etc/mongo-keyfile
                 chmod 400 /etc/mongo-keyfile
                 chown mongodb:mongodb /etc/mongo-keyfile
-                exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo-keyfile
+                exec docker-entrypoint.sh mongod --replSet rs0 --bind_ip_all --keyFile /etc/mongo-keyfile --wiredTigerCacheSizeGB 0.5
             ' >/dev/null
     fi
     for _ in $(seq 1 120); do

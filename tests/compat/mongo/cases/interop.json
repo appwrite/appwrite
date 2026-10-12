@@ -450,7 +450,7 @@
             "client": {
               "$ref": "a"
             },
-            "collection": "ids",
+            "collection": "ids_a",
             "document": {
               "by": "a"
             }
@@ -467,7 +467,7 @@
             "client": {
               "$ref": "b"
             },
-            "collection": "ids",
+            "collection": "ids_b",
             "document": {
               "by": "b"
             }
@@ -484,12 +484,7 @@
             "client": {
               "$ref": "a"
             },
-            "collection": "ids",
-            "options": {
-              "sort": {
-                "_id": 1
-              }
-            }
+            "collection": "ids_a"
           },
           "side": "a",
           "expect": {
@@ -502,7 +497,32 @@
                         "_id": "<uuid7>",
                         "by": "a"
                       }
-                    },
+                    }
+                  ],
+                  "id": 0,
+                  "ns": "${ns}.ids_a"
+                }
+              },
+              "ok": 1.0,
+              "$clusterTime": "<masked>",
+              "operationTime": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "client.find",
+          "args": {
+            "client": {
+              "$ref": "b"
+            },
+            "collection": "ids_b"
+          },
+          "side": "b",
+          "expect": {
+            "$object": {
+              "cursor": {
+                "$object": {
+                  "firstBatch": [
                     {
                       "$object": {
                         "_id": "<uuid7>",
@@ -511,7 +531,7 @@
                     }
                   ],
                   "id": 0,
-                  "ns": "${ns}.ids"
+                  "ns": "${ns}.ids_b"
                 }
               },
               "ok": 1.0,
