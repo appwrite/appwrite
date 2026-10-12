@@ -214,6 +214,12 @@ export function DuelLegend() {
       <span className="inline-flex items-center gap-1.5">
         <span className="inline-block h-2 w-3 rounded-sm bg-rust" /> Rust
       </span>
+      <span className="inline-flex items-center gap-1.5">
+        <svg width="14" height="6" aria-hidden="true"><line x1="0" x2="14" y1="3" y2="3" stroke="currentColor" strokeWidth="2" /></svg> median
+      </span>
+      <span className="inline-flex items-center gap-1.5">
+        <svg width="14" height="6" aria-hidden="true"><line x1="0" x2="14" y1="3" y2="3" stroke="currentColor" strokeWidth="1.2" strokeDasharray="3 3" /></svg> p99
+      </span>
     </span>
   )
 }
@@ -306,45 +312,113 @@ export function useBenchStep(bench: Benchmark | undefined) {
   return { rows, step: rows[at], at, setAt }
 }
 
-/** Picks the load step the endpoint benchmarks show. */
-export function StepPicker({ rows, at, setAt }: { rows: ReturnType<typeof pairs>; at: number; setAt: (i: number) => void }) {
+type Rows = ReturnType<typeof pairs>
+type Timing = BenchStep['endpoints'][string]
+
+/** `rate 200` → `200/s`, `vus 50` → `50 users`, short enough for an axis. */
+const short = (mode: 'rate' | 'vus', level: number) => (mode === 'rate' ? `${level}/s` : `${level} u`)
+
+/**
+ * One scenario's latency at every load step at once: the median (solid) and
+ * p99 (dashed) of each runtime on a log scale, fixed-rate steps then
+ * closed-loop ones, with how many times faster Rust's median is per step.
+ */
+function LoadCurve({ rows, name }: { rows: Rows; name: string }) {
+  const at = rows.map((r) => ({ row: r, p: r.php?.endpoints[name] as Timing | undefined, r: r.rust?.endpoints[name] as Timing | undefined }))
+  const values = at.flatMap(({ p, r }) => [p?.p50, p?.p99, r?.p50, r?.p99]).filter((v): v is number => !!v && v > 0)
+  if (!values.length) return null
+  const W = 300
+  const H = 100
+  const left = 40
+  const right = 8
+  const top = 6
+  const bottom = 34
+  const lo = Math.log10(Math.min(...values) / 1.3)
+  const hi = Math.log10(Math.max(...values) * 1.3)
+  // Fixed-rate and closed-loop steps are different experiments: a gap between them.
+  const gap = at.some(({ row }) => row.mode === 'vus') && at.some(({ row }) => row.mode === 'rate') ? 0.6 : 0
+  const slots = at.map(({ row }, i) => i + (row.mode === 'vus' ? gap : 0))
+  const span = Math.max(1, (slots.at(-1) ?? 0) - (slots[0] ?? 0))
+  const x = (i: number) => left + ((slots[i] - slots[0]) / span) * (W - left - right)
+  const y = (v: number) => top + (1 - (Math.log10(v) - lo) / (hi - lo || 1)) * (H - top - bottom)
+  const line = (pick: (t: { p?: Timing; r?: Timing }) => number | undefined) =>
+    at
+      .map((t, i) => [i, pick(t)] as const)
+      .filter(([, v]) => !!v)
+      .map(([i, v], k) => `${k ? 'L' : 'M'}${x(i).toFixed(1)},${y(v as number).toFixed(1)}`)
+      .join(' ')
+  const ticks = [Math.pow(10, lo + (hi - lo) * 0.15), Math.pow(10, lo + (hi - lo) * 0.85)]
+  const series = [
+    { key: 'php', color: 'var(--php)', p50: line((t) => t.p?.p50), p99: line((t) => t.p?.p99), dots: at.map((t, i) => [i, t.p?.p50] as const) },
+    { key: 'rust', color: 'var(--rust)', p50: line((t) => t.r?.p50), p99: line((t) => t.r?.p99), dots: at.map((t, i) => [i, t.r?.p50] as const) },
+  ]
   return (
-    <label className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
-      Benchmark at
-      <select value={at} onChange={(e) => setAt(Number(e.target.value))} className="h-8 rounded-md border border-border bg-card px-2 text-[12.5px] text-foreground">
-        {rows.map((r, i) => (
-          <option key={i} value={i}>
-            {load(r.mode, r.level)}
-          </option>
-        ))}
-      </select>
-    </label>
+    <svg viewBox={`0 0 ${W} ${H}`} className="block h-auto w-full max-w-[340px]" role="img" aria-label={`Latency by load for ${name}`}>
+      {ticks.map((t) => (
+        <g key={t}>
+          <line x1={left} x2={W - right} y1={y(t)} y2={y(t)} className="stroke-border" strokeWidth={1} />
+          <text x={left - 4} y={y(t) + 3} textAnchor="end" className="fill-muted-foreground text-[9px] tabular-nums">
+            {millis(t)}
+          </text>
+        </g>
+      ))}
+      {series.map((s) => (
+        <g key={s.key}>
+          <path d={s.p99} fill="none" stroke={s.color} strokeWidth={1.2} strokeDasharray="3 3" opacity={0.55} />
+          <path d={s.p50} fill="none" stroke={s.color} strokeWidth={2} />
+          {s.dots.map(([i, v]) =>
+            v ? (
+              <circle key={i} cx={x(i)} cy={y(v)} r={2.6} fill={s.color}>
+                <title>{`${s.key === 'php' ? 'PHP' : 'Rust'} at ${load(at[i].row.mode, at[i].row.level)}: median ${millis(v)}, p99 ${millis((s.key === 'php' ? at[i].p?.p99 : at[i].r?.p99) ?? 0)}`}</title>
+              </circle>
+            ) : null,
+          )}
+        </g>
+      ))}
+      {at.map(({ row, p, r }, i) => {
+        const ratio = p?.p50 && r?.p50 ? p.p50 / r.p50 : null
+        return (
+          <g key={i}>
+            <text x={x(i)} y={H - 19} textAnchor="middle" className="fill-muted-foreground text-[9.5px]">
+              {short(row.mode, row.level)}
+            </text>
+            {ratio ? (
+              <text x={x(i)} y={H - 5} textAnchor="middle" className={`text-[10px] font-semibold tabular-nums ${ratio >= 1 ? 'fill-ok-ink' : 'fill-red-600'}`}>
+                {ratio >= 10 ? Math.round(ratio) : ratio.toFixed(1)}×
+              </text>
+            ) : null}
+          </g>
+        )
+      })}
+    </svg>
   )
 }
 
-/** One endpoint's benchmark at a step: median latency and throughput, PHP against Rust. */
 /**
- * An endpoint's timings at one step: each scenario that measures it (a route
- * can have several, like a list and a search), PHP against Rust, or PHP alone
- * while Rust does not serve it. Without timings, why: no scenario yet, a
- * scenario not run yet, or the reason it is skipped.
+ * An endpoint's latency at every load step: each scenario that measures it
+ * (a route can have several, like a list and a search) as a [`LoadCurve`] of
+ * PHP against Rust, or PHP alone while Rust does not serve it. Without
+ * timings, why: no scenario yet, a scenario not run yet, or the reason it is
+ * skipped.
  */
-export function EndpointBench({ step, route, bench }: { step: ReturnType<typeof pairs>[number] | undefined; route: string; bench: Endpoint['bench'] }) {
-  const of = (s: BenchStep | undefined) => Object.entries(s?.endpoints ?? {}).filter(([, e]) => e.route === route)
-  const names = [...new Set([...of(step?.php), ...of(step?.rust)].map(([name]) => name))]
+export function EndpointBench({ rows, route, bench }: { rows: Rows; route: string; bench: Endpoint['bench'] }) {
+  const names = [
+    ...new Set(rows.flatMap((r) => [r.php, r.rust]).flatMap((s) => Object.entries(s?.endpoints ?? {}).filter(([, e]) => e.route === route).map(([n]) => n))),
+  ]
   if (!names.length) {
     if (bench.status === 'skipped') return <span className="text-[12px] text-muted-foreground">Skipped: {bench.reason}</span>
     if (bench.status === 'covered') return <span className="text-[12px] text-muted-foreground">Scenario written, not run yet</span>
     return <span className="text-[12px] text-red-600 dark:text-red-400">No benchmark scenario</span>
   }
   return (
-    <div className="grid min-w-[220px] gap-3">
+    <div className="grid min-w-[240px] gap-3">
       {names.map((name) => {
-        const p = step?.php?.endpoints[name]
-        const r = step?.rust?.endpoints[name]
-        const note = p?.note ?? r?.note
+        const note = rows.map((r) => r.php?.endpoints[name]?.note ?? r.rust?.endpoints[name]?.note).find(Boolean)
+        const errors = rows
+          .map((r) => ({ r, php: r.php?.endpoints[name]?.errors ?? 0, rust: r.rust?.endpoints[name]?.errors ?? 0 }))
+          .filter((e) => e.php || e.rust)
         return (
-          <div key={name} className="grid gap-2">
+          <div key={name} className="grid gap-1">
             {names.length > 1 || note ? (
               <span className="text-[11px] text-muted-foreground">
                 {names.length > 1 ? <span className="font-mono">{name}</span> : null}
@@ -352,12 +426,10 @@ export function EndpointBench({ step, route, bench }: { step: ReturnType<typeof 
                 {note}
               </span>
             ) : null}
-            <Duel label="Median" php={p?.p50} rust={r?.p50} format={millis} compact />
-            <Duel label="p99" php={p?.p99} rust={r?.p99} format={millis} compact />
-            {p && !r && step?.rust ? <span className="text-[11px] text-muted-foreground">No Rust timing recorded</span> : null}
-            {p?.errors || r?.errors ? (
+            <LoadCurve rows={rows} name={name} />
+            {errors.length ? (
               <span className="text-[11px] text-red-700 dark:text-red-300">
-                Server errors: PHP {p?.errors ?? 0}, Rust {r?.errors ?? 0}
+                Server errors: {errors.map((e) => `${short(e.r.mode, e.r.level)} PHP ${e.php}, Rust ${e.rust}`).join(' · ')}
               </span>
             ) : null}
           </div>

@@ -15,7 +15,6 @@ import {
   ServiceBadge,
   SourceLink,
   Stat,
-  StepPicker,
   useBenchStep,
 } from '@/components/Appwrite'
 import { MigrationCard, MigrationOnly } from '@/components/Migration'
@@ -147,9 +146,9 @@ function ServicePage() {
               </button>
             ))}
           </div>
-          {bench.step ? (
+          {bench.rows.length ? (
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <StepPicker rows={bench.rows} at={bench.at} setAt={bench.setAt} />
+              <span className="text-[12.5px] text-muted-foreground">Latency by load: fixed request rates, then concurrent users (closed loop); × is how many times faster Rust's median is.</span>
               <DuelLegend />
             </div>
           ) : null}
@@ -159,7 +158,7 @@ function ServicePage() {
                 <tr className="border-b border-border text-left text-[11px] tracking-wider text-muted-foreground uppercase">
                   <th className="px-3 py-2 font-semibold">Endpoint</th>
                   <th className="px-3 py-2 font-semibold">Status</th>
-                  <th className="px-3 py-2 font-semibold">{bench.step?.rust ? 'PHP vs Rust' : bench.step ? 'PHP baseline (Rust does not serve it yet)' : 'Benchmark'}</th>
+                  <th className="px-3 py-2 font-semibold">{bench.rows.some((r) => r.rust) ? 'Latency by load, PHP vs Rust' : bench.rows.length ? 'Latency by load, PHP baseline (Rust does not serve it yet)' : 'Benchmark'}</th>
                 </tr>
               </thead>
               <tbody>
@@ -207,7 +206,7 @@ function ServicePage() {
                       ) : null}
                     </td>
                     <td className="px-3 py-2.5">
-                      <EndpointBench step={bench.step} route={`${e.method} ${e.path}`} bench={e.bench} />
+                      <EndpointBench rows={bench.rows} route={`${e.method} ${e.path}`} bench={e.bench} />
                     </td>
                   </tr>
                 ))}
