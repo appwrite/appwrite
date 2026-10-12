@@ -1291,6 +1291,9 @@ class OpenAPI3 extends Format
                     if ($readOnly) {
                         $output['components']['schemas'][$model->getType()]['properties'][$name]['readOnly'] = true;
                     }
+                    if (isset($rule['default'])) {
+                        $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'] === [] ? new \stdClass() : $rule['default'];
+                    }
                     continue;
                 }
 
@@ -1326,6 +1329,10 @@ class OpenAPI3 extends Format
                 $propertyType = $rule['array'] ? 'array' : $type;
                 if (isset($rule['example']) && (\in_array($propertyType, ['string', 'array']) || $rule['example'] !== '')) {
                     $output['components']['schemas'][$model->getType()]['properties'][$name]['example'] = $this->normalizeExample($rule['example'], $propertyType);
+                }
+                // Clients fill a field an older server omits from its default, as the server does.
+                if (isset($rule['default']) && $items === null) {
+                    $output['components']['schemas'][$model->getType()]['properties'][$name]['default'] = $rule['default'];
                 }
                 if ($items) {
                     if ($rule['array'] || $rule['type'] === 'array') {

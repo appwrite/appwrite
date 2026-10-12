@@ -776,6 +776,41 @@ final class FormatTest extends TestCase
 
     }
 
+    public function testModelPropertiesEmitTheirDefaults(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('GET', '/v1/tests/team'))
+            ->desc('Get test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'getTeamTest',
+                description: 'Get test.',
+                auth: [AuthType::ADMIN],
+                responses: [
+                    new SDKResponse(
+                        code: 200,
+                        model: Response::MODEL_TEAM,
+                    ),
+                ],
+            ));
+
+        $models = [
+            new Team(),
+            new Preferences(),
+            new ErrorModel(),
+        ];
+
+        $openApi = (new OpenAPI3(new Container(), [], [$route], $models, [], ['console' => 0], 'console'))->parse();
+        $properties = $openApi['components']['schemas']['team']['properties'];
+
+        $this->assertSame('', $properties['name']['default']);
+        $this->assertSame(0, $properties['total']['default']);
+        $this->assertArrayNotHasKey('default', $properties['prefs']);
+    }
+
     /**
      * A route only matches when every path segment is present, so a path
      * parameter is always supplied no matter what the PHP param declares.
