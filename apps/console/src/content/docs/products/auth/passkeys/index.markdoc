@@ -101,7 +101,7 @@ Browsers need no other setup. Passkeys work on HTTPS origins, and on `http://loc
 
 An Android app does not sign in from a web origin. Android identifies it by a hash of the certificate the app is signed with, so Appwrite needs that certificate's fingerprint.
 
-1. In the Appwrite Console, go to **Overview**, then **Apps**, and select your Android app. Add one if you have not yet.
+1. In the Appwrite Console, go to **Apps** and select your Android app. Add one if you have not yet.
 2. Under **Signing certificate fingerprints**, paste the SHA-256 fingerprint of each key that signs your app, one per line.
 3. Select **Update**.
 
