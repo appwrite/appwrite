@@ -11,7 +11,7 @@ const INTROSPECTION = 'query { __schema { queryType { name } mutationType { name
 function ok(api, res) {
     // GraphQL answers 200 with an `errors` list when a resolver fails.
     if (res.status === 200 && res.json('errors') !== null && res.json('errors') !== undefined) {
-        api.expect({ status: 0, body: res.body }, [200], `${api.name} errors`);
+        api.fail(`${api.name} errors`, res.body);
     }
 }
 

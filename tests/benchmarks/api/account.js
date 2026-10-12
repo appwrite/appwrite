@@ -47,7 +47,7 @@ function guarded(api) {
 
 /** A failure the harness counts, for checks that are not a status code. */
 function fail(api, message) {
-    api.expect({ status: 0, body: message }, [-1], `${api.name} check`);
+    api.fail(`${api.name} check`, message);
 }
 
 function guest(api, extra = {}) {

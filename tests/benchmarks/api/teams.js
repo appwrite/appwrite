@@ -51,7 +51,7 @@ function invitation(api, email) {
         }
         sleep(0.25);
     }
-    api.expect({ status: 0, body: `no invitation email for ${email} in ${MAILDEV}` }, [200], `${api.name} prep invitation email`);
+    api.fail(`${api.name} prep invitation email`, `no invitation email for ${email} in ${MAILDEV}`);
     return '';
 }
 

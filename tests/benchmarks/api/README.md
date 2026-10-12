@@ -84,6 +84,8 @@ export const handleSummary = bench.handleSummary;
   `api.request(method, url, body, codes, params)` is a measured request to any
   URL with k6 params as given (routes outside /v1 via `ROOT`, signed requests,
   `redirects: 0` to measure a redirect itself).
+  `api.fail(label, message)` records a failed check that is not a status
+  (a rejected body, a missing mail).
   `api.session(secret)` gives the headers of a
   client request with a session; pass headers as the last argument of any call.
   `context.admin` (in `seed`) holds the console session's headers, for console

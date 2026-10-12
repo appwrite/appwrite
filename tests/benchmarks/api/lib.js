@@ -153,6 +153,16 @@ class Api {
         return res;
     }
 
+    /**
+     * A failed check that is not a status code (a body the scenario rejects,
+     * a mail that never came): a failure, which fails the run.
+     */
+    fail(label, message) {
+        check(null, { [label]: () => false });
+        failures.add(1, { name: this.name });
+        console.warn(`${label}: ${String(message).slice(0, 300)}`);
+    }
+
     /** Headers of a client (end user) request with the session's secret. */
     session(secret) {
         return { 'Content-Type': 'application/json', 'X-Appwrite-Project': this.headers['X-Appwrite-Project'], 'X-Appwrite-Session': secret };
