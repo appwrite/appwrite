@@ -202,6 +202,8 @@ const passkey = await account.updatePasskeyVerification({
 {% tabsitem #register-flutter title="Flutter" %}
 Flutter apps call the platform's passkey API through the [`passkeys`](https://pub.dev/packages/passkeys) package, which reads and returns the same JSON Appwrite uses.
 
+![A passkey created from a Flutter app on Android](/images/docs/auth/passkeys/flutter-passkey-created.avif)
+
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
 import 'package:passkeys/authenticator.dart';
@@ -373,6 +375,8 @@ const session = await account.createSession({
 {% /tabsitem %}
 
 {% tabsitem #sign-in-flutter title="Flutter" %}
+![Signing in with a passkey from a Flutter app on Android](/images/docs/auth/passkeys/flutter-signed-in.avif)
+
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
 import 'package:passkeys/authenticator.dart';
