@@ -2106,6 +2106,105 @@ trait TransactionsBase
     }
 
     /**
+     * Rows a commit wrote are purged from the cache after COMMIT. Each write purges inside a savepoint,
+     * so a read between that purge and COMMIT caches the pre-commit row. Readers poll for the whole commit,
+     * and filler creates keep it open long enough for them to land in that window.
+     */
+    public function testGetAfterCommitWithConcurrentReads(): void
+    {
+        $databaseId = $this->getSharedDatabase();
+        $collectionId = $this->getSharedCollection();
+
+        $headers = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        for ($round = 0; $round < 3; $round++) {
+            $documentId = ID::unique();
+            $created = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId, null), $headers, [
+                $this->getRecordIdParam() => $documentId,
+                'data' => ['name' => 'open'],
+            ]);
+            $this->assertEquals(201, $created['headers']['status-code']);
+
+            $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
+            $this->assertEquals(201, $transaction['headers']['status-code']);
+            $transactionId = $transaction['body']['$id'];
+
+            $operations = [[
+                'action' => 'update',
+                'databaseId' => $databaseId,
+                $this->getContainerIdParam() => $collectionId,
+                $this->getRecordIdParam() => $documentId,
+                'data' => ['name' => 'done'],
+            ]];
+            for ($i = 0; $i < 90; $i++) {
+                $operations[] = [
+                    'action' => 'create',
+                    'databaseId' => $databaseId,
+                    $this->getContainerIdParam() => $collectionId,
+                    $this->getRecordIdParam() => ID::unique(),
+                    'data' => ['name' => 'filler'],
+                ];
+            }
+            $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $headers, [
+                'operations' => $operations,
+            ]);
+            $this->assertEquals(201, $staged['headers']['status-code']);
+
+            $curlHeaders = \array_map(fn ($key, $value) => "{$key}: {$value}", \array_keys($headers), $headers);
+            $request = function (string $method, string $path, ?array $body = null) use ($curlHeaders) {
+                $handle = \curl_init($this->client->getEndpoint() . $path);
+                \curl_setopt_array($handle, [
+                    CURLOPT_CUSTOMREQUEST => $method,
+                    CURLOPT_HTTPHEADER => $curlHeaders,
+                    CURLOPT_RETURNTRANSFER => true,
+                    CURLOPT_TIMEOUT => 120,
+                ]);
+                if ($body !== null) {
+                    \curl_setopt($handle, CURLOPT_POSTFIELDS, \json_encode($body));
+                }
+                return $handle;
+            };
+
+            $multi = \curl_multi_init();
+            $commit = $request(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), ['commit' => true]);
+            \curl_multi_add_handle($multi, $commit);
+            $readers = [];
+            $committed = null;
+            while ($committed === null) {
+                while (\count($readers) < 8) {
+                    $reader = $request(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId));
+                    \curl_multi_add_handle($multi, $reader);
+                    $readers[\spl_object_id($reader)] = $reader;
+                }
+                \curl_multi_exec($multi, $running);
+                \curl_multi_select($multi, 0.01);
+                while ($info = \curl_multi_info_read($multi)) {
+                    \curl_multi_remove_handle($multi, $info['handle']);
+                    if ($info['handle'] === $commit) {
+                        $committed = \json_decode(\curl_multi_getcontent($commit), true);
+                    } else {
+                        unset($readers[\spl_object_id($info['handle'])]);
+                    }
+                }
+            }
+            foreach ($readers as $reader) {
+                \curl_multi_remove_handle($multi, $reader);
+            }
+            \curl_multi_close($multi);
+
+            $this->assertEquals('committed', $committed['status'] ?? null);
+
+            $after = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $documentId), $headers);
+            $this->assertEquals(200, $after['headers']['status-code']);
+            $this->assertEquals('done', $after['body']['name']);
+        }
+    }
+
+    /**
      * Test upsertDocument with transactionId via normal route
      */
     public function testUpsertDocument(): void
