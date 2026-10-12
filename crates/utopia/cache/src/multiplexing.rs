@@ -632,11 +632,16 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         if blank(key) || is_reserved(hash) {
             return Ok(false);
         }
-        // As `save`: a failed write is not stored, not an error.
-        if self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), bytes]).await.is_err() {
+        // A failed write is not stored, not an error. Unlike `save`, which
+        // keeps PHP's answer (phpredis' `false` on an error reply is ignored),
+        // an error reply (`WRONGTYPE`, `OOM`) is a failed write too.
+        if !matches!(self.command(&[b"HSET", key.as_bytes(), hash.as_bytes(), bytes]).await, Ok(reply) if !matches!(reply, Reply::Error(_)))
+        {
             return Ok(false);
         }
-        if ttl > 0 && self.command(&[b"EXPIRE", key.as_bytes(), ttl.to_string().as_bytes()]).await.is_err() {
+        if ttl > 0
+            && !matches!(self.command(&[b"EXPIRE", key.as_bytes(), ttl.to_string().as_bytes()]).await, Ok(reply) if !matches!(reply, Reply::Error(_)))
+        {
             return Ok(false);
         }
         Ok(true)

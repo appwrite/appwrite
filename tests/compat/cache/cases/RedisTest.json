@@ -1869,6 +1869,66 @@
       "state": [
         "redis@cache-redis/11,6"
       ]
+    },
+    {
+      "name": "a save onto a key of another type is not stored",
+      "steps": [
+        {
+          "op": "redis.new",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "raw.set",
+          "args": {
+            "key": "${ns}:string",
+            "value": "plain"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.save",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:string",
+            "data": "a",
+            "hash": "topic"
+          },
+          "expect": true
+        },
+        {
+          "op": "cache.load",
+          "args": {
+            "cache": {
+              "$ref": "c"
+            },
+            "key": "${ns}:string",
+            "ttl": 60,
+            "hash": "topic"
+          },
+          "expect": false
+        }
+      ],
+      "state": [
+        "redis@cache-redis/11,6"
+      ]
     }
   ]
 }

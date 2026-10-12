@@ -474,6 +474,9 @@
     "raw.hset": {
       "doc": "fixture: HSET key field value"
     },
+    "raw.set": {
+      "doc": "fixture: SET key value (a string where a cache hash is expected)"
+    },
     "raw.hexists": {
       "doc": "fixture: HEXISTS key field"
     },

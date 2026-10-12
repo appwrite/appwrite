@@ -61,6 +61,7 @@ pub const OPS: &[&str] = &[
     "noscript.from",
     "raw.hget",
     "raw.hset",
+    "raw.set",
     "raw.hexists",
     "raw.ttl",
     "raw.script_flush",
@@ -775,6 +776,12 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
                 .await
                 .map_err(fault)?;
             Outcome::ok(v)
+        }
+        "raw.set" => {
+            let mut c = raw(session, &a).await?;
+            let v: String =
+                redis::cmd("SET").arg(a.str("key")?).arg(a.bytes("value")?).query_async(&mut c).await.map_err(fault)?;
+            Outcome::ok(v == "OK")
         }
         "raw.hexists" => {
             let mut c = raw(session, &a).await?;

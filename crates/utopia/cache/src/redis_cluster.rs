@@ -248,11 +248,16 @@ impl<C: ConnectionLike + Clone + Send + Sync + 'static, K: Codec> Adapter for Re
         if blank(key) {
             return Ok(false);
         }
-        // As `save`: a failed write is not stored, not an error.
-        if self.execute(redis::cmd("HSET").arg(key).arg(field(key, hash)).arg(bytes)).await.is_err() {
+        // A failed write is not stored, not an error. Unlike `save`, which
+        // keeps PHP's answer (phpredis' `false` on an error reply is ignored),
+        // an error reply (`WRONGTYPE`, `OOM`) is a failed write too.
+        if !matches!(self.execute(redis::cmd("HSET").arg(key).arg(field(key, hash)).arg(bytes)).await, Ok(reply) if !matches!(reply, Reply::Error(_)))
+        {
             return Ok(false);
         }
-        if ttl > 0 && self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl)).await.is_err() {
+        if ttl > 0
+            && !matches!(self.execute(redis::cmd("EXPIRE").arg(key).arg(ttl)).await, Ok(reply) if !matches!(reply, Reply::Error(_)))
+        {
             return Ok(false);
         }
         Ok(true)

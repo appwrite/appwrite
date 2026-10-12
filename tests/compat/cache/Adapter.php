@@ -268,6 +268,7 @@ final class Adapter implements Base, Benchmarks
             // Fixtures: direct Redis access, as the PHP tests use.
             'raw.hget' => fn (array $a, Session $s) => self::raw($a, $s)->hGet($a['key'], $a['field']),
             'raw.hset' => fn (array $a, Session $s) => self::raw($a, $s)->hSet($a['key'], $a['field'], $a['value']),
+            'raw.set' => fn (array $a, Session $s) => (bool) self::raw($a, $s)->set($a['key'], $a['value']),
             'raw.hexists' => fn (array $a, Session $s) => (bool) self::raw($a, $s)->hExists($a['key'], $a['field']),
             'raw.ttl' => function (array $a, Session $s) {
                 $ttl = self::raw($a, $s)->ttl($a['key']);
