@@ -1,0 +1,170 @@
+---
+layout: article
+title: Marketplaces
+description: Build an OAuth app marketplace with the Apps API and OAuth connect. Publish integrations, let organizations install them, and manage grants on your platform.
+---
+
+{% info title="Unlinked draft" %}
+This page is not in the Partners navigation. The Apps API and its install flows are still settling, so the steps below are not verified end to end. Relink this page once the flow is confirmed.
+{% /info %}
+
+Use this guide when you run a **marketplace** where Appwrite organizations discover, install, and manage third-party integrations. Your platform lists OAuth apps, starts authorization on install, and tracks which apps are connected to each customer organization.
+
+# Marketplace roles {% #marketplace-roles %}
+
+| Role | Responsibility |
+| ---- | -------------- |
+| **Marketplace operator** (you) | Curates the catalog, registers or approves OAuth apps, runs install and uninstall flows |
+| **Integration developer** | Builds the app that requests Console scopes after install |
+| **Organization admin** | Browses your marketplace and approves access to their Appwrite organization |
+
+Appwrite separates **publishing** an OAuth client from **consuming** OAuth on behalf of a user:
+
+- **[Apps API](/docs/partners/apps)**: create and manage OAuth app records (`client_id`, redirect URIs, secrets, branding)
+- **[OAuth connect](/docs/partners/oauth-connect)**: send users through consent and call Console APIs with delegated tokens
+
+# Architecture {% #architecture %}
+
+Typical install flow:
+
+1. Organization admin clicks **Install** in your marketplace
+2. Your backend calls `oauth2.authorize` with the app's `clientId` and scopes
+3. Admin signs in to Appwrite and approves consent
+4. Appwrite redirects to your callback with an authorization code
+5. Your backend exchanges the code for tokens and saves an installation record
+6. The integration backend calls your API; you use stored tokens for Console API requests on that org
+
+Your marketplace backend owns the catalog and installation state. Integration backends call **your** API; you proxy Console requests with stored tokens or pass short-lived delegated credentials according to your trust model.
+
+# Step 1: Register apps with the Apps API {% #step-1-register-apps-with-the-apps-api %}
+
+Each listing in your marketplace maps to one app. Register the app in the Console, in your organization's **Marketplace** tab, then import its client ID into your catalog. The slug you choose during registration becomes the client ID.
+
+Save the metadata your marketplace UI needs: the client ID, name, logo URIs, requested scopes, and developer contact. See [Registration](/docs/partners/apps/registration) for the full set of Console fields, and [Installations](/docs/partners/apps/installations) for app keys and the install flow.
+
+# Step 2: Build your catalog {% #step-2-build-your-catalog %}
+
+Your catalog is application data outside Appwrite. A typical record:
+
+| Field | Purpose |
+| ----- | ------- |
+| `appwriteAppId` | OAuth `client_id` from the Apps API |
+| `name`, `description`, `logoUri` | Marketplace listing (can mirror app fields) |
+| `scopes` | Scopes shown to the admin before install |
+| `category` | Browse and search in your UI |
+| `published` | Whether the listing is visible |
+
+Use `apps.list` and `apps.get` to sync branding or enabled state from Appwrite when integrations update their app settings.
+
+# Step 3: Start install with OAuth {% #step-3-start-install-with-oauth %}
+
+When an organization admin clicks **Install**, start the authorization code flow with the app's `clientId` and the scopes that integration requires.
+
+{% multicode %}
+```server-nodejs
+import { Oauth2 } from 'node-appwrite';
+
+const oauth2 = new Oauth2(client);
+
+const result = await oauth2.authorize({
+    clientId: listing.appwriteAppId,
+    redirectUri: 'https://marketplace.example.com/oauth/callback',
+    responseType: 'code',
+    scope: listing.scopes.join(' '),
+    state: signedStateForOrgAndListing,
+    prompt: 'consent',
+});
+
+if (result.redirectUrl) {
+    // Send the admin to Appwrite sign-in and consent
+    redirect(result.redirectUrl);
+}
+```
+{% /multicode %}
+
+Validate `state` on callback to bind the authorization to the correct organization in your platform. Request only the scopes from [OAuth connect scopes](/docs/partners/oauth-connect/scopes) that the integration needs.
+
+# Step 4: Exchange tokens and record the install {% #step-4-exchange-tokens-and-record-the-install %}
+
+On your callback route, exchange the authorization code for access and refresh tokens using the app's client secret. Persist an **installation** row keyed by your tenant or organization ID and `appwriteAppId`.
+
+{% multicode %}
+```server-nodejs
+// After code exchange (see OAuth connect setup)
+await marketplaceInstalls.create({
+    orgId: customer.appwriteOrgId,
+    appId: listing.appwriteAppId,
+    accessToken: encrypted(tokens.access),
+    refreshToken: encrypted(tokens.refresh),
+    scopes: listing.scopes,
+    installedAt: new Date(),
+});
+```
+{% /multicode %}
+
+Refresh access tokens before they expire. When an admin uninstalls, revoke the grant in Appwrite and delete stored tokens.
+
+# Step 5: Let integrations act on installed orgs {% #step-5-let-integrations-act-on-installed-orgs %}
+
+After install, the integration backend calls your marketplace API with an install ID or org ID. Your backend uses the stored token to call Console APIs:
+
+{% multicode %}
+```server-nodejs
+import { Client, Organization } from 'node-appwrite';
+
+const install = await marketplaceInstalls.get(orgId, appId);
+
+const userClient = new Client()
+    .setEndpoint('https://cloud.appwrite.io/v1')
+    .setOrganization(install.organizationId)
+    .setBearer(await refreshAccessToken(install));
+
+const organization = new Organization(userClient);
+const list = await organization.listProjects();
+```
+{% /multicode %}
+
+If you would rather not let third-party servers hold long-lived refresh tokens, mint a short-lived token per request and pass that to the integration instead.
+
+# Developer onboarding {% #developer-onboarding %}
+
+If third parties publish into your marketplace:
+
+1. Developer registers with your platform
+2. You review scopes and redirect URIs
+3. You create the OAuth app with the Apps API (or approve a Console-registered app)
+4. You publish the listing after testing the install flow in a staging organization
+
+Keep redirect URIs under domains you control (`marketplace.example.com/oauth/callback`) so token exchange stays on your backend.
+
+# Uninstall and revocation {% #uninstall-and-revocation %}
+
+When an admin removes an integration:
+
+1. Delete or disable the installation record in your database
+2. Revoke refresh tokens and grants in Appwrite
+3. Notify the integration developer if you operate webhooks for install lifecycle events
+
+Treat uninstall as a security event: integrations must stop calling Console APIs immediately.
+
+# Security checklist {% #security-checklist %}
+
+- Register redirect URIs that match your callback exactly
+- Store client secrets and refresh tokens encrypted at rest
+- Show requested scopes in your UI before redirecting to consent
+- Rotate secrets with `createSecret` and `deleteSecret` on the Apps API
+- Audit installs per organization and alert on scope changes
+
+# Related {% #related %}
+
+{% cards %}
+{% cards_item href="/docs/partners/apps" title="Apps API" %}
+Create and manage OAuth app records.
+{% /cards_item %}
+{% cards_item href="/docs/partners/oauth-connect/setup" title="OAuth connect setup" %}
+Authorization code flow and token exchange.
+{% /cards_item %}
+{% cards_item href="/docs/partners/oauth-connect/scopes" title="OAuth scopes" %}
+Request the minimum Console scopes per integration.
+{% /cards_item %}
+{% /cards %}

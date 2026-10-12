@@ -1,0 +1,260 @@
+---
+layout: article
+title: Sign in with Appwrite
+description: Let users sign in to your app with their Appwrite account. Enable the Appwrite OAuth2 provider and create sessions with a consent-based flow.
+---
+
+Sign in with Appwrite lets users log in to your app with their Appwrite account. It works like other OAuth2 providers such as Google or GitHub. Appwrite is the identity provider. This is a good fit when your users are developers, for example when you build developer tools, dashboards, or education platforms.
+
+The provider requests the `openid`, `profile`, and `email` scopes. Appwrite uses them to read the user's ID, name, and email, and to create the session.
+
+{% info title="Access to Appwrite resources" %}
+This page covers login only. To access your users' Appwrite projects and organizations with scoped tokens, see [Sign in with Appwrite for apps](/docs/partners/apps). To make your own product an OAuth2 provider, see the [OAuth2 server](/docs/products/auth/oauth-server) documentation.
+{% /info %}
+
+# Enable the provider {% #enable %}
+
+1. In the Appwrite Console, open your project.
+2. Navigate to **Auth** > **Social providers**.
+3. Open the **Appwrite** provider.
+4. Turn on the **Enabled** toggle.
+
+{% only_dark %}
+![Social providers page with the Appwrite provider enabled](/images/docs/auth/sign-in-with-appwrite/dark/providers.avif)
+{% /only_dark %}
+{% only_light %}
+![Social providers page with the Appwrite provider enabled](/images/docs/auth/sign-in-with-appwrite/providers.avif)
+{% /only_light %}
+
+# Configure credentials {% #configure %}
+
+{% only_dark %}
+![Appwrite OAuth2 settings dialog with quick setup and credentials](/images/docs/auth/sign-in-with-appwrite/dark/provider-settings.avif)
+{% /only_dark %}
+{% only_light %}
+![Appwrite OAuth2 settings dialog with quick setup and credentials](/images/docs/auth/sign-in-with-appwrite/provider-settings.avif)
+{% /only_light %}
+
+The provider authenticates through an Appwrite app, which acts as the OAuth2 client. The **Appwrite OAuth2 settings** dialog gives you two ways to configure it.
+
+**Quick setup** creates the app for you:
+
+1. In the **Create app** tab, enter an app name.
+2. Click **Create and fill credentials**.
+3. Click **Update** to save the provider settings.
+
+Appwrite creates the app in your organization, registers the redirect URI, and fills the **Client ID** and **Client Secret** fields. To reuse an app you registered before, use the **Select app** tab instead.
+
+You can also enter credentials manually:
+
+1. [Register an app](/docs/partners/apps/registration) in your organization.
+2. Add the redirect URI shown in the dialog to the app.
+3. Paste the app's client ID and secret into the fields.
+4. Click **Update**.
+
+# Initialize the sign-in {% #init %}
+
+Start the flow from your app with the Appwrite provider. The user is redirected to Appwrite to approve the request, then redirected back to your app with an active session.
+
+{% tabs %}
+{% tabsitem #js title="Javascript" %}
+```client-web
+import { Client, Account, OAuthProvider } from "appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                          // Your project ID
+
+const account = new Account(client);
+
+// Go to the Appwrite consent screen
+account.createOAuth2Session({
+    provider: OAuthProvider.Appwrite,
+    success: 'https://example.com/success', // redirect here on success
+    failure: 'https://example.com/failed',  // redirect here on failure
+});
+```
+{% /tabsitem %}
+
+{% tabsitem #flutter title="Flutter" %}
+
+For Android, add the following activity inside the `<application>` tag in your `AndroidManifest.xml`. Replace `<PROJECT_ID>` with your actual Appwrite project ID.
+
+```xml
+<!-- Add this inside the <application> tag, along side the existing <activity> tags -->
+<activity android:exported="true" android:name="com.linusu.flutter_web_auth_2.CallbackActivity" >
+  <intent-filter android:label="flutter_web_auth_2">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="appwrite-callback-<PROJECT_ID>" />
+  </intent-filter>
+</activity>
+```
+
+No other configuration is required for iOS.
+
+```client-flutter
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/enums.dart';
+
+final client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');               // Your project ID
+
+final account = Account(client);
+
+// Go to the Appwrite consent screen
+await account.createOAuth2Session(
+    provider: OAuthProvider.appwrite,
+);
+```
+{% /tabsitem %}
+
+{% tabsitem #apple title="Apple" %}
+For Apple, add the following URL scheme to your `Info.plist`.
+
+```xml
+<key>CFBundleURLTypes</key>
+<array>
+<dict>
+    <key>CFBundleTypeRole</key>
+    <string>Editor</string>
+    <key>CFBundleURLName</key>
+    <string>io.appwrite</string>
+    <key>CFBundleURLSchemes</key>
+    <array>
+        <string>appwrite-callback-<PROJECT_ID></string>
+    </array>
+</dict>
+</array>
+```
+
+If you're using UIKit, you'll also need to add a hook to your `SceneDelegate.swift` file to ensure cookies work correctly.
+
+```client-apple
+func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+    guard let url = URLContexts.first?.url,
+        url.absoluteString.contains("appwrite-callback") else {
+        return
+    }
+    WebAuthComponent.handleIncomingCookie(from: url)
+}
+```
+
+```client-apple
+import Appwrite
+import AppwriteEnums
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                // Your project ID
+
+let account = Account(client)
+
+// Go to the Appwrite consent screen
+try await account.createOAuth2Session(
+    provider: .appwrite
+)
+```
+{% /tabsitem %}
+
+{% tabsitem #android title="Android" %}
+For Android, add the following activity inside the `<application>` tag in your `AndroidManifest.xml`.
+Replace `<PROJECT_ID>` with your actual Appwrite project ID.
+
+```xml
+<!-- Add this inside the `<application>` tag, along side the existing `<activity>` tags -->
+<activity android:name="io.appwrite.views.CallbackActivity" android:exported="true">
+  <intent-filter android:label="android_web_auth">
+    <action android:name="android.intent.action.VIEW" />
+    <category android:name="android.intent.category.DEFAULT" />
+    <category android:name="android.intent.category.BROWSABLE" />
+    <data android:scheme="appwrite-callback-<PROJECT_ID>" />
+  </intent-filter>
+</activity>
+```
+```client-android-kotlin
+import io.appwrite.Client
+import io.appwrite.services.Account
+import io.appwrite.enums.OAuthProvider
+
+val client = Client(context)                     // Activity or application context
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<PROJECT_ID>")                  // Your project ID
+
+val account = Account(client)
+
+// Go to the Appwrite consent screen
+account.createOAuth2Session(
+    provider = OAuthProvider.APPWRITE
+)
+```
+{% /tabsitem %}
+
+{% tabsitem #react-native title="React Native" %}
+If using Expo, set the URL scheme to `appwrite-callback-<PROJECT_ID>` in your `app.json` file.
+
+```json
+{
+  "expo": {
+    "scheme": "appwrite-callback-<PROJECT_ID>"
+  }
+}
+```
+
+Then, create a deep link, pass it to `account.createOAuth2Token()` method to create the login URL, open the URL in a browser, listen for the redirect, and finally create a session with the secret.
+
+```client-react-native
+import { Client, Account, OAuthProvider } from "react-native-appwrite";
+import { makeRedirectUri } from 'expo-auth-session'
+import * as WebBrowser from 'expo-web-browser';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                          // Your project ID
+
+const account = new Account(client);
+
+// Create deep link that works across Expo environments
+// Ensure localhost is used for the hostname to avoid a validation error for success/failure URLs
+const deepLink = new URL(makeRedirectUri({ preferLocalhost: true }));
+const scheme = `${deepLink.protocol}//`; // e.g. 'exp://' or 'appwrite-callback-<PROJECT_ID>://'
+
+// Start OAuth flow
+const loginUrl = await account.createOAuth2Token({
+    provider: OAuthProvider.Appwrite,
+    success: `${deepLink}`,
+    failure: `${deepLink}`,
+});
+
+// Open loginUrl and listen for the scheme redirect
+const result = await WebBrowser.openAuthSessionAsync(`${loginUrl}`, scheme);
+
+// Extract credentials from OAuth redirect URL
+const url = new URL(result.url);
+const secret = url.searchParams.get('secret');
+const userId = url.searchParams.get('userId');
+
+// Create session with OAuth credentials
+await account.createSession({
+    userId,
+    secret
+});
+// Redirect as needed
+```
+{% /tabsitem %}
+{% /tabs %}
+
+# What users see {% #consent %}
+
+Appwrite asks the user to sign in to their Appwrite account if they have no active session. The consent screen then shows your app's name and the requested permissions. When the user clicks **Authorize**, Appwrite redirects them back to your app and the session is active. Users can revoke access from their Appwrite account at any time.
+
+{% only_dark %}
+![Consent screen asking the user to authorize the app](/images/docs/auth/sign-in-with-appwrite/dark/consent.avif)
+{% /only_dark %}
+{% only_light %}
+![Consent screen asking the user to authorize the app](/images/docs/auth/sign-in-with-appwrite/consent.avif)
+{% /only_light %}
+
+Like all OAuth2 logins, a successful sign-in creates an [identity](/docs/products/auth/identities) for the user. To read provider details from the session or refresh tokens, see [OAuth2 login](/docs/products/auth/oauth2).

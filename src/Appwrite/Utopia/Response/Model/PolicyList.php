@@ -35,6 +35,7 @@ class PolicyList extends Model
             Response::MODEL_POLICY_PASSWORD_STRENGTH,
             Response::MODEL_POLICY_PASSWORD_PERSONAL_DATA,
             Response::MODEL_POLICY_PASSWORD_PWNED,
+            Response::MODEL_POLICY_PASSWORD_ROTATION,
             Response::MODEL_POLICY_SESSION_ALERT,
             Response::MODEL_POLICY_SESSION_DURATION,
             Response::MODEL_POLICY_SESSION_INVALIDATION,
@@ -46,6 +47,7 @@ class PolicyList extends Model
             Response::MODEL_POLICY_DENY_DISPOSABLE_EMAIL,
             Response::MODEL_POLICY_DENY_FREE_EMAIL,
             Response::MODEL_POLICY_DENY_CORPORATE_EMAIL,
+            Response::MODEL_POLICY_PASSKEY,
         ];
     }
 

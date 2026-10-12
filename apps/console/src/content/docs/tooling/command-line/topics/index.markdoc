@@ -1,0 +1,228 @@
+---
+layout: article
+title: Topics
+description: Efficiently deploy your Appwrite topics using the Command-Line Tool (CLI). 
+---
+
+{% partial file="cli-disclaimer.md" /%}
+
+The Appwrite CLI can create, update, delete, and get topics, as well as configure the provider and the subscribers.
+
+# Initialize topic {% #initialize-topic %}
+
+Create a new topic using the following command:
+
+```
+appwrite init topics
+```
+
+# Pull topics {% #pull-topics %}
+
+You can also pull your existing Appwrite topics from the Appwrite Console using the `pull` command in the folder containing your `appwrite.config.json` file.
+
+```sh
+appwrite pull topics
+```
+
+# appwrite.config.json {% #appwritejson %}
+
+After [initializing](/docs/tooling/command-line/installation#initialization) your Appwrite project and pulling your existing topics, your `appwrite.config.json` file should look similar to the following:
+
+```json
+{
+    "projectId": "<PROJECT_ID>",
+    "endpoint": "https://<REGION>.cloud.appwrite.io/v1",
+    "topics": [
+        {
+            "$id": "N1IzUIJiOicGbhJye",
+            "$createdAt": "2024-07-01T14:40:43.381+00:00",
+            "$updatedAt": "2024-07-01T14:40:43.381+00:00",
+            "name": "Anime",
+            "emailTotal": 3,
+            "smsTotal": 0,
+            "pushTotal": 0,
+            "subscribe": [
+                "users"
+            ]
+        },
+        {
+            "$id": "eyJhbGciOiJIUzI1N",
+            "$createdAt": "2024-07-01T14:41:19.029+00:00",
+            "$updatedAt": "2024-07-01T14:41:28.751+00:00",
+            "name": "Music",
+            "emailTotal": 2,
+            "smsTotal": 0,
+            "pushTotal": 0,
+            "subscribe": [
+                "users",
+                "any"
+            ]
+        }
+    ]
+}
+```
+
+You can also move the `topics` array into a separate JSON file with the `includes` field.
+
+{% arrow_link href="/docs/tooling/command-line/installation#multi-file-configuration" %}
+Learn more about multi-file configuration
+{% /arrow_link %}
+
+# Push topics {% #push-topics %}
+
+{% partial file="cli-push-command.md" /%}
+
+```sh
+appwrite push topics
+```
+
+# Commands {% #commands %}
+
+The messaging command allows you to send, get, update, and delete push notifications, SMS text messages, and emails. You can create a new provider like Mailgun and SendGrid and create, update, get, and delete topics and subscribers. Appwrite messaging CLI commands generally follow the following syntax:
+```sh
+appwrite messaging [COMMAND] [OPTIONS]
+```
+
+{% table %}
+* Command
+* Description
+---
+* `list-messages [options]`             
+* Get a list of all messages from the current Appwrite project.
+---
+* `create-email [options]`              
+* Create a new email message.
+---
+* `update-email [options]`              
+* Update an email message by its unique ID.
+---
+* `create-push [options]`               
+* Create a new push notification.
+---
+* `update-push [options]`               
+* Update a push notification by its unique ID.
+---
+* `create-sms [options]`                
+* Create a new SMS message.
+---
+* `updateSms [options]`                
+* Update an email message by its unique ID.
+---
+* `get-message [options]`               
+* Get a message by its unique ID.
+---
+* `delete [options]`        
+* Delete a message. If the message is not a draft or scheduled, but has been sent, this will not recall the message.
+---
+* `list-message-logs [options]`          
+* Get the message activity logs listed by its unique ID.
+---
+* `list-targets [options]`
+* Get a list of the targets associated with a message.
+---
+* `list-providers [options]`      
+* Get a list of all providers from the current Appwrite project.
+---
+* `create-apns-provider [options]`
+* Create a new Apple Push Notification service provider.
+---
+* `update-apns-provider [options]` 
+* Update an Apple Push Notification service provider by its unique ID.
+---
+* `create-fcm-provider [options]`      
+* Create a new Firebase Cloud Messaging provider.
+---
+* `update-fcm-provider [options]`        
+* Update a Firebase Cloud Messaging provider by its unique ID.
+---
+* `create-mailgun-provider [options]`    
+* Create a new Mailgun provider.
+---
+* `update-mailgun-provider [options]`   
+* Update a Mailgun provider by its unique ID.
+---
+* `create-msg91-provider [options]`    
+* Create a new MSG91 provider.
+---
+* `update-msg91-provider [options]`
+* Update a MSG91 provider by its unique ID.
+---
+* `create-sendgrid-provider [options]` 
+* Create a new Sendgrid provider.
+---
+* `update-sendgrid-provider [options]`
+* Update a Sendgrid provider by its unique ID.
+---
+* `create-smtp-provider [options]`     
+* Create a new SMTP provider.
+---
+* `update-smtp-provider [options]`
+* Update a SMTP provider by its unique ID.
+---
+* `create-telesign-provider [options]` 
+* Create a new Telesign provider.
+---
+* `update-telesign-provider [options]`
+* Update a Telesign provider by its unique ID.
+---
+* `create-textmagic-provider [options]`
+* Create a new Textmagic provider.
+---
+* `update-textmagic-provider [options]`
+* Update a Textmagic provider by its unique ID.
+---
+* `create-twilio-provider [options]`   
+* Create a new Twilio provider.
+---
+* `update-twilio-provider [options]`
+* Update a Twilio provider by its unique ID.
+---
+* `create-vonage-provider [options]`   
+* Create a new Vonage provider.
+---
+* `update-vonage-provider [options]`
+* Update a Vonage provider by its unique ID.
+---
+* `get-provider [options]`         
+* Get a provider by its unique ID.
+---
+* `delete-provider [options]`
+* Delete a provider by its unique ID.
+---
+* `list-provider-logs [options]`   
+* Get the provider activity logs listed by its unique ID.
+---
+* `list-subscriber-logs [options]`
+* Get the subscriber activity logs listed by its unique ID.
+---
+* `list-topics [options]`            
+* Get a list of all topics from the current Appwrite project.
+---
+* `create-topic [options]`    
+* Create a new topic.
+---
+* `get-topic [options]`             
+* Get a topic by its unique ID.
+---
+* `update-topic [options]`              
+* Update a topic by its unique ID.
+---
+* `delete-topic [options]`          
+* Delete a topic by its unique ID.
+---
+* `list-topic-logs [options]`           
+* Get the topic activity logs listed by its unique ID.
+---
+* `list-subscribers [options]`       
+* Get a list of all subscribers from the current Appwrite project.
+---
+* `create-subscriber [options]`
+* Create a new subscriber.
+---
+* `get-subscriber [options]`       
+* Get a subscriber by its unique ID.
+---
+* `delete-subscriber [options]`
+* Delete a subscriber by its unique ID.
+---
+{% /table %}

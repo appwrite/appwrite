@@ -16,6 +16,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Template\Template;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
+use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Response;
 use Utopia\Auth\Proofs\Password;
 use Utopia\Auth\Proofs\Token;
@@ -77,6 +78,7 @@ class Create extends Action
             ))
             ->label('abuse-limit', 10)
             ->param('teamId', '', new UID(), 'Team ID.')
+            ->param('membershipId', '', new CustomId(), 'Membership ID. Choose a custom ID or generate a random ID with `ID.unique()`. Valid chars are a-z, A-Z, 0-9, period, hyphen, and underscore. Can\'t start with a special char. Max length is 36 chars.', true)
             ->param('email', '', new EmailValidator(), 'Email of the new team member.', true)
             ->param('userId', '', new UID(), 'ID of the user to be added to a team.', true)
             ->param('phone', '', new Phone(), 'Phone number. Format this number with a leading \'+\' and a country code, e.g., +16175551212.', true)
@@ -100,9 +102,10 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $teamId, ?string $email, ?string $userId, ?string $phone, array $roles, ?string $url, ?string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
+    public function action(string $teamId, ?string $membershipId, ?string $email, ?string $userId, ?string $phone, array $roles, ?string $url, ?string $name, Response $response, Document $project, User $user, Database $dbForProject, Authorization $authorization, Locale $locale, MailPublisher $publisherForMails, MessagingPublisher $publisherForMessaging, Event $queueForEvents, Context $usage, array $plan, array $platform, Password $proofForPassword, Token $proofForToken)
     {
         $email ??= '';
+        $membershipId ??= '';
         $userId ??= '';
         $phone ??= '';
         $url ??= '';
@@ -112,6 +115,7 @@ class Create extends Action
         $isPrivilegedUser = $user->isPrivileged($authorization->getRoles());
         $invitee = new Document();
         $hash = '';
+        $inviteeCreated = false;
 
         if (empty($url)) {
             if (! $isAppUser && ! $isPrivilegedUser) {
@@ -129,6 +133,7 @@ class Create extends Action
 
         $email = \strtolower($email);
         $name = empty($name) ? $email : $name;
+        $canonicalEmails = (($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false);
         $team = $dbForProject->getDocument('teams', $teamId);
 
         if ($team->isEmpty()) {
@@ -150,6 +155,19 @@ class Create extends Action
             $name = $invitee->getAttribute('name', '') ?: $name;
         } elseif (! empty($email)) {
             $invitee = $dbForProject->findOne('users', [Query::equal('email', [$email])]); // Get user by email address
+            // Aliased emails are denied at sign-up, so the account holds the unaliased address. Keep the typed
+            // domain as OAuth does.
+            if ($invitee->isEmpty() && $canonicalEmails) {
+                $unaliased = $email;
+                try {
+                    $parsedEmail = new Email($email);
+                    $unaliased = \explode('@', $parsedEmail->getCanonical(), 2)[0] . '@' . $parsedEmail->getDomain();
+                } catch (\Throwable) {
+                }
+                if ($unaliased !== $email) {
+                    $invitee = $dbForProject->findOne('users', [Query::equal('email', [$unaliased])]);
+                }
+            }
             if (! $invitee->isEmpty() && ! empty($phone) && $invitee->getAttribute('phone', '') !== $phone) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS, 'Given email and phone doesn\'t match', 409);
             }
@@ -201,7 +219,7 @@ class Create extends Action
                 throw new Exception(Exception::USER_EMAIL_DISPOSABLE);
             }
 
-            if ((($project->getId() === 'console') || empty($plan) || ($plan['supportsCanonicalEmailValidation'] ?? false)) && ($project->getAttribute('auths', [])['canonicalEmails'] ?? false) && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
+            if ($canonicalEmails && ($emailMetadata['emailIsCanonical'] ?? true) === false) {
                 throw new Exception(Exception::USER_EMAIL_NOT_CANONICAL);
             }
 
@@ -256,6 +274,7 @@ class Create extends Action
 
             try {
                 $invitee = $authorization->skip(fn () => $dbForProject->createDocument('users', $userDocument));
+                $inviteeCreated = true;
             } catch (Duplicate $th) {
                 throw new Exception(Exception::USER_ALREADY_EXISTS);
             }
@@ -276,7 +295,7 @@ class Create extends Action
 
         $secret = $proofForToken->generate();
         if ($membership->isEmpty()) {
-            $membershipId = ID::unique();
+            $membershipId = ($membershipId === '' || $membershipId == 'unique()') ? ID::unique() : $membershipId;
             $membership = new Document([
                 '$id' => $membershipId,
                 '$permissions' => [
@@ -298,12 +317,28 @@ class Create extends Action
                 'search' => implode(' ', [$membershipId, $invitee->getId()]),
             ]);
 
-            $membership = ($isPrivilegedUser || $isAppUser) ?
-                $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership)) :
-                $dbForProject->createDocument('memberships', $membership);
-
-            if ($isPrivilegedUser || $isAppUser) {
-                $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+            try {
+                if ($isPrivilegedUser || $isAppUser) {
+                    $membership = $dbForProject->withTransaction(function () use ($dbForProject, $authorization, $membership, $team) {
+                        $created = $authorization->skip(fn () => $dbForProject->createDocument('memberships', $membership));
+                        $authorization->skip(fn () => $dbForProject->increaseDocumentAttribute('teams', $team->getId(), 'total', 1));
+                        return $created;
+                    });
+                } else {
+                    $membership = $dbForProject->createDocument('memberships', $membership);
+                }
+            } catch (Duplicate $th) {
+                if ($inviteeCreated) {
+                    $membershipCount = $authorization->skip(
+                        fn () => $dbForProject->count('memberships', [
+                            Query::equal('userInternalId', [$invitee->getSequence()]),
+                        ], 1)
+                    );
+                    if ($membershipCount === 0) {
+                        $authorization->skip(fn () => $dbForProject->deleteDocument('users', $invitee->getId()));
+                    }
+                }
+                throw new Exception(Exception::MEMBERSHIP_ALREADY_EXISTS);
             }
         } elseif ($membership->getAttribute('confirm') === false) {
             $secretHash = $proofForToken->hash($secret);

@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace Utopia\Validator\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Utopia\Validator;
 use Utopia\Validator\AllOf;
 use Utopia\Validator\AnyOf;
 use Utopia\Validator\NoneOf;
 use Utopia\Validator\Text;
 use Utopia\Validator\URL;
+use Utopia\Validator\Validator;
 
 final class MultipleOfTest extends TestCase
 {

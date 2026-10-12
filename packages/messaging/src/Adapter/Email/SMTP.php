@@ -3,18 +3,22 @@
 namespace Utopia\Messaging\Adapter\Email;
 
 use Utopia\Messaging\Adapter\Email as EmailAdapter;
+use Utopia\Messaging\Adapter\Email\SMTP\NoHostAnswered;
 use Utopia\Messaging\Messages\Email as EmailMessage;
 use Utopia\Messaging\Response;
 use Utopia\SMTP\Auth\Login;
 use Utopia\SMTP\Auth\Plain;
 use Utopia\SMTP\Client;
 use Utopia\SMTP\Encryption;
+use Utopia\SMTP\Exception\AuthenticationException;
+use Utopia\SMTP\Exception\CapabilityException;
 use Utopia\SMTP\Exception\ConnectionException;
 use Utopia\SMTP\Exception\ProtocolException;
 use Utopia\SMTP\Exception\SmtpException;
 use Utopia\SMTP\Exception\TransactionException;
 use Utopia\SMTP\Exception\UnconfirmedException;
 use Utopia\SMTP\Message as SmtpMessage;
+use Utopia\SMTP\Outcome;
 use Utopia\SMTP\Timeouts;
 use Utopia\SMTP\Transport\Native;
 
@@ -89,7 +93,7 @@ class SMTP extends EmailAdapter
             [$client, $reused] = $this->open();
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage());
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception));
             }
 
             return $response->toArray();
@@ -111,11 +115,14 @@ class SMTP extends EmailAdapter
             }
 
             foreach ($result->rejected as $email => $reply) {
-                $response->addResult($email, (string) $reply);
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
             }
         } catch (TransactionException $exception) {
+            // Every recipient refused: each answers for itself. Otherwise the
+            // refusal was the message's own (MAIL FROM, DATA) and holds for all.
             foreach ($recipients as $email) {
-                $response->addResult($email, (string) $exception->reply);
+                $reply = $exception->rejected[$email] ?? $exception->reply;
+                $response->addResult($email, (string) $reply, $reply->outcome === Outcome::Permanent);
             }
 
             // A 421 during RCPT ends the session with the transaction.
@@ -140,7 +147,7 @@ class SMTP extends EmailAdapter
             $stale = $retry && $reused;
         } catch (SmtpException $exception) {
             foreach ($recipients as $email) {
-                $response->addResult($email, $exception->getMessage());
+                $response->addResult($email, $exception->getMessage(), $this->permanent($exception));
             }
 
             $keep = false;
@@ -215,6 +222,7 @@ class SMTP extends EmailAdapter
         );
 
         $failures = [];
+        $permanent = true;
 
         foreach ($this->hosts() as [$host, $port, $encryption]) {
             $client = new Client(
@@ -231,6 +239,9 @@ class SMTP extends EmailAdapter
                 $client->capabilities();
             } catch (SmtpException $exception) {
                 $failures[] = "{$host}:{$port} ({$exception->getMessage()})";
+                // One host that may answer differently later is reason enough
+                // to try the whole list again.
+                $permanent = $permanent && $this->permanent($exception);
 
                 continue;
             }
@@ -238,9 +249,32 @@ class SMTP extends EmailAdapter
             return $client;
         }
 
-        throw new \Utopia\SMTP\Exception\ConnectionException(
-            'No SMTP host answered: ' . implode('; ', $failures),
-        );
+        throw new NoHostAnswered('No SMTP host answered: ' . implode('; ', $failures), $failures !== [] && $permanent);
+    }
+
+    /**
+     * Whether the server said, with a 5xx reply, that sending the same message
+     * again cannot change its answer. Anything short of that reply is worth
+     * repeating: a connection that dropped or timed out, a 4xx, a reply out of
+     * protocol, and a login failure no reply code stands behind.
+     *
+     * A capability the server lacks is final too: no STARTTLS when encryption is
+     * required, no SMTPUTF8 for a non-ASCII address, a message over the advertised
+     * SIZE. The client falls back to HELO only when EHLO is refused with a 5xx, by a
+     * server that does not speak ESMTP at all, so the extensions a session offers
+     * are the server's, not an artefact of a busy moment.
+     */
+    private function permanent(SmtpException $exception): bool
+    {
+        $previous = $exception->getPrevious();
+
+        return match (true) {
+            $exception instanceof TransactionException => $exception->isPermanent(),
+            $exception instanceof NoHostAnswered => $exception->permanent,
+            $exception instanceof CapabilityException => true,
+            $exception instanceof AuthenticationException => $previous instanceof TransactionException && $previous->isPermanent(),
+            default => false,
+        };
     }
 
     private function reusable(Client $client): bool
