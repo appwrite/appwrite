@@ -1,8 +1,8 @@
 {
   "lib": "database",
   "environment": {
-    "date": "2026-10-12T15:39:53Z",
-    "commit": "26cd49b0e2",
+    "date": "2026-10-12T21:15:19Z",
+    "commit": "d593dcbfde",
     "machine": {
       "os": "macos",
       "arch": "aarch64",
@@ -31,22 +31,22 @@
       "name": "query_parse",
       "description": "Parse a list request's five queries from their JSON strings",
       "php": {
-        "ns": 2566.2560010214506,
-        "min": 2549.6361082737485,
-        "max": 3085.6581971399387,
+        "ns": 4860.484389489954,
+        "min": 3922.462751159196,
+        "max": 11752.382998454405,
         "samples": 15,
-        "calls": 7832
+        "calls": 3235
       },
       "rust": {
-        "ns": 2247.91888062345,
-        "min": 2228.913212894084,
-        "max": 2432.3710001180775,
+        "ns": 4214.183006535948,
+        "min": 3910.653594771242,
+        "max": 6548.213333333333,
         "samples": 15,
-        "calls": 8469,
-        "allocations": 50.00000787184634,
-        "bytes": 7788.000944621561
+        "calls": 3825,
+        "allocations": 50.0000174291939,
+        "bytes": 7788.002091503268
       },
-      "speedup": 1.1416141494882195,
+      "speedup": 1.1533633878622809,
       "bound": null,
       "compat": null
     },
@@ -54,22 +54,22 @@
       "name": "queries_validate",
       "description": "Validate five parsed queries against a collection's attributes and indexes (Queries\\Documents)",
       "php": {
-        "ns": 4696.930379746836,
-        "min": 4609.156202531645,
-        "max": 4892.151898734177,
+        "ns": 8891.731007751938,
+        "min": 8446.317829457364,
+        "max": 13917.893798449611,
         "samples": 15,
-        "calls": 3950
+        "calls": 1290
       },
       "rust": {
-        "ns": 1042.8291445699792,
-        "min": 1023.4009107678119,
-        "max": 1266.5220774729075,
+        "ns": 1917.2176717188004,
+        "min": 1842.4701709126089,
+        "max": 2505.4685585295065,
         "samples": 15,
-        "calls": 17348,
-        "allocations": 24.00000384290216,
-        "bytes": 2308.000461148259
+        "calls": 3101,
+        "allocations": 24.000021498441363,
+        "bytes": 2308.0025798129636
       },
-      "speedup": 4.504026766228959,
+      "speedup": 4.637830716311118,
       "bound": null,
       "compat": null
     },
@@ -77,22 +77,22 @@
       "name": "structure_validate",
       "description": "Validate a user document against its collection's structure",
       "php": {
-        "ns": 9167.546222430783,
-        "min": 8984.358047864853,
-        "max": 11285.957297043642,
+        "ns": 23535.69504310345,
+        "min": 20974.00323275862,
+        "max": 27617.276939655174,
         "samples": 15,
-        "calls": 2131
+        "calls": 928
       },
       "rust": {
-        "ns": 7112.199375866851,
-        "min": 7026.699029126214,
-        "max": 8322.093273231623,
+        "ns": 14490.881728045326,
+        "min": 13647.39730878187,
+        "max": 22488.196883852692,
         "samples": 15,
-        "calls": 2884,
-        "allocations": 133.00002311604254,
-        "bytes": 7884.002773925104
+        "calls": 1412,
+        "allocations": 133.00004721435317,
+        "bytes": 7884.0056657223795
       },
-      "speedup": 1.2889889242332189,
+      "speedup": 1.6241727373671815,
       "bound": null,
       "compat": null
     },
@@ -100,22 +100,22 @@
       "name": "document_encode",
       "description": "Encode a user document for the adapter (defaults, the datetime filter)",
       "php": {
-        "ns": 5787.852112676056,
-        "min": 5729.729166666667,
-        "max": 6390.612676056338,
+        "ns": 16053.069719042664,
+        "min": 12618.88657648283,
+        "max": 18214.4901144641,
         "samples": 15,
-        "calls": 3408
+        "calls": 961
       },
       "rust": {
-        "ns": 4863.791283292978,
-        "min": 4799.162711864406,
-        "max": 4982.243583535109,
+        "ns": 9917.078208048595,
+        "min": 8960.642369020501,
+        "max": 11055.650721336371,
         "samples": 15,
-        "calls": 4130,
-        "allocations": 121.00001614205004,
-        "bytes": 6096.001937046005
+        "calls": 1317,
+        "allocations": 121.00005062009618,
+        "bytes": 6096.006074411542
       },
-      "speedup": 1.1899877637753922,
+      "speedup": 1.6187297692191398,
       "bound": null,
       "compat": null
     },
@@ -123,22 +123,22 @@
       "name": "document_decode",
       "description": "Decode a stored user document (filters reversed, internal keys mapped back)",
       "php": {
-        "ns": 6300.728611720464,
-        "min": 6184.059542463177,
-        "max": 6783.349106863052,
+        "ns": 12379.017884914463,
+        "min": 10484.091757387247,
+        "max": 25594.93234836703,
         "samples": 15,
-        "calls": 3191
+        "calls": 1286
       },
       "rust": {
-        "ns": 4553.204603580562,
-        "min": 4532.162985352244,
-        "max": 4684.685887003023,
+        "ns": 9254.450759431651,
+        "min": 8463.518863302303,
+        "max": 10075.208231259187,
         "samples": 15,
-        "calls": 4301,
-        "allocations": 116.00001550027126,
-        "bytes": 7877.00186003255
+        "calls": 2041,
+        "allocations": 116.00003266372693,
+        "bytes": 7877.003919647232
       },
-      "speedup": 1.383800896354554,
+      "speedup": 1.3376285861479589,
       "bound": null,
       "compat": null
     },
@@ -146,22 +146,22 @@
       "name": "create_document",
       "description": "Create a user document: validation, encoding and one INSERT round trip",
       "php": {
-        "ns": 801838.3636363636,
-        "min": 543142.696969697,
-        "max": 1471900.2424242424,
+        "ns": 9498583.0,
+        "min": 4632000.0,
+        "max": 18948292.0,
         "samples": 15,
-        "calls": 33
+        "calls": 1
       },
       "rust": {
-        "ns": 629609.5925925926,
-        "min": 578155.8888888889,
-        "max": 712512.3333333334,
+        "ns": 3789604.5,
+        "min": 2319166.5,
+        "max": 7575687.5,
         "samples": 15,
-        "calls": 27,
-        "allocations": 1240.0395061728395,
-        "bytes": 139132.1925925926
+        "calls": 2,
+        "allocations": 1240.2,
+        "bytes": 139616.53333333333
       },
-      "speedup": 1.2735485181135364,
+      "speedup": 2.5064839879728873,
       "bound": "One INSERT (document and permissions) on PostgreSQL: the round trip, the same server and network for both runtimes, dominates the call",
       "compat": null
     },
@@ -169,22 +169,22 @@
       "name": "create_documents",
       "description": "Create ten user documents in one batch (one INSERT round trip)",
       "php": {
-        "ns": 1299825.0666666667,
-        "min": 1254222.2,
-        "max": 1410833.3333333333,
+        "ns": 13816791.0,
+        "min": 7325084.0,
+        "max": 171614250.0,
         "samples": 15,
-        "calls": 15
+        "calls": 1
       },
       "rust": {
-        "ns": 1004226.8888888889,
-        "min": 969974.5555555555,
-        "max": 1180256.9444444445,
+        "ns": 3769000.0,
+        "min": 2998125.0,
+        "max": 5171645.75,
         "samples": 15,
-        "calls": 18,
-        "allocations": 6653.003703703704,
-        "bytes": 528146.4444444445
+        "calls": 4,
+        "allocations": 6653.2,
+        "bytes": 528769.4666666667
       },
-      "speedup": 1.2943539762262668,
+      "speedup": 3.665903687980897,
       "bound": "One batched INSERT of ten documents on PostgreSQL: the round trip dominates the call",
       "compat": null
     },
@@ -192,22 +192,22 @@
       "name": "get_document",
       "description": "Read a user document by id, uncached (one SELECT round trip)",
       "php": {
-        "ns": 412049.4791666667,
-        "min": 407978.2916666667,
-        "max": 429700.5208333333,
+        "ns": 1700512.0,
+        "min": 765339.2857142857,
+        "max": 2811714.285714286,
         "samples": 15,
-        "calls": 48
+        "calls": 7
       },
       "rust": {
-        "ns": 222572.25531914894,
-        "min": 174191.48936170212,
-        "max": 241107.27659574468,
+        "ns": 648551.6851851852,
+        "min": 497654.31481481483,
+        "max": 1082474.537037037,
         "samples": 15,
-        "calls": 94,
-        "allocations": 851.4737588652482,
-        "bytes": 127651.10780141845
+        "calls": 54,
+        "allocations": 851.483950617284,
+        "bytes": 127650.03209876543
       },
-      "speedup": 1.8513065726715316,
+      "speedup": 2.62201461941224,
       "bound": "One SELECT on PostgreSQL (uncached): the round trip dominates the call",
       "compat": null
     },
@@ -215,22 +215,22 @@
       "name": "find",
       "description": "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)",
       "php": {
-        "ns": 658250.0,
-        "min": 589557.0,
-        "max": 774826.7368421053,
+        "ns": 2696427.0,
+        "min": 1375734.375,
+        "max": 6069484.375,
         "samples": 15,
-        "calls": 19
+        "calls": 8
       },
       "rust": {
-        "ns": 449709.29545454547,
-        "min": 444796.38636363635,
-        "max": 490672.36363636365,
+        "ns": 1557409.6666666667,
+        "min": 1233628.4166666667,
+        "max": 2318618.0833333335,
         "samples": 15,
-        "calls": 44,
-        "allocations": 5532.669696969697,
-        "bytes": 450826.6303030303
+        "calls": 12,
+        "allocations": 5532.672222222222,
+        "bytes": 450830.6666666667
       },
-      "speedup": 1.4637233578520346,
+      "speedup": 1.7313537071920062,
       "bound": "One SELECT over 100 rows on PostgreSQL: the round trip and the server's query dominate the call",
       "compat": null
     },
@@ -238,23 +238,253 @@
       "name": "update_document",
       "description": "Update one attribute of a user document (a locking read and one UPDATE)",
       "php": {
-        "ns": 661152.7666666667,
-        "min": 633423.6,
-        "max": 744006.9333333333,
+        "ns": 5179406.25,
+        "min": 3527770.75,
+        "max": 15211270.75,
         "samples": 15,
-        "calls": 30
+        "calls": 4
       },
       "rust": {
-        "ns": 486856.7073170732,
-        "min": 463519.31707317074,
-        "max": 583792.6829268293,
+        "ns": 2615659.8333333335,
+        "min": 1761576.3333333333,
+        "max": 4854895.833333333,
         "samples": 15,
-        "calls": 41,
-        "allocations": 1950.4959349593496,
-        "bytes": 256155.44878048782
+        "calls": 6,
+        "allocations": 1950.611111111111,
+        "bytes": 256452.6
       },
-      "speedup": 1.3580027895889302,
+      "speedup": 1.9801528409753077,
       "bound": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "create_document_mariadb",
+      "description": "Create a user document: validation, encoding and one INSERT round trip on MariaDB",
+      "php": {
+        "ns": 2168316.8,
+        "min": 1770150.0,
+        "max": 4827391.6,
+        "samples": 15,
+        "calls": 5
+      },
+      "rust": {
+        "ns": 1570885.375,
+        "min": 1100526.125,
+        "max": 2580807.25,
+        "samples": 15,
+        "calls": 8,
+        "allocations": 1295.0166666666667,
+        "bytes": 147611.18333333332
+      },
+      "speedup": 1.3803150977836303,
+      "bound": "One INSERT of the document and one of its permissions on MariaDB: the round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "create_documents_mariadb",
+      "description": "Create ten user documents in one batch (one INSERT round trip) on MariaDB",
+      "php": {
+        "ns": 3863027.6666666665,
+        "min": 2955805.6666666665,
+        "max": 7588791.666666667,
+        "samples": 15,
+        "calls": 3
+      },
+      "rust": {
+        "ns": 2894255.8571428573,
+        "min": 2218839.285714286,
+        "max": 4117827.4285714286,
+        "samples": 15,
+        "calls": 7,
+        "allocations": 6733.009523809524,
+        "bytes": 537578.1428571428
+      },
+      "speedup": 1.3347222420343163,
+      "bound": "One batched INSERT of ten documents (and one of their permissions) on MariaDB: the round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "get_document_mariadb",
+      "description": "Read a user document by id, uncached (one SELECT round trip) on MariaDB",
+      "php": {
+        "ns": 845036.7142857143,
+        "min": 451992.0714285714,
+        "max": 1156505.9523809524,
+        "samples": 15,
+        "calls": 42
+      },
+      "rust": {
+        "ns": 509543.14285714284,
+        "min": 348660.71428571426,
+        "max": 904846.75,
+        "samples": 15,
+        "calls": 28,
+        "allocations": 997.4976190476191,
+        "bytes": 133879.87619047618
+      },
+      "speedup": 1.658420344050497,
+      "bound": "One SELECT on MariaDB (uncached): the round trip dominates the call",
+      "compat": null
+    },
+    {
+      "name": "find_mariadb",
+      "description": "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MariaDB",
+      "php": {
+        "ns": 1898194.3333333333,
+        "min": 1358034.8333333333,
+        "max": 2408527.8333333335,
+        "samples": 15,
+        "calls": 6
+      },
+      "rust": {
+        "ns": 929863.0714285715,
+        "min": 765645.8571428572,
+        "max": 1105160.7142857143,
+        "samples": 15,
+        "calls": 14,
+        "allocations": 5482.019047619047,
+        "bytes": 447666.8
+      },
+      "speedup": 2.041369736747466,
+      "bound": "One SELECT over 100 rows on MariaDB: the round trip and the server's query dominate the call",
+      "compat": null
+    },
+    {
+      "name": "update_document_mariadb",
+      "description": "Update one attribute of a user document (a locking read and one UPDATE) on MariaDB",
+      "php": {
+        "ns": 1662358.3,
+        "min": 1513516.7,
+        "max": 2341612.5,
+        "samples": 15,
+        "calls": 10
+      },
+      "rust": {
+        "ns": 1507100.6666666667,
+        "min": 1091385.4166666667,
+        "max": 1732559.0,
+        "samples": 15,
+        "calls": 12,
+        "allocations": 2162.616666666667,
+        "bytes": 270287.8222222222
+      },
+      "speedup": 1.1030174272809028,
+      "bound": "A transaction with a locking read and an UPDATE on MariaDB: its round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "create_document_mysql",
+      "description": "Create a user document: validation, encoding and one INSERT round trip on MySQL",
+      "php": {
+        "ns": 4893775.0,
+        "min": 3013908.4,
+        "max": 24629000.0,
+        "samples": 15,
+        "calls": 5
+      },
+      "rust": {
+        "ns": 2696072.875,
+        "min": 1782729.125,
+        "max": 8089088.625,
+        "samples": 15,
+        "calls": 8,
+        "allocations": 1294.0083333333334,
+        "bytes": 147064.85833333334
+      },
+      "speedup": 1.8151493772214893,
+      "bound": "One INSERT of the document and one of its permissions on MySQL: the round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "create_documents_mysql",
+      "description": "Create ten user documents in one batch (one INSERT round trip) on MySQL",
+      "php": {
+        "ns": 4990486.0,
+        "min": 3368569.3333333335,
+        "max": 10958305.666666666,
+        "samples": 15,
+        "calls": 3
+      },
+      "rust": {
+        "ns": 2261527.6666666665,
+        "min": 1949632.0,
+        "max": 3455680.5,
+        "samples": 15,
+        "calls": 6,
+        "allocations": 6733.011111111111,
+        "bytes": 537398.3333333334
+      },
+      "speedup": 2.206688016050508,
+      "bound": "One batched INSERT of ten documents (and one of their permissions) on MySQL: the round trips dominate the call",
+      "compat": null
+    },
+    {
+      "name": "get_document_mysql",
+      "description": "Read a user document by id, uncached (one SELECT round trip) on MySQL",
+      "php": {
+        "ns": 285978.93258426967,
+        "min": 246097.8426966292,
+        "max": 320563.67415730335,
+        "samples": 15,
+        "calls": 89
+      },
+      "rust": {
+        "ns": 272657.3888888889,
+        "min": 187546.27777777778,
+        "max": 953171.2777777778,
+        "samples": 15,
+        "calls": 18,
+        "allocations": 997.5592592592593,
+        "bytes": 133797.88888888888
+      },
+      "speedup": 1.0488581796725467,
+      "bound": "One SELECT on MySQL (uncached): the round trip dominates the call",
+      "compat": null
+    },
+    {
+      "name": "find_mysql",
+      "description": "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MySQL",
+      "php": {
+        "ns": 718069.4166666666,
+        "min": 615673.625,
+        "max": 793345.5,
+        "samples": 15,
+        "calls": 24
+      },
+      "rust": {
+        "ns": 591738.6363636364,
+        "min": 529368.696969697,
+        "max": 776443.1818181818,
+        "samples": 15,
+        "calls": 33,
+        "allocations": 5482.006060606061,
+        "bytes": 447583.4383838384
+      },
+      "speedup": 1.2134908429832478,
+      "bound": "One SELECT over 100 rows on MySQL: the round trip and the server's query dominate the call",
+      "compat": null
+    },
+    {
+      "name": "update_document_mysql",
+      "description": "Update one attribute of a user document (a locking read and one UPDATE) on MySQL",
+      "php": {
+        "ns": 1615989.5833333333,
+        "min": 1243899.3333333333,
+        "max": 2093954.8333333333,
+        "samples": 15,
+        "calls": 12
+      },
+      "rust": {
+        "ns": 1354127.625,
+        "min": 1140200.5625,
+        "max": 2291658.8125,
+        "samples": 15,
+        "calls": 16,
+        "allocations": 2162.5625,
+        "bytes": 269876.36666666664
+      },
+      "speedup": 1.1933805599256815,
+      "bound": "A transaction with a locking read and an UPDATE on MySQL: its round trips dominate the call",
       "compat": null
     }
   ]
