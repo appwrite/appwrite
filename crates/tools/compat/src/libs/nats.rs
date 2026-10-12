@@ -557,7 +557,7 @@ fn scripted_error(spec: &Value) -> Error {
         "NatsException" => Error::Nats(message),
         "ConnectionException" => Error::Connection(message),
         "TimeoutException" => Error::Timeout(message),
-        "ProtocolException" => Error::Protocol(message),
+        "ProtocolException" => Error::protocol(message),
         "AuthenticationException" => Error::Authentication(message),
         "ServiceException" => {
             Error::Service { code: spec.get("code").and_then(Value::as_str).unwrap_or("500").to_owned(), message }
@@ -611,7 +611,7 @@ fn record(log: &Log, entry: Value) {
 }
 
 fn lib(error: Error) -> Outcome {
-    Outcome::err(error.php_class(), error.to_string())
+    Outcome::err_bytes(error.php_class(), &error.message_bytes())
 }
 
 macro_rules! try_lib {
@@ -810,7 +810,7 @@ fn tls_options(value: Option<&Value>) -> TlsOptions {
 }
 
 fn error_value(e: &Error) -> Value {
-    let mut out = json!({"class": e.php_class(), "message": e.to_string()});
+    let mut out = json!({"class": e.php_class(), "message": bytes_value(&e.message_bytes())});
     if let Some(previous) = e.previous() {
         out["previous"] = Value::String(previous.php_class().into());
     }
@@ -959,7 +959,9 @@ fn connection_options(v: &Value, log: &Log) -> Result<ConnectionOptions, Fault> 
             };
             match hook.as_str() {
                 "onError" => {
-                    o.on_error = Some(Arc::new(move |e: &Error| fire(Some(json!([e.php_class(), e.to_string()])))))
+                    o.on_error = Some(Arc::new(move |e: &Error| {
+                        fire(Some(json!([e.php_class(), bytes_value(&e.message_bytes())])))
+                    }))
                 }
                 "onSlowConsumer" => {
                     o.on_slow_consumer = Some(Arc::new(move |s: &SubscriptionState| fire(Some(json!(s.sid())))))
@@ -1787,7 +1789,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
         "connection.reconnects_after" => Ok(Outcome::ok(Connection::reconnects_after(a.str("message")?))),
         "connection.map_server_error" => {
             let e = Connection::map_server_error(a.str("message")?);
-            Ok(Outcome::ok(json!([e.php_class(), e.to_string()])))
+            Ok(Outcome::ok(json!([e.php_class(), bytes_value(&e.message_bytes())])))
         }
         "connection.reconnect_backoff" => Ok(Outcome::ok(float_value(Connection::reconnect_backoff(
             a.i64("attempt")?,
@@ -2092,7 +2094,7 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
                             index,
                             match &result {
                                 Ok(m) => message_value(Some(m)),
-                                Err(e) => json!({"error": [e.php_class(), e.to_string()]}),
+                                Err(e) => json!({"error": [e.php_class(), bytes_value(&e.message_bytes())]}),
                             }
                         ]));
                         if mode == "throw" {
@@ -2420,7 +2422,7 @@ async fn call_jetstream(op: &str, a: &Args<'_>, session: &mut Session) -> OpResu
                     conn!(),
                     &messages,
                     |index, error| {
-                        confirmed.push((index, error.map(|e| json!([e.php_class(), e.to_string()]))));
+                        confirmed.push((index, error.map(|e| json!([e.php_class(), bytes_value(&e.message_bytes())]))));
                         Ok(())
                     },
                     t

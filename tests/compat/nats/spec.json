@@ -4422,13 +4422,13 @@
   "deviations": [
     {
       "symbol": "Utopia\\NATS\\Headers::fromWire",
-      "php": "Header names, values, the status line and the \"Invalid header version\" message keep whatever bytes the block holds, UTF-8 or not.",
-      "reason": "utopia_nats::Headers holds String names and values (NATS headers are ASCII, MIME-style text). Bytes that are not UTF-8 become U+FFFD, in the parsed headers and in the error message. The fuzz profiles generate UTF-8 header blocks."
+      "php": "Header names, values and the status code and description keep whatever bytes the block holds, UTF-8 or not.",
+      "reason": "utopia_nats::Headers holds String names, values, status and description (NATS headers are ASCII, MIME-style text). Bytes that are not UTF-8 become U+FFFD in the parsed headers. The \"Invalid header version\" ProtocolException keeps the exact bytes (Error::message_bytes()); only to_string() is lossy. The fuzz profiles generate UTF-8 header blocks."
     },
     {
       "symbol": "Utopia\\NATS\\Protocol\\Parser::next",
-      "php": "The subject, sid and reply subject of a MSG/HMSG line, an -ERR text and the line quoted in an \"Unknown protocol operation\" message keep their bytes, UTF-8 or not.",
-      "reason": "utopia_nats::protocol::RawMessage and Message hold String subjects (NATS subjects are UTF-8 text); bytes that are not UTF-8 become U+FFFD. Payloads stay bytes exactly. The fuzz profiles generate UTF-8 control lines with arbitrary payloads."
+      "php": "The subject, sid and reply subject of a MSG/HMSG line and an -ERR text (and the exceptions built from it) keep their bytes, UTF-8 or not.",
+      "reason": "utopia_nats::protocol::RawMessage and Message hold String subjects (NATS subjects are UTF-8 text), and Op::Err holds the -ERR text as a String; bytes that are not UTF-8 become U+FFFD. Payloads stay bytes exactly, and so do the ProtocolException messages quoting wire bytes (\"Unknown protocol operation\", \"Invalid MSG line\", \"Invalid HMSG line\"): Error::message_bytes() is PHP's getMessage(), only to_string() is lossy. The fuzz profiles generate UTF-8 control lines with arbitrary payloads; a payload cut mid-character by a short declared size leaves non-UTF-8 bytes that are parsed as the next line and quoted exactly."
     },
     {
       "symbol": "Utopia\\NATS\\Connection::requestBatch",

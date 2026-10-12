@@ -192,13 +192,13 @@ impl Headers {
     /// PHP: `Headers::fromWire()`.
     pub fn from_wire(raw: &[u8]) -> Result<Headers> {
         if raw.is_empty() {
-            return Err(Error::Protocol("Empty header block".into()));
+            return Err(Error::protocol("Empty header block"));
         }
         let mut headers = Headers::new();
         let mut lines = Lines { rest: Some(raw) };
         let status_line = lines.next().unwrap_or_default();
         if !status_line.starts_with(b"NATS/1.0") {
-            return Err(Error::Protocol(format!("Invalid header version: {}", String::from_utf8_lossy(status_line))));
+            return Err(Error::protocol_bytes([b"Invalid header version: ".as_slice(), status_line].concat()));
         }
         let remainder = php_std::string::trim(&status_line[8..], PHP_WHITESPACE);
         if !remainder.is_empty() {
