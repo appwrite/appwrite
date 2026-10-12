@@ -257,7 +257,7 @@ final class Adapter implements Base, Benchmarks
     {
         $schema = match ($at[0]) {
             'schemas' => $spec->schemas[$at[1]] ?? null,
-            'property' => ($spec->schemas[$at[1]] ?? null)?->properties[$at[2]] ?? null,
+            'property' => ($object = $spec->schemas[$at[1]] ?? null) instanceof ObjectSchema ? $object->properties[$at[2]] ?? null : null,
             'response' => ($spec->paths[$at[1]] ?? null)?->operation(HttpMethod::from($at[2]))?->responses[$at[3]]->content[$at[4]]->schema,
             'body' => ($spec->paths[$at[1]] ?? null)?->operation(HttpMethod::from($at[2]))?->requestBody?->content[$at[3]]->schema,
             default => null,
