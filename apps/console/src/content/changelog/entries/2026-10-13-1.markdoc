@@ -1,0 +1,22 @@
+---
+layout: changelog
+title: "Appwrite Cloud now limits deployments per project each hour and day"
+date: 2026-10-13
+description: "Appwrite Cloud now limits how many deployments a project can start per hour and per day, based on its organization's plan."
+tags: functions, sites
+---
+
+Appwrite Cloud now limits how many [Functions](/docs/products/functions) and [Sites](/docs/products/sites) deployments a project can start in an hour and in a day. The limits depend on your organization's plan. They're there to stop runaway build loops, such as a CI job or webhook that redeploys over and over, not to cap normal use.
+
+| Plan | Deployments per hour | Deployments per day |
+| --- | --- | --- |
+| Free and Education | 100 | 200 |
+| Start | 200 | 1,000 |
+| Pro | 500 | 6,000 |
+| Scale | 1,000 | 12,000 |
+
+Custom and legacy plans get the limits of the Pro or Scale plan they're based on.
+
+Every deployment counts, whether it comes from the Console, the CLI, a Git push, a template, or an API key. Each project keeps its own count, so one busy project doesn't use up the limits of the others in your organization. Counts reset at the top of each hour and at midnight UTC.
+
+When a project reaches a limit, new deployments fail with a `429` and the `deployment_rate_limit_exceeded` error. The message names the limit and the time you can deploy again, and the response includes `Retry-After` and `X-RateLimit-*` headers for scripts that retry. Your active deployment keeps serving. The refused deployment is marked as failed with the same message in its build logs, and a refused Git push shows up as a failed commit status and pull request comment.
