@@ -910,9 +910,22 @@ jobs:
     if: needs.changes.outputs.server == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
+    # The Redis the cache crate's integration tests run against
+    # (crates/utopia/cache/tests/native.rs), the dev stack's image.
+    services:
+      redis:
+        image: redis:7.4.7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s
+          --health-timeout 2s
+          --health-retries 15
     env:
       CARGO_TERM_COLOR: always
       RUST_VERSION: '1.88'
+      UTOPIA_CACHE_REDIS: redis://localhost:6379/6
     steps:
       - name: Checkout repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2

@@ -205,3 +205,9 @@ pub fn unwrap(reply: Reply) -> Result<Reply> {
 pub fn is_noscript(error: &str) -> bool {
     error.split(' ').next() == Some("NOSCRIPT")
 }
+
+/// Whether a Redis error reply is `WRONGTYPE`: the key holds another kind of
+/// value than the command reads.
+pub(crate) fn is_wrongtype(error: &str) -> bool {
+    error.split(' ').next() == Some("WRONGTYPE")
+}

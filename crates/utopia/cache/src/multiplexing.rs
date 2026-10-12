@@ -624,7 +624,12 @@ impl<K: Codec> Adapter for Multiplexing<K> {
         if blank(key) || is_reserved(hash) {
             return Ok(None);
         }
-        Transport::hget(self, key, hash).await
+        // A key holding another kind of value is a miss, as on the other
+        // adapters, whose replies keep errors apart from values.
+        match Transport::hget(self, key, hash).await {
+            Err(Error::Redis(e)) if resp::is_wrongtype(&e) => Ok(None),
+            other => other,
+        }
     }
 
     async fn save_bytes(&self, key: &str, bytes: &[u8], hash: &str, ttl: i64) -> Result<bool> {

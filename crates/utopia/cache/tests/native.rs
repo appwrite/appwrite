@@ -138,3 +138,31 @@ async fn redis_leases_guard_native_saves() {
         let _: () = utopia_cache::redis::cmd("DEL").arg(&key).query_async(&mut connection.clone()).await.unwrap();
     }
 }
+
+#[cfg(feature = "redis")]
+#[tokio::test]
+async fn redis_native_saves_fail_on_an_error_reply() {
+    let Some(connection) = redis().await else { return };
+    let multiplexing = {
+        let url = std::env::var("UTOPIA_CACHE_REDIS").unwrap();
+        let (host, rest) = url.trim_start_matches("redis://").split_once(':').unwrap();
+        let (port, db) = rest.split_once('/').unwrap_or((rest, "0"));
+        let mut options = utopia_cache::MultiplexingOptions::new(host, port.parse().unwrap());
+        options.db = db.parse().unwrap();
+        utopia_cache::Multiplexing::connect(options).await.unwrap()
+    };
+    let caches: [Cache; 2] = [
+        Cache::from_dyn(Arc::new(utopia_cache::Redis::new(connection.clone()))),
+        Cache::from_dyn(Arc::new(multiplexing)),
+    ];
+    for cache in caches {
+        // A string where the cache expects a hash: HSET answers WRONGTYPE.
+        let key = unique("wrongtype");
+        let _: () =
+            utopia_cache::redis::cmd("SET").arg(&key).arg("plain").query_async(&mut connection.clone()).await.unwrap();
+        assert!(!cache.save_native(&key, &project(), "rust", 0).await.unwrap());
+        assert!(!cache.save_native(&key, &project(), "rust", 60).await.unwrap());
+        assert_eq!(cache.load_native::<Project>(&key, 60, "rust").await.unwrap(), None);
+        let _: () = utopia_cache::redis::cmd("DEL").arg(&key).query_async(&mut connection.clone()).await.unwrap();
+    }
+}
