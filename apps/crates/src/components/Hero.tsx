@@ -71,32 +71,30 @@ export function Hero({ index }: { index: Index }) {
   // The crates live in the Appwrite repository, not on crates.io.
   const install = `cargo add ${http?.rust?.name ?? 'utopia-http'} --git https://github.com/appwrite/appwrite`
   return (
-    <section className="grid gap-10 pt-2">
-      <div className="grid grid-cols-[minmax(0,1fr)] items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)] lg:gap-12">
-        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] content-start justify-items-start gap-5">
-          <h1 className="m-0 text-[34px] leading-[1.1] sm:text-[42px]">Rust libraries for building backend services</h1>
-          <p className="m-0 max-w-[54ch] text-[15.5px] leading-relaxed text-muted-foreground">
-            Small, focused crates for HTTP, validation, authentication, databases, queues and storage. Use one on its own, or combine them into a
-            complete API server.
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <a href="#libraries" className="inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground hover:opacity-90">
-              Browse libraries
-            </a>
-            {http ? (
-              <Link to="/$lib" params={{ lib: http.slug }} className="inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-[13.5px] font-medium hover:bg-accent">
-                Start with HTTP
-                <ArrowRight className="size-3.5" />
-              </Link>
-            ) : null}
-          </div>
-          <div className="flex max-w-full items-center gap-1 rounded-md border border-code-border bg-code py-0.5 pr-0.5 pl-3 font-mono text-[12.5px] text-zinc-100">
-            <span className="text-zinc-500 select-none">$</span>
-            <span className="min-w-0 truncate px-1.5">{install}</span>
-            <CopyButton text={install} label="Copy" />
-          </div>
+    <section className="grid gap-10 pt-4">
+      <div className="mx-auto grid w-full max-w-[760px] grid-cols-[minmax(0,1fr)] justify-items-center gap-5 text-center">
+        <h1 className="m-0 text-[34px] leading-[1.1] sm:text-[44px]">Rust libraries for building backend services</h1>
+        <p className="m-0 max-w-[58ch] text-[15.5px] leading-relaxed text-muted-foreground">
+          Small, focused crates for HTTP, validation, authentication, databases, queues and storage. Use one on its own, or combine them into a
+          complete API server.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-2">
+          <a href="#libraries" className="inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground hover:opacity-90">
+            Browse libraries
+          </a>
+          {http ? (
+            <Link to="/$lib" params={{ lib: http.slug }} className="inline-flex h-9 items-center gap-1.5 rounded-md px-3 text-[13.5px] font-medium hover:bg-accent">
+              Start with HTTP
+              <ArrowRight className="size-3.5" />
+            </Link>
+          ) : null}
         </div>
-        <div className="min-w-0">
+        <div className="flex max-w-full items-center gap-1 rounded-md border border-code-border bg-code py-0.5 pr-0.5 pl-3 text-left font-mono text-[12.5px] text-zinc-100">
+          <span className="text-zinc-500 select-none">$</span>
+          <span className="min-w-0 truncate px-1.5">{install}</span>
+          <CopyButton text={install} label="Copy" />
+        </div>
+        <div className="mt-3 w-full min-w-0 text-left">
           <CodeBlock code={EXAMPLE} program={PROGRAM} lang="rust" title="main.rs" />
         </div>
       </div>
