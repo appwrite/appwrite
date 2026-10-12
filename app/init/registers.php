@@ -1,5 +1,6 @@
 <?php
 
+use Appwrite\Database\Factory as DatabaseFactory;
 use Appwrite\Extend\Exception;
 use Appwrite\GraphQL\Promises\Adapter\Swoole;
 use Appwrite\Hooks\Hooks;
@@ -17,6 +18,7 @@ use Utopia\Database\Adapter\MySQL;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\PDO;
+use Utopia\Database\Validator\Authorization;
 use Utopia\Domains\Validator\PublicDomain;
 use Utopia\DSN\DSN;
 use Utopia\Http\Http;
@@ -304,6 +306,14 @@ $register->set('cache', function () use ($register) {
         Config::getParam('pools-cache', []),
     )));
 });
+
+// Builds the database factory every request, worker and test uses, so a host that places its databases
+// differently overrides one entry; Cloud registers its own.
+$register->set('databaseFactory', fn () => fn (Group $pools, Cache $cache, Authorization $authorization): DatabaseFactory => new DatabaseFactory(
+    $pools,
+    $cache,
+    $authorization
+));
 
 $register->set('db', function () {
     // This is usually for our workers or CLI commands scope

@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tests\E2E\Services\Project;
 
-use Appwrite\Database\Factory;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\ProjectCustom;
 use Tests\E2E\Scopes\Scope;
@@ -171,7 +170,7 @@ final class PoliciesPasswordRotationIntegrationTest extends Scope
             $pools = $register->get('pools');
             $cache = $register->get('cache');
             $authorization = new Authorization();
-            $factory = new Factory($pools, $cache, $authorization);
+            $factory = $register->get('databaseFactory')($pools, $cache, $authorization);
 
             $authorization->skip(function () use ($factory, $userId, $date) {
                 $project = $factory->platform()->getDocument('projects', $this->getProject()['$id']);
