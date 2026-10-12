@@ -80,7 +80,7 @@ await project.updateAuthMethod({ methodId: 'passkey', enabled: true });
 
 Add `localhost` as a web platform, and passkeys work on `http://localhost` on any port. Requests from localhost get their own relying party, `localhost`, so you can develop without a domain and without touching the production relying party ID.
 
-Passkeys created on localhost only work on localhost. They are separate from your production passkeys.
+Passkeys created on localhost only work on localhost. They are separate from your production passkeys, but they still count as registered passkeys: once one exists, Appwrite refuses to change the relying party ID until it is deleted. Set your production relying party ID before you test on localhost, and use `localhost`, not `127.0.0.1`.
 
 # Set up your platforms {% #platforms %}
 
@@ -88,7 +88,9 @@ Passkeys created on localhost only work on localhost. They are separate from you
 
 Add a web platform for each hostname your app runs on, such as `example.com` and `app.example.com`. The hostname must be the relying party ID or one of its subdomains. A wildcard platform such as `*.example.com` covers every subdomain, but not `example.com` itself.
 
-Browsers need no other setup. Passkeys work on HTTPS origins, and on `http://localhost` for development.
+Browsers need no other setup. Passkeys work on HTTPS origins on the default port, and on `http://localhost` on any port for development.
+
+The web examples below use `PublicKeyCredential.parseCreationOptionsFromJSON()`, `parseRequestOptionsFromJSON()` and `toJSON()`, which need Chrome and Edge 129, Firefox 119, or Safari 18.4 and later. For older browsers, convert the options with a library such as [`@simplewebauthn/browser`](https://www.npmjs.com/package/@simplewebauthn/browser).
 
 ## Android {% #android %}
 
@@ -108,7 +110,7 @@ An Android app does not sign in from a web origin. Android identifies it by a ha
 Most apps have more than one signing key:
 
 - **Debug builds** are signed with the debug keystore on each developer's machine. Run `./gradlew signingReport` in your Android project, which prints the SHA-256 fingerprint for every build variant.
-- **Builds from Google Play** are re-signed by Google with the app signing key. In Play Console, go to **Protected with Play** > **Play Store protection** > **Manage Play app signing** and copy the SHA-256 fingerprint in the **App signing key** section.
+- **Builds from Google Play** are re-signed by Google with the app signing key. In Play Console, open **App integrity**, select **Play app signing**, and copy the SHA-256 fingerprint of the **App signing key certificate**.
 - **Builds you install yourself** carry the key that signed them, such as your upload key.
 
 Android also checks that your domain trusts the app before it creates or uses a passkey. Host this file at `https://example.com/.well-known/assetlinks.json`, on your relying party ID, with your package name and the same fingerprints:
@@ -135,9 +137,9 @@ Add the [Credential Manager](https://developer.android.com/identity/sign-in/cred
 
 ```kotlin
 dependencies {
-    implementation("androidx.credentials:credentials:1.5.0")
-    implementation("androidx.credentials:credentials-play-services-auth:1.5.0")
-    implementation("com.google.code.gson:gson:2.11.0")
+    implementation("androidx.credentials:credentials:1.6.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.6.0")
+    implementation("com.google.code.gson:gson:2.14.0")
 }
 ```
 
@@ -173,7 +175,7 @@ Registration takes three steps:
 2. Pass the options to the platform's passkey API. The user confirms with a biometric or the device PIN.
 3. Send the resulting credential to `updatePasskeyVerification()`. Appwrite verifies it and stores the passkey.
 
-The session must have signed in, or completed an MFA challenge, within the last 10 minutes. The challenge expires after 5 minutes, and each user can have up to 10 passkeys.
+The session must have signed in, or completed an MFA challenge, within the last 10 minutes, and step 3 must use the same session as step 1. The challenge expires after 5 minutes, and each user can have up to 10 passkeys, counting registrations still in progress.
 
 {% tabs %}
 {% tabsitem #register-web title="Web" %}
@@ -304,7 +306,24 @@ let passkey = try await account.updatePasskeyVerification(
 )
 ```
 
-`Data(base64URLEncoded:)` and `base64URLEncodedString()` stand for base64url helpers, which Foundation does not include. Add your own small extension on `Data`.
+Foundation has no base64url helpers, so add this extension on `Data`. Appwrite expects base64url without padding.
+
+```swift
+extension Data {
+    init?(base64URLEncoded string: String) {
+        var base64 = string.replacingOccurrences(of: "-", with: "+").replacingOccurrences(of: "_", with: "/")
+        base64 += String(repeating: "=", count: (4 - base64.count % 4) % 4)
+        self.init(base64Encoded: base64)
+    }
+
+    func base64URLEncodedString() -> String {
+        base64EncodedString()
+            .replacingOccurrences(of: "+", with: "-")
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: "=", with: "")
+    }
+}
+```
 {% /tabsitem %}
 
 {% tabsitem #register-react-native title="React Native" %}
@@ -343,7 +362,7 @@ Sign-in needs no email or password. The user picks one of their passkeys for you
 3. Send the credential to `updatePasskeyToken()`. Appwrite verifies it and returns a token with a `userId` and `secret`.
 4. Exchange the token for a session with `createSession()`, as with any [token](/docs/products/auth/tokens).
 
-The token expires after one minute, and each challenge can only be used once.
+The token expires after one minute, and each challenge can only be used once. Each IP address can start and complete 10 passkey sign-ins per hour.
 
 {% tabs %}
 {% tabsitem #sign-in-web title="Web" %}
@@ -525,7 +544,7 @@ const session = await account.createSession({
 
 # Manage passkeys {% #manage %}
 
-Signed-in users can list, rename, and delete their own passkeys, for example from a security settings screen. Each passkey records its name and when it was last used.
+Signed-in users can list, rename, and delete their own passkeys, for example from a security settings screen. Each passkey records its name and when it was last used. Like registration, deleting a passkey needs a session that signed in, or completed MFA, within the last 10 minutes.
 
 {% multicode %}
 ```client-web
@@ -589,19 +608,38 @@ _ = try await account.updatePasskey(passkeyId: list.passkeys[0].id, name: "Work 
 
 _ = try await account.deletePasskey(passkeyId: list.passkeys[0].id)
 ```
+```client-react-native
+import { Client, Account } from 'react-native-appwrite';
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<PROJECT_ID>');                           // Your project ID
+
+const account = new Account(client);
+
+const { passkeys } = await account.listPasskeys();
+
+await account.updatePasskey({ passkeyId: passkeys[0].$id, name: 'Work phone' });
+
+await account.deletePasskey({ passkeyId: passkeys[0].$id });
+```
 {% /multicode %}
 
-On the server, the Users service has the same operations for any user, such as `users.listPasskeys()` and `users.deletePasskey()`. Use them to remove a lost device's passkey on a user's behalf.
+On the server, the Users service has the same operations for any user: `users.listPasskeys()`, `users.getPasskey()`, `users.updatePasskey()` and `users.deletePasskey()`. Use them to remove a lost device's passkey on a user's behalf. Deleting a user also deletes their passkeys.
 
 # Errors {% #errors %}
 
 | Error | Cause |
 | --- | --- |
 | `user_auth_method_unsupported` | Passkeys are turned off, or the project has no relying party ID with a matching platform. |
-| `user_reauthentication_required` | Registration needs a session that signed in, or completed MFA, within the last 10 minutes. |
-| `user_passkey_invalid` | The credential failed verification, for example because the origin is not one Appwrite accepts, the challenge expired, or the signature does not match. Start a new ceremony. |
-| `user_passkey_limit_exceeded` | The user already has 10 passkeys. |
-| `user_passkey_already_exists` | This credential is already registered. |
-| `user_passkey_not_found` | No passkey with this ID belongs to the user. |
+| `user_reauthentication_required` | Registering or deleting a passkey needs a session that signed in, or completed MFA, within the last 10 minutes. |
+| `user_invalid_token` | The challenge expired after 5 minutes or was already used, registration finished from a different session, the passkey settings changed during the ceremony, or the sign-in token expired after one minute. Start again. |
+| `user_passkey_invalid` | The credential failed verification, for example because the origin is not one Appwrite accepts or the signature does not match. |
+| `user_passkey_limit_exceeded` | The user already has 10 passkeys, counting registrations still in progress. |
+| `user_passkey_already_exists` | This credential, or a passkey with this ID, is already registered. |
+| `user_passkey_not_found` | No passkey with this ID belongs to the user, or the registration is no longer pending. |
+| `user_blocked` | The passkey belongs to a blocked user. |
+| `general_argument_invalid` | You tried to change the relying party ID while users have passkeys, including localhost passkeys and registrations in progress. |
+| `general_rate_limit_exceeded` | Too many passkey requests. Registration allows 10 per user and sign-in 10 per IP address each hour. |
 
 When registration or sign-in fails with `user_passkey_invalid` from a native app, compare the origin the platform sent with **Where passkeys work** under **Auth** > **Policies** > **Passkeys**. On Android, a missing origin usually means the app was signed with a key whose fingerprint is not on the Android platform.

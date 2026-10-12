@@ -55,9 +55,9 @@ Appwrite works out where passkeys may be used from the platforms already in your
 
 ![The relying party card listing where passkeys work](/images/blog/announcing-passkeys/relying-party.avif)
 
-# Four calls, any platform
+# The same calls on every platform
 
-Registration and sign-in each take two calls to Appwrite, with the platform's own passkey API in between. On the web, that is `navigator.credentials`:
+Registration takes two calls to Appwrite, and sign-in takes two plus the usual `createSession`, with the platform's own passkey API in between. On the web, that is `navigator.credentials`:
 
 ```client-web
 // Register a passkey for the signed-in user
