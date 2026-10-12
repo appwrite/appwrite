@@ -309,6 +309,8 @@ final class IntegerOperatorsTest extends TestCase
         yield 'a maximum with many fractional digits just above one holds back 15' => [Operator::multiply(1.5, '1.' . \str_repeat('0', 80) . '1'), 10];
         yield 'a maximum with many fractional digits just below sixteen lets 15 through' => [Operator::multiply(1.5, '15.' . \str_repeat('9', 80)), 15];
         yield 'a tiny factor leaves zero' => [Operator::multiply('1e-1000000000', 100), 0];
+        yield 'an exponent written with leading zeros is read by its value' => [Operator::multiply('1.5e-00000', 100), 15];
+        yield 'a long fraction scaled up by its exponent is read by its value' => [Operator::multiply('0.' . \str_repeat('0', 99) . '15e100', 100), 15];
     }
 
     #[DataProvider('oversizedLimits')]

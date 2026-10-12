@@ -31,7 +31,7 @@ final readonly class IntegerOperators
      */
     private const int MAXIMUM_DIGITS = 64;
 
-    private const int MAXIMUM_EXPONENT_DIGITS = 4;
+    private const int MAXIMUM_EXPONENT_DIGITS = 18;
 
     private const array EXACT_ON_POSTGRESQL = [OperatorType::Multiply, OperatorType::Divide, OperatorType::Modulo];
 
@@ -205,8 +205,8 @@ final readonly class IntegerOperators
     }
 
     /**
-     * How a result compares with a limit whose exponent is past MAXIMUM_DIGITS: one beyond every result in
-     * magnitude, or one closer to zero than any of them but zero.
+     * How a result compares with a limit decimal() leaves out: one beyond every result in magnitude, or one closer
+     * to zero than any of them but zero.
      */
     private static function compareWithOversized(int|string $numerator, int|float|string $limit): int
     {
@@ -225,12 +225,37 @@ final readonly class IntegerOperators
      */
     private static function isTiny(int|float|string $value): bool
     {
-        return \str_starts_with(\explode('e', \strtolower(\trim((string) $value)), 2)[1] ?? '', '-');
+        $order = self::order($value);
+
+        return $order !== null && $order < -self::MAXIMUM_DIGITS;
+    }
+
+    /**
+     * The power of ten of a number's leading digit (2 for 123, -3 for 0.001), from its text; null for zero. An
+     * exponent too long to read as an integer saturates.
+     */
+    private static function order(int|float|string $value): ?int
+    {
+        [$mantissa, $exponent] = \explode('e', \strtolower(\trim((string) $value)), 2) + [1 => '0'];
+        [$whole, $fraction] = \explode('.', \ltrim($mantissa, '+-'), 2) + [1 => ''];
+        if (\ltrim($whole . $fraction, '0') === '') {
+            return null;
+        }
+
+        $magnitude = \ltrim(\ltrim($exponent, '+-'), '0');
+        if (\strlen($magnitude) > self::MAXIMUM_EXPONENT_DIGITS) {
+            return \str_starts_with($exponent, '-') ? \PHP_INT_MIN : \PHP_INT_MAX;
+        }
+
+        $significant = \ltrim($whole, '0');
+        $leading = $significant !== '' ? \strlen($significant) - 1 : -(\strspn($fraction, '0') + 1);
+
+        return $leading + (int) $exponent;
     }
 
     /**
      * A number as an integer and the power of ten that divides it, from the text main bound for it; null when its
-     * exponent is past MAXIMUM_DIGITS.
+     * leading digit is more than MAXIMUM_DIGITS powers of ten from the units.
      *
      * @return array{int|string, int}|null
      */
@@ -239,10 +264,11 @@ final readonly class IntegerOperators
         $text = \strtolower(\trim((string) $value));
         [$mantissa, $exponent] = \explode('e', $text, 2) + [1 => '0'];
         [$whole, $fraction] = \explode('.', $mantissa, 2) + [1 => ''];
-        if (\ltrim(\ltrim($whole, '+-') . $fraction, '0') === '') {
+        $order = self::order($value);
+        if ($order === null) {
             return [0, 0];
         }
-        if (\strlen(\ltrim($exponent, '+-')) > self::MAXIMUM_EXPONENT_DIGITS || \abs((int) $exponent) > self::MAXIMUM_DIGITS) {
+        if (\abs($order) > self::MAXIMUM_DIGITS) {
             return null;
         }
 
