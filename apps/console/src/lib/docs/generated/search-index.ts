@@ -523,7 +523,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "advanced/self-hosting/configuration/sites",
     "title": "Sites",
     "description": "Harness the full power of self-hosted sites with Appwrite. Explore site deployment, management, and integration in your self-hosted environment.",
-    "excerpt": "This guide covers how to configure sites in your self-hosted Appwrite instance. For GitHub repository integration with sites, see the version control configuration. Configure sites runtimes Not all site runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server. To enable a runtime, add it to the environment variable as a comma-separated list. The three runtimes currently available for Sites are the Static, Node.js 22, and Flutter 3.41…",
+    "excerpt": "This guide covers how to configure sites in your self-hosted Appwrite instance. For GitHub repository integration with sites, see the version control configuration. Configure sites runtimes Not all site runtimes are enabled by default. Enable the runtimes that you need and disable unused runtimes to save disk space on your server. To enable a runtime, add it to the environment variable as a comma-separated list. Any runtime on the runtimes list can be enabled here. Flutter and Static are for…",
     "breadcrumbs": [
       "Self-hosting",
       "Configuration",
@@ -2217,6 +2217,17 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
       "Auth",
       "Guides",
       "OAuth2 login"
+    ]
+  },
+  {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "excerpt": "A passkey replaces a password with a key pair that lives on the user's device or in their password manager, such as iCloud Keychain or Google Password Manager. The user unlocks it with Face ID, Touch ID, a fingerprint, or the device PIN. The private key never leaves the device, and the public key that Appwrite stores is useless to an attacker. A passkey only works on the domain it was created for, so a look-alike phishing site cannot use…",
+    "breadcrumbs": [
+      "Auth",
+      "Guides",
+      "Passkeys"
     ]
   },
   {
@@ -5561,7 +5572,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "quick-starts/react-native",
     "title": "Start with React Native",
     "description": "Discover how to leverage Appwrite's powerful backend to help you build React Native apps for iOS, Android and other native platforms.",
-    "excerpt": "Learn how to setup your first React Native project powered by Appwrite. The React Native SDK is still in . Proceed with caution if you plan to use this SDK in production. Looking to start with React for web? Follow the React quickstart and React tutorial flows. Create a React Native project using npx. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**,…",
+    "excerpt": "Learn how to setup your first React Native project powered by Appwrite. Looking to start with React for web? Follow the React quickstart and React tutorial flows. Create a React Native project using npx. Head to the Appwrite Console. If this is your first time using Appwrite, create an account and create your first project. Then, under **Add a platform**, add a **Android app** or a **Apple app**. Add your app **name** and **Bundle ID**. You can find your **Bundle…",
     "breadcrumbs": [
       "Quick start",
       "Mobile and native",
@@ -6313,7 +6324,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tooling/command-center",
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
-    "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. The Command Center is enhanced with AI capabilities and is the home of the Appwrite assistant. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows…",
+    "excerpt": "The Appwrite **Command Center** is designed to improve the developer experience by enabling straightforward navigation and exploration of features, settings, and sections of the Appwrite Console. It allows you to execute tasks and access features within the Appwrite Console efficiently using keyboard shortcuts and advanced context-aware search. Getting started You can access the Command Center by pressing + on Mac or + on Windows and Linux devices or by clicking the search icon in the Console top navigation bar. A…",
     "breadcrumbs": [
       "Tooling",
       "Getting started",
@@ -6764,7 +6775,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/astro-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Astro project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new route to handle the redirect. The method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the route with the and URL query parameters. Create a new route…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new route to handle the redirect. The method returns a URL to the OAuth provider. After authentication the OAuth provider redirects the user back to the route with the , and URL query parameters. The is the…",
     "breadcrumbs": [
       "Astro SSR",
       "Steps",
@@ -7039,7 +7050,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/nuxt-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a Nuxt project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the , and URL query parameters. The is…",
     "breadcrumbs": [
       "Nuxt SSR",
       "Steps",
@@ -7611,7 +7622,7 @@ export const DOCS_SEARCH_INDEX: DocsSearchEntry[] = [
     "slug": "tutorials/sveltekit-ssr-auth/step-7",
     "title": "OAuth authentication with SSR",
     "description": "Add authentication to a SvelteKit project using Appwrite.",
-    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the and URL query parameters. Handle the callback…",
+    "excerpt": "To support the OAuth flow, we first redirect the user to the OAuth provider, and then handle the callback from the OAuth provider. To redirect, add a button to our sign up page that redirects the user to the OAuth provider. Add a new server route to handle the redirect. The method redirects the user to the OAuth provider, and then the OAuth provider redirects the user back to the route with the , and URL query parameters. The is…",
     "breadcrumbs": [
       "SvelteKit SSR",
       "Steps",

@@ -322,7 +322,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Environment variables",
     "description": "Customize the behavior of your self-hosted Appwrite instance to your unique needs. Customize SMTP, SMS, functions, S3 adaptor, database, and other behaiors.",
     "layout": "article",
-    "readingTimeMinutes": 21
+    "readingTimeMinutes": 22
   },
   {
     "slug": "advanced/self-hosting/configuration/functions",
@@ -490,7 +490,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Updates and migrations",
     "description": "Keep your self-hosted Appwrite instance up-to-date. Learn how to perform updates, manage versions, and ensure your self-hosted Appwrite stays current.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 4
   },
   {
     "slug": "apis",
@@ -1433,6 +1433,13 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "description": "Integrate OAuth2 authentication seamlessly with Appwrite. Learn how to connect your application with third-party OAuth2 providers for secure user login and access.",
     "layout": "article",
     "readingTimeMinutes": 4
+  },
+  {
+    "slug": "products/auth/passkeys",
+    "title": "Passkeys",
+    "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
+    "layout": "article",
+    "readingTimeMinutes": 8
   },
   {
     "slug": "products/auth/phone-sms",
@@ -4078,7 +4085,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Command Center",
     "description": "Appwrite Command Center enhances developer experience with AI, keyboard shortcuts, and context-aware search for efficient navigation and task execution.",
     "layout": "article",
-    "readingTimeMinutes": 3
+    "readingTimeMinutes": 2
   },
   {
     "slug": "tooling/command-center/shortcuts",
