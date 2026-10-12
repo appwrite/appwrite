@@ -205,6 +205,46 @@ const BADGE: Record<string, { letter: string; tone: string }> = {
   associated: { letter: 'f', tone: 'text-muted-foreground' },
 }
 
+const LEGEND: Record<string, string> = {
+  struct: 'Struct',
+  enum: 'Enum',
+  trait: 'Trait',
+  fn: 'Function',
+  type: 'Type alias',
+  const: 'Constant',
+  method: 'Method',
+  associated: 'Associated fn',
+}
+
+const LEGEND_TITLE: Record<string, string> = {
+  method: 'A method: takes self',
+  associated: 'An associated function: called on the type (Type::name), no self',
+}
+
+/** What the outline's badges mean: the kinds this page has, in outline order. */
+function Legend({ kinds, counts }: { kinds: string[]; counts: boolean }) {
+  if (!kinds.length) return null
+  return (
+    <div className="grid gap-1.5 border-t border-border pt-2.5" aria-label="Legend">
+      <span className="text-[10.5px] font-semibold tracking-wider text-muted-foreground uppercase">Legend</span>
+      <div className="grid grid-cols-2 gap-x-3 gap-y-1">
+        {kinds.map((k) => (
+          <span key={k} title={LEGEND_TITLE[k]} className="flex min-w-0 items-center gap-1.5 text-[11.5px] text-muted-foreground">
+            <Badge kind={k} />
+            <span className="truncate">{LEGEND[k]}</span>
+          </span>
+        ))}
+      </div>
+      {counts ? (
+        <span className="flex items-center gap-1.5 text-[11.5px] text-muted-foreground">
+          <span className="w-4 text-center text-[10.5px] tabular-nums">12</span>
+          Number of methods
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function Badge({ kind }: { kind: string }) {
   const b = BADGE[kind] ?? BADGE.fn
   return <span className={`grid size-4 flex-none place-items-center rounded-[4px] font-mono text-[9.5px] font-semibold ${b.tone}`}>{b.letter}</span>
@@ -283,7 +323,7 @@ function Symbols({ items, base }: { items: Entry[]; base: string }) {
   const active = (id: string) => (current === id ? 'bg-sidebar-accent text-sidebar-strong' : 'text-sidebar-ink')
   if (!items.length) return null
   return (
-    <nav className="sticky top-20 grid max-h-[calc(100vh-6rem)] grid-rows-[auto_auto_minmax(0,1fr)] gap-2" aria-label="Symbols">
+    <nav className="sticky top-20 grid max-h-[calc(100vh-6rem)] grid-rows-[auto_auto_minmax(0,1fr)_auto] gap-2" aria-label="Symbols">
       <div className="flex items-center justify-between">
         <span className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase">Outline</span>
         {expandable.length ? (
@@ -382,6 +422,14 @@ function Symbols({ items, base }: { items: Entry[]; base: string }) {
           )
         })}
       </div>
+      <Legend
+        kinds={[
+          ...KIND_ORDER.filter((k) => items.some((e) => e.item.kind === k)),
+          ...(items.some((e) => groups(e).some((g) => g.methods.some((m) => m.function?.receiver))) ? ['method'] : []),
+          ...(items.some((e) => groups(e).some((g) => g.methods.some((m) => !m.function?.receiver))) ? ['associated'] : []),
+        ]}
+        counts={expandable.length > 0}
+      />
     </nav>
   )
 }
