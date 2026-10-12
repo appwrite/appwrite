@@ -3,7 +3,7 @@
 /**
  * Ports utopia-php/database's e2e suites to compat cases by recording them.
  *
- *   bin/compat-php tests/compat/database/recorder/record.php <postgres|shared> [<test filter>]
+ *   bin/compat-php tests/compat/database/recorder/record.php <postgres|shared> [<file filter>[,<file filter>...]]
  *
  * Runs every test method of tests/e2e/Adapter/PostgresTest.php (`postgres`)
  * or tests/e2e/Adapter/SharedTables/PostgresTest.php (`shared`) against the
@@ -120,6 +120,12 @@ final class Target
         Recorder::$on = false;
         $pdo = self::pdo();
         $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
+        // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
+        $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
+        $others->execute([Recorder::$schema . '_']);
+        foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
+            $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+        }
         $database = new RecordingDatabase(new RecordingPostgres($pdo), \Tests\Compat\Database\Core::cache('memory'));
         $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
         if (self::$profile === 'shared') {
@@ -227,7 +233,7 @@ final class Target
                 })(),
                 'authorization.status' => $step('db.authorization.set_status', ['status' => $value]),
                 'authorization.statusDefault' => $step('db.authorization.set_default_status', ['status' => $value]),
-                'adapter.database' => $step('database.set_database', ['name' => $value === Recorder::$schema ? '${ns}' : $value]),
+                'adapter.database' => $step('database.set_database', ['name' => str_replace(Recorder::$schema, '${ns}', (string) $value)]),
                 'adapter.namespace' => $step('database.set_namespace', ['namespace' => $value]),
                 'adapter.tenant' => $step('database.set_tenant', ['tenant' => $value]),
                 'adapter.sharedTables' => $step('database.set_shared_tables', ['sharedTables' => $value]),

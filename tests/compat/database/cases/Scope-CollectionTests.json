@@ -103110,70 +103110,28 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "schema1"
+            "database": "${ns}_schema1"
           },
-          "expect": true
-        },
-        {
-          "op": "database.set_database",
-          "args": {
-            "name": "schema1"
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.delete",
-          "args": {},
-          "expect": true
+          "expect": false
         },
         {
           "op": "database.exists",
           "args": {
-            "database": "schema2"
+            "database": "${ns}_schema2"
           },
-          "expect": true
-        },
-        {
-          "op": "database.set_database",
-          "args": {
-            "name": "schema2"
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.delete",
-          "args": {},
-          "expect": true
+          "expect": false
         },
         {
           "op": "database.exists",
           "args": {
-            "database": "sharedTables"
+            "database": "${ns}_sharedTables"
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "database.set_database",
           "args": {
-            "name": "sharedTables"
-          },
-          "expect": {
-            "$database": true
-          }
-        },
-        {
-          "op": "database.delete",
-          "args": {},
-          "expect": true
-        },
-        {
-          "op": "database.set_database",
-          "args": {
-            "name": "schema1"
+            "name": "${ns}_schema1"
           },
           "expect": {
             "$database": true
@@ -103196,14 +103154,14 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "schema1"
+            "database": "${ns}_schema1"
           },
           "expect": true
         },
         {
           "op": "database.set_database",
           "args": {
-            "name": "schema2"
+            "name": "${ns}_schema2"
           },
           "expect": {
             "$database": true
@@ -103226,14 +103184,14 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "schema2"
+            "database": "${ns}_schema2"
           },
           "expect": true
         },
         {
           "op": "database.set_database",
           "args": {
-            "name": "sharedTables"
+            "name": "${ns}_sharedTables"
           },
           "expect": {
             "$database": true
@@ -103274,7 +103232,7 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "sharedTables"
+            "database": "${ns}_sharedTables"
           },
           "expect": true
         },
@@ -103989,14 +103947,14 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "sharedTables"
+            "database": "${ns}_sharedTables"
           },
-          "expect": true
+          "expect": false
         },
         {
           "op": "database.set_database",
           "args": {
-            "name": "sharedTables"
+            "name": "${ns}_sharedTables"
           },
           "expect": {
             "$database": true
@@ -104010,7 +103968,7 @@
         {
           "op": "database.set_database",
           "args": {
-            "name": "sharedTables"
+            "name": "${ns}_sharedTables"
           },
           "expect": {
             "$database": true
@@ -104382,14 +104340,14 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "stMultiTenant"
+            "database": "${ns}_stMultiTenant"
           },
           "expect": false
         },
         {
           "op": "database.set_database",
           "args": {
-            "name": "stMultiTenant"
+            "name": "${ns}_stMultiTenant"
           },
           "expect": {
             "$database": true
@@ -104797,14 +104755,14 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "stMultiCreate"
+            "database": "${ns}_stMultiCreate"
           },
           "expect": false
         },
         {
           "op": "database.set_database",
           "args": {
-            "name": "stMultiCreate"
+            "name": "${ns}_stMultiCreate"
           },
           "expect": {
             "$database": true
@@ -104845,7 +104803,7 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "stMultiCreate"
+            "database": "${ns}_stMultiCreate"
           },
           "expect": true
         },
@@ -104866,7 +104824,7 @@
         {
           "op": "database.exists",
           "args": {
-            "database": "stMultiCreate"
+            "database": "${ns}_stMultiCreate"
           },
           "expect": true
         },
@@ -104993,7 +104951,7 @@
                 {
                   "op": "database.set_database",
                   "args": {
-                    "name": "hellodb"
+                    "name": "${ns}_hellodb"
                   }
                 },
                 {
@@ -105233,7 +105191,7 @@
                 {
                   "op": "database.delete",
                   "args": {
-                    "database": "hellodb"
+                    "database": "${ns}_hellodb"
                   }
                 },
                 {
@@ -105492,7 +105450,7 @@
             {
               "event": "database_create",
               "listener": "test",
-              "data": "hellodb"
+              "data": "${ns}_hellodb"
             },
             {
               "event": "database_list",
@@ -106155,7 +106113,7 @@
               "event": "database_delete",
               "listener": "test",
               "data": {
-                "name": "hellodb",
+                "name": "${ns}_hellodb",
                 "deleted": true
               }
             },
@@ -106163,7 +106121,7 @@
               "event": "database_delete",
               "listener": "should-not-execute",
               "data": {
-                "name": "hellodb",
+                "name": "${ns}_hellodb",
                 "deleted": true
               }
             }
@@ -107226,7 +107184,7 @@
             },
             "cache": "none"
           },
-          "bind": "s4016",
+          "bind": "s4010",
           "expect": {
             "$handle": "*"
           }
@@ -107235,7 +107193,7 @@
           "op": "database.set_authorization",
           "args": {
             "db": {
-              "$ref": "s4016"
+              "$ref": "s4010"
             },
             "authorization": {
               "$ref": "db"
@@ -107258,7 +107216,7 @@
           "op": "database.create_collection",
           "args": {
             "db": {
-              "$ref": "s4016"
+              "$ref": "s4010"
             },
             "id": "concurrentCreate",
             "attributes": [
@@ -107307,7 +107265,7 @@
           "op": "database.create_document",
           "args": {
             "db": {
-              "$ref": "s4016"
+              "$ref": "s4010"
             },
             "collection": "concurrentCreate",
             "document": {
@@ -107364,7 +107322,7 @@
           "op": "database.get_document",
           "args": {
             "db": {
-              "$ref": "s4016"
+              "$ref": "s4010"
             },
             "collection": "concurrentCreate",
             "id": "written"
@@ -107387,7 +107345,7 @@
           "op": "database.get_collection",
           "args": {
             "db": {
-              "$ref": "s4016"
+              "$ref": "s4010"
             },
             "id": "concurrentCreate"
           },

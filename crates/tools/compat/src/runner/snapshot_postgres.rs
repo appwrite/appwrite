@@ -211,8 +211,18 @@ fn order_rows(a: &[Value], b: &[Value], id: Option<usize>) -> std::cmp::Ordering
     })
 }
 
+/// Drops schema `ns` and the schemas `${ns}_<name>` a case's other
+/// databases live in (the database recorder isolates them so).
 pub fn cleanup(url: &str, ns: &str) -> Result<(), String> {
-    let sql = format!("DROP SCHEMA IF EXISTS {} CASCADE", quote(ns));
+    let sql = format!(
+        "DROP SCHEMA IF EXISTS {} CASCADE; \
+         DO $cleanup$ DECLARE s text; BEGIN \
+         FOR s IN SELECT nspname FROM pg_namespace WHERE starts_with(nspname, {}) LOOP \
+         EXECUTE format('DROP SCHEMA IF EXISTS %I CASCADE', s); \
+         END LOOP; END $cleanup$",
+        quote(ns),
+        literal(&format!("{ns}_"))
+    );
     with_client(url, Box::new(move |client| Box::pin(async move { client.batch_execute(&sql).await.map_err(err) })))
 }
 

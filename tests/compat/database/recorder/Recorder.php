@@ -108,6 +108,32 @@ final class Recorder
 
     private const WRAPPERS = ['with', 'skip', 'silent'];
 
+    /** Methods whose first parameter names a database (schema). */
+    private const SCHEMA_NAMES = ['setDatabase', 'exists', 'create', 'delete'];
+
+    /**
+     * Prefixes the database (schema) names the tests use besides the
+     * suite's own (`sharedTables`, `schema1`, `hellodb`, `stMulti*`, ...)
+     * with the recorder's schema, so they record as `${ns}_<name>`: each
+     * runtime's run then works in schemas of its own, which the runner's
+     * cleanup of `${ns}` drops with it.
+     *
+     * @param list<mixed> $positional
+     * @return list<mixed>
+     */
+    private static function isolate(string $kind, string $method, array $positional): array
+    {
+        if (!\in_array($kind, ['database', 'adapter'], true) || !\in_array($method, self::SCHEMA_NAMES, true)) {
+            return $positional;
+        }
+        $name = $positional[0] ?? null;
+        if (\is_string($name) && $name !== '' && $name !== self::$schema && !str_starts_with($name, self::$schema . '_')) {
+            $positional[0] = self::$schema . '_' . $name;
+        }
+
+        return $positional;
+    }
+
     public static function log(): void
     {
         self::$logCount++;
@@ -123,6 +149,7 @@ final class Recorder
         if (!self::$on || self::$depth > 0) {
             return $parent(...$positional);
         }
+        $positional = self::isolate($kind, $method, $positional);
         self::formats();
         $reflection = new \ReflectionMethod(get_parent_class($target), $method);
         $params = $reflection->getParameters();
