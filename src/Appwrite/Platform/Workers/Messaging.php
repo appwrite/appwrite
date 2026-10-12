@@ -309,8 +309,9 @@ class Messaging extends Action
                     }
                     $recipients = \array_keys($userTopics);
                 } elseif ($perUser && $isWakeProvider && \count($mqttUsers) > 0) {
-                    // If the user already gets the message over Appwrite push, don't send their other
-                    // push providers a full notification — they get a wake-up signal after the loop.
+                    // a wakeup provider for the appwrite push
+                    // example -> both apns is registered + appwrite push is in the providers
+                    // then full notification will be skipped for the apns
                     $recipients = [];
                     foreach ($identifiers as $identifier => $userId) {
                         if (empty($userId) || !isset($mqttUsers[$userId])) {
@@ -318,7 +319,7 @@ class Messaging extends Action
                         }
                     }
                 } else {
-                    // Topic campaigns and every other provider send to the resolved identifiers.
+                    // full notifications when appwrite push not present or not listed in the wakeup signals providers
                     $recipients = \array_keys($identifiers);
                 }
 
