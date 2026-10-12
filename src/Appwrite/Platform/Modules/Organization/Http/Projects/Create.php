@@ -4,13 +4,13 @@ namespace Appwrite\Platform\Modules\Organization\Http\Projects;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Hooks\Hooks;
-use Appwrite\Video\Profiles;
 use Appwrite\SDK\AuthType;
 use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Validator\ProjectId;
 use Appwrite\Utopia\Response;
+use Appwrite\Video\Profiles;
 use Utopia\Audit\Adapter\Database as AdapterDatabase;
 use Utopia\Audit\Audit;
 use Utopia\Cache\Cache;

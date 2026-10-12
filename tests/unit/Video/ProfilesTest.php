@@ -80,11 +80,46 @@ final class ProfilesTest extends TestCase
             ->setNamespace($namespace);
         $database->create();
 
-        /** @var array $collection */
-        $collection = (require \dirname(__DIR__, 3) . '/app/config/collections/projects.php')['videos_profiles'];
-        $attributes = \array_map(fn ($attribute) => new Document($attribute), $collection['attributes']);
-        $indexes = \array_map(fn (array $index) => new Document($index), $collection['indexes']);
-        $database->createCollection('videos_profiles', $attributes, $indexes);
+        $string = fn (string $id, int $size): Document => new Document([
+            '$id' => $id,
+            'type' => Database::VAR_STRING,
+            'format' => '',
+            'size' => $size,
+            'signed' => true,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
+        $integer = fn (string $id): Document => new Document([
+            '$id' => $id,
+            'type' => Database::VAR_INTEGER,
+            'format' => '',
+            'size' => 8,
+            'signed' => false,
+            'required' => false,
+            'default' => null,
+            'array' => false,
+            'filters' => [],
+        ]);
+
+        $database->createCollection('videos_profiles', [
+            $string('name', 128),
+            $integer('videoBitRate'),
+            $integer('audioBitRate'),
+            $integer('width'),
+            $integer('height'),
+            $string('codec', 36),
+            $string('search', 128),
+        ], [
+            new Document([
+                '$id' => '_key_profile',
+                'type' => Database::INDEX_UNIQUE,
+                'attributes' => ['width', 'height', 'videoBitRate', 'audioBitRate', 'codec'],
+                'lengths' => [],
+                'orders' => [],
+            ]),
+        ]);
 
         return $database;
     }
