@@ -1120,7 +1120,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -1207,7 +1213,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -1294,7 +1306,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -1364,7 +1382,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -1415,7 +1439,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -1485,7 +1515,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -1536,7 +1572,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -1615,7 +1657,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -1732,7 +1780,13 @@
                 "$collection": "vectorQueries"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -2124,7 +2178,13 @@
                 "$collection": "vectorDistance"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -2223,7 +2283,13 @@
                 "$collection": "vectorDistance"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -2322,7 +2388,13 @@
                 "$collection": "vectorDistance"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -2457,7 +2529,13 @@
                 "$collection": "vectorDistance"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.create_document",
@@ -2612,7 +2690,13 @@
                 "$collection": "vectorDistance"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -3147,7 +3231,13 @@
                 "$collection": "vectorIndexes"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -10002,7 +10092,13 @@
                 "$collection": "vectorLarge"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -10581,7 +10677,13 @@
                 "$collection": "multiVector"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -10658,7 +10760,13 @@
                 "$collection": "multiVector"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -11272,7 +11380,13 @@
                 "$collection": "vectorPagination"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -11370,7 +11484,13 @@
                 "$collection": "vectorPagination"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -11497,7 +11617,13 @@
                 "$collection": "vectorPagination"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -11660,7 +11786,13 @@
                 "$collection": "vectorPagination"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -12104,7 +12236,13 @@
                 "$collection": "vectorTextSearch"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -12185,7 +12323,13 @@
                 "$collection": "vectorTextSearch"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -12286,7 +12430,13 @@
                 "$collection": "vectorTextSearch"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -12655,7 +12805,13 @@
                 "$collection": "vectorSpecialFloats"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -43097,7 +43253,13 @@
                 "$collection": "vectorPerf"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.create_index",
@@ -44706,7 +44868,13 @@
                 "$collection": "vectorPerf"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -45204,7 +45372,13 @@
                 "$collection": "vectorNorm"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -46826,7 +47000,13 @@
                 "$collection": "vectorParent"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.get_document",
@@ -46935,7 +47115,13 @@
                 "$collection": "vectorParent"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -47369,7 +47555,13 @@
                 "$collection": "vectorBooks"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.get_document",
@@ -47705,7 +47897,13 @@
                 "$collection": "vectorZeros"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -47764,7 +47962,13 @@
                 "$collection": "vectorZeros"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -48027,7 +48231,13 @@
                 "$collection": "vectorCosineZero"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -48853,7 +49063,13 @@
                 "$collection": "vectorPermissions"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "db.authorization.clean_roles",
@@ -48933,7 +49149,13 @@
                 "$collection": "vectorPermissions"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "db.authorization.clean_roles",
@@ -49352,7 +49574,13 @@
                 "$collection": "vectorPermScoring"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "db.authorization.clean_roles",
@@ -50000,7 +50228,13 @@
                 "$collection": "vectorCursorBefore"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -50125,7 +50359,13 @@
                 "$collection": "vectorCursorBefore"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -51424,7 +51664,13 @@
                 "$collection": "vectorBackward"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -51587,7 +51833,13 @@
                 "$collection": "vectorBackward"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -51731,7 +51983,13 @@
                 "$collection": "vectorBackward"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -52705,7 +52963,13 @@
                 "$collection": "vectorDeleteIdx"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -53049,7 +53313,13 @@
                 "$collection": "vectorMultiIdx"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -53095,7 +53365,13 @@
                 "$collection": "vectorMultiIdx"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -53549,7 +53825,13 @@
                 "$collection": "vectorNoIndex"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -53954,7 +54236,13 @@
                 "$collection": "vectorSingleDim"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -59420,7 +59708,13 @@
                 "$collection": "vectorLongResults"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -60026,7 +60320,13 @@
                 "$collection": "vectorMultiQuery"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -60148,7 +60448,13 @@
                 "$collection": "vectorMultiQuery"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -60270,7 +60576,13 @@
                 "$collection": "vectorMultiQuery"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -60666,7 +60978,13 @@
                 "$collection": "vectorLargeVals"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -125042,7 +125360,13 @@
                 "$collection": "vector16000"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -183775,7 +184099,13 @@
                 "$collection": "vectorLargeDataset"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -184101,7 +184431,13 @@
                 "$collection": "vectorFilterDisabled"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",
@@ -184542,7 +184878,13 @@
                 "$collection": "vectorFilterOverride"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.delete_collection",

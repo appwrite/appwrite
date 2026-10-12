@@ -8626,7 +8626,13 @@
                 "$collection": "u0000000000000000090"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",
@@ -8877,7 +8883,13 @@
                 "$collection": "u0000000000000000090"
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "database.find",

@@ -1866,7 +1866,13 @@
                 "$distance": 0.02985753301900307
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "adapter.driver_exec",

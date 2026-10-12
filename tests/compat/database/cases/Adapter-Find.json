@@ -12468,7 +12468,13 @@
                 "$distance": 1.0
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "adapter.find",
@@ -12567,7 +12573,13 @@
                 "$distance": 1.4142135623730951
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "adapter.find",
@@ -12651,7 +12663,13 @@
                 "$distance": -0.0
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "adapter.find",
@@ -12726,7 +12744,13 @@
                 "$distance": null
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "adapter.find",
@@ -12814,7 +12838,13 @@
                 "$distance": 0.006116251198662548
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "adapter.find",
@@ -12892,7 +12922,13 @@
                 "$distance": 0.33333333333333337
               }
             }
-          ]
+          ],
+          "mask": {
+            "paths": [
+              "/*/$document/$distance"
+            ],
+            "reason": "pgvector computes $distance, and its float arithmetic differs in the last digits between CPUs (SIMD); both runtimes read the same value, and the result order and documents are still compared"
+          }
         },
         {
           "op": "adapter.find",
