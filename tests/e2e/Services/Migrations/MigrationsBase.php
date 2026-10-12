@@ -3359,35 +3359,41 @@ trait MigrationsBase
             'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
         ];
 
-        // Pick three policies that span the field types: int, bool, and
-        // bundled membership-privacy.
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceKeyHeaders, [
-            'total' => 5,
-        ]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceKeyHeaders, [
-            'enabled' => true,
-        ]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceKeyHeaders, [
-            'userEmail' => false,
-            'userAccessedAt' => true,
-        ]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $sourceKeyHeaders, [
-            'min' => 12,
-            'uppercase' => true,
-            'number' => true,
-        ]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', $sourceKeyHeaders, [
-            'email' => false,
-            'custom' => true,
-        ]);
-        // Plan-gated on Cloud, where the source keeps it disabled; the destination must match the source.
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-free-email', $sourceKeyHeaders, [
-            'enabled' => true,
-        ]);
-        $sourceDenyFreeEmail = $this->client->call(Client::METHOD_GET, '/project/policies/deny-free-email', $sourceKeyHeaders);
-        $this->assertSame(200, $sourceDenyFreeEmail['headers']['status-code']);
-
+        // Setup runs inside the try, so the restore below runs whatever fails.
         try {
+            // Pick three policies that span the field types: int, bool, and
+            // bundled membership-privacy.
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceKeyHeaders, [
+                'total' => 5,
+            ]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceKeyHeaders, [
+                'enabled' => true,
+            ]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceKeyHeaders, [
+                'userEmail' => false,
+                'userAccessedAt' => true,
+            ]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $sourceKeyHeaders, [
+                'min' => 12,
+                'uppercase' => true,
+                'number' => true,
+            ]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', $sourceKeyHeaders, [
+                'email' => false,
+                'custom' => true,
+            ]);
+            // Plans without free email validation refuse this on Cloud, so the source keeps it disabled.
+            // Any other failure is a real one.
+            $denyFreeEmail = $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-free-email', $sourceKeyHeaders, [
+                'enabled' => true,
+            ]);
+            if ($denyFreeEmail['headers']['status-code'] !== 200) {
+                $this->assertSame('general_access_forbidden', $denyFreeEmail['body']['type'] ?? null, \json_encode($denyFreeEmail['body']));
+            }
+            $sourceDenyFreeEmail = $this->client->call(Client::METHOD_GET, '/project/policies/deny-free-email', $sourceKeyHeaders);
+            $this->assertSame(200, $sourceDenyFreeEmail['headers']['status-code']);
+            $this->assertSame($denyFreeEmail['headers']['status-code'] === 200, $sourceDenyFreeEmail['body']['enabled']);
+
             $this->assertPoliciesMigrated($sourceProjectId, $destinationKeyHeaders, $sourceDenyFreeEmail['body']['enabled']);
         } finally {
             // Restore both projects to defaults, so a failed assertion does not leave policies that break later tests.
