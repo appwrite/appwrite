@@ -1,0 +1,234 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "readers of a response handle",
+      "steps": [
+        {
+          "op": "stream.new",
+          "args": {
+            "content": "--b\r\nContent-Disposition: form-data; name=\"a\"\r\nX: 1\r\n\r\nv\r\n--b--"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "response.new",
+          "args": {
+            "status": 200,
+            "body": {
+              "$ref": "s"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "Content-Type",
+              "multipart/form-data; boundary=b"
+            ]
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "response.call",
+          "args": {
+            "message": {
+              "$ref": "m"
+            },
+            "method": "multipart",
+            "lookup": [
+              "x"
+            ]
+          },
+          "expect": [
+            {
+              "headers": {
+                "Content-Disposition": [
+                  "form-data; name=\"a\""
+                ],
+                "X": [
+                  "1"
+                ]
+              },
+              "body": "v",
+              "name": "a",
+              "filename": null,
+              "contentType": null,
+              "lookup": [
+                [
+                  [
+                    "1"
+                  ],
+                  "1"
+                ]
+              ]
+            }
+          ]
+        },
+        {
+          "op": "response.call",
+          "args": {
+            "message": {
+              "$ref": "m"
+            },
+            "method": "contentType"
+          },
+          "expect": "multipart/form-data"
+        },
+        {
+          "op": "response.call",
+          "args": {
+            "message": {
+              "$ref": "m"
+            },
+            "method": "text"
+          },
+          "expect": "--b\r\nContent-Disposition: form-data; name=\"a\"\r\nX: 1\r\n\r\nv\r\n--b--"
+        },
+        {
+          "op": "response.call",
+          "args": {
+            "message": {
+              "$ref": "m"
+            },
+            "method": "json"
+          },
+          "expect": {
+            "$error": {
+              "class": "JsonException",
+              "message": "Syntax error"
+            }
+          }
+        },
+        {
+          "op": "response.call",
+          "args": {
+            "message": {
+              "$ref": "m"
+            },
+            "method": "form"
+          },
+          "expect": {
+            "--b\r\nContent-Disposition:_form-data;_name": "\"a\"\r\nX: 1\r\n\r\nv\r\n--b--"
+          }
+        },
+        {
+          "op": "response.call",
+          "args": {
+            "message": {
+              "$ref": "m"
+            },
+            "method": "xml"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid XML response."
+            }
+          }
+        },
+        {
+          "op": "response.call",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "multipart"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Multipart response is missing a boundary."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "one-shot header and uri changes",
+      "steps": [
+        {
+          "op": "header.set",
+          "args": {
+            "name": "X-Test",
+            "value": [
+              "a",
+              1
+            ]
+          },
+          "expect": {
+            "X-Test": [
+              "a",
+              "1"
+            ]
+          }
+        },
+        {
+          "op": "header.set",
+          "args": {
+            "name": "bad name",
+            "value": "a"
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid header name."
+            }
+          }
+        },
+        {
+          "op": "uri.change",
+          "args": {
+            "uri": "http://example.com/",
+            "method": "withPath",
+            "args": [
+              "a b"
+            ]
+          },
+          "expect": {
+            "scheme": "http",
+            "authority": "example.com",
+            "userInfo": "",
+            "host": "example.com",
+            "port": null,
+            "path": "a%20b",
+            "query": "",
+            "fragment": "",
+            "string": "http://example.com/a%20b"
+          }
+        },
+        {
+          "op": "uri.change",
+          "args": {
+            "uri": "http://example.com/",
+            "method": "withPort",
+            "args": [
+              0
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid URI port."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

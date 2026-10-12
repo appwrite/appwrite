@@ -1,0 +1,158 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "headers and parameters",
+      "steps": [
+        {
+          "op": "received.new",
+          "args": {
+            "headers": {
+              "Content-Disposition": [
+                "form-data; name=\"a\"; filename=\"b.txt\""
+              ],
+              "Content-Type": [
+                "text/plain",
+                "charset=x"
+              ]
+            },
+            "body": "x",
+            "lookup": [
+              "content-type",
+              "missing"
+            ]
+          },
+          "expect": {
+            "headers": {
+              "Content-Disposition": [
+                "form-data; name=\"a\"; filename=\"b.txt\""
+              ],
+              "Content-Type": [
+                "text/plain",
+                "charset=x"
+              ]
+            },
+            "body": "x",
+            "name": "a",
+            "filename": "b.txt",
+            "contentType": "text/plain, charset=x",
+            "lookup": [
+              [
+                [
+                  "text/plain",
+                  "charset=x"
+                ],
+                "text/plain, charset=x"
+              ],
+              [
+                [],
+                ""
+              ]
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "no disposition",
+      "steps": [
+        {
+          "op": "received.new",
+          "args": {
+            "headers": [],
+            "body": "",
+            "lookup": []
+          },
+          "expect": {
+            "headers": [],
+            "body": "",
+            "name": null,
+            "filename": null,
+            "contentType": null,
+            "lookup": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty content type",
+      "steps": [
+        {
+          "op": "received.new",
+          "args": {
+            "headers": {
+              "Content-Type": [
+                ""
+              ]
+            },
+            "body": "",
+            "lookup": []
+          },
+          "expect": {
+            "headers": {
+              "Content-Type": [
+                ""
+              ]
+            },
+            "body": "",
+            "name": null,
+            "filename": null,
+            "contentType": null,
+            "lookup": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "case-insensitive lookup takes the first",
+      "steps": [
+        {
+          "op": "received.new",
+          "args": {
+            "headers": {
+              "x": [
+                "1"
+              ],
+              "X": [
+                "2"
+              ]
+            },
+            "body": "",
+            "lookup": [
+              "X",
+              "x"
+            ]
+          },
+          "expect": {
+            "headers": {
+              "x": [
+                "1"
+              ],
+              "X": [
+                "2"
+              ]
+            },
+            "body": "",
+            "name": null,
+            "filename": null,
+            "contentType": null,
+            "lookup": [
+              [
+                [
+                  "1"
+                ],
+                "1"
+              ],
+              [
+                [
+                  "1"
+                ],
+                "1"
+              ]
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,853 @@
+{
+  "source": "packages/psr7/tests/MessageTest.php",
+  "cases": [
+    {
+      "name": "headers are immutable, case-insensitive and keep their original case",
+      "steps": [
+        {
+          "op": "response.factory",
+          "args": {},
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "X-Test",
+              "one"
+            ]
+          },
+          "bind": "r1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r1"
+            },
+            "method": "withAddedHeader",
+            "args": [
+              "x-test",
+              "two"
+            ]
+          },
+          "bind": "r2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r2"
+            },
+            "method": "withHeader",
+            "args": [
+              "CONTENT-TYPE",
+              [
+                "text/plain",
+                "application/json"
+              ]
+            ]
+          },
+          "bind": "r3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r1"
+            },
+            "method": "hasHeader",
+            "args": [
+              "content-type"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r1"
+            },
+            "method": "getHeader",
+            "args": [
+              "x-test"
+            ]
+          },
+          "expect": [
+            "one"
+          ]
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r3"
+            },
+            "method": "getHeader",
+            "args": [
+              "X-TEST"
+            ]
+          },
+          "expect": [
+            "one",
+            "two"
+          ]
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r3"
+            },
+            "method": "getHeaderLine",
+            "args": [
+              "x-test"
+            ]
+          },
+          "expect": "one, two"
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r3"
+            },
+            "method": "getHeader",
+            "args": [
+              "content-type"
+            ]
+          },
+          "expect": [
+            "text/plain",
+            "application/json"
+          ]
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r3"
+            },
+            "method": "getHeaders"
+          },
+          "expect": {
+            "X-Test": [
+              "one",
+              "two"
+            ],
+            "CONTENT-TYPE": [
+              "text/plain",
+              "application/json"
+            ]
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r3"
+            },
+            "method": "withoutHeader",
+            "args": [
+              "x-TEST"
+            ]
+          },
+          "bind": "r4",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r4"
+            },
+            "method": "hasHeader",
+            "args": [
+              "X-Test"
+            ]
+          },
+          "expect": false
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r3"
+            },
+            "method": "hasHeader",
+            "args": [
+              "X-Test"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "r4"
+            },
+            "method": "getHeaders"
+          },
+          "expect": {
+            "CONTENT-TYPE": [
+              "text/plain",
+              "application/json"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "invalid headers are rejected",
+      "steps": [
+        {
+          "op": "response.factory",
+          "args": {},
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "Bad\nHeader",
+              "value"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid header name."
+            }
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "",
+              "value"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid header name."
+            }
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "Bad Header",
+              "value"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid header name."
+            }
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "Bad:Header",
+              "value"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid header name."
+            }
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withAddedHeader",
+            "args": [
+              "(bad)",
+              "value"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid header name."
+            }
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "\nX",
+              "value"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Invalid header name."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "request factory sets Host and withUri honors preserveHost",
+      "steps": [
+        {
+          "op": "request.factory",
+          "args": {
+            "method": "createRequest",
+            "args": [
+              "GET",
+              "https://example.com:8443/users?active=1"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "example.com:8443"
+              ]
+            },
+            "method": "GET",
+            "target": "/users?active=1",
+            "uri": "https://example.com:8443/users?active=1"
+          }
+        },
+        {
+          "op": "uri.factory",
+          "args": {
+            "uri": "https://api.example.com/orders"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withUri",
+            "args": [
+              {
+                "$ref": "u"
+              }
+            ]
+          },
+          "bind": "changed",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "changed"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "api.example.com"
+              ]
+            },
+            "method": "GET",
+            "target": "/orders",
+            "uri": "https://api.example.com/orders"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "r"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "example.com:8443"
+              ]
+            },
+            "method": "GET",
+            "target": "/users?active=1",
+            "uri": "https://example.com:8443/users?active=1"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "Host",
+              "custom.example.com"
+            ]
+          },
+          "bind": "h",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "h"
+            },
+            "method": "withUri",
+            "args": [
+              {
+                "$ref": "u"
+              },
+              true
+            ]
+          },
+          "bind": "preserved",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "preserved"
+            },
+            "method": "getHeaderLine",
+            "args": [
+              "Host"
+            ]
+          },
+          "expect": "custom.example.com"
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withoutHeader",
+            "args": [
+              "Host"
+            ]
+          },
+          "bind": "nohost",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "nohost"
+            },
+            "method": "withUri",
+            "args": [
+              {
+                "$ref": "u"
+              },
+              true
+            ]
+          },
+          "bind": "missing",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.get",
+          "args": {
+            "message": {
+              "$ref": "missing"
+            },
+            "method": "getHeaderLine",
+            "args": [
+              "Host"
+            ]
+          },
+          "expect": "api.example.com"
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "missing"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "api.example.com"
+              ]
+            },
+            "method": "GET",
+            "target": "/orders",
+            "uri": "https://api.example.com/orders"
+          }
+        }
+      ]
+    },
+    {
+      "name": "uri authority, default ports and string output",
+      "steps": [
+        {
+          "op": "uri.factory",
+          "args": {
+            "uri": "HTTPS://user:pass@example.com:443/a path?x=1#frag"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uri.dump",
+          "args": {
+            "uri": {
+              "$ref": "u"
+            }
+          },
+          "expect": {
+            "scheme": "https",
+            "authority": "user:pass@example.com",
+            "userInfo": "user:pass",
+            "host": "example.com",
+            "port": null,
+            "path": "/a%20path",
+            "query": "x=1",
+            "fragment": "frag",
+            "string": "https://user:pass@example.com/a%20path?x=1#frag"
+          }
+        },
+        {
+          "op": "uri.with",
+          "args": {
+            "uri": {
+              "$ref": "u"
+            },
+            "method": "withPort",
+            "args": [
+              8443
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "uri.dump",
+          "args": {
+            "uri": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "scheme": "https",
+            "authority": "user:pass@example.com:8443",
+            "userInfo": "user:pass",
+            "host": "example.com",
+            "port": 8443,
+            "path": "/a%20path",
+            "query": "x=1",
+            "fragment": "frag",
+            "string": "https://user:pass@example.com:8443/a%20path?x=1#frag"
+          }
+        }
+      ]
+    },
+    {
+      "name": "stream detach and close state",
+      "steps": [
+        {
+          "op": "stream.new",
+          "args": {
+            "content": "hello"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "detach"
+          },
+          "expect": {
+            "contents": "hello"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "isReadable"
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "isWritable"
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "isSeekable"
+          },
+          "expect": false
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getContents"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "eof"
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "toString"
+          },
+          "expect": ""
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "detach"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getSize"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "tell"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "getMetadata"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "read",
+            "args": [
+              1
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "write",
+            "args": [
+              "x"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "seek",
+            "args": [
+              0
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Stream is detached."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "s"
+            },
+            "method": "close"
+          },
+          "expect": null
+        }
+      ]
+    }
+  ]
+}

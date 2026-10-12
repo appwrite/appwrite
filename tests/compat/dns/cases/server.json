@@ -1,0 +1,3377 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "malformed packets (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "telemetry": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u0000\u0001"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u00124\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u00124\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u00124\u0011\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": {
+                  "$bytes": "EjSBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB"
+                }
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": {
+                  "$bytes": "EjQBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB/w=="
+                }
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u0000\u0007\u0001\u0000\u0000\u0001\u0000\u0001\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+              },
+              {
+                "kind": "errors"
+              },
+              {
+                "kind": "telemetry"
+              },
+              {
+                "kind": "workers"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            {
+              "$bytes": "EjSBAQAAAAAAAAAA"
+            },
+            {
+              "$bytes": "EjSBAQAAAAAAAAAA"
+            },
+            {
+              "$bytes": "EjSRBAAAAAAAAAAA"
+            },
+            {
+              "$bytes": "EjSFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAAQABA2RldghhcHB3cml0ZQJpbwAAAQABAAAACgAEtAwDGA=="
+            },
+            {
+              "$bytes": "EjSBAQAAAAAAAAAA"
+            },
+            {
+              "$bytes": "AAeBAQAAAAAAAAAA"
+            },
+            [
+              {
+                "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+                "message": "Invalid DNS response: header too short"
+              },
+              {
+                "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+                "message": "Question section truncated"
+              },
+              {
+                "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+                "message": "Invalid packet length"
+              },
+              {
+                "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+                "message": "Unexpected end of data while decoding domain name"
+              }
+            ],
+            [
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 0
+                }
+              ]
+            ],
+            [
+              0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resolver errors (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "throw"
+                },
+                "telemetry": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "a.test",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "a.test",
+                "type": 1,
+                "id": 2
+              },
+              {
+                "kind": "errors"
+              },
+              {
+                "kind": "telemetry"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 2,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 2,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            [
+              {
+                "class": "Exception",
+                "message": "Resolver failed for udp"
+              },
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              }
+            ],
+            [
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 2
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 2
+                }
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unencodable answers (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "invalid"
+                },
+                "telemetry": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "a.test",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "a.test",
+                "type": 1,
+                "id": 2
+              },
+              {
+                "kind": "errors"
+              },
+              {
+                "kind": "telemetry"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 2,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 2,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            [
+              {
+                "class": "InvalidArgumentException",
+                "message": "Invalid IPv4 address: not-an-ip"
+              },
+              {
+                "class": "InvalidArgumentException",
+                "message": "Invalid IPv4 address: not-an-ip"
+              }
+            ],
+            [
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 2
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 2
+                }
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "telemetry of answers (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "telemetry": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "dev.appwrite.io",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "missing.appwrite.io",
+                "type": 16,
+                "id": 2
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "other.org",
+                "type": 15,
+                "id": 3
+              },
+              {
+                "kind": "telemetry"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 10,
+                  "rdata": "180.12.3.24",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "missing.appwrite.io",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.appwrite.zone team.appwrite.io 1 7200 1800 1209600 3600",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 3,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "other.org",
+                  "type": 15,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.appwrite.zone team.appwrite.io 1 7200 1800 1209600 3600",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            },
+            [
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 16
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 3
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 3
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 16,
+                  "responseCode": 3
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 15
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 3
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 3
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 15,
+                  "responseCode": 3
+                }
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TCP framing (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000!\u0000\u000b\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001\u0000!\u0000\f\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0010\u0000\u0001",
+                "frames": 2
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "",
+                "chunks": [
+                  "\u0000",
+                  "!\u0000\r\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+                ],
+                "frames": 1
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000\u0003\u0000\u0001\u0002"
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000\f\u0000\u000e\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+                "frames": 1
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "AEAAC4UAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMYAE8ADIUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAAQAAEDZGV2CGFwcHdyaXRlAmlvAAAQAAEAAAAeABMSYXdlc29tZS1zZWNyZXQta2V5"
+              },
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "AEAADYUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMY"
+              },
+              "closed": false
+            },
+            {
+              "data": "",
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "AAwADoEBAAAAAAAAAAA="
+              },
+              "closed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "seeded shuffles (native)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "seed": 42
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "dev2.appwrite.io",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "dev2.appwrite.io",
+                "type": 1,
+                "id": 2
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "dev2.appwrite.io",
+                "type": 28,
+                "id": 3
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "dev2.appwrite.io",
+                "type": 1,
+                "id": 4
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 2,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.2",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 2,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.2",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 3,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 2,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 28,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 28,
+                  "class": 1,
+                  "ttl": 20,
+                  "rdata": "2001:db8::ff00:0:2",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 28,
+                  "class": 1,
+                  "ttl": 20,
+                  "rdata": "2001:db8::ff00:0:1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 4,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 2,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.2",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "malformed packets (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "telemetry": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u0000\u0001"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u00124\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u00124\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u00124\u0011\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": {
+                  "$bytes": "EjSBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB"
+                }
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": {
+                  "$bytes": "EjQBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB/w=="
+                }
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u0000\u0007\u0001\u0000\u0000\u0001\u0000\u0001\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+              },
+              {
+                "kind": "errors"
+              },
+              {
+                "kind": "telemetry"
+              },
+              {
+                "kind": "workers"
+              }
+            ]
+          },
+          "expect": [
+            null,
+            {
+              "$bytes": "EjSBAQAAAAAAAAAA"
+            },
+            {
+              "$bytes": "EjSBAQAAAAAAAAAA"
+            },
+            {
+              "$bytes": "EjSRBAAAAAAAAAAA"
+            },
+            {
+              "$bytes": "EjSFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAAQABA2RldghhcHB3cml0ZQJpbwAAAQABAAAACgAEtAwDGA=="
+            },
+            {
+              "$bytes": "EjSBAQAAAAAAAAAA"
+            },
+            {
+              "$bytes": "AAeBAQAAAAAAAAAA"
+            },
+            [
+              {
+                "class": "Utopia\\DNS\\Exception\\Message\\DecodingException",
+                "message": "Invalid DNS response: header too short"
+              },
+              {
+                "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+                "message": "Question section truncated"
+              },
+              {
+                "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+                "message": "Invalid packet length"
+              },
+              {
+                "class": "Utopia\\DNS\\Exception\\Message\\PartialDecodingException",
+                "message": "Unexpected end of data while decoding domain name"
+              }
+            ],
+            [
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 0
+                }
+              ]
+            ],
+            [
+              0
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "resolver errors (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "throw"
+                },
+                "telemetry": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "a.test",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "a.test",
+                "type": 1,
+                "id": 2
+              },
+              {
+                "kind": "errors"
+              },
+              {
+                "kind": "telemetry"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 2,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 2,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            [
+              {
+                "class": "Exception",
+                "message": "Resolver failed for udp"
+              },
+              {
+                "class": "Exception",
+                "message": "Resolver failed for tcp"
+              }
+            ],
+            [
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 2
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 2
+                }
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "unencodable answers (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "invalid"
+                },
+                "telemetry": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "a.test",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "a.test",
+                "type": 1,
+                "id": 2
+              },
+              {
+                "kind": "errors"
+              },
+              {
+                "kind": "telemetry"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 2,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 2,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "a.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [],
+              "additional": []
+            },
+            [
+              {
+                "class": "InvalidArgumentException",
+                "message": "Invalid IPv4 address: not-an-ip"
+              },
+              {
+                "class": "InvalidArgumentException",
+                "message": "Invalid IPv4 address: not-an-ip"
+              }
+            ],
+            [
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 2
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 2
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 2
+                }
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "telemetry of answers (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "telemetry": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "dev.appwrite.io",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "missing.appwrite.io",
+                "type": 16,
+                "id": 2
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "other.org",
+                "type": 15,
+                "id": 3
+              },
+              {
+                "kind": "telemetry"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 10,
+                  "rdata": "180.12.3.24",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "missing.appwrite.io",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.appwrite.zone team.appwrite.io 1 7200 1800 1209600 3600",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 3,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "other.org",
+                  "type": 15,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "appwrite.io",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 30,
+                  "rdata": "ns1.appwrite.zone team.appwrite.io 1 7200 1800 1209600 3600",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            },
+            [
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 1
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 0
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 1,
+                  "responseCode": 0
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 16
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 3
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 3
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 16,
+                  "responseCode": 3
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "decode"
+                }
+              ],
+              [
+                "counter",
+                "dns.queries.total",
+                1,
+                {
+                  "type": 15
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "resolve",
+                  "responseCode": 3
+                }
+              ],
+              [
+                "histogram",
+                "dns.query.duration",
+                "s",
+                [
+                  0.001,
+                  0.005,
+                  0.01,
+                  0.025,
+                  0.05,
+                  0.1,
+                  0.25,
+                  0.5,
+                  1.0
+                ],
+                {
+                  "phase": "encode",
+                  "responseCode": 3
+                }
+              ],
+              [
+                "counter",
+                "dns.responses.total",
+                1,
+                {
+                  "type": 15,
+                  "responseCode": 3
+                }
+              ]
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "TCP framing (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000!\u0000\u000b\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001\u0000!\u0000\f\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0010\u0000\u0001",
+                "frames": 2
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "",
+                "chunks": [
+                  "\u0000",
+                  "!\u0000\r\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+                ],
+                "frames": 1
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000\u0003\u0000\u0001\u0002"
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000\f\u0000\u000e\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+                "frames": 1
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "AEAAC4UAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMYAE8ADIUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAAQAAEDZGV2CGFwcHdyaXRlAmlvAAAQAAEAAAAeABMSYXdlc29tZS1zZWNyZXQta2V5"
+              },
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "AEAADYUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMY"
+              },
+              "closed": false
+            },
+            {
+              "data": "",
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "AAwADoEBAAAAAAAAAAA="
+              },
+              "closed": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "seeded shuffles (swoole)",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "seed": 42
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "dev2.appwrite.io",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "dev2.appwrite.io",
+                "type": 1,
+                "id": 2
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "dev2.appwrite.io",
+                "type": 28,
+                "id": 3
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "dev2.appwrite.io",
+                "type": 1,
+                "id": 4
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 2,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.2",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 2,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.2",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 3,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 2,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 28,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 28,
+                  "class": 1,
+                  "ttl": 20,
+                  "rdata": "2001:db8::ff00:0:2",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 28,
+                  "class": 1,
+                  "ttl": 20,
+                  "rdata": "2001:db8::ff00:0:1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 4,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 2,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.2",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "dev2.appwrite.io",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 1800,
+                  "rdata": "142.6.0.1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "native TCP limits",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "tcp": {
+                  "maxFrameSize": 40,
+                  "maxBufferSize": 100,
+                  "idleTimeout": 1
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000!\u0000\u0015\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "frames": 1
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000!\u0000\u0016\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0005large\tlocalhost\u0000\u0000\u0010\u0000\u0001",
+                "frames": 1
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000\u0000"
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+              },
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000\u0010",
+                "wait": 2.5
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": {
+                "$bytes": "AEAAFYUAAAEAAQAAAAADZGV2CGFwcHdyaXRlAmlvAAABAAEDZGV2CGFwcHdyaXRlAmlvAAABAAEAAAAKAAS0DAMY"
+              },
+              "closed": false
+            },
+            {
+              "data": {
+                "$bytes": "BE0AFoUAAAEACAAAAAAFbGFyZ2UJbG9jYWxob3N0AAAQAAEFbGFyZ2UJbG9jYWxob3N0AAAQAAEAAAEsAFpZTmVxdWUgcG9ycm8gcXVpc3F1YW0gZXN0IHF1aSBkb2xvcmVtIGlwc3VtIHF1aWEgZG9sb3Igc2l0IGFtZXQgY29uc2VjdGV0dXIgYWRpcGlzY2kgdmVsaXQFbGFyZ2UJbG9jYWxob3N0AAAQAAEAAAEsAGZlRHVpcyBhdXRlIGlydXJlIGRvbG9yIGluIHJlcHJlaGVuZGVyaXQgaW4gdm9sdXB0YXRlIHZlbGl0IGVzc2UgY2lsbHVtIGRvbG9yZSBldSBmdWdpYXQgbnVsbGEgcGFyaWF0dXIFbGFyZ2UJbG9jYWxob3N0AAAQAAEAAAEsAGppVXQgZW5pbSBhZCBtaW5pbSB2ZW5pYW0gcXVpcyBub3N0cnVkIGV4ZXJjaXRhdGlvbiB1bGxhbWNvIGxhYm9yaXMgbmlzaSB1dCBhbGlxdWlwIGV4IGVhIGNvbW1vZG8gY29uc2VxdWF0BWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABzclNlZCB1dCBwZXJzcGljaWF0aXMgdW5kZSBvbW5pcyBpc3RlIG5hdHVzIGVycm9yIHNpdCB2b2x1cHRhdGVtIGFjY3VzYW50aXVtIGRvbG9yZW1xdWUgbGF1ZGFudGl1bSB0b3RhbSByZW0gYXBlcmlhbQVsYXJnZQlsb2NhbGhvc3QAABAAAQAAASwAb25OZW1vIGVuaW0gaXBzYW0gdm9sdXB0YXRlbSBxdWlhIHZvbHVwdGFzIHNpdCBhc3Blcm5hdHVyIGF1dCBvZGl0IGF1dCBmdWdpdCBzZWQgcXVpYSBjb25zZXF1dW50dXIgbWFnbmkgZG9sb3JlcwVsYXJnZQlsb2NhbGhvc3QAABAAAQAAASwAeXhMb3JlbSBpcHN1bSBkb2xvciBzaXQgYW1ldCBjb25zZWN0ZXR1ciBhZGlwaXNjaW5nIGVsaXQgc2VkIGRvIGVpdXNtb2QgdGVtcG9yIGluY2lkaWR1bnQgdXQgbGFib3JlIGV0IGRvbG9yZSBtYWduYSBhbGlxdWEFbGFyZ2UJbG9jYWxob3N0AAAQAAEAAAEsAG1sRXhjZXB0ZXVyIHNpbnQgb2NjYWVjYXQgY3VwaWRhdGF0IG5vbiBwcm9pZGVudCBzdW50IGluIGN1bHBhIHF1aSBvZmZpY2lhIGRlc2VydW50IG1vbGxpdCBhbmltIGlkIGVzdCBsYWJvcnVtBWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABiYUVhcXVlIGlwc2EgcXVhZSBhYiBpbGxvIGludmVudG9yZSB2ZXJpdGF0aXMgZXQgcXVhc2kgYXJjaGl0ZWN0byBiZWF0YWUgdml0YWUgZGljdGEgc3VudCBleHBsaWNhYm8="
+              },
+              "closed": false
+            },
+            {
+              "data": "",
+              "closed": true
+            },
+            {
+              "data": "",
+              "closed": true
+            },
+            {
+              "data": "",
+              "closed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "native TCP client limit",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "tcp": {
+                  "maxClients": 0
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "raw",
+                "transport": "tcp",
+                "data": "\u0000!\u0000\u0017\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "data": "",
+              "closed": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "UDP truncation keeps questions",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "large.localhost",
+                "type": 16,
+                "id": 24
+              },
+              {
+                "kind": "raw",
+                "transport": "udp",
+                "data": "\u0000\u0019\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0005large\tlocalhost\u0000\u0000\u0010\u0000\u0001"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 24,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": true,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 3,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "large.localhost",
+                  "type": 16,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "large.localhost",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 300,
+                  "rdata": "Neque porro quisquam est qui dolorem ipsum quia dolor sit amet consectetur adipisci velit",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "large.localhost",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 300,
+                  "rdata": "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                },
+                {
+                  "name": "large.localhost",
+                  "type": 16,
+                  "class": 1,
+                  "ttl": 300,
+                  "rdata": "Ut enim ad minim veniam quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "$bytes": "ABmHAAABAAMAAAAABWxhcmdlCWxvY2FsaG9zdAAAEAABBWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABaWU5lcXVlIHBvcnJvIHF1aXNxdWFtIGVzdCBxdWkgZG9sb3JlbSBpcHN1bSBxdWlhIGRvbG9yIHNpdCBhbWV0IGNvbnNlY3RldHVyIGFkaXBpc2NpIHZlbGl0BWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABmZUR1aXMgYXV0ZSBpcnVyZSBkb2xvciBpbiByZXByZWhlbmRlcml0IGluIHZvbHVwdGF0ZSB2ZWxpdCBlc3NlIGNpbGx1bSBkb2xvcmUgZXUgZnVnaWF0IG51bGxhIHBhcmlhdHVyBWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABzclNlZCB1dCBwZXJzcGljaWF0aXMgdW5kZSBvbW5pcyBpc3RlIG5hdHVzIGVycm9yIHNpdCB2b2x1cHRhdGVtIGFjY3VzYW50aXVtIGRvbG9yZW1xdWUgbGF1ZGFudGl1bSB0b3RhbSByZW0gYXBlcmlhbQ=="
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "zone resolver server",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "zone",
+                  "zone": {
+                    "name": "zone.test",
+                    "soa": {
+                      "name": "zone.test",
+                      "type": 6,
+                      "ttl": 60,
+                      "rdata": "ns.zone.test hm.zone.test 1 2 3 4 5"
+                    },
+                    "records": [
+                      {
+                        "name": "zone.test",
+                        "type": 1,
+                        "ttl": 5,
+                        "rdata": "192.0.2.1"
+                      },
+                      {
+                        "name": "*.zone.test",
+                        "type": 5,
+                        "ttl": 5,
+                        "rdata": "zone.test"
+                      }
+                    ]
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "zone.test",
+                "type": 1,
+                "id": 1
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "x.zone.test",
+                "type": 1,
+                "id": 2
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "tcp",
+                "name": "ZONE.TEST",
+                "type": 6,
+                "id": 3
+              },
+              {
+                "kind": "query",
+                "server": 0,
+                "transport": "udp",
+                "name": "other.test",
+                "type": 1,
+                "id": 4
+              }
+            ]
+          },
+          "expect": [
+            {
+              "header": {
+                "id": 1,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "zone.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "zone.test",
+                  "type": 1,
+                  "class": 1,
+                  "ttl": 5,
+                  "rdata": "192.0.2.1",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 2,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "x.zone.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "x.zone.test",
+                  "type": 5,
+                  "class": 1,
+                  "ttl": 5,
+                  "rdata": "zone.test",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 3,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 1,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "zone.test",
+                  "type": 6,
+                  "class": 1
+                }
+              ],
+              "answers": [
+                {
+                  "name": "zone.test",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 60,
+                  "rdata": "ns.zone.test hm.zone.test 1 2 3 4 5",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "authority": [],
+              "additional": []
+            },
+            {
+              "header": {
+                "id": 4,
+                "isResponse": true,
+                "opcode": 0,
+                "authoritative": true,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 3,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 1,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "other.test",
+                  "type": 1,
+                  "class": 1
+                }
+              ],
+              "answers": [],
+              "authority": [
+                {
+                  "name": "zone.test",
+                  "type": 6,
+                  "class": 1,
+                  "ttl": 60,
+                  "rdata": "ns.zone.test hm.zone.test 1 2 3 4 5",
+                  "priority": null,
+                  "weight": null,
+                  "port": null
+                }
+              ],
+              "additional": []
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

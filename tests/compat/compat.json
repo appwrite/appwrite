@@ -136,6 +136,17 @@
       "rust": "nats://localhost:14422",
       "runner": "nats://localhost:14422"
     },
+    "dns-php-server": {
+      "php": "compat-dns-php:5300",
+      "rust": "127.0.0.1:17760",
+      "rust-container": "compat-dns-php:5300",
+      "runner": "127.0.0.1:17760"
+    },
+    "dns-rust-server": {
+      "php": "host.docker.internal:17770",
+      "rust": "0.0.0.0:17770",
+      "runner": "0.0.0.0:17770"
+    },
     "smtp": {
       "php": "compat-smtp-mailpit:1025",
       "rust": "127.0.0.1:16620",

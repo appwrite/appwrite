@@ -1,0 +1,2179 @@
+{
+  "source": "packages/dns/tests/Zone/ResolverTest.php",
+  "cases": [
+    {
+      "name": "lookup returns FORMERR when query has no question",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 42,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 0,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              }
+            }
+          },
+          "expect": {
+            "header": {
+              "id": 42,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 1,
+              "questionCount": 0,
+              "answerCount": 0,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [],
+            "answers": [],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns exact type match",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "1.2.3.4"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "1.2.3.4",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns CNAME when exact type missing",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "alias.example.com",
+                  "type": 5,
+                  "ttl": 1800,
+                  "rdata": "target.example.com"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "alias.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "alias.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "alias.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 1800,
+                "rdata": "target.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup exact match NODATA returns SOA",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 16,
+                  "ttl": 600,
+                  "rdata": "\"hello\""
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns NXDOMAIN with SOA when name missing",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "1.2.3.4"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "missing.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 3,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "missing.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup synthesizes wildcard answer",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "*.example.com",
+                  "type": 1,
+                  "ttl": 60,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "host.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "host.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "host.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 60,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup synthesizes wildcard CNAME",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "*.example.com",
+                  "type": 5,
+                  "ttl": 600,
+                  "rdata": "target.example.com"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "beta.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "beta.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "beta.example.com",
+                "type": 5,
+                "class": 1,
+                "ttl": 600,
+                "rdata": "target.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns multiple exact type records",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "203.0.113.10"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 180,
+                  "rdata": "203.0.113.20"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 2,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "203.0.113.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 180,
+                "rdata": "203.0.113.20",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "203.0.113.10"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 180,
+                  "rdata": "203.0.113.20"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 2
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 2,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 180,
+                "rdata": "203.0.113.20",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "203.0.113.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "203.0.113.10"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 180,
+                  "rdata": "203.0.113.20"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 3
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 2,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 180,
+                "rdata": "203.0.113.20",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "203.0.113.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "203.0.113.10"
+                },
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 180,
+                  "rdata": "203.0.113.20"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 4
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 2,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 180,
+                "rdata": "203.0.113.20",
+                "priority": null,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "203.0.113.10",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup synthesizes wildcard MX preserving priority",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "*.example.com",
+                  "type": 15,
+                  "ttl": 3600,
+                  "rdata": "mail1.example.com",
+                  "priority": 10
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 15,
+                  "ttl": 3600,
+                  "rdata": "mail2.example.com",
+                  "priority": 20
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "api.example.com",
+                  "type": 15
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 2,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "api.example.com",
+                "type": 15,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "api.example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mail1.example.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "api.example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mail2.example.com",
+                "priority": 20,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        },
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "*.example.com",
+                  "type": 15,
+                  "ttl": 3600,
+                  "rdata": "mail1.example.com",
+                  "priority": 10
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 15,
+                  "ttl": 3600,
+                  "rdata": "mail2.example.com",
+                  "priority": 20
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "api.example.com",
+                  "type": 15
+                }
+              ]
+            },
+            "seed": 7
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 2,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "api.example.com",
+                "type": 15,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "api.example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mail1.example.com",
+                "priority": 10,
+                "weight": null,
+                "port": null
+              },
+              {
+                "name": "api.example.com",
+                "type": 15,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "mail2.example.com",
+                "priority": 20,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns referral for delegated subdomain",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "delegated.example.com",
+                  "type": 2,
+                  "ttl": 86400,
+                  "rdata": "ns1.delegated.example.com"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "delegated.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": false,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "delegated.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "delegated.example.com",
+                "type": 2,
+                "class": 1,
+                "ttl": 86400,
+                "rdata": "ns1.delegated.example.com",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup wildcard NODATA returns SOA",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "*.example.com",
+                  "type": 16,
+                  "ttl": 120,
+                  "rdata": "\"v=spf1 ~all\""
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "svc.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "svc.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup prefers exact match over wildcard",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "www.example.com",
+                  "type": 1,
+                  "ttl": 300,
+                  "rdata": "2.2.2.2"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 1,
+                  "ttl": 60,
+                  "rdata": "3.3.3.3"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "www.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "www.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "2.2.2.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup uses closest enclosing wildcard",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "*.example.com",
+                  "type": 1,
+                  "ttl": 60,
+                  "rdata": "1.1.1.1"
+                },
+                {
+                  "name": "*.sub.example.com",
+                  "type": 1,
+                  "ttl": 60,
+                  "rdata": "2.2.2.2"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "host.sub.example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "host.sub.example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "host.sub.example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 60,
+                "rdata": "2.2.2.2",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup resolves wildcard CNAME query",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "test-dns.appwrite.org",
+              "records": [
+                {
+                  "name": "test-dns.appwrite.org",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns1.example.org"
+                },
+                {
+                  "name": "*.wildcard.test-dns.appwrite.org",
+                  "type": 5,
+                  "ttl": 3600,
+                  "rdata": "stage.appwrite.network"
+                }
+              ],
+              "soa": {
+                "name": "test-dns.appwrite.org",
+                "type": 6,
+                "ttl": 300,
+                "rdata": "ns1-stage.appwrite.zone team.appwrite.io 1 3600 600 86400 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "baz.wildcard.test-dns.appwrite.org",
+                  "type": 5
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "baz.wildcard.test-dns.appwrite.org",
+                "type": 5,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "baz.wildcard.test-dns.appwrite.org",
+                "type": 5,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "stage.appwrite.network",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "is authoritative detects delegation",
+      "steps": [
+        {
+          "op": "zone.is_authoritative",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "delegated.example.com",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns1.delegated.example.com"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "name": "example.com"
+          },
+          "expect": true
+        },
+        {
+          "op": "zone.is_authoritative",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "delegated.example.com",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns1.delegated.example.com"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "name": "delegated.example.com"
+          },
+          "expect": false
+        },
+        {
+          "op": "zone.is_authoritative",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "delegated.example.com",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns1.delegated.example.com"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 3600,
+                "rdata": "ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300"
+              }
+            },
+            "name": "www.example.com"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "lookup returns apex A record",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns1-stage.appwrite.zone"
+                },
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns2-stage.appwrite.zone"
+                },
+                {
+                  "name": "example.com",
+                  "type": 1,
+                  "ttl": 3600,
+                  "rdata": "1.1.1.1"
+                },
+                {
+                  "name": "example.com",
+                  "type": 28,
+                  "ttl": 3600,
+                  "rdata": "2606:4700::1111"
+                },
+                {
+                  "name": "*.example.com",
+                  "type": 5,
+                  "ttl": 3600,
+                  "rdata": "stage.appwrite.network"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 300,
+                "rdata": "ns1.appwrite.zone. team@appwrite.io. 1761705275 3600 600 86400 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "1.1.1.1",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns apex AAAA record",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 1,
+                  "ttl": 3600,
+                  "rdata": "1.1.1.1"
+                },
+                {
+                  "name": "example.com",
+                  "type": 28,
+                  "ttl": 3600,
+                  "rdata": "2606:4700::1111"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 300,
+                "rdata": "ns1.appwrite.zone. team@appwrite.io. 1761705275 3600 600 86400 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 28
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 28,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "example.com",
+                "type": 28,
+                "class": 1,
+                "ttl": 3600,
+                "rdata": "2606:4700::1111",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns SOA answer for apex SOA query with records",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 1,
+                  "ttl": 3600,
+                  "rdata": "1.1.1.1"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 300,
+                "rdata": "ns1.appwrite.zone. team@appwrite.io. 1761705275 3600 600 86400 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 6
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "ns1.appwrite.zone. team@appwrite.io. 1761705275 3600 600 86400 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns SOA answer for apex SOA query with no records",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 300,
+                "rdata": "ns1.appwrite.zone. team@appwrite.io. 1761705275 3600 600 86400 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 6
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 1,
+              "authorityCount": 0,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1
+              }
+            ],
+            "answers": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "ns1.appwrite.zone. team@appwrite.io. 1761705275 3600 600 86400 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "authority": [],
+            "additional": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup returns SOA in authority for apex non NS query",
+      "steps": [
+        {
+          "op": "zone.lookup",
+          "args": {
+            "zone": {
+              "name": "example.com",
+              "records": [
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns1-stage.appwrite.zone"
+                },
+                {
+                  "name": "example.com",
+                  "type": 2,
+                  "ttl": 3600,
+                  "rdata": "ns2-stage.appwrite.zone"
+                }
+              ],
+              "soa": {
+                "name": "example.com",
+                "type": 6,
+                "ttl": 300,
+                "rdata": "ns1.appwrite.zone. team@appwrite.io. 1761705275 3600 600 86400 300"
+              }
+            },
+            "query": {
+              "header": {
+                "id": 16962,
+                "isResponse": false,
+                "opcode": 0,
+                "authoritative": false,
+                "truncated": false,
+                "recursionDesired": true,
+                "recursionAvailable": false,
+                "responseCode": 0,
+                "questionCount": 1,
+                "answerCount": 0,
+                "authorityCount": 0,
+                "additionalCount": 0
+              },
+              "questions": [
+                {
+                  "name": "example.com",
+                  "type": 1
+                }
+              ]
+            },
+            "seed": 1
+          },
+          "expect": {
+            "header": {
+              "id": 16962,
+              "isResponse": true,
+              "opcode": 0,
+              "authoritative": true,
+              "truncated": false,
+              "recursionDesired": true,
+              "recursionAvailable": false,
+              "responseCode": 0,
+              "questionCount": 1,
+              "answerCount": 0,
+              "authorityCount": 1,
+              "additionalCount": 0
+            },
+            "questions": [
+              {
+                "name": "example.com",
+                "type": 1,
+                "class": 1
+              }
+            ],
+            "answers": [],
+            "authority": [
+              {
+                "name": "example.com",
+                "type": 6,
+                "class": 1,
+                "ttl": 300,
+                "rdata": "ns1.appwrite.zone. team@appwrite.io. 1761705275 3600 600 86400 300",
+                "priority": null,
+                "weight": null,
+                "port": null
+              }
+            ],
+            "additional": []
+          }
+        }
+      ]
+    }
+  ]
+}

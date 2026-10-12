@@ -1,0 +1,169 @@
+{
+  "lib": "psr7",
+  "environment": {
+    "date": "2026-10-12T08:18:50Z",
+    "commit": "e4e095988a",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "uri_parse",
+      "description": "Parse a URI with credentials, a port, a path, a query and a fragment",
+      "php": {
+        "ns": 2086.508751062022,
+        "min": 1643.1853865760409,
+        "max": 9209.154630416313,
+        "samples": 15,
+        "calls": 11770
+      },
+      "rust": {
+        "ns": 831.8231005372218,
+        "min": 750.065408497872,
+        "max": 1287.6607479243703,
+        "samples": 15,
+        "calls": 28666,
+        "allocations": 15.00000232563548,
+        "bytes": 265.0002790762576
+      },
+      "speedup": 2.50835634369192,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "create_request",
+      "description": "Create a request from a method and URI string (Host set from the URI)",
+      "php": {
+        "ns": 2931.491076568797,
+        "min": 2500.1439263097295,
+        "max": 4273.747841105354,
+        "samples": 15,
+        "calls": 1737
+      },
+      "rust": {
+        "ns": 966.3761574074074,
+        "min": 667.636574074074,
+        "max": 3326.5924639917694,
+        "samples": 15,
+        "calls": 7776,
+        "allocations": 23.000008573388204,
+        "bytes": 714.0010288065844
+      },
+      "speedup": 3.0334886204492015,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "headers",
+      "description": "Set three headers on a response and read one back case-insensitively",
+      "php": {
+        "ns": 2739.249873031996,
+        "min": 2342.369222955815,
+        "max": 5309.484509903505,
+        "samples": 15,
+        "calls": 1969
+      },
+      "rust": {
+        "ns": 1856.6776943252264,
+        "min": 1006.3334525512637,
+        "max": 4125.715307582261,
+        "samples": 15,
+        "calls": 16776,
+        "allocations": 24.000003973931012,
+        "bytes": 836.0004768717215
+      },
+      "speedup": 1.4753502352100607,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "json_request",
+      "description": "Build a JSON request with an Authorization header",
+      "php": {
+        "ns": 4616.9807692307695,
+        "min": 4575.307692307692,
+        "max": 44067.307692307695,
+        "samples": 15,
+        "calls": 52
+      },
+      "rust": {
+        "ns": 2374.4926234765876,
+        "min": 2053.7472738935217,
+        "max": 13248.663245670301,
+        "samples": 15,
+        "calls": 1559,
+        "allocations": 50.00004276245456,
+        "bytes": 3503.0051314945476
+      },
+      "speedup": 1.9444072908808903,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "json_response",
+      "description": "Decode a JSON response body",
+      "php": {
+        "ns": 4109.796932382804,
+        "min": 2811.9284942752215,
+        "max": 11371.543529920069,
+        "samples": 15,
+        "calls": 4629
+      },
+      "rust": {
+        "ns": 1355.0251499322887,
+        "min": 1124.1536080479784,
+        "max": 3120.671309731089,
+        "samples": 15,
+        "calls": 5169,
+        "allocations": 18.000012897401174,
+        "bytes": 19093.00154768814
+      },
+      "speedup": 3.0330041716112595,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "multipart_response",
+      "description": "Split a two-part multipart response and read each part's name",
+      "php": {
+        "ns": 8190.486559139785,
+        "min": 6660.301075268817,
+        "max": 19519.13440860215,
+        "samples": 15,
+        "calls": 2232
+      },
+      "rust": {
+        "ns": 2521.1595824011933,
+        "min": 2221.3523489932886,
+        "max": 4921.358314690529,
+        "samples": 15,
+        "calls": 2682,
+        "allocations": 40.000024857071836,
+        "bytes": 18673.002982848622
+      },
+      "speedup": 3.248698184880083,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

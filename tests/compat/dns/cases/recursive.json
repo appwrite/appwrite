@@ -1,0 +1,227 @@
+{
+  "source": [],
+  "cases": [
+    {
+      "name": "server list forms",
+      "steps": [
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "127.0.0.1:53"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "[::1]"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "::1"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "1.2.3.4:0"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "1.2.3.4:00053"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "1.2.3.4:99999999999999999999"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '1.2.3.4:99999999999999999999'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "[1.2.3.4]:5"
+            ]
+          },
+          "expect": null
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "[::1]:"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '[::1]:'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "1.2.3.4: 5"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: '1.2.3.4: 5'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              "fe80::1%lo0"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: 'fe80::1%lo0'."
+            }
+          }
+        },
+        {
+          "op": "lookup.new",
+          "args": {
+            "servers": [
+              " 1.2.3.4"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "DNS server must be an IP address with an optional port: ' 1.2.3.4'."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "answers of both families, deduplicated",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "1": {
+                      "rcode": 0,
+                      "answer": "10.0.0.1"
+                    },
+                    "28": {
+                      "rcode": 3
+                    }
+                  }
+                }
+              },
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "rules",
+                  "rules": {
+                    "1": {
+                      "rcode": 0,
+                      "answer": "93.184.215.14"
+                    },
+                    "28": {
+                      "rcode": 0,
+                      "answer": "2606:2800:21f:cb07:6820:80da:af6b:8b2c"
+                    }
+                  }
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "recursive",
+                "servers": [
+                  0
+                ],
+                "hostname": "x.test"
+              },
+              {
+                "kind": "recursive",
+                "servers": [
+                  1,
+                  0
+                ],
+                "hostname": "x.test"
+              },
+              {
+                "kind": "recursive",
+                "servers": [
+                  "unreachable"
+                ],
+                "hostname": "x.test"
+              },
+              {
+                "kind": "recursive",
+                "servers": [
+                  0
+                ],
+                "hostname": "bad..name"
+              }
+            ]
+          },
+          "expect": [
+            [
+              "10.0.0.1"
+            ],
+            [
+              "93.184.215.14",
+              "2606:2800:21f:cb07:6820:80da:af6b:8b2c"
+            ],
+            [],
+            []
+          ]
+        }
+      ]
+    }
+  ]
+}

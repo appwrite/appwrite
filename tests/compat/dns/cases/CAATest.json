@@ -1,0 +1,206 @@
+{
+  "source": "packages/dns/tests/Validator/CAATest.php",
+  "cases": [
+    {
+      "name": "valid",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "caa",
+            "values": [
+              "0 issue \"letsencrypt.org\"",
+              "128 issuewild \"certainly.com;account=123456;validationmethods=dns-01\"",
+              "0 issuewild \"certainly.com\"",
+              "0 iodef \"mailto:security@example.com\"",
+              "0 issue \";\"",
+              "0 issue \"certainly.com; validationmethods=dns-01\""
+            ]
+          },
+          "expect": [
+            {
+              "valid": true,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": true,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": true,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": true,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": true,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": true,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invalid",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "caa",
+            "values": [
+              "issue \"letsencrypt.org\"",
+              "0 \"\"",
+              "256 issue \"letsencrypt.org\"",
+              "0 issue letsencrypt.org",
+              "0 issue \"\""
+            ]
+          },
+          "expect": [
+            {
+              "valid": false,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": false,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": false,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": false,
+              "description": "Value must be a non-empty string and must be enclosed in quotes"
+            },
+            {
+              "valid": false,
+              "description": "Value must be a non-empty string and must be enclosed in quotes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "edge cases",
+      "steps": [
+        {
+          "op": "validator.check",
+          "args": {
+            "validator": "caa",
+            "values": [
+              "0 issue \"x\"",
+              "-1 issue \"x\"",
+              "1.9 issue \"x\"",
+              "1e2 issue \"x\"",
+              " 5 issue \"x\"",
+              "5  \"x\"",
+              "0x1 issue \"x\"",
+              "0 issue \"\"x\"\"",
+              "0 issue \"",
+              "0 issue x\"",
+              null,
+              5,
+              "0  issue \"x\"",
+              "255 a \"b c\"",
+              "0 issue \"x\" extra",
+              "abc issue \"x\"",
+              "9999999999999999999999 issue \"x\"",
+              "0 issue \"\n\""
+            ]
+          },
+          "expect": [
+            {
+              "valid": true,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": false,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": true,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": true,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": false,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": false,
+              "description": "Tag must be a non-empty string"
+            },
+            {
+              "valid": false,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": true,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": false,
+              "description": "Value must be a non-empty string and must be enclosed in quotes"
+            },
+            {
+              "valid": false,
+              "description": "Value must be a non-empty string and must be enclosed in quotes"
+            },
+            {
+              "valid": false,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": false,
+              "description": "CAA record must be in the format <flags> <tag> \"<value>\""
+            },
+            {
+              "valid": false,
+              "description": "Tag must be a non-empty string"
+            },
+            {
+              "valid": true,
+              "description": "Tag must be a non-empty string"
+            },
+            {
+              "valid": false,
+              "description": "Value must be a non-empty string and must be enclosed in quotes"
+            },
+            {
+              "valid": false,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": false,
+              "description": "Flags must be a number between 0 and 255"
+            },
+            {
+              "valid": true,
+              "description": "Flags must be a number between 0 and 255"
+            }
+          ]
+        },
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "caa"
+          },
+          "expect": {
+            "description": "CAA record must be in the format <flags> <tag> \"<value>\"",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

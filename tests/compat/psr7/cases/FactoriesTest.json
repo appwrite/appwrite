@@ -1,0 +1,674 @@
+{
+  "source": "packages/psr7/tests/FactoriesTest.php",
+  "cases": [
+    {
+      "name": "creates PSR messages",
+      "steps": [
+        {
+          "op": "request.factory",
+          "args": {
+            "method": "createRequest",
+            "args": [
+              "post",
+              "https://example.com/users?active=1"
+            ]
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r"
+            },
+            "method": "withHeader",
+            "args": [
+              "Accept",
+              [
+                "application/json",
+                "text/plain"
+              ]
+            ]
+          },
+          "bind": "r2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.factory",
+          "args": {
+            "content": "body"
+          },
+          "bind": "s",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "r2"
+            },
+            "method": "withBody",
+            "args": [
+              {
+                "$ref": "s"
+              }
+            ]
+          },
+          "bind": "r3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "r3"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Host": [
+                "example.com"
+              ],
+              "Accept": [
+                "application/json",
+                "text/plain"
+              ]
+            },
+            "method": "POST",
+            "target": "/users?active=1",
+            "uri": "https://example.com/users?active=1"
+          }
+        },
+        {
+          "op": "message.body",
+          "args": {
+            "message": {
+              "$ref": "r3"
+            }
+          },
+          "bind": "body",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "body"
+            },
+            "method": "toString"
+          },
+          "expect": "body"
+        },
+        {
+          "op": "response.factory",
+          "args": {
+            "args": [
+              201,
+              "Created"
+            ]
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "p"
+            },
+            "method": "withHeader",
+            "args": [
+              "Content-Type",
+              "application/json"
+            ]
+          },
+          "bind": "p2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.factory",
+          "args": {
+            "content": "{}"
+          },
+          "bind": "s2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.with",
+          "args": {
+            "message": {
+              "$ref": "p2"
+            },
+            "method": "withBody",
+            "args": [
+              {
+                "$ref": "s2"
+              }
+            ]
+          },
+          "bind": "p3",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "message.dump",
+          "args": {
+            "message": {
+              "$ref": "p3"
+            }
+          },
+          "expect": {
+            "protocol": "1.1",
+            "headers": {
+              "Content-Type": [
+                "application/json"
+              ]
+            },
+            "status": 201,
+            "reason": "Created"
+          }
+        },
+        {
+          "op": "message.body",
+          "args": {
+            "message": {
+              "$ref": "p3"
+            }
+          },
+          "bind": "pb",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "pb"
+            },
+            "method": "toString"
+          },
+          "expect": "{}"
+        }
+      ]
+    },
+    {
+      "name": "wraps files and resources without copying them",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/stream.txt",
+            "content": "on disk"
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/stream.txt"
+          },
+          "bind": "file",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "file"
+            },
+            "method": "getSize"
+          },
+          "expect": 7
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "file"
+            },
+            "method": "toString"
+          },
+          "expect": "on disk"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "file"
+            },
+            "method": "getMetadata",
+            "args": [
+              "mode"
+            ]
+          },
+          "expect": "r"
+        },
+        {
+          "op": "stream.from_resource",
+          "args": {
+            "content": "in memory"
+          },
+          "bind": "res",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "res"
+            },
+            "method": "tell"
+          },
+          "expect": 9
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "res"
+            },
+            "method": "toString"
+          },
+          "expect": "in memory"
+        }
+      ]
+    },
+    {
+      "name": "rejects files that cannot be opened",
+      "steps": [
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/nonexistent/utopia-missing-file"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to open stream file."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "stream factory modes",
+      "steps": [
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/dir.txt",
+            "content": ""
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/modes.txt",
+            "mode": "w+"
+          },
+          "bind": "w",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "w"
+            },
+            "method": "write",
+            "args": [
+              "abcdef"
+            ]
+          },
+          "expect": 6
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "w"
+            },
+            "method": "tell"
+          },
+          "expect": 6
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "w"
+            },
+            "method": "rewind"
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "w"
+            },
+            "method": "read",
+            "args": [
+              3
+            ]
+          },
+          "expect": "abc"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "w"
+            },
+            "method": "getMetadata"
+          },
+          "expect": {
+            "timed_out": false,
+            "blocked": true,
+            "eof": false,
+            "wrapper_type": "plainfile",
+            "stream_type": "STDIO",
+            "mode": "w+",
+            "unread_bytes": 3,
+            "seekable": true,
+            "uri": "/tmp/compat-fs/${ns}/modes.txt"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "w"
+            },
+            "method": "close"
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/modes.txt",
+            "mode": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to open stream file."
+            }
+          }
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/modes.txt",
+            "mode": "z"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to open stream file."
+            }
+          }
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/modes.txt",
+            "mode": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to open stream file."
+            }
+          }
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/modes.txt",
+            "mode": "ab"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "a"
+            },
+            "method": "write",
+            "args": [
+              "gh"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "a"
+            },
+            "method": "close"
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/modes.txt",
+            "mode": "rb"
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "r"
+            },
+            "method": "getContents"
+          },
+          "expect": "abcdefgh"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "r"
+            },
+            "method": "eof"
+          },
+          "expect": true
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "r"
+            },
+            "method": "write",
+            "args": [
+              "x"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to write to stream."
+            }
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "r"
+            },
+            "method": "getMetadata"
+          },
+          "expect": {
+            "timed_out": false,
+            "blocked": true,
+            "eof": true,
+            "wrapper_type": "plainfile",
+            "stream_type": "STDIO",
+            "mode": "rb",
+            "unread_bytes": 0,
+            "seekable": true,
+            "uri": "/tmp/compat-fs/${ns}/modes.txt"
+          }
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/modes.txt",
+            "mode": "c+"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "c"
+            },
+            "method": "read",
+            "args": [
+              2
+            ]
+          },
+          "expect": "ab"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "c"
+            },
+            "method": "write",
+            "args": [
+              "ZZ"
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "c"
+            },
+            "method": "toString"
+          },
+          "expect": "abZZefgh"
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "c"
+            },
+            "method": "close"
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/new.txt",
+            "mode": "x+"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "n"
+            },
+            "method": "write",
+            "args": [
+              "fresh"
+            ]
+          },
+          "expect": 5
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "n"
+            },
+            "method": "getSize"
+          },
+          "expect": 5
+        },
+        {
+          "op": "stream.call",
+          "args": {
+            "stream": {
+              "$ref": "n"
+            },
+            "method": "close"
+          },
+          "expect": null
+        },
+        {
+          "op": "stream.from_file",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/missing/dir.txt",
+            "mode": "w"
+          },
+          "expect": {
+            "$error": {
+              "class": "RuntimeException",
+              "message": "Unable to open stream file."
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

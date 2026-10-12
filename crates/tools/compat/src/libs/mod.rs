@@ -25,6 +25,7 @@ pub mod console;
 pub mod database;
 pub mod detector;
 pub mod di;
+pub mod dns;
 pub mod domains;
 pub mod dsn;
 pub mod emails;
@@ -36,6 +37,7 @@ pub mod openapi;
 pub mod php_std;
 pub mod platform;
 pub mod pools;
+pub mod psr7;
 pub mod query;
 pub mod queue;
 pub mod registry;
@@ -66,6 +68,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("database", database::OPS),
     ("detector", detector::OPS),
     ("di", di::OPS),
+    ("dns", dns::OPS),
     ("domains", domains::OPS),
     ("dsn", dsn::OPS),
     ("emails", emails::OPS),
@@ -77,6 +80,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("php-std", php_std::OPS),
     ("platform", platform::OPS),
     ("pools", pools::OPS),
+    ("psr7", psr7::OPS),
     ("query", query::OPS),
     ("queue", queue::OPS),
     ("registry", registry::OPS),
@@ -109,6 +113,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "database" => database::call(op, args, session).await,
         "detector" => detector::call(op, args, session).await,
         "di" => di::call(op, args, session).await,
+        "dns" => dns::call(op, args, session).await,
         "domains" => domains::call(op, args, session).await,
         "dsn" => dsn::call(op, args, session).await,
         "emails" => emails::call(op, args, session).await,
@@ -120,6 +125,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "php-std" => php_std::call(op, args, session).await,
         "platform" => platform::call(op, args, session).await,
         "pools" => pools::call(op, args, session).await,
+        "psr7" => psr7::call(op, args, session).await,
         "query" => query::call(op, args, session).await,
         "queue" => queue::call(op, args, session).await,
         "registry" => registry::call(op, args, session).await,
@@ -153,6 +159,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "console" => console::BENCHES,
         "detector" => detector::BENCHES,
         "di" => di::BENCHES,
+        "dns" => dns::BENCHES,
         "domains" => domains::BENCHES,
         "dsn" => dsn::BENCHES,
         "emails" => emails::BENCHES,
@@ -164,6 +171,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "php-std" => php_std::BENCHES,
         "platform" => platform::BENCHES,
         "pools" => pools::BENCHES,
+        "psr7" => psr7::BENCHES,
         "queue" => queue::BENCHES,
         "registry" => registry::BENCHES,
         "schedule" => schedule::BENCHES,
@@ -196,6 +204,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "console" => console::bench(name, session).await,
         "detector" => detector::bench(name, session).await,
         "di" => di::bench(name, session).await,
+        "dns" => dns::bench(name, session).await,
         "domains" => domains::bench(name, session).await,
         "dsn" => dsn::bench(name, session).await,
         "emails" => emails::bench(name, session).await,
@@ -207,6 +216,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "php-std" => php_std::bench(name, session).await,
         "platform" => platform::bench(name, session).await,
         "pools" => pools::bench(name, session).await,
+        "psr7" => psr7::bench(name, session).await,
         "queue" => queue::bench(name, session).await,
         "registry" => registry::bench(name, session).await,
         "schedule" => schedule::bench(name, session).await,
