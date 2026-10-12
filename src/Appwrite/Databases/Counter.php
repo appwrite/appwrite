@@ -153,11 +153,11 @@ final readonly class Counter
                 throw new NotFoundException('Document not found');
             }
 
-            $before = $current->getAttribute($attribute);
+            $before = $current->getAttribute($attribute) ?? 0;
             $exact = $increase ? $before + $value : $before - $value;
-            $whole = (int) \abs(\round($exact, 0, \PHP_ROUND_HALF_EVEN) - (float) ($before ?? 0));
+            $whole = self::wholeChange(BigInt::toNative($before), $value, $increase);
 
-            if ($whole > 0) {
+            if (BigInt::compare($whole, 0) > 0) {
                 $document = $increase
                     ? $database->increaseDocumentAttribute($collection, $id, $attribute, $whole)
                     : $database->decreaseDocumentAttribute($collection, $id, $attribute, $whole);
@@ -172,6 +172,36 @@ final readonly class Counter
 
             return $document->setAttribute($attribute, $exact);
         });
+    }
+
+    /**
+     * The whole-number change that stores $before plus or minus $value rounded half to even. $before never passes
+     * through a float, which cannot hold every integer above 2^53; only the fraction of $value decides the rounding.
+     */
+    private static function wholeChange(int|string $before, float $value, bool $increase): int|string
+    {
+        $whole = self::integral(\floor($value));
+        $fraction = $value - \floor($value);
+        if ($fraction === 0.0) {
+            return $whole;
+        }
+
+        if ($increase) {
+            $base = BigInt::add($before, $whole);
+            $up = $fraction > 0.5 || ($fraction === 0.5 && self::odd($base));
+
+            return $up ? BigInt::add($whole, 1) : $whole;
+        }
+
+        $base = BigInt::subtract(BigInt::subtract($before, $whole), 1);
+        $up = $fraction < 0.5 || ($fraction === 0.5 && self::odd($base));
+
+        return $up ? $whole : BigInt::add($whole, 1);
+    }
+
+    private static function odd(int|string $value): bool
+    {
+        return (int) \substr((string) $value, -1) % 2 === 1;
     }
 
     private static function decimal(string $bound): ?Decimal

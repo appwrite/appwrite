@@ -368,6 +368,32 @@ final class CounterTest extends TestCase
         $this->assertSame(3, $this->database->getDocument(self::COLLECTION, $document->getId())->getAttribute('count'));
     }
 
+    /**
+     * @return iterable<string, array{int, float, bool, int}>
+     */
+    public static function fractionalChangesBeyondFloatPrecision(): iterable
+    {
+        yield 'increase rounds half to even' => [9007199254740993, 1.5, true, 9007199254740994];
+        yield 'increase rounds up past the half' => [9007199254740993, 1.75, true, 9007199254740995];
+        yield 'increase rounds down below the half' => [9007199254740993, 1.25, true, 9007199254740994];
+        yield 'decrease rounds half to even' => [9007199254740995, 1.5, false, 9007199254740994];
+        yield 'decrease rounds down past the half' => [9007199254740995, 1.75, false, 9007199254740993];
+        yield 'decrease rounds up below the half' => [9007199254740995, 1.25, false, 9007199254740994];
+    }
+
+    #[DataProvider('fractionalChangesBeyondFloatPrecision')]
+    public function testAFractionalChangeOnABigIntegerBeyondFloatPrecisionStoresTheExactRoundedResult(int $before, float $change, bool $increase, int $expected): void
+    {
+        $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'huge', 'big' => $before]));
+        $counter = Counter::of($this->database, self::COLLECTION, 'big');
+
+        $increase
+            ? $counter->increase($this->database, self::COLLECTION, $document->getId(), 'big', $change, null)
+            : $counter->decrease($this->database, self::COLLECTION, $document->getId(), 'big', $change, null);
+
+        $this->assertSame($expected, $this->database->getDocument(self::COLLECTION, $document->getId())->getAttribute('big'));
+    }
+
     public function testAFractionalTextMaximumBeyondFloatPrecisionBoundsTheIncrementAtItsWholePart(): void
     {
         $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'precise', 'big' => 9007199254740992]));
