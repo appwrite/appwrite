@@ -10,11 +10,25 @@ const root = getRouteApi('__root__')
 
 const STATUSES: Status[] = ['complete', 'progress', 'started', 'planned']
 
+/** How the list is ordered; anything but `category` shows one list instead of a section per category. */
+type Sort = 'category' | 'name' | 'speed' | 'size' | 'examples' | 'status' | 'cases'
+
+const SORTS: { id: Sort; label: string; migration?: boolean }[] = [
+  { id: 'category', label: 'Category' },
+  { id: 'name', label: 'Name' },
+  { id: 'size', label: 'Size (API items)' },
+  { id: 'examples', label: 'Examples' },
+  { id: 'speed', label: 'Speed boost vs PHP', migration: true },
+  { id: 'status', label: 'Conversion status', migration: true },
+  { id: 'cases', label: 'Test cases vs PHP', migration: true },
+]
+
 interface Filters {
   q?: string
   status?: Status
   category?: string
   behind?: boolean
+  sort?: Sort
 }
 
 export const Route = createFileRoute('/')({
@@ -23,6 +37,7 @@ export const Route = createFileRoute('/')({
     status: STATUSES.includes(search.status as Status) ? (search.status as Status) : undefined,
     category: typeof search.category === 'string' && search.category ? search.category : undefined,
     behind: search.behind === true || search.behind === 'true' ? true : undefined,
+    sort: SORTS.some((o) => o.id === search.sort && o.id !== 'category') ? (search.sort as Sort) : undefined,
   }),
   component: Home,
 })
@@ -37,6 +52,21 @@ const chip =
   'inline-flex h-8 items-center gap-1.5 rounded-md border px-2.5 text-[12.5px] transition-colors aria-pressed:border-foreground aria-pressed:bg-accent aria-pressed:text-foreground'
 
 const ORDER: Status[] = ['complete', 'progress', 'started', 'planned']
+
+/** Libraries in the chosen order: largest, fastest or most tested first; name breaks ties. */
+function sorted(libs: LibrarySummary[], sort: Sort): LibrarySummary[] {
+  const by = (key: (l: LibrarySummary) => number) => (a: LibrarySummary, b: LibrarySummary) => key(b) - key(a) || a.title.localeCompare(b.title)
+  const order = {
+    category: by(() => 0),
+    name: (a: LibrarySummary, b: LibrarySummary) => a.title.localeCompare(b.title),
+    size: by((l) => (l.rust ? l.counts.items : -1)),
+    examples: by((l) => l.counts.examples ?? 0),
+    speed: by((l) => l.bench?.speedup ?? -1),
+    status: by((l) => -ORDER.indexOf(l.status)),
+    cases: by((l) => l.compat?.cases ?? -1),
+  }[sort]
+  return [...libs].sort(order)
+}
 const BAR: Record<Status, string> = { complete: 'bg-ok', progress: 'bg-progress', started: 'bg-started', planned: 'bg-planned/40' }
 
 function Home() {
@@ -62,6 +92,8 @@ function Home() {
   const total = index.libraries.filter((l) => migration || l.rust).length
   const filtered = !!(term || filters.category || (migration && (filters.status || filters.behind)))
   const categories = index.categories.filter((c) => !filters.category || c.id === filters.category)
+  // Migration-only orders fall back to categories outside the migration view.
+  const sort: Sort = filters.sort && (migration || !SORTS.find((o) => o.id === filters.sort)?.migration) ? filters.sort : 'category'
   return (
     <div className="mx-auto grid max-w-[1100px] gap-10">
       <PageHeader title="Utopia libraries">
@@ -118,6 +150,19 @@ function Home() {
               </option>
             ))}
           </select>
+          <select
+            value={sort}
+            onChange={(e) => set({ sort: e.target.value === 'category' ? undefined : (e.target.value as Sort) })}
+            aria-label="Sort by"
+            title="Sort by"
+            className="h-9 rounded-md border border-border bg-card px-2.5 text-[13px] text-foreground"
+          >
+            {SORTS.filter((o) => migration || !o.migration).map((o) => (
+              <option key={o.id} value={o.id}>
+                Sort: {o.label}
+              </option>
+            ))}
+          </select>
           <LayoutToggle />
           {filtered ? (
             <button
@@ -168,7 +213,12 @@ function Home() {
           </button>
         </div>
       )}
-      {categories.map((c) => {
+      {sort !== 'category' && shown.length ? (
+        <Section title={`Sorted by ${SORTS.find((o) => o.id === sort)?.label}`}>
+          <LibraryList libs={sorted(shown, sort)} />
+        </Section>
+      ) : null}
+      {sort === 'category' && categories.map((c) => {
         const libs = c.libraries.map((s) => bySlug.get(s)).filter((l): l is LibrarySummary => !!l && visible(l))
         return libs.length ? (
         <Section key={c.id} id={c.id} title={c.title} description={c.description}>
