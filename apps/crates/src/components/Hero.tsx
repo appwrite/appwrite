@@ -71,10 +71,10 @@ export function Hero({ index }: { index: Index }) {
   // The crates live in the Appwrite repository, not on crates.io.
   const install = `cargo add ${http?.rust?.name ?? 'utopia-http'} --git https://github.com/appwrite/appwrite`
   return (
-    <section className="grid gap-10 pt-4">
-      <div className="mx-auto grid w-full max-w-[760px] grid-cols-[minmax(0,1fr)] justify-items-center gap-5 text-center">
-        <h1 className="m-0 text-[34px] leading-[1.1] sm:text-[44px]">Rust libraries for building backend services</h1>
-        <p className="m-0 max-w-[58ch] text-[15.5px] leading-relaxed text-muted-foreground">
+    <section className="grid gap-16 pt-10 pb-6 sm:pt-16">
+      <div className="mx-auto grid w-full max-w-[820px] grid-cols-[minmax(0,1fr)] justify-items-center gap-7 text-center">
+        <h1 className="m-0 text-[36px] leading-[1.05] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">Rust libraries for building backend services</h1>
+        <p className="m-0 max-w-[58ch] text-[16.5px] leading-relaxed text-muted-foreground">
           Small, focused crates for HTTP, validation, authentication, databases, queues and storage. Use one on its own, or combine them into a
           complete API server.
         </p>
@@ -94,12 +94,12 @@ export function Hero({ index }: { index: Index }) {
           <span className="min-w-0 truncate px-1.5">{install}</span>
           <CopyButton text={install} label="Copy" />
         </div>
-        <div className="mt-3 w-full min-w-0 text-left">
+        <div className="mt-8 w-full min-w-0 text-left">
           <CodeBlock code={EXAMPLE} program={PROGRAM} lang="rust" title="main.rs" />
         </div>
       </div>
 
-      <ul className="m-0 grid list-none gap-x-8 gap-y-6 border-t border-border p-0 pt-8 sm:grid-cols-2 lg:grid-cols-4">
+      <ul className="m-0 grid list-none gap-x-10 gap-y-8 border-t border-border p-0 pt-12 sm:grid-cols-2 lg:grid-cols-4">
         {VALUES.map(({ icon: Icon, title, text }) => (
           <li key={title} className="grid content-start gap-2">
             <span className="inline-flex size-8 items-center justify-center rounded-md border border-border text-foreground">
