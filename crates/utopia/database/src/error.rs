@@ -75,6 +75,9 @@ pub enum Kind {
     Json,
     /// `Exception`: PHP's base exception, thrown by library code with `new \Exception`.
     Exception,
+    /// `Error`: PHP's engine error (a method called on a value that is not
+    /// an object with it, ...).
+    Error,
 }
 
 impl Kind {
@@ -106,6 +109,7 @@ impl Kind {
             Kind::ValueError => "ValueError",
             Kind::Json => "JsonException",
             Kind::Exception => "Exception",
+            Kind::Error => "Error",
         }
     }
 
@@ -115,7 +119,13 @@ impl Kind {
     pub fn parent(self) -> Option<Kind> {
         match self {
             Kind::Unique => Some(Kind::Duplicate),
-            Kind::Database | Kind::Pdo | Kind::TypeError | Kind::ValueError | Kind::Json | Kind::Exception => None,
+            Kind::Database
+            | Kind::Pdo
+            | Kind::TypeError
+            | Kind::ValueError
+            | Kind::Json
+            | Kind::Exception
+            | Kind::Error => None,
             _ => Some(Kind::Database),
         }
     }
@@ -208,6 +218,7 @@ impl From<php_std::EngineError> for Error {
             "TypeError" => Kind::TypeError,
             "ValueError" => Kind::ValueError,
             "JsonException" => Kind::Json,
+            "Error" => Kind::Error,
             _ => Kind::Exception,
         };
         Error::new(kind, e.message)
