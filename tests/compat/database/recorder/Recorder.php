@@ -99,6 +99,14 @@ final class Recorder
     /** @var list<string> problems to report */
     public static array $problems = [];
 
+    /**
+     * Adapters the tests built themselves (`new Memory()` for a peer), by
+     * object id: the step that opened the first database on each.
+     *
+     * @var array<int, int>
+     */
+    private static array $adapters = [];
+
     /** Known `before` transformations of the tests (file:line => fixture). */
     private const TRANSFORMS = [
         'CollectionTests.php:1679' => ['append' => ' AND 1=0'],
@@ -206,6 +214,11 @@ final class Recorder
             $encoded = ['db' => self::encode($target)] + $encoded;
         }
         $step->args = $kind === 'adapter' ? ['method' => $method, 'args' => $encoded === [] ? new \stdClass() : $encoded] : $encoded;
+        if ($kind === 'adapter' && $target !== self::$main?->getAdapter()) {
+            // An adapter the test built itself (`new Memory()`): through the
+            // detached database `db.open` made for it.
+            $step->args = ['db' => self::encode($target)] + $step->args;
+        }
         $step->collections = self::collections($method, $named);
         $step->write = self::writes($kind, $method);
         // A peer's settings are its own: they are restored by replaying its steps.
@@ -530,6 +543,7 @@ final class Recorder
             $value instanceof PeerDatabase && $value->opened !== null => ['$ref' => "s{$value->opened}"],
             $value === self::$main => ['$ref' => 'db'],
             $value instanceof \Utopia\Database\Adapter && $value === self::$main?->getAdapter() => ['$ref' => 'db'],
+            $value instanceof \Utopia\Database\Adapter && isset(self::$adapters[spl_object_id($value)]) => ['$ref' => 's' . self::$adapters[spl_object_id($value)]],
             $value instanceof Authorization && $value === self::$main?->getAuthorization() => ['$ref' => 'db'],
             $value instanceof Authorization => ['roles' => $value->getRoles()],
             $value instanceof \Utopia\Cache\Cache => self::cache($value),
@@ -556,6 +570,44 @@ final class Recorder
         $step->write = true;
         self::push($step);
         $peer->opened = $step->index;
+        self::$adapters[spl_object_id($adapter)] ??= $step->index;
+    }
+
+    /**
+     * An adapter the test built itself (`new Memory()`, a PeerMemory): a
+     * detached database on a fresh adapter of the engine (`db.open` with
+     * `engine` and `detached`), its calls then naming it with `db`.
+     */
+    public static function freshAdapter(\Utopia\Database\Adapter $adapter, string $engine): void
+    {
+        if (!self::$on || self::$depth > 0) {
+            return;
+        }
+        $step = new Step('db.open');
+        $step->args = ['engine' => $engine, 'detached' => true];
+        $step->result = ['$handle' => '*'];
+        $step->write = true;
+        self::push($step);
+        self::$adapters[spl_object_id($adapter)] = $step->index;
+    }
+
+    /**
+     * What MemoryTest reads of an adapter by reflection (its `$data`): a
+     * `db.memory_data` step.
+     *
+     * @return array<string, mixed>
+     */
+    public static function memoryData(\Utopia\Database\Adapter\Memory $adapter): array
+    {
+        $data = (new \ReflectionProperty(\Utopia\Database\Adapter\Memory::class, 'data'))->getValue($adapter);
+        if (self::$on && self::$depth === 0) {
+            $step = new Step('db.memory_data');
+            $step->args = $adapter === self::$main?->getAdapter() ? [] : ['db' => self::encode($adapter)];
+            $step->result = Core::result($data);
+            self::push($step);
+        }
+
+        return $data;
     }
 
     private static function unsupported(object $value): array
@@ -572,6 +624,9 @@ final class Recorder
         return match (true) {
             $adapter instanceof \Utopia\Cache\Adapter\Memory => 'memory',
             $adapter instanceof \Utopia\Cache\Adapter\None => 'none',
+            // The suite's Redis caches (MemoryTest::freshDatabase): the cases
+            // run on a Memory cache, as for the suite's own database.
+            $adapter instanceof \Utopia\Cache\Adapter\Redis => 'memory',
             default => self::unsupported($adapter),
         };
     }

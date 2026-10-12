@@ -100,9 +100,16 @@ pub fn database_marker() -> Json {
     json!({"$database": true})
 }
 
-/// The adapter: `{"$adapter": "Postgres"}`.
-pub fn adapter_marker() -> Json {
-    json!({"$adapter": "Postgres"})
+/// The adapter: `{"$adapter": "<class>"}` (`Postgres`, `SQLite`, `Memory`).
+pub fn adapter_marker(handle: &Db) -> Json {
+    let class = if handle.memory.is_some() {
+        "Memory"
+    } else if handle.sqlite.is_some() {
+        "SQLite"
+    } else {
+        "Postgres"
+    };
+    json!({"$adapter": class})
 }
 
 /// A cache: `{"$cache": true}`.
@@ -136,6 +143,12 @@ pub struct Db {
     /// Its PostgreSQL adapter (`db.sql` runs on its connection); `None` for
     /// none of its own.
     pub postgres: Option<Arc<Postgres>>,
+    /// Its SQLite adapter (`db.sql` runs on its connection), for engine
+    /// `sqlite`.
+    pub sqlite: Option<Arc<utopia_database::adapter::sqlite::Sqlite>>,
+    /// Its in-memory adapter (`db.memory_data` reads it), for engine
+    /// `memory`.
+    pub memory: Option<Arc<utopia_database::adapter::memory::Memory>>,
 }
 
 /// What a session's databases share (PHP's `CoreState`).

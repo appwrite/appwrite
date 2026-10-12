@@ -897,6 +897,9 @@
     "db.sql": {
       "doc": "A statement on the database's own connection, naming no schema but the database's: rows as lists of column => text"
     },
+    "db.memory_data": {
+      "doc": "The stored collections of the database's Memory adapter (its `$data`, which MemoryTest reads by reflection): storage key => attributes, indexes, documents, sequence"
+    },
     "db.add_format": {
       "doc": "Structure::addFormat(name, ...) with the named fixture format of the e2e suite (priceRange, priceRangeNew: a Range from formatOptions min/max, integer); true",
       "covers": [

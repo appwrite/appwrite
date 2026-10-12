@@ -273,8 +273,22 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             None | Some(Json::Null) => None,
             Some(n) => n.as_i64(),
         };
-        let e = PdoError { sqlstate: text(args, "sqlstate")?, native, message: text(args, "message")? };
-        return Ok(codec::error(&utopia_database::adapter::postgres::process_exception(e)));
+        let (sqlstate, message) = (text(args, "sqlstate")?, text(args, "message")?);
+        let engine = match args.get("engine") {
+            None | Some(Json::Null) => "postgres".to_owned(),
+            Some(_) => text(args, "engine")?,
+        };
+        return Ok(codec::error(&match engine.as_str() {
+            "postgres" => utopia_database::adapter::postgres::process_exception(PdoError { sqlstate, native, message }),
+            "sqlite" => {
+                utopia_database::adapter::sqlite::process_exception(utopia_database::adapter::sqlite::pdo::PdoError {
+                    sqlstate,
+                    native,
+                    message,
+                })
+            }
+            _ => return Err(Fault::new("adapter.process_exception: `engine` must be \"postgres\" or \"sqlite\"")),
+        }));
     }
     if op == "adapter.fuzz_find" || op == "adapter.fuzz_roundtrip" {
         let db = match fuzz_adapter(session).await {

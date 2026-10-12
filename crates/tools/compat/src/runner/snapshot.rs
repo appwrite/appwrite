@@ -8,6 +8,7 @@
 //! | `files` | every file under `/tmp/compat-fs/<namespace>/` (shared with the PHP driver's container): relative path and content |
 //! | `redis@<service>[/<db>[,<db>...]]` | like `redis`, on another Redis service of `compat.json` (its database, or the databases listed, merged into one snapshot); cache envelope timestamps are masked |
 //! | `postgres@<service>` | the PostgreSQL schema named after the namespace: tables, columns, indexes, constraints and rows (see [`super::snapshot_postgres`]) |
+//! | `sqlite` | every SQLite database file under `/tmp/compat-fs/<namespace>/`: its schema and rows (see [`super::snapshot_sqlite`]) |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.
@@ -22,6 +23,7 @@ pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
     match kind {
         "redis" => redis_snapshot(&cfg.runner_service("redis")?, ns),
         "files" => files_snapshot(ns),
+        "sqlite" => super::snapshot_sqlite::snapshot(ns),
         other if other.starts_with("postgres@") => {
             super::snapshot_postgres::snapshot(&cfg.runner_service(&other["postgres@".len()..])?, ns)
         }
@@ -109,7 +111,7 @@ fn service_urls(cfg: &Config, kind: &str) -> Result<Vec<String>, String> {
 pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
     match kind {
         "redis" => redis_cleanup(&cfg.runner_service("redis")?, ns),
-        "files" => {
+        "files" | "sqlite" => {
             let dir = files_root().join(ns);
             if dir.exists() {
                 std::fs::remove_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;

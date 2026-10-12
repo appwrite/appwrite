@@ -3,7 +3,7 @@
 namespace Tests\Compat\Database\Recorder;
 
 /**
- * Generates the recording subclasses (RecordingDatabase, RecordingPostgres,
+ * Generates the recording subclasses (RecordingDatabase, RecordingPostgres, RecordingSQLite, RecordingMemory,
  * RecordingAuthorization): every public, non-static, non-final method is
  * overridden to go through Recorder::call with the same signature.
  */
@@ -14,12 +14,28 @@ final class Classes
         $code = 'namespace Tests\\Compat\\Database\\Recorder;' . "\n"
             . self::subclass(\Utopia\Database\Database::class, 'RecordingDatabase', 'database', ['getAdapter', 'getAuthorization'])
             . self::subclass(\Utopia\Database\Adapter\Postgres::class, 'RecordingPostgres', 'adapter', [])
+            . self::subclass(\Utopia\Database\Adapter\SQLite::class, 'RecordingSQLite', 'adapter', [])
+            . self::subclass(\Utopia\Database\Adapter\Memory::class, 'RecordingMemory', 'adapter', [])
             . self::subclass(\Utopia\Database\Validator\Authorization::class, 'RecordingAuthorization', 'authorization', ['isValid', 'getDescription', 'isArray', 'getType'])
             . <<<'PHP'
                 /**
                  * A Database the tests construct themselves (`new Database(...)`
                  * in their source is rewritten to this): recorded as a peer.
                  */
+                /**
+                 * A Memory adapter the tests construct themselves (`new
+                 * Memory()` in their source is rewritten to this): a detached
+                 * database of its own.
+                 */
+                class PeerMemory extends RecordingMemory
+                {
+                    public function __construct()
+                    {
+                        parent::__construct();
+                        Recorder::freshAdapter($this, 'memory');
+                    }
+                }
+
                 class PeerDatabase extends RecordingDatabase
                 {
                     public ?int $opened = null;

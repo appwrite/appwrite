@@ -174,6 +174,7 @@ pub const OPS: &[&str] = &[
     "db.authorization.set_status",
     "db.authorization.skip",
     "db.log",
+    "db.memory_data",
     "db.open",
     "db.select",
     "db.sql",

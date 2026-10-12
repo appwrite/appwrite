@@ -455,20 +455,21 @@ final class Cases
                     $steps[] = ['op' => 'db.log', 'args' => new \stdClass()];
                 }
             }
-            $case = ['name' => "{$trait}::{$test['name']}", 'state' => ['postgres@database-postgres'], 'steps' => $steps];
+            $case = ['name' => "{$trait}::{$test['name']}", 'state' => Target::config()['state'], 'steps' => $steps];
             $files[$file]['cases'][] = $case;
             $files[$file]['steps'] += \count($steps);
         }
         $written = [];
         foreach ($files as $file => $data) {
-            $adapter = $this->profile === 'shared' ? 'tests/e2e/Adapter/SharedTables/PostgresTest.php' : 'tests/e2e/Adapter/PostgresTest.php';
+            $adapter = 'tests/e2e/Adapter/' . str_replace('\\', '/', Target::config()['class']) . '.php';
             $base = 'vendor/utopia-php/database/';
-            if ($file === 'PostgresTest.php') {
-                $name = 'PostgresTest.json';
-                $source = [$base . 'tests/e2e/Adapter/PostgresTest.php'];
+            if (!str_starts_with($file, 'Scopes/')) {
+                // The adapter class's own tests (PostgresTest.json, MemoryTest.json).
+                $name = str_replace('/', '-', substr($file, 0, -4)) . '.json';
+                $source = [$base . 'tests/e2e/Adapter/' . $file];
             } else {
                 $relative = substr($file, \strlen('Scopes/'));
-                $name = 'Scope-' . ($this->profile === 'shared' ? 'SharedTables-' : '') . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
+                $name = Target::config()['prefix'] . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
                 $source = [$base . 'tests/e2e/Adapter/' . $file, $base . $adapter];
             }
             if ($filter !== null && array_filter(explode(',', $filter), fn (string $f) => str_contains($name, $f)) === []) {

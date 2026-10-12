@@ -16,6 +16,7 @@ use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Change;
 use Utopia\Database\Document;
 use Utopia\Database\PDO;
@@ -311,7 +312,11 @@ return [
         $exception = new \PDOException((string) $a['message']);
         (new \ReflectionProperty(\Exception::class, 'code'))->setValue($exception, (string) $a['sqlstate']);
         $exception->errorInfo = [(string) $a['sqlstate'], $a['native'] ?? null, (string) $a['message']];
-        $class = new \ReflectionClass(Postgres::class);
+        $class = new \ReflectionClass(match ($a['engine'] ?? 'postgres') {
+            'postgres' => Postgres::class,
+            'sqlite' => SQLite::class,
+            default => throw new Fault('adapter.process_exception: `engine` must be "postgres" or "sqlite"'),
+        });
 
         throw $class->getMethod('processException')->invoke($class->newInstanceWithoutConstructor(), $exception);
     },

@@ -8,6 +8,7 @@ use std::sync::Arc;
 use serde_json::{Map, Value as Json, json};
 use utopia_database::adapter::Adapter;
 use utopia_database::adapter::postgres::Postgres;
+use utopia_database::adapter::sqlite::Sqlite;
 use utopia_database::value::{Array, Ext, Value};
 use utopia_database::{Authorization, Database};
 
@@ -136,6 +137,7 @@ pub const OPS: &[&str] = &[
     "db.open",
     "db.select",
     "db.sql",
+    "db.memory_data",
 ];
 
 /// `true` as JSON.
@@ -200,8 +202,12 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
         return authorization(method, &a, &db, session).await;
     }
     match op {
-        "db.adapter" => adapter(&a, &db).await,
+        "db.adapter" => adapter(&a, &db, &handle).await,
         "db.sql" => sql(&a, &handle).await,
+        "db.memory_data" => match &handle.memory {
+            Some(memory) => Ok(encode(&Value::Array(memory.data()))),
+            None => fault("db.memory_data: not a Memory adapter"),
+        },
         "database.on" => {
             let (event, name) = (a.string_or("event", "")?, a.string_or("name", "")?);
             db.on(&event, &name, args::listener(&name, a.raw("callback")));
@@ -255,7 +261,7 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
             db.set_authorization(a.authorization("authorization", session)?);
             Ok(database_marker())
         }
-        "database.get_adapter" => Ok(adapter_marker()),
+        "database.get_adapter" => Ok(adapter_marker(&handle)),
         "database.set_timeout" => {
             db.set_timeout(a.int("milliseconds")?, &a.string_or("event", Database::EVENT_ALL)?)?;
             Ok(database_marker())
@@ -605,9 +611,11 @@ pub async fn call(op: &str, json: &Json, session: &mut Session) -> R<Json> {
     }
 }
 
-/// `db.open`: a database on PostgreSQL service `database-postgres` (or on
-/// the adapter of the database handle `adapter`), made current unless it
-/// is such a peer, and created unless `create` is false (`Core::open`).
+/// `db.open`: a database on PostgreSQL service `database-postgres`, on the
+/// SQLite file `/tmp/compat-fs/${ns}/<file>` (`engine: "sqlite"`), on the
+/// in-memory adapter (`engine: "memory"`), or on the adapter of the
+/// database handle `adapter`; made current unless it is such a peer, and
+/// created unless `create` is false (`Core::open`).
 async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     const KNOWN: &[&str] = &[
         "namespace",
@@ -620,6 +628,10 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
         "roles",
         "adapter",
         "filters",
+        "engine",
+        "file",
+        "emulate_mysql",
+        "detached",
     ];
     if let Some(o) = a.raw_object() {
         for key in o.keys() {
@@ -634,12 +646,35 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     for name in args::FILTERS {
         Database::add_filter(name, args::filter(name)?);
     }
-    let peer = a.given("adapter");
-    let (adapter, postgres): (Arc<dyn Adapter>, Option<Arc<Postgres>>) = if peer {
+    let detached = a.bool_or("detached", false)?;
+    let peer = a.given("adapter") || detached;
+    let engine = a.string_or("engine", "postgres")?;
+    let mut sqlite = None;
+    let mut memory = None;
+    let (adapter, postgres): (Arc<dyn Adapter>, Option<Arc<Postgres>>) = if a.given("adapter") {
         let db = session
             .get::<Db>(a.raw("adapter").unwrap_or(&Json::Null))
             .map_err(|_| Fault::new("db.open: `adapter` is not a database handle"))?;
+        sqlite = db.sqlite.clone();
+        memory = db.memory.clone();
         (db.database.adapter().clone(), db.postgres.clone())
+    } else if engine == "sqlite" {
+        let dir = format!("/tmp/compat-fs/{}", session.ns);
+        std::fs::create_dir_all(&dir).map_err(|e| Fault::new(format!("db.open: {e}")))?;
+        let file = a.string_or("file", "database.sqlite")?;
+        if file.is_empty() || file.contains('/') {
+            return fault("db.open: `file` is a file name");
+        }
+        let adapter = Arc::new(Sqlite::open(&format!("{dir}/{file}"))?);
+        adapter.set_emulate_mysql(a.bool_or("emulate_mysql", false)?);
+        sqlite = Some(adapter.clone());
+        (adapter, None)
+    } else if engine == "memory" {
+        let adapter = Arc::new(utopia_database::adapter::memory::Memory::new());
+        memory = Some(adapter.clone());
+        (adapter, None)
+    } else if engine != "postgres" {
+        return fault("db.open: `engine` must be \"postgres\", \"sqlite\" or \"memory\"");
     } else {
         let url = session.service("database-postgres")?.to_owned();
         let mut postgres = Postgres::connect(&url).await?;
@@ -695,7 +730,7 @@ async fn open(a: &Args<'_>, session: &mut Session) -> R<Json> {
     if !peer || a.has("namespace") {
         db.set_namespace(&a.string_or("namespace", "compat")?)?;
     }
-    let handle = Db { database: db.clone(), postgres };
+    let handle = Db { database: db.clone(), postgres, sqlite, memory };
     if !peer {
         args::state(session).current = Some(handle.clone());
         if a.bool_or("create", true)? {
@@ -740,7 +775,7 @@ async fn authorization(method: &str, a: &Args<'_>, db: &Database, session: &mut 
 }
 
 /// `db.adapter`: `$db->getAdapter()->$method(...$args)`.
-async fn adapter(a: &Args<'_>, db: &Database) -> R<Json> {
+async fn adapter(a: &Args<'_>, db: &Database, handle: &Db) -> R<Json> {
     let method = a.string_or("method", "")?;
     let empty = Json::Object(Map::new());
     let args = Args::new(a.raw("args").filter(|j| !j.is_null()).unwrap_or(&empty));
@@ -855,6 +890,120 @@ async fn adapter(a: &Args<'_>, db: &Database) -> R<Json> {
                 .await?,
         )),
         "ping" => Ok(Json::Bool(adapter.ping().await?)),
+        "setSupportForAttributes" => Ok(Json::Bool(adapter.set_support_for_attributes(args.bool("support")?))),
+        // The calls MemoryTest makes on adapters of its own.
+        "setNamespace" => {
+            adapter.set_namespace(&args.string("namespace")?)?;
+            Ok(adapter_marker(handle))
+        }
+        "setSharedTables" => Ok(Json::Bool(adapter.set_shared_tables(args.bool("sharedTables")?))),
+        "setTenant" => Ok(Json::Bool(adapter.set_tenant(args.value("tenant")?))),
+        "startTransaction" => Ok(Json::Bool(adapter.start_transaction().await?)),
+        "commitTransaction" => Ok(Json::Bool(adapter.commit_transaction().await?)),
+        "rollbackTransaction" => Ok(Json::Bool(adapter.rollback_transaction().await?)),
+        "createAttribute" => Ok(Json::Bool(
+            adapter
+                .create_attribute(
+                    &args.string("collection")?,
+                    &args.string("id")?,
+                    &args.string("type")?,
+                    args.int("size")?,
+                    args.bool_or("signed", true)?,
+                    args.bool_or("array", false)?,
+                    args.bool_or("required", false)?,
+                )
+                .await?,
+        )),
+        "updateAttribute" => Ok(Json::Bool(
+            adapter
+                .update_attribute(
+                    &args.string("collection")?,
+                    &args.string("id")?,
+                    &args.string("type")?,
+                    args.int("size")?,
+                    args.bool_or("signed", true)?,
+                    args.bool_or("array", false)?,
+                    args.opt_string("newKey")?.as_deref(),
+                    args.bool_or("required", false)?,
+                )
+                .await?,
+        )),
+        "renameAttribute" => Ok(Json::Bool(
+            adapter.rename_attribute(&args.string("collection")?, &args.string("old")?, &args.string("new")?).await?,
+        )),
+        "deleteAttribute" => {
+            Ok(Json::Bool(adapter.delete_attribute(&args.string("collection")?, &args.string("id")?).await?))
+        }
+        "createIndex" => Ok(Json::Bool(
+            adapter
+                .create_index(
+                    &args.string("collection")?,
+                    &args.string("id")?,
+                    &args.string("type")?,
+                    &args.strings("attributes")?,
+                    &list(&args, "lengths")?,
+                    &list(&args, "orders")?,
+                    &[],
+                    &[],
+                    args.int_or("ttl", 1)?,
+                )
+                .await?,
+        )),
+        "deleteDocument" => {
+            Ok(Json::Bool(adapter.delete_document(&args.string("collection")?, &args.string("id")?).await?))
+        }
+        "deleteDocuments" => Ok(Json::from(
+            adapter
+                .delete_documents(
+                    &args.string("collection")?,
+                    &list(&args, "sequences")?,
+                    &args.strings("permissionIds")?,
+                )
+                .await?,
+        )),
+        "getSequences" => {
+            let documents = adapter.get_sequences(&args.string("collection")?, args.documents("documents")?).await?;
+            Ok(Json::Array(documents.iter().map(args::document).collect()))
+        }
+        "find" => {
+            let order_attributes = args.opt_strings("orderAttributes")?.unwrap_or_default();
+            let order_types = args.opt_strings("orderTypes")?.unwrap_or_default();
+            let cursor = if args.has("cursor") { args.array("cursor")? } else { Array::new() };
+            let direction = args.string_or("cursorDirection", Database::CURSOR_AFTER)?;
+            let permission = args.string_or("forPermission", Database::PERMISSION_READ)?;
+            let options = utopia_database::adapter::FindOptions {
+                limit: if args.has("limit") { args.opt_int("limit")? } else { Some(25) },
+                offset: args.opt_int("offset")?,
+                order_attributes: &order_attributes,
+                order_types: &order_types,
+                cursor: &cursor,
+                cursor_direction: &direction,
+                for_permission: &permission,
+            };
+            let found = adapter.find(&args.document("collection")?, &args.queries("queries")?, options).await?;
+            Ok(Json::Array(found.iter().map(args::document).collect()))
+        }
+        "count" => Ok(Json::from(
+            adapter.count(&args.document("collection")?, &args.queries("queries")?, args.opt_int("max")?).await?,
+        )),
+        "sum" => Ok(encode(
+            &adapter
+                .sum(
+                    &args.document("collection")?,
+                    &args.string("attribute")?,
+                    &args.queries("queries")?,
+                    args.opt_int("max")?,
+                )
+                .await?,
+        )),
+        "upsertDocuments" => Ok(Json::Array(
+            adapter
+                .upsert_documents(&args.document("collection")?, &args.string("attribute")?, Vec::new())
+                .await?
+                .iter()
+                .map(args::document)
+                .collect(),
+        )),
         _ => fault(format!("db.adapter: no method `{method}` in the compat glue")),
     }
 }
@@ -878,10 +1027,13 @@ async fn sql(a: &Args<'_>, handle: &Db) -> R<Json> {
         }
         at = quote + 2;
     }
-    let Some(postgres) = &handle.postgres else {
+    let rows = if let Some(postgres) = &handle.postgres {
+        postgres.driver_query(&sql).await?
+    } else if let Some(sqlite) = &handle.sqlite {
+        sqlite.driver_query(&sql).await?
+    } else {
         return fault("db.sql: this database has no connection of its own");
     };
-    let rows = postgres.driver_query(&sql).await?;
     Ok(Json::Array(rows.into_iter().map(|r| encode(&Value::Array(r))).collect()))
 }
 

@@ -3,14 +3,17 @@
 /**
  * Ports utopia-php/database's e2e suites to compat cases by recording them.
  *
- *   bin/compat-php tests/compat/database/recorder/record.php <postgres|shared> [<file filter>[,<file filter>...]]
+ *   bin/compat-php tests/compat/database/recorder/record.php <profile> [<file filter>[,<file filter>...]]
  *
- * Runs every test method of tests/e2e/Adapter/PostgresTest.php (`postgres`)
- * or tests/e2e/Adapter/SharedTables/PostgresTest.php (`shared`) against the
- * compat PostgreSQL, in declaration order (honouring @depends and
+ * Runs every test method of an e2e adapter test class (Target::PROFILES:
+ * `postgres` tests/e2e/Adapter/PostgresTest.php and `shared`
+ * SharedTables/PostgresTest.php against the compat PostgreSQL, `sqlite`
+ * SQLiteTest.php and `sqlite-shared` SharedTables/SQLiteTest.php on a SQLite
+ * file, `memory` MemoryTest.php) in declaration order (honouring @depends and
  * @dataProvider), with a recording Database, adapter and Authorization. Each
  * test method becomes a self-contained case (see README.md here), written
- * to tests/compat/database/cases/Scope-*.json (and PostgresTest.json); what
+ * to tests/compat/database/cases/Scope-[<Adapter>-][SharedTables-]*.json
+ * (and <Adapter>Test.json for the class's own tests); what
  * PHP returned while recording goes to recorder/out/<profile>.json for
  * `fidelity.php`. Expectations are then written by `bin/compat record`.
  */
@@ -20,6 +23,7 @@ namespace Tests\Compat\Database\Recorder;
 use Tests\Compat\Codec;
 use Tests\Compat\Session;
 use Utopia\Database\Adapter\Postgres;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Database;
 use Utopia\Database\PDO;
 
@@ -56,8 +60,13 @@ const PATCHED = '/tmp/cxrecorder-e2e/';
         return;
     }
     $source = str_replace(
-        ['new Database(', '__DIR__'],
-        ['new \\Tests\\Compat\\Database\\Recorder\\PeerDatabase(', var_export(\dirname($file), true)],
+        ['new Database(', '__DIR__', 'new Memory()', '(new \\ReflectionClass($adapter))->getProperty(\'data\')->getValue($adapter)'],
+        [
+            'new \\Tests\\Compat\\Database\\Recorder\\PeerDatabase(',
+            var_export(\dirname($file), true),
+            'new \\Tests\\Compat\\Database\\Recorder\\PeerMemory()',
+            '\\Tests\\Compat\\Database\\Recorder\\Recorder::memoryData($adapter)',
+        ],
         $source,
     );
     $copy = PATCHED . $relative;
@@ -77,8 +86,8 @@ Classes::load();
 
 $profile = $argv[1] ?? 'postgres';
 $filter = $argv[2] ?? null;
-if (!\in_array($profile, ['postgres', 'shared'], true)) {
-    fwrite(STDERR, "usage: record.php <postgres|shared> [<filter>]\n");
+if (!isset(Target::PROFILES[$profile])) {
+    fwrite(STDERR, 'usage: record.php <' . implode('|', array_keys(Target::PROFILES)) . "> [<filter>]\n");
     exit(2);
 }
 
@@ -87,7 +96,32 @@ if (!\in_array($profile, ['postgres', 'shared'], true)) {
  */
 final class Target
 {
+    /**
+     * Per profile: the e2e class recorded (under Tests\E2E\Adapter), its
+     * adapter (`engine` of `db.open`), whether its tables are shared (tenant
+     * 999, namespace ''), the recorder's schema (database name), the case
+     * file prefix and the snapshot kinds of its cases.
+     */
+    public const PROFILES = [
+        'postgres' => ['class' => 'PostgresTest', 'engine' => 'postgres', 'shared' => false, 'schema' => 'cxrecorderp', 'prefix' => 'Scope-', 'state' => ['postgres@database-postgres']],
+        'shared' => ['class' => 'SharedTables\PostgresTest', 'engine' => 'postgres', 'shared' => true, 'schema' => 'cxrecorders', 'prefix' => 'Scope-SharedTables-', 'state' => ['postgres@database-postgres']],
+        'sqlite' => ['class' => 'SQLiteTest', 'engine' => 'sqlite', 'shared' => false, 'schema' => 'cxrecorderq', 'prefix' => 'Scope-SQLite-', 'state' => ['sqlite']],
+        'sqlite-shared' => ['class' => 'SharedTables\SQLiteTest', 'engine' => 'sqlite', 'shared' => true, 'schema' => 'cxrecorderr', 'prefix' => 'Scope-SQLite-SharedTables-', 'state' => ['sqlite']],
+        'memory' => ['class' => 'MemoryTest', 'engine' => 'memory', 'shared' => false, 'schema' => 'cxrecorderm', 'prefix' => 'Scope-Memory-', 'state' => []],
+    ];
+
+    /** The SQLite file the `sqlite` profiles record on (in the PHP container). */
+    public const SQLITE_FILE = '/tmp/cxrecorder.sqlite';
+
     public static string $profile = 'postgres';
+
+    /**
+     * @return array{class: string, engine: string, shared: bool, schema: string, prefix: string, state: list<string>}
+     */
+    public static function config(): array
+    {
+        return self::PROFILES[self::$profile];
+    }
 
     public static ?PDO $pdo = null;
 
@@ -100,7 +134,10 @@ final class Target
 
     public static function pdo(): PDO
     {
-        if (self::$pdo === null) {
+        if (self::$pdo === null && self::config()['engine'] === 'sqlite') {
+            @unlink(self::SQLITE_FILE);
+            self::$pdo = new PDO('sqlite:' . self::SQLITE_FILE, null, null, SQLite::getPDOAttributes());
+        } elseif (self::$pdo === null) {
             $url = self::url();
             self::$pdo = new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=root", $url['user'], $url['pass'], Postgres::getPDOAttributes());
         }
@@ -118,17 +155,25 @@ final class Target
         }
         $was = Recorder::$on;
         Recorder::$on = false;
-        $pdo = self::pdo();
-        $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
-        // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
-        $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
-        $others->execute([Recorder::$schema . '_']);
-        foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
-            $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+        if (self::config()['engine'] === 'memory') {
+            $adapter = new RecordingMemory();
+        } elseif (self::config()['engine'] === 'sqlite') {
+            $adapter = new RecordingSQLite(self::pdo());
+            $adapter->setEmulateMySQL(true);
+        } else {
+            $pdo = self::pdo();
+            $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
+            // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
+            $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
+            $others->execute([Recorder::$schema . '_']);
+            foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
+                $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+            }
+            $adapter = new RecordingPostgres($pdo);
         }
-        $database = new RecordingDatabase(new RecordingPostgres($pdo), \Tests\Compat\Database\Core::cache('memory'));
+        $database = new RecordingDatabase($adapter, \Tests\Compat\Database\Core::cache('memory'));
         $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
-        if (self::$profile === 'shared') {
+        if (self::config()['shared']) {
             $database->setSharedTables(true)->setTenant(999)->setNamespace('');
         } else {
             $database->setNamespace('compat');
@@ -149,6 +194,11 @@ final class Target
         'adapter', 'cache', 'authorization', 'pdo', 'timestamp', 'relationshipWriteStack', 'relationshipFetchStack',
         'relationshipDeleteStack', 'inBatchRelationshipPopulation', 'relationshipFetchDepth', 'filterSignatures',
         'filterSignaturesEncoded', 'filterSignaturesVersion', 'filterSignaturesSource', 'inTransaction', 'hostname', 'message',
+        // SQLite: the FTS5 table lookup cache, and the settings db.open makes.
+        'ftsTableCache', 'pcreRegistered', 'emulateMySQL',
+        // Memory: the stored data and its indexes, and the filter cache.
+        'databases', 'data', 'permissions', 'permissionsByDocument', 'permissionsByPermission', 'uniqueIndexHashes',
+        'journals', 'filterCache',
     ];
 
     /**
@@ -238,6 +288,7 @@ final class Target
                 'adapter.tenant' => $step('database.set_tenant', ['tenant' => $value]),
                 'adapter.sharedTables' => $step('database.set_shared_tables', ['sharedTables' => $value]),
                 'adapter.tenantPerDocument' => $step('database.set_tenant_per_document', ['enabled' => $value]),
+                'adapter.supportForAttributes' => $step('db.adapter', ['method' => 'setSupportForAttributes', 'args' => ['support' => $value]]),
                 'adapter.timeout' => $value === 0 ? $step('database.clear_timeout') : $step('database.set_timeout', ['milliseconds' => $value]),
                 'adapter.metadata' => (function () use ($step, $value) {
                     $step('database.reset_metadata');
@@ -296,15 +347,56 @@ final class Target
      */
     public static function open(): array|\stdClass
     {
-        return self::$profile === 'shared' ? ['namespace' => '', 'shared_tables' => true, 'tenant' => 999] : new \stdClass();
+        $open = self::config()['engine'] === 'postgres' ? [] : ['engine' => self::config()['engine']];
+        if (self::config()['engine'] === 'sqlite') {
+            $open['emulate_mysql'] = true;
+        }
+        if (self::config()['shared']) {
+            $open += ['namespace' => '', 'shared_tables' => true, 'tenant' => 999];
+        }
+
+        return $open === [] ? new \stdClass() : $open;
+    }
+
+    /**
+     * The suite's deleteColumn(): drops a column behind the library's back,
+     * recorded as `db.sql`.
+     */
+    public static function deleteColumn(Database $database, string $collection, string $column): void
+    {
+        if (self::config()['engine'] === 'memory') {
+            // MemoryTest: no out-of-band schema changes.
+            return;
+        }
+        $table = $database->getNamespace() . '_' . $collection;
+        $sql = self::config()['engine'] === 'sqlite'
+            ? "ALTER TABLE `{$table}` DROP COLUMN `{$column}`"
+            : 'ALTER TABLE "' . Recorder::$schema . '"."' . $table . '" DROP COLUMN "' . $column . '"';
+        Recorder::sql(self::pdo(), $sql, [$collection]);
+    }
+
+    /**
+     * The suite's deleteIndex(): drops an index behind the library's back,
+     * recorded as `db.sql`.
+     */
+    public static function deleteIndex(Database $database, string $collection, string $index): void
+    {
+        if (self::config()['engine'] === 'memory') {
+            return;
+        }
+        $name = $database->getNamespace() . '_' . $database->getTenant() . '_' . $collection . '_' . $index;
+        $sql = self::config()['engine'] === 'sqlite'
+            ? "DROP INDEX `{$name}`"
+            : 'DROP INDEX "' . Recorder::$schema . '"."' . $name . '"';
+        Recorder::sql(self::pdo(), $sql, [$collection]);
     }
 }
 
 Target::$profile = $profile;
-Recorder::$schema = 'cxrecorder' . ($profile === 'shared' ? 's' : 'p');
+Recorder::$schema = Target::config()['schema'];
 
-$parent = $profile === 'shared' ? 'Tests\\E2E\\Adapter\\SharedTables\\PostgresTest' : 'Tests\\E2E\\Adapter\\PostgresTest';
-$recording = 'Recording' . ($profile === 'shared' ? 'Shared' : 'Postgres') . 'Test';
+$parent = 'Tests\\E2E\\Adapter\\' . Target::config()['class'];
+$recording = 'Recording' . str_replace('-', '', ucwords($profile, '-')) . 'Test';
 eval(<<<PHP
 namespace Tests\\Compat\\Database\\Recorder;
 
@@ -325,25 +417,23 @@ class {$recording} extends \\{$parent}
 
     public function getDatabase(): \\Utopia\\Database\\Database
     {
-        self::\$pdo = Target::pdo();
+        if (Target::config()['engine'] !== 'memory') {
+            self::\$pdo = Target::pdo();
+        }
 
         return Target::database(self::\$authorization);
     }
 
     protected function deleteColumn(string \$collection, string \$column): bool
     {
-        \$database = \$this->getDatabase();
-        \$sql = 'ALTER TABLE "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$collection . '" DROP COLUMN "' . \$column . '"';
-        Recorder::sql(Target::pdo(), \$sql, [\$collection]);
+        Target::deleteColumn(\$this->getDatabase(), \$collection, \$column);
 
         return true;
     }
 
     protected function deleteIndex(string \$collection, string \$index): bool
     {
-        \$database = \$this->getDatabase();
-        \$sql = 'DROP INDEX "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$database->getTenant() . '_' . \$collection . '_' . \$index . '"';
-        Recorder::sql(Target::pdo(), \$sql, [\$collection]);
+        Target::deleteIndex(\$this->getDatabase(), \$collection, \$index);
 
         return true;
     }
@@ -493,12 +583,20 @@ foreach (array_keys($order) as $name) {
 \ini_set("memory_limit", "-1");
 $cases = new Cases($profile, Recorder::$stream, $tests, Target::open(), Recorder::$schema, $dirty);
 $written = $cases->write($root . '/tests/compat/database/cases', $filter);
-@mkdir(__DIR__ . '/out');
-file_put_contents(
-    __DIR__ . "/out/{$profile}.json",
-    json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
-);
 foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {
     fwrite(STDERR, "problem: {$problem}\n");
 }
+@mkdir(__DIR__ . '/out');
+try {
+    $originals = Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]);
+} catch (\Throwable $e) {
+    // A recorded result that is not plain data: the fidelity data is
+    // written without the originals.
+    fwrite(STDERR, "out/{$profile}.json: originals not written ({$e->getMessage()})\n");
+    $originals = Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => []]);
+}
+file_put_contents(
+    __DIR__ . "/out/{$profile}.json",
+    json_encode($originals, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
+);
 fwrite(STDOUT, json_encode($written, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");
