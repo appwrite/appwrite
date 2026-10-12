@@ -20,12 +20,27 @@ Passkeys are bound to a **relying party ID**: the domain of your app, such as `e
 
 Appwrite works out where each passkey may be used from your project's platforms. You do not maintain a separate list of origins.
 
-| Platform | What you add in Appwrite | Origin Appwrite accepts | What else the platform needs |
-| --- | --- | --- | --- |
-| Web | A web platform on the relying party ID or one of its subdomains | `https://app.example.com` | Nothing |
-| Android | An Android platform with the SHA-256 fingerprints of your signing keys | `android:apk-key-hash:<hash>` | `/.well-known/assetlinks.json` on the relying party ID |
-| Apple | An Apple platform | `https://<relying party ID>` | An associated domain and `/.well-known/apple-app-site-association` on the relying party ID |
-| Local development | A `localhost` web platform | `http://localhost` on any port | Nothing |
+{% table %}
+* Platform {% width=130 %}
+* Origin Appwrite accepts {% width=260 %}
+* Setup
+---
+* Web
+* `https://app.example.com`
+* A web platform on the relying party ID or one of its subdomains.
+---
+* Android
+* `android:apk-key-hash:<hash>`
+* An Android platform with the SHA-256 fingerprints of your signing keys, and an `assetlinks.json` file on the relying party ID.
+---
+* Apple
+* `https://example.com`
+* An Apple platform, an associated domain, and an `apple-app-site-association` file on the relying party ID.
+---
+* Local development
+* `http://localhost:<port>`
+* A `localhost` web platform.
+{% /table %}
 
 A native app needs a domain even if you have no website. The domain only has to serve the two `.well-known` files over HTTPS.
 
@@ -654,17 +669,39 @@ On the server, the Users service has the same operations for any user: `users.li
 
 # Errors {% #errors %}
 
-| Error | Cause |
-| --- | --- |
-| `user_auth_method_unsupported` | Passkeys are turned off, or the project has no relying party ID with a matching platform. |
-| `user_reauthentication_required` | Registering or deleting a passkey needs a session that signed in, or completed MFA, within the last 10 minutes. |
-| `user_invalid_token` | The challenge expired after 5 minutes or was already used, registration finished from a different session, the passkey settings changed during the ceremony, or the sign-in token expired after one minute. Start again. |
-| `user_passkey_invalid` | The credential failed verification, for example because the origin is not one Appwrite accepts or the signature does not match. |
-| `user_passkey_limit_exceeded` | The user already has 10 passkeys, counting registrations still in progress. |
-| `user_passkey_already_exists` | This credential, or a passkey with this ID, is already registered. |
-| `user_passkey_not_found` | No passkey with this ID belongs to the user, or the registration is no longer pending. |
-| `user_blocked` | The passkey belongs to a blocked user. |
-| `general_argument_invalid` | You tried to change the relying party ID while users have passkeys, including localhost passkeys and registrations in progress. |
-| `general_rate_limit_exceeded` | Too many passkey requests. Registration allows 10 per user and sign-in 10 per IP address each hour. |
+{% table %}
+* Error {% width=300 %}
+* Cause
+---
+* `user_auth_method_unsupported`
+* Passkeys are turned off, or the project has no relying party ID with a matching platform.
+---
+* `user_reauthentication_required`
+* Registering or deleting a passkey needs a session that signed in, or completed MFA, within the last 10 minutes.
+---
+* `user_invalid_token`
+* The challenge expired after 5 minutes or was already used, registration finished from a different session, the passkey settings changed during the ceremony, or the sign-in token expired after one minute. Start again.
+---
+* `user_passkey_invalid`
+* The credential failed verification, for example because the origin is not one Appwrite accepts or the signature does not match.
+---
+* `user_passkey_limit_exceeded`
+* The user already has 10 passkeys, counting registrations still in progress.
+---
+* `user_passkey_already_exists`
+* This credential, or a passkey with this ID, is already registered.
+---
+* `user_passkey_not_found`
+* No passkey with this ID belongs to the user, or the registration is no longer pending.
+---
+* `user_blocked`
+* The passkey belongs to a blocked user.
+---
+* `general_argument_invalid`
+* You tried to change the relying party ID while users have passkeys, including localhost passkeys and registrations in progress.
+---
+* `general_rate_limit_exceeded`
+* Too many passkey requests. Registration allows 10 per user and sign-in 10 per IP address each hour.
+{% /table %}
 
 When registration or sign-in fails with `user_passkey_invalid` from a native app, compare the origin the platform sent with **Where passkeys work** under **Auth** > **Policies** > **Passkeys**. On Android, a missing origin usually means the app was signed with a key whose fingerprint is not on the Android platform.
