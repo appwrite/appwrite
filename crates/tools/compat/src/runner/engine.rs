@@ -202,10 +202,47 @@ impl Engine {
         kinds.iter().try_for_each(|k| snapshot::cleanup(&self.cfg, k, ns))
     }
 
+    /// Builds `spec`'s task binaries into the Rust driver's own target
+    /// directory before any case runs. The driver builds them on first use
+    /// too (`crate::task::run`), but there the build counts against the
+    /// driver's reply timeout, which a cold build (CI) can exceed; here it
+    /// leaves the driver an up-to-date binary. A driver run by command
+    /// (`COMPAT_RUST`, a container) builds its own.
+    fn build_tasks(&self, spec: &spec::Spec) -> Result<(), String> {
+        let Some(driver) = self.cfg.rust.first().map(std::path::PathBuf::from) else { return Ok(()) };
+        if spec.tasks.is_empty()
+            || self.cfg.rust_in_container
+            || driver.file_name().is_none_or(|n| n != "compat-driver")
+        {
+            return Ok(());
+        }
+        let profile = driver.parent().map(std::path::Path::to_path_buf).unwrap_or_default();
+        let release = profile.file_name().is_some_and(|n| n == "release");
+        let target = profile.parent().map(std::path::Path::to_path_buf).unwrap_or_default();
+        for task in spec.tasks.values() {
+            let mut cargo = std::process::Command::new(std::env::var("CARGO").unwrap_or_else(|_| "cargo".to_owned()));
+            cargo
+                .args(["build", "--quiet", "-p", &task.rust.package, "--bin", &task.rust.bin, "--target-dir"])
+                .arg(&target);
+            if release {
+                cargo.arg("--release");
+            }
+            let status = cargo
+                .current_dir(&self.cfg.root)
+                .status()
+                .map_err(|e| format!("cargo build {}: {e}", task.rust.bin))?;
+            if !status.success() {
+                return Err(format!("cargo build -p {} --bin {} failed", task.rust.package, task.rust.bin));
+            }
+        }
+        Ok(())
+    }
+
     /// Runs every case of `lib` (optionally only those whose label contains `filter`).
     pub fn run_lib(&mut self, lib: &str, filter: Option<&str>, fail_fast: bool) -> Result<Report, String> {
         self.restart();
         let spec = spec::load(&self.cfg.root, lib)?;
+        self.build_tasks(&spec)?;
         let files = cases::load_dir(&spec::lib_dir(&self.cfg.root, lib).join("cases"))?;
         let mut report = Report::default();
         for file in &files {
@@ -498,6 +535,7 @@ impl Engine {
     pub fn fuzz_lib(&mut self, lib: &str, opts: &FuzzOptions) -> Result<Report, String> {
         self.restart();
         let spec = spec::load(&self.cfg.root, lib)?;
+        self.build_tasks(&spec)?;
         let (ns_p, ns_r) = (self.ns('p'), self.ns('r'));
         self.configure("php", &ns_p)?;
         self.configure("rust", &ns_r)?;
