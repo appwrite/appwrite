@@ -2,11 +2,13 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
+use Appwrite\Databases\Counter;
 use Appwrite\Databases\ListCache;
 use Appwrite\Databases\RelatedPermissions;
 use Appwrite\Databases\Support;
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Action as AppwriteAction;
+use Appwrite\Utopia\Database\Attribute as AttributeDefinition;
 use Utopia\Database\Adapter;
 use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
 use Utopia\Database\Capability;
@@ -16,6 +18,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Operator;
+use Utopia\Database\OperatorType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
@@ -110,9 +113,14 @@ class Action extends AppwriteAction
     protected function parseOperators(array $data, Document $collection): array
     {
         $relationshipKeys = [];
+        $integerKeys = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            if ($attribute->getAttribute('type') === ColumnType::Relationship->value) {
+            $type = $attribute->getAttribute('type');
+            if ($type === ColumnType::Relationship->value) {
                 $relationshipKeys[$attribute->getAttribute('key')] = true;
+            }
+            if (\is_string($type) && \in_array(AttributeDefinition::columnType($type), [ColumnType::Integer, ColumnType::BigInteger], true)) {
+                $integerKeys[$attribute->getAttribute('key')] = (bool) $attribute->getAttribute('array', false);
             }
         }
 
@@ -143,7 +151,7 @@ class Action extends AppwriteAction
                     Operator::isMethod($decoded['method'])
                 ) {
                     try {
-                        $data[$key] = Operator::parse($value);
+                        $data[$key] = $this->wholeOperands(Operator::parse($value), $integerKeys[$key] ?? null);
                     } catch (\Exception $e) {
                         throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
                     }
@@ -157,7 +165,7 @@ class Action extends AppwriteAction
                 Operator::isMethod($value['method'])
             ) {
                 try {
-                    $data[$key] = Operator::parseOperator($value);
+                    $data[$key] = $this->wholeOperands(Operator::parseOperator($value), $integerKeys[$key] ?? null);
                 } catch (\Exception $e) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
                 }
@@ -167,6 +175,52 @@ class Action extends AppwriteAction
         }
 
         return $data;
+    }
+
+    /**
+     * An integer column takes whole operands only. A fractional increment, decrement or array item is rounded half
+     * to even, as a fractional counter change is, and a limit to the whole numbers it allows (a maximum floored, a
+     * minimum ceiled), which is the result main's engines stored. A fractional factor, divisor or exponent is left
+     * as sent: rounding it would store a different product than main did.
+     *
+     * @param bool|null $array Whether the integer column is an array; null when the column is not an integer
+     */
+    private function wholeOperands(Operator $operator, ?bool $array): Operator
+    {
+        if ($array === null) {
+            return $operator;
+        }
+
+        $counter = new Counter(true);
+        $whole = fn (mixed $value): mixed => \is_int($value) || \is_float($value) || (\is_string($value) && \is_numeric($value))
+            ? $counter->whole($value)
+            : $value;
+        $method = $operator->getMethod();
+        $values = $operator->getValues();
+
+        if (!$array && $operator->isNumericOperation()) {
+            if (isset($values[0]) && \in_array($method, [OperatorType::Increment, OperatorType::Decrement], true)) {
+                $values[0] = $whole($values[0]);
+            }
+            if (isset($values[1]) && \is_numeric($values[1])) {
+                $values[1] = \in_array($method, [OperatorType::Decrement, OperatorType::Divide], true)
+                    ? $counter->minimum($values[1])
+                    : $counter->maximum($values[1]);
+            }
+        }
+
+        if ($array) {
+            $values = match ($method) {
+                OperatorType::ArrayAppend, OperatorType::ArrayPrepend => \array_map(
+                    fn (mixed $item): mixed => \is_array($item) ? \array_map($whole, $item) : $whole($item),
+                    $values,
+                ),
+                OperatorType::ArrayInsert => isset($values[1]) ? [$values[0], $whole($values[1])] : $values,
+                default => $values,
+            };
+        }
+
+        return $operator->setValues($values);
     }
 
     /**

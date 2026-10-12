@@ -6279,6 +6279,90 @@ trait DatabasesBase
         }
     }
 
+    public function testFractionalOperandsOnAnIntegerColumnStoreWhatMainStored(): void
+    {
+        if (!$this->getSupportForOperators()) {
+            $this->expectNotToPerformAssertions();
+            return;
+        }
+
+        $databaseId = $this->setupDatabase()['databaseId'];
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+        $userHeaders = array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders());
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'Fractional operands',
+            $this->getSecurityParam() => false,
+            'permissions' => [
+                Permission::create(Role::users()),
+                Permission::read(Role::users()),
+                Permission::update(Role::users()),
+            ],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', ['key' => 'count', 'required' => false]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $this->waitForAttribute($databaseId, $collectionId, 'count');
+
+        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $userHeaders, [
+            $this->getRecordIdParam() => Id::unique(),
+            'data' => ['count' => 10],
+        ]);
+        $this->assertSame(201, $record['headers']['status-code']);
+        $recordId = $record['body']['$id'];
+
+        $update = fn (Operator $operator): array => $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+            'data' => ['count' => $operator->toString()],
+        ]);
+
+        /**
+         * Test for SUCCESS
+         */
+        // Main stored each result rounded to the nearest whole number, and applied a limit when the result stayed within it.
+        $steps = [
+            [Operator::increment(1.25), 11],
+            [Operator::increment(1.75), 13],
+            [Operator::decrement(0.75), 12],
+            [Operator::increment(2, 13.9), 12],
+            [Operator::increment(1, 13.9), 13],
+            [Operator::decrement(1, 11.1), 12],
+            [Operator::decrement(1, 11.1), 12],
+            [Operator::multiply(2, 25.5), 24],
+            [Operator::multiply(2, 25.5), 24],
+        ];
+        foreach ($steps as $index => [$operator, $expected]) {
+            $updated = $update($operator);
+            $this->assertSame(200, $updated['headers']['status-code'], "Step {$index}: " . ($updated['body']['message'] ?? ''));
+            $this->assertSame($expected, $updated['body']['count'], "Step {$index}");
+        }
+
+        $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+            'data' => ['count' => Operator::increment(0.75)->toString()],
+        ]);
+        $this->assertSame(200, $upserted['headers']['status-code'], $upserted['body']['message'] ?? '');
+        $this->assertSame(25, $upserted['body']['count']);
+
+        $bulk = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), $keyHeaders, [
+            'data' => ['count' => Operator::decrement(1.25, 20.5)->toString()],
+            'queries' => [Query::equal('$id', [$recordId])->toString()],
+        ]);
+        $this->assertSame(200, $bulk['headers']['status-code'], $bulk['body']['message'] ?? '');
+
+        $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders);
+        $this->assertSame(200, $read['headers']['status-code']);
+        $this->assertSame(24, $read['body']['count']);
+    }
+
     public function testOperators(): void
     {
         if (!$this->getSupportForOperators()) {

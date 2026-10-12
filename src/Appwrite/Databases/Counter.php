@@ -126,6 +126,19 @@ final readonly class Counter
     }
 
     /**
+     * A change on an integer column as a whole number: a fractional one rounded half to even, as a fractional
+     * counter change is rounded.
+     */
+    public function whole(int|float|string $value): int|float|string
+    {
+        if ($this->acceptsChange($value) || !\is_finite((float) $value)) {
+            return $this->change($value);
+        }
+
+        return self::integral(\round((float) $value, 0, \PHP_ROUND_HALF_EVEN));
+    }
+
+    /**
      * A float change on an integer column keeps main's float result in the response.
      */
     private function rounds(int|float|string $value): bool
