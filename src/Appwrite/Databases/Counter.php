@@ -126,19 +126,6 @@ final readonly class Counter
     }
 
     /**
-     * A change on an integer column as a whole number: a fractional one rounded half to even, as a fractional
-     * counter change is rounded.
-     */
-    public function whole(int|float|string $value): int|float|string
-    {
-        if ($this->acceptsChange($value) || !\is_finite((float) $value)) {
-            return $this->change($value);
-        }
-
-        return self::integral(\round((float) $value, 0, \PHP_ROUND_HALF_EVEN));
-    }
-
-    /**
      * A float change on an integer column keeps main's float result in the response.
      */
     private function rounds(int|float|string $value): bool
@@ -154,8 +141,8 @@ final readonly class Counter
     }
 
     /**
-     * A fractional change on an integer column stores the exact result rounded half to even, as the
-     * SQL engines do on assignment, and returns the exact result. The row stays locked between the
+     * A fractional change on an integer column stores the exact result rounded as main's engine stored
+     * it, and returns the exact result. The row stays locked between the
      * read and the whole-number change so the rounding sees the value it changes.
      */
     private function round(Database $database, string $collection, string $id, string $attribute, float $value, int|float|string|null $bound, bool $increase): Document
@@ -168,7 +155,7 @@ final readonly class Counter
 
             $before = $current->getAttribute($attribute) ?? 0;
             $exact = $increase ? $before + $value : $before - $value;
-            $whole = self::wholeChange(BigInt::toNative($before), $value, $increase);
+            $whole = self::wholeChange(Engine::of($database)->rounding(), BigInt::toNative($before), $value, $increase);
 
             if (BigInt::compare($whole, 0) > 0) {
                 $document = $increase
@@ -188,10 +175,11 @@ final readonly class Counter
     }
 
     /**
-     * The whole-number change that stores $before plus or minus $value rounded half to even. $before never passes
+     * The whole-number change that stores $before plus or minus $value as main's engine stored it (rounded half to
+     * even on MariaDB, cut toward zero on MongoDB, NUMERIC's half away from zero on PostgreSQL). $before never passes
      * through a float, which cannot hold every integer above 2^53; only the fraction of $value decides the rounding.
      */
-    private static function wholeChange(int|string $before, float $value, bool $increase): int|string
+    private static function wholeChange(Rounding $rounding, int|string $before, float $value, bool $increase): int|string
     {
         $whole = self::integral(\floor($value));
         $fraction = $value - \floor($value);
@@ -199,22 +187,11 @@ final readonly class Counter
             return $whole;
         }
 
-        if ($increase) {
-            $base = BigInt::add($before, $whole);
-            $up = $fraction > 0.5 || ($fraction === 0.5 && self::odd($base));
+        $stored = $increase
+            ? $rounding->apply(BigInt::add($before, $whole), $fraction)
+            : $rounding->apply(BigInt::subtract(BigInt::subtract($before, $whole), 1), 1 - $fraction);
 
-            return $up ? BigInt::add($whole, 1) : $whole;
-        }
-
-        $base = BigInt::subtract(BigInt::subtract($before, $whole), 1);
-        $up = $fraction < 0.5 || ($fraction === 0.5 && self::odd($base));
-
-        return $up ? $whole : BigInt::add($whole, 1);
-    }
-
-    private static function odd(int|string $value): bool
-    {
-        return (int) \substr((string) $value, -1) % 2 === 1;
+        return BigInt::compare($stored, $before) >= 0 ? BigInt::subtract($stored, $before) : BigInt::subtract($before, $stored);
     }
 
     private static function decimal(string $bound): ?Decimal

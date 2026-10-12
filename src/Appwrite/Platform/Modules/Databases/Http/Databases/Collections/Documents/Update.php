@@ -147,6 +147,10 @@ class Update extends Action
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
+        if ($transactionId === null) {
+            $data = $this->resolveIntegerOperators($data, $collection, $document, $dbForDatabases);
+        }
+
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
             PermissionType::Read,

@@ -140,6 +140,11 @@ class Upsert extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
+        if ($transactionId === null && $this->hasFractionalIntegerOperators($data, $collection)) {
+            $stored = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
+            $data = $this->resolveIntegerOperators($data, $collection, $stored, $dbForDatabases);
+        }
+
         $allowedPermissions = [
             PermissionType::Read,
             PermissionType::Update,

@@ -2,7 +2,8 @@
 
 namespace Appwrite\Platform\Modules\Databases\Http\Databases;
 
-use Appwrite\Databases\Counter;
+use Appwrite\Databases\Engine;
+use Appwrite\Databases\IntegerOperators;
 use Appwrite\Databases\ListCache;
 use Appwrite\Databases\RelatedPermissions;
 use Appwrite\Databases\Support;
@@ -18,7 +19,6 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Operator;
-use Utopia\Database\OperatorType;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
@@ -113,16 +113,12 @@ class Action extends AppwriteAction
     protected function parseOperators(array $data, Document $collection): array
     {
         $relationshipKeys = [];
-        $integerKeys = [];
         foreach ($collection->getAttribute('attributes', []) as $attribute) {
-            $type = $attribute->getAttribute('type');
-            if ($type === ColumnType::Relationship->value) {
+            if ($attribute->getAttribute('type') === ColumnType::Relationship->value) {
                 $relationshipKeys[$attribute->getAttribute('key')] = true;
             }
-            if (\is_string($type) && \in_array(AttributeDefinition::columnType($type), [ColumnType::Integer, ColumnType::BigInteger], true)) {
-                $integerKeys[$attribute->getAttribute('key')] = (bool) $attribute->getAttribute('array', false);
-            }
         }
+        $integerArrays = $this->integerKeys($collection, array: true);
 
         foreach ($data as $key => $value) {
             if (!\is_string($key)) {
@@ -151,7 +147,7 @@ class Action extends AppwriteAction
                     Operator::isMethod($decoded['method'])
                 ) {
                     try {
-                        $data[$key] = $this->wholeOperands(Operator::parse($value), $integerKeys[$key] ?? null);
+                        $data[$key] = $this->wholeItems(Operator::parse($value), isset($integerArrays[$key]));
                     } catch (\Exception $e) {
                         throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
                     }
@@ -165,7 +161,7 @@ class Action extends AppwriteAction
                 Operator::isMethod($value['method'])
             ) {
                 try {
-                    $data[$key] = $this->wholeOperands(Operator::parseOperator($value), $integerKeys[$key] ?? null);
+                    $data[$key] = $this->wholeItems(Operator::parseOperator($value), isset($integerArrays[$key]));
                 } catch (\Exception $e) {
                     throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid operator for attribute "' . $key . '": ' . $e->getMessage());
                 }
@@ -177,50 +173,134 @@ class Action extends AppwriteAction
         return $data;
     }
 
-    /**
-     * An integer column takes whole operands only. A fractional increment, decrement or array item is rounded half
-     * to even, as a fractional counter change is, and a limit to the whole numbers it allows (a maximum floored, a
-     * minimum ceiled), which is the result main's engines stored. A fractional factor, divisor or exponent is left
-     * as sent: rounding it would store a different product than main did.
-     *
-     * @param bool|null $array Whether the integer column is an array; null when the column is not an integer
-     */
-    private function wholeOperands(Operator $operator, ?bool $array): Operator
+    private function wholeItems(Operator $operator, bool $integerArray): Operator
     {
-        if ($array === null) {
-            return $operator;
-        }
+        return $integerArray ? IntegerOperators::wholeItems($operator) : $operator;
+    }
 
-        $counter = new Counter(true);
-        $whole = fn (mixed $value): mixed => \is_int($value) || \is_float($value) || (\is_string($value) && \is_numeric($value))
-            ? $counter->whole($value)
-            : $value;
-        $method = $operator->getMethod();
-        $values = $operator->getValues();
-
-        if (!$array && $operator->isNumericOperation()) {
-            if (isset($values[0]) && \in_array($method, [OperatorType::Increment, OperatorType::Decrement], true)) {
-                $values[0] = $whole($values[0]);
+    /**
+     * The integer columns of a collection, keyed by attribute key: the arrays, or the single values.
+     *
+     * @return array<string, true>
+     */
+    private function integerKeys(Document $collection, bool $array): array
+    {
+        $keys = [];
+        foreach ($collection->getAttribute('attributes', []) as $attribute) {
+            $type = $attribute->getAttribute('type');
+            if (
+                \is_string($type)
+                && \in_array(AttributeDefinition::columnType($type), [ColumnType::Integer, ColumnType::BigInteger], true)
+                && (bool) $attribute->getAttribute('array', false) === $array
+            ) {
+                $keys[$attribute->getAttribute('key')] = true;
             }
-            if (isset($values[1]) && \is_numeric($values[1])) {
-                $values[1] = \in_array($method, [OperatorType::Decrement, OperatorType::Divide], true)
-                    ? $counter->minimum($values[1])
-                    : $counter->maximum($values[1]);
+        }
+
+        return $keys;
+    }
+
+    /**
+     * Whether $data holds a numeric operator with a fractional amount or limit on an integer column, which needs
+     * the stored value to answer as main did.
+     *
+     * @param array<string, mixed> $data
+     */
+    protected function hasFractionalIntegerOperators(array $data, Document $collection): bool
+    {
+        $keys = $this->integerKeys($collection, array: false);
+        foreach ($data as $key => $value) {
+            if ($value instanceof Operator && isset($keys[$key]) && IntegerOperators::fractional($value)) {
+                return true;
             }
         }
 
-        if ($array) {
-            $values = match ($method) {
-                OperatorType::ArrayAppend, OperatorType::ArrayPrepend => \array_map(
-                    fn (mixed $item): mixed => \is_array($item) ? \array_map($whole, $item) : $whole($item),
-                    $values,
-                ),
-                OperatorType::ArrayInsert => isset($values[1]) ? [$values[0], $whole($values[1])] : $values,
-                default => $values,
-            };
+        return false;
+    }
+
+    /**
+     * Answer each numeric operator with a fractional amount or limit on an integer column from $stored, as main's
+     * engine did, with the whole-number change it amounts to.
+     *
+     * @param array<string, mixed> $data
+     * @return array<string, mixed>
+     */
+    protected function resolveIntegerOperators(array $data, Document $collection, Document $stored, Database $dbForDatabases): array
+    {
+        $keys = $this->integerKeys($collection, array: false);
+        $operators = null;
+        foreach ($data as $key => $value) {
+            if ($value instanceof Operator && isset($keys[$key]) && IntegerOperators::fractional($value)) {
+                $operators ??= new IntegerOperators(Engine::of($dbForDatabases));
+                $data[$key] = $operators->resolve($value, $stored->getAttribute($key));
+            }
         }
 
-        return $operator->setValues($values);
+        return $data;
+    }
+
+    /**
+     * resolveIntegerOperators() for every document of a bulk upsert, each against its own stored version, read in
+     * one query per batch; a document not stored yet is answered from an empty one.
+     *
+     * @param array<Document> $documents
+     * @return array<Document>
+     */
+    protected function resolveIntegerOperatorsOfDocuments(Database $dbForDatabases, string $collectionTableId, Document $collection, array $documents): array
+    {
+        $ids = [];
+        foreach ($documents as $document) {
+            if ($this->hasFractionalIntegerOperators($document->getArrayCopy(), $collection)) {
+                $ids[] = $document->getId();
+            }
+        }
+        if ($ids === []) {
+            return $documents;
+        }
+
+        $stored = [];
+        foreach (\array_chunk($ids, APP_DATABASE_QUERY_MAX_VALUES) as $chunk) {
+            foreach ($dbForDatabases->getAuthorization()->skip(fn (): array => $dbForDatabases->find($collectionTableId, [Query::equal('$id', $chunk), Query::limit(\count($chunk))])) as $document) {
+                $stored[$document->getId()] = $document;
+            }
+        }
+
+        return \array_map(
+            fn (Document $document): Document => \in_array($document->getId(), $ids, true)
+                ? new Document($this->resolveIntegerOperators($document->getArrayCopy(), $collection, $stored[$document->getId()] ?? new Document(), $dbForDatabases))
+                : $document,
+            $documents,
+        );
+    }
+
+    /**
+     * A bulk update whose fractional integer operators change each document by its own amount, split into one
+     * update per distinct change, each naming the documents it applies to.
+     *
+     * @param array<string, mixed> $data
+     * @param array<Query> $queries
+     * @return list<array{data: array<string, mixed>, queries: list<array<Query>>}>
+     */
+    protected function groupIntegerOperators(Database $dbForDatabases, string $collectionTableId, Document $collection, array $data, array $queries): array
+    {
+        $groups = [];
+        foreach ($dbForDatabases->cursor($collectionTableId, $queries) as $document) {
+            $resolved = $this->resolveIntegerOperators($data, $collection, $document, $dbForDatabases);
+            $signature = \serialize(\array_map(
+                fn (mixed $value): mixed => $value instanceof Operator ? $value->toArray() : null,
+                $resolved,
+            ));
+            $groups[$signature]['data'] = $resolved;
+            $groups[$signature]['ids'][] = $document->getId();
+        }
+
+        return \array_map(fn (array $group): array => [
+            'data' => $group['data'],
+            'queries' => \array_map(
+                fn (array $ids): array => [Query::equal('$id', $ids)],
+                \array_chunk($group['ids'], APP_DATABASE_QUERY_MAX_VALUES),
+            ),
+        ], \array_values($groups));
     }
 
     /**

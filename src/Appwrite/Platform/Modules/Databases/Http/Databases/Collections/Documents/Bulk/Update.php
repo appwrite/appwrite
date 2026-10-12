@@ -205,17 +205,27 @@ class Update extends Action
         $documents = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(true, function () use ($plan, &$documents, $dbForDatabases, $database, $collection, $data, $queries) {
-                return $dbForDatabases->updateDocuments(
-                    'database_' . $database->getSequence() . '_collection_' . $collection->getSequence(),
-                    new Document($data),
-                    $queries,
-                    onNext: function (Document $document) use ($plan, &$documents) {
-                        if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
-                            $documents[] = $document;
+            $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+            $onNext = function (Document $document) use ($plan, &$documents) {
+                if (\count($documents) < ($plan['databasesBatchSize'] ?? APP_LIMIT_DATABASE_BATCH)) {
+                    $documents[] = $document;
+                }
+            };
+            $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collection, $collectionTableId, $data, $queries, $onNext) {
+                if (!$this->hasFractionalIntegerOperators($data, $collection)) {
+                    return $dbForDatabases->updateDocuments($collectionTableId, new Document($data), $queries, onNext: $onNext);
+                }
+
+                return $dbForDatabases->withTransaction(function () use ($dbForDatabases, $collection, $collectionTableId, $data, $queries, $onNext): int {
+                    $modified = 0;
+                    foreach ($this->groupIntegerOperators($dbForDatabases, $collectionTableId, $collection, $data, $queries) as $group) {
+                        foreach ($group['queries'] as $selection) {
+                            $modified += $dbForDatabases->updateDocuments($collectionTableId, new Document($group['data']), $selection, onNext: $onNext);
                         }
-                    },
-                );
+                    }
+
+                    return $modified;
+                });
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

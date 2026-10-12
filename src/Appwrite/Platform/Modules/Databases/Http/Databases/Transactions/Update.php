@@ -264,6 +264,18 @@ class Update extends Action
                             $data = $this->parseOperators($data, $collection);
                         }
 
+                        if (\in_array($action, ['update', 'upsert'], true) && $documentId && \is_array($data) && $this->hasFractionalIntegerOperators($data, $collection)) {
+                            $stored = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionId, $documentId));
+                            $data = $this->resolveIntegerOperators($data, $collection, $stored, $dbForDatabases);
+                        }
+
+                        if ($action === 'bulkUpsert' && \is_array($data)) {
+                            $data = $this->resolveIntegerOperatorsOfDocuments($dbForDatabases, $collectionId, $collection, \array_map(
+                                fn (mixed $document): Document => $document instanceof Document ? $document : new Document($document),
+                                $data,
+                            ));
+                        }
+
                         if ($action === 'delete' && $documentId && empty($data)) {
                             $doc = $dbForDatabases->getDocument($collectionId, $documentId);
                             if (!$doc->isEmpty()) {
@@ -311,7 +323,10 @@ class Update extends Action
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
                             case 'bulkUpdate':
-                                $count = $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $data, $createdAt, $state);
+                                $count = 0;
+                                foreach ($this->bulkUpdates($dbForDatabases, $collectionId, $collection, $data) as $update) {
+                                    $count += $this->handleBulkUpdateOperation($dbForDatabases, $transactionState, $collectionId, $update, $createdAt, $state);
+                                }
                                 $totalOperations += $count;
                                 $databaseOperations[$databaseInternalId] = ($databaseOperations[$databaseInternalId] ?? 0) + $count;
                                 break;
@@ -937,6 +952,32 @@ class Update extends Action
             );
         });
         return $count;
+    }
+
+    /**
+     * A staged bulk update as the updates it runs: itself, or one per distinct change its fractional integer
+     * operators make, each naming its documents.
+     *
+     * @param array{data: array<string, mixed>, queries?: array<string>} $data
+     * @return list<array{data: array<string, mixed>, queries: array<string>}>
+     */
+    private function bulkUpdates(Database $dbForDatabases, string $collectionId, Document $collection, array $data): array
+    {
+        if (!$this->hasFractionalIntegerOperators($data['data'], $collection)) {
+            return [['data' => $data['data'], 'queries' => $data['queries'] ?? []]];
+        }
+
+        $updates = [];
+        foreach ($this->groupIntegerOperators($dbForDatabases, $collectionId, $collection, $data['data'], Query::parseQueries($data['queries'] ?? [])) as $group) {
+            foreach ($group['queries'] as $selection) {
+                $updates[] = [
+                    'data' => $group['data'],
+                    'queries' => \array_map(fn (Query $query): string => $query->toString(), $selection),
+                ];
+            }
+        }
+
+        return $updates;
     }
 
     /**

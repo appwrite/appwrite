@@ -1,0 +1,161 @@
+<?php
+
+namespace Appwrite\Databases;
+
+use Utopia\Database\Operator;
+use Utopia\Database\OperatorType;
+use Utopia\Database\Validator\BigInt;
+
+/**
+ * Numeric operators on an integer column with a fractional amount or limit. The library takes whole operands only;
+ * main (database 7.4.1) handed fractional ones to the engine, which stored the result rounded its own way. Each such
+ * operator is answered from the stored value as main's engine answered it, and sent as the whole-number change.
+ */
+final readonly class IntegerOperators
+{
+    private const array LIMITED_BY_MAXIMUM = [OperatorType::Increment, OperatorType::Multiply, OperatorType::Power];
+
+    private const array LIMITED_BY_MINIMUM = [OperatorType::Decrement, OperatorType::Divide];
+
+    /**
+     * Without a limit, main bound the amount next to an integer column on PostgreSQL, which read it as an integer
+     * and refused a fractional one.
+     */
+    private const array CAST_TO_INTEGER_ON_POSTGRESQL = [OperatorType::Increment, OperatorType::Decrement, OperatorType::Multiply, OperatorType::Divide];
+
+    public function __construct(private Engine $engine)
+    {
+    }
+
+    /**
+     * Whether the operator needs the stored value: a numeric operator with a fractional amount or limit.
+     */
+    public static function fractional(Operator $operator): bool
+    {
+        if (!$operator->isNumericOperation()) {
+            return false;
+        }
+
+        foreach (\array_slice($operator->getValues(), 0, 2) as $value) {
+            if (self::isFractional($value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Items added to an integer array as every engine read them back on main: cut toward zero.
+     */
+    public static function wholeItems(Operator $operator): Operator
+    {
+        $whole = fn (mixed $item): mixed => self::isFractional($item) ? (int) (float) $item : $item;
+        $values = $operator->getValues();
+
+        return match ($operator->getMethod()) {
+            OperatorType::ArrayAppend, OperatorType::ArrayPrepend => $operator->setValues(\array_map(
+                fn (mixed $value): mixed => \is_array($value) ? \array_map($whole, $value) : $whole($value),
+                $values,
+            )),
+            OperatorType::ArrayInsert => isset($values[1]) ? $operator->setValues([$values[0], $whole($values[1])]) : $operator,
+            default => $operator,
+        };
+    }
+
+    /**
+     * The whole-number change that stores what main stored for $operator applied to $stored. The operator comes
+     * back unchanged when main's engine refused it (PostgreSQL took a fractional amount only with a limit) or the
+     * result is undefined, so the library refuses it.
+     */
+    public function resolve(Operator $operator, int|float|string|null $stored): Operator
+    {
+        $method = $operator->getMethod();
+        $values = $operator->getValues();
+        $amount = $values[0] ?? 1;
+        $limit = $values[1] ?? null;
+        $current = BigInt::toNative($stored ?? 0);
+
+        if ($this->engine === Engine::PostgreSQL && $limit === null && self::isFractional($amount) && \in_array($method, self::CAST_TO_INTEGER_ON_POSTGRESQL, true)) {
+            return $operator;
+        }
+
+        $exact = self::compute($method, (float) $current, (float) $amount);
+        if ($limit !== null && ($this->undefinedPower($method, $current, $amount) || $this->beyond($method, $exact, (float) $amount, (float) $limit))) {
+            return Operator::increment(0);
+        }
+
+        if (!\is_finite($exact)) {
+            return $operator;
+        }
+
+        $rounding = $this->engine->rounding($method, !self::isFractional($amount));
+        $stores = \in_array($method, [OperatorType::Increment, OperatorType::Decrement], true)
+            ? self::shift($rounding, $current, (float) $amount, $method === OperatorType::Increment)
+            : $rounding->round($exact);
+        $change = BigInt::subtract($stores, $current);
+
+        return BigInt::compare($change, 0) >= 0
+            ? Operator::increment($change)
+            : Operator::decrement(BigInt::negate($change));
+    }
+
+    private static function isFractional(mixed $value): bool
+    {
+        return match (true) {
+            \is_float($value) => \is_finite($value) && \floor($value) !== $value,
+            \is_string($value) && \is_numeric($value) => !BigInt::isIntegerString($value) && \floor((float) $value) !== (float) $value,
+            default => false,
+        };
+    }
+
+    private static function compute(OperatorType $method, float $current, float $amount): float
+    {
+        return match ($method) {
+            OperatorType::Increment => $current + $amount,
+            OperatorType::Decrement => $current - $amount,
+            OperatorType::Multiply => $current * $amount,
+            OperatorType::Divide => $amount === 0.0 ? \NAN : $current / $amount,
+            OperatorType::Modulo => $amount === 0.0 ? \NAN : \fmod($current, $amount),
+            OperatorType::Power => $current === 0.0 && $amount < 0 ? \NAN : $current ** $amount,
+            default => \NAN,
+        };
+    }
+
+    private function beyond(OperatorType $method, float $exact, float $amount, float $limit): bool
+    {
+        return match (true) {
+            $method === OperatorType::Multiply && $amount === 0.0, $method === OperatorType::Divide && $amount === 0.0 => false,
+            \in_array($method, self::LIMITED_BY_MAXIMUM, true) => $exact > $limit,
+            \in_array($method, self::LIMITED_BY_MINIMUM, true) => $exact < $limit,
+            default => false,
+        };
+    }
+
+    /**
+     * With a limit, main left the value as it was where the power is undefined: zero to a negative power, a
+     * negative base to a fractional one.
+     */
+    private function undefinedPower(OperatorType $method, int|string $current, int|float|string $amount): bool
+    {
+        return $method === OperatorType::Power
+            && ((BigInt::compare($current, 0) === 0 && (float) $amount < 0) || (BigInt::compare($current, 0) < 0 && self::isFractional($amount)));
+    }
+
+    /**
+     * The stored value plus or minus a fractional amount, exact at any size of the stored value.
+     */
+    private static function shift(Rounding $rounding, int|string $current, float $amount, bool $increase): int|string
+    {
+        $whole = BigInt::toNative(\sprintf('%.0f', \floor($amount)));
+        $fraction = $amount - \floor($amount);
+
+        if ($increase) {
+            return $rounding->apply(BigInt::add($current, $whole), $fraction);
+        }
+
+        return $fraction === 0.0
+            ? BigInt::subtract($current, $whole)
+            : $rounding->apply(BigInt::subtract(BigInt::subtract($current, $whole), 1), 1 - $fraction);
+    }
+}

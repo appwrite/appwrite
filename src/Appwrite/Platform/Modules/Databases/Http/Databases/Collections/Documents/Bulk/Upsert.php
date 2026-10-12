@@ -176,6 +176,7 @@ class Upsert extends Action
             $this->validateTimestamps($document->getArrayCopy(), $dbForDatabases);
         }
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+        $documents = $this->resolveIntegerOperatorsOfDocuments($dbForDatabases, $collectionTableId, $collection, $documents);
         $upserted = [];
 
         try {

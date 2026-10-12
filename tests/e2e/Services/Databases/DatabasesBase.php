@@ -6279,6 +6279,12 @@ trait DatabasesBase
         }
     }
 
+    /**
+     * Every expectation is what main (database 7.4.1) stored on each engine for the same operator on an integer
+     * column: MariaDB rounded a DOUBLE half to even (an exact DECIMAL half away from zero when dividing by a whole
+     * number), PostgreSQL rounded NUMERIC half away from zero and refused a fractional amount without a limit, and
+     * MongoDB read the stored double back cut toward zero. null is a refusal.
+     */
     public function testFractionalOperandsOnAnIntegerColumnStoreWhatMainStored(): void
     {
         if (!$this->getSupportForOperators()) {
@@ -6286,6 +6292,11 @@ trait DatabasesBase
             return;
         }
 
+        $engine = match (getenv('_APP_DB_ADAPTER')) {
+            'postgresql' => 1,
+            'mongodb' => 2,
+            default => 0,
+        };
         $databaseId = $this->setupDatabase()['databaseId'];
         $keyHeaders = [
             'content-type' => 'application/json',
@@ -6312,55 +6323,92 @@ trait DatabasesBase
 
         $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', ['key' => 'count', 'required' => false]);
         $this->assertSame(202, $attribute['headers']['status-code']);
-        $this->waitForAttribute($databaseId, $collectionId, 'count');
+        $attribute = $this->createAttribute($databaseId, $collectionId, 'integer', ['key' => 'counts', 'required' => false, 'array' => true]);
+        $this->assertSame(202, $attribute['headers']['status-code']);
+        $this->waitForAllAttributes($databaseId, $collectionId);
 
-        $record = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $userHeaders, [
+        $record = fn (array $data): string => $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), $userHeaders, [
             $this->getRecordIdParam() => Id::unique(),
-            'data' => ['count' => 10],
-        ]);
-        $this->assertSame(201, $record['headers']['status-code']);
-        $recordId = $record['body']['$id'];
-
-        $update = fn (Operator $operator): array => $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
-            'data' => ['count' => $operator->toString()],
-        ]);
+            'data' => $data,
+        ])['body']['$id'];
+        $read = fn (string $recordId): array => $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders)['body'];
 
         /**
          * Test for SUCCESS
          */
-        // Main stored each result rounded to the nearest whole number, and applied a limit when the result stayed within it.
-        $steps = [
-            [Operator::increment(1.25), 11],
-            [Operator::increment(1.75), 13],
-            [Operator::decrement(0.75), 12],
-            [Operator::increment(2, 13.9), 12],
-            [Operator::increment(1, 13.9), 13],
-            [Operator::decrement(1, 11.1), 12],
-            [Operator::decrement(1, 11.1), 12],
-            [Operator::multiply(2, 25.5), 24],
-            [Operator::multiply(2, 25.5), 24],
+        // [stored, operator, [MariaDB, PostgreSQL, MongoDB]]
+        $cases = [
+            'increment ties' => [11, Operator::increment(1.5), [12, null, 12]],
+            'increment tie to even' => [10, Operator::increment(1.5), [12, null, 11]],
+            'increment negative tie' => [-12, Operator::increment(0.5), [-12, null, -11]],
+            'decrement tie' => [11, Operator::decrement(0.5), [10, null, 10]],
+            'increment tie within a limit' => [11, Operator::increment(1.5, 20), [12, 13, 12]],
+            'decrement tie within a limit' => [11, Operator::decrement(0.5, 0), [10, 11, 10]],
+            'increment onto a fractional limit' => [12, Operator::increment(1.5, 13.5), [14, 14, 13]],
+            'increment past a fractional limit' => [12, Operator::increment(2, 13.9), [12, 12, 12]],
+            'increment within a fractional limit' => [10, Operator::increment(2, 13.9), [12, 12, 12]],
+            'multiply tie' => [5, Operator::multiply(2.5), [12, null, 12]],
+            'multiply tie within a limit' => [5, Operator::multiply(2.5, 100), [12, 13, 12]],
+            'multiply negative tie within a limit' => [7, Operator::multiply(-1.5, 100), [-10, -11, -10]],
+            'multiply past a fractional limit' => [13, Operator::multiply(2, 25.5), [13, 13, 13]],
+            'divide tie by a fraction' => [5, Operator::divide(0.4, 0), [12, 13, 12]],
+            'divide by a fraction' => [10, Operator::divide(1.5), [7, null, 6]],
+            'divide tie by a whole number with a fractional limit' => [5, Operator::divide(2, 0.5), [3, 3, 2]],
+            'modulo tie' => [13, Operator::modulo(3.5), [2, 3, 2]],
+            'modulo negative' => [-11, Operator::modulo(3.5), [0, -1, 0]],
+            'power by a fraction' => [2, Operator::power(2.5), [6, 6, 5]],
+            'power past a fractional limit' => [3, Operator::power(2, 8.5), [3, 3, 3]],
+            'power to a negative fraction' => [4, Operator::power(-0.5), [0, 0, 0]],
         ];
-        foreach ($steps as $index => [$operator, $expected]) {
-            $updated = $update($operator);
-            $this->assertSame(200, $updated['headers']['status-code'], "Step {$index}: " . ($updated['body']['message'] ?? ''));
-            $this->assertSame($expected, $updated['body']['count'], "Step {$index}");
+        foreach ($cases as $name => [$stored, $operator, $expectations]) {
+            $expected = $expectations[$engine];
+            $recordId = $record(['count' => $stored]);
+            $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+                'data' => ['count' => $operator->toString()],
+            ]);
+
+            if ($expected === null) {
+                $this->assertSame(400, $updated['headers']['status-code'], "{$name}: main's engine refused it");
+                $this->assertSame($stored, $read($recordId)['count'], $name);
+                continue;
+            }
+
+            $this->assertSame(200, $updated['headers']['status-code'], "{$name}: " . ($updated['body']['message'] ?? ''));
+            $this->assertSame($expected, $updated['body']['count'], $name);
+            $this->assertSame($expected, $read($recordId)['count'], $name);
         }
 
+        $recordId = $record(['counts' => [1]]);
+        $updated = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
+            'data' => ['counts' => Operator::arrayAppend([1.5, -2.5, 0.9999])->toString()],
+        ]);
+        $this->assertSame(200, $updated['headers']['status-code'], $updated['body']['message'] ?? '');
+        $this->assertSame([1, 1, -2, 0], $read($recordId)['counts'], 'Every engine read fractional array items back cut toward zero');
+
+        $recordId = $record(['count' => 11]);
         $upserted = $this->client->call(Client::METHOD_PUT, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders, [
-            'data' => ['count' => Operator::increment(0.75)->toString()],
+            'data' => ['count' => Operator::increment(1.5, 20)->toString()],
         ]);
         $this->assertSame(200, $upserted['headers']['status-code'], $upserted['body']['message'] ?? '');
-        $this->assertSame(25, $upserted['body']['count']);
+        $this->assertSame([12, 13, 12][$engine], $read($recordId)['count']);
 
+        $even = $record(['count' => 10]);
+        $odd = $record(['count' => 11]);
         $bulk = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId), $keyHeaders, [
-            'data' => ['count' => Operator::decrement(1.25, 20.5)->toString()],
-            'queries' => [Query::equal('$id', [$recordId])->toString()],
+            'data' => ['count' => Operator::increment(1.5, 100)->toString()],
+            'queries' => [Query::equal('$id', [$even, $odd])->toString()],
         ]);
         $this->assertSame(200, $bulk['headers']['status-code'], $bulk['body']['message'] ?? '');
+        $this->assertSame(2, $bulk['body']['total']);
+        $this->assertSame([12, 12, 11][$engine], $read($even)['count'], 'Each document of a bulk update rounds from its own stored value');
+        $this->assertSame([12, 13, 12][$engine], $read($odd)['count']);
 
-        $read = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, $recordId), $userHeaders);
-        $this->assertSame(200, $read['headers']['status-code']);
-        $this->assertSame(24, $read['body']['count']);
+        $recordId = $record(['count' => 10]);
+        $increased = $this->client->call(Client::METHOD_PATCH, $this->getRecordUrl($databaseId, $collectionId, $recordId) . '/count/increment', $userHeaders, [
+            'value' => 1.5,
+        ]);
+        $this->assertSame(200, $increased['headers']['status-code'], $increased['body']['message'] ?? '');
+        $this->assertSame([12, 12, 11][$engine], $read($recordId)['count'], 'A counter rounds as the engine stored it on main');
     }
 
     public function testOperators(): void
