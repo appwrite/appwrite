@@ -63,13 +63,6 @@ class Messaging extends Action
     /** The Appwrite push provider, delivered over MQTT. */
     private const APPWRITE_PUSH_PROVIDER = 'appwrite';
 
-    /**
-     * Push providers that send a wake-up signal (instead of a full notification) when the user is already
-     * reached over Appwrite push. A provider not listed here is delivered normally; an empty list turns
-     * the wake-up off.
-     *
-     * @var array<string>
-     */
     private const APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS = ['apns'];
 
     public static function getName(): string
