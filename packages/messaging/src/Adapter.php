@@ -280,37 +280,48 @@ abstract class Adapter
         $results = [];
 
         $run = function () use ($requests, $timeout, $connectTimeout, &$results): void {
+            $concurrency = max(1, min(\count($requests), self::MAX_CONCURRENT_REQUESTS));
+
             $pool = new ConnectionPool(
                 adapter: new SwoolePoolAdapter(),
                 name: self::CONNECTION_POOL_NAME,
-                size: max(1, min(\count($requests), self::MAX_CONCURRENT_REQUESTS)),
+                size: $concurrency,
                 init: $this->clientFactory ?? $this->defaultClient($timeout, $connectTimeout)->withConnectionReuse(...),
-                // A slot per request, so acquisition never queues; the request
+                // A slot per worker coroutine, so acquisition never queues; the request
                 // timeouts belong to the client, not to getting hold of one.
                 timeout: 0.0,
             );
 
+            $indexes = \array_keys($requests);
+            $next = 0;
             $group = new WaitGroup();
 
-            foreach ($requests as $index => $request) {
+            for ($worker = 0; $worker < $concurrency; $worker++) {
                 $group->add();
 
-                Coroutine::create(function () use ($pool, $request, $index, &$results, $group): void {
+                Coroutine::create(function () use ($pool, $requests, $indexes, &$next, &$results, $group): void {
                     try {
-                        $results[$index] = $pool->use(fn (ClientInterface $client): array => $this->buildResult($client->sendRequest($request), (string) $request->getUri()));
-                    } catch (\Throwable $error) {
-                        // Throwable rather than the PSR client exception: pool
-                        // acquisition and factory failures must also land in
-                        // this slot's result — an uncaught throwable in a
-                        // coroutine is fatal and would drop the slot entirely.
-                        $results[$index] = [
-                            'url' => (string) $request->getUri(),
-                            'statusCode' => 0,
-                            'response' => null,
-                            'headers' => [],
-                            'error' => $error->getMessage(),
-                            'errorCode' => (int) $error->getCode(),
-                        ];
+                        while (($position = $next++) < \count($indexes)) {
+                            $index = $indexes[$position];
+                            $request = $requests[$index];
+
+                            try {
+                                $results[$index] = $pool->use(fn (ClientInterface $client): array => $this->buildResult($client->sendRequest($request), (string) $request->getUri()));
+                            } catch (\Throwable $error) {
+                                // Throwable rather than the PSR client exception: pool
+                                // acquisition and factory failures must also land in
+                                // this slot's result — an uncaught throwable in a
+                                // coroutine is fatal and would drop the slot entirely.
+                                $results[$index] = [
+                                    'url' => (string) $request->getUri(),
+                                    'statusCode' => 0,
+                                    'response' => null,
+                                    'headers' => [],
+                                    'error' => $error->getMessage(),
+                                    'errorCode' => (int) $error->getCode(),
+                                ];
+                            }
+                        }
                     } finally {
                         $group->done();
                     }
@@ -318,6 +329,7 @@ abstract class Adapter
             }
 
             $group->wait();
+            \ksort($results);
         };
 
         // Fan out directly when already inside a coroutine runtime (e.g.

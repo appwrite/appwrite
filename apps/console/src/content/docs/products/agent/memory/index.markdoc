@@ -1,0 +1,43 @@
+---
+layout: article
+title: Memory
+description: Learn how Appwrite Agent memory stores preferences, instructions, and facts across conversations.
+---
+
+**Memory** stores durable notes the Agent can reuse across chats so you do not restate the same guidance every time. Use it for how you want replies shaped, standing rules for your org’s Appwrite usage, and stable facts about your stack.
+
+Manage memory under **Agent** > **Settings** > **Memory**. Memories you create in the Console belong to your user account and apply when they are active. They are not a substitute for project secrets or team-wide policy documents.
+
+# Categories {% #categories %}
+
+Pick a category that matches why you are saving the note. The category helps you (and the Agent) treat the content as style, rule, or fact.
+
+| Category | Use for | Example |
+|----------|---------|---------|
+| Preference | How you want the Agent to respond | `Prefer short answers with numbered steps` |
+| Instruction | Standing rules when helping you | `Always use TablesDB terminology, not collections, for this org` |
+| Fact | Stable information about apps or conventions | `Production project region is fra` |
+
+Each memory has a **key** (short label, fixed after create), **content**, optional **priority**, and an active or archived status.
+
+# Priority and status {% #priority-and-status %}
+
+When many memories exist, the Agent may not be able to include every note in every turn. **Priority** controls which memories are kept first when space is limited: higher values are preferred.
+
+**Active** memories are available to the Agent. **Archived** memories stay saved but are not included until you activate them again. Archive is the right tool when a preference is temporarily wrong (for example during an incident war room) without deleting the text.
+
+# Writing memories that help {% #writing-memories %}
+
+Good memories are specific and stable. Prefer one clear rule per memory over a long essay that mixes tone, naming, and infrastructure. Keys should be scannable in the settings list (`reply-style`, `tablesdb-terms`, `prod-region`).
+
+Avoid storing secrets (API keys, passwords, tokens, private connection strings) in memory. Use project settings, environment variables, and secure secret storage instead. Memory is meant for guidance the Agent can safely reuse in prompts, not for credentials.
+
+If two memories conflict (for example one says "be brief" and another says "always explain in detail"), raise the priority of the one you want to win, or archive the outdated note.
+
+# How memory relates to a single chat {% #memory-vs-chat %}
+
+Memory is for standing guidance. For one-off context (this bug, this screenshot, this deploy), put the details in the conversation or attach a file. Mixing ephemeral incident detail into memory makes future chats noisier.
+
+{% arrow_link href="/docs/products/agent/add-memory" %}
+Add memory
+{% /arrow_link %}

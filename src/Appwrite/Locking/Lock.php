@@ -5,7 +5,7 @@ namespace Appwrite\Locking;
 use Appwrite\Extend\Exception;
 use Closure;
 use Throwable;
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Database\Document;
 use Utopia\Lock\Lock as UtopiaLock;
 use Utopia\Span\Span;

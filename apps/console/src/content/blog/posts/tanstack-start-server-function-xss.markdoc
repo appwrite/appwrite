@@ -1,0 +1,154 @@
+---
+layout: post
+title: "TanStack Start XSS (CVE-2026-102989): what to do on Appwrite"
+description: A critical XSS in TanStack Start server functions lets a crafted link run scripts on your domain. Here's how to upgrade, and what Appwrite Sites blocks for you.
+date: 2026-10-01
+cover: /images/blog/tanstack-start-server-function-xss/cover.avif
+timeToRead: 7
+author: torsten-dittmann
+category: security
+featured: false
+unlisted: false
+faqs:
+  - question: "What is CVE-2026-102989?"
+    answer: "CVE-2026-102989 ([GHSA-qx66-fv34-fjm8](https://github.com/TanStack/router/security/advisories/GHSA-qx66-fv34-fjm8)) is an unauthenticated reflected XSS in TanStack Start server-function response handling, rated critical with a CVSS score of 9.3. A crafted link to a `/_serverFn/` URL can make an affected app return attacker-controlled HTML from its own origin, so anyone who opens the link runs the attacker's JavaScript in your app."
+  - question: "Which TanStack Start version fixes the XSS?"
+    answer: "Upgrade to `@tanstack/start-server-core` 1.169.39 or later. The framework packages that pull in the fix are `@tanstack/react-start` 1.168.60, `@tanstack/solid-start` 1.168.57, and `@tanstack/vue-start` 1.168.56. Versions from 1.143.12 up to those releases are affected."
+  - question: "Do I still need to upgrade if my site runs on Appwrite Cloud?"
+    answer: "Yes. Appwrite Cloud blocks the known crafted-link pattern at the edge, but that is a mitigation, not a fix. The `x-tsr-serverFn` header it checks is set by the client and is not authentication. Upgrade TanStack Start and push a new deployment."
+  - question: "Do Appwrite's TanStack Start edge rules count toward my Firewall rule limit?"
+    answer: "No. The two rules are built into Appwrite Cloud's edge and apply to every site automatically. They do not appear in your rules list and do not count toward your plan's [rule limit](/docs/products/firewall/rules#plan-limits)."
+  - question: "Why does my TanStack Start site return 403 on a /_serverFn/ request?"
+    answer: "Check the `X-Appwrite-WAF-Rule` response header. If it reads `internal-tanstack-start-server-fn-xss-header` or `internal-tanstack-start-server-fn-xss-navigation`, Appwrite's edge rule denied the request because it had no `x-tsr-serverFn: true` header or looked like a page load. The usual cause is an HTML form that posts straight to a server-function URL without JavaScript."
+  - question: "Does self-hosted Appwrite include the TanStack Start edge rules?"
+    answer: "No. The rules run on Appwrite Cloud's edge. On a self-hosted instance, upgrading TanStack Start is the fix. You can also add the same header and navigation checks to the reverse proxy in front of your sites."
+---
+
+TanStack [released a fix](https://tanstack.com/blog/tanstack-start-security-update-cve-2026-102989) for a critical vulnerability in TanStack Start on September 30, 2026. A crafted link to a server function can make your app respond with HTML the attacker wrote, served from your own domain. Anyone who opens that link runs the attacker's JavaScript as if your app had shipped it. The advisory is [GHSA-qx66-fv34-fjm8](https://github.com/TanStack/router/security/advisories/GHSA-qx66-fv34-fjm8), tracked as CVE-2026-102989, with a CVSS score of 9.3.
+
+The attacker needs no account and no access to your code, only one person who clicks a link. Lovable helped TanStack discover the issue and worked with them on the fix.
+
+If you run TanStack Start on [Appwrite Sites](/docs/products/sites), upgrade to the patched release and push a new deployment. Until you do, Appwrite Cloud blocks the known attack pattern at the edge on every site. The rest of this post covers the upgrade, what our rules block, and what they don't.
+
+# What to do about CVE-2026-102989
+
+1. Check which version of `@tanstack/start-server-core` your lockfile resolves.
+2. Upgrade to `@tanstack/react-start` 1.168.60 or later. Solid and Vue have their own patched versions, listed below.
+3. Commit the lockfile and push, so Appwrite Sites builds a new deployment.
+
+You don't need to create a Firewall rule. Appwrite Cloud already applies two rules to `/_serverFn/*` on every site, and they don't count toward your plan's rule limit. They reduce exposure but don't fix the bug. TanStack's advisory says the same about every edge mitigation.
+
+# How the TanStack Start server-function XSS works
+
+Server functions in TanStack Start are RPC endpoints. The client calls them at `/_serverFn/<id>`, sends a payload, and gets a serialized result back. The framework runs your middleware around each call.
+
+In affected versions, the transport copied fields from the request payload into internal middleware state. It should have kept only the public input fields. An attacker could shape a payload that left their own value in the error path. Response handling then treated that response-shaped object as a real HTTP response and sent it back.
+
+Put that payload in a URL and you have a link to your own domain that returns attacker HTML. The browser has no way to tell it apart from your real pages.
+
+## What an attacker can do in an Appwrite app
+
+The script runs on your origin, so it gets whatever access your frontend has for the visitor who opened the link.
+
+- **Client-side Appwrite SDK.** Your site's hostname is a registered platform in your project, so the script can call Appwrite with the visitor's session. It can read their rows, files, and account details, and change anything their permissions allow.
+- **SSR with a session cookie.** If you keep the session secret in an `httpOnly` cookie, the script can't read the cookie. It can still call your own routes and server functions, and those attach the session on the server.
+
+This is a browser-side attack. It doesn't read your site's environment variables or server-side keys directly. It acts as the person who clicked.
+
+# Affected and patched TanStack Start versions
+
+The bug lives in `@tanstack/start-server-core`. Each framework package pulls it in, so check that package first.
+
+| Package | Affected | Patched |
+|---------|----------|---------|
+| `@tanstack/start-server-core` | `>= 1.143.12, < 1.169.39` | `1.169.39` |
+| `@tanstack/react-start` | `>= 1.143.12, < 1.168.60` | `1.168.60` |
+| `@tanstack/solid-start` | `>= 1.143.12, < 1.168.57` | `1.168.57` |
+| `@tanstack/vue-start` | `>= 1.143.12, < 1.168.56` | `1.168.56` |
+
+If your site deploys TanStack Start as static output, no server answers `/_serverFn/*`, so this bug can't reach it. Upgrade anyway. Switching the site to SSR later would bring it back.
+
+# How to upgrade TanStack Start on Appwrite Sites
+
+Check the version your project resolves:
+
+```bash
+npm ls @tanstack/start-server-core
+```
+
+With pnpm, `pnpm why @tanstack/start-server-core` gives the same answer. With Bun, run `bun pm ls --all` and look for the same package. Anything below 1.169.39 needs the upgrade.
+
+`@tanstack/react-start` depends on an exact `@tanstack/react-router` version, so upgrade both together to keep a single copy in your tree:
+
+```bash
+npm install @tanstack/react-start@latest @tanstack/react-router@latest
+```
+
+For Solid, upgrade `@tanstack/solid-start` and `@tanstack/solid-router`. For Vue, upgrade `@tanstack/vue-start` and `@tanstack/vue-router`.
+
+Run `npm ls @tanstack/start-server-core` again and confirm every entry shows 1.169.39 or later. An `overrides` or `resolutions` entry can pin an older nested copy, and that copy stays vulnerable.
+
+Commit `package.json` and your lockfile, then push to your production branch. Appwrite Sites [creates, builds, and activates a new deployment](/docs/products/sites/deploy-from-git) on every push to that branch. Redeploying an old deployment from the Console rebuilds the code it already had, so it won't pick up the upgrade. If you configured path filters on build triggers, make sure they include your lockfile. If you deploy with the [Appwrite CLI](/docs/products/sites/deploy-from-cli), create a new deployment after the install.
+
+# What Appwrite Cloud blocks at the edge
+
+TanStack shared mitigation guidance with hosting providers before disclosure. We turned two of its suggestions into rules that Appwrite Cloud runs on every site, ahead of your own [Firewall](/docs/products/firewall) rules. Both match paths starting with `/_serverFn/` and answer with a `403`.
+
+**Only the TanStack client may call a server function.** TanStack's client sends `x-tsr-serverFn: true` on every server-function call. A link someone clicks can't add a custom header, so the edge denies any request that lacks it or sends another value. CORS preflights are the one exception. The browser names the header in a preflight without sending it.
+
+**A server function is never a page load.** The edge also denies requests with `Sec-Fetch-Mode: navigate` or with `text/html` in the `Accept` header, even when they carry the client header. The TanStack client asks for JSON and its own stream formats, never HTML.
+
+These rules behave differently from the ones you create yourself:
+
+- They don't count toward your [plan's rule limit](/docs/products/firewall/rules#plan-limits). A Free project keeps both of its two rules for its own use.
+- They don't appear in your rules list.
+- You can't turn them off, and your rules can't bypass them. Our rules run first, so a bypass rule never gets the chance.
+
+Treat the header check as a filter, not authentication. Anyone scripting requests by hand can set `x-tsr-serverFn: true`. The rules stop the crafted-link attack a victim's browser would make. The upgrade closes the bug.
+
+## Why a server function returns 403
+
+If a request to `/_serverFn/` fails with a `403`, check the response headers. Our rules name themselves in [`X-Appwrite-WAF-Rule`](/docs/products/firewall/actions#which-rule-fired):
+
+```
+X-Appwrite-WAF-Rule: internal-tanstack-start-server-fn-xss-header
+X-Appwrite-WAF-Action: deny
+```
+
+The navigation rule reports `internal-tanstack-start-server-fn-xss-navigation`. The [traffic overview](/docs/products/firewall/monitor) doesn't break these denies out per site yet, so the header is how you confirm which rule fired.
+
+The usual cause is an HTML form that posts straight to a server-function URL, such as `<form action={myFn.url} method="post">`, with JavaScript unavailable. That submission is a page navigation with no client header, so the edge denies it. Submit the form through the TanStack client instead, for example by calling the server function from an `onSubmit` handler.
+
+## What the edge rules don't cover
+
+- **Custom server-function paths.** The rules match the default `/_serverFn/` prefix. If you set `serverFns.base` in your TanStack Start config, add your own rules. The next section shows how.
+- **Response headers.** TanStack also suggests a restrictive `Content-Security-Policy` on server-function responses. Firewall can't set response headers, so the edge doesn't add one. The patched release validates responses at the server boundary, which is the job that header would back up.
+- **Self-hosted Appwrite.** The rules run on Appwrite Cloud's edge. A self-hosted instance doesn't have them, so upgrading is the fix there. You can also add the same checks to the reverse proxy in front of your sites.
+- **Functions.** The rules apply to Sites only. TanStack Start apps deploy to Sites, so this gap only matters for unusual setups.
+
+# Add the rules yourself for a custom server-function path
+
+If your app serves server functions from a path other than `/_serverFn/`, recreate the checks as site rules. All conditions on a Firewall rule must match, so each check needs its own rule.
+
+1. Open your project in the [Appwrite Console](https://appwrite.io) and go to **Firewall**.
+2. Click **Create rule**, set **Resource type** to your site, and add two conditions:
+   - **Path**, **Starts with**, your server-function base path
+   - **Header** `x-tsr-serverfn`, **Not equal**, `true`
+3. Under **Then**, choose **Deny** and click **Create rule**.
+4. Create a second deny rule for the same site with these conditions:
+   - **Path**, **Starts with**, your server-function base path
+   - **Accept**, **Contains**, `text/html`
+
+**Not equal** also matches when the request sends no header at all, so the first rule catches crafted links. If other origins call your server functions, add **Method**, **Not equal**, `OPTIONS` to the first rule so CORS preflights get through.
+
+Rules you create count toward your plan's limit like any others. On the Free plan, these two use your full allowance.
+
+# Keeping TanStack Start apps on Appwrite Sites patched
+
+The edge rules buy time. Your site is only fixed once `@tanstack/start-server-core` resolves to 1.169.39 or later and that build is the active deployment. Check your lockfile, upgrade, push, and confirm the new deployment is live. If a server function starts returning `403` afterward, the `X-Appwrite-WAF-Rule` header tells you which rule fired.
+
+- [TanStack Start security update: CVE-2026-102989](https://tanstack.com/blog/tanstack-start-security-update-cve-2026-102989)
+- [TanStack advisory GHSA-qx66-fv34-fjm8](https://github.com/TanStack/router/security/advisories/GHSA-qx66-fv34-fjm8)
+- [Deploy a TanStack Start app to Appwrite Sites](/docs/products/sites/quick-start/tanstack-start)
+- [Deploy Sites from Git](/docs/products/sites/deploy-from-git)
+- [Firewall actions and response headers](/docs/products/firewall/actions#which-rule-fired)
