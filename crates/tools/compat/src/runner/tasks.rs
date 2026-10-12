@@ -559,6 +559,65 @@ mod tests {
     }
 
     #[test]
+    fn tasks_are_ported_waived_or_pending() {
+        // A package with a program, a composer bin, a script and a benchmark,
+        // and a crate with one binary.
+        let root = std::env::temp_dir().join(format!("compat-tasks-{}", std::process::id()));
+        let write = |path: &str, text: &str| {
+            let path = root.join(path);
+            std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+            std::fs::write(path, text).unwrap();
+        };
+        write(
+            "packages/x/composer.json",
+            r#"{"bin": ["bin/x"], "scripts": {"test": "phpunit", "sync": "php sync.php --all", "build": "make"}}"#,
+        );
+        write("packages/x/sync.php", "<?php\nrequire 'vendor/autoload.php';\n");
+        write("packages/x/bin/x", "#!/usr/bin/env php\n<?php\n$cli->run();\n");
+        write("packages/x/bench/run.php", "<?php\necho 1;\n");
+        write("packages/x/data/list.php", "<?php\nreturn [];\n");
+        write("crates/utopia/x/Cargo.toml", "[package]\nname = \"utopia-x\"\n");
+        write("crates/utopia/x/src/bin/x-sync.rs", "//! Syncs.\nfn main() {}\n");
+        write("tests/compat/x/cases/sync.json", r#"{"cases": [{"name": "syncs", "op": "sync.run"}]}"#);
+        let spec = |tasks: Value, waived: Value| -> Spec {
+            serde_json::from_value(json!({
+                "lib": "x", "php": { "src": ["packages/x/src"] }, "rust": { "crate": "crates/utopia/x" }, "ops": {},
+                "tasks": tasks, "tasks_waived": waived,
+            }))
+            .unwrap()
+        };
+
+        let none = check(&root, "x", &spec(json!({}), json!({})));
+        assert_eq!(
+            none.pending,
+            ["packages/x/bench/run.php", "packages/x/sync.php", "packages/x/bin/x", "packages/x/composer.json#build"]
+        );
+        assert!(!none.ok());
+
+        let task = json!({ "sync": {
+            "php": "packages/x/sync.php", "rust": { "package": "utopia-x", "bin": "x-sync" }, "covered_by": ["cases/sync.json"]
+        }});
+        let waived = json!({
+            "packages/x/bench/run.php": "A benchmark",
+            "packages/x/bin/x": "An example",
+            "packages/x/composer.json#build": "Builds the docs",
+        });
+        let done = check(&root, "x", &spec(task.clone(), waived));
+        assert!(done.ok(), "{done:?}");
+        assert_eq!(done.ported.len(), 1);
+        assert_eq!(done.waived.len(), 3);
+        assert_eq!(done.entries.iter().find(|e| e.id == "packages/x/sync.php").unwrap().scripts.len(), 1);
+
+        let broken = json!({ "sync": {
+            "php": "packages/x/gone.php", "rust": { "package": "utopia-x", "bin": "x-gone" }, "covered_by": []
+        }});
+        let bad = check(&root, "x", &spec(broken, json!({ "packages/x/old.php": "Removed" })));
+        assert_eq!(bad.broken.len(), 3, "{:?}", bad.broken);
+        assert_eq!(bad.dangling, ["packages/x/old.php"]);
+        std::fs::remove_dir_all(&root).unwrap();
+    }
+
+    #[test]
     fn scripts_that_run_a_file() {
         assert_eq!(runs_php_file("php import.php all --commit=true").as_deref(), Some("import.php"));
         assert_eq!(runs_php_file("@php -d memory_limit=1G ./bin/tool").as_deref(), Some("bin/tool"));

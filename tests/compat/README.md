@@ -168,7 +168,7 @@ Tasks that download never reach the internet in tests: the PHP script and the Ru
 
 1. `bin/compat new <lib>`, then read the PHP source and tests end to end.
 2. `bin/compat coverage <lib>` lists every public symbol. Design operations that exercise them and add them to `spec.json` with `covers`.
-3. Implement them in `Adapter.php` and `src/libs/<lib>.rs`, port every PHP test class to a case file, add interop cases for shared formats and fuzz profiles for pure operations.
+3. Implement them in `Adapter.php` and `src/libs/<lib>.rs`, port every PHP test class to a case file, add interop cases for shared formats and fuzz profiles for pure operations. Port every task `coverage` lists (or waive it), with cases that run both runtimes' tasks against fixtures ([Tasks](#tasks)).
 4. Converge: `bin/compat run`, `fuzz`, `coverage`. A difference is a Rust bug, a PHP quirk to keep and record, or a missing case. Never loosen a comparison to make it pass.
 5. `bin/compat record <lib>`, set `"complete": true` once `bin/compat check <lib>` passes, and `bin/compat status --write`.
 
