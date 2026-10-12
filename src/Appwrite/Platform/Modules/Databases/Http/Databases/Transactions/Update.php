@@ -157,6 +157,26 @@ class Update extends Action
             $databaseOperations = [];
             $currentDocumentId = null;
 
+            $claim = function () use ($dbForProject, $transactionId) {
+                // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice,
+                // and staging, which takes the same lock, must not add operations after they are read below
+                $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
+
+                if ($current->getAttribute('status', '') !== 'pending') {
+                    return new Document();
+                }
+
+                return $dbForProject->updateDocument('transactions', $transactionId, new Document(['status' => 'committing']));
+            };
+
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? $authorization->skip(fn () => $dbForProject->withTransaction($claim))
+                : $dbForProject->withTransaction($claim);
+
+            if ($transaction->isEmpty()) {
+                throw new Exception(Exception::TRANSACTION_NOT_READY);
+            }
+
             $firstOperation = $authorization->skip(fn () => $dbForProject->findOne('transactionLogs', [
                 Query::equal('transactionInternalId', [$transaction->getSequence()]),
                 Query::orderAsc(),
@@ -182,33 +202,14 @@ class Update extends Action
                 return;
             }
 
-            $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
-                Query::equal('$sequence', [$firstOperation['databaseInternalId']])
-            ]));
-            $databaseDsn = $databaseDoc->getAttribute('database') ?: $project->getAttribute('database');
-
-            $dbForDatabases = $getDatabasesDB($databaseDoc);
-
-            $claim = function () use ($dbForProject, $transactionId) {
-                // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice
-                $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
-
-                if ($current->getAttribute('status', '') !== 'pending') {
-                    return new Document();
-                }
-
-                return $dbForProject->updateDocument('transactions', $transactionId, new Document(['status' => 'committing']));
-            };
-
-            $transaction = ($isAPIKey || $isPrivilegedUser)
-                ? $authorization->skip(fn () => $dbForProject->withTransaction($claim))
-                : $dbForProject->withTransaction($claim);
-
-            if ($transaction->isEmpty()) {
-                throw new Exception(Exception::TRANSACTION_NOT_READY);
-            }
-
             try {
+                $databaseDoc = $authorization->skip(fn () => $dbForProject->findOne('databases', [
+                    Query::equal('$sequence', [$firstOperation['databaseInternalId']])
+                ]));
+                $databaseDsn = $databaseDoc->getAttribute('database') ?: $project->getAttribute('database');
+
+                $dbForDatabases = $getDatabasesDB($databaseDoc);
+
                 $operations = $authorization->skip(fn () => $dbForProject->find('transactionLogs', [
                     Query::equal('transactionInternalId', [$transaction->getSequence()]),
                     Query::orderAsc(),
