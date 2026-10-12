@@ -11,7 +11,7 @@
 //! operation's `{"$error": ...}` while a [`Fault`] stops the case.
 
 // TEMPORARY (phase B): parts of the shared API are only used once the
-// documents and relationships areas are glued.
+// relationships area is glued (the documents area is).
 #![allow(dead_code)]
 
 use std::collections::HashMap;
