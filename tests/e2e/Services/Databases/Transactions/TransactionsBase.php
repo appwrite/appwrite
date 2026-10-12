@@ -518,6 +518,75 @@ trait TransactionsBase
         $this->assertEquals(400, $response['headers']['status-code']);
     }
 
+    /**
+     * Work after COMMIT (cache purges, queueing the cleanup of its logs) never turns a committed transaction into a
+     * failed one: the commit answers committed, its writes stay, and the transaction keeps reading as committed
+     * while the cleanup runs.
+     */
+    public function testACommittedTransactionStaysCommitted(): void
+    {
+        $keyHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+            'x-appwrite-key' => $this->getProject()['apiKey'],
+        ];
+
+        $database = $this->client->call(Client::METHOD_POST, $this->getDatabaseUrl(), $keyHeaders, [
+            'databaseId' => Id::unique(),
+            'name' => 'CommittedTransactionDB',
+        ]);
+        $this->assertSame(201, $database['headers']['status-code']);
+        $databaseId = $database['body']['$id'];
+
+        $collection = $this->client->call(Client::METHOD_POST, $this->getContainerUrl($databaseId), $keyHeaders, [
+            $this->getContainerIdParam() => Id::unique(),
+            'name' => 'CommittedTransaction',
+            'permissions' => [Permission::read(Role::any()), Permission::create(Role::any())],
+        ]);
+        $this->assertSame(201, $collection['headers']['status-code']);
+        $collectionId = $collection['body']['$id'];
+
+        if ($this->getSupportForAttributes()) {
+            $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId, 'string', null), $keyHeaders, [
+                'key' => 'name',
+                'size' => 64,
+                'required' => false,
+            ]);
+            $this->assertSame(202, $attribute['headers']['status-code']);
+            $this->waitForAllAttributes($databaseId, $collectionId);
+        }
+
+        $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $keyHeaders);
+        $this->assertSame(201, $transaction['headers']['status-code']);
+        $transactionId = $transaction['body']['$id'];
+
+        $staged = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl($transactionId) . '/operations', $keyHeaders, [
+            'operations' => [[
+                'databaseId' => $databaseId,
+                $this->getContainerIdParam() => $collectionId,
+                'action' => 'create',
+                $this->getRecordIdParam() => 'committed',
+                'data' => ['name' => 'Committed'],
+            ]],
+        ]);
+        $this->assertSame(201, $staged['headers']['status-code']);
+
+        $commit = $this->client->call(Client::METHOD_PATCH, $this->getTransactionUrl($transactionId), $keyHeaders, ['commit' => true]);
+        $this->assertSame(200, $commit['headers']['status-code']);
+        $this->assertSame('committed', $commit['body']['status']);
+
+        $record = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId, 'committed'), $keyHeaders);
+        $this->assertSame(200, $record['headers']['status-code']);
+
+        $deadline = \microtime(true) + 5;
+        do {
+            $read = $this->client->call(Client::METHOD_GET, $this->getTransactionUrl($transactionId), $keyHeaders);
+            $this->assertSame(200, $read['headers']['status-code']);
+            $this->assertSame('committed', $read['body']['status'], 'A committed transaction must never read as failed');
+            \usleep(500_000);
+        } while (\microtime(true) < $deadline);
+    }
+
     public function testCommitInvalidRelationship(): void
     {
         if (!$this->getSupportForRelationships()) {

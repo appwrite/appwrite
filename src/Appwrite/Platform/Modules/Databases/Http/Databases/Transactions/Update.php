@@ -3,9 +3,9 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Transactions;
 
 use Appwrite\Databases\Counter;
+use Appwrite\Databases\TransactionCleanup;
 use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
-use Appwrite\Event\Message\Delete as DeleteMessage;
 use Appwrite\Event\Message\Func as FunctionMessage;
 use Appwrite\Event\Publisher\Delete as DeletePublisher;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
@@ -171,11 +171,7 @@ class Update extends Action
                     new Document(['status' => 'committed'])
                 ));
 
-                $publisherForDeletes->enqueue(new DeleteMessage(
-                    project: $project,
-                    type: DELETE_TYPE_DOCUMENT,
-                    document: $transaction,
-                ));
+                (new TransactionCleanup($publisherForDeletes))->queue($project, $transaction);
 
                 $response
                     ->setStatusCode(SwooleResponse::STATUS_CODE_OK)
@@ -349,29 +345,6 @@ class Update extends Action
                 // Every write purges its cached rows, nested and cascaded rows included, inside a savepoint of
                 // this transaction, so a read before COMMIT can cache the old row again. Purge them again after COMMIT.
                 $purged = $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit));
-
-                // The commit already landed, so a cache error must not fail it
-                foreach ($purged as $key => $hashes) {
-                    foreach (\array_keys($hashes) as $hash) {
-                        try {
-                            $dbForDatabases->getCache()->purge($key, $hash);
-                        } catch (\Throwable $e) {
-                            Console::warning('Failed to purge committed document from cache: ' . $e->getMessage());
-                        }
-                    }
-                }
-
-                $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
-                    'transactions',
-                    $transactionId,
-                    new Document(['status' => 'committed'])
-                ));
-
-                $publisherForDeletes->enqueue(new DeleteMessage(
-                    project: $project,
-                    type: DELETE_TYPE_DOCUMENT,
-                    document: $transaction,
-                ));
             } catch (NotFoundException $e) {
                 $authorization->skip(fn () => $dbForProject->updateDocument('transactions', $transactionId, new Document([
                     'status' => 'failed',
@@ -419,6 +392,25 @@ class Update extends Action
                 ])));
                 throw $e;
             }
+
+            // The writes are committed from here on: nothing below may mark the transaction failed or fail the request.
+            foreach ($purged as $key => $hashes) {
+                foreach (\array_keys($hashes) as $hash) {
+                    try {
+                        $dbForDatabases->getCache()->purge($key, $hash);
+                    } catch (\Throwable $e) {
+                        Console::warning('Failed to purge committed document from cache: ' . $e->getMessage());
+                    }
+                }
+            }
+
+            $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
+                'transactions',
+                $transactionId,
+                new Document(['status' => 'committed'])
+            ));
+
+            (new TransactionCleanup($publisherForDeletes))->queue($project, $transaction);
 
             foreach ($databaseOperations as $databaseInternalId => $count) {
                 $database = $authorization->skip(fn () => $dbForProject->skipFilters(
@@ -613,11 +605,7 @@ class Update extends Action
                 new Document(['status' => 'failed'])
             ));
 
-            $publisherForDeletes->enqueue(new DeleteMessage(
-                project: $project,
-                type: DELETE_TYPE_DOCUMENT,
-                document: $transaction,
-            ));
+            (new TransactionCleanup($publisherForDeletes))->queue($project, $transaction);
         }
 
         $response
