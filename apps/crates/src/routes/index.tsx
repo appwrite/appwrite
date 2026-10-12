@@ -1,6 +1,7 @@
 import { Link, createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { Search, X } from 'lucide-react'
-import { LayoutToggle, LibraryList, PageHeader, Section } from '@/components/Page'
+import { LayoutToggle, LibraryList, Section } from '@/components/Page'
+import { Hero } from '@/components/Hero'
 import { StatusDot } from '@/components/Status'
 import { MigrationCard } from '@/components/Migration'
 import { useMigration } from '@/lib/prefs'
@@ -96,10 +97,7 @@ function Home() {
   const sort: Sort = filters.sort && (migration || !SORTS.find((o) => o.id === filters.sort)?.migration) ? filters.sort : 'category'
   return (
     <div className="mx-auto grid max-w-[1100px] gap-10">
-      <PageHeader title="Utopia libraries">
-        Small, single-purpose Rust libraries for building services: HTTP, validation, authentication, locks, configuration and more. Each library
-        solves one problem and documents it with examples you can copy and run.
-      </PageHeader>
+      <Hero index={index} />
       <MigrationCard title="Conversion from PHP">
         <p className="m-0 text-[13px] text-muted-foreground">
           The libraries are moving from PHP to Rust one at a time. Each Rust crate keeps its PHP library's behaviour, proven case by case against PHP.
@@ -124,7 +122,7 @@ function Home() {
           ))}
         </div>
       </MigrationCard>
-      <div className="sticky top-14 z-10 -mx-2 grid gap-3 border-b border-border bg-background/95 px-2 py-3 backdrop-blur">
+      <div id="libraries" className="sticky top-14 z-10 -mx-2 grid scroll-mt-14 gap-3 border-b border-border bg-background/95 px-2 py-3 backdrop-blur">
         <div className="flex flex-wrap items-center gap-2">
           <label className="flex h-9 min-w-0 flex-[1_1_280px] items-center gap-2 rounded-md border border-border bg-card px-3 text-muted-foreground focus-within:border-ring">
             <Search className="size-4 flex-none" />

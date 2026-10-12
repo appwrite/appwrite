@@ -19,7 +19,7 @@ function highlight(code: string, lang: Lang) {
   return Prism.highlight(code, grammar, lang)
 }
 
-function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
+export function CopyButton({ text, label = 'Copy' }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false)
   return (
     <button
