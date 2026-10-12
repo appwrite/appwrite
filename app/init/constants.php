@@ -604,6 +604,9 @@ const CSV_ALLOWED_DATABASE_TYPES = [
 
 const DATA_EXPORT_RETENTION = 60 * 60 * 24 * 7; // 1 week
 
+// A running migration saves progress after every batch; one silent this long lost its worker
+const MIGRATION_STALL_TIMEOUT = 60 * 60; // 1 hour
+
 const VCS_DEPLOYMENT_SKIP_PATTERNS = [
     '[skip ci]',
 ];

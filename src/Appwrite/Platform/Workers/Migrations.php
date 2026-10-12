@@ -155,6 +155,17 @@ class Migrations extends Action
             throw new \Exception('Project not found');
         }
 
+        // The queue redelivers a job stranded by a killed worker about a day later; a retry may have rerun its migration by then.
+        $current = $dbForProject->getDocument('migrations', $migration->getId());
+        $status = $current->getAttribute('status');
+        $running = $status === 'processing'
+            && \strtotime($current->getUpdatedAt()) >= \time() - MIGRATION_STALL_TIMEOUT;
+
+        if ($status === 'completed' || $running) {
+            Console::warning('Migration(' . $migration->getId() . ') is already ' . $status . ', skipping this delivery');
+            return;
+        }
+
         $this->dbForProject = $dbForProject;
         $this->dbForPlatform = $dbForPlatform;
         $this->project = $project;
