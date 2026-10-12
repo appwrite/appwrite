@@ -76,6 +76,7 @@ class Create extends Action
             ->param('operations', [], new ArrayList(new Operation(type: 'legacy')), 'Array of staged operations.', true)
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('getDatabasesDB')
             ->inject('transactionState')
             ->inject('plan')
             ->inject('authorization')
@@ -83,7 +84,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
+    public function action(string $transactionId, array $operations, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, TransactionState $transactionState, array $plan, Authorization $authorization, User $user): void
     {
         if (empty($operations)) {
             throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Operations array cannot be empty');
@@ -171,42 +172,42 @@ class Create extends Action
 
             // Bulk operations skip permission validation entirely (API key/admin only, already checked above)
             if (!\in_array($operation['action'], ['bulkCreate', 'bulkUpdate', 'bulkUpsert', 'bulkDelete'])) {
-                $permissionType = match ($operation['action']) {
-                    'create' => PermissionType::Create,
-                    'update', 'increment', 'decrement' => PermissionType::Update,
-                    'delete' => PermissionType::Delete,
-                    'upsert' => ($document && !$document->isEmpty()) ? PermissionType::Update : PermissionType::Create,
-                    default => throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action'])
-                };
+                if (!\in_array($operation['action'], ['create', 'update', 'upsert', 'increment', 'decrement', 'delete'])) {
+                    throw new Exception(Exception::GENERAL_BAD_REQUEST, 'Invalid action: ' . $operation['action']);
+                }
 
                 // For individual operations, enforce permissions unless using API key/admin
                 if (!$isAPIKey && !$isPrivilegedUser) {
-                    $documentSecurity = $collection->getAttribute('documentSecurity', false);
+                    $collectionKey = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+                    $exists = $document !== null && !$document->isEmpty();
 
-                    $collectionValid = $authorization->isValid(
-                        new Input($permissionType, $collection->getPermissionsByType($permissionType))
-                    );
-                    $documentValid = false;
-                    if ($document !== null && !$document->isEmpty() && $documentSecurity) {
-                        if ($permissionType === PermissionType::Update) {
-                            $documentValid = $authorization->isValid(
-                                new Input(PermissionType::Update, $document->getPermissionsByType(PermissionType::Update))
-                            );
-                        } elseif ($permissionType === PermissionType::Delete) {
-                            $documentValid = $authorization->isValid(
-                                new Input(PermissionType::Delete, $document->getPermissionsByType(PermissionType::Delete))
-                            );
+                    if ($operation['action'] === 'delete') {
+                        $permissions = $collection->getPermissionsByType(PermissionType::Delete);
+                        if ($collection->getAttribute('documentSecurity', false) && $exists) {
+                            $permissions = [...$permissions, ...$document->getPermissionsByType(PermissionType::Delete)];
                         }
-                    }
-
-                    if ($permissionType === PermissionType::Create || !$documentSecurity) {
-                        if (!$collectionValid) {
+                        if (!$authorization->isValid(new Input(PermissionType::Delete, $permissions))) {
                             throw new Exception(Exception::USER_UNAUTHORIZED);
                         }
                     } else {
-                        if (!$collectionValid && !$documentValid) {
-                            throw new Exception(Exception::USER_UNAUTHORIZED);
+                        $dbForDatabases = $getDatabasesDB($database);
+                        $data = \is_array($operation['data'] ?? null) ? $operation['data'] : [];
+                        $creates = $operation['action'] === 'create' || ($operation['action'] === 'upsert' && !$exists);
+
+                        if ($creates && isset($operation[$this->getResourceId()])) {
+                            $data['$id'] = $operation[$this->getResourceId()];
                         }
+                        if (\in_array($operation['action'], ['increment', 'decrement'])) {
+                            $data = [];
+                        }
+
+                        $this->authorizeStagedWrite(
+                            fn () => $creates
+                                ? $dbForDatabases->authorizeCreate($collectionKey, new Document($data))
+                                : $dbForDatabases->authorizeUpdate($collectionKey, $document ?? new Document(), new Document($data)),
+                            Exception::COLLECTION_NOT_FOUND,
+                            $operation[$this->getGroupId()],
+                        );
                     }
 
                     // Users can only set permissions for roles they have

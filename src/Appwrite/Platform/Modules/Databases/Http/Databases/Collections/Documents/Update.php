@@ -187,6 +187,14 @@ class Update extends Action
 
         // Handle transaction staging
         if ($transactionId !== null) {
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                $this->authorizeStagedWrite(
+                    fn () => $dbForDatabases->authorizeUpdate($collectionTableId, $document, $newDocument),
+                    $this->getParentNotFoundException(),
+                    $collectionId,
+                );
+            }
+
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);

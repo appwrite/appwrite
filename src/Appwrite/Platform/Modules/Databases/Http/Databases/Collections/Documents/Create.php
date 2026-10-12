@@ -314,8 +314,20 @@ class Create extends Action
             return $document;
         }, $documents);
 
+        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
+
         // Handle transaction staging
         if ($transactionId !== null) {
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                foreach ($documents as $document) {
+                    $this->authorizeStagedWrite(
+                        fn () => $dbForDatabases->authorizeCreate($collectionTableId, $document),
+                        $this->getParentNotFoundException(),
+                        $collectionId,
+                    );
+                }
+            }
+
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
@@ -388,7 +400,6 @@ class Create extends Action
             $this->validateTimestamps($document->getArrayCopy(), $dbForDatabases);
         }
 
-        $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
         $writes = Operations::writes($collection, $documents, fn (string $id): Document => $authorization->skip(
             fn () => $dbForProject->getDocument('database_' . $database->getSequence(), $id)
         ));

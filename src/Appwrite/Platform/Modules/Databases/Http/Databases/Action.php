@@ -12,6 +12,9 @@ use Utopia\Database\Adapter\Feature\Relationships as FeatureRelationships;
 use Utopia\Database\Capability;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
+use Utopia\Database\Exception\Authorization as AuthorizationException;
+use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Operator;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
@@ -181,5 +184,24 @@ class Action extends AppwriteAction
     protected function validateRelatedPermissions(mixed $permissions, Document $current, Authorization $authorization): void
     {
         (new RelatedPermissions($authorization))->validate($permissions, $current);
+    }
+
+    /**
+     * Refuse a write when it is staged, not first when its transaction commits, answering as the write itself would.
+     *
+     * @param callable(): void $authorize Database::authorizeCreate() or Database::authorizeUpdate() for the staged write
+     * @throws Exception
+     */
+    protected function authorizeStagedWrite(callable $authorize, string $notFoundType, string $collectionId): void
+    {
+        try {
+            $authorize();
+        } catch (AuthorizationException $error) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $error->getMessage(), previous: $error);
+        } catch (NotFoundException $error) {
+            throw new Exception($notFoundType, previous: $error, params: [$collectionId]);
+        } catch (RelationshipException $error) {
+            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
+        }
     }
 }
