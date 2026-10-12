@@ -315,9 +315,14 @@ impl Serializer {
 
     fn binary(&self, out: &mut String, binary: &Binary, parent: Option<u8>) -> Result<()> {
         let level = precedence(&binary.operator);
-        // Non-commutative left-associative operators bind their right operand
-        // tighter, so an equal-precedence right subtree keeps its grouping.
-        let right_level = if matches!(binary.operator.as_str(), "-" | "/" | "%") { level + 1 } else { level };
+        // Operators are left-associative, so an equal-precedence right subtree
+        // keeps its grouping: `a * (b / c)` is not `a * b / c` under integer
+        // division, nor `a - (b - c)` `a - b - c`. Only the same associative
+        // operator may drop it: `a + (b + c)` is `a + b + c`.
+        let associative = matches!(&*binary.right, Expression::Binary(r)
+            if r.operator.eq_ignore_ascii_case(&binary.operator)
+                && ["+", "*", "||", "AND", "OR"].iter().any(|o| o.eq_ignore_ascii_case(&binary.operator)));
+        let right_level = if associative { level } else { level + 1 };
         let parens = parent.is_some_and(|p| level < p);
         if parens {
             out.push('(');

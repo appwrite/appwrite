@@ -891,6 +891,102 @@
           "x"
         ]
       }
+    },
+    {
+      "name": "grouping: SELECT a + (b - c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a + (b - c) FROM t"
+      },
+      "expect": "SELECT `a` + (`b` - `c`) FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a * (b / c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a * (b / c) FROM t"
+      },
+      "expect": "SELECT `a` * (`b` / `c`) FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a - (b - c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a - (b - c) FROM t"
+      },
+      "expect": "SELECT `a` - (`b` - `c`) FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a / (b * c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a / (b * c) FROM t"
+      },
+      "expect": "SELECT `a` / (`b` * `c`) FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a + (b + c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a + (b + c) FROM t"
+      },
+      "expect": "SELECT `a` + `b` + `c` FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a * (b * c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a * (b * c) FROM t"
+      },
+      "expect": "SELECT `a` * `b` * `c` FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a % (b * c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a % (b * c) FROM t"
+      },
+      "expect": "SELECT `a` % (`b` * `c`) FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a = (b = c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a = (b = c) FROM t"
+      },
+      "expect": "SELECT `a` = (`b` = `c`) FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT (a + b) - c",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT (a + b) - c FROM t"
+      },
+      "expect": "SELECT `a` + `b` - `c` FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a || (b || c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a || (b || c) FROM t"
+      },
+      "expect": "SELECT `a` || `b` || `c` FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a AND (b OR c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a AND (b OR c) FROM t"
+      },
+      "expect": "SELECT `a` AND (`b` OR `c`) FROM `t`"
+    },
+    {
+      "name": "grouping: SELECT a OR (b OR c)",
+      "op": "ast.parse",
+      "args": {
+        "sql": "SELECT a OR (b OR c) FROM t"
+      },
+      "expect": "SELECT `a` OR `b` OR `c` FROM `t`"
     }
   ]
 }
