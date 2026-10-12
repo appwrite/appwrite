@@ -18,9 +18,11 @@ use Utopia\Cache\Cache;
 use Utopia\Cache\Codec\Igbinary;
 use Utopia\Cache\Codec\Json;
 use Utopia\Database\Adapter;
+use Utopia\Database\Adapter\Memory as MemoryAdapter;
 use Utopia\Database\Adapter\Pool;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\Redis as RedisAdapter;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Mirror;
@@ -153,14 +155,17 @@ final class Core
 
     /**
      * `db.open`: a Database on PostgreSQL service `database-postgres`, in
-     * schema `database` (default: the case namespace).
+     * schema `database` (default: the case namespace); with `engine`
+     * `sqlite`, on SQLite file `/tmp/compat-fs/${ns}/<file>` (default
+     * `database.sqlite`; `emulate_mysql` sets `setEmulateMySQL`); with
+     * `engine` `memory`, on the in-memory adapter.
      *
      * @param array<string, mixed> $a
      * @return array{'$handle': string}
      */
     public static function open(array $a, Session $s): array
     {
-        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters', 'pool', 'mirror', 'redis'];
+        $known = ['namespace', 'database', 'shared_tables', 'tenant', 'tenant_per_document', 'cache', 'create', 'roles', 'adapter', 'filters', 'pool', 'mirror', 'redis', 'engine', 'file', 'emulate_mysql', 'detached'];
         foreach (array_keys($a) as $key) {
             if (!\in_array($key, $known, true)) {
                 throw new Fault("db.open: unknown argument `{$key}`");
@@ -196,13 +201,15 @@ final class Core
             $pdo = null;
             $poolFixture = null;
         } else {
-            $pdo = self::pdo($s);
-            $adapter = new Postgres($pdo);
+            [$adapter, $pdo] = self::engine($a, $s);
             $poolFixture = null;
         }
+        // A peer (on another database's adapter, or `detached` on an adapter
+        // of its own) is only used through `db`, and set up by the case.
+        $peer = isset($a['adapter']) || !empty($a['detached']);
         // A database of its own starts on an empty private Redis cache, as
         // the e2e suites flush theirs; a peer shares it.
-        $cache = self::cache($a['cache'] ?? 'memory', $s, fresh: !isset($a['adapter']));
+        $cache = self::cache($a['cache'] ?? 'memory', $s, fresh: !$peer);
         // Instance filters: name => the fixture it runs.
         $filters = [];
         foreach ((array) ($a['filters'] ?? []) as $name => $fixture) {
@@ -216,7 +223,7 @@ final class Core
             $authorization->addRole((string) $role);
         }
         $db->setAuthorization($authorization);
-        if (!isset($a['adapter'])) {
+        if (!$peer) {
             $db->setDatabase((string) ($a['database'] ?? $s->ns));
         }
         if (\array_key_exists('shared_tables', $a)) {
@@ -228,7 +235,7 @@ final class Core
         if (\array_key_exists('tenant_per_document', $a)) {
             $db->setTenantPerDocument((bool) $a['tenant_per_document']);
         }
-        if (!isset($a['adapter']) || \array_key_exists('namespace', $a)) {
+        if (!$peer || \array_key_exists('namespace', $a)) {
             $db->setNamespace((string) ($a['namespace'] ?? 'compat'));
         }
         if ($pdo !== null) {
@@ -237,15 +244,48 @@ final class Core
         if ($poolFixture !== null) {
             $state->pools[$db] = $poolFixture;
         }
-        // A peer (on another database's adapter) is only used through `db`.
-        if (!isset($a['adapter'])) {
+        if (!$peer) {
             $state->db = $db;
         }
-        if (!isset($a['adapter']) && ($a['create'] ?? true)) {
+        if (!$peer && ($a['create'] ?? true)) {
             $db->create();
         }
 
         return $s->handle($db);
+    }
+
+    /**
+     * The adapter (and its PDO, if any) `db.open` builds for `engine`.
+     *
+     * @param array<string, mixed> $a
+     * @return array{0: Adapter, 1: ?PDO}
+     */
+    public static function engine(array $a, Session $s): array
+    {
+        switch ($a['engine'] ?? 'postgres') {
+            case 'postgres':
+                $pdo = self::pdo($s);
+
+                return [new Postgres($pdo), $pdo];
+            case 'sqlite':
+                $dir = '/tmp/compat-fs/' . $s->ns;
+                if (!is_dir($dir)) {
+                    mkdir($dir, 0777, true);
+                }
+                $file = (string) ($a['file'] ?? 'database.sqlite');
+                if ($file === '' || str_contains($file, '/')) {
+                    throw new Fault('db.open: `file` is a file name');
+                }
+                $pdo = new PDO('sqlite:' . $dir . '/' . $file, null, null, SQLite::getPDOAttributes());
+                $adapter = new SQLite($pdo);
+                $adapter->setEmulateMySQL((bool) ($a['emulate_mysql'] ?? false));
+
+                return [$adapter, $pdo];
+            case 'memory':
+                return [new MemoryAdapter(), null];
+            default:
+                throw new Fault('db.open: `engine` must be "postgres", "sqlite" or "memory"');
+        }
     }
 
     /**
@@ -1143,6 +1183,15 @@ $raw = [
     },
     'db.pool' => fn (array $a, Session $s) => Core::poolCall(Core::db($a, $s), (string) ($a['method'] ?? ''), $s),
     'db.cache' => fn (array $a, Session $s) => Core::cacheCall(Core::db($a, $s)->getCache(), (string) ($a['method'] ?? ''), (array) ($a['args'] ?? [])),
+    // What MemoryTest reads of a Memory adapter by reflection: its `$data`.
+    'db.memory_data' => static function (array $a, Session $s) {
+        $adapter = Core::db($a, $s)->getAdapter();
+        if (!$adapter instanceof MemoryAdapter) {
+            throw new Fault('db.memory_data: not a Memory adapter');
+        }
+
+        return (new \ReflectionProperty(MemoryAdapter::class, 'data'))->getValue($adapter);
+    },
     'db.add_format' => function (array $a, Session $s) {
         $name = (string) ($a['name'] ?? '');
         $format = Core::format($name);

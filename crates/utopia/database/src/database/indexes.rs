@@ -26,32 +26,6 @@ fn base_attribute(attribute: &str) -> &str {
     attribute.split_once('.').map_or(attribute, |(base, _)| base)
 }
 
-/// The values of `array` at the positions `0..count` (`$array[$i]`, `null`
-/// when unset), as an adapter reads them per index attribute.
-fn positional(array: &Array, count: usize) -> Vec<Value> {
-    (0..count).map(|i| array.get(&ArrayKey::Int(i as i64)).cloned().unwrap_or(Value::Null)).collect()
-}
-
-/// An index's lengths or orders as `createIndex()` hands them to the
-/// adapter: a list as it is (an adapter storing them, such as Redis, keeps
-/// PHP's `array_values`), otherwise by position (`null` where unset) up to
-/// the last one set, for adapters reading `$lengths[$i]`.
-fn as_given(array: &Array) -> Vec<Value> {
-    let list = array.iter().enumerate().all(|(i, (k, _))| matches!(k, crate::value::KeyRef::Int(n) if n == i as i64));
-    if list {
-        return array.values().cloned().collect();
-    }
-    let count = array
-        .keys()
-        .filter_map(|k| match k {
-            crate::value::KeyRef::Int(n) if n >= 0 => Some(n as usize + 1),
-            _ => None,
-        })
-        .max()
-        .unwrap_or(0);
-    positional(array, count)
-}
-
 /// The strings of an index's `attributes`.
 fn strings_at(index: &Document, key: &str) -> Vec<String> {
     match index.get(key) {
@@ -211,13 +185,13 @@ impl Database {
 
         if !exists_in_schema {
             let result = adapter
-                .create_index(
+                .create_index_arrays(
                     collection.id(),
                     id,
                     kind,
                     &attributes,
-                    &as_given(&lengths),
-                    &as_given(&orders),
+                    &lengths,
+                    &orders,
                     &attribute_types,
                     &[],
                     ttl,
@@ -381,13 +355,13 @@ impl Database {
             });
             async move {
                 adapter
-                    .create_index(
+                    .create_index_arrays(
                         &collection_id,
                         &id,
                         &kind,
                         &attributes,
-                        &as_given(&lengths),
-                        &as_given(&orders),
+                        &lengths,
+                        &orders,
                         &attribute_types,
                         &[],
                         ttl,

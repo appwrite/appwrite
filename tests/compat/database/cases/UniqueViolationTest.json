@@ -471,19 +471,215 @@
       ]
     },
     {
-      "name": "testSQLiteDocumentIdConflictIsDuplicate (phase 2: SQLite adapter)",
+      "name": "testSQLiteDocumentIdConflictIsDuplicate",
       "steps": [
         {
           "op": "adapter.process_exception",
           "args": {
+            "engine": "sqlite",
             "sqlstate": "HY000",
             "native": 19,
             "message": "SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint failed: ns_movies._tenant, ns_movies._uid"
           },
           "expect": {
             "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSQLiteCompositeIndexOnDocumentIdIsUnique",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 19,
+            "message": "SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint failed: ns_movies._uid, ns_movies.email"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testSQLiteUniqueIndexConflictIsUnique",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 19,
+            "message": "SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint failed: ns_movies.slug"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "SQLite error codes",
+      "steps": [
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 1,
+            "message": "SQLSTATE[HY000]: General error: 1 table compat_x already exists"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 1,
+            "message": "SQLSTATE[HY000]: General error: 1 no such table: compat_x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 1,
+            "message": "SQLSTATE[HY000]: General error: 1 Duplicate thing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 1,
+            "message": "SQLSTATE[HY000]: General error: 1 bad syntax"
+          },
+          "expect": {
+            "$error": {
               "class": "PDOException",
-              "message": "SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint failed: ns_movies._tenant, ns_movies._uid"
+              "message": "SQLSTATE[HY000]: General error: 1 bad syntax"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "23000",
+            "native": 19,
+            "message": "SQLSTATE[23000]: Integrity constraint violation: 19 UNIQUE constraint failed: compat_x._uid"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "23000",
+            "native": 19,
+            "message": "SQLSTATE[23000]: Integrity constraint violation: 19 NOT NULL constraint failed: compat_x._uid"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 18,
+            "message": "SQLSTATE[HY000]: General error: 18 string or blob too big"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Limit",
+              "message": "Value too large"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 3024,
+            "message": "timeout"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Timeout",
+              "message": "Query timed out"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": null,
+            "message": "no code"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "no code"
+            }
+          }
+        },
+        {
+          "op": "adapter.process_exception",
+          "args": {
+            "engine": "sqlite",
+            "sqlstate": "HY000",
+            "native": 6,
+            "message": "SQLSTATE[HY000]: General error: 6 database table is locked"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[HY000]: General error: 6 database table is locked"
             }
           }
         }

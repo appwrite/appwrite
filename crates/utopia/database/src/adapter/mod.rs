@@ -13,9 +13,10 @@
 //! (`getSupportFor*`) keep their names in snake case.
 //!
 //! Adapters in this crate: [`postgres::Postgres`] (feature `postgres`),
-//! [`redis::Redis`] (feature `redis`) and [`pool::Pool`] (feature `pool`),
-//! over a pool of adapters. The others PHP ships are converted in their
-//! phases (see the crate guide).
+//! `sqlite::Sqlite` (feature `sqlite`), `memory::Memory` (feature
+//! `memory`), `redis::Redis` (feature `redis`) and `pool::Pool` (feature
+//! `pool`), over a pool of adapters. MariaDB, MySQL and MongoDB are
+//! converted in their phases (see the crate guide).
 
 use std::future::Future;
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -30,12 +31,16 @@ use crate::query::Query;
 use crate::validator::authorization::Authorization;
 use crate::value::{Array, Value};
 
+#[cfg(feature = "memory")]
+pub mod memory;
 #[cfg(feature = "pool")]
 pub mod pool;
 #[cfg(feature = "postgres")]
 pub mod postgres;
 #[cfg(feature = "redis")]
 pub mod redis;
+#[cfg(feature = "sqlite")]
+pub mod sqlite;
 
 /// A statement transform registered with [`Adapter::before`]: receives the
 /// SQL about to run and returns the SQL to run instead.
@@ -572,6 +577,41 @@ pub trait Adapter: Send + Sync {
         collation: &[String],
         ttl: i64,
     ) -> Result<bool>;
+    /// `createIndex(...)` with `$lengths` and `$orders` as the arrays the
+    /// database built (their keys kept, sparse ones included). The default
+    /// hands [`Adapter::create_index`] one entry per attribute (`null` for
+    /// a missing one); an adapter that stores the arrays overrides it.
+    #[allow(clippy::too_many_arguments)]
+    async fn create_index_arrays(
+        &self,
+        collection: &str,
+        id: &str,
+        kind: &str,
+        attributes: &[String],
+        lengths: &Array,
+        orders: &Array,
+        attribute_types: &[(String, String)],
+        collation: &[String],
+        ttl: i64,
+    ) -> Result<bool> {
+        let positional = |a: &Array| -> Vec<Value> {
+            (0..attributes.len())
+                .map(|i| a.get(&crate::value::ArrayKey::Int(i as i64)).cloned().unwrap_or(Value::Null))
+                .collect()
+        };
+        self.create_index(
+            collection,
+            id,
+            kind,
+            attributes,
+            &positional(lengths),
+            &positional(orders),
+            attribute_types,
+            collation,
+            ttl,
+        )
+        .await
+    }
     /// `deleteIndex($collection, $id)`.
     async fn delete_index(&self, collection: &str, id: &str) -> Result<bool>;
     /// `renameIndex($collection, $old, $new)`.
@@ -592,6 +632,8 @@ pub trait Adapter: Send + Sync {
     /// `createDocuments($collection, $documents)`.
     async fn create_documents(&self, collection: &Document, documents: Vec<Document>) -> Result<Vec<Document>>;
     /// `updateDocument($collection, $id, $document, $skipPermissions)`.
+    /// Returns `$document` as the call leaves it (PHP's caller holds that
+    /// object, which an adapter may change in place), not what PHP returns.
     async fn update_document(
         &self,
         collection: &Document,

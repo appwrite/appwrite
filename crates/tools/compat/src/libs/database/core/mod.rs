@@ -182,6 +182,7 @@ pub const OPS: &[&str] = &[
     "db.cache",
     "db.mirror",
     "db.log",
+    "db.memory_data",
     "db.open",
     "db.pool",
     "db.redis",

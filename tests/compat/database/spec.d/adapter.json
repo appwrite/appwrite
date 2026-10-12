@@ -218,7 +218,7 @@
       ]
     },
     "adapter.process_exception": {
-      "doc": "processException(new PDOException(message) with code sqlstate and errorInfo [sqlstate, native, message]), thrown"
+      "doc": "processException(new PDOException(message) with code sqlstate and errorInfo [sqlstate, native, message]), thrown; of the Postgres adapter, or of `engine` (\"sqlite\")"
     },
     "adapter.in_transaction": {
       "doc": "inTransaction()",
@@ -613,12 +613,19 @@
       ]
     },
     "adapter.fuzz_find": {
-      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order, limit, offset",
+      "doc": "find() on collection `fz` of the session's fuzz adapter (schema ${ns}, namespace `fz`, 24 seeded documents, created on first use as in ops/adapter.php): queries typed as the Database types them (meta object, tags array), roles (authorization off without), order, limit, offset; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
       "covers": [
         "Utopia\\Database\\Adapter\\SQL::find"
       ],
       "services": [
         "database-postgres"
+      ],
+      "services_unless": [
+        {
+          "engine": [
+            "sqlite"
+          ]
+        }
       ],
       "fuzz": [
         {
@@ -724,17 +731,132 @@
               "roles"
             ]
           }
+        },
+        {
+          "name": "SQLite: filter programs",
+          "iterations": 1500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.query"
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "adapter.logical"
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              },
+              "order_attributes": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "title",
+                    "year",
+                    "rating",
+                    "$sequence",
+                    "$id",
+                    "active",
+                    "released"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "order_types": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "ASC",
+                    "DESC"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "limit": {
+                "gen": "int",
+                "min": 0,
+                "max": 30
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              },
+              "roles": {
+                "gen": "array",
+                "items": {
+                  "gen": "pick",
+                  "from": [
+                    "any",
+                    "user:1",
+                    "team:x"
+                  ]
+                },
+                "min": 0,
+                "max": 2
+              },
+              "attribute_types": {
+                "gen": "const",
+                "value": {
+                  "meta": "object",
+                  "meta.k": "object",
+                  "meta.s": "object"
+                }
+              },
+              "arrays": {
+                "gen": "const",
+                "value": [
+                  "tags"
+                ]
+              },
+              "engine": {
+                "gen": "const",
+                "value": "sqlite"
+              }
+            },
+            "optional": [
+              "order_attributes",
+              "order_types",
+              "limit",
+              "offset",
+              "roles"
+            ]
+          }
         }
       ]
     },
     "adapter.fuzz_roundtrip": {
-      "doc": "createDocument() of `value` (in a TEXT column, a string array and an object) into collection `rt` of the session's fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(): each result or {error}",
+      "doc": "createDocument() of `value` (in a TEXT column, a string array and an object) into collection `rt` of the session's fuzz adapter, then getDocument(), find(equal t value) and deleteDocument(): each result or {error}; `engine` \"sqlite\": the same on SQLite (file /tmp/compat-fs/${ns}/fuzz.sqlite, no object attributes)",
       "covers": [
         "Utopia\\Database\\Adapter\\Postgres::createDocument",
         "Utopia\\Database\\Adapter\\SQL::getDocument"
       ],
       "services": [
         "database-postgres"
+      ],
+      "services_unless": [
+        {
+          "engine": [
+            "sqlite"
+          ]
+        }
       ],
       "fuzz": [
         {
@@ -749,29 +871,38 @@
               }
             }
           }
+        },
+        {
+          "name": "SQLite: string literals",
+          "iterations": 2500,
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "adapter.literal"
+              },
+              "engine": {
+                "gen": "const",
+                "value": "sqlite"
+              }
+            }
+          }
         }
       ]
     }
   },
   "waivers": {
-    "Utopia\\Database\\Adapter::getColumnType": "Phase 2: the base default ('') only applies to adapters without SQL types (Mongo, Memory, Redis); every SQL adapter, Postgres included, runs SQL::getColumnType (covered)",
-    "Utopia\\Database\\Adapter::getHostname": "Phase 2: the base getter only applies to adapters that are not SQL; Postgres runs SQL::getHostname (covered)",
-    "Utopia\\Database\\Adapter::getSupportForTTLIndexes": "Phase 2: Postgres overrides it with Postgres::getSupportForTTLIndexes (covered); only the Mongo adapter keeps the base default",
-    "Utopia\\Database\\Adapter\\SQL::createAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::createAttribute, covered)",
-    "Utopia\\Database\\Adapter\\SQL::deleteAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::deleteAttribute, covered)",
-    "Utopia\\Database\\Adapter\\SQL::renameAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::renameAttribute, covered)",
-    "Utopia\\Database\\Adapter\\SQL::rollbackTransaction": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::rollbackTransaction, covered)",
-    "Utopia\\Database\\Adapter\\SQL::decodePoint": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::decodePoint, covered)",
-    "Utopia\\Database\\Adapter\\SQL::decodeLinestring": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::decodeLinestring, covered)",
-    "Utopia\\Database\\Adapter\\SQL::decodePolygon": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::decodePolygon, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getLikeOperator": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::getLikeOperator, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getRegexOperator": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::getRegexOperator, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSchemaIndexes": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAttributes": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAxisOrder": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexNull": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexOrder": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
-    "Utopia\\Database\\Adapter\\SQL::getSupportForVectors": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::deleteAttribute": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::rollbackTransaction": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::decodePoint": "Phase 2: only the MariaDB/MySQL adapters reach it (Postgres overrides it with Postgres::decodePoint and Memory with Memory::decodePoint, both covered; SQLite inherits it but has no spatial types, getSupportForSpatialAttributes() is false)",
+    "Utopia\\Database\\Adapter\\SQL::decodeLinestring": "Phase 2: only the MariaDB/MySQL adapters reach it (Postgres overrides it with Postgres::decodeLinestring and Memory with Memory::decodeLinestring, both covered; SQLite inherits it but has no spatial types, getSupportForSpatialAttributes() is false)",
+    "Utopia\\Database\\Adapter\\SQL::decodePolygon": "Phase 2: only the MariaDB/MySQL adapters reach it (Postgres overrides it with Postgres::decodePolygon and Memory with Memory::decodePolygon, both covered; SQLite inherits it but has no spatial types, getSupportForSpatialAttributes() is false)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSchemaIndexes": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAttributes": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialAxisOrder": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexNull": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
+    "Utopia\\Database\\Adapter\\SQL::getSupportForSpatialIndexOrder": "Phase 2: only the MariaDB/MySQL adapters use it (Postgres, SQLite and Memory override it, covered)",
     "Utopia\\Database\\Adapter\\SQL::getPDOAttributes": "PHP runtime plumbing: the PDO attributes (emulated prepares, stringified fetches, exceptions) PHP must configure for the adapter to behave as it does; the Rust connection (adapter::postgres::pdo) always behaves so, which every adapter case proves"
   },
   "tests_waived": {

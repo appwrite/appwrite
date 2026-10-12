@@ -6,7 +6,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"
@@ -73,7 +75,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"

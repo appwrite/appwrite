@@ -565,6 +565,31 @@ impl<S: utopia_pools::Adapter<Pooled>> Adapter for Pool<S> {
         ))
     }
 
+    async fn create_index_arrays(
+        &self,
+        collection: &str,
+        id: &str,
+        kind: &str,
+        attributes: &[String],
+        lengths: &Array,
+        orders: &Array,
+        attribute_types: &[(String, String)],
+        collation: &[String],
+        ttl: i64,
+    ) -> Result<bool> {
+        delegate!(self, |a| a.create_index_arrays(
+            collection,
+            id,
+            kind,
+            attributes,
+            lengths,
+            orders,
+            attribute_types,
+            collation,
+            ttl
+        ))
+    }
+
     async fn delete_index(&self, collection: &str, id: &str) -> Result<bool> {
         delegate!(self, |a| a.delete_index(collection, id))
     }

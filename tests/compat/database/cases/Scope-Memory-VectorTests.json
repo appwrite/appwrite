@@ -1,0 +1,4568 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/VectorTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MemoryTest.php"
+  ],
+  "cases": [
+    {
+      "name": "VectorTests::testVectorAttributes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorInvalidDimensions",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorTooManyDimensions",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDocuments",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueries",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDistance",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryValidation",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorIndexes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDimensionMismatch",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithInvalidDataTypes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithNullAndEmpty",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testLargeVectors",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorUpdates",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testMultipleVectorAttributes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueriesWithPagination",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testCombinedVectorAndTextSearch",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorSpecialFloatValues",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorIndexPerformance",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryValidationExtended",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorNormalization",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithInfinityValues",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithNaNValues",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithAssociativeArray",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithSparseArray",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithNestedArrays",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithBooleansInArray",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithStringNumbers",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithRelationships",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorWithTwoWayRelationships",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorAllZeros",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorCosineSimilarityDivisionByZero",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testDeleteVectorAttribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testDeleteAttributeWithVectorIndexes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorSearchWithRestrictedPermissions",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorPermissionFilteringAfterScoring",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorCursorBeforePagination",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorBackwardPagination",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorDimensionUpdate",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorRequiredWithNullValue",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorConcurrentUpdates",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testDeleteVectorIndexes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testMultipleVectorIndexes",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorIndexCreationFailure",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryWithoutIndex",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryEmpty",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testSingleDimensionVector",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorLongResultSet",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testMultipleVectorQueriesOnSameCollection",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorNonNumericValidationE2E",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorLargeValues",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorPrecisionLoss",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVector16000DimensionsBoundary",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorLargeDatasetIndexBuild",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorFilterDisabled",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorFilterOverride",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testMultipleFiltersOnVectorAttribute",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryInNestedQuery",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQueryCount",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorQuerySum",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "VectorTests::testVectorUpsert",
+      "state": [],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": 1
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

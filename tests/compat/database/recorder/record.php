@@ -3,14 +3,17 @@
 /**
  * Ports utopia-php/database's e2e suites to compat cases by recording them.
  *
- *   bin/compat-php tests/compat/database/recorder/record.php <postgres|shared> [<file filter>[,<file filter>...]]
+ *   bin/compat-php tests/compat/database/recorder/record.php <profile> [<file filter>[,<file filter>...]]
  *
- * Runs every test method of tests/e2e/Adapter/PostgresTest.php (`postgres`)
- * or tests/e2e/Adapter/SharedTables/PostgresTest.php (`shared`) against the
- * compat PostgreSQL, in declaration order (honouring @depends and
+ * Runs every test method of an e2e adapter test class (Target::PROFILES:
+ * `postgres` tests/e2e/Adapter/PostgresTest.php and `shared`
+ * SharedTables/PostgresTest.php against the compat PostgreSQL, `sqlite`
+ * SQLiteTest.php and `sqlite-shared` SharedTables/SQLiteTest.php on a SQLite
+ * file, `memory` MemoryTest.php) in declaration order (honouring @depends and
  * @dataProvider), with a recording Database, adapter and Authorization. Each
  * test method becomes a self-contained case (see README.md here), written
- * to tests/compat/database/cases/Scope-*.json (and PostgresTest.json); what
+ * to tests/compat/database/cases/Scope-[<Adapter>-][SharedTables-]*.json
+ * (and <Adapter>Test.json for the class's own tests); what
  * PHP returned while recording goes to recorder/out/<profile>.json for
  * `fidelity.php`. Expectations are then written by `bin/compat record`.
  */
@@ -20,6 +23,7 @@ namespace Tests\Compat\Database\Recorder;
 use Tests\Compat\Codec;
 use Tests\Compat\Session;
 use Utopia\Database\Adapter\Postgres;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Database;
 use Utopia\Database\PDO;
 
@@ -56,8 +60,13 @@ const PATCHED = '/tmp/cxrecorder-e2e/';
         return;
     }
     $source = str_replace(
-        ['new Database(', '__DIR__'],
-        ['new \\Tests\\Compat\\Database\\Recorder\\PeerDatabase(', var_export(\dirname($file), true)],
+        ['new Database(', '__DIR__', 'new Memory()', '(new \\ReflectionClass($adapter))->getProperty(\'data\')->getValue($adapter)'],
+        [
+            'new \\Tests\\Compat\\Database\\Recorder\\PeerDatabase(',
+            var_export(\dirname($file), true),
+            'new \\Tests\\Compat\\Database\\Recorder\\PeerMemory()',
+            '\\Tests\\Compat\\Database\\Recorder\\Recorder::memoryData($adapter)',
+        ],
         $source,
     );
     $copy = PATCHED . $relative;
@@ -102,6 +111,18 @@ final class Profile
     ) {
     }
 
+    /** The adapter its `db.open` picks (`engine`): postgres, sqlite or memory. */
+    public function engine(): string
+    {
+        return (string) (((array) $this->open)['engine'] ?? 'postgres');
+    }
+
+    /** Whether its tables are shared (tenant 999, namespace ''). */
+    public function shared(): bool
+    {
+        return (bool) (((array) $this->open)['shared_tables'] ?? false);
+    }
+
     public static function get(string $name): ?self
     {
         return match ($name) {
@@ -133,6 +154,11 @@ final class Profile
                     ['op' => 'db.mirror', 'args' => ['part' => 'destination'], 'bind' => 'dst'],
                 ],
             ),
+            // SQLiteTest (a SQLite file, MySQL emulated as the suite sets it)
+            // and SharedTables\SQLiteTest; MemoryTest on the in-memory adapter.
+            'sqlite' => new self($name, 'Tests\\E2E\\Adapter\\SQLiteTest', 'SQLiteTest.php', 'SQLite-', 'cxrecorderq', ['engine' => 'sqlite', 'emulate_mysql' => true], ['sqlite']),
+            'sqlite-shared' => new self($name, 'Tests\\E2E\\Adapter\\SharedTables\\SQLiteTest', 'SharedTables/SQLiteTest.php', 'SQLite-SharedTables-', 'cxrecordert', ['engine' => 'sqlite', 'emulate_mysql' => true, 'namespace' => '', 'shared_tables' => true, 'tenant' => 999], ['sqlite']),
+            'memory' => new self($name, 'Tests\\E2E\\Adapter\\MemoryTest', 'MemoryTest.php', 'Memory-', 'cxrecorderx', ['engine' => 'memory'], []),
             default => null,
         };
     }
@@ -141,7 +167,7 @@ final class Profile
 $profile = $argv[1] ?? 'postgres';
 $filter = $argv[2] ?? null;
 if (Profile::get($profile) === null) {
-    fwrite(STDERR, "usage: record.php <postgres|shared|pool|mirror|redis|shared-redis> [<filter>]\n");
+    fwrite(STDERR, "usage: record.php <postgres|shared|pool|mirror|redis|shared-redis|sqlite|sqlite-shared|memory> [<filter>]\n");
     exit(2);
 }
 
@@ -150,6 +176,23 @@ if (Profile::get($profile) === null) {
  */
 final class Target
 {
+    /**
+     * Per profile: the e2e class recorded (under Tests\E2E\Adapter), its
+     * adapter (`engine` of `db.open`), whether its tables are shared (tenant
+     * 999, namespace ''), the recorder's schema (database name), the case
+     * file prefix and the snapshot kinds of its cases.
+     */
+    public const PROFILES = [
+        'postgres' => ['class' => 'PostgresTest', 'engine' => 'postgres', 'shared' => false, 'schema' => 'cxrecorderp', 'prefix' => 'Scope-', 'state' => ['postgres@database-postgres']],
+        'shared' => ['class' => 'SharedTables\PostgresTest', 'engine' => 'postgres', 'shared' => true, 'schema' => 'cxrecorders', 'prefix' => 'Scope-SharedTables-', 'state' => ['postgres@database-postgres']],
+        'sqlite' => ['class' => 'SQLiteTest', 'engine' => 'sqlite', 'shared' => false, 'schema' => 'cxrecorderq', 'prefix' => 'Scope-SQLite-', 'state' => ['sqlite']],
+        'sqlite-shared' => ['class' => 'SharedTables\SQLiteTest', 'engine' => 'sqlite', 'shared' => true, 'schema' => 'cxrecorderr', 'prefix' => 'Scope-SQLite-SharedTables-', 'state' => ['sqlite']],
+        'memory' => ['class' => 'MemoryTest', 'engine' => 'memory', 'shared' => false, 'schema' => 'cxrecorderm', 'prefix' => 'Scope-Memory-', 'state' => []],
+    ];
+
+    /** The SQLite file the `sqlite` profiles record on (in the PHP container). */
+    public const SQLITE_FILE = '/tmp/cxrecorder.sqlite';
+
     public static string $profile = 'postgres';
 
     public static Profile $config;
@@ -165,6 +208,11 @@ final class Target
 
     public static function pdo(): PDO
     {
+        if (self::$pdo === null && self::$config->engine() === 'sqlite') {
+            @unlink(self::SQLITE_FILE);
+            self::$pdo = new PDO('sqlite:' . self::SQLITE_FILE, null, null, SQLite::getPDOAttributes());
+        }
+
         return self::$pdo ??= self::connect();
     }
 
@@ -223,6 +271,16 @@ final class Target
                 new RecordingRedis(\Tests\Compat\Database\Core::redis($session, 'database-redis-adapter')),
                 \Tests\Compat\Database\Core::cache('none'),
             ],
+            'sqlite', 'sqlite-shared' => [
+                (function () {
+                    $adapter = new RecordingSQLite(self::pdo());
+                    $adapter->setEmulateMySQL(true);
+
+                    return $adapter;
+                })(),
+                \Tests\Compat\Database\Core::cache('memory'),
+            ],
+            'memory' => [new RecordingMemory(), \Tests\Compat\Database\Core::cache('memory')],
             default => [new RecordingPostgres(self::pdo()), \Tests\Compat\Database\Core::cache('memory')],
         };
     }
@@ -237,7 +295,12 @@ final class Target
         }
         $was = Recorder::$on;
         Recorder::$on = false;
-        foreach (self::$profile === 'mirror' ? [self::pdo(), self::mirrorPdo()] : [self::pdo()] as $pdo) {
+        $pdos = match (true) {
+            self::$config->engine() !== 'postgres' => [],
+            self::$profile === 'mirror' => [self::pdo(), self::mirrorPdo()],
+            default => [self::pdo()],
+        };
+        foreach ($pdos as $pdo) {
             $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
             // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
             $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
@@ -270,7 +333,7 @@ final class Target
             $database = new RecordingDatabase($adapter, $cache);
         }
         $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
-        if (self::$profile === 'shared' || self::$profile === 'shared-redis') {
+        if (self::$config->shared()) {
             $database->setSharedTables(true)->setTenant(999)->setNamespace('');
         } elseif (self::$profile === 'redis') {
             $database->setNamespace(Recorder::$schema);
@@ -299,6 +362,11 @@ final class Target
         'client', 'journalStack',
         // A Pool's connections; its timeouts are restored with `timeouts`.
         'pool', 'pinnedAdapter',
+        // SQLite: the FTS5 table lookup cache, and the settings db.open makes.
+        'ftsTableCache', 'pcreRegistered', 'emulateMySQL',
+        // Memory: the stored data and its indexes, and the filter cache.
+        'databases', 'data', 'permissions', 'permissionsByDocument', 'permissionsByPermission', 'uniqueIndexHashes',
+        'journals', 'filterCache',
     ];
 
     /**
@@ -388,6 +456,7 @@ final class Target
                 'adapter.tenant' => $step('database.set_tenant', ['tenant' => $value]),
                 'adapter.sharedTables' => $step('database.set_shared_tables', ['sharedTables' => $value]),
                 'adapter.tenantPerDocument' => $step('database.set_tenant_per_document', ['enabled' => $value]),
+                'adapter.supportForAttributes' => $step('db.adapter', ['method' => 'setSupportForAttributes', 'args' => ['support' => $value]]),
                 'adapter.timeout' => isset($settings['adapter.timeouts']) ? null : ($value === 0 ? $step('database.clear_timeout') : $step('database.set_timeout', ['milliseconds' => $value])),
                 // A Pool's timeouts per event (its `timeout` is the global one).
                 'adapter.timeouts' => (function () use ($step, $value) {
@@ -455,6 +524,45 @@ final class Target
     {
         return self::$config->open;
     }
+
+    /**
+     * The suite's deleteColumn(): drops a column behind the library's back,
+     * recorded as `db.sql`.
+     */
+    public static function deleteColumn(Database $database, string $collection, string $column): void
+    {
+        if (self::$config->engine() === 'memory') {
+            // MemoryTest: no out-of-band schema changes.
+            return;
+        }
+        $table = $database->getNamespace() . '_' . $collection;
+        $sql = self::$config->engine() === 'sqlite'
+            ? "ALTER TABLE `{$table}` DROP COLUMN `{$column}`"
+            : 'ALTER TABLE "' . Recorder::$schema . '"."' . $table . '" DROP COLUMN "' . $column . '"';
+        Recorder::sql(self::pdo(), $sql, [$collection]);
+        if ($database instanceof \Utopia\Database\Mirror) {
+            Recorder::sql(self::mirrorPdo(), $sql, [$collection], 'dst');
+        }
+    }
+
+    /**
+     * The suite's deleteIndex(): drops an index behind the library's back,
+     * recorded as `db.sql`.
+     */
+    public static function deleteIndex(Database $database, string $collection, string $index): void
+    {
+        if (self::$config->engine() === 'memory') {
+            return;
+        }
+        $name = $database->getNamespace() . '_' . $database->getTenant() . '_' . $collection . '_' . $index;
+        $sql = self::$config->engine() === 'sqlite'
+            ? "DROP INDEX `{$name}`"
+            : 'DROP INDEX "' . Recorder::$schema . '"."' . $name . '"';
+        Recorder::sql(self::pdo(), $sql, [$collection]);
+        if ($database instanceof \Utopia\Database\Mirror) {
+            Recorder::sql(self::mirrorPdo(), $sql, [$collection], 'dst');
+        }
+    }
 }
 
 Target::$profile = $profile;
@@ -495,7 +603,7 @@ class {$recording} extends \\{$parent}
 
     {$getDatabase}
     {
-        if (property_exists(self::class, 'pdo')) {
+        if (property_exists(self::class, 'pdo') && Target::\$config->engine() !== 'memory') {
             self::\$pdo = Target::pdo();
         }
         \$database = Target::database(self::\$authorization);
@@ -509,24 +617,14 @@ class {$recording} extends \\{$parent}
 
     {$deleteColumn}
     {
-        \$database = \$this->getDatabase();
-        \$sql = 'ALTER TABLE "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$collection . '" DROP COLUMN "' . \$column . '"';
-        Recorder::sql(Target::pdo(), \$sql, [\$collection]);
-        if (\$database instanceof \\Utopia\\Database\\Mirror) {
-            Recorder::sql(Target::mirrorPdo(), \$sql, [\$collection], 'dst');
-        }
+        Target::deleteColumn(\$this->getDatabase(), \$collection, \$column);
 
         return true;
     }
 
     {$deleteIndex}
     {
-        \$database = \$this->getDatabase();
-        \$sql = 'DROP INDEX "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$database->getTenant() . '_' . \$collection . '_' . \$index . '"';
-        Recorder::sql(Target::pdo(), \$sql, [\$collection]);
-        if (\$database instanceof \\Utopia\\Database\\Mirror) {
-            Recorder::sql(Target::mirrorPdo(), \$sql, [\$collection], 'dst');
-        }
+        Target::deleteIndex(\$this->getDatabase(), \$collection, \$index);
 
         return true;
     }
@@ -681,11 +779,15 @@ foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {
 }
 @mkdir(__DIR__ . '/out');
 try {
-    file_put_contents(
-        __DIR__ . "/out/{$profile}.json",
-        json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
-    );
+    $originals = Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]);
 } catch (\Throwable $e) {
-    fwrite(STDERR, "problem: recorder/out/{$profile}.json not written: {$e->getMessage()}\n");
+    // A recorded result that is not plain data: the fidelity data is
+    // written without the originals.
+    fwrite(STDERR, "out/{$profile}.json: originals not written ({$e->getMessage()})\n");
+    $originals = Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => []]);
 }
+file_put_contents(
+    __DIR__ . "/out/{$profile}.json",
+    json_encode($originals, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
+);
 fwrite(STDOUT, json_encode($written, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) . "\n");

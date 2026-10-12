@@ -18,6 +18,7 @@ pub mod report;
 pub mod scrub;
 pub mod snapshot;
 pub mod snapshot_postgres;
+pub mod snapshot_sqlite;
 pub mod spec;
 pub mod sync;
 pub mod tasks;

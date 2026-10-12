@@ -9,7 +9,9 @@
     "database.analyze_collection": {
       "doc": "$db->analyzeCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::analyzeCollection"
+        "Utopia\\Database\\Database::analyzeCollection",
+        "Utopia\\Database\\Adapter\\Memory::analyzeCollection",
+        "Utopia\\Database\\Adapter\\SQLite::analyzeCollection"
       ]
     },
     "database.before": {
@@ -75,13 +77,16 @@
     "database.create_attribute": {
       "doc": "$db->createAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::createAttribute"
+        "Utopia\\Database\\Database::createAttribute",
+        "Utopia\\Database\\Adapter\\SQL::createAttribute"
       ]
     },
     "database.create_attributes": {
       "doc": "$db->createAttributes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::createAttributes"
+        "Utopia\\Database\\Database::createAttributes",
+        "Utopia\\Database\\Adapter\\Memory::createAttributes",
+        "Utopia\\Database\\Adapter\\SQLite::createAttributes"
       ]
     },
     "database.create_collection": {
@@ -99,19 +104,23 @@
     "database.create_documents": {
       "doc": "$db->createDocuments(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
       "covers": [
-        "Utopia\\Database\\Database::createDocuments"
+        "Utopia\\Database\\Database::createDocuments",
+        "Utopia\\Database\\Adapter\\Memory::createDocuments"
       ]
     },
     "database.create_index": {
       "doc": "$db->createIndex(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::createIndex"
+        "Utopia\\Database\\Database::createIndex",
+        "Utopia\\Database\\Adapter\\SQLite::createIndex"
       ]
     },
     "database.create_relationship": {
       "doc": "$db->createRelationship(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::createRelationship"
+        "Utopia\\Database\\Database::createRelationship",
+        "Utopia\\Database\\Adapter\\Memory::createRelationship",
+        "Utopia\\Database\\Adapter\\SQLite::createRelationship"
       ]
     },
     "database.decode": {
@@ -135,7 +144,8 @@
     "database.delete_attribute": {
       "doc": "$db->deleteAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::deleteAttribute"
+        "Utopia\\Database\\Database::deleteAttribute",
+        "Utopia\\Database\\Adapter\\SQLite::deleteAttribute"
       ]
     },
     "database.delete_collection": {
@@ -159,13 +169,17 @@
     "database.delete_index": {
       "doc": "$db->deleteIndex(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::deleteIndex"
+        "Utopia\\Database\\Database::deleteIndex",
+        "Utopia\\Database\\Adapter\\Memory::deleteIndex",
+        "Utopia\\Database\\Adapter\\SQLite::deleteIndex"
       ]
     },
     "database.delete_relationship": {
       "doc": "$db->deleteRelationship(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::deleteRelationship"
+        "Utopia\\Database\\Database::deleteRelationship",
+        "Utopia\\Database\\Adapter\\Memory::deleteRelationship",
+        "Utopia\\Database\\Adapter\\SQLite::deleteRelationship"
       ]
     },
     "database.disable_filters": {
@@ -213,7 +227,9 @@
     "database.find": {
       "doc": "$db->find(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::find"
+        "Utopia\\Database\\Database::find",
+        "Utopia\\Database\\Adapter\\SQL::getLikeOperator",
+        "Utopia\\Database\\Adapter\\SQL::getRegexOperator"
       ]
     },
     "database.find_one": {
@@ -411,13 +427,17 @@
     "database.get_size_of_collection": {
       "doc": "$db->getSizeOfCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::getSizeOfCollection"
+        "Utopia\\Database\\Database::getSizeOfCollection",
+        "Utopia\\Database\\Adapter\\Memory::getSizeOfCollection",
+        "Utopia\\Database\\Adapter\\SQLite::getSizeOfCollection"
       ]
     },
     "database.get_size_of_collection_on_disk": {
       "doc": "$db->getSizeOfCollectionOnDisk(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::getSizeOfCollectionOnDisk"
+        "Utopia\\Database\\Database::getSizeOfCollectionOnDisk",
+        "Utopia\\Database\\Adapter\\Memory::getSizeOfCollectionOnDisk",
+        "Utopia\\Database\\Adapter\\SQLite::getSizeOfCollectionOnDisk"
       ]
     },
     "database.get_tenant": {
@@ -435,7 +455,8 @@
     "database.increase_document_attribute": {
       "doc": "$db->increaseDocumentAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::increaseDocumentAttribute"
+        "Utopia\\Database\\Database::increaseDocumentAttribute",
+        "Utopia\\Database\\Adapter\\Memory::increaseDocumentAttribute"
       ]
     },
     "database.is_migrating": {
@@ -501,13 +522,16 @@
     "database.rename_attribute": {
       "doc": "$db->renameAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::renameAttribute"
+        "Utopia\\Database\\Database::renameAttribute",
+        "Utopia\\Database\\Adapter\\SQL::renameAttribute"
       ]
     },
     "database.rename_index": {
       "doc": "$db->renameIndex(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::renameIndex"
+        "Utopia\\Database\\Database::renameIndex",
+        "Utopia\\Database\\Adapter\\Memory::renameIndex",
+        "Utopia\\Database\\Adapter\\SQLite::renameIndex"
       ]
     },
     "database.reset_global_collections": {
@@ -585,7 +609,8 @@
     "database.set_namespace": {
       "doc": "$db->setNamespace(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::setNamespace"
+        "Utopia\\Database\\Database::setNamespace",
+        "Utopia\\Database\\Adapter\\SQLite::setNamespace"
       ]
     },
     "database.set_preserve_dates": {
@@ -603,13 +628,15 @@
     "database.set_shared_tables": {
       "doc": "$db->setSharedTables(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::setSharedTables"
+        "Utopia\\Database\\Database::setSharedTables",
+        "Utopia\\Database\\Adapter\\SQLite::setSharedTables"
       ]
     },
     "database.set_tenant": {
       "doc": "$db->setTenant(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::setTenant"
+        "Utopia\\Database\\Database::setTenant",
+        "Utopia\\Database\\Adapter\\SQLite::setTenant"
       ]
     },
     "database.set_tenant_per_document": {
@@ -669,7 +696,8 @@
     "database.update_attribute": {
       "doc": "$db->updateAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::updateAttribute"
+        "Utopia\\Database\\Database::updateAttribute",
+        "Utopia\\Database\\Adapter\\SQLite::updateAttribute"
       ]
     },
     "database.update_attribute_default": {
@@ -711,19 +739,24 @@
     "database.update_document": {
       "doc": "$db->updateDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::updateDocument"
+        "Utopia\\Database\\Database::updateDocument",
+        "Utopia\\Database\\Adapter\\Memory::updateDocument",
+        "Utopia\\Database\\Adapter\\SQLite::updateDocument"
       ]
     },
     "database.update_documents": {
       "doc": "$db->updateDocuments(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
       "covers": [
-        "Utopia\\Database\\Database::updateDocuments"
+        "Utopia\\Database\\Database::updateDocuments",
+        "Utopia\\Database\\Adapter\\Memory::updateDocuments"
       ]
     },
     "database.update_relationship": {
       "doc": "$db->updateRelationship(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
       "covers": [
-        "Utopia\\Database\\Database::updateRelationship"
+        "Utopia\\Database\\Database::updateRelationship",
+        "Utopia\\Database\\Adapter\\Memory::updateRelationship",
+        "Utopia\\Database\\Adapter\\SQLite::updateRelationship"
       ]
     },
     "database.upsert_document": {
@@ -735,7 +768,8 @@
     "database.upsert_documents": {
       "doc": "$db->upsertDocuments(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
       "covers": [
-        "Utopia\\Database\\Database::upsertDocuments"
+        "Utopia\\Database\\Database::upsertDocuments",
+        "Utopia\\Database\\Adapter\\SQLite::getUpsertStatement"
       ]
     },
     "database.upsert_documents_with_increase": {
@@ -777,7 +811,10 @@
     "database.with_transaction": {
       "doc": "$db->withTransaction(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
       "covers": [
-        "Utopia\\Database\\Database::withTransaction"
+        "Utopia\\Database\\Database::withTransaction",
+        "Utopia\\Database\\Adapter\\SQLite::startTransaction",
+        "Utopia\\Database\\Adapter\\SQLite::commitTransaction",
+        "Utopia\\Database\\Adapter\\SQLite::rollbackTransaction"
       ]
     },
     "db.authorization.add_role": {
@@ -877,10 +914,12 @@
       ]
     },
     "db.open": {
-      "doc": "A Database on PostgreSQL service database-postgres: new Database(new Postgres(PDO), Cache) with its own Authorization (roles, default [\"any\"]), setDatabase(database ?? ${ns}), setSharedTables, setTenant, setTenantPerDocument, setNamespace(namespace ?? \"compat\") and create() (unless create: false). Args: namespace?, database?, shared_tables?, tenant?, tenant_per_document?, pool? ({\"size\": n} (default 1) for a Utopia\\Database\\Adapter\\Pool over a Utopia\\Pools\\Pool of PostgreSQL connections from a Stack, waiting 0 s, with a connection of its own for db.sql; \"unreachable\": true makes every connection attempt fail as a refused connection; {\"of\": <handle>} the pool of another Pool database), redis? (true: a Utopia\\Database\\Adapter\\Redis over service database-redis-adapter instead of PostgreSQL, no db.sql), mirror? ({destination?: bool (default true: a Database on PostgreSQL service database-postgres-mirror with cache `cache` (default redis-mirror, flushed)), filters?: [names of Mirroring\\Filter fixtures: \"log\" logs each hook it runs to db.log as {\"mirroring\": <hook>, \"collection\", ...} and passes its input through], cache?}: a Utopia\\Database\\Mirror over a source on this adapter and that destination), cache?: \"memory\"|\"none\"|\"redis\"|\"redis-mirror\"|\"redis-shared\" (Redis caches through Utopia\\Cache\\Adapter\\Redis, Json entries, igbinary ones with an \"-igbinary\" suffix; redis and redis-mirror are private to each runtime and flushed when a database of its own opens, redis-shared is one both runtimes use), create?, roles?, adapter? (a database handle: a peer on its adapter, not made current). Returns a handle; the database becomes the current one.",
+      "doc": "A Database on PostgreSQL service database-postgres: new Database(new Postgres(PDO), Cache) with its own Authorization (roles, default [\"any\"]), setDatabase(database ?? ${ns}), setSharedTables, setTenant, setTenantPerDocument, setNamespace(namespace ?? \"compat\") and create() (unless create: false). Args: namespace?, database?, shared_tables?, tenant?, tenant_per_document?, pool? ({\"size\": n} (default 1) for a Utopia\\Database\\Adapter\\Pool over a Utopia\\Pools\\Pool of PostgreSQL connections from a Stack, waiting 0 s, with a connection of its own for db.sql; \"unreachable\": true makes every connection attempt fail as a refused connection; {\"of\": <handle>} the pool of another Pool database), redis? (true: a Utopia\\Database\\Adapter\\Redis over service database-redis-adapter instead of PostgreSQL, no db.sql), mirror? ({destination?: bool (default true: a Database on PostgreSQL service database-postgres-mirror with cache `cache` (default redis-mirror, flushed)), filters?: [names of Mirroring\\Filter fixtures: \"log\" logs each hook it runs to db.log as {\"mirroring\": <hook>, \"collection\", ...} and passes its input through], cache?}: a Utopia\\Database\\Mirror over a source on this adapter and that destination), cache?: \"memory\"|\"none\"|\"redis\"|\"redis-mirror\"|\"redis-shared\" (Redis caches through Utopia\\Cache\\Adapter\\Redis, Json entries, igbinary ones with an \"-igbinary\" suffix; redis and redis-mirror are private to each runtime and flushed when a database of its own opens, redis-shared is one both runtimes use), create?, roles?, adapter? (a database handle: a peer on its adapter, not made current), engine?: \"postgres\"|\"sqlite\"|\"memory\" (new SQLite(PDO) on file /tmp/compat-fs/${ns}/<file ?? \"database.sqlite\">, with setEmulateMySQL(emulate_mysql ?? false); new Memory()), detached? (a fresh adapter of engine in a database neither made current nor set up). With engine sqlite or memory only the default caches (memory, none) apply. Returns a handle; the database becomes the current one.",
       "covers": [
+        "Utopia\\Database\\Adapter\\Memory::__construct",
         "Utopia\\Database\\Adapter\\Pool::*",
         "Utopia\\Database\\Adapter\\Redis::*",
+        "Utopia\\Database\\Adapter\\SQLite::__construct",
         "Utopia\\Database\\Database::__construct",
         "Utopia\\Database\\Mirror::__construct",
         "Utopia\\Database\\Mirroring\\*"
@@ -892,6 +931,45 @@
         "database-redis-adapter",
         "database-redis-mirror",
         "database-redis-shared"
+      ],
+      "services_unless": [
+        {
+          "engine": [
+            "sqlite",
+            "memory"
+          ],
+          "cache": [
+            null,
+            "memory",
+            "none"
+          ],
+          "adapter": [
+            null
+          ],
+          "pool": [
+            null
+          ],
+          "redis": [
+            null,
+            false
+          ],
+          "mirror": [
+            null
+          ]
+        },
+        {
+          "adapter": [
+            "*"
+          ],
+          "cache": [
+            null,
+            "memory",
+            "none"
+          ],
+          "mirror": [
+            null
+          ]
+        }
       ]
     },
     "db.pool": {
@@ -904,13 +982,170 @@
       "doc": "Makes the database `db` (a handle) the current one; true"
     },
     "db.adapter": {
-      "doc": "$db->getAdapter()->{method}(...args): any public adapter method (capabilities, limits, raw adapter calls), named arguments as database.*"
+      "doc": "$db->getAdapter()->{method}(...args): any public adapter method (capabilities, limits, raw adapter calls), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Adapter\\Memory::castingAfter",
+        "Utopia\\Database\\Adapter\\Memory::castingBefore",
+        "Utopia\\Database\\Adapter\\Memory::commitTransaction",
+        "Utopia\\Database\\Adapter\\Memory::count",
+        "Utopia\\Database\\Adapter\\Memory::create",
+        "Utopia\\Database\\Adapter\\Memory::createAttribute",
+        "Utopia\\Database\\Adapter\\Memory::createCollection",
+        "Utopia\\Database\\Adapter\\Memory::createDocument",
+        "Utopia\\Database\\Adapter\\Memory::createIndex",
+        "Utopia\\Database\\Adapter\\Memory::decodeLinestring",
+        "Utopia\\Database\\Adapter\\Memory::decodePoint",
+        "Utopia\\Database\\Adapter\\Memory::decodePolygon",
+        "Utopia\\Database\\Adapter\\Memory::delete",
+        "Utopia\\Database\\Adapter\\Memory::deleteAttribute",
+        "Utopia\\Database\\Adapter\\Memory::deleteCollection",
+        "Utopia\\Database\\Adapter\\Memory::deleteDocument",
+        "Utopia\\Database\\Adapter\\Memory::deleteDocuments",
+        "Utopia\\Database\\Adapter\\Memory::exists",
+        "Utopia\\Database\\Adapter\\Memory::filter",
+        "Utopia\\Database\\Adapter\\Memory::find",
+        "Utopia\\Database\\Adapter\\Memory::getAttributeWidth",
+        "Utopia\\Database\\Adapter\\Memory::getConnectionId",
+        "Utopia\\Database\\Adapter\\Memory::getCountOfAttributes",
+        "Utopia\\Database\\Adapter\\Memory::getCountOfDefaultAttributes",
+        "Utopia\\Database\\Adapter\\Memory::getCountOfDefaultIndexes",
+        "Utopia\\Database\\Adapter\\Memory::getCountOfIndexes",
+        "Utopia\\Database\\Adapter\\Memory::getDocument",
+        "Utopia\\Database\\Adapter\\Memory::getDocumentSizeLimit",
+        "Utopia\\Database\\Adapter\\Memory::getIdAttributeType",
+        "Utopia\\Database\\Adapter\\Memory::getInternalIndexesKeys",
+        "Utopia\\Database\\Adapter\\Memory::getKeywords",
+        "Utopia\\Database\\Adapter\\Memory::getLimitForAttributes",
+        "Utopia\\Database\\Adapter\\Memory::getLimitForBigInt",
+        "Utopia\\Database\\Adapter\\Memory::getLimitForIndexes",
+        "Utopia\\Database\\Adapter\\Memory::getLimitForInt",
+        "Utopia\\Database\\Adapter\\Memory::getLimitForString",
+        "Utopia\\Database\\Adapter\\Memory::getMaxIndexLength",
+        "Utopia\\Database\\Adapter\\Memory::getMaxUIDLength",
+        "Utopia\\Database\\Adapter\\Memory::getMaxVarcharLength",
+        "Utopia\\Database\\Adapter\\Memory::getMinDateTime",
+        "Utopia\\Database\\Adapter\\Memory::getSchemaAttributes",
+        "Utopia\\Database\\Adapter\\Memory::getSchemaIndexes",
+        "Utopia\\Database\\Adapter\\Memory::getSequences",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForAlterLocks",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForAttributeResizing",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForAttributes",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForBatchCreateAttributes",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForBatchOperations",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForBoundaryInclusiveContains",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForCacheSkipOnFailure",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForCaching",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForCastIndexArray",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForCasting",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForDistanceBetweenMultiDimensionGeometryInMeters",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForFulltextIndex",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForFulltextWildcardIndex",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForGetConnectionId",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForHostname",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForIdenticalIndexes",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForIndex",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForIndexArray",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForIntegerBooleans",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForInternalCasting",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForMultipleFulltextIndexes",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForNestedTransactions",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForObject",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForObjectIndexes",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForOperators",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForOptionalSpatialAttributeWithExistingRows",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForOrderRandom",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForPCRERegex",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForPOSIXRegex",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForQueryContains",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForReconnection",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForRelationships",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForSchemaAttributes",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForSchemaIndexes",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForSchemas",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForSpatialAttributes",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForSpatialAxisOrder",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForSpatialIndexNull",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForSpatialIndexOrder",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForTimeouts",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForTransactionRetries",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForTrigramIndex",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForUTCCasting",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForUniqueIndex",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForUpdateLock",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForUpsertOnUniqueIndex",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForUpserts",
+        "Utopia\\Database\\Adapter\\Memory::getSupportForVectors",
+        "Utopia\\Database\\Adapter\\Memory::getSupportNonUtfCharacters",
+        "Utopia\\Database\\Adapter\\Memory::getTenantQuery",
+        "Utopia\\Database\\Adapter\\Memory::list",
+        "Utopia\\Database\\Adapter\\Memory::ping",
+        "Utopia\\Database\\Adapter\\Memory::reconnect",
+        "Utopia\\Database\\Adapter\\Memory::renameAttribute",
+        "Utopia\\Database\\Adapter\\Memory::rollbackTransaction",
+        "Utopia\\Database\\Adapter\\Memory::setSupportForAttributes",
+        "Utopia\\Database\\Adapter\\Memory::setTimeout",
+        "Utopia\\Database\\Adapter\\Memory::setUTCDatetime",
+        "Utopia\\Database\\Adapter\\Memory::startTransaction",
+        "Utopia\\Database\\Adapter\\Memory::sum",
+        "Utopia\\Database\\Adapter\\Memory::updateAttribute",
+        "Utopia\\Database\\Adapter\\Memory::upsertDocuments",
+        "Utopia\\Database\\Adapter\\SQLite::create",
+        "Utopia\\Database\\Adapter\\SQLite::createCollection",
+        "Utopia\\Database\\Adapter\\SQLite::createDocument",
+        "Utopia\\Database\\Adapter\\SQLite::delete",
+        "Utopia\\Database\\Adapter\\SQLite::deleteCollection",
+        "Utopia\\Database\\Adapter\\SQLite::exists",
+        "Utopia\\Database\\Adapter\\SQLite::getEmulateMySQL",
+        "Utopia\\Database\\Adapter\\SQLite::getKeywords",
+        "Utopia\\Database\\Adapter\\SQLite::getSchemaAttributes",
+        "Utopia\\Database\\Adapter\\SQLite::getSchemaIndexes",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForAlterLocks",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForAttributeResizing",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForBatchCreateAttributes",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForBoundaryInclusiveContains",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForDistanceBetweenMultiDimensionGeometryInMeters",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForFulltextIndex",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForFulltextWildcardIndex",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForGetConnectionId",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForHostname",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForJSONOverlaps",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForObject",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForObjectIndexes",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForOptionalSpatialAttributeWithExistingRows",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForPCRERegex",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForPOSIXRegex",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForQueryContains",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForRelationships",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForSchemaAttributes",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForSchemaIndexes",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForSchemas",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForSpatialAttributes",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForSpatialAxisOrder",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForSpatialIndexNull",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForSpatialIndexOrder",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForTTLIndexes",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForTimeouts",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForUnsignedBigInt",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForUpdateLock",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForUpsertOnUniqueIndex",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportForUpserts",
+        "Utopia\\Database\\Adapter\\SQLite::getSupportNonUtfCharacters",
+        "Utopia\\Database\\Adapter\\SQLite::setEmulateMySQL",
+        "Utopia\\Database\\Adapter\\Memory::getDriver",
+        "Utopia\\Database\\Adapter\\SQL::getSupportForVectors",
+        "Utopia\\Database\\Adapter::getHostname",
+        "Utopia\\Database\\Adapter::getColumnType",
+        "Utopia\\Database\\Adapter::getSupportForTTLIndexes"
+      ]
     },
     "db.log": {
       "doc": "The entries fixtures logged since the last db.log (listener events, filter calls, transformations), in order; clears them"
     },
     "db.sql": {
       "doc": "A statement on the database's own connection, naming no schema but the database's: rows as lists of column => text"
+    },
+    "db.memory_data": {
+      "doc": "The stored collections of the database's Memory adapter (its `$data`, which MemoryTest reads by reflection): storage key => attributes, indexes, documents, sequence"
     },
     "db.add_format": {
       "doc": "Structure::addFormat(name, ...) with the named fixture format of the e2e suite (priceRange, priceRangeNew: a Range from formatOptions min/max, integer); true",
@@ -979,12 +1214,9 @@
   "tests_waived": {
     "vendor/utopia-php/database/tests/e2e/Adapter/MariaDBTest.php": "Phase 2: the MariaDB adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php": "Phase 2: the MySQL adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
-    "vendor/utopia-php/database/tests/e2e/Adapter/SQLiteTest.php": "Phase 2: the SQLite adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
-    "vendor/utopia-php/database/tests/e2e/Adapter/MemoryTest.php": "Phase 2: the Memory adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/MongoDBTest.php": "Phase 3: the MongoDB adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MariaDBTest.php": "Phase 2: the MariaDB adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php": "Phase 2: the MySQL adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
-    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/SQLiteTest.php": "Phase 2: the SQLite adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MongoDBTest.php": "Phase 3: the MongoDB adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/Schemaless/MongoDBTest.php": "Phase 3: schemaless MongoDB is not converted yet",
     "vendor/utopia-php/database/tests/unit/MongoPermissionStringsTest.php": "Phase 3: tests Utopia\\Database\\Adapter\\Mongo::permissionStrings (private, by reflection); the MongoDB adapter is not converted yet"

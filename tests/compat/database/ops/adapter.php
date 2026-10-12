@@ -16,6 +16,7 @@ use Tests\Compat\Fault;
 use Tests\Compat\Session;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
+use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Change;
 use Utopia\Database\Document;
 use Utopia\Database\PDO;
@@ -84,14 +85,31 @@ $connect = static function (Session $s): Postgres {
 
     return $adapter;
 };
-// The fuzz profiles' adapter: one per namespace, on schema ${ns} (namespace
-// `fz`), with collection `fz` seeded with 24 documents and an empty `rt`.
-$fuzzAdapter = static function (Session $s) use ($connect): Postgres {
+// The fuzz profiles' adapter: one per namespace and engine, on schema ${ns}
+// (namespace `fz`), with collection `fz` seeded with 24 documents and an
+// empty `rt`. Engine `sqlite` puts them in file /tmp/compat-fs/${ns}/fuzz.sqlite,
+// without the object attributes SQLite has no type for.
+$fuzzAdapter = static function (Session $s, string $engine) use ($connect): SQL {
     static $adapters = [];
-    if (isset($adapters[$s->ns])) {
-        return $adapters[$s->ns];
+    if (isset($adapters[$s->ns][$engine])) {
+        return $adapters[$s->ns][$engine];
     }
-    $adapter = $connect($s);
+    switch ($engine) {
+        case 'postgres':
+            $adapter = $connect($s);
+            break;
+        case 'sqlite':
+            $dir = '/tmp/compat-fs/' . $s->ns;
+            if (!\is_dir($dir)) {
+                \mkdir($dir, 0777, true);
+            }
+            $adapter = new SQLite(new PDO('sqlite:' . $dir . '/fuzz.sqlite', null, null, SQLite::getPDOAttributes()));
+            $adapter->setAuthorization(new Authorization());
+            break;
+        default:
+            throw new Fault('adapter fuzzing: `engine` must be "postgres" or "sqlite"');
+    }
+    $objects = $engine !== 'sqlite';
     $adapter->setDatabase($s->ns);
     $adapter->setNamespace('fz');
     $adapter->delete($s->ns);
@@ -101,15 +119,16 @@ $fuzzAdapter = static function (Session $s) use ($connect): Postgres {
     ]);
     $adapter->createCollection('fz', [
         $attribute('title', 'string', 64), $attribute('year', 'integer', 4), $attribute('rating', 'double'),
-        $attribute('active', 'boolean'), $attribute('tags', 'string', 32, true), $attribute('meta', 'object'),
+        $attribute('active', 'boolean'), $attribute('tags', 'string', 32, true),
+        ...($objects ? [$attribute('meta', 'object')] : []),
         $attribute('released', 'datetime'),
     ]);
-    $adapter->createCollection('rt', [$attribute('t', 'text'), $attribute('a', 'string', 64, true), $attribute('o', 'object')]);
+    $adapter->createCollection('rt', [$attribute('t', 'text'), $attribute('a', 'string', 64, true), ...($objects ? [$attribute('o', 'object')] : [])]);
     $names = ['Alpha', 'beta', 'Gamma', 'delta', 'Ünïcödé', "o'brien", '100%', 'a_b'];
     $tags = [['x', 'y'], [], ['y'], ['z', 'x', "o'b"]];
     $documents = [];
     for ($i = 0; $i < 24; $i++) {
-        $documents[] = new Document([
+        $document = new Document([
             '$id' => 'd' . $i,
             '$permissions' => [$i % 2 === 0 ? 'read("any")' : 'read("user:1")'],
             '$createdAt' => \sprintf('2001-01-%02d 00:00:00.000', $i + 1),
@@ -122,10 +141,14 @@ $fuzzAdapter = static function (Session $s) use ($connect): Postgres {
             'meta' => ['k' => $i % 5, 's' => $i % 2 === 0 ? 'a' : 'b'],
             'released' => \sprintf('2000-01-%02d 00:00:00.000', $i % 28 + 1),
         ]);
+        if (!$objects) {
+            $document->removeAttribute('meta');
+        }
+        $documents[] = $document;
     }
     $adapter->createDocuments(new Document(['$id' => 'fz']), $documents);
 
-    return $adapters[$s->ns] = $adapter;
+    return $adapters[$s->ns][$engine] = $adapter;
 };
 
 return [
@@ -311,7 +334,11 @@ return [
         $exception = new \PDOException((string) $a['message']);
         (new \ReflectionProperty(\Exception::class, 'code'))->setValue($exception, (string) $a['sqlstate']);
         $exception->errorInfo = [(string) $a['sqlstate'], $a['native'] ?? null, (string) $a['message']];
-        $class = new \ReflectionClass(Postgres::class);
+        $class = new \ReflectionClass(match ($a['engine'] ?? 'postgres') {
+            'postgres' => Postgres::class,
+            'sqlite' => SQLite::class,
+            default => throw new Fault('adapter.process_exception: `engine` must be "postgres" or "sqlite"'),
+        });
 
         throw $class->getMethod('processException')->invoke($class->newInstanceWithoutConstructor(), $exception);
     },
@@ -644,7 +671,7 @@ return [
     // ----- Fuzzing: one adapter per namespace, over a seeded collection -----
 
     'adapter.fuzz_find' => static function (array $a, Session $s) use ($fuzzAdapter, $queries, $strings) {
-        $adapter = $fuzzAdapter($s);
+        $adapter = $fuzzAdapter($s, (string) ($a['engine'] ?? 'postgres'));
         $authorization = new Authorization();
         if (\array_key_exists('roles', $a)) {
             $authorization->cleanRoles();
@@ -668,7 +695,7 @@ return [
         ));
     },
     'adapter.fuzz_roundtrip' => static function (array $a, Session $s) use ($fuzzAdapter) {
-        $adapter = $fuzzAdapter($s);
+        $adapter = $fuzzAdapter($s, (string) ($a['engine'] ?? 'postgres'));
         $value = Values::decode($a['value'] ?? null);
         $authorization = new Authorization();
         $authorization->setStatus(false);
@@ -676,7 +703,8 @@ return [
         $out = [];
         foreach ([
             static fn () => $adapter->createDocument(new Document(['$id' => 'rt']), new Document([
-                '$id' => 'rt', '$permissions' => [], 't' => $value, 'a' => [$value], 'o' => ['k' => $value],
+                '$id' => 'rt', '$permissions' => [], 't' => $value, 'a' => [$value],
+                ...($adapter->getSupportForObject() ? ['o' => ['k' => $value]] : []),
             ])),
             static fn () => $adapter->getDocument(new Document(['$id' => 'rt']), 'rt'),
             static fn () => $adapter->find(new Document(['$id' => 'rt']), [new \Utopia\Database\Query('equal', 't', [$value])]),

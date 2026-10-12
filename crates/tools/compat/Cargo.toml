@@ -41,6 +41,8 @@ tokio = { workspace = true, features = ["fs", "io-std", "io-util", "rt", "macros
 tokio-tungstenite.workspace = true
 # The runner snapshots PostgreSQL schemas (`postgres@<service>`).
 tokio-postgres.workspace = true
+# The runner snapshots SQLite database files (`sqlite`).
+rusqlite.workspace = true
 
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
@@ -49,7 +51,7 @@ utopia-auth.workspace = true
 utopia-balancer.workspace = true
 utopia-cache = { workspace = true, features = ["memcached", "redis-cluster"] }
 utopia-compression.workspace = true
-utopia-database = { workspace = true, features = ["pool", "redis"] }
+utopia-database = { workspace = true, features = ["memory", "pool", "redis", "sqlite"] }
 utopia-detector.workspace = true
 utopia-domains.workspace = true
 utopia-dsn.workspace = true

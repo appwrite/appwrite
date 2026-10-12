@@ -111,6 +111,33 @@ pub struct OpSpec {
     /// declares them (otherwise every case of a spec with `services` does).
     #[serde(default)]
     pub services: Vec<String>,
+    /// Arguments under which a step of this operation opens none of its
+    /// `services` (a database on a local engine): each pattern maps an
+    /// argument to the values it may take, `null` standing for an absent
+    /// argument and `"*"` for any present one. A step matching every entry
+    /// of one pattern needs no services in the replay.
+    #[serde(default)]
+    pub services_unless: Vec<BTreeMap<String, Vec<Value>>>,
+}
+
+impl OpSpec {
+    /// Whether a step of this operation with `args` needs its services.
+    pub fn step_needs_services(&self, args: &Value) -> bool {
+        if self.services.is_empty() {
+            return false;
+        }
+        !self.services_unless.iter().any(|pattern| {
+            pattern.iter().all(|(key, allowed)| {
+                let given = args.get(key).filter(|v| !v.is_null());
+                allowed.iter().any(|a| match (a, given) {
+                    (Value::Null, None) => true,
+                    (Value::String(any), Some(_)) if any == "*" => true,
+                    (a, Some(v)) => a == v,
+                    _ => false,
+                })
+            })
+        })
+    }
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -254,15 +281,17 @@ pub fn libs(root: &Path) -> Vec<String> {
 
 impl Spec {
     /// Whether the PHP-free replay needs services for `case`, which
-    /// snapshots `kinds` (see [`OpSpec::services`]) or lists the `services`
-    /// requirement.
+    /// snapshots `kinds` (a kind on a service, see
+    /// [`super::snapshot::needs_service`]), lists the `services`
+    /// requirement, or has a step needing its operation's services (see
+    /// [`OpSpec::services`] and [`OpSpec::services_unless`]).
     pub fn case_needs_services(&self, case: &Case, kinds: &[String]) -> bool {
-        if !kinds.is_empty() || case.requires.iter().any(|r| r == "services") {
+        if kinds.iter().any(|k| super::snapshot::needs_service(k)) || case.requires.iter().any(|r| r == "services") {
             return true;
         }
         if !self.ops.values().any(|o| !o.services.is_empty()) {
             return !self.services.is_empty();
         }
-        case.steps.iter().any(|s| self.ops.get(&s.op).is_some_and(|o| !o.services.is_empty()))
+        case.steps.iter().any(|s| self.ops.get(&s.op).is_some_and(|o| o.step_needs_services(&s.args)))
     }
 }

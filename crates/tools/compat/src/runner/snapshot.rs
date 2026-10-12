@@ -9,6 +9,7 @@
 //! | `redis@<service>[/<db>[,<db>...]]` | like `redis`, on another Redis service of `compat.json` (its database, or the databases listed, merged into one snapshot); cache envelope timestamps are masked |
 //! | `postgres@<service>` | the PostgreSQL schema named after the namespace: tables, columns, indexes, constraints and rows (see [`super::snapshot_postgres`]) |
 //! | `redis-json@<service>[/<db>[,<db>...]]` | like `redis@`, as a list of `{key, type, value}` entries in which strings (and hash fields) holding a JSON object or array are `{"$json": <decoded>}`, so the scrubs reach the values inside; entries, and set members, are sorted as they read once the namespace is `${ns}` and ids and times near the clock are scrubbed (a store keyed by generated ids, such as the database's Redis adapter) |
+//! | `sqlite` | every SQLite database file under `/tmp/compat-fs/<namespace>/`: its schema and rows (see [`super::snapshot_sqlite`]) |
 //!
 //! Add a kind by adding a branch to [`snapshot`] and [`cleanup`]. A kind must
 //! only touch resources whose names contain the namespace.
@@ -23,6 +24,7 @@ pub fn snapshot(cfg: &Config, kind: &str, ns: &str) -> Result<Value, String> {
     match kind {
         "redis" => redis_snapshot(&cfg.runner_service("redis")?, ns),
         "files" => files_snapshot(ns),
+        "sqlite" => super::snapshot_sqlite::snapshot(ns),
         other if other.starts_with("postgres@") => {
             super::snapshot_postgres::snapshot(&cfg.runner_service(&other["postgres@".len()..])?, ns)
         }
@@ -115,10 +117,16 @@ fn service_urls(cfg: &Config, kind: &str) -> Result<Vec<String>, String> {
     Ok(dbs.split(',').map(|db| format!("{host}/{db}")).collect())
 }
 
+/// Whether snapshotting `kind` reads a service. `sqlite` reads the cases'
+/// own files, which the in-process replay writes too.
+pub fn needs_service(kind: &str) -> bool {
+    kind != "sqlite"
+}
+
 pub fn cleanup(cfg: &Config, kind: &str, ns: &str) -> Result<(), String> {
     match kind {
         "redis" => redis_cleanup(&cfg.runner_service("redis")?, ns),
-        "files" => {
+        "files" | "sqlite" => {
             let dir = files_root().join(ns);
             if dir.exists() {
                 std::fs::remove_dir_all(&dir).map_err(|e| format!("{}: {e}", dir.display()))?;

@@ -102,7 +102,7 @@ pub fn database_marker() -> Json {
 }
 
 /// An adapter: `{"$adapter": "<PHP class short name>"}` (`Postgres`,
-/// `Pool`, ...).
+/// `Pool`, `Redis`, `Mirror`, `SQLite`, `Memory`, ...).
 pub fn adapter_marker(name: &str) -> Json {
     json!({"$adapter": name})
 }
@@ -145,6 +145,12 @@ pub struct Db {
     /// The mirror a database opened with `mirror` is (its `database` is the
     /// mirror's own).
     pub mirror: Option<Arc<MirrorHandle>>,
+    /// Its SQLite adapter (`db.sql` runs on its connection), for engine
+    /// `sqlite`.
+    pub sqlite: Option<Arc<utopia_database::adapter::sqlite::Sqlite>>,
+    /// Its in-memory adapter (`db.memory_data` reads it), for engine
+    /// `memory`.
+    pub memory: Option<Arc<utopia_database::adapter::memory::Memory>>,
 }
 
 /// A mirror and the handles of its source and destination (`db.mirror`).

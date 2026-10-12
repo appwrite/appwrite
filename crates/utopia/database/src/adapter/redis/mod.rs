@@ -836,6 +836,24 @@ impl Adapter for Redis {
         self.put_index(collection, id, kind, attributes, lengths, orders).await
     }
 
+    /// Stores `$lengths` and `$orders` as `createIndex()` hands them over: a
+    /// list as it is (PHP's `array_values`), otherwise by position (`null`
+    /// where unset) up to the last one set.
+    async fn create_index_arrays(
+        &self,
+        collection: &str,
+        id: &str,
+        kind: &str,
+        attributes: &[String],
+        lengths: &Array,
+        orders: &Array,
+        _attribute_types: &[(String, String)],
+        _collation: &[String],
+        _ttl: i64,
+    ) -> Result<bool> {
+        self.put_index(collection, id, kind, attributes, &as_given(lengths), &as_given(orders)).await
+    }
+
     async fn delete_index(&self, collection: &str, id: &str) -> Result<bool> {
         self.drop_index(collection, id).await
     }
@@ -875,7 +893,12 @@ impl Adapter for Redis {
         document: Document,
         skip_permissions: bool,
     ) -> Result<Document> {
-        self.replace_document(collection, id, document, skip_permissions).await
+        // PHP returns the merged row but leaves the caller's document as it
+        // was, and `Database::updateDocument` carries on with that one
+        // (see [`Adapter::update_document`]).
+        let held = document.clone();
+        self.replace_document(collection, id, document, skip_permissions).await?;
+        Ok(held)
     }
 
     async fn update_documents(&self, collection: &Document, updates: &Document, documents: &[Document]) -> Result<i64> {
@@ -1194,4 +1217,23 @@ impl Redis {
     fn meta_json(value: &Value) -> Result<Vec<u8>> {
         json_encode(value, meta_flags())
     }
+}
+
+/// An index's lengths or orders as `createIndex()` hands them to the
+/// adapter: a list as it is, otherwise by position (`null` where unset) up
+/// to the last one set.
+fn as_given(array: &Array) -> Vec<Value> {
+    let list = array.iter().enumerate().all(|(i, (k, _))| matches!(k, crate::value::KeyRef::Int(n) if n == i as i64));
+    if list {
+        return array.values().cloned().collect();
+    }
+    let count = array
+        .keys()
+        .filter_map(|k| match k {
+            crate::value::KeyRef::Int(n) if n >= 0 => Some(n as usize + 1),
+            _ => None,
+        })
+        .max()
+        .unwrap_or(0);
+    (0..count).map(|i| array.get(&crate::value::ArrayKey::Int(i as i64)).cloned().unwrap_or(Value::Null)).collect()
 }

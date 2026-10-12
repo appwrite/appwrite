@@ -863,9 +863,10 @@ impl Database {
         }
 
         let document = adapter.casting_before(collection, document)?;
-        // PHP carries on with its own document: the adapter's result is not
-        // used (the Redis adapter returns the merged row instead).
-        adapter.update_document(collection, id, document.clone(), skip_permissions_update).await?;
+        // PHP carries on with its own document, which an adapter may change
+        // in place (Memory applies the operators to it): adapters return
+        // that document, not their own result.
+        let document = adapter.update_document(collection, id, document, skip_permissions_update).await?;
         let document = adapter.casting_after(collection, document)?;
 
         self.purge_cached_document(collection.id(), Some(id)).await?;

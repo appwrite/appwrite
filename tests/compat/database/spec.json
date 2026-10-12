@@ -1,6 +1,6 @@
 {
   "lib": "database",
-  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter; phase 3's Redis adapter, Pool adapter, Mirror (with its Mirroring filters) and the shared Redis caches are converted too. Still pending: the MariaDB/MySQL, SQLite and Memory adapters (phase 2) and MongoDB (phase 3), waived until their branches land.",
+  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter; phase 2's SQLite and in-memory adapters and phase 3's Redis adapter, Pool adapter, Mirror (with its Mirroring filters) and the shared Redis caches are converted too. Still pending: the MariaDB and MySQL adapters (phase 2) and MongoDB (phase 3), waived until their branches land.",
   "complete": false,
   "php": {
     "src": [
@@ -22,9 +22,7 @@
   "waivers": {
     "Utopia\\Database\\Adapter\\MariaDB::*": "Phase 2: the MariaDB adapter is not converted yet",
     "Utopia\\Database\\Adapter\\MySQL::*": "Phase 2: the MySQL adapter is not converted yet",
-    "Utopia\\Database\\Adapter\\SQLite::*": "Phase 2: the SQLite adapter is not converted yet",
     "Utopia\\Database\\Adapter\\Mongo::*": "Phase 3: the MongoDB adapter (and utopia-php/mongo) is not converted yet",
-    "Utopia\\Database\\Adapter\\Memory::*": "Phase 2: the Memory adapter is not converted yet",
     "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its tokio-postgres connection (reconnect behaviour is converted with Adapter::reconnect)",
     "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
   },
