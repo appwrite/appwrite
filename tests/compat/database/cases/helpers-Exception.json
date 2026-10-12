@@ -1,0 +1,564 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Exception.php",
+  "cases": [
+    {
+      "name": "Exception",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "base"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "base",
+        "code": 0,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Authorization",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Authorization",
+        "message": "Authorization failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Authorization",
+        "message": "Authorization failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Character",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Character",
+        "message": "Character failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Character",
+        "message": "Character failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Conflict",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Conflict",
+        "message": "Conflict failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Conflict",
+        "message": "Conflict failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Dependency",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Dependency",
+        "message": "Dependency failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Dependency",
+        "message": "Dependency failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Duplicate",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Duplicate",
+        "message": "Duplicate failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Duplicate",
+        "message": "Duplicate failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Index",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Index",
+        "message": "Index failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Index",
+        "message": "Index failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Limit",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Limit",
+        "message": "Limit failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Limit",
+        "message": "Limit failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\NotFound",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\NotFound",
+        "message": "NotFound failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\NotFound",
+        "message": "NotFound failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Operator",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Operator",
+        "message": "Operator failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Operator",
+        "message": "Operator failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Order",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Order",
+        "message": "Order failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Order",
+        "message": "Order failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Query",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Query",
+        "message": "Query failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Query",
+        "message": "Query failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Relationship",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Relationship",
+        "message": "Relationship failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Relationship",
+        "message": "Relationship failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Restricted",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Restricted",
+        "message": "Restricted failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Restricted",
+        "message": "Restricted failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Structure",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Structure",
+        "message": "Structure failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Structure",
+        "message": "Structure failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Timeout",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Timeout",
+        "message": "Timeout failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Timeout",
+        "message": "Timeout failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Transaction",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Transaction",
+        "message": "Transaction failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Transaction",
+        "message": "Transaction failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Truncate",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Truncate",
+        "message": "Truncate failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Truncate",
+        "message": "Truncate failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Type",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Type",
+        "message": "Type failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Type",
+        "message": "Type failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Exception\\Unique",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Unique",
+        "message": "Unique failed",
+        "code": 7
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Unique",
+        "message": "Unique failed",
+        "code": 7,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"12\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "12"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 12,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \" 12\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": " 12"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 12,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"12 \"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "12 "
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 12,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"1.9\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "1.9"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 1,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"1e3\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "1e3"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 1000,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"1e100\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "1e100"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 9223372036854775807,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"-5\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "-5"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": -5,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"HY000\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "HY000"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 0,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": ""
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 0,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"0x1A\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "0x1A"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 0,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"23505\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "23505"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 23505,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "string code \"9223372036854775808\"",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": "9223372036854775808"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception",
+        "message": "m",
+        "code": 9223372036854775807,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Order getAttribute",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Order",
+        "message": "Order attribute not found",
+        "attribute": "name"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Order",
+        "message": "Order attribute not found",
+        "code": 0,
+        "attribute": "name",
+        "database": true
+      }
+    },
+    {
+      "name": "Order without an attribute",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Order",
+        "message": "m"
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Order",
+        "message": "m",
+        "code": 0,
+        "attribute": null,
+        "database": true
+      }
+    },
+    {
+      "name": "Order with a string code",
+      "op": "error.new",
+      "args": {
+        "class": "Utopia\\Database\\Exception\\Order",
+        "message": "m",
+        "code": "42",
+        "attribute": ""
+      },
+      "expect": {
+        "class": "Utopia\\Database\\Exception\\Order",
+        "message": "m",
+        "code": 42,
+        "attribute": "",
+        "database": true
+      }
+    }
+  ]
+}
