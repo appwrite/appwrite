@@ -2247,6 +2247,7 @@ class Appwrite extends Source
                     $function->scopes ?? [],
                     $function->runtimeSpecification ?: '',
                     $function->buildSpecification ?: '',
+                    $function->interval ?? 0,
                 );
                 $functions[] = $convertedFunc;
 

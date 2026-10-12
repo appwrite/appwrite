@@ -3061,6 +3061,7 @@ class Appwrite extends Destination
                     scopes: $resource->getScopes(),
                     buildSpecification: $resource->getBuildSpecification() ?: null,
                     runtimeSpecification: $resource->getRuntimeSpecification() ?: null,
+                    interval: $resource->getInterval() ?: null,
                 );
                 break;
             case Resource::TYPE_ENVIRONMENT_VARIABLE:
