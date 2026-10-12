@@ -1570,7 +1570,6 @@
                   }
                 },
                 "optional": [
-                  "method",
                   "attribute",
                   "values",
                   "alias"
@@ -1748,6 +1747,145 @@
             }
           },
           "iterations": 3000
+        }
+      ]
+    },
+    "builder.queries": {
+      "doc": "(new Builder\\<Dialect>())->from('t')->queries(array_map(Query::parseQuery(...), $queries))->build(): query and bindings, for values of any type",
+      "covers": [
+        "Utopia\\Query\\Builder::build",
+        "Utopia\\Query\\Query::parseQuery"
+      ],
+      "fuzz": [
+        {
+          "name": "typed",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "dialect": {
+                "gen": "pick",
+                "from": [
+                  "mysql",
+                  "mariadb",
+                  "postgresql",
+                  "sqlite",
+                  "clickhouse",
+                  "mongodb"
+                ]
+              },
+              "queries": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "method": {
+                      "gen": "pick",
+                      "from": [
+                        "equal",
+                        "notEqual",
+                        "lessThan",
+                        "lessThanEqual",
+                        "greaterThan",
+                        "greaterThanEqual",
+                        "contains",
+                        "containsAny",
+                        "notContains",
+                        "search",
+                        "notSearch",
+                        "isNull",
+                        "isNotNull",
+                        "between",
+                        "notBetween",
+                        "startsWith",
+                        "notStartsWith",
+                        "endsWith",
+                        "notEndsWith",
+                        "regex",
+                        "exists",
+                        "notExists",
+                        "select",
+                        "orderAsc",
+                        "orderDesc",
+                        "orderRandom",
+                        "limit",
+                        "offset",
+                        "cursorAfter",
+                        "cursorBefore",
+                        "and",
+                        "or",
+                        "elemMatch",
+                        "count",
+                        "sum",
+                        "avg",
+                        "min",
+                        "max",
+                        "groupBy",
+                        "having",
+                        "distinct",
+                        "join",
+                        "leftJoin",
+                        "crossJoin",
+                        "on",
+                        "union",
+                        "jsonContains",
+                        "jsonPath",
+                        "intersects",
+                        "distanceLessThan",
+                        "vectorCosine",
+                        "containsAll"
+                      ]
+                    },
+                    "attribute": {
+                      "gen": "one_of",
+                      "of": [
+                        {
+                          "gen": "string",
+                          "max": 6,
+                          "alphabet": "alnum"
+                        },
+                        {
+                          "gen": "pick",
+                          "from": [
+                            "a.b",
+                            "*",
+                            "$id",
+                            "1"
+                          ]
+                        }
+                      ]
+                    },
+                    "values": {
+                      "gen": "array",
+                      "items": {
+                        "gen": "one_of",
+                        "of": [
+                          {
+                            "gen": "any",
+                            "depth": 2
+                          },
+                          {
+                            "gen": "string",
+                            "max": 6,
+                            "tricky": 0.4
+                          },
+                          {
+                            "gen": "int"
+                          }
+                        ]
+                      },
+                      "max": 4
+                    }
+                  },
+                  "optional": [
+                    "attribute"
+                  ]
+                },
+                "min": 1,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 5000
         }
       ]
     }

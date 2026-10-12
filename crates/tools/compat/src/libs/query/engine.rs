@@ -1068,6 +1068,8 @@ impl<'a> Args<'a> {
             Json::Array(items) => {
                 Value::Array(Array::from_list(items.iter().map(|i| self.php(i)).collect::<Result<Vec<_>, _>>()?))
             }
+            // An empty JSON object is a `stdClass`, as the PHP driver decodes it.
+            Json::Object(map) if map.is_empty() => Value::Object(Array::default()),
             Json::Object(map) => {
                 if map.len() == 1 {
                     let (k, v) = map.iter().next().expect("one entry");

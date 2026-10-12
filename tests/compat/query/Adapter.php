@@ -139,6 +139,15 @@ final class Adapter implements Base, Benchmarks
 
                 return (new Serializer())->serialize((new Parser())->parse($tokens));
             },
+            'builder.queries' => function (array $a): array {
+                $class = self::dialect($a, 'Builder');
+                $builder = new $class();
+                $queries = \array_map(fn ($q) => Query::parseQuery($q), $a['queries']);
+                $builder->from('t')->queries($queries);
+                $statement = $builder->build();
+
+                return ['query' => $statement->query, 'bindings' => $statement->bindings];
+            },
             'builder.build' => function (array $a): array {
                 $class = self::dialect($a, 'Builder');
                 $builder = new $class();

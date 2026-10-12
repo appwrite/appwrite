@@ -859,6 +859,31 @@
           2
         ]
       }
+    },
+    {
+      "name": "build from parsed arrays",
+      "op": "builder.queries",
+      "args": {
+        "dialect": "mysql",
+        "queries": [
+          {
+            "method": "equal",
+            "attribute": "a",
+            "values": [
+              1,
+              "x",
+              null
+            ]
+          },
+          {
+            "method": "groupBy",
+            "values": [
+              "b",
+              2
+            ]
+          }
+        ]
+      }
     }
   ]
 }

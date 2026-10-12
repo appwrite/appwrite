@@ -35,6 +35,7 @@ pub const OPS: &[&str] = &[
     "ast.parse",
     "builder",
     "builder.build",
+    "builder.queries",
     "classifier",
     "classifier.classify",
     "hook",
@@ -71,6 +72,19 @@ fn lib(result: utopia_query::Result<Value>) -> OpResult {
     Ok(match result {
         Ok(v) => Outcome::Ok(v),
         Err(e) => Outcome::err(e.php_class(), e.to_string()),
+    })
+}
+
+fn build_dialect(args: &Value, queries: &[Query]) -> OpResult {
+    use utopia_query::builder::*;
+    lib(match args.get("dialect").and_then(Value::as_str).unwrap_or_default() {
+        "mysql" => build_with::<MySqlDialect>(queries),
+        "mariadb" => build_with::<MariaDbDialect>(queries),
+        "postgresql" => build_with::<PostgreSqlDialect>(queries),
+        "sqlite" => build_with::<SqliteDialect>(queries),
+        "clickhouse" => build_with::<ClickHouseDialect>(queries),
+        "mongodb" => build_with::<MongoDbDialect>(queries),
+        _ => return Err(Fault::new("unknown dialect")),
     })
 }
 
@@ -146,6 +160,23 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
                 Ok(Value::String(Serializer::new().serialize(&select)?))
             })());
         }
+        "builder.queries" => {
+            let raw = args.get("queries").and_then(Value::as_array).cloned().unwrap_or_default();
+            let cx = engine::standalone();
+            let mut queries = Vec::with_capacity(raw.len());
+            for item in &raw {
+                let decoded = cx.decoded(item);
+                let array = match decoded.value(0, "query") {
+                    Ok(utopia_query::Value::Array(a)) => a,
+                    _ => return Err(Fault::new("a query must be an object")),
+                };
+                match Query::parse_query(&array, false) {
+                    Ok(q) => queries.push(q),
+                    Err(e) => return Ok(Outcome::err(e.php_class(), e.to_string())),
+                }
+            }
+            return build_dialect(args, &queries);
+        }
         "builder.build" => {
             let items: Vec<String> = args
                 .get("queries")
@@ -156,16 +187,7 @@ pub async fn call(op: &str, args: &Value, _session: &mut Session) -> OpResult {
                 Ok(q) => q,
                 Err(e) => return Ok(Outcome::err(e.php_class(), e.to_string())),
             };
-            use utopia_query::builder::*;
-            return lib(match args.get("dialect").and_then(Value::as_str).unwrap_or_default() {
-                "mysql" => build_with::<MySqlDialect>(&queries),
-                "mariadb" => build_with::<MariaDbDialect>(&queries),
-                "postgresql" => build_with::<PostgreSqlDialect>(&queries),
-                "sqlite" => build_with::<SqliteDialect>(&queries),
-                "clickhouse" => build_with::<ClickHouseDialect>(&queries),
-                "mongodb" => build_with::<MongoDbDialect>(&queries),
-                _ => return Err(Fault::new("unknown dialect")),
-            });
+            return build_dialect(args, &queries);
         }
         _ => {}
     }
