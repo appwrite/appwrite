@@ -240,42 +240,52 @@ class Action extends AppwriteAction
     }
 
     /**
-     * resolveIntegerOperators() for every document of a bulk upsert, each against its own stored version, read in
-     * one query per batch; a document not stored yet is answered from an empty one.
+     * resolveIntegerOperators() for each document against its stored version, read locked for update, so a
+     * concurrent change cannot land between the read and the write; call it inside the write's transaction. A
+     * document not stored yet is answered from an empty one.
      *
      * @param array<Document> $documents
      * @return array<Document>
      */
     protected function resolveIntegerOperatorsOfDocuments(Database $dbForDatabases, string $collectionTableId, Document $collection, array $documents): array
     {
-        $ids = [];
-        foreach ($documents as $document) {
-            if ($this->hasFractionalIntegerOperators($document->getArrayCopy(), $collection)) {
-                $ids[] = $document->getId();
-            }
-        }
-        if ($ids === []) {
-            return $documents;
-        }
-
-        $stored = [];
-        foreach (\array_chunk($ids, APP_DATABASE_QUERY_MAX_VALUES) as $chunk) {
-            foreach ($dbForDatabases->getAuthorization()->skip(fn (): array => $dbForDatabases->find($collectionTableId, [Query::equal('$id', $chunk), Query::limit(\count($chunk))])) as $document) {
-                $stored[$document->getId()] = $document;
-            }
-        }
-
         return \array_map(
-            fn (Document $document): Document => \in_array($document->getId(), $ids, true)
-                ? new Document($this->resolveIntegerOperators($document->getArrayCopy(), $collection, $stored[$document->getId()] ?? new Document(), $dbForDatabases))
+            fn (Document $document): Document => $this->hasFractionalIntegerOperators($document->getArrayCopy(), $collection)
+                ? new Document($this->resolveIntegerOperators(
+                    $document->getArrayCopy(),
+                    $collection,
+                    $dbForDatabases->getAuthorization()->skip(fn (): Document => $dbForDatabases->getDocument($collectionTableId, $document->getId(), forUpdate: true)),
+                    $dbForDatabases,
+                ))
                 : $document,
             $documents,
         );
     }
 
     /**
+     * Run $write on $documents with their fractional integer operators resolved in the same transaction, against
+     * the stored versions it locks.
+     *
+     * @param array<Document> $documents
+     * @param callable(array<Document>): mixed $write
+     */
+    protected function withIntegerOperatorsResolved(Database $dbForDatabases, string $collectionTableId, Document $collection, array $documents, callable $write): mixed
+    {
+        foreach ($documents as $document) {
+            if ($this->hasFractionalIntegerOperators($document->getArrayCopy(), $collection)) {
+                return $dbForDatabases->withTransaction(fn (): mixed => $write(
+                    $this->resolveIntegerOperatorsOfDocuments($dbForDatabases, $collectionTableId, $collection, $documents),
+                ));
+            }
+        }
+
+        return $write($documents);
+    }
+
+    /**
      * A bulk update whose fractional integer operators change each document by its own amount, split into one
-     * update per distinct change, each naming the documents it applies to.
+     * update per distinct change, each naming the documents it applies to. Each document is read locked for
+     * update; call it inside the write's transaction.
      *
      * @param array<string, mixed> $data
      * @param array<Query> $queries
@@ -283,8 +293,14 @@ class Action extends AppwriteAction
      */
     protected function groupIntegerOperators(Database $dbForDatabases, string $collectionTableId, Document $collection, array $data, array $queries): array
     {
-        $groups = [];
+        $ids = [];
         foreach ($dbForDatabases->cursor($collectionTableId, $queries) as $document) {
+            $ids[] = $document->getId();
+        }
+
+        $groups = [];
+        foreach ($ids as $id) {
+            $document = $dbForDatabases->getAuthorization()->skip(fn (): Document => $dbForDatabases->getDocument($collectionTableId, $id, forUpdate: true));
             $resolved = $this->resolveIntegerOperators($data, $collection, $document, $dbForDatabases);
             $signature = \serialize(\array_map(
                 fn (mixed $value): mixed => $value instanceof Operator ? $value->toArray() : null,

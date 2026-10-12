@@ -140,11 +140,6 @@ class Upsert extends Action
         }
 
         $dbForDatabases = $getDatabasesDB($database, $collection);
-        if ($transactionId === null && $this->hasFractionalIntegerOperators($data, $collection)) {
-            $stored = $authorization->skip(fn () => $dbForDatabases->getDocument('database_' . $database->getSequence() . '_collection_' . $collection->getSequence(), $documentId));
-            $data = $this->resolveIntegerOperators($data, $collection, $stored, $dbForDatabases);
-        }
-
         $allowedPermissions = [
             PermissionType::Read,
             PermissionType::Update,
@@ -277,16 +272,16 @@ class Upsert extends Action
                     $dbForDatabases,
                     $collection,
                     [$newDocument],
-                    function (array $documents) use (&$upserted, $dbForDatabases, $collectionTableId) {
+                    function (array $documents) use (&$upserted, $dbForDatabases, $collection, $collectionTableId) {
                         $upserted = [];
 
-                        return $dbForDatabases->upsertDocuments(
+                        return $this->withIntegerOperatorsResolved($dbForDatabases, $collectionTableId, $collection, $documents, fn (array $documents): int => $dbForDatabases->upsertDocuments(
                             $collectionTableId,
                             $documents,
                             onNext: function (Document $document) use (&$upserted) {
                                 $upserted[] = $document;
                             },
-                        );
+                        ));
                     }
                 );
             });

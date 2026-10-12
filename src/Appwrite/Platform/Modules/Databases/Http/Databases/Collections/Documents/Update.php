@@ -147,10 +147,6 @@ class Update extends Action
             throw new Exception($this->getNotFoundException(), params: [$documentId]);
         }
 
-        if ($transactionId === null) {
-            $data = $this->resolveIntegerOperators($data, $collection, $document, $dbForDatabases);
-        }
-
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions, [
             PermissionType::Read,
@@ -271,10 +267,12 @@ class Update extends Action
         try {
             $document = $dbForDatabases->withRequestTimestamp(
                 $requestTimestamp,
-                fn () => $dbForDatabases->withPreserveDates(true, fn () => $dbForDatabases->updateDocument(
+                fn () => $dbForDatabases->withPreserveDates(true, fn () => $this->withIntegerOperatorsResolved(
+                    $dbForDatabases,
                     $collectionTableId,
-                    $document->getId(),
-                    $newDocument
+                    $collection,
+                    [$newDocument],
+                    fn (array $documents): Document => $dbForDatabases->updateDocument($collectionTableId, $document->getId(), $documents[0]),
                 ))
             );
         } catch (ConflictException) {

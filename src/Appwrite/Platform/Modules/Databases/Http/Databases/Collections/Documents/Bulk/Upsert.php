@@ -176,12 +176,11 @@ class Upsert extends Action
             $this->validateTimestamps($document->getArrayCopy(), $dbForDatabases);
         }
         $collectionTableId = 'database_' . $database->getSequence() . '_collection_' . $collection->getSequence();
-        $documents = $this->resolveIntegerOperatorsOfDocuments($dbForDatabases, $collectionTableId, $collection, $documents);
         $upserted = [];
 
         try {
-            $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collectionTableId, $documents, $plan, &$upserted) {
-                return $dbForDatabases->upsertDocuments(
+            $modified = $dbForDatabases->withPreserveDates(true, function () use ($dbForDatabases, $collection, $collectionTableId, $documents, $plan, &$upserted) {
+                return $this->withIntegerOperatorsResolved($dbForDatabases, $collectionTableId, $collection, $documents, fn (array $documents): int => $dbForDatabases->upsertDocuments(
                     $collectionTableId,
                     $documents,
                     onNext: function (Document $document) use ($plan, &$upserted) {
@@ -189,7 +188,7 @@ class Upsert extends Action
                             $upserted[] = $document;
                         }
                     },
-                );
+                ));
             });
         } catch (ConflictException) {
             throw new Exception($this->getConflictException());

@@ -265,7 +265,7 @@ class Update extends Action
                         }
 
                         if (\in_array($action, ['update', 'upsert'], true) && $documentId && \is_array($data) && $this->hasFractionalIntegerOperators($data, $collection)) {
-                            $stored = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionId, $documentId));
+                            $stored = $authorization->skip(fn () => $dbForDatabases->getDocument($collectionId, $documentId, forUpdate: true));
                             $data = $this->resolveIntegerOperators($data, $collection, $stored, $dbForDatabases);
                         }
 
