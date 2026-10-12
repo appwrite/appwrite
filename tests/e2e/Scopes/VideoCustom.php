@@ -698,9 +698,31 @@ trait VideoCustom
     {
         // Cues are `previews/{id}?project=...#xywh=...` (serve-time rewrite) or
         // the older on-disk form without the query; stop before either.
-        \preg_match_all('#previews/([A-Za-z0-9]+)(?:\?|#)#', $vtt, $matches);
+        $ids = [];
 
-        return $matches[1];
+        foreach (\explode("\n", $vtt) as $line) {
+            $line = \rtrim($line, "\r");
+            if (!\str_starts_with($line, 'previews/')) {
+                continue;
+            }
+
+            $cue = \substr($line, \strlen('previews/'));
+            $end = false;
+            foreach (['?', '#'] as $stop) {
+                $position = \strpos($cue, $stop);
+                if ($position !== false && ($end === false || $position < $end)) {
+                    $end = $position;
+                }
+            }
+
+            if ($end === false || $end === 0) {
+                continue;
+            }
+
+            $ids[] = \substr($cue, 0, $end);
+        }
+
+        return $ids;
     }
 
     /**
