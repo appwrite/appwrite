@@ -309,9 +309,9 @@ class Messaging extends Action
                     }
                     $recipients = \array_keys($userTopics);
                 } elseif ($perUser && $isWakeProvider && \count($mqttUsers) > 0) {
-                    // a wakeup provider for the appwrite push
-                    // example -> both apns is registered + appwrite push is in the providers
-                    // then full notification will be skipped for the apns
+                    // A wake-up provider for Appwrite push.
+                    // Example: apns is registered and Appwrite push is also in the providers, so the
+                    // full apns notification is skipped — the device gets a silent wake instead.
                     $recipients = [];
                     foreach ($identifiers as $identifier => $userId) {
                         if (empty($userId) || !isset($mqttUsers[$userId])) {
@@ -319,7 +319,7 @@ class Messaging extends Action
                         }
                     }
                 } else {
-                    // full notifications when appwrite push not present or not listed in the wakeup signals providers
+                    // Full notification when Appwrite push isn't present, or this provider isn't in the wake-up list.
                     $recipients = \array_keys($identifiers);
                 }
 
@@ -860,9 +860,8 @@ class Messaging extends Action
      * retried, so `delivered` is summed across attempts without double-counting, and `recipients` always
      * reports the original batch size so the caller's `failed = recipients - delivered` holds.
      *
-     * A wake send is billed like any other (usage is still enqueued) but reports `wake: true` so the
-     * caller can keep it out of the message's own delivery status — a silent wake is auxiliary to the
-     * MQTT delivery, so its failure must not fail the message nor its success double-count the recipient.
+     * A wake send is billed like any other, but reports `wake: true` so the caller keeps it out of the
+     * message's delivery status — its success or failure must not affect the MQTT-delivered message.
      *
      * @param array<string> $batch
      * @param array<Attachment> $attachments
