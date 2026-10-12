@@ -44,6 +44,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
@@ -87,6 +88,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'permissions' => [],
@@ -180,6 +182,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -266,6 +269,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::users()),
@@ -391,6 +395,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::user($this->getUser()['$id'])),
@@ -566,6 +571,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::team(ID::custom($team1['$id']))),
@@ -731,6 +737,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [],
             'fileSecurity' => true
@@ -820,6 +827,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [],
             'fileSecurity' => true
@@ -909,6 +917,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [],
             'fileSecurity' => true
@@ -1045,6 +1054,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [],
             'fileSecurity' => true,
@@ -1222,6 +1232,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::write(Role::user($this->getUser()['$id'])),
@@ -1282,6 +1293,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'permissions' => [
@@ -1442,6 +1454,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket Transformations Disabled',
             'permissions' => [
                 Permission::read(Role::any())
@@ -1503,6 +1516,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any())
@@ -1620,6 +1634,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Chunked resume ownership',
             'fileSecurity' => true,
             'encryption' => false,
@@ -1817,6 +1832,7 @@ final class StorageCustomClientTest extends Scope
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Guest chunked upload',
             'fileSecurity' => true,
             'encryption' => false,

@@ -224,6 +224,7 @@ trait WebhooksBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),
@@ -1134,6 +1135,7 @@ trait WebhooksBase
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]), [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'permissions' => [
                 Permission::read(Role::any()),

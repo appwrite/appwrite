@@ -74,6 +74,7 @@ class Create extends Action
             ->param('encryption', true, new Boolean(true), 'Is encryption enabled? For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
             ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Bytes::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
             ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
+            ->param('stripMetadata', true, new Boolean(true), 'Remove metadata such as location, device and capture time from uploaded images. The color profile and orientation are kept. For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' metadata is not removed even if it\'s enabled.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -92,6 +93,7 @@ class Create extends Action
         ?bool $encryption,
         bool $antivirus,
         bool $transformations,
+        bool $stripMetadata,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents
@@ -148,6 +150,7 @@ class Create extends Action
                 'encryption' => $encryption,
                 'antivirus' => $antivirus,
                 'transformations' => $transformations,
+                'stripMetadata' => $stripMetadata,
                 'search' => implode(' ', [$bucketId, $name]),
             ]));
 

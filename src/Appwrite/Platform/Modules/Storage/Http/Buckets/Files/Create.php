@@ -12,6 +12,7 @@ use Appwrite\SDK\ContentType;
 use Appwrite\SDK\Method;
 use Appwrite\SDK\MethodType;
 use Appwrite\SDK\Response as SDKResponse;
+use Appwrite\Storage\ExifTool;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Database\Validator\CustomId;
 use Appwrite\Utopia\Database\Validator\Folder;
@@ -21,6 +22,7 @@ use Utopia\Compression\Algorithms\GZIP;
 use Utopia\Compression\Algorithms\Zstd;
 use Utopia\Compression\Compression;
 use Utopia\Config\Config;
+use Utopia\Console\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Duplicate as DuplicateException;
@@ -37,6 +39,7 @@ use Utopia\Lock\Distributed;
 use Utopia\Lock\Exception\Contention as LockContention;
 use Utopia\Platform\Action;
 use Utopia\Platform\Scope\HTTP;
+use Utopia\Pools\Pool;
 use Utopia\Psr7\Stream;
 use Utopia\Storage\Device;
 use Utopia\Storage\DeviceType;
@@ -61,6 +64,20 @@ class Create extends Action
      * Not part of the public file model.
      */
     private const UPLOADER_ID = 'uploaderId';
+
+    /**
+     * Image types exiftool can rewrite when a bucket strips metadata.
+     */
+    private const METADATA_MIME_TYPES = [
+        'image/jpeg',
+        'image/png',
+        'image/webp',
+        'image/heic',
+        'image/heif',
+        'image/avif',
+        'image/gif',
+        'image/tiff',
+    ];
 
     public static function getName()
     {
@@ -113,6 +130,7 @@ class Create extends Action
             ->inject('deviceForLocal')
             ->inject('authorization')
             ->inject('locks')
+            ->inject('exiftool')
             ->callback($this->action(...));
     }
 
@@ -131,7 +149,8 @@ class Create extends Action
         Device $deviceForFiles,
         Device $deviceForLocal,
         Authorization $authorization,
-        callable $locks
+        callable $locks,
+        Pool $exiftool
     ) {
         $bucket = $authorization->skip(fn () => $dbForProject->getDocument('buckets', $bucketId));
 
@@ -343,7 +362,7 @@ class Create extends Action
             }
         };
 
-        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
+        $finalizeUpload = function (int $chunksUploaded) use ($authorization, $bucket, &$chunks, $contentRange, &$createdInRequest, $dbForProject, $deviceForFiles, $exiftool, $fileId, $fileName, $fileSize, &$metadata, $mergeUploadMetadata, $folder, $path, $permissions, $queueForEvents, $response, $user): void {
             $file = $authorization->skip(fn () => $dbForProject->getDocument('bucket_' . $bucket->getSequence(), $fileId));
             $uploaded = 0;
 
@@ -423,6 +442,11 @@ class Create extends Action
 
                 if (\in_array($mimeType, $formats['ambiguous'], true)) {
                     $mimeType = $formats['extensions'][\strtolower(\pathinfo($fileName, PATHINFO_EXTENSION))] ?? $mimeType;
+                }
+
+                // Strip before hashing so the signature and sizes describe the file we store.
+                if ($bucket->getAttribute('stripMetadata', false) && $fileSize <= APP_STORAGE_READ_BUFFER && \in_array($mimeType, self::METADATA_MIME_TYPES, true)) {
+                    $fileSize = $this->stripMetadata($exiftool, $deviceForFiles, $path, $mimeType) ?? $fileSize;
                 }
 
                 $fileHash = $deviceForFiles->getFileHash($path); // Get file hash before compression and encryption
@@ -522,6 +546,7 @@ class Create extends Action
                     $file = $authorization->skip(fn () => $dbForProject->updateDocument('bucket_' . $bucket->getSequence(), $fileId, new Document([
                         'signature' => $fileHash,
                         'mimeType' => $mimeType,
+                        'sizeOriginal' => $fileSize,
                         'sizeActual' => $sizeActual,
                         'algorithm' => $algorithm,
                         'openSSLVersion' => $openSSLVersion,
@@ -617,6 +642,51 @@ class Create extends Action
      */
     protected function afterCreateSuccess(Document $file)
     {
+    }
+
+    /**
+     * Remove metadata from a stored image and return its new size. Returns null when
+     * the file is left as uploaded: stripping is best effort and never fails an upload.
+     */
+    private function stripMetadata(Pool $exiftool, Device $deviceForFiles, string $path, string $mimeType): ?int
+    {
+        // Work on a temporary copy without an extension: exiftool then detects the format from the
+        // content, so a JPEG uploaded as "photo.png" is still stripped. It also works for remote devices.
+        $copy = \tempnam(\sys_get_temp_dir(), 'strip');
+        if ($copy === false) {
+            Console::warning("Image metadata was not removed from {$path}: a temporary file could not be created.");
+            return null;
+        }
+
+        try {
+            if (\file_put_contents($copy, $deviceForFiles->read($path)) === false) {
+                Console::warning("Image metadata was not removed from {$path}: the file could not be copied.");
+                return null;
+            }
+
+            if (!$exiftool->use(fn (ExifTool $tool) => $tool->strip($copy))) {
+                Console::warning("Image metadata was not removed from {$path}: exiftool could not rewrite the file.");
+                return null;
+            }
+
+            \clearstatcache(true, $copy);
+            $stripped = (string) \file_get_contents($copy);
+
+            if (!$deviceForFiles->write($path, new Stream($stripped), $mimeType)) {
+                Console::warning("Image metadata was not removed from {$path}: the stripped file could not be saved.");
+                return null;
+            }
+
+            // The device may have cached the previous size, so report the length we wrote.
+            \clearstatcache(true, $path);
+
+            return \strlen($stripped);
+        } catch (\Throwable $th) {
+            Console::warning("Image metadata was not removed from {$path}: {$th->getMessage()}");
+            return null;
+        } finally {
+            @\unlink($copy);
+        }
     }
 
     /**

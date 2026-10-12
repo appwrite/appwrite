@@ -1030,6 +1030,15 @@ return [
                 'filter' => ''
             ],
             [
+                'name' => '_APP_STORAGE_EXIFTOOL_POOL_SIZE',
+                'description' => 'Number of exiftool processes each API worker keeps running to strip metadata from uploaded images. Each process uses about 20MB of memory. Default value is: \'1\'.',
+                'introduction' => '2.5.0',
+                'default' => '1',
+                'required' => false,
+                'question' => '',
+                'filter' => ''
+            ],
+            [
                 'name' => '_APP_STORAGE_DEVICE',
                 'description' => 'Select the default storage device. Supported adapters are \'local\', \'s3\', \'dospaces\', \'backblaze\', \'linode\', and \'wasabi\'. Configure object storage with _APP_STORAGE_S3_* variables. Deprecated provider-specific variables remain available as fallbacks for backward compatibility, but Open Runtimes Orchestrator does not support those fallback variables.',
                 'introduction' => '0.13.0',

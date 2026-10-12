@@ -158,6 +158,7 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals(true, $bucket['body']['enabled']);
         $this->assertEquals(true, $bucket['body']['encryption']);
         $this->assertEquals(true, $bucket['body']['antivirus']);
+        $this->assertTrue($bucket['body']['stripMetadata']);
         $bucketId = $bucket['body']['$id'];
 
         /**
@@ -420,6 +421,7 @@ final class StorageCustomServerTest extends Scope
             'maximumFileSize' => 1000000,
             'compression' => Compression::GZIP,
             'encryption' => false,
+            'stripMetadata' => false,
         ]);
         $this->assertSame(201, $bucket['headers']['status-code']);
 
@@ -429,6 +431,7 @@ final class StorageCustomServerTest extends Scope
             'maximumFileSize' => null,
             'compression' => null,
             'encryption' => null,
+            'stripMetadata' => null,
         ]);
         $this->assertSame(200, $bucket['headers']['status-code']);
 
@@ -437,6 +440,7 @@ final class StorageCustomServerTest extends Scope
         $this->assertSame(1000000, $bucket['body']['maximumFileSize']);
         $this->assertSame(Compression::GZIP, $bucket['body']['compression']);
         $this->assertFalse($bucket['body']['encryption']);
+        $this->assertFalse($bucket['body']['stripMetadata']);
 
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucket['body']['$id'], $headers);
     }
@@ -571,5 +575,173 @@ final class StorageCustomServerTest extends Scope
         $this->assertEquals($totalSize, $file['body']['sizeOriginal']);
         $this->assertEquals($file['body']['chunksTotal'], $file['body']['chunksUploaded']);
         $this->assertNotEmpty($file['body']['mimeType']);
+    }
+
+    public function testStripMetadataOnUpload(): void
+    {
+        $photo = $this->createTaggedPhoto(64, 48);
+        $text = \tempnam(\sys_get_temp_dir(), 'strip-text-');
+        \file_put_contents($text, 'GPSLatitude 37.7749 is just text here');
+
+        $stripBucket = $this->createBucketForStripping(true);
+        $keepBucket = $this->createBucketForStripping(false);
+
+        // Bucket with stripping on: private metadata is gone, orientation stays.
+        $file = $this->uploadFile($stripBucket, new CURLFile($photo, 'image/jpeg', 'photo.jpg'));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertLessThan(\filesize($photo), $file['body']['sizeOriginal']);
+
+        $download = $this->downloadFile($stripBucket, $file['body']['$id']);
+        $this->assertSame($file['body']['sizeOriginal'], \strlen($download));
+        $tags = $this->readTags($download);
+        foreach (['GPSLatitude', 'GPSLongitude', 'Make', 'Model', 'DateTimeOriginal', 'Creator', 'By-line'] as $tag) {
+            $this->assertArrayNotHasKey($tag, $tags, "{$tag} was not removed");
+        }
+        $this->assertSame('Rotate 90 CW', $tags['Orientation'] ?? null);
+
+        // The format comes from the content, so a renamed photo can't keep its location.
+        $file = $this->uploadFile($stripBucket, new CURLFile($photo, 'image/png', 'disguised.png'));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertArrayNotHasKey('GPSLatitude', $this->readTags($this->downloadFile($stripBucket, $file['body']['$id'])));
+
+        // Bucket with stripping off: the file is stored exactly as uploaded.
+        $file = $this->uploadFile($keepBucket, new CURLFile($photo, 'image/jpeg', 'photo.jpg'));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $download = $this->downloadFile($keepBucket, $file['body']['$id']);
+        $this->assertSame(\file_get_contents($photo), $download);
+        $this->assertArrayHasKey('GPSLatitude', $this->readTags($download));
+
+        // Files that aren't images are never touched.
+        $file = $this->uploadFile($stripBucket, new CURLFile($text, 'text/plain', 'notes.txt'));
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertSame(\file_get_contents($text), $this->downloadFile($stripBucket, $file['body']['$id']));
+
+        \unlink($photo);
+        \unlink($text);
+    }
+
+    public function testStripMetadataOnChunkedUpload(): void
+    {
+        // Random noise compresses poorly, so this JPEG is large enough to upload in chunks.
+        $photo = $this->createTaggedPhoto(1800, 1800, noise: true);
+        $totalSize = \filesize($photo);
+        $chunkSize = 5 * 1024 * 1024;
+        $this->assertGreaterThan($chunkSize, $totalSize, 'Fixture must be large enough to chunk.');
+        $this->assertLessThanOrEqual(APP_STORAGE_READ_BUFFER, $totalSize, 'Fixture must stay under the stripping size limit.');
+
+        $bucketId = $this->createBucketForStripping(true);
+        $handle = \fopen($photo, 'rb');
+        $this->assertNotFalse($handle);
+
+        $headers = [
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ];
+        $fileId = ID::unique();
+        $counter = 0;
+        $id = '';
+        $file = null;
+
+        while (!\feof($handle)) {
+            $chunk = \fread($handle, $chunkSize);
+            if ($chunk === '' || $chunk === false) {
+                break;
+            }
+            $start = $counter * $chunkSize;
+            $headers['content-range'] = 'bytes ' . $start . '-' . ($start + \strlen($chunk) - 1) . '/' . $totalSize;
+            if (!empty($id)) {
+                $headers['x-appwrite-id'] = $id;
+            }
+
+            $file = $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', \array_merge($headers, $this->getHeaders()), [
+                'fileId' => $fileId,
+                'file' => new CURLFile('data://image/jpeg;base64,' . \base64_encode($chunk), 'image/jpeg', 'large.jpg'),
+            ]);
+            $counter++;
+            $id = $file['body']['$id'] ?? $id;
+        }
+        \fclose($handle);
+
+        $this->assertSame(201, $file['headers']['status-code']);
+        $this->assertGreaterThan(1, $file['body']['chunksTotal']);
+        $this->assertLessThan($totalSize, $file['body']['sizeOriginal']);
+
+        $download = $this->downloadFile($bucketId, $file['body']['$id']);
+        $this->assertSame($file['body']['sizeOriginal'], \strlen($download));
+        $this->assertArrayNotHasKey('GPSLatitude', $this->readTags($download));
+
+        \unlink($photo);
+    }
+
+    private function createBucketForStripping(bool $stripMetadata): string
+    {
+        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', array_merge([
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'bucketId' => ID::unique(),
+            'name' => 'Strip Metadata ' . ($stripMetadata ? 'On' : 'Off'),
+            'stripMetadata' => $stripMetadata,
+        ]);
+        $this->assertSame(201, $bucket['headers']['status-code']);
+        $this->assertSame($stripMetadata, $bucket['body']['stripMetadata']);
+
+        return $bucket['body']['$id'];
+    }
+
+    private function uploadFile(string $bucketId, CURLFile $file): array
+    {
+        return $this->client->call(Client::METHOD_POST, '/storage/buckets/' . $bucketId . '/files', array_merge([
+            'content-type' => 'multipart/form-data',
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()), [
+            'fileId' => ID::unique(),
+            'file' => $file,
+        ]);
+    }
+
+    private function downloadFile(string $bucketId, string $fileId): string
+    {
+        $download = $this->client->call(Client::METHOD_GET, '/storage/buckets/' . $bucketId . '/files/' . $fileId . '/download', array_merge([
+            'x-appwrite-project' => $this->getProject()['$id'],
+        ], $this->getHeaders()));
+        $this->assertSame(200, $download['headers']['status-code']);
+
+        return $download['body'];
+    }
+
+    private function createTaggedPhoto(int $width, int $height, bool $noise = false): string
+    {
+        $path = \sys_get_temp_dir() . '/strip-photo-' . \uniqid() . '.jpg';
+
+        $image = new \Imagick();
+        $image->newImage($width, $height, new \ImagickPixel('skyblue'));
+        if ($noise) {
+            $image->addNoiseImage(\Imagick::NOISE_RANDOM);
+            $image->setImageCompressionQuality(100);
+        }
+        $image->setImageFormat('jpeg');
+        $image->writeImage($path);
+
+        \exec('exiftool -q -q -overwrite_original'
+            . ' -GPSLatitude=37.7749 -GPSLatitudeRef=N -GPSLongitude=122.4194 -GPSLongitudeRef=W'
+            . ' -Make=Apple ' . \escapeshellarg('-Model=iPhone 15') . ' ' . \escapeshellarg('-DateTimeOriginal=2026:10:04 18:22:07')
+            . ' -Orientation#=6 -XMP:Creator=Jane -IPTC:By-line=Jane ' . \escapeshellarg($path), $output, $code);
+        $this->assertSame(0, $code, 'Failed to write test metadata');
+
+        return $path;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function readTags(string $contents): array
+    {
+        $path = \tempnam(\sys_get_temp_dir(), 'strip-read-');
+        \file_put_contents($path, $contents);
+        \exec('exiftool -j ' . \escapeshellarg($path), $output);
+        \unlink($path);
+
+        return \json_decode(\implode('', $output), true)[0] ?? [];
     }
 }

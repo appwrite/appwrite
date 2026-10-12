@@ -2204,6 +2204,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Test Bucket',
             'fileSecurity' => true,
             'maximumFileSize' => 2000000, // 2MB
@@ -2794,6 +2795,7 @@ trait MessagingBase
             'x-appwrite-key' => $this->getProject()['apiKey'],
         ], [
             'bucketId' => ID::unique(),
+            'stripMetadata' => false,
             'name' => 'Attachments',
             'encryption' => true,
             'compression' => 'gzip',

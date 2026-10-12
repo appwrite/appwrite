@@ -71,6 +71,7 @@ class Update extends Action
             ->param('encryption', true, new Nullable(new Boolean(true)), 'Is encryption enabled? For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' encryption is skipped even if it\'s enabled', true)
             ->param('antivirus', true, new Boolean(true), 'Is virus scanning enabled? For file size above ' . Bytes::human(APP_LIMIT_ANTIVIRUS, 0) . ' AntiVirus scanning is skipped even if it\'s enabled', true)
             ->param('transformations', true, new Boolean(true), 'Are image transformations enabled?', true)
+            ->param('stripMetadata', null, new Nullable(new Boolean(true)), 'Remove metadata such as location, device and capture time from uploaded images. The color profile and orientation are kept. For file size above ' . Bytes::human(APP_STORAGE_READ_BUFFER, 0) . ' metadata is not removed even if it\'s enabled. By default, the current setting is kept.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('queueForEvents')
@@ -89,6 +90,7 @@ class Update extends Action
         ?bool $encryption,
         bool $antivirus,
         bool $transformations,
+        ?bool $stripMetadata,
         Response $response,
         Database $dbForProject,
         Event $queueForEvents
@@ -103,6 +105,7 @@ class Update extends Action
         $maximumFileSize ??= $bucket->getAttribute('maximumFileSize', (int) System::getEnv('_APP_STORAGE_LIMIT', 0));
         $encryption ??= $bucket->getAttribute('encryption', true);
         $compression ??= $bucket->getAttribute('compression', Compression::NONE);
+        $stripMetadata ??= $bucket->getAttribute('stripMetadata', false);
 
         // Map aggregate permissions into the multiple permissions they represent.
         $permissions = Permission::aggregate($permissions);
@@ -117,7 +120,8 @@ class Update extends Action
             ->setAttribute('encryption', $encryption)
             ->setAttribute('compression', $compression)
             ->setAttribute('antivirus', $antivirus)
-            ->setAttribute('transformations', $transformations));
+            ->setAttribute('transformations', $transformations)
+            ->setAttribute('stripMetadata', $stripMetadata));
 
         $dbForProject->updateCollection('bucket_' . $bucket->getSequence(), $permissions, $fileSecurity);
 

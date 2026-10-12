@@ -58,6 +58,9 @@ $container->set('geoRecords', fn () => $geoRecords);
 $container->set('pools', function ($register) {
     return $register->get('pools');
 }, ['register']);
+$container->set('exiftool', function ($register) {
+    return $register->get('exiftool');
+}, ['register']);
 
 $payloadSize = 12 * (1024 * 1024); // 12MB - adding slight buffer for headers and other data that might be sent with the payload - update later with valid testing
 $totalWorkers = intval(System::getEnv('_APP_CPU_NUM', swoole_cpu_num())) * intval(System::getEnv('_APP_WORKER_PER_CORE', 6));
@@ -77,7 +80,21 @@ $swoole = new Server(
 
 $http = $swoole->getServer();
 
-$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) {
+$http->on(Constant::EVENT_WORKER_START, function ($server, $workerId) use ($register) {
+    // Start exiftool now so the first upload doesn't wait for Perl to load.
+    $exiftool = $register->get('exiftool');
+    $connections = [];
+    try {
+        for ($i = 0; $i < $exiftool->size; $i++) {
+            $connections[] = $exiftool->pop();
+        }
+    } catch (\Throwable $th) {
+        Console::warning('exiftool is unavailable, image metadata will not be stripped: ' . $th->getMessage());
+    } finally {
+        foreach ($connections as $connection) {
+            $exiftool->reclaim($connection);
+        }
+    }
 });
 
 $http->on(Constant::EVENT_WORKER_STOP, function ($server, $workerId) {
