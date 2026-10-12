@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Query\Tests\E2E;
 
 use PHPUnit\Framework\TestCase;

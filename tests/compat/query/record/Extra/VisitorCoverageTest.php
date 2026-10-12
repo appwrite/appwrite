@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Query\Tests\Extra;
 
 use PHPUnit\Framework\TestCase;
@@ -18,7 +20,7 @@ use Utopia\Query\Exception;
  * Calls each library visitor's methods directly (the ported tests only run
  * them through the Walker).
  */
-class VisitorCoverageTest extends TestCase
+final class VisitorCoverageTest extends TestCase
 {
     public function testColumnValidator(): void
     {

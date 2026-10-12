@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Query\Tests\Extra;
 
 use PHPUnit\Framework\TestCase;
@@ -17,7 +19,7 @@ use Utopia\Query\Schema\SQLite;
  * Calls the schema API the ported PHP tests leave out, so every public
  * symbol has a compat case (see tests/compat/query/record/record.php).
  */
-class SchemaCoverageTest extends TestCase
+final class SchemaCoverageTest extends TestCase
 {
     public function testCompileMySQL(): void
     {

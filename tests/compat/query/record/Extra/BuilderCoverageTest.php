@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Utopia\Query\Tests\Extra;
 
 use PHPUnit\Framework\TestCase;
@@ -22,7 +24,7 @@ use Utopia\Query\Query;
  * Calls the builder API the ported PHP tests leave out, so every public
  * symbol has a compat case (see tests/compat/query/record/record.php).
  */
-class BuilderCoverageTest extends TestCase
+final class BuilderCoverageTest extends TestCase
 {
     public function testExecutorOnSelect(): void
     {
