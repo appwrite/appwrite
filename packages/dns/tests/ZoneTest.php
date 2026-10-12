@@ -136,22 +136,27 @@ final class ZoneTest extends TestCase
             ttl: 3600,
             rdata: 'ns1.example.com hostmaster.example.com 1 7200 3600 1209600 300',
         );
-        $a = new Record('example.com', Record::TYPE_A, ttl: 300, rdata: '203.0.113.10');
+        $a = new Record('example.com', Record::TYPE_A, ttl: 60, rdata: '203.0.113.10');
         $otherA = new Record('example.com', Record::TYPE_A, ttl: 300, rdata: '203.0.113.20');
         $mx = new Record('example.com', Record::TYPE_MX, ttl: 300, rdata: 'mail.example.com', priority: 10);
         $backupMx = new Record('example.com', Record::TYPE_MX, ttl: 300, rdata: 'mail.example.com', priority: 20);
+        $nullMx = new Record('example.com', Record::TYPE_MX, ttl: 300, rdata: '.');
         $records = [
-            $a,
+            new Record('example.com', Record::TYPE_A, ttl: 300, rdata: '203.0.113.10'),
             $otherA,
             new Record('EXAMPLE.com', Record::TYPE_A, ttl: 300, rdata: '203.0.113.10'),
-            new Record('example.com', Record::TYPE_A, ttl: 60, rdata: '203.0.113.10'),
+            // The copy with the lowest TTL is kept, in the place of the first copy.
+            $a,
             $mx,
             $backupMx,
             clone $mx,
+            $nullMx,
+            // An MX priority left unset is encoded as 0.
+            new Record('example.com', Record::TYPE_MX, ttl: 300, rdata: '.', priority: 0),
         ];
 
         $zone = new Zone('example.com', $records, $soa);
 
-        $this->assertSame([$a, $otherA, $mx, $backupMx], $zone->records);
+        $this->assertSame([$a, $otherA, $mx, $backupMx, $nullMx], $zone->records);
     }
 }
