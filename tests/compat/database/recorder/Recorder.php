@@ -2,9 +2,9 @@
 
 namespace Tests\Compat\Database\Recorder;
 
+use Tests\Compat\Database\Called;
 use Tests\Compat\Database\Core;
 use Tests\Compat\Database\Invocation;
-use Tests\Compat\Database\Called;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;

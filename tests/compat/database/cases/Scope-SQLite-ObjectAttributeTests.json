@@ -1,0 +1,871 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/ObjectAttributeTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SQLiteTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ObjectAttributeTests::testObjectAttribute",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeGinIndex",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObjectIndexes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeInvalidCases",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeDefaults",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeIntegersBeyondInt32",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeEmptyObject",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeNestedEmptyObjects",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testMetadataWithVector",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testNestedObjectAttributeIndexes",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObjectIndexes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testQueryNestedAttribute",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObjectIndexes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testNestedObjectAttributeEdgeCases",
+      "state": [
+        "sqlite"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "sqlite",
+            "emulate_mysql": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRange"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.add_format",
+          "args": {
+            "name": "priceRangeNew"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

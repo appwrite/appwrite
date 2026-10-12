@@ -6,7 +6,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"
@@ -112,7 +114,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"
@@ -218,7 +222,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"
@@ -325,7 +331,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"
@@ -434,7 +442,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"
@@ -529,12 +539,12 @@
               "$document": {
                 "sku": "abc",
                 "$id": "widget",
-                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$sequence": "1",
                 "$collection": "widgets"
               }
             }
@@ -547,7 +557,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"
@@ -642,12 +654,12 @@
               "$document": {
                 "sku": "abc",
                 "$id": "widget",
-                "$sequence": "1",
                 "$createdAt": "<now>",
                 "$updatedAt": "<now>",
                 "$permissions": [
                   "read(\"any\")"
                 ],
+                "$sequence": "1",
                 "$collection": "widgets"
               }
             }
@@ -660,7 +672,9 @@
       "steps": [
         {
           "op": "db.open",
-          "args": {},
+          "args": {
+            "engine": "memory"
+          },
           "bind": "db",
           "expect": {
             "$handle": "*"

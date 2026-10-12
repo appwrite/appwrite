@@ -50,7 +50,6 @@ final class Cases
      * @param array<int, list<array<string, mixed>>> $dirty steps restoring the settings each test started with, when they differ from a fresh database's
      */
     public function __construct(
-        private string $profile,
         private array $stream,
         private array $tests,
         private array|\stdClass $open,

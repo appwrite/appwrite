@@ -21,7 +21,6 @@
 namespace Tests\Compat\Database\Recorder;
 
 use Tests\Compat\Codec;
-use Tests\Compat\Session;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQLite;
 use Utopia\Database\Database;
@@ -581,7 +580,7 @@ foreach (array_keys($order) as $name) {
 }
 
 \ini_set("memory_limit", "-1");
-$cases = new Cases($profile, Recorder::$stream, $tests, Target::open(), Recorder::$schema, $dirty);
+$cases = new Cases(Recorder::$stream, $tests, Target::open(), Recorder::$schema, $dirty);
 $written = $cases->write($root . '/tests/compat/database/cases', $filter);
 foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {
     fwrite(STDERR, "problem: {$problem}\n");

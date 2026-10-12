@@ -1,0 +1,1220 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/Memory.php",
+  "cases": [
+    {
+      "name": "Memory: capabilities and limits",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemas"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemaAttributes"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemaIndexes"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForIndex"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForIndexArray"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForCastIndexArray"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForUniqueIndex"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForFulltextIndex"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForFulltextWildcardIndex"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForCasting"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForQueryContains"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTimeouts"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRelationships"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForUpdateLock"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForBatchOperations"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributeResizing"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForGetConnectionId"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForUpserts"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForUpsertOnUniqueIndex"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForCacheSkipOnFailure"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForCaching"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForReconnection"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForHostname"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForBatchCreateAttributes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAttributes"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObjectIndexes"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialIndexNull"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForOperators"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForOptionalSpatialAttributeWithExistingRows"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialIndexOrder"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSpatialAxisOrder"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForBoundaryInclusiveContains"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForDistanceBetweenMultiDimensionGeometryInMeters"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForMultipleFulltextIndexes"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForIdenticalIndexes"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForOrderRandom"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForUnsignedBigInt"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForInternalCasting"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForUTCCasting"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForIntegerBooleans"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAlterLocks"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportNonUtfCharacters"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTrigramIndex"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForPCRERegex"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForPOSIXRegex"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRegex"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTTLIndexes"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForTransactionRetries"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForNestedTransactions"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForString"
+          },
+          "expect": 4294967295
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForInt"
+          },
+          "expect": 4294967295
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForBigInt"
+          },
+          "expect": 9223372036854775807
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForAttributes"
+          },
+          "expect": 1017
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getLimitForIndexes"
+          },
+          "expect": 64
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getMaxIndexLength"
+          },
+          "expect": 1024
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getMaxVarcharLength"
+          },
+          "expect": 16381
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getMaxUIDLength"
+          },
+          "expect": 255
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getCountOfDefaultAttributes"
+          },
+          "expect": 7
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getCountOfDefaultIndexes"
+          },
+          "expect": 6
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getDocumentSizeLimit"
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getIdAttributeType"
+          },
+          "expect": "integer"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSharedTables"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTenantPerDocument"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "inTransaction"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getNamespace"
+          },
+          "expect": "compat"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getDatabase"
+          },
+          "expect": "${ns}"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTenant"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getMinDateTime"
+          },
+          "expect": {
+            "$datetime": "0001-01-01T00:00:00.000000+00:00"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getMaxDateTime"
+          },
+          "expect": {
+            "$datetime": "9999-12-31T23:59:59.000000+00:00"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getInternalIndexesKeys"
+          },
+          "expect": []
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getKeywords"
+          },
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "Memory: databases, collections and schema",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "exists",
+            "args": {
+              "database": "${ns}"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "createCollection",
+            "args": {
+              "name": "cars",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": true,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "year",
+                    "key": "year",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "by_name",
+                    "key": "by_name",
+                    "type": "key",
+                    "attributes": [
+                      "name"
+                    ],
+                    "lengths": [],
+                    "orders": []
+                  }
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "exists",
+            "args": {
+              "database": "${ns}",
+              "collection": "cars"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "exists",
+            "args": {
+              "database": "${ns}",
+              "collection": "trucks"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getCountOfAttributes",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "cars",
+                  "name": "cars",
+                  "attributes": [
+                    {
+                      "$document": {
+                        "$id": "name",
+                        "key": "name",
+                        "type": "string",
+                        "size": 128,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "year",
+                        "key": "year",
+                        "type": "integer",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    }
+                  ],
+                  "indexes": [
+                    {
+                      "$document": {
+                        "$id": "by_name",
+                        "key": "by_name",
+                        "type": "key",
+                        "attributes": [
+                          "name"
+                        ],
+                        "lengths": [],
+                        "orders": []
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "expect": 9
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getCountOfIndexes",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "cars",
+                  "name": "cars",
+                  "attributes": [
+                    {
+                      "$document": {
+                        "$id": "name",
+                        "key": "name",
+                        "type": "string",
+                        "size": 128,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "year",
+                        "key": "year",
+                        "type": "integer",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    }
+                  ],
+                  "indexes": [
+                    {
+                      "$document": {
+                        "$id": "by_name",
+                        "key": "by_name",
+                        "type": "key",
+                        "attributes": [
+                          "name"
+                        ],
+                        "lengths": [],
+                        "orders": []
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "expect": 7
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getAttributeWidth",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "cars",
+                  "name": "cars",
+                  "attributes": [
+                    {
+                      "$document": {
+                        "$id": "name",
+                        "key": "name",
+                        "type": "string",
+                        "size": 128,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "year",
+                        "key": "year",
+                        "type": "integer",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    }
+                  ],
+                  "indexes": [
+                    {
+                      "$document": {
+                        "$id": "by_name",
+                        "key": "by_name",
+                        "type": "key",
+                        "attributes": [
+                          "name"
+                        ],
+                        "lengths": [],
+                        "orders": []
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "expect": 0
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSchemaAttributes",
+            "args": {
+              "collection": "cars"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSchemaIndexes",
+            "args": {
+              "collection": "cars"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "deleteCollection",
+            "args": {
+              "id": "cars"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "exists",
+            "args": {
+              "database": "${ns}",
+              "collection": "cars"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "Memory: adapter specifics",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "memory"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "create",
+            "args": {
+              "name": "${ns}_other"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "list"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "${ns}"
+              }
+            },
+            {
+              "$document": {
+                "name": "${ns}_other"
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "exists",
+            "args": {
+              "database": "${ns}_other"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "delete",
+            "args": {
+              "name": "${ns}_other"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "list"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "${ns}"
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getConnectionId"
+          },
+          "expect": "0"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getDriver"
+          },
+          "expect": "memory"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getHostname"
+          },
+          "expect": ""
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "type": "string",
+              "size": 128
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getColumnType",
+            "args": {
+              "type": "integer",
+              "size": 0,
+              "signed": false,
+              "array": true,
+              "required": true
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "reconnect"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "ping"
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 1000
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setTimeout",
+            "args": {
+              "milliseconds": 1000,
+              "event": "find"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTenantQuery",
+            "args": {
+              "collection": "cars"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getTenantQuery",
+            "args": {
+              "collection": "cars",
+              "alias": "c"
+            }
+          },
+          "expect": ""
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "castingBefore",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "cars",
+                  "name": "cars",
+                  "attributes": [
+                    {
+                      "$document": {
+                        "$id": "name",
+                        "key": "name",
+                        "type": "string",
+                        "size": 128,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "year",
+                        "key": "year",
+                        "type": "integer",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    }
+                  ],
+                  "indexes": [
+                    {
+                      "$document": {
+                        "$id": "by_name",
+                        "key": "by_name",
+                        "type": "key",
+                        "attributes": [
+                          "name"
+                        ],
+                        "lengths": [],
+                        "orders": []
+                      }
+                    }
+                  ]
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "x",
+                  "year": 1999
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x",
+              "year": 1999
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "castingAfter",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "cars",
+                  "name": "cars",
+                  "attributes": [
+                    {
+                      "$document": {
+                        "$id": "name",
+                        "key": "name",
+                        "type": "string",
+                        "size": 128,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "year",
+                        "key": "year",
+                        "type": "integer",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    }
+                  ],
+                  "indexes": [
+                    {
+                      "$document": {
+                        "$id": "by_name",
+                        "key": "by_name",
+                        "type": "key",
+                        "attributes": [
+                          "name"
+                        ],
+                        "lengths": [],
+                        "orders": []
+                      }
+                    }
+                  ]
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "x",
+                  "year": "1999"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "x",
+              "year": "1999"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "setUTCDatetime",
+            "args": {
+              "value": "2024-01-02 03:04:05"
+            }
+          },
+          "expect": "2024-01-02 03:04:05"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "decodePoint",
+            "args": {
+              "wkb": "\u0001"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial types are not implemented in the Memory adapter"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "decodeLinestring",
+            "args": {
+              "wkb": "\u0001"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial types are not implemented in the Memory adapter"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "decodePolygon",
+            "args": {
+              "wkb": "\u0001"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial types are not implemented in the Memory adapter"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "filter",
+            "args": {
+              "value": "a-b_c.d"
+            }
+          },
+          "expect": "a-b_cd"
+        }
+      ]
+    }
+  ]
+}
