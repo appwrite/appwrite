@@ -588,6 +588,7 @@ dependencies = [
  "utopia-balancer",
  "utopia-bus",
  "utopia-cache",
+ "utopia-cdn",
  "utopia-circuit-breaker",
  "utopia-cli",
  "utopia-client",
@@ -3482,6 +3483,17 @@ dependencies = [
  "utopia-circuit-breaker",
  "utopia-pools",
  "utopia-telemetry",
+]
+
+[[package]]
+name = "utopia-cdn"
+version = "0.1.0"
+dependencies = [
+ "php-std",
+ "thiserror",
+ "tokio",
+ "utopia-balancer",
+ "utopia-client",
 ]
 
 [[package]]

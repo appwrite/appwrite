@@ -1,0 +1,158 @@
+{
+  "source": "packages/cdn/src/Exception",
+  "cases": [
+    {
+      "name": "certificate blocked",
+      "op": "exception.certificate",
+      "args": {
+        "message": "waiting",
+        "status": "blocked",
+        "challenges": [
+          {
+            "type": "managed-dns",
+            "record_type": "CNAME",
+            "record_name": "_acme-challenge.example.com",
+            "values": [
+              "a",
+              "b"
+            ]
+          }
+        ],
+        "warnings": [
+          "w"
+        ]
+      },
+      "expect": {
+        "class": "Utopia\\Cdn\\Exception\\Certificate",
+        "message": "waiting",
+        "status": "blocked",
+        "blocked": true,
+        "challenges": [
+          {
+            "type": "managed-dns",
+            "record_type": "CNAME",
+            "record_name": "_acme-challenge.example.com",
+            "values": [
+              "a",
+              "b"
+            ]
+          }
+        ],
+        "warnings": [
+          "w"
+        ]
+      }
+    },
+    {
+      "name": "certificate failed",
+      "op": "exception.certificate",
+      "args": {
+        "message": "stopped",
+        "status": "failed"
+      },
+      "expect": {
+        "class": "Utopia\\Cdn\\Exception\\Certificate",
+        "message": "stopped",
+        "status": "failed",
+        "blocked": false,
+        "challenges": [],
+        "warnings": []
+      }
+    },
+    {
+      "name": "purge with errors",
+      "op": "exception.purge",
+      "args": {
+        "message": "Cache x failed for a, b.",
+        "errors": [
+          "first",
+          "second"
+        ]
+      },
+      "expect": {
+        "class": "Utopia\\Cdn\\Exception\\Purge",
+        "message": "Cache x failed for a, b.",
+        "errors": [
+          {
+            "class": "RuntimeException",
+            "message": "first"
+          },
+          {
+            "class": "RuntimeException",
+            "message": "second"
+          }
+        ],
+        "previous": {
+          "class": "RuntimeException",
+          "message": "first"
+        }
+      }
+    },
+    {
+      "name": "purge without errors",
+      "op": "exception.purge",
+      "args": {
+        "message": "none"
+      },
+      "expect": {
+        "class": "Utopia\\Cdn\\Exception\\Purge",
+        "message": "none",
+        "errors": [],
+        "previous": null
+      }
+    },
+    {
+      "name": "challenge",
+      "op": "challenge.new",
+      "args": {
+        "type": "managed-dns",
+        "record_type": "CNAME",
+        "record_name": "n",
+        "values": [
+          "v"
+        ]
+      },
+      "expect": {
+        "type": "managed-dns",
+        "record_type": "CNAME",
+        "record_name": "n",
+        "values": [
+          "v"
+        ]
+      }
+    },
+    {
+      "name": "constants",
+      "op": "constants",
+      "args": {},
+      "expect": {
+        "cloudflare": {
+          "PATHS_PER_PURGE": 30,
+          "KEYS_PER_PURGE": 30
+        },
+        "fastly": {
+          "KEYS_PER_PURGE": 256
+        },
+        "option": {
+          "ADAPTER": "adapter",
+          "PROVIDER": "provider",
+          "EDGE": "edge",
+          "PROVIDER_FASTLY": "fastly",
+          "PROVIDER_CLOUDFLARE": "cloudflare"
+        },
+        "status": [
+          "pending",
+          "processing",
+          "issued",
+          "renewing",
+          "failed",
+          "blocked",
+          "unknown"
+        ],
+        "fastly_tls": {
+          "CHALLENGE_MANAGED_DNS": "managed-dns"
+        }
+      }
+    }
+  ]
+}

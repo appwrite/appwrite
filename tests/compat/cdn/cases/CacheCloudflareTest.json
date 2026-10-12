@@ -1,0 +1,1317 @@
+{
+  "source": "packages/cdn/tests/Cache/Adapter/CloudflareTest.php",
+  "cases": [
+    {
+      "name": "purges paths and domain",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone-id",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a",
+              "/b?x=1"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone-id/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/b?x=1\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone-id/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"hosts\":[\"example.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "batches paths",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              },
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\"]}"
+              },
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/a\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "purges cache tags",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "tag-a",
+              "tag-b"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"tags\":[\"tag-a\",\"tag-b\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "batches cache tags",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag",
+              "tag"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              },
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              },
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"tags\":[\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\"]}"
+              },
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"tags\":[\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\",\"tag\"]}"
+              },
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"tags\":[\"tag\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "zone purge is its own operation",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a purge the body reports as failed",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":false,\"errors\":[{\"message\":\"Invalid zone\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 200: Invalid zone"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"hosts\":[\"example.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "accepts a purge without the envelope",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"hosts\":[\"example.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects a purge the status reports as failed",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 403,
+                "body": "{\"success\":false,\"errors\":[{\"message\":\"Forbidden\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 403: Forbidden"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"hosts\":[\"example.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "empty purges touch nothing",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [],
+            "responses": []
+          },
+          "expect": {
+            "result": null,
+            "requests": []
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeKeys",
+            "keys": [],
+            "responses": []
+          },
+          "expect": {
+            "result": null,
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "envelope edge cases",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":null}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 200: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":1}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 200: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":\"true\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 200: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "[true]"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 500,
+                "body": "{\"errors\":[{\"message\":42}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 500: 42"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 500,
+                "body": "{\"errors\":[{\"message\":false}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 500: "
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 500,
+                "body": "{\"errors\":{\"0\":{\"message\":\"keyed\"}}}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 500: keyed"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 500,
+                "body": "{\"errors\":\"text\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 500: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 502,
+                "body": "not json"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 502: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 302,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 302: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 500: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "error": "Could not resolve host: api.cloudflare.com"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 0: Could not resolve host: api.cloudflare.com"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a failed batch stops the rest",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a",
+              "/a"
+            ],
+            "responses": [
+              {
+                "status": 429,
+                "body": "{\"success\":false}"
+              },
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare purge failed with status 429: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\",\"https:\\/\\/example.com\\/a\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "paths and keys are encoded as json_encode writes them",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgePaths",
+            "domain": "Example.com",
+            "paths": [
+              "/café/☃?q=\"x\"&y=\\",
+              "/a b"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"files\":[\"https:\\/\\/example.com\\/caf\\u00e9\\/\\u2603?q=\\\"x\\\"&y=\\\\\",\"https:\\/\\/example.com\\/a b\"]}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "café",
+              "a/b",
+              "<tag>",
+              ""
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"tags\":[\"caf\\u00e9\",\"a\\/b\",\"<tag>\",\"\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "a custom API base",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token",
+            "api_base": "http://cloudflare.test/v4"
+          },
+          "bind": "cf",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "cf"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "http://cloudflare.test/v4/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token",
+            "api_base": "not a url"
+          },
+          "bind": "bad",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "bad"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "not%20a%20url/zones/zone/purge_cache",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Adapter"
+                },
+                "body": "{\"purge_everything\":true}"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

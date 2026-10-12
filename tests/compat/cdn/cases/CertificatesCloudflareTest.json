@@ -1,0 +1,836 @@
+{
+  "source": "packages/cdn/tests/Certificates/Provider/CloudflareTest.php",
+  "cases": [
+    {
+      "name": "creates custom hostname",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "cert_name": "ignored",
+            "responses": [
+              {
+                "status": 201,
+                "body": "{\"success\":true,\"result\":{\"id\":\"host_1\"}}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": "{\"hostname\":\"example.com\",\"ssl\":{\"method\":\"http\",\"type\":\"dv\",\"wildcard\":false}}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "duplicate hostname is idempotent",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 409,
+                "body": "{\"success\":false,\"errors\":[{\"code\":1406,\"message\":\"duplicate\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": "{\"hostname\":\"example.com\",\"ssl\":{\"method\":\"http\",\"type\":\"dv\",\"wildcard\":false}}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 409,
+                "body": "{\"success\":false,\"errors\":[{\"code\":\"1406\",\"message\":\"duplicate\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to create Cloudflare custom hostname with status 409: duplicate"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": "{\"hostname\":\"example.com\",\"ssl\":{\"method\":\"http\",\"type\":\"dv\",\"wildcard\":false}}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to create Cloudflare custom hostname with status 200: Unknown Cloudflare error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": "{\"hostname\":\"example.com\",\"ssl\":{\"method\":\"http\",\"type\":\"dv\",\"wildcard\":false}}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 201,
+                "body": "{\"success\":false}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to create Cloudflare custom hostname with status 201: Unknown Cloudflare error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": "{\"hostname\":\"example.com\",\"ssl\":{\"method\":\"http\",\"type\":\"dv\",\"wildcard\":false}}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "Example.COM",
+            "responses": [
+              {
+                "status": 201,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames",
+                "headers": {
+                  "accept": "application/json",
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": "{\"hostname\":\"example.com\",\"ssl\":{\"method\":\"http\",\"type\":\"dv\",\"wildcard\":false}}"
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "issueCertificate",
+            "domain": "https://example.com",
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "lookup exact match and delete",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":[{\"id\":\"wrong\",\"hostname\":\"other.com\"},{\"id\":\"right\",\"hostname\":\"example.com\"}]}"
+              },
+              {
+                "status": 204,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "DELETE",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames/right",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":[{\"hostname\":\"example.com\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare custom hostname response was missing an ID."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":[{\"id\":\"a/b c\",\"hostname\":\"example.com\"}]}"
+              },
+              {
+                "status": 200,
+                "body": "{\"success\":false,\"errors\":[{\"message\":\"locked\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to delete Cloudflare custom hostname with status 200: locked"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              },
+              {
+                "method": "DELETE",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames/a%2Fb%20c",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "deleteCertificate",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":[{\"id\":7,\"hostname\":\"example.com\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare custom hostname response was missing an ID."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "renewal and unsupported status",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":[]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": true,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":[{\"hostname\":\"example.com\",\"id\":\"x\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "result": false,
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "example.com",
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+              "message": "Certificate status retrieval is not supported by the Cloudflare provider."
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "getCertificateStatus",
+            "domain": "not a domain",
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+              "message": "Certificate status retrieval is not supported by the Cloudflare provider."
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isInstantGeneration",
+            "domain": "example.com",
+            "responses": []
+          },
+          "expect": {
+            "result": true,
+            "requests": []
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isInstantGeneration",
+            "domain": "not a domain",
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "rejects malformed lookup",
+      "steps": [
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "cloudflare",
+            "zone": "zone",
+            "token": "token"
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "invalid"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare custom hostname response was not valid JSON."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare custom hostname response was missing its result list."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":true,\"result\":\"x\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Cloudflare custom hostname response was missing its result list."
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"success\":false,\"errors\":[{\"message\":\"bad token\"}]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to fetch Cloudflare custom hostnames with status 200: bad token"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 500,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to fetch Cloudflare custom hostnames with status 500: Unknown Cloudflare error"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p"
+            },
+            "method": "isRenewRequired",
+            "domain": "example.com",
+            "responses": [
+              {
+                "error": "timeout"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Failed to fetch Cloudflare custom hostnames with status 0: timeout"
+            },
+            "requests": [
+              {
+                "method": "GET",
+                "url": "https://api.cloudflare.com/client/v4/zones/zone/custom_hostnames?hostname=example.com",
+                "headers": {
+                  "authorization": "Bearer token",
+                  "content-type": "application/json",
+                  "user-agent": "Utopia CDN Cloudflare Certificates Provider"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1375 @@
+{
+  "source": "packages/cdn/tests/Cache/Adapter/FastlyTest.php",
+  "cases": [
+    {
+      "name": "purges paths and keys",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": "service-id",
+            "soft": true
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/hello world?x=1"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/hello%20world?x=1",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "fastly-soft-purge": "1",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "key"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service-id/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "fastly-soft-purge": "1",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"key\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "domain purge targets only that domains key",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": "shared-service"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/shared-service/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"domain-example.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "domain purge can use the bare hostname as the key",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "",
+            "service": "service-id"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeDomain",
+            "domain": "Example.com",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service-id/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"example.com\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "keys are sent unencoded",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": "service-id"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "domain-example.com-summer sale"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service-id/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"domain-example.com-summer sale\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "keys are purged in batches",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": "service-id"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "key-1",
+              "key-2",
+              "key-3",
+              "key-4",
+              "key-5",
+              "key-6",
+              "key-7",
+              "key-8",
+              "key-9",
+              "key-10",
+              "key-11",
+              "key-12",
+              "key-13",
+              "key-14",
+              "key-15",
+              "key-16",
+              "key-17",
+              "key-18",
+              "key-19",
+              "key-20",
+              "key-21",
+              "key-22",
+              "key-23",
+              "key-24",
+              "key-25",
+              "key-26",
+              "key-27",
+              "key-28",
+              "key-29",
+              "key-30",
+              "key-31",
+              "key-32",
+              "key-33",
+              "key-34",
+              "key-35",
+              "key-36",
+              "key-37",
+              "key-38",
+              "key-39",
+              "key-40",
+              "key-41",
+              "key-42",
+              "key-43",
+              "key-44",
+              "key-45",
+              "key-46",
+              "key-47",
+              "key-48",
+              "key-49",
+              "key-50",
+              "key-51",
+              "key-52",
+              "key-53",
+              "key-54",
+              "key-55",
+              "key-56",
+              "key-57",
+              "key-58",
+              "key-59",
+              "key-60",
+              "key-61",
+              "key-62",
+              "key-63",
+              "key-64",
+              "key-65",
+              "key-66",
+              "key-67",
+              "key-68",
+              "key-69",
+              "key-70",
+              "key-71",
+              "key-72",
+              "key-73",
+              "key-74",
+              "key-75",
+              "key-76",
+              "key-77",
+              "key-78",
+              "key-79",
+              "key-80",
+              "key-81",
+              "key-82",
+              "key-83",
+              "key-84",
+              "key-85",
+              "key-86",
+              "key-87",
+              "key-88",
+              "key-89",
+              "key-90",
+              "key-91",
+              "key-92",
+              "key-93",
+              "key-94",
+              "key-95",
+              "key-96",
+              "key-97",
+              "key-98",
+              "key-99",
+              "key-100",
+              "key-101",
+              "key-102",
+              "key-103",
+              "key-104",
+              "key-105",
+              "key-106",
+              "key-107",
+              "key-108",
+              "key-109",
+              "key-110",
+              "key-111",
+              "key-112",
+              "key-113",
+              "key-114",
+              "key-115",
+              "key-116",
+              "key-117",
+              "key-118",
+              "key-119",
+              "key-120",
+              "key-121",
+              "key-122",
+              "key-123",
+              "key-124",
+              "key-125",
+              "key-126",
+              "key-127",
+              "key-128",
+              "key-129",
+              "key-130",
+              "key-131",
+              "key-132",
+              "key-133",
+              "key-134",
+              "key-135",
+              "key-136",
+              "key-137",
+              "key-138",
+              "key-139",
+              "key-140",
+              "key-141",
+              "key-142",
+              "key-143",
+              "key-144",
+              "key-145",
+              "key-146",
+              "key-147",
+              "key-148",
+              "key-149",
+              "key-150",
+              "key-151",
+              "key-152",
+              "key-153",
+              "key-154",
+              "key-155",
+              "key-156",
+              "key-157",
+              "key-158",
+              "key-159",
+              "key-160",
+              "key-161",
+              "key-162",
+              "key-163",
+              "key-164",
+              "key-165",
+              "key-166",
+              "key-167",
+              "key-168",
+              "key-169",
+              "key-170",
+              "key-171",
+              "key-172",
+              "key-173",
+              "key-174",
+              "key-175",
+              "key-176",
+              "key-177",
+              "key-178",
+              "key-179",
+              "key-180",
+              "key-181",
+              "key-182",
+              "key-183",
+              "key-184",
+              "key-185",
+              "key-186",
+              "key-187",
+              "key-188",
+              "key-189",
+              "key-190",
+              "key-191",
+              "key-192",
+              "key-193",
+              "key-194",
+              "key-195",
+              "key-196",
+              "key-197",
+              "key-198",
+              "key-199",
+              "key-200",
+              "key-201",
+              "key-202",
+              "key-203",
+              "key-204",
+              "key-205",
+              "key-206",
+              "key-207",
+              "key-208",
+              "key-209",
+              "key-210",
+              "key-211",
+              "key-212",
+              "key-213",
+              "key-214",
+              "key-215",
+              "key-216",
+              "key-217",
+              "key-218",
+              "key-219",
+              "key-220",
+              "key-221",
+              "key-222",
+              "key-223",
+              "key-224",
+              "key-225",
+              "key-226",
+              "key-227",
+              "key-228",
+              "key-229",
+              "key-230",
+              "key-231",
+              "key-232",
+              "key-233",
+              "key-234",
+              "key-235",
+              "key-236",
+              "key-237",
+              "key-238",
+              "key-239",
+              "key-240",
+              "key-241",
+              "key-242",
+              "key-243",
+              "key-244",
+              "key-245",
+              "key-246",
+              "key-247",
+              "key-248",
+              "key-249",
+              "key-250",
+              "key-251",
+              "key-252",
+              "key-253",
+              "key-254",
+              "key-255",
+              "key-256",
+              "key-257"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service-id/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"key-1\",\"key-2\",\"key-3\",\"key-4\",\"key-5\",\"key-6\",\"key-7\",\"key-8\",\"key-9\",\"key-10\",\"key-11\",\"key-12\",\"key-13\",\"key-14\",\"key-15\",\"key-16\",\"key-17\",\"key-18\",\"key-19\",\"key-20\",\"key-21\",\"key-22\",\"key-23\",\"key-24\",\"key-25\",\"key-26\",\"key-27\",\"key-28\",\"key-29\",\"key-30\",\"key-31\",\"key-32\",\"key-33\",\"key-34\",\"key-35\",\"key-36\",\"key-37\",\"key-38\",\"key-39\",\"key-40\",\"key-41\",\"key-42\",\"key-43\",\"key-44\",\"key-45\",\"key-46\",\"key-47\",\"key-48\",\"key-49\",\"key-50\",\"key-51\",\"key-52\",\"key-53\",\"key-54\",\"key-55\",\"key-56\",\"key-57\",\"key-58\",\"key-59\",\"key-60\",\"key-61\",\"key-62\",\"key-63\",\"key-64\",\"key-65\",\"key-66\",\"key-67\",\"key-68\",\"key-69\",\"key-70\",\"key-71\",\"key-72\",\"key-73\",\"key-74\",\"key-75\",\"key-76\",\"key-77\",\"key-78\",\"key-79\",\"key-80\",\"key-81\",\"key-82\",\"key-83\",\"key-84\",\"key-85\",\"key-86\",\"key-87\",\"key-88\",\"key-89\",\"key-90\",\"key-91\",\"key-92\",\"key-93\",\"key-94\",\"key-95\",\"key-96\",\"key-97\",\"key-98\",\"key-99\",\"key-100\",\"key-101\",\"key-102\",\"key-103\",\"key-104\",\"key-105\",\"key-106\",\"key-107\",\"key-108\",\"key-109\",\"key-110\",\"key-111\",\"key-112\",\"key-113\",\"key-114\",\"key-115\",\"key-116\",\"key-117\",\"key-118\",\"key-119\",\"key-120\",\"key-121\",\"key-122\",\"key-123\",\"key-124\",\"key-125\",\"key-126\",\"key-127\",\"key-128\",\"key-129\",\"key-130\",\"key-131\",\"key-132\",\"key-133\",\"key-134\",\"key-135\",\"key-136\",\"key-137\",\"key-138\",\"key-139\",\"key-140\",\"key-141\",\"key-142\",\"key-143\",\"key-144\",\"key-145\",\"key-146\",\"key-147\",\"key-148\",\"key-149\",\"key-150\",\"key-151\",\"key-152\",\"key-153\",\"key-154\",\"key-155\",\"key-156\",\"key-157\",\"key-158\",\"key-159\",\"key-160\",\"key-161\",\"key-162\",\"key-163\",\"key-164\",\"key-165\",\"key-166\",\"key-167\",\"key-168\",\"key-169\",\"key-170\",\"key-171\",\"key-172\",\"key-173\",\"key-174\",\"key-175\",\"key-176\",\"key-177\",\"key-178\",\"key-179\",\"key-180\",\"key-181\",\"key-182\",\"key-183\",\"key-184\",\"key-185\",\"key-186\",\"key-187\",\"key-188\",\"key-189\",\"key-190\",\"key-191\",\"key-192\",\"key-193\",\"key-194\",\"key-195\",\"key-196\",\"key-197\",\"key-198\",\"key-199\",\"key-200\",\"key-201\",\"key-202\",\"key-203\",\"key-204\",\"key-205\",\"key-206\",\"key-207\",\"key-208\",\"key-209\",\"key-210\",\"key-211\",\"key-212\",\"key-213\",\"key-214\",\"key-215\",\"key-216\",\"key-217\",\"key-218\",\"key-219\",\"key-220\",\"key-221\",\"key-222\",\"key-223\",\"key-224\",\"key-225\",\"key-226\",\"key-227\",\"key-228\",\"key-229\",\"key-230\",\"key-231\",\"key-232\",\"key-233\",\"key-234\",\"key-235\",\"key-236\",\"key-237\",\"key-238\",\"key-239\",\"key-240\",\"key-241\",\"key-242\",\"key-243\",\"key-244\",\"key-245\",\"key-246\",\"key-247\",\"key-248\",\"key-249\",\"key-250\",\"key-251\",\"key-252\",\"key-253\",\"key-254\",\"key-255\",\"key-256\"]}"
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service-id/purge",
+                "headers": {
+                  "accept": "application/json",
+                  "content-type": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": "{\"surrogate_keys\":[\"key-257\"]}"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "zone purge is its own operation",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": "service-id"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/service-id/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "zone purge requires service id",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+              "message": "Fastly service ID is required for zone purging."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "key purge requires service id",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "key"
+            ],
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+              "message": "Fastly service ID is required for cache key purging."
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": ""
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "e"
+            },
+            "method": "purgeKeys",
+            "keys": [
+              "key"
+            ],
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+              "message": "Fastly service ID is required for cache key purging."
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "e"
+            },
+            "method": "purgeKeys",
+            "keys": [],
+            "responses": []
+          },
+          "expect": {
+            "result": null,
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "domain purge requires service id",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeDomain",
+            "domain": "example.com",
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\UnsupportedOperation",
+              "message": "Fastly service ID is required for cache key purging."
+            },
+            "requests": []
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeDomain",
+            "domain": "https://example.com",
+            "responses": []
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+            },
+            "requests": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "path purge works without service id",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a.png"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/a.png",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "path encoding",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgePaths",
+            "domain": "Example.com",
+            "paths": [
+              "/café",
+              "/a#b",
+              "/%41%zz",
+              "/a?b=c&d=e:f+g",
+              "/~user/./..",
+              "/ä ö",
+              "/☃",
+              "/a\"b'c<d>",
+              "//double"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/caf%C3%A9",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/a%23b",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/%41%25zz",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/a?b=c&d=e:f+g",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/~user/./..",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/%C3%A4%20%C3%B6",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/%E2%98%83",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/a%22b%27c%3Cd%3E",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com//double",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "failures",
+      "steps": [
+        {
+          "op": "cache.new",
+          "args": {
+            "type": "fastly",
+            "token": "token",
+            "prefix": "domain-",
+            "service": "s"
+          },
+          "bind": "f",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 401,
+                "body": "{\"msg\":\"Not authorized\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 401: Not authorized"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 410,
+                "body": "{\"detail\":\"Gone\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 410: Gone"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 400,
+                "body": "{\"msg\":null,\"detail\":\"fallback\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 400: fallback"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 400,
+                "body": "{\"msg\":[1]}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 400: Array"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 400,
+                "body": "{\"msg\":1.5}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 400: 1.5"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 500,
+                "body": "oops"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 500: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 199,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 199: Unknown purge error"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "error": "Connection timed out"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 0: Connection timed out"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgeZone",
+            "responses": [
+              {
+                "status": 204,
+                "body": ""
+              }
+            ]
+          },
+          "expect": {
+            "result": null,
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/service/s/purge_all",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        },
+        {
+          "op": "cache.call",
+          "args": {
+            "cache": {
+              "$ref": "f"
+            },
+            "method": "purgePaths",
+            "domain": "example.com",
+            "paths": [
+              "/a",
+              "/b",
+              "/c"
+            ],
+            "responses": [
+              {
+                "status": 200,
+                "body": "{\"status\":\"ok\"}"
+              },
+              {
+                "status": 500,
+                "body": "{\"msg\":\"second\"}"
+              }
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "RuntimeException",
+              "message": "Fastly purge failed with status 500: second"
+            },
+            "requests": [
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/a",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              },
+              {
+                "method": "POST",
+                "url": "https://api.fastly.com/purge/example.com/b",
+                "headers": {
+                  "accept": "application/json",
+                  "fastly-key": "token",
+                  "user-agent": "Utopia CDN Fastly Adapter"
+                },
+                "body": ""
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -16,6 +16,7 @@ pub mod auth;
 pub mod balancer;
 pub mod bus;
 pub mod cache;
+pub mod cdn;
 pub mod circuit_breaker;
 pub mod cli;
 pub mod client;
@@ -56,6 +57,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("balancer", balancer::OPS),
     ("bus", bus::OPS),
     ("cache", cache::OPS),
+    ("cdn", cdn::OPS),
     ("circuit-breaker", circuit_breaker::OPS),
     ("cli", cli::OPS),
     ("client", client::OPS),
@@ -98,6 +100,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "balancer" => balancer::call(op, args, session).await,
         "bus" => bus::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
+        "cdn" => cdn::call(op, args, session).await,
         "circuit-breaker" => circuit_breaker::call(op, args, session).await,
         "cli" => cli::call(op, args, session).await,
         "client" => client::call(op, args, session).await,
@@ -142,6 +145,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "balancer" => balancer::BENCHES,
         "bus" => bus::BENCHES,
         "cache" => cache::BENCHES,
+        "cdn" => cdn::BENCHES,
         "circuit-breaker" => circuit_breaker::BENCHES,
         "cli" => cli::BENCHES,
         "client" => client::BENCHES,
@@ -184,6 +188,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "balancer" => balancer::bench(name, session).await,
         "bus" => bus::bench(name, session).await,
         "cache" => cache::bench(name, session).await,
+        "cdn" => cdn::bench(name, session).await,
         "circuit-breaker" => circuit_breaker::bench(name, session).await,
         "cli" => cli::bench(name, session).await,
         "client" => client::bench(name, session).await,

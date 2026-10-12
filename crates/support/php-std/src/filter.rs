@@ -1068,8 +1068,10 @@ fn validate_float(s: &[u8], flags: i64, dec_sep: u8, tsd: &[u8], min: Option<f64
     }
 }
 
-/// `php_filter_validate_domain_ex()`.
-fn validate_domain(d: &[u8], hostname: bool) -> bool {
+/// `php_filter_validate_domain_ex()`: whether a non-empty string passes
+/// `filter_var($d, FILTER_VALIDATE_DOMAIN)`, with `FILTER_FLAG_HOSTNAME`
+/// when `hostname` is set, without building the filter's result.
+pub fn validate_domain(d: &[u8], hostname: bool) -> bool {
     let at = |i: usize| d.get(i).copied().unwrap_or(0);
     let alnum = |b: u8| b.is_ascii_alphanumeric();
     let mut l = d.len();

@@ -1,0 +1,1419 @@
+{
+  "lib": "cdn",
+  "description": "utopia-php/cdn: domain and path checks, cache purges through Cloudflare, Fastly and a balancer fan-out, and certificate providers (Cloudflare custom hostnames, Fastly domains, Fastly TLS subscriptions, and a proxy between them). Providers send through a recorded transport, or their default client against the cdn-http fixture server: no CDN is ever called.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/cdn/src"
+    ],
+    "tests": [
+      "packages/cdn/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/cdn"
+  },
+  "services": [
+    "cdn-http"
+  ],
+  "state": [],
+  "ops": {
+    "domain.validate": {
+      "doc": "Domain::validate(domain)",
+      "covers": [
+        "Utopia\\Cdn\\Domain::validate"
+      ],
+      "fuzz": [
+        {
+          "name": "hostnames",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "domain": {
+                "gen": "ref",
+                "name": "domain"
+              }
+            }
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "free text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "domain": {
+                "gen": "string",
+                "alphabet": "unicode",
+                "max": 24,
+                "tricky": 0.3
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "domain.validate_paths": {
+      "doc": "Domain::validatePaths(paths) for a list of strings",
+      "covers": [
+        "Utopia\\Cdn\\Domain::validatePaths"
+      ],
+      "fuzz": [
+        {
+          "name": "paths",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "paths": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "path"
+                },
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "log.new": {
+      "doc": "a call log for the recording test doubles (the ArrayObject the PHP tests share)",
+      "covers": []
+    },
+    "log.take": {
+      "doc": "the entries of a call log since the last take",
+      "covers": []
+    },
+    "cache.new": {
+      "doc": "a cache adapter or the Cache facade: {type: cloudflare|fastly|recorder|balancer|facade, ...}; providers get a recorded transport unless `transport` is `http`",
+      "covers": [
+        "Utopia\\Cdn\\Cache::__construct",
+        "Utopia\\Cdn\\Cache\\Adapter\\Cloudflare::__construct",
+        "Utopia\\Cdn\\Cache\\Adapter\\Fastly::__construct",
+        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::__construct"
+      ]
+    },
+    "cache.call": {
+      "doc": "one purge (`method`: purgePaths, purgeDomain, purgeKeys, purgeZone) with the queued `responses`: {result | error, requests}",
+      "covers": [
+        "Utopia\\Cdn\\Cache::purgePaths",
+        "Utopia\\Cdn\\Cache::purgeDomain",
+        "Utopia\\Cdn\\Cache::purgeKeys",
+        "Utopia\\Cdn\\Cache::purgeZone",
+        "Utopia\\Cdn\\Cache\\Adapter\\Cloudflare::purgePaths",
+        "Utopia\\Cdn\\Cache\\Adapter\\Cloudflare::purgeDomain",
+        "Utopia\\Cdn\\Cache\\Adapter\\Cloudflare::purgeKeys",
+        "Utopia\\Cdn\\Cache\\Adapter\\Cloudflare::purgeZone",
+        "Utopia\\Cdn\\Cache\\Adapter\\Fastly::purgePaths",
+        "Utopia\\Cdn\\Cache\\Adapter\\Fastly::purgeDomain",
+        "Utopia\\Cdn\\Cache\\Adapter\\Fastly::purgeKeys",
+        "Utopia\\Cdn\\Cache\\Adapter\\Fastly::purgeZone",
+        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgePaths",
+        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgeDomain",
+        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgeKeys",
+        "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgeZone"
+      ]
+    },
+    "cache.once": {
+      "doc": "cache.new and one cache.call in one step (the fuzz target)",
+      "covers": [],
+      "fuzz": [
+        {
+          "name": "fastly paths",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "fastly"
+              },
+              "token": {
+                "gen": "const",
+                "value": "token"
+              },
+              "prefix": {
+                "gen": "const",
+                "value": "domain-"
+              },
+              "method": {
+                "gen": "const",
+                "value": "purgePaths"
+              },
+              "domain": {
+                "gen": "ref",
+                "name": "domain"
+              },
+              "paths": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "path"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "responses": {
+                "gen": "ref",
+                "name": "responses"
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "cloudflare paths",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "cloudflare"
+              },
+              "zone": {
+                "gen": "pick",
+                "from": [
+                  "zone",
+                  "zone id",
+                  "z%41",
+                  ""
+                ]
+              },
+              "token": {
+                "gen": "const",
+                "value": "token"
+              },
+              "method": {
+                "gen": "const",
+                "value": "purgePaths"
+              },
+              "domain": {
+                "gen": "ref",
+                "name": "domain"
+              },
+              "paths": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "path"
+                },
+                "min": 0,
+                "max": 3
+              },
+              "responses": {
+                "gen": "ref",
+                "name": "responses"
+              }
+            }
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "keys",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "pick",
+                "from": [
+                  "cloudflare",
+                  "fastly"
+                ]
+              },
+              "zone": {
+                "gen": "const",
+                "value": "zone"
+              },
+              "token": {
+                "gen": "const",
+                "value": "token"
+              },
+              "prefix": {
+                "gen": "const",
+                "value": ""
+              },
+              "service": {
+                "gen": "pick",
+                "from": [
+                  "service",
+                  "",
+                  null
+                ]
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "purgeKeys",
+                  "purgeDomain",
+                  "purgeZone"
+                ]
+              },
+              "domain": {
+                "gen": "ref",
+                "name": "domain"
+              },
+              "keys": {
+                "gen": "array",
+                "items": {
+                  "gen": "string",
+                  "alphabet": "unicode",
+                  "max": 12,
+                  "tricky": 0.3
+                },
+                "min": 0,
+                "max": 3
+              },
+              "responses": {
+                "gen": "ref",
+                "name": "responses"
+              }
+            }
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "option.new": {
+      "doc": "new CdnOption(adapter, provider[, edge])",
+      "covers": [
+        "Utopia\\Cdn\\Extend\\CdnOption::__construct"
+      ]
+    },
+    "option.read": {
+      "doc": "{provider: getProvider(), edge: isEdge(), adapter: getAdapter() is the given adapter}",
+      "covers": [
+        "Utopia\\Cdn\\Extend\\CdnOption::getAdapter",
+        "Utopia\\Cdn\\Extend\\CdnOption::getProvider",
+        "Utopia\\Cdn\\Extend\\CdnOption::isEdge"
+      ]
+    },
+    "option.filter": {
+      "doc": "a First balancer over the options with the filters ({edge} or {provider}): {filtered: positions of getFilteredOptions(), run: position of run()}",
+      "covers": []
+    },
+    "certificates.new": {
+      "doc": "a certificate provider or the Certificates facade: {type: cloudflare|fastly|fastly_tls|recorder|proxy|facade, ...}",
+      "covers": [
+        "Utopia\\Cdn\\Certificates::__construct",
+        "Utopia\\Cdn\\Certificates\\Provider\\Cloudflare::__construct",
+        "Utopia\\Cdn\\Certificates\\Provider\\Fastly::__construct",
+        "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::__construct",
+        "Utopia\\Cdn\\Certificates\\Provider\\Proxy::__construct"
+      ]
+    },
+    "certificates.call": {
+      "doc": "one provider method (issueCertificate, isInstantGeneration, getCertificateStatus, isRenewRequired, deleteCertificate) with the queued `responses`: {result | error, requests}; a Certificate error reports its status, challenges and warnings",
+      "covers": [
+        "Utopia\\Cdn\\Certificates::issueCertificate",
+        "Utopia\\Cdn\\Certificates::isInstantGeneration",
+        "Utopia\\Cdn\\Certificates::getCertificateStatus",
+        "Utopia\\Cdn\\Certificates::isRenewRequired",
+        "Utopia\\Cdn\\Certificates::deleteCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\Cloudflare::issueCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\Cloudflare::isInstantGeneration",
+        "Utopia\\Cdn\\Certificates\\Provider\\Cloudflare::getCertificateStatus",
+        "Utopia\\Cdn\\Certificates\\Provider\\Cloudflare::isRenewRequired",
+        "Utopia\\Cdn\\Certificates\\Provider\\Cloudflare::deleteCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\Fastly::issueCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\Fastly::isInstantGeneration",
+        "Utopia\\Cdn\\Certificates\\Provider\\Fastly::getCertificateStatus",
+        "Utopia\\Cdn\\Certificates\\Provider\\Fastly::isRenewRequired",
+        "Utopia\\Cdn\\Certificates\\Provider\\Fastly::deleteCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::issueCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::isInstantGeneration",
+        "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::getCertificateStatus",
+        "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::isRenewRequired",
+        "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::deleteCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\Proxy::issueCertificate",
+        "Utopia\\Cdn\\Certificates\\Provider\\Proxy::isInstantGeneration",
+        "Utopia\\Cdn\\Certificates\\Provider\\Proxy::getCertificateStatus",
+        "Utopia\\Cdn\\Certificates\\Provider\\Proxy::isRenewRequired",
+        "Utopia\\Cdn\\Certificates\\Provider\\Proxy::deleteCertificate",
+        "Utopia\\Cdn\\Exception\\Certificate::getStatus",
+        "Utopia\\Cdn\\Exception\\Certificate::getChallenges",
+        "Utopia\\Cdn\\Exception\\Certificate::getWarnings",
+        "Utopia\\Cdn\\Exception\\Certificate::isBlocked",
+        "Utopia\\Cdn\\Exception\\Purge::getErrors"
+      ]
+    },
+    "certificates.once": {
+      "doc": "certificates.new and one certificates.call in one step (the fuzz target)",
+      "covers": [],
+      "fuzz": [
+        {
+          "name": "fastly tls subscriptions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "type": {
+                "gen": "const",
+                "value": "fastly_tls"
+              },
+              "token": {
+                "gen": "const",
+                "value": "token"
+              },
+              "tls_config": {
+                "gen": "pick",
+                "from": [
+                  "config",
+                  ""
+                ]
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "issueCertificate",
+                  "getCertificateStatus",
+                  "isRenewRequired",
+                  "deleteCertificate"
+                ]
+              },
+              "domain": {
+                "gen": "pick",
+                "from": [
+                  "example.com",
+                  "Example.COM",
+                  "www.example.com"
+                ]
+              },
+              "responses": {
+                "gen": "array",
+                "items": {
+                  "gen": "object",
+                  "fields": {
+                    "status": {
+                      "gen": "pick",
+                      "from": [
+                        200,
+                        200,
+                        200,
+                        200,
+                        200,
+                        200,
+                        201,
+                        204,
+                        409,
+                        500
+                      ]
+                    },
+                    "json": {
+                      "gen": "ref",
+                      "name": "tls_body"
+                    }
+                  }
+                },
+                "min": 1,
+                "max": 6
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "challenge.new": {
+      "doc": "new Challenge(type, recordType, recordName, values) read back",
+      "covers": [
+        "Utopia\\Cdn\\Certificates\\Challenge::__construct"
+      ]
+    },
+    "exception.certificate": {
+      "doc": "new Certificate(message, status, challenges, warnings) read back through its getters",
+      "covers": [
+        "Utopia\\Cdn\\Exception\\Certificate::__construct"
+      ]
+    },
+    "exception.purge": {
+      "doc": "new Purge(message, errors) (RuntimeExceptions with the given messages) read back: getErrors() and the previous exception",
+      "covers": [
+        "Utopia\\Cdn\\Exception\\Purge::__construct"
+      ]
+    },
+    "constants": {
+      "doc": "the batch ceilings, CdnOption keys and providers, Status values and FastlyTls::CHALLENGE_MANAGED_DNS",
+      "covers": []
+    }
+  },
+  "generators": {
+    "label": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-",
+          "min": 1,
+          "max": 10
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "www",
+            "app",
+            "Example",
+            "xn--p1ai",
+            "-a",
+            "a-",
+            "a_b",
+            "0",
+            "",
+            "рф",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        }
+      ]
+    },
+    "domain": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "ref",
+                "name": "label"
+              },
+              "sep": ".",
+              "min": 1,
+              "max": 4
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "",
+                ".",
+                "/",
+                ":443",
+                "/path"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "https://example.com",
+            "example.com",
+            "EXAMPLE.com",
+            ".example.com",
+            "example..com",
+            "localhost",
+            "127.0.0.1",
+            " example.com",
+            "example.com\n"
+          ]
+        }
+      ]
+    },
+    "path": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "const",
+              "value": "/"
+            },
+            {
+              "gen": "string",
+              "alphabet": "url",
+              "max": 16
+            }
+          ]
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "/",
+                "",
+                "//"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "unicode",
+              "max": 10,
+              "tricky": 0.3
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "/hello world?x=1",
+            "/a#b",
+            "/%zz",
+            "/%41",
+            "/café",
+            "/a?b=c&d=e",
+            "/☃",
+            "relative"
+          ]
+        }
+      ]
+    },
+    "responses": {
+      "gen": "array",
+      "items": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "object",
+            "fields": {
+              "status": {
+                "gen": "pick",
+                "from": [
+                  200,
+                  200,
+                  204,
+                  400,
+                  403,
+                  500
+                ]
+              },
+              "body": {
+                "gen": "pick",
+                "from": [
+                  "",
+                  "{\"success\":true}",
+                  "{\"success\":false,\"errors\":[{\"message\":\"Invalid zone\"}]}",
+                  "{\"success\":null}",
+                  "{\"errors\":[{\"message\":42}]}",
+                  "{\"msg\":\"bad\"}",
+                  "{\"detail\":\"denied\"}",
+                  "{\"msg\":false}",
+                  "{\"msg\":[1]}",
+                  "[]",
+                  "null",
+                  "1.5",
+                  "not json"
+                ]
+              }
+            }
+          },
+          {
+            "gen": "object",
+            "fields": {
+              "error": {
+                "gen": "pick",
+                "from": [
+                  "Connection refused",
+                  ""
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "min": 0,
+      "max": 3
+    },
+    "tls_ref": {
+      "gen": "object",
+      "fields": {
+        "id": {
+          "gen": "pick",
+          "from": [
+            "cert_1",
+            "cert_2",
+            "auth_1",
+            "example.com",
+            "www.example.com",
+            "EXAMPLE.com",
+            7,
+            null
+          ]
+        },
+        "type": {
+          "gen": "pick",
+          "from": [
+            "tls_certificate",
+            "tls_authorization",
+            "tls_domain"
+          ]
+        }
+      },
+      "optional": [
+        "id"
+      ]
+    },
+    "tls_relationship": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "data": {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "tls_ref"
+              },
+              "min": 0,
+              "max": 3
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "data": {
+              "gen": "ref",
+              "name": "tls_ref"
+            }
+          }
+        },
+        {
+          "gen": "pick",
+          "from": [
+            null,
+            "x",
+            []
+          ]
+        }
+      ]
+    },
+    "tls_resource": {
+      "gen": "object",
+      "fields": {
+        "id": {
+          "gen": "pick",
+          "from": [
+            "sub_1",
+            "act_1",
+            "cert_1",
+            "cert_2",
+            "auth_1",
+            5,
+            1.5,
+            true,
+            null,
+            [
+              1
+            ]
+          ]
+        },
+        "type": {
+          "gen": "pick",
+          "from": [
+            "tls_subscription",
+            "tls_certificate",
+            "tls_authorization",
+            "tls_activation"
+          ]
+        },
+        "attributes": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "state": {
+                  "gen": "pick",
+                  "from": [
+                    "pending",
+                    "processing",
+                    "issued",
+                    "ISSUED",
+                    "renewing",
+                    "failed",
+                    "blocked",
+                    "passing",
+                    "",
+                    3,
+                    null
+                  ]
+                },
+                "not_after": {
+                  "gen": "pick",
+                  "from": [
+                    "2027-02-01T00:00:00Z",
+                    "2026-01-01T00:00:00Z",
+                    "2027-06-01 12:30:00",
+                    "tomorrow",
+                    "",
+                    "garbage",
+                    9
+                  ]
+                },
+                "challenges": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "object",
+                        "fields": {
+                          "type": {
+                            "gen": "pick",
+                            "from": [
+                              "managed-dns",
+                              "managed-http-a",
+                              1
+                            ]
+                          },
+                          "record_type": {
+                            "gen": "pick",
+                            "from": [
+                              "CNAME",
+                              "a",
+                              null
+                            ]
+                          },
+                          "record_name": {
+                            "gen": "pick",
+                            "from": [
+                              "_acme-challenge.example.com",
+                              "example.com",
+                              ""
+                            ]
+                          },
+                          "values": {
+                            "gen": "array",
+                            "items": {
+                              "gen": "pick",
+                              "from": [
+                                "token.fastly-validations.com",
+                                "151.101.0.0",
+                                "",
+                                42
+                              ]
+                            },
+                            "min": 0,
+                            "max": 3
+                          }
+                        },
+                        "optional": [
+                          "type",
+                          "record_type",
+                          "values"
+                        ]
+                      },
+                      {
+                        "gen": "pick",
+                        "from": [
+                          "not a challenge",
+                          null
+                        ]
+                      }
+                    ]
+                  },
+                  "min": 0,
+                  "max": 3
+                },
+                "warnings": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "one_of",
+                    "of": [
+                      {
+                        "gen": "object",
+                        "fields": {
+                          "instructions": {
+                            "gen": "pick",
+                            "from": [
+                              "Remove the conflicting record.",
+                              "  Add the CNAME record \n",
+                              "",
+                              "...",
+                              7
+                            ]
+                          }
+                        }
+                      },
+                      {
+                        "gen": "const",
+                        "value": "warning"
+                      }
+                    ]
+                  },
+                  "min": 0,
+                  "max": 2
+                }
+              },
+              "optional": [
+                "state",
+                "not_after",
+                "challenges",
+                "warnings"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "attributes",
+                null
+              ]
+            }
+          ]
+        },
+        "relationships": {
+          "gen": "object",
+          "fields": {
+            "tls_certificates": {
+              "gen": "ref",
+              "name": "tls_relationship"
+            },
+            "tls_authorizations": {
+              "gen": "ref",
+              "name": "tls_relationship"
+            },
+            "tls_domains": {
+              "gen": "ref",
+              "name": "tls_relationship"
+            },
+            "tls_domain": {
+              "gen": "ref",
+              "name": "tls_relationship"
+            },
+            "tls_certificate": {
+              "gen": "ref",
+              "name": "tls_relationship"
+            }
+          },
+          "optional": [
+            "tls_certificates",
+            "tls_authorizations",
+            "tls_domains",
+            "tls_domain",
+            "tls_certificate"
+          ]
+        }
+      },
+      "optional": [
+        "id",
+        "type",
+        "attributes",
+        "relationships"
+      ]
+    },
+    "tls_body": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "tls_good_body"
+        },
+        {
+          "gen": "ref",
+          "name": "tls_good_body"
+        },
+        {
+          "gen": "ref",
+          "name": "tls_good_body"
+        },
+        {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "object",
+              "fields": {
+                "data": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "array",
+                      "items": {
+                        "gen": "ref",
+                        "name": "tls_resource"
+                      },
+                      "min": 0,
+                      "max": 2
+                    },
+                    {
+                      "gen": "ref",
+                      "name": "tls_resource"
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        null,
+                        "data",
+                        [
+                          "x"
+                        ]
+                      ]
+                    }
+                  ]
+                },
+                "included": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "array",
+                      "items": {
+                        "gen": "ref",
+                        "name": "tls_resource"
+                      },
+                      "min": 0,
+                      "max": 3
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        "x",
+                        null
+                      ]
+                    }
+                  ]
+                },
+                "errors": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "object",
+                    "fields": {
+                      "detail": {
+                        "gen": "pick",
+                        "from": [
+                          "Subscription has active domains",
+                          null,
+                          false
+                        ]
+                      },
+                      "title": {
+                        "gen": "pick",
+                        "from": [
+                          "Bad Request",
+                          7
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "detail",
+                      "title"
+                    ]
+                  },
+                  "min": 0,
+                  "max": 1
+                },
+                "msg": {
+                  "gen": "pick",
+                  "from": [
+                    "busy",
+                    true
+                  ]
+                }
+              },
+              "optional": [
+                "data",
+                "included",
+                "errors",
+                "msg"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "not json",
+                null,
+                1,
+                []
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "tls_list_relationship": {
+      "gen": "object",
+      "fields": {
+        "data": {
+          "gen": "array",
+          "items": {
+            "gen": "object",
+            "fields": {
+              "id": {
+                "gen": "pick",
+                "from": [
+                  "cert_1",
+                  "cert_2",
+                  "auth_1",
+                  "example.com",
+                  "www.example.com",
+                  "WWW.example.com",
+                  "Example.com",
+                  7
+                ]
+              },
+              "type": {
+                "gen": "pick",
+                "from": [
+                  "tls_certificate",
+                  "tls_authorization",
+                  "tls_domain"
+                ]
+              }
+            },
+            "optional": [
+              "type"
+            ]
+          },
+          "min": 0,
+          "max": 3
+        }
+      }
+    },
+    "tls_good_resource": {
+      "gen": "object",
+      "fields": {
+        "id": {
+          "gen": "pick",
+          "from": [
+            "sub_1",
+            "sub_1",
+            "sub_1",
+            "act_1",
+            "cert_1",
+            "cert_2",
+            "auth_1",
+            5
+          ]
+        },
+        "type": {
+          "gen": "pick",
+          "from": [
+            "tls_subscription",
+            "tls_certificate",
+            "tls_authorization",
+            "tls_activation"
+          ]
+        },
+        "attributes": {
+          "gen": "object",
+          "fields": {
+            "state": {
+              "gen": "pick",
+              "from": [
+                "pending",
+                "processing",
+                "issued",
+                "issued",
+                "renewing",
+                "renewing",
+                "failed",
+                "blocked",
+                "passing",
+                "Issued"
+              ]
+            },
+            "not_after": {
+              "gen": "pick",
+              "from": [
+                "2027-02-01T00:00:00Z",
+                "2026-01-01T00:00:00Z",
+                "2027-06-01 12:30:00",
+                "2027-02-01T00:00:00+05:00",
+                "garbage",
+                ""
+              ]
+            },
+            "challenges": {
+              "gen": "array",
+              "items": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "type": {
+                        "gen": "pick",
+                        "from": [
+                          "managed-dns",
+                          "managed-http-a",
+                          1
+                        ]
+                      },
+                      "record_type": {
+                        "gen": "pick",
+                        "from": [
+                          "CNAME",
+                          "a",
+                          null
+                        ]
+                      },
+                      "record_name": {
+                        "gen": "pick",
+                        "from": [
+                          "_acme-challenge.example.com",
+                          "example.com",
+                          ""
+                        ]
+                      },
+                      "values": {
+                        "gen": "array",
+                        "items": {
+                          "gen": "pick",
+                          "from": [
+                            "token.fastly-validations.com",
+                            "151.101.0.0",
+                            "",
+                            42
+                          ]
+                        },
+                        "min": 0,
+                        "max": 3
+                      }
+                    },
+                    "optional": [
+                      "type",
+                      "record_type",
+                      "values"
+                    ]
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "not a challenge",
+                      null
+                    ]
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 3
+            },
+            "warnings": {
+              "gen": "array",
+              "items": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "instructions": {
+                        "gen": "pick",
+                        "from": [
+                          "Remove the conflicting record.",
+                          "  Add the CNAME record \n",
+                          "",
+                          "...",
+                          7
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "gen": "const",
+                    "value": "warning"
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 2
+            }
+          },
+          "optional": [
+            "not_after",
+            "challenges",
+            "warnings"
+          ]
+        },
+        "relationships": {
+          "gen": "object",
+          "fields": {
+            "tls_certificates": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "ref",
+                  "name": "tls_list_relationship"
+                },
+                {
+                  "gen": "ref",
+                  "name": "tls_list_relationship"
+                },
+                {
+                  "gen": "ref",
+                  "name": "tls_relationship"
+                }
+              ]
+            },
+            "tls_authorizations": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "ref",
+                  "name": "tls_list_relationship"
+                },
+                {
+                  "gen": "ref",
+                  "name": "tls_relationship"
+                }
+              ]
+            },
+            "tls_domains": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "ref",
+                  "name": "tls_list_relationship"
+                },
+                {
+                  "gen": "ref",
+                  "name": "tls_relationship"
+                }
+              ]
+            },
+            "tls_domain": {
+              "gen": "object",
+              "fields": {
+                "data": {
+                  "gen": "object",
+                  "fields": {
+                    "id": {
+                      "gen": "pick",
+                      "from": [
+                        "example.com",
+                        "EXAMPLE.COM",
+                        "other.com",
+                        3
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "tls_certificate": {
+              "gen": "object",
+              "fields": {
+                "data": {
+                  "gen": "object",
+                  "fields": {
+                    "id": {
+                      "gen": "pick",
+                      "from": [
+                        "cert_1",
+                        "cert_2",
+                        "cert_x",
+                        4
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "optional": [
+            "tls_certificates",
+            "tls_authorizations",
+            "tls_domains",
+            "tls_domain",
+            "tls_certificate"
+          ]
+        }
+      },
+      "optional": [
+        "type",
+        "relationships"
+      ]
+    },
+    "tls_good_body": {
+      "gen": "object",
+      "fields": {
+        "data": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "tls_good_resource"
+              },
+              "min": 1,
+              "max": 1
+            },
+            {
+              "gen": "array",
+              "items": {
+                "gen": "ref",
+                "name": "tls_good_resource"
+              },
+              "min": 0,
+              "max": 1
+            },
+            {
+              "gen": "ref",
+              "name": "tls_good_resource"
+            }
+          ]
+        },
+        "included": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "tls_good_resource"
+          },
+          "min": 0,
+          "max": 4
+        }
+      }
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "deviations": [
+    {
+      "symbol": "Utopia\\Cdn\\Domain::validatePaths",
+      "php": "an entry that is not a string fails with InvalidArgumentException (`Every cache path must be a string beginning with \"/\".`).",
+      "reason": "utopia_cdn::domain::validate_paths takes a slice of strings, so a non-string path cannot be passed."
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Cache\\Adapter\\Cloudflare::purgeKeys",
+      "php": "keys that are not strings (integers) are sent as JSON numbers in `tags` (Fastly: in `surrogate_keys`); keys or paths that are not valid UTF-8 fail json_encode with JsonException.",
+      "reason": "cache::Adapter::purge_keys and purge_paths take Rust Strings, which are always valid UTF-8 text."
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Cache\\Adapter\\Fastly::purgePaths",
+      "php": "a path that is not valid UTF-8 makes the /u pattern of encodePath() fail, so the purge URL loses its path (`/purge/<domain>`).",
+      "reason": "paths are Rust Strings, always valid UTF-8."
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Extend\\CdnOption::getAdapter",
+      "php": "state overwritten through setState() with a value of the wrong type fails getAdapter()/getProvider() with Exception\\Configuration (CdnOptionTest::testRejectsStateOverwrittenWithTheWrongType).",
+      "reason": "CdnOption keeps its adapter, provider and edge flag in typed fields with no generic state setter, so state of the wrong type cannot be set."
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Cache\\Adapter\\Balancer::purgeDomain",
+      "php": "a balancer option that is not a CdnOption fails every purge with Exception\\Configuration (`Cache options must be instances of Utopia\\Cdn\\Extend\\CdnOption.`, BalancerTest::testRejectsOptionsThatCarryNoAdapter).",
+      "reason": "cache::Balancer wraps a utopia_balancer::Balancer<CdnOption, _>, which holds CdnOptions only."
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Certificates\\Provider\\Proxy::getCertificateStatus",
+      "php": "a provider may report any string as a status, and Proxy (and Certificates) return it unchanged.",
+      "reason": "certificates::Provider::certificate_status returns certificates::Status, the seven Status constants."
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Exception\\Certificate::__construct",
+      "php": "`$status` is any string; isBlocked() is true only for `blocked`.",
+      "reason": "Blocked::status is a certificates::Status."
+    }
+  ],
+  "quirks": [
+    {
+      "symbol": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::issueCertificate",
+      "description": "FastlyTls.php has no strict_types, so a subscription ID or state of the wrong type is coerced to a string (an integer ID retries `/tls/subscriptions/7`); an array, or a missing ID, raises TypeError. PHP's message names the source file and line; Rust's ends `called in FastlyTls.php on line <n>`, so the message is masked.",
+      "case": "FastlyTlsTest.json#retry of a subscription without an id"
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Certificates\\Provider\\FastlyTls::issueCertificate",
+      "description": "an expiry date strtotime() cannot read sorts below every readable one, and new DateTimeImmutable() of it raises DateMalformedStringException when it is the only date",
+      "case": "FastlyTlsTest.json#renew dates"
+    },
+    {
+      "symbol": "Utopia\\Cdn\\Cache\\Adapter\\Cloudflare::purgeZone",
+      "description": "a 2xx response is a success unless its body is a JSON object with a `success` key that is not exactly true (`{\"success\":1}` and `{\"success\":null}` fail, `[true]` succeeds)",
+      "case": "CacheCloudflareTest.json#envelope edge cases"
+    }
+  ]
+}
