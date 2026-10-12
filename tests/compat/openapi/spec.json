@@ -1,7 +1,7 @@
 {
   "lib": "openapi",
   "description": "utopia-php/openapi: OpenAPI 2.0, 3.0 and 3.1 documents (JSON or decoded arrays) read into one version-independent model; local $ref resolution, schema dialects, annotated string enums.",
-  "complete": false,
+  "complete": true,
   "php": {
     "src": [
       "packages/openapi/src"

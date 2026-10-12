@@ -1,0 +1,169 @@
+{
+  "lib": "openapi",
+  "environment": {
+    "date": "2026-10-12T09:04:08Z",
+    "commit": "8bb87e0514",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse_2_0",
+      "description": "Parse the OpenAPI 2.0 fixture from JSON",
+      "php": {
+        "ns": 1192292.0,
+        "min": 219875.0,
+        "max": 6403917.0,
+        "samples": 15,
+        "calls": 1
+      },
+      "rust": {
+        "ns": 46739.111940298506,
+        "min": 25854.16417910448,
+        "max": 641115.3582089553,
+        "samples": 15,
+        "calls": 134,
+        "allocations": 298.0004975124378,
+        "bytes": 52984.05970149254
+      },
+      "speedup": 25.50951334982479,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "parse_3_0",
+      "description": "Parse the OpenAPI 3.0 fixture from JSON",
+      "php": {
+        "ns": 133382.29896907217,
+        "min": 62270.18556701031,
+        "max": 5045241.402061855,
+        "samples": 15,
+        "calls": 97
+      },
+      "rust": {
+        "ns": 28448.404761904763,
+        "min": 24362.095238095237,
+        "max": 801053.5714285715,
+        "samples": 15,
+        "calls": 42,
+        "allocations": 286.0015873015873,
+        "bytes": 43540.19047619047
+      },
+      "speedup": 4.688568659135654,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "parse_3_1",
+      "description": "Parse the OpenAPI 3.1 fixture from JSON",
+      "php": {
+        "ns": 211858.57746478874,
+        "min": 69865.02816901408,
+        "max": 1710204.2253521127,
+        "samples": 15,
+        "calls": 71
+      },
+      "rust": {
+        "ns": 25188.354166666668,
+        "min": 24533.854166666668,
+        "max": 158796.875,
+        "samples": 15,
+        "calls": 48,
+        "allocations": 286.00138888888887,
+        "bytes": 43540.166666666664
+      },
+      "speedup": 8.410973422993811,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "parse_document",
+      "description": "Read the decoded OpenAPI 3.1 fixture",
+      "php": {
+        "ns": 46166.0,
+        "min": 44541.0,
+        "max": 151416.0,
+        "samples": 15,
+        "calls": 1
+      },
+      "rust": {
+        "ns": 11539.086419753086,
+        "min": 10396.086419753086,
+        "max": 75916.14814814815,
+        "samples": 15,
+        "calls": 81,
+        "allocations": 147.00082304526748,
+        "bytes": 17126.0987654321
+      },
+      "speedup": 4.000836662508319,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "schema_read",
+      "description": "Read an object schema with five properties",
+      "php": {
+        "ns": 15745.37037037037,
+        "min": 9722.99074074074,
+        "max": 68776.23148148147,
+        "samples": 15,
+        "calls": 108
+      },
+      "rust": {
+        "ns": 2486.3333333333335,
+        "min": 2375.0,
+        "max": 60486.0,
+        "samples": 15,
+        "calls": 3,
+        "allocations": 14.022222222222222,
+        "bytes": 2258.6666666666665
+      },
+      "speedup": 6.332767275923195,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "resolve_schema",
+      "description": "Resolve a two-step schema reference chain",
+      "php": {
+        "ns": 569.044324925816,
+        "min": 415.31777530497857,
+        "max": 2898.5594296076492,
+        "samples": 15,
+        "calls": 48528
+      },
+      "rust": {
+        "ns": 266.25433090090337,
+        "min": 122.54157285082603,
+        "max": 697.3227409597699,
+        "samples": 15,
+        "calls": 184315,
+        "allocations": 1.0000003616996265,
+        "bytes": 64.00004340395519
+      },
+      "speedup": 2.1372209158077786,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}
