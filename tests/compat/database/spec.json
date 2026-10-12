@@ -34,5 +34,14 @@
   },
   "tests_waived": {},
   "quirks": [],
-  "deviations": []
+  "deviations": [],
+  "bench": {
+    "bound": {
+      "create_document": "One INSERT (document and permissions) on PostgreSQL: the round trip, the same server and network for both runtimes, dominates the call",
+      "create_documents": "One batched INSERT of ten documents on PostgreSQL: the round trip dominates the call",
+      "get_document": "One SELECT on PostgreSQL (uncached): the round trip dominates the call",
+      "find": "One SELECT over 100 rows on PostgreSQL: the round trip and the server's query dominate the call",
+      "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call"
+    }
+  }
 }

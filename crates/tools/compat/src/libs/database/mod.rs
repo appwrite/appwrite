@@ -12,6 +12,7 @@ use crate::adapter::{Fault, OpResult, Session};
 pub mod codec;
 
 mod adapter;
+mod benches;
 mod core;
 mod helpers;
 mod validators;
@@ -23,7 +24,7 @@ const AREAS: &[&[&str]] = &[adapter::OPS, core::OPS, helpers::OPS, validators::O
 pub const OPS: &[&str] = &concat_ops();
 
 /// Benchmarks (same names and work as `benchmarks()` in Adapter.php).
-pub const BENCHES: &[(&str, &str)] = &[];
+pub const BENCHES: &[(&str, &str)] = benches::BENCHES;
 
 pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
     if adapter::OPS.contains(&op) {
@@ -41,8 +42,8 @@ pub async fn call(op: &str, args: &Value, session: &mut Session) -> OpResult {
     }
 }
 
-pub async fn bench(name: &str, _session: &mut Session) -> Result<crate::bench::Bench, Fault> {
-    Err(Fault::new(format!("database: no benchmark `{name}`")))
+pub async fn bench(name: &str, session: &mut Session) -> Result<crate::bench::Bench, Fault> {
+    benches::bench(name, session).await
 }
 
 const fn ops_len() -> usize {
