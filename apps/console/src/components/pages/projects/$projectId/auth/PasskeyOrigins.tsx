@@ -1,6 +1,7 @@
 import { useT } from '@/lib/i18n/translate'
 
 const LOCALHOST_ORIGINS = ['http://localhost', 'https://localhost']
+const ANDROID_ORIGIN = 'android:apk-key-hash:'
 
 /** Origins passkeys work on, with localhost shown once since any port works there. */
 export function PasskeyOrigins({
@@ -21,7 +22,12 @@ export function PasskeyOrigins({
       {origins
         .filter((origin) => !LOCALHOST_ORIGINS.includes(origin))
         .map((origin) => (
-          <li key={origin}>{origin}</li>
+          <li key={origin} className="break-all">
+            {origin}
+            {origin.startsWith(ANDROID_ORIGIN) && (
+              <span className="font-sans"> {t('(Android app)')}</span>
+            )}
+          </li>
         ))}
       {localhost && (
         <li>

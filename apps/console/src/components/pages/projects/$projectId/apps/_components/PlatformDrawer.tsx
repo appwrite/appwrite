@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
 import { BaseDrawer } from '@/components/global/shared/BaseDrawer'
 import {
   Dialog,
@@ -21,6 +22,7 @@ import {
   type ProjectPlatform,
 } from '@/lib/utils/platform'
 import { HOSTNAME_PRESETS } from '@/lib/add-app-wizard/platform-map'
+import { isFingerprint } from '@/lib/passkey-policy'
 import { PlatformIcon } from '@/components/global/shared/Icon'
 import { toast } from 'sonner'
 import { Trash2, ExternalLink } from 'lucide-react'
@@ -56,6 +58,7 @@ export function PlatformDrawer({
   const [name, setName] = useState('')
   const [key, setKey] = useState('')
   const [hostname, setHostname] = useState('')
+  const [fingerprints, setFingerprints] = useState('')
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
 
@@ -64,6 +67,7 @@ export function PlatformDrawer({
       setName('')
       setKey('')
       setHostname('')
+      setFingerprints('')
       setErrors({})
       setDeleteConfirmOpen(false)
     } else if (displayPlatform) {
@@ -71,6 +75,11 @@ export function PlatformDrawer({
       setKey(getPlatformIdentifier(displayPlatform))
       setHostname(
         'hostname' in displayPlatform ? displayPlatform.hostname || '' : '',
+      )
+      setFingerprints(
+        'fingerprints' in displayPlatform
+          ? displayPlatform.fingerprints.join('\n')
+          : '',
       )
       setErrors({})
     }
@@ -83,10 +92,28 @@ export function PlatformDrawer({
     }
   }
 
+  const isAndroid = !!displayPlatform && 'applicationId' in displayPlatform
+  const fingerprintList = [
+    ...new Set(
+      fingerprints
+        .split(/[\s,]+/)
+        .filter(Boolean)
+        .map((fingerprint) => fingerprint.toUpperCase()),
+    ),
+  ]
+
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {}
     if (!name.trim()) {
       newErrors.name = t('Name is required')
+    }
+    const invalid = fingerprintList.find(
+      (fingerprint) => !isFingerprint(fingerprint),
+    )
+    if (isAndroid && invalid) {
+      newErrors.fingerprints = t(
+        '{fingerprint} is not a SHA-256 fingerprint. Use 32 colon-separated hex pairs.',
+      ).replace('{fingerprint}', invalid)
     }
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
@@ -102,6 +129,7 @@ export function PlatformDrawer({
         name: name.trim(),
         key: key.trim() || undefined,
         hostname: hostname.trim() || undefined,
+        fingerprints: isAndroid ? fingerprintList : undefined,
       },
       {
         onSuccess: () => {
@@ -285,6 +313,48 @@ export function PlatformDrawer({
                           onChange={(e) => setKey(e.target.value)}
                           disabled={isPending}
                         />
+                      </div>
+                    )}
+
+                    {isAndroid && (
+                      <div className="space-y-2">
+                        <Label
+                          htmlFor="platform-fingerprints"
+                          className="text-[12px] font-medium"
+                        >
+                          {t('Signing certificate fingerprints')}
+                        </Label>
+                        <Textarea
+                          id="platform-fingerprints"
+                          placeholder="14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5"
+                          value={fingerprints}
+                          onChange={(e) => {
+                            setFingerprints(e.target.value)
+                            if (errors.fingerprints)
+                              setErrors((prev) => ({
+                                ...prev,
+                                fingerprints: '',
+                              }))
+                          }}
+                          disabled={isPending}
+                          rows={3}
+                          spellCheck={false}
+                          className={cn(
+                            'font-mono text-[12px]',
+                            errors.fingerprints && 'border-destructive',
+                          )}
+                        />
+                        {errors.fingerprints ? (
+                          <p className="text-[12px] text-destructive">
+                            {errors.fingerprints}
+                          </p>
+                        ) : (
+                          <p className="text-[12px] text-muted-foreground">
+                            {t(
+                              'SHA-256 fingerprints of the keys your app is signed with, one per line. Passkeys work in builds signed with a listed key. Find them in Play Console under App integrity, or with ./gradlew signingReport.',
+                            )}
+                          </p>
+                        )}
                       </div>
                     )}
 
