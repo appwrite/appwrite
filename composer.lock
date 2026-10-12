@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2c717c9445e005cb4207e5df52c597b1",
+    "content-hash": "b646682b21ad48a8e753a66be9346df6",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,27 +69,32 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "27.1.0",
+            "version": "30.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "24685bc34928c0e5479d4977dc47ea4aa721f025"
+                "reference": "ec301b5d92af2fd99e8a7b1155a8f1016310b2a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/24685bc34928c0e5479d4977dc47ea4aa721f025",
-                "reference": "24685bc34928c0e5479d4977dc47ea4aa721f025",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/ec301b5d92af2fd99e8a7b1155a8f1016310b2a4",
+                "reference": "ec301b5d92af2fd99e8a7b1155a8f1016310b2a4",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "ext-curl": "*",
                 "ext-json": "*",
-                "php": ">=8.2.0"
+                "php": ">=8.5",
+                "utopia-php/client": "^0.6"
             },
             "require-dev": {
-                "mockery/mockery": "1.6.12",
-                "phpunit/phpunit": "^12"
+                "laravel/pint": "^1.25",
+                "mockery/mockery": "1.6.15",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-mockery": "^2.0",
+                "phpunit/phpunit": "^12",
+                "rector/rector": "^2.2"
             },
             "type": "library",
             "autoload": {
@@ -105,10 +110,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/27.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/30.2.2",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-07-24T06:10:52+00:00"
+            "time": "2026-10-12T13:46:08+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -4358,16 +4363,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "0d81ae309b3fae1ea8afb9b8dd721621eecd3dbf"
+                "reference": "16d299ec32466a6379e7382300516f4e9f37931a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0d81ae309b3fae1ea8afb9b8dd721621eecd3dbf",
-                "reference": "0d81ae309b3fae1ea8afb9b8dd721621eecd3dbf",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/16d299ec32466a6379e7382300516f4e9f37931a",
+                "reference": "16d299ec32466a6379e7382300516f4e9f37931a",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "^27.0",
+                "appwrite/appwrite": "^30.2.2",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
@@ -4379,7 +4384,7 @@
             "require-dev": {
                 "ext-pdo": "*",
                 "laravel/pint": "1.*",
-                "phpstan/phpstan": "1.*",
+                "phpstan/phpstan": "^2.1",
                 "phpunit/phpunit": "11.*",
                 "vlucas/phpdotenv": "5.*"
             },
@@ -4405,7 +4410,7 @@
                 "issues": "https://github.com/utopia-php/migration/issues",
                 "source": "https://github.com/utopia-php/migration/tree/fix-csv-import-rows"
             },
-            "time": "2026-10-12T14:18:10+00:00"
+            "time": "2026-10-12T17:11:20+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -7266,16 +7271,16 @@
         },
         {
             "name": "symfony/polyfill-php85",
-            "version": "v1.41.0",
+            "version": "v1.43.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php85.git",
-                "reference": "255fab485aaa1006ed411040c42aecd7b5302d7a"
+                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/255fab485aaa1006ed411040c42aecd7b5302d7a",
-                "reference": "255fab485aaa1006ed411040c42aecd7b5302d7a",
+                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/86a42cbcc07adc331481a5ab310a4024bfc227f6",
+                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6",
                 "shasum": ""
             },
             "require": {
@@ -7322,7 +7327,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php85/tree/v1.41.0"
+                "source": "https://github.com/symfony/polyfill-php85/tree/v1.43.0"
             },
             "funding": [
                 {
@@ -7342,7 +7347,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-01T12:47:55+00:00"
+            "time": "2026-09-25T15:46:47+00:00"
         },
         {
             "name": "symfony/process",
@@ -7593,8 +7598,8 @@
         {
             "package": "utopia-php/migration",
             "version": "dev-fix-csv-import-rows",
-            "alias": "2.0.999",
-            "alias_normalized": "2.0.999.0"
+            "alias": "2.1.999",
+            "alias_normalized": "2.1.999.0"
         }
     ],
     "minimum-stability": "dev",
