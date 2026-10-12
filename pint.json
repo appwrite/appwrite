@@ -3,7 +3,7 @@
     "exclude": [
         "app/sdks",
         "tests/resources/functions",
-        "app/console"
+        "apps"
     ],
     "notPath": [
         "data/data.php"

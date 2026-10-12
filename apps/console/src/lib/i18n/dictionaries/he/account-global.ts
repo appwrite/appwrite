@@ -1,0 +1,1409 @@
+/**
+ * Hebrew translations for the Account pages and global auth/provider components.
+ * Keys are the exact English source strings (English is the source of truth).
+ */
+export const heAccountGlobalDictionary: Record<string, string> = {
+  // Account pages
+  'Join an organization': 'הצטרפו לארגון',
+  'No organizations for this account': 'אין ארגונים לחשבון הזה',
+  'This account is not a member of any organization. Exit impersonation to return to your operator session, or ask an organization owner to invite this user.':
+    'החשבון הזה לא חבר באף ארגון. צאו ממצב התחזות כדי לחזור לסשן המפעיל, או בקשו מבעלי ארגון להזמין את המשתמש.',
+  'This account is not a member of any organization. Ask an organization owner to invite you, or use Account in the menu to manage your profile.':
+    'החשבון הזה לא חבר באף ארגון. בקשו מבעלי ארגון להזמין אתכם, או פתחו את Account בתפריט כדי לנהל את הפרופיל.',
+  'Your account is ready. Ask an organization owner to invite you, then accept the invitation in your email to access existing projects.':
+    'החשבון שלכם מוכן. בקשו מבעלי הארגון להזמין אתכם, ואז אשרו את ההזמנה באימייל כדי לקבל גישה לפרויקטים הקיימים.',
+  '123 Main St': 'הרצל 1',
+  Account: 'חשבון',
+  'Account ID': 'מזהה חשבון',
+  'Account was deleted': 'החשבון נמחק',
+  Active: 'פעיל',
+  Add: 'הוספה',
+  'Add a billing address to get started': 'הוסיפו כתובת חיוב כדי להתחיל',
+  'Add a new billing address to your account.':
+    'הוסיפו כתובת חיוב חדשה לחשבון שלכם.',
+  'Add a payment method to get started': 'הוסיפו אמצעי תשלום כדי להתחיל',
+  'Add billing address': 'הוספת כתובת חיוב',
+  'Add payment method': 'הוספת אמצעי תשלום',
+  Address: 'כתובת',
+  'Address Line 2': 'שורת כתובת 2',
+  'All sessions have been deleted': 'כל הסשנים נמחקו',
+  'Apt, suite, etc. (optional)': 'דירה, קומה וכדומה (אופציונלי)',
+  Application: 'אפליקציה',
+  'Application access has been revoked': 'הגישה לאפליקציה בוטלה',
+  Applications: 'אפליקציות',
+  "Applications you've authorized to access your Appwrite account.":
+    'אפליקציות שאישרתם לגשת לחשבון Appwrite שלכם.',
+  Affiliates: 'אפיליאייטס',
+  'Affiliates program': 'תוכנית אפיליאייטס',
+  'Affiliate link created': 'קישור האפיליאייטס נוצר',
+  'Affiliate link deleted': 'קישור האפיליאייטס נמחק',
+  'Attributed accounts': 'חשבונות מיוחסים',
+  'Clicks are tracked automatically. Signups are attributed for 180 days.':
+    'קליקים נמדדים אוטומטית. הרשמות מיוחסות ל-180 ימים.',
+  'Create an invite link': 'יצירת קישור הזמנה',
+  'Create invite link': 'יצירת קישור הזמנה',
+  'Credits added to your organization for each Pro upgrade':
+    'קרדיטים שנוספים לארגון שלכם על כל שדרוג ל-Pro',
+  'Earn credits by referring developers': 'הרוויחו קרדיטים בהפניית מפתחים',
+  'Earn Pro credits': 'הרוויחו קרדיטים ל-Pro',
+  'Generate a shareable link with an optional name for each campaign or channel.':
+    'צרו קישור לשיתוף עם שם אופציונלי לכל קמפיין או ערוץ.',
+  'How rewards work': 'איך עובדים התגמולים',
+  'Only referrals who upgrade to Pro generate a reward':
+    'רק הפניות שמשדרגות ל-Pro מייצרות תגמול',
+  'Share with developers': 'שתפו עם מפתחים',
+  Step: 'שלב',
+  'The Affiliates program rewards you when people you invite join Appwrite and upgrade to Pro. Create a link to get started.':
+    'תוכנית האפיליאייטס מתגמלת אתכם כשאנשים שהזמנתם מצטרפים ל-Appwrite ומשדרגים ל-Pro. צרו קישור כדי להתחיל.',
+  'Time after signup during which a Pro upgrade still counts for you':
+    'הזמן אחרי ההרשמה שבו שדרוג ל-Pro עדיין נספר לזכותכם',
+  'When a referred user upgrades to Pro, you receive $15 in organization credits.':
+    'כשמשתמש מופנה משדרג ל-Pro, אתם מקבלים $15 בקרדיטים לארגון.',
+  'All links': 'כל הקישורים',
+  'Attribution window': 'חלון ייחוס',
+  Attributed: 'יוחס',
+  Claim: 'מימוש',
+  Claimed: 'מומש',
+  'Claim credits': 'מימוש קרדיטים',
+  Clicks: 'קליקים',
+  clicks: 'קליקים',
+  'Choose an organization you own to receive these affiliate credits.':
+    'בחרו ארגון שבבעלותכם לקבלת קרדיטי האפיליאייטס האלה.',
+  'Could not load affiliate analytics': 'לא ניתן לטעון את אנליטיקת האפיליאייטס',
+  Converted: 'הומר',
+  Conversions: 'המרות',
+  conversions: 'המרות',
+  'Copy invite': 'העתקת הזמנה',
+  'Create link': 'יצירת קישור',
+  'Create a shareable invite link. The link ID is your referral code.':
+    'צרו קישור הזמנה לשיתוף. מזהה הקישור הוא קוד ההפניה שלכם.',
+  'Create or join an organization you own to claim credits.':
+    'צרו או הצטרפו לארגון שבבעלותכם כדי לממש קרדיטים.',
+  'Create shareable links and earn $15 in credits when a referred user upgrades to Pro. Attribution lasts 180 days.':
+    'צרו קישורים לשיתוף והרוויחו $15 בקרדיטים כשמשתמש מופנה משדרג ל-Pro. הייחוס תקף ל-180 ימים.',
+  'Credits claimed for organization': 'הקרדיטים מומשו עבור הארגון',
+  '1 pending reward': 'תגמול ממתין אחד',
+  'Credits earned from converted referrals. Claim pending rewards to an organization you own.':
+    'קרדיטים שנצברו מהפניות שהומרו. מימשו תגמולים ממתינים לארגון שבבעלותכם.',
+  'Delete link': 'מחיקת קישור',
+  'Existing referrals and rewards keep their history. New visits to this invite URL will stop working.':
+    'הפניות ותגמולים קיימים נשמרים בהיסטוריה. ביקורים חדשים בכתובת ההזמנה הזו יפסיקו לעבוד.',
+  'Expires at': 'תפוגה',
+  'Failed to claim credits': 'מימוש הקרדיטים נכשל',
+  'Failed to copy invite link': 'העתקת קישור ההזמנה נכשלה',
+  'Failed to create affiliate link': 'יצירת קישור האפיליאייטס נכשלה',
+  'Failed to delete affiliate link': 'מחיקת קישור האפיליאייטס נכשלה',
+  'Funnel over time': 'משפך לאורך זמן',
+  'Invite link': 'קישור הזמנה',
+  'Invite link copied': 'קישור ההזמנה הועתק',
+  'Invite link visits': 'ביקורים בקישור ההזמנה',
+  'Leave blank to auto-generate': 'השאירו ריק ליצירה אוטומטית',
+  'Link ID': 'מזהה קישור',
+  Link: 'קישור',
+  Links: 'קישורים',
+  links: 'קישורים',
+  'Loading links...': 'טוען קישורים...',
+  'Loading referrals...': 'טוען הפניות...',
+  'Loading rewards...': 'טוען תגמולים...',
+  'No affiliate activity in this date range':
+    'אין פעילות אפיליאייטס בטווח התאריכים הזה',
+  'No links yet': 'אין עדיין קישורים',
+  'No referrals yet': 'אין עדיין הפניות',
+  'No rewards yet': 'אין עדיין תגמולים',
+  'Not claimed': 'לא מומש',
+  'Conversion rate': 'שיעור המרה',
+  'Conversion rate is the share of attributed signups that upgraded to Pro in the selected date range.':
+    'שיעור ההמרה הוא החלק מההרשמות המיוחסות ששדרגו ל-Pro בטווח התאריכים שנבחר.',
+  'Optional name': 'שם אופציונלי',
+  'Pro upgrades': 'שדרוגים ל-Pro',
+  'Signup rate': 'שיעור הרשמה',
+  'Signup rate is the share of invite link clicks that resulted in a new account in the selected date range.':
+    'שיעור ההרשמה הוא החלק מקליקים על קישור ההזמנה שהובילו לחשבון חדש בטווח התאריכים שנבחר.',
+  Referrals: 'הפניות',
+  referrals: 'הפניות',
+  'pending rewards': 'תגמולים ממתינים',
+  'ready to claim': 'מוכנים למימוש',
+  Reward: 'תגמול',
+  Rewards: 'תגמולים',
+  rewards: 'תגמולים',
+  'Rewards appear here after a referral upgrades to Pro.':
+    'תגמולים יופיעו כאן אחרי שהפניה תשדרג ל-Pro.',
+  'Share an invite link to start attributing signups.':
+    'שתפו קישור הזמנה כדי להתחיל לייחס הרשמות.',
+  'Share invite links to attribute signups. Clicks are tracked automatically.':
+    'שתפו קישורי הזמנה לייחוס הרשמות. קליקים נמדדים אוטומטית.',
+  'Create your first invite link to start referring users.':
+    'צרו את קישור ההזמנה הראשון כדי להתחיל להפנות משתמשים.',
+  'Signups attributed to your invite links. Converted referrals earn you credits.':
+    'הרשמות שיוחסו לקישורי ההזמנה שלכם. הפניות שהומרו מזכות אתכם בקרדיטים.',
+  Signups: 'הרשמות',
+  signups: 'הרשמות',
+  Untitled: 'ללא שם',
+  'Are you sure you want to delete this billing address? This action cannot be undone.':
+    'האם למחוק את כתובת החיוב הזו? פעולה זו אינה ניתנת לביטול.',
+  'Are you sure you want to delete this identity?': 'האם למחוק את הזהות הזו?',
+  'Are you sure you want to delete this payment method? This action cannot be undone.':
+    'האם למחוק את אמצעי התשלום הזה? פעולה זו אינה ניתנת לביטול.',
+  'Are you sure you want to delete your account? This action cannot be undone.':
+    'האם למחוק את החשבון שלכם? פעולה זו אינה ניתנת לביטול.',
+  'Are you sure you want to logout from all devices? You will need to sign in again to access your account from any device.':
+    'האם להתנתק מכל המכשירים? תצטרכו להתחבר מחדש כדי לגשת לחשבון מכל מכשיר.',
+  'Are you sure you want to logout from this device? You will be redirected to the sign-in page and will need to sign in again to access your account.':
+    'האם להתנתק מהמכשיר הזה? תועברו לדף ההתחברות ותצטרכו להתחבר מחדש כדי לגשת לחשבון.',
+  'Are you sure you want to logout from this device? You will need to sign in again to access your account from this device.':
+    'האם להתנתק מהמכשיר הזה? תצטרכו להתחבר מחדש כדי לגשת לחשבון מהמכשיר הזה.',
+  'Are you sure you want to regenerate all recovery codes? All previously generated recovery codes will become invalid.':
+    'האם ליצור מחדש את כל קודי השחזור? כל קודי השחזור שנוצרו בעבר יהפכו ללא תקפים.',
+  'Are you sure you want to revoke access for this application? You may need to authorize it again to use it.':
+    'האם לבטל את הגישה לאפליקציה הזו? ייתכן שתצטרכו לאשר אותה שוב כדי להשתמש בה.',
+  'Application access has been revoked for all authorizations':
+    'הגישה של האפליקציה בוטלה עבור כל ההרשאות',
+  'Authentication method': 'שיטת אימות',
+  Authorized: 'אושר',
+  authorizations: 'הרשאות',
+  'authorizations. You may need to authorize it again to use it.':
+    'ההרשאות. ייתכן שתצטרכו לאשר אותה שוב כדי להשתמש בה.',
+  'Client ID': 'מזהה לקוח',
+  'Hide authorizations': 'הסתרת הרשאות',
+  'Revoke all': 'ביטול הכול',
+  'Revoking will remove all': 'הביטול יסיר את כל',
+  'Show authorizations': 'הצגת הרשאות',
+  'Some authorizations could not be revoked. Please try again.':
+    'לא ניתן היה לבטל חלק מההרשאות. נסו שוב.',
+  'This application has been authorized multiple times, likely because it registers a new OAuth client on each connection.':
+    'האפליקציה הזו אושרה מספר פעמים, ככל הנראה משום שהיא רושמת לקוח OAuth חדש בכל התחברות.',
+  'Authenticator app': 'אפליקציית אימות',
+  'Authenticator app has been connected': 'אפליקציית האימות חוברה',
+  'Authenticator app has been deleted': 'אפליקציית האימות נמחקה',
+  'Billing address created': 'כתובת החיוב נוצרה',
+  'Billing address deleted': 'כתובת החיוב נמחקה',
+  'Billing address has been added to your organization':
+    'כתובת החיוב נוספה לארגון שלכם',
+  'Billing address updated': 'כתובת החיוב עודכנה',
+  'Billing addresses': 'כתובות חיוב',
+  Cancel: 'ביטול',
+  Card: 'כרטיס',
+  Cardholder: 'בעל הכרטיס',
+  'Change your account password. Includes link to password recovery if forgotten.':
+    'שינוי סיסמת החשבון. כולל קישור לשחזור סיסמה במקרה ששכחתם אותה.',
+  City: 'עיר',
+  Country: 'מדינה',
+  Created: 'נוצר',
+  'Created At': 'נוצר בתאריך',
+  Current: 'נוכחי',
+  Delete: 'מחיקה',
+  'Delete account': 'מחיקת חשבון',
+  'Delete identity': 'מחיקת זהות',
+  'Delete all sessions': 'מחיקת כל הסשנים',
+  'Delete authenticator app': 'מחיקת אפליקציית האימות',
+  'Delete billing address': 'מחיקת כתובת חיוב',
+  'Delete payment method': 'מחיקת אמצעי תשלום',
+  'Deleting it will remove it from those organizations.':
+    'המחיקה תסיר את הקישור מהארגונים האלה.',
+  'Device & Auth': 'מכשיר ואימות',
+  'Device flow': 'Device flow',
+  'Each code can only be used once.': 'כל קוד ניתן לשימוש פעם אחת בלבד.',
+  Email: 'אימייל',
+  'Email has been updated': 'האימייל עודכן',
+  "Enhance your account's security by requiring a second sign-in method":
+    'חזקו את אבטחת החשבון באמצעות אימות דו-שלבי',
+  'Enter the 6-digit one-time code generated by the app.':
+    'הזינו את הקוד החד-פעמי בן 6 הספרות שנוצר באפליקציה.',
+  'Enter verification code': 'הזינו קוד אימות',
+  Expired: 'פג תוקף',
+  Expires: 'תוקף',
+  'Expiring soon': 'התוקף יפוג בקרוב',
+  'Expiry Date': 'תאריך תפוגה',
+  Failed: 'נכשל',
+  'Failed to create authenticator': 'יצירת אפליקציית האימות נכשלה',
+  'Failed to create challenge': 'יצירת אתגר האימות נכשלה',
+  'Failed to create recovery codes': 'יצירת קודי השחזור נכשלה',
+  'Failed to delete account': 'מחיקת החשבון נכשלה',
+  'Failed to delete authenticator': 'מחיקת אפליקציית האימות נכשלה',
+  'Failed to delete billing address': 'מחיקת כתובת החיוב נכשלה',
+  'Failed to delete identity': 'מחיקת הזהות נכשלה',
+  'Failed to delete payment method': 'מחיקת אמצעי התשלום נכשלה',
+  'Failed to delete session': 'מחיקת הסשן נכשלה',
+  'Failed to revoke application access': 'ביטול הגישה לאפליקציה נכשל',
+  'Failed to delete sessions': 'מחיקת הסשנים נכשלה',
+  'Failed to get recovery codes': 'קבלת קודי השחזור נכשלה',
+  'Failed to regenerate recovery codes': 'יצירה מחדש של קודי השחזור נכשלה',
+  'Failed to save billing address': 'שמירת כתובת החיוב נכשלה',
+  'Failed to update email': 'עדכון האימייל נכשל',
+  'Failed to update MFA': 'עדכון MFA נכשל',
+  'Failed to update name': 'עדכון השם נכשל',
+  'Failed to update password': 'עדכון הסיסמה נכשל',
+  'Failed to update payment method': 'עדכון אמצעי התשלום נכשל',
+  'Failed to verify authenticator': 'אימות אפליקציית האימות נכשל',
+  'Failed to verify code': 'אימות הקוד נכשל',
+  General: 'כללי',
+  Identities: 'זהויות',
+  'Identity has been deleted': 'הזהות נמחקה',
+  'Install an authenticator app on your mobile device, open it and scan the provided QR code or enter it manually.':
+    'התקינו אפליקציית אימות במכשיר הנייד, פתחו אותה וסרקו את קוד ה-QR או הזינו את הקוד ידנית.',
+  'IP Address': 'כתובת IP',
+  'Last used': 'שימוש אחרון',
+  'Linked Organizations': 'ארגונים מקושרים',
+  'Linked To': 'מקושר אל',
+  'Linked to:': 'מקושר אל:',
+  'Loading addresses...': 'טוען כתובות...',
+  'Loading applications...': 'טוען אפליקציות...',
+  'Loading identities...': 'טוען זהויות...',
+  'Loading payment methods...': 'טוען אמצעי תשלום...',
+  'Loading sessions...': 'טוען סשנים...',
+  Location: 'מיקום',
+  Logout: 'התנתקות',
+  'Logout from all devices': 'התנתקות מכל המכשירים',
+  'Logout from device': 'התנתקות מהמכשיר',
+  'Manage your billing addresses for invoices and payments.':
+    'נהלו את כתובות החיוב שלכם לחשבוניות ותשלומים.',
+  'Manage your payment methods and billing information.':
+    'נהלו את אמצעי התשלום ופרטי החיוב שלכם.',
+  'Manual entry code': 'קוד להזנה ידנית',
+  'Manually enter the following code into the authenticator app':
+    'הזינו ידנית את הקוד הבא באפליקציית האימות',
+  'MFA is currently disabled': 'MFA מושבת כרגע',
+  'MFA is currently enabled': 'MFA מופעל כרגע',
+  'MFA QR Code': 'קוד QR של MFA',
+  Month: 'חודש',
+  'Multi-factor authentication': 'אימות רב-שלבי',
+  'Multi-factor authentication has been disabled': 'האימות הרב-שלבי הושבת',
+  'Multi-factor authentication has been enabled': 'האימות הרב-שלבי הופעל',
+  Name: 'שם',
+  'Name has been updated': 'השם עודכן',
+  'Name must be at least 2 characters': 'השם חייב להכיל לפחות 2 תווים',
+  'New password': 'סיסמה חדשה',
+  'No active sessions': 'אין סשנים פעילים',
+  'No applications connected': 'אין אפליקציות מחוברות',
+  'When you authorize an application through OAuth, it will appear here.':
+    'כשתאשרו אפליקציה דרך OAuth, היא תופיע כאן.',
+  'No billing addresses': 'אין כתובות חיוב',
+  'No country found.': 'לא נמצאה מדינה.',
+  'No identities are currently available.': 'אין זהויות זמינות כרגע.',
+  'No payment methods': 'אין אמצעי תשלום',
+  'Not linked': 'לא מקושר',
+  'Old password': 'סיסמה נוכחית',
+  "Once you sign in via GitHub, you'll see it here.":
+    'לאחר שתתחברו דרך GitHub, תראו זאת כאן.',
+  'One-time codes will be sent to:': 'קודים חד-פעמיים יישלחו אל:',
+  organization: 'ארגון',
+  organizations: 'ארגונים',
+  Password: 'סיסמה',
+  'Password has been updated': 'הסיסמה עודכנה',
+  'Password must be at least 8 characters': 'הסיסמה חייבת להכיל לפחות 8 תווים',
+  'Payment method deleted': 'אמצעי התשלום נמחק',
+  'Payment method updated': 'אמצעי התשלום עודכן',
+  'Payment methods': 'אמצעי תשלום',
+  'Please fill in all required fields': 'מלאו את כל שדות החובה',
+  'Please select a state': 'בחרו מחוז',
+  'Please select expiration month and year': 'בחרו חודש ושנת תפוגה',
+  'Postal Code': 'מיקוד',
+  Provider: 'ספק',
+  'Recovery code': 'קוד שחזור',
+  'Recovery codes': 'קודי שחזור',
+  'Recovery codes copied': 'קודי השחזור הועתקו',
+  Regenerate: 'יצירה מחדש',
+  'Regenerate recovery codes': 'יצירה מחדש של קודי שחזור',
+  Remove: 'הסרה',
+  'Revoke session': 'ביטול סשן',
+  Revoke: 'ביטול גישה',
+  'Revoke application access': 'ביטול גישה לאפליקציה',
+  "Save these recovery codes now. They won't be shown again.":
+    'שמרו את קודי השחזור האלה עכשיו. הם לא יוצגו שוב.',
+  'Scan QR code': 'סריקת קוד QR',
+  'Search countries...': 'חיפוש מדינות...',
+  Security: 'אבטחה',
+  'Select a country': 'בחרו מדינה',
+  'Select a state': 'בחרו מחוז',
+  'Session has been deleted': 'הסשן נמחק',
+  Sessions: 'סשנים',
+  State: 'מחוז',
+  'State/Province': 'מחוז/אזור',
+  Status: 'סטטוס',
+  'Street Address': 'רחוב',
+  'This billing address is linked to': 'כתובת החיוב הזו מקושרת אל',
+  'This payment method is linked to': 'אמצעי התשלום הזה מקושר אל',
+  'This removes authenticator app codes from your account.':
+    'פעולה זו מסירה את קודי אפליקציית האימות מהחשבון שלכם.',
+  'To continue, verify your identity with a one-time code.':
+    'כדי להמשיך, אמתו את זהותכם באמצעות קוד חד-פעמי.',
+  'Verification is required to view your recovery codes.':
+    'נדרש אימות כדי להציג את קודי השחזור שלכם.',
+  'Two-factor authentication': 'אימות דו-שלבי',
+  Unknown: 'לא ידוע',
+  'Unknown device': 'מכשיר לא ידוע',
+  unverified: 'לא מאומת',
+  Update: 'עדכון',
+  'Update billing address': 'עדכון כתובת חיוב',
+  'Update email': 'עדכון אימייל',
+  'Update name': 'עדכון שם',
+  'Update password': 'עדכון סיסמה',
+  'Update payment method': 'עדכון אמצעי תשלום',
+  'Update the expiration date for this payment method.':
+    'עדכנו את תאריך התפוגה של אמצעי התשלום הזה.',
+  'Update your account display name.': 'עדכנו את שם התצוגה של החשבון.',
+  'Update your account email address. Requires password verification when changing email.':
+    'עדכנו את כתובת האימייל של החשבון. שינוי אימייל דורש אימות סיסמה.',
+  'Update your billing address information.': 'עדכנו את פרטי כתובת החיוב.',
+  'Use a recovery code instead': 'שימוש בקוד שחזור במקום',
+  'Use an authentication app to generate two-factor authentication codes.':
+    'השתמשו באפליקציית אימות ליצירת קודים לאימות דו-שלבי.',
+  "Use in case you can't receive two-factor authentication codes.":
+    'לשימוש במקרה שאינכם יכולים לקבל קודים לאימות דו-שלבי.',
+  'Use recovery code': 'שימוש בקוד שחזור',
+  'Use these codes to access your account if you lose your authenticator.':
+    'השתמשו בקודים האלה כדי לגשת לחשבון אם תאבדו את אפליקציית האימות.',
+  // pragma: allowlist secret
+  'Use this ID when integrating with the Appwrite API or SDKs. Support may also ask for this ID when assisting with issues.':
+    'השתמשו במזהה הזה בעת אינטגרציה עם ה-API או ה-SDK של Appwrite. גם התמיכה עשויה לבקש מזהה זה בעת טיפול בתקלות.', // pragma: allowlist secret
+  verified: 'מאומת',
+  View: 'הצגה',
+  Year: 'שנה',
+  "You don't have any active sessions at the moment.":
+    'אין לכם סשנים פעילים כרגע.',
+  'Your account will be permanently deleted and access will be lost to any of your teams and data. This action is irreversible.':
+    'החשבון שלכם יימחק לצמיתות ותאבדו גישה לכל הצוותים והנתונים שלכם. פעולה זו אינה הפיכה.',
+  'Your email': 'האימייל שלכם',
+  'Your name': 'השם שלכם',
+  'Your password': 'הסיסמה שלכם',
+
+  // Auth (sign in, sign up, recovery, reset, verify, MFA, OAuth consent)
+  'A 6-digit verification code was sent to your email. Enter it below.':
+    'קוד אימות בן 6 ספרות נשלח לאימייל שלכם. הזינו אותו למטה.',
+  'A 6-digit verification code was sent to your phone. Enter it below.':
+    'קוד אימות בן 6 ספרות נשלח לטלפון שלכם. הזינו אותו למטה.',
+  'After authorizing, return to your device.': 'לאחר האישור, חזרו למכשיר שלכם.',
+  'Already have an account?': 'כבר יש לכם חשבון?',
+  'Already verified?': 'כבר אימתתם?',
+  Authorize: 'אישור',
+  'Authorizing…': 'מאשר…',
+  'Back to sign in': 'חזרה להתחברות',
+  'Check your email': 'בדקו את האימייל שלכם',
+  'Confirm Password': 'אימות סיסמה',
+  connected: 'מחובר',
+  Continue: 'המשך',
+  'Create an account': 'יצירת חשבון',
+  "Don't have an account?": 'אין לכם חשבון?',
+  'Email verification': 'אימות אימייל',
+  'Enter a 6-digit one-time code from your authenticator app.':
+    'הזינו קוד חד-פעמי בן 6 ספרות מאפליקציית האימות שלכם.',
+  'Enter email': 'הזינו אימייל',
+  'Enter name': 'הזינו שם',
+  'Enter one of the recovery codes you received when enabling MFA.':
+    'הזינו אחד מקודי השחזור שקיבלתם בעת הפעלת MFA.',
+  'Enter password': 'הזינו סיסמה',
+  'Enter recovery code': 'הזינו קוד שחזור',
+  'Enter your details to create a new account':
+    'הזינו את הפרטים שלכם ליצירת חשבון חדש',
+  "Enter your email address and we'll send you a link to reset your password.":
+    'הזינו את כתובת האימייל שלכם ונשלח לכם קישור לאיפוס הסיסמה.',
+  'Enter your new password below.': 'הזינו את הסיסמה החדשה למטה.',
+  'Failed to authorize the application': 'אישור האפליקציה נכשל',
+  'Failed to send verification email': 'שליחת אימייל האימות נכשלה',
+  'Forgot your password?': 'שכחתם את הסיסמה?',
+  'Go to console': 'מעבר לקונסולה',
+  'Login to your account': 'התחברות לחשבון שלכם',
+  'Login with Bitbucket': 'התחברות עם Bitbucket',
+  'Login with GitHub': 'התחברות עם GitHub',
+  'Login with GitLab': 'התחברות עם GitLab',
+  'Login with Google': 'התחברות עם Google',
+  Login: 'התחברות',
+  'New Password': 'סיסמה חדשה',
+  'No verification methods are available for this account. Contact support if you need help signing in.':
+    'אין שיטות אימות זמינות לחשבון הזה. פנו לתמיכה אם אתם זקוקים לעזרה בהתחברות.',
+  or: 'או',
+  'Or continue with': 'או המשיכו עם',
+  'Password is required': 'יש להזין סיסמה',
+  'Password reset': 'איפוס סיסמה',
+  "Passwords don't match": 'הסיסמאות אינן תואמות',
+  Phone: 'טלפון',
+  'Phone verification': 'אימות טלפון',
+  'Please confirm your password': 'אמתו את הסיסמה',
+  'Please enter a valid email address': 'הזינו כתובת אימייל תקינה',
+  'Please wait while we confirm your email address.':
+    'המתינו בזמן שאנחנו מאמתים את כתובת האימייל שלכם.',
+  'Preparing verification...': 'מכין אימות...',
+  'Privacy Policy': 'מדיניות הפרטיות',
+  'Remember your password?': 'זוכרים את הסיסמה?',
+  'Requested resources': 'משאבים מבוקשים',
+  'Resend verification email': 'שליחה חוזרת של אימייל האימות',
+  'Reset password': 'איפוס סיסמה',
+  'Reset your password': 'איפוס הסיסמה שלכם',
+  'Send recovery link': 'שליחת קישור שחזור',
+  'Sign in': 'התחברות',
+  'Sign up': 'הירשמו',
+  'Sign up with Bitbucket': 'הרשמה עם Bitbucket',
+  'Sign up with GitHub': 'הרשמה עם GitHub',
+  'Sign up with GitLab': 'הרשמה עם GitLab',
+  'Sign up with Google': 'הרשמה עם Google',
+  'Signed in as': 'מחוברים בתור',
+  "You're signed in as": 'אתם מחוברים בתור',
+  'Terms of Service': 'תנאי השימוש',
+  'This will allow': 'פעולה זו תאפשר ל-',
+  'to:': 'לבצע את הפעולות הבאות:',
+  'Verification code': 'קוד אימות',
+  'Verification email has been sent': 'אימייל אימות נשלח',
+  'Verified but could not open the console':
+    'האימות הצליח אך לא ניתן היה לפתוח את הקונסולה',
+  Verify: 'אימות',
+  'Verify your email': 'אמתו את האימייל שלכם',
+  'Verifying your email': 'מאמת את האימייל שלכם',
+  // pragma: allowlist secret
+  'wants to access your Appwrite account.': 'מבקשת גישה לחשבון Appwrite שלכם.', // pragma: allowlist secret
+  "We'll send a recovery link to this email address.":
+    'נשלח קישור שחזור לכתובת האימייל הזו.',
+  "We've sent a password recovery link to your email address.":
+    'שלחנו קישור לשחזור סיסמה לכתובת האימייל שלכם.',
+  "We've sent a verification link to your email address. Click the link to verify your account and access the console.":
+    'שלחנו קישור אימות לכתובת האימייל שלכם. לחצו על הקישור כדי לאמת את החשבון ולגשת לקונסולה.',
+  'Welcome back': 'ברוכים השבים',
+  "You'll be redirected to": 'תועברו אל',
+  'Your password has been successfully reset. You can now sign in with your new password.':
+    'הסיסמה שלכם אופסה בהצלחה. כעת תוכלו להתחבר עם הסיסמה החדשה.',
+
+  // Account access blocked screen
+  'Account access blocked': 'הגישה לחשבון חסומה',
+  // pragma: allowlist secret
+  'This account cannot use the Appwrite Console - access is blocked or restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review of your account, contact support@appwrite.io.':
+    'חשבון זה אינו יכול להשתמש בקונסולת Appwrite. הגישה חסומה או מוגבלת, ייתכן שבשל הפרת תנאי השימוש. לשאלות על ההגבלה או לבקשת בדיקה מחודשת של החשבון, פנו אל support@appwrite.io.', // pragma: allowlist secret
+
+  // OAuth2 consent scopes (translated at render site from src/lib/oauth2/scopes.ts)
+  'Full access to your account': 'גישה מלאה לחשבון שלכם',
+  'Manage your organizations, projects, and all their resources on your behalf.':
+    'ניהול הארגונים, הפרויקטים וכל המשאבים שלהם בשמכם.',
+  'Verify your identity': 'אימות הזהות שלכם',
+  // pragma: allowlist secret
+  'Confirm who you are using your Appwrite account.':
+    'אישור זהותכם באמצעות חשבון Appwrite שלכם.', // pragma: allowlist secret
+  'View your profile': 'הצגת הפרופיל שלכם',
+  'Read your name and profile details.': 'קריאת השם ופרטי הפרופיל שלכם.',
+  'View your email address': 'הצגת כתובת האימייל שלכם',
+  'Read the email address associated with your account.':
+    'קריאת כתובת האימייל המשויכת לחשבון שלכם.',
+
+  // Global providers (uploads, promo banner, docs preview, notifications)
+  'You have file uploads in progress. Are you sure you want to leave?':
+    'יש לכם העלאות קבצים בתהליך. האם אתם בטוחים שברצונכם לעזוב?',
+  more: 'נוספים',
+  'Dismiss all': 'סגירת הכול',
+  Docs: 'דוקומנטציה',
+  'Open in new window': 'פתיחה בחלון חדש',
+  'Open in docs': 'פתיחה בדוקומנטציה',
+  'Close documentation preview': 'סגירת תצוגה מקדימה של הדוקומנטציה',
+  'Loading documentation...': 'טוען דוקומנטציה...',
+  'Could not load this documentation page.':
+    'לא ניתן היה לטעון את דף הדוקומנטציה הזה.',
+  'Notifications enabled': 'ההתראות הופעלו',
+  'Reloading to apply…': 'טוען מחדש כדי להחיל…',
+  'Notifications blocked': 'ההתראות נחסמו',
+  'You can re-enable them anytime from your browser settings.':
+    'תוכלו להפעיל אותן מחדש בכל עת מהגדרות הדפדפן.',
+  'Get notified when builds finish': 'קבלו התראה כשבניות מסתיימות',
+  'Allow browser notifications to hear about build completion even when this tab is in the background.':
+    'אפשרו התראות דפדפן כדי לדעת על סיום בנייה גם כשהלשונית הזו ברקע.',
+  'Not now': 'לא עכשיו',
+  Enable: 'הפעלה',
+  'Browser alerts': 'התראות דפדפן',
+  'Receive desktop alerts from the Console when this tab is in the background or another app has focus.':
+    'קבלו התראות שולחן עבודה מה-Console כשהלשונית הזו ברקע או שאפליקציה אחרת בפוקוס.',
+  'You will receive desktop alerts from the Console while this tab is in the background.':
+    'תקבלו התראות שולחן עבודה מה-Console בזמן שהלשונית הזו ברקע.',
+  'Browser alerts are turned off in the Console.':
+    'התראות הדפדפן כבויות ב-Console.',
+  'Console alerts': 'התראות Console',
+  'Included alerts': 'התראות כלולות',
+  'Build completion': 'סיום בנייה',
+  'Site and function builds that finish while you are away.':
+    'בניות אתרים ופונקציות שמסתיימות בזמן שאתם לא ליד המסך.',
+  'Browser alerts test': 'בדיקת התראות דפדפן',
+  'If you can read this, browser alerts are working correctly.':
+    'אם אתם קוראים את זה, התראות הדפדפן עובדות כראוי.',
+  'Send test notification': 'שליחת התראת בדיקה',
+  'Test notification sent': 'התראת הבדיקה נשלחה',
+  'Could not send a test notification. Check browser permissions.':
+    'לא ניתן היה לשלוח התראת בדיקה. בדקו את הרשאות הדפדפן.',
+  'Allow notifications for this site in your browser settings, then return here.':
+    'אפשרו התראות עבור האתר הזה בהגדרות הדפדפן, ואז חזרו לכאן.',
+  'Browser permission': 'הרשאת דפדפן',
+  'Console preference': 'העדפת Console',
+  'Waiting for browser permission': 'ממתין להרשאת דפדפן',
+  'Not supported': 'לא נתמך',
+  'Open your browser settings, find notification permissions for this site, allow notifications, then refresh this page.':
+    'פתחו את הגדרות הדפדפן, מצאו הרשאות התראות עבור האתר הזה, אפשרו התראות, ואז רעננו את העמוד.',
+  'This browser does not support desktop notifications.':
+    'הדפדפן הזה לא תומך בהתראות שולחן עבודה.',
+  'Notifications are blocked by your browser. Allow them in browser settings for this site.':
+    'ההתראות חסומות על ידי הדפדפן. אפשרו אותן בהגדרות הדפדפן עבור האתר הזה.',
+  'Turn on alerts and allow notifications when your browser prompts you.':
+    'הפעילו התראות ואשרו התראות כשהדפדפן מבקש מכם.',
+  'If no banner appeared, check your system notification center or Do Not Disturb settings.':
+    'אם לא הופיע באנר, בדקו את מרכז ההתראות של המערכת או את הגדרות "נא לא להפריע".',
+
+  // Build notification titles/bodies (dynamic combinations)
+  'Site build ready': 'בניית האתר מוכנה',
+  'Site build failed': 'בניית האתר נכשלה',
+  'Site build timed out': 'בניית האתר חרגה מהזמן',
+  'Site build canceled': 'בניית האתר בוטלה',
+  'Function build ready': 'בניית הפונקציה מוכנה',
+  'Function build failed': 'בניית הפונקציה נכשלה',
+  'Function build timed out': 'בניית הפונקציה חרגה מהזמן',
+  'Function build canceled': 'בניית הפונקציה בוטלה',
+  'build completed successfully.': 'הבנייה הושלמה בהצלחה.',
+  'build failed.': 'הבנייה נכשלה.',
+  'build timed out.': 'הבנייה חרגה מהזמן.',
+  'build was canceled.': 'הבנייה בוטלה.',
+
+  // Promo banner mock content
+  'Introducing Imagine': 'הכירו את Imagine',
+  'The most complete AI builder to date': 'בונה ה-AI המקיף ביותר עד כה',
+  'Try it now': 'נסו עכשיו',
+  'Edge Functions': 'פונקציות Edge',
+  'Deploy serverless functions at the edge for ultra-low latency':
+    'פרסו פונקציות serverless בקצה הרשת לזמן תגובה נמוך במיוחד',
+  'Learn more': 'למדו עוד',
+  'New Database Regions': 'אזורי מסד נתונים חדשים',
+  "We've expanded to 12 new regions worldwide":
+    'התרחבנו ל-12 אזורים חדשים ברחבי העולם',
+  'See regions': 'הצגת אזורים',
+  'New Feature Available': 'תכונה חדשה זמינה',
+  'Check out our latest updates and improvements to enhance your development experience.':
+    'גלו את העדכונים והשיפורים האחרונים שלנו לשיפור חוויית הפיתוח.',
+  Explore: 'גלו',
+
+  // AI chat
+  'Add a follow-up': 'הוסיפו הודעת המשך',
+  'Add to queue': 'הוספה לתור',
+  'Attach files': 'צירוף קבצים',
+  'Voice input': 'קלט קולי',
+  'Stop voice input': 'עצירת קלט קולי',
+  'Listening...': 'מקשיבים...',
+  'Listening... Say "submit now" to submit':
+    'מקשיבים... אמרו "שלח עכשיו" כדי לשלוח',
+  'Sending soon. Cancel to keep editing': 'שולחים בקרוב. בטלו כדי להמשיך לערוך',
+  'Sending in': 'שולחים בעוד',
+  'Microphone permission denied': 'הרשאת המיקרופון נדחתה',
+  'Voice input is not supported in this browser':
+    'קלט קולי אינו נתמך בדפדפן זה',
+  'Could not start voice input': 'לא ניתן להתחיל קלט קולי',
+  'Sign in to chat with the agent...': 'התחברו כדי לשוחח עם הסוכן...',
+  Attachment: 'קובץ מצורף',
+  'attachment selected': 'קובץ מצורף נבחר',
+  'attachments selected': 'קבצים מצורפים נבחרו',
+  'Attachments upload in background. Sending waits until they are ready.':
+    'קבצים מצורפים מועלים ברקע. השליחה ממתינה עד שהם מוכנים.',
+  'Collapse chat': 'כיווץ הצ׳אט',
+  'Close sidebar': 'סגירת סרגל הצד',
+  'Open sidebar': 'פתיחת סרגל הצד',
+  'Appwrite Agent': 'Appwrite Agent',
+  Agents: 'סוכנים',
+  Automations: 'אוטומציות',
+  Automation: 'אוטומציה',
+  'Back to automation': 'חזרה לאוטומציה',
+  'Create agent': 'יצירת סוכן',
+  'No automations yet.': 'אין עדיין אוטומציות.',
+  'Search automations...': 'חיפוש אוטומציות...',
+  'No automations match your search.': 'אין אוטומציות התואמות לחיפוש.',
+  'Create automation': 'יצירת אוטומציה',
+  'Update automation': 'עדכון אוטומציה',
+  'Automation created': 'האוטומציה נוצרה',
+  'Automation updated': 'האוטומציה עודכנה',
+  'Automation deleted': 'האוטומציה נמחקה',
+  'Delete automation': 'מחיקת אוטומציה',
+  'This permanently deletes the automation.':
+    'פעולה זו מוחקת את האוטומציה לצמיתות.',
+  'Failed to create automation': 'יצירת האוטומציה נכשלה',
+  'Failed to update automation': 'עדכון האוטומציה נכשל',
+  'Failed to delete automation': 'מחיקת האוטומציה נכשלה',
+  'Untitled automation': 'אוטומציה ללא שם',
+  'Custom model': 'מודל מותאם',
+  'Last run': 'הרצה אחרונה',
+  Runs: 'הרצות',
+  runs: 'הרצות',
+  'Run history': 'היסטוריית הרצות',
+  Triggers: 'טריגרים',
+  'Agent instructions': 'הוראות לסוכן',
+  By: 'על ידי',
+  Succeeded: 'הצליח',
+  Scheduled: 'מתוזמן',
+  Trigger: 'טריגר',
+  Triggered: 'הופעל',
+  Duration: 'משך',
+  'Successful · 24h': 'הצלחות · 24 שע׳',
+  'Failed · 24h': 'כשלונות · 24 שע׳',
+  'Successful · 7d': 'הצלחות · 7 ימים',
+  'Failed · 7d': 'כשלונות · 7 ימים',
+  'Automation enabled': 'האוטומציה הופעלה',
+  'Automation paused': 'האוטומציה הושהתה',
+  'No runs yet.': 'אין עדיין הרצות.',
+  'Runs appear here after this automation executes.':
+    'ההרצות יופיעו כאן אחרי שהאוטומציה תרוץ.',
+  'Run a prompt on a schedule. Each run creates a new agent conversation.':
+    'הריצו פרומפט לפי לוח זמנים. כל הרצה יוצרת שיחת סוכן חדשה.',
+  'Automation will not run on a schedule': 'האוטומציה לא תרוץ לפי תזמון',
+  'Weekly project review': 'סקירת פרויקט שבועית',
+  Prompt: 'פרומפט',
+  'Summarize project activity and suggest next steps.':
+    'סכמו את פעילות הפרויקט והציעו צעדים הבאים.',
+  'Schedule (cron)': 'לוח זמנים (cron)',
+  'Example: 0 9 * * 1 runs every Monday at 09:00 UTC.':
+    'דוגמה: 0 9 * * 1 רץ בכל יום שני ב-09:00 UTC.',
+  'Title prefix (optional)': 'קידומת כותרת (אופציונלי)',
+  'Weekly review': 'סקירה שבועית',
+  'Manage models': 'ניהול מודלים',
+  'Search models...': 'חיפוש מודלים...',
+  'Run this automation on its schedule.':
+    'הריצו את האוטומציה לפי לוח הזמנים שלה.',
+  Models: 'מודלים',
+  models: 'מודלים',
+  memories: 'זיכרונות',
+  'Add model': 'הוספת מודל',
+  'Update model': 'עדכון מודל',
+  'Add your own LLM providers and API keys for Agents.':
+    'הוסיפו ספקי LLM ומפתחות API משלכם עבור Agents.',
+  'Configure the provider, model ID, and API key.':
+    'הגדירו את הספק, מזהה המודל ומפתח ה-API.',
+  'No custom models': 'אין מודלים מותאמים',
+  'Add your own provider and API key to choose a different model.':
+    'הוסיפו ספק ומפתח API משלכם כדי לבחור מודל אחר.',
+  'Select a model': 'בחירת מודל',
+  'Custom model ID': 'מזהה מודל מותאם',
+  'Display name': 'שם לתצוגה',
+  'Model created': 'המודל נוצר',
+  'Model updated': 'המודל עודכן',
+  'Model deleted': 'המודל נמחק',
+  'Failed to create model': 'יצירת המודל נכשלה',
+  'Failed to update model': 'עדכון המודל נכשל',
+  'Failed to delete model': 'מחיקת המודל נכשלה',
+  'My OpenAI key': 'מפתח OpenAI שלי',
+  'Model ID': 'מזהה מודל',
+  'Enter API key': 'הזינו מפתח API',
+  'Leave blank to keep the existing key.':
+    'השאירו ריק כדי לשמור על המפתח הקיים.',
+  'Base URL (optional)': 'Base URL (אופציונלי)',
+  'Allow this model in the agent composer.':
+    'אפשרו בחירה במודל הזה בקומפוזר של הסוכן.',
+  'Add memory': 'הוספת זיכרון',
+  'Update memory': 'עדכון זיכרון',
+  'Preferences, instructions, and facts the Appwrite Agent can reuse across conversations.':
+    'העדפות, הוראות ועובדות ש-Appwrite Agent יכול להשתמש בהן שוב בשיחות.',
+  'Sign in to manage memory.': 'התחברו כדי לנהל זיכרון.',
+  'No memories': 'אין זיכרונות',
+  'Add preferences, instructions, or facts for the agent to remember.':
+    'הוסיפו העדפות, הוראות או עובדות שהסוכן יזכור.',
+  Preference: 'העדפה',
+  Instruction: 'הוראה',
+  Fact: 'עובדה',
+  'Memory created': 'הזיכרון נוצר',
+  'Memory updated': 'הזיכרון עודכן',
+  'Memory deleted': 'הזיכרון נמחק',
+  'Failed to create memory': 'יצירת הזיכרון נכשלה',
+  'Failed to update memory': 'עדכון הזיכרון נכשל',
+  'Failed to delete memory': 'מחיקת הזיכרון נכשלה',
+  'Key cannot be changed after creation.':
+    'לא ניתן לשנות את המפתח לאחר היצירה.',
+  'A stable key for this memory within your account.':
+    'מפתח יציב לזיכרון הזה בחשבון שלכם.',
+  'What should the agent remember?': 'מה על הסוכן לזכור?',
+  'Higher values are kept first when space is limited.':
+    'ערכים גבוהים יותר נשמרים קודם כשיש מגבלת מקום.',
+  'Include this memory when the agent runs.': 'כללו את הזיכרון הזה כשהסוכן רץ.',
+  'Delete memory': 'מחיקת זיכרון',
+  'This permanently deletes the memory.': 'פעולה זו מוחקת את הזיכרון לצמיתות.',
+  Archive: 'ארכוב',
+  'Archive agent': 'ארכוב הסוכן',
+  'Agent archived': 'הסוכן הועבר לארכיון',
+  'Agent deleted': 'הסוכן נמחק',
+  'Agent updated': 'הסוכן עודכן',
+  'Agent title': 'כותרת הסוכן',
+  'Update agent': 'עדכון סוכן',
+  'Change the title for this agent.': 'שנו את הכותרת של הסוכן הזה.',
+  'This permanently deletes the agent and its messages.':
+    'פעולה זו מוחקת לצמיתות את הסוכן ואת ההודעות שלו.',
+  'Failed to archive agent': 'ארכוב הסוכן נכשל',
+  'Failed to update agent': 'עדכון הסוכן נכשל',
+  'Copy message': 'העתקת ההודעה',
+  'Read message aloud': 'הקראת ההודעה',
+  'Stop reading aloud': 'עצירת ההקראה',
+  'Text to speech is not supported in this browser':
+    'הדפדפן הזה אינו תומך בהקראת טקסט',
+  'Failed to read message aloud': 'הקראת ההודעה נכשלה',
+  'Thumbs up': 'אהבתי',
+  'Thumbs down': 'לא אהבתי',
+  'Expand chat': 'הרחבת הצ׳אט',
+  'Delete agent': 'מחיקת הסוכן',
+  'Edit and resend message': 'עריכה ושליחה מחדש של ההודעה',
+  'Edit message...': 'עריכת הודעה...',
+  'Editing message': 'עריכת הודעה',
+  'Failed to copy message': 'העתקת ההודעה נכשלה',
+  'Failed to score message': 'דירוג ההודעה נכשל',
+  'Failed to create agent': 'יצירת הסוכן נכשלה',
+  'Failed to delete agent': 'מחיקת הסוכן נכשלה',
+  'Failed to send message': 'שליחת ההודעה נכשלה',
+  File: 'קובץ',
+  'Fit image to screen': 'התאמת התמונה למסך',
+  'How can I help you?': 'איך אפשר לעזור?',
+  'What should we do next?': 'מה נעשה עכשיו?',
+  'Sign in to use the agent': 'התחברו כדי להשתמש ב-Agent',
+  'Create an account or sign in to chat with the Appwrite Agent about your projects.':
+    'צרו חשבון או התחברו כדי לשוחח עם Appwrite Agent על הפרויקטים שלכם.',
+  'Back to Appwrite': 'חזרה ל-Appwrite',
+  'MCP ready': 'MCP מוכן',
+  'I can inspect your project, explain issues, suggest next steps, and run approved actions.':
+    'אני יכול לבדוק את הפרויקט שלכם, להסביר בעיות, להציע צעדים הבאים ולהריץ פעולות מאושרות.',
+  'Load older messages': 'טעינת הודעות ישנות יותר', // pragma: allowlist secret
+  'Loading agents...': 'טוען סוכנים...',
+  'Loading image...': 'טוען תמונה...',
+  'Loading older messages...': 'טוען הודעות ישנות יותר...', // pragma: allowlist secret
+  Older: 'ישן יותר',
+  'Previous 7 days': '7 הימים הקודמים',
+  'Previous 30 days': '30 הימים הקודמים',
+  'Toggle agent': 'פתיחה או סגירה של הסוכן',
+  'New agent': 'סוכן חדש',
+  'Focus prompt': 'מיקוד בפרומפט',
+  'New automation': 'אוטומציה חדשה',
+  Agent: 'סוכן',
+  Today: 'היום',
+  Yesterday: 'אתמול',
+  'Next image': 'התמונה הבאה',
+  'No accessible project found to create an agent.':
+    'לא נמצא פרויקט נגיש ליצירת סוכן.',
+  'No accessible project found to start a new agent.':
+    'לא נמצא פרויקט נגיש להתחלת סוכן חדש.',
+  'No agents yet.': 'אין עדיין סוכנים.',
+  'No agents match your search.': 'לא נמצאו סוכנים התואמים לחיפוש.',
+  'No active agents.': 'אין סוכנים פעילים.',
+  'No active agents match your search.':
+    'לא נמצאו סוכנים פעילים התואמים לחיפוש.',
+  'Resources changed': 'משאבים שהשתנו',
+  updated: 'עודכנו',
+  'Search agents...': 'חיפוש סוכנים...',
+  Open: 'פתיחה',
+  'Press Enter to queue, Shift+Enter for new line':
+    'לחצו Enter להוספה לתור, Shift+Enter לשורה חדשה',
+  'Edit queued message': 'עריכת הודעה בתור',
+  Queued: 'בתור',
+  Running: 'רץ',
+  Stopped: 'נעצר',
+  Archived: 'בארכיון',
+  'Remove from queue': 'הסרה מהתור',
+  'Send next': 'שליחה הבאה',
+  'Press Enter to send, Shift+Enter for new line':
+    'הקישו Enter לשליחה, Shift+Enter לשורה חדשה',
+  'Previous image': 'התמונה הקודמת',
+  Ready: 'מוכן',
+  'Select values for placeholders': 'בחרו ערכים למצייני המיקום',
+  Confirm: 'אישור',
+  'Some attachments failed to upload. Remove them and try again.':
+    'חלק מהקבצים המצורפים לא הועלו. הסירו אותם ונסו שוב.',
+  'Thinking...': 'חושב...',
+  'Answering...': 'עונה...',
+  'Running...': 'רץ...',
+  'Working...': 'עובד...',
+  Stop: 'עצירה',
+  'Failed to stop response': 'עצירת התשובה נכשלה',
+  'Failed to retry response': 'ניסיון חוזר לתשובה נכשל',
+  Input: 'קלט',
+  'No tool calls': 'אין קריאות לכלי',
+  'tool call': 'קריאת כלי',
+  'tool calls': 'קריאות לכלים',
+  'Jump to latest': 'מעבר להודעה האחרונה',
+  Subagent: 'סוכן משנה',
+  'Routed to': 'ניתוב אל',
+  Supervisor: 'מפקח',
+  Researcher: 'חוקר',
+  Worker: 'עובד',
+  'Supervisor agent': 'סוכן מפקח',
+  'Researcher agent': 'סוכן חוקר',
+  'Worker agent': 'סוכן עובד',
+  'Platform agent': 'סוכן פלטפורמה',
+  'Planner agent': 'סוכן מתכנן',
+  'Appwrite agent': 'סוכן Appwrite',
+  'Untitled agent': 'סוכן ללא כותרת',
+  'Upload failed': 'ההעלאה נכשלה',
+  'Uploading...': 'מעלה...',
+  'Zoom in': 'התקרבות',
+  'Zoom out': 'התרחקות',
+  MCP: 'MCP',
+  'MCP connections': 'חיבורי MCP',
+  'No MCP connections': 'אין חיבורי MCP',
+  'Connect Appwrite MCP to give the agent tools for your projects.':
+    'חברו את Appwrite MCP כדי לתת לסוכן כלים לעבודה על הפרויקטים שלכם.',
+  'Servers available to the agent': 'שרתים זמינים ל-Agent',
+  'Appwrite MCP': 'Appwrite MCP',
+  'Let the agent take actions in your Appwrite projects through the hosted MCP server.':
+    'אפשרו ל-Agent לבצע פעולות בפרויקטי Appwrite שלכם דרך שרת ה-MCP המתארח.',
+  'Open MCP settings': 'פתיחת הגדרות MCP',
+  'Select an automation': 'בחרו אוטומציה',
+  'Choose an automation from the list, or create a new one to run on a schedule.':
+    'בחרו אוטומציה מהרשימה, או צרו אחת חדשה שתרוץ לפי לוח זמנים.',
+  'Add custom LLM providers and API keys for the Appwrite Agent.':
+    'הוסיפו ספקי LLM מותאמים ומפתחות API עבור Appwrite Agent.',
+  'Sign in to manage models.': 'התחברו כדי לנהל מודלים.',
+  'Sign in to manage MCP connections.': 'התחברו כדי לנהל חיבורי MCP.',
+  'No custom models yet. The Appwrite default model is always available.':
+    'אין עדיין מודלים מותאמים. מודל ברירת המחדל של Appwrite תמיד זמין.',
+  'This permanently deletes the model credentials.':
+    'פעולה זו מוחקת את פרטי הגישה של המודל לצמיתות.',
+  'Delete model': 'מחיקת מודל',
+  'Failed to resolve project': 'פתרון הפרויקט נכשל',
+  'Appwrite MCP connected': 'Appwrite MCP חובר',
+  'Appwrite MCP disconnected': 'Appwrite MCP נותק',
+  'MCP disconnected': 'MCP נותק',
+  'Failed to connect Appwrite MCP': 'חיבור Appwrite MCP נכשל',
+  'Failed to disconnect Appwrite MCP': 'ניתוק Appwrite MCP נכשל',
+  'Failed to disconnect MCP': 'ניתוק ה-MCP נכשל',
+  'Failed to update MCP connection': 'עדכון חיבור ה-MCP נכשל',
+  'Not connected': 'לא מחובר',
+  Reconnect: 'חיבור מחדש',
+  'Enable MCP': 'הפעלת MCP',
+  'OAuth required': 'נדרש OAuth',
+  'Refresh OAuth credentials': 'רענון פרטי גישה של OAuth',
+  'Connect with Appwrite OAuth': 'חיבור עם Appwrite OAuth',
+  'MCP connection failed': 'חיבור ה-MCP נכשל',
+  'MCP connected': 'MCP חובר',
+  'Connecting MCP...': 'מחבר MCP...',
+  'You can close this window and return to the console.':
+    'אפשר לסגור את החלון הזה ולחזור לקונסול.',
+  'Connecting MCP': 'חיבור MCP',
+
+  // AI chat placeholder labels
+  'Appwrite endpoint': 'נקודת קצה של Appwrite', // pragma: allowlist secret
+  Region: 'אזור',
+  'Project ID': 'מזהה פרויקט',
+  'Project name': 'שם הפרויקט',
+  'Team ID': 'מזהה צוות',
+  'Organization ID': 'מזהה ארגון',
+  'User ID': 'מזהה משתמש',
+
+  // AI chat suggested questions
+  'How do I create a new database?': 'איך יוצרים מסד נתונים חדש?',
+  'How do I set up authentication?': 'איך מגדירים אימות?',
+  'How do I upload files to storage?': 'איך מעלים קבצים לאחסון?',
+  'How do I deploy a function?': 'איך פורסים פונקציה?',
+  'List the databases and tables in this project':
+    'הציגו את מסדי הנתונים והטבלאות בפרויקט הזה',
+  'Show me Auth users created this week': 'הציגו משתמשי Auth שנוצרו השבוע',
+  'What storage buckets do I have?': 'אילו באקטי אחסון יש לי?',
+  'Create a todos table with title and done columns':
+    'צרו טבלת todos עם עמודות title ו-done',
+
+  // API explorer
+  'Act as': 'פעולה בתור',
+  'Active key': 'מפתח פעיל',
+  'Add array': 'הוספת מערך',
+  'Add item': 'הוספת פריט',
+  'Add object': 'הוספת אובייקט',
+  // pragma: allowlist secret
+  'Add one Appwrite Query condition for this entry.':
+    'הוסיפו תנאי Appwrite Query אחד לרשומה הזו.', // pragma: allowlist secret
+  'Add to draft': 'הוספה לטיוטה',
+  'API key': 'מפתח API',
+  'API platform': 'פלטפורמת API',
+  'API services': 'שירותי API',
+  'API specification unavailable.': 'מפרט ה-API אינו זמין.',
+  APIs: 'ממשקי API',
+  'Apply query': 'החלת השאילתה',
+  Attribute: 'מאפיין',
+  Authentication: 'אימות',
+  Body: 'Body',
+  Build: 'בנייה',
+  'Build a permission string for this entry. Changes apply when you click Done.':
+    'בנו מחרוזת הרשאה לרשומה הזו. השינויים יחולו בלחיצה על סיום.',
+  'Build permission': 'בניית הרשאה',
+  'Cancelling…': 'מבטל…',
+  'Clear all': 'ניקוי הכול',
+  'Clear method search': 'ניקוי חיפוש המתודות',
+  'Client API': 'API צד לקוח',
+  'Collapse key scopes': 'כיווץ הרשאות המפתח',
+  Condition: 'תנאי',
+  'Copied headers': 'הכותרות הועתקו',
+  'Copy all': 'העתקת הכול',
+  'Copy as cURL': 'העתקה כ-cURL',
+  'Copy as JSON': 'העתקה כ-JSON',
+  'Copy ID': 'העתקת מזהה',
+  'Copy link': 'העתקת קישור',
+  'Copy name': 'העתקת שם',
+  'Copy page': 'העתקת הדף',
+  'cURL copied': 'cURL הועתק',
+  'Deprecated endpoint': 'נקודת קצה שהוצאה משימוש',
+  'This endpoint is deprecated and may be removed in a future version.':
+    'נקודת קצה זו הוצאה משימוש ועשויה להיות מוסרת בגרסה עתידית.',
+  Description: 'תיאור',
+  Done: 'סיום',
+  'Download .txt': 'הורדת קובץ ‎.txt',
+  'Draft scopes already match this endpoint.':
+    'הרשאות הטיוטה כבר תואמות לנקודת הקצה הזו.',
+  Endpoint: 'נקודת קצה',
+  'Endpoint copied': 'נקודת הקצה הועתקה',
+  'Enter value': 'הזינו ערך',
+  Ephemeral: 'זמני',
+  'Ephemeral API key generated (expires in 1 hour)':
+    'נוצר מפתח API זמני (תוקפו יפוג בעוד שעה)',
+  'Expand key scopes': 'הרחבת הרשאות המפתח',
+  'Expires in 1 hour. Regenerate after editing scopes below.':
+    'התוקף יפוג בעוד שעה. צרו מפתח מחדש לאחר עריכת ההרשאות למטה.',
+  'Failed to cancel the request': 'ביטול הבקשה נכשל',
+  'Failed to copy cURL': 'העתקת ה-cURL נכשלה',
+  'Failed to copy endpoint': 'העתקת נקודת הקצה נכשלה',
+  'Failed to download OpenAPI spec': 'הורדת מפרט ה-OpenAPI נכשלה',
+  'Failed to generate API key': 'יצירת מפתח ה-API נכשלה',
+  'Failed to load API specification': 'טעינת מפרט ה-API נכשלה',
+  Form: 'טופס',
+  Generate: 'יצירה',
+  'Generate key': 'יצירת מפתח',
+  Guest: 'אורח',
+  Headers: 'Headers',
+  'Hide API key': 'הסתרת מפתח ה-API',
+  'Hide password': 'הסתרת הסיסמה',
+  'Invalid JSON in request body.': 'JSON לא תקין בגוף הבקשה.',
+  'Invalid JSON. Fix the payload before switching to form view.':
+    'JSON לא תקין. תקנו את התוכן לפני מעבר לתצוגת טופס.',
+  'Invalid request body': 'גוף בקשה לא תקין',
+  Key: 'מפתח',
+  'Key scopes': 'הרשאות מפתח',
+  'Link copied': 'הקישור הועתק',
+  'Loading API specification…': 'טוען מפרט API…',
+  'Loading users…': 'טוען משתמשים…',
+  Manual: 'ידני',
+  'Match endpoint': 'התאמה לנקודת הקצה',
+  'Missing required field:': 'חסר שדה חובה:',
+  'Missing scopes': 'הרשאות חסרות',
+  Needs: 'דורש',
+  'No body fields for this endpoint.': 'אין שדות גוף לנקודת הקצה הזו.',
+  'No methods available.': 'אין מתודות זמינות.',
+  'No methods match your search.': 'אין מתודות התואמות לחיפוש שלכם.',
+  'No object': 'אין אובייקט',
+  'No permissions': 'אין הרשאות',
+  'No queries': 'אין שאילתות',
+  'No response headers': 'אין כותרות תגובה',
+  'No services available for this API.': 'אין שירותים זמינים ל-API הזה.',
+  'No session or JWT is sent on the request.': 'לא נשלח סשן או JWT בבקשה.',
+  'No users found': 'לא נמצאו משתמשים',
+  'No value needed': 'אין צורך בערך',
+  'A JWT is created for this user when you send the request.':
+    'JWT נוצר עבור המשתמש הזה בעת שליחת הבקשה.',
+  'OpenAPI spec': 'מפרט OpenAPI',
+  Operator: 'אופרטור',
+  Parameters: 'פרמטרים',
+  'Paste a project API key': 'הדביקו מפתח API של הפרויקט',
+  'Paste a project API key (optional)':
+    'הדביקו מפתח API של הפרויקט (אופציונלי)',
+  Path: 'נתיב',
+  Preview: 'תצוגה מקדימה',
+  Project: 'פרויקט',
+  'Provide an API key or generate an ephemeral key.':
+    'ספקו מפתח API או צרו מפתח זמני.',
+  'Query parameters': 'פרמטרי שאילתה',
+  'Rate limit': 'מגבלת קצב',
+  'Regenerate key': 'יצירת מפתח מחדש',
+  'Request failed': 'הבקשה נכשלה',
+  'Request is running.': 'הבקשה רצה.',
+  Required: 'חובה',
+  'Required scopes': 'הרשאות נדרשות',
+  Reset: 'איפוס',
+  'Reset draft scopes to the scopes required by this endpoint.':
+    'איפוס הרשאות הטיוטה להרשאות הנדרשות על ידי נקודת הקצה הזו.',
+  Response: 'תגובה',
+  'Response preview': 'תצוגה מקדימה של התגובה',
+  'Reused across methods. Stored locally in this browser.':
+    'משמש בכל המתודות. נשמר מקומית בדפדפן זה.',
+  'Search by name, email, phone, or ID...':
+    'חיפוש לפי שם, אימייל, טלפון או מזהה…',
+  'Search methods': 'חיפוש מתודות',
+  'Search methods...': 'חיפוש מתודות…',
+  Select: 'בחירה',
+  'Select a method': 'בחרו מתודה',
+  'Select a method to inspect and send a request.':
+    'בחרו מתודה כדי לבדוק ולשלוח בקשה.',
+  'Select a project user': 'בחרו משתמש בפרויקט',
+  'Select a service': 'בחרו שירות',
+  'Select a user to act as, or choose Guest.':
+    'בחרו משתמש לפעול בשמו, או בחרו אורח.',
+  'Select at least one scope for the ephemeral key.':
+    'בחרו לפחות הרשאה אחת למפתח הזמני.',
+  'selected for the next key': 'נבחרו למפתח הבא',
+  'Send a request to see the response here.':
+    'שלחו בקשה כדי לראות כאן את התגובה.',
+  'Request and response': 'בקשה ותגובה',
+  'Send delete request': 'שליחת בקשת מחיקה',
+  'Send request': 'שליחת בקשה',
+  'Send update request': 'שליחת בקשת עדכון',
+  'Server API': 'API צד שרת',
+  'Server API key source': 'מקור מפתח ה-API של השרת',
+  'Session authentication': 'אימות מבוסס סשן',
+  'Set parent ID': 'הגדרת מזהה אב',
+  'Set parent resource IDs first': 'הגדירו תחילה מזהי משאבי אב',
+  'Show API key': 'הצגת מפתח ה-API',
+  'Show password': 'הצגת הסיסמה',
+  scope: 'הרשאת גישה',
+  scopes: 'הרשאות גישה',
+  Methods: 'מתודות',
+  Request: 'בקשה',
+  User: 'משתמש',
+  Value: 'ערך',
+  'Remove item': 'הסרת פריט',
+  Change: 'החלפה',
+  'Choose file': 'בחירת קובץ',
+  'Clear file': 'ניקוי הקובץ',
+
+  // CLI shell / terminal
+  'Clear output': 'ניקוי הפלט',
+  'Close search': 'סגירת החיפוש',
+  'Close terminal search': 'סגירת חיפוש הטרמינל',
+  Copied: 'הועתק',
+  Copy: 'העתקה',
+  'Copy all output': 'העתקת כל הפלט',
+  'Copy last command': 'העתקת הפקודה האחרונה',
+  'Copy selection': 'העתקת הבחירה',
+  'Delete terminal': 'מחיקת הטרמינל',
+  'Download output': 'הורדת הפלט',
+  'Exit full screen': 'יציאה ממסך מלא',
+  'Failed to copy': 'ההעתקה נכשלה:',
+  'Full screen': 'מסך מלא',
+  'last command': 'הפקודה האחרונה',
+  Maximum: 'לכל היותר',
+  'Minimize shell': 'מזעור הטרמינל',
+  'New terminal': 'טרמינל חדש',
+  'Next match': 'ההתאמה הבאה',
+  'No results': 'אין תוצאות',
+  'Nothing to copy for': 'אין מה להעתיק עבור',
+  'Nothing to export.': 'אין מה לייצא.',
+  'Open terminal': 'פתיחת הטרמינל',
+  Output: 'פלט',
+  'Output actions': 'פעולות פלט',
+  'Previous match': 'ההתאמה הקודמת',
+  'Rename terminal session': 'שינוי שם סשן הטרמינל',
+  Reorder: 'שינוי סדר',
+  'Resize terminal': 'שינוי גודל הטרמינל',
+  'Retry setup': 'ניסיון הגדרה מחדש',
+  'Search output...': 'חיפוש בפלט',
+  'Search terminal output': 'חיפוש בפלט הטרמינל',
+  selection: 'הבחירה',
+  'Setting up CLI': 'מגדיר את ה-CLI',
+  Split: 'פיצול',
+  'Split terminal': 'פיצול הטרמינל',
+  Terminal: 'טרמינל',
+  'terminal output': 'פלט הטרמינל',
+  'Terminal output downloaded': 'פלט הטרמינל הורד',
+  'Terminal sessions': 'סשני טרמינל',
+  'terminal sessions.': 'סשני טרמינל.',
+
+  // CSV migrations
+  Close: 'סגירה',
+  Dismiss: 'סגירה',
+  Download: 'הורדה',
+  'Export completed': 'הייצוא הושלם',
+  'Export failed': 'הייצוא נכשל',
+  'Exporting...': 'מייצא...',
+  'Import completed to': 'הייבוא הושלם אל',
+  'Import error details': 'פרטי שגיאת הייבוא',
+  'Import failed to': 'הייבוא נכשל אל',
+  'Importing to': 'מייבא אל',
+  'Preparing CSV for import...': 'מכין CSV לייבוא...',
+  'Preparing export...': 'מכין ייצוא...',
+  'rows exported': 'שורות יוצאו',
+  'View details': 'הצגת פרטים',
+
+  // Auth route pages (join, sign-in, sign-up, recovery, verify-email, reset)
+  'Successfully joined the organization!': 'הצטרפתם לארגון בהצלחה!',
+  'Failed to accept invitation': 'אישור ההזמנה נכשל',
+  'Welcome to the organization!': 'ברוכים הבאים לארגון!',
+  "You've successfully joined. Redirecting you now...":
+    'הצטרפתם בהצלחה. מעבירים אתכם כעת...',
+  'Unable to accept invitation': 'לא ניתן לאשר את ההזמנה',
+  'Go to Sign In': 'מעבר להתחברות',
+  "You're signed in with a different account": 'אתם מחוברים עם חשבון אחר',
+  'This invitation was sent to a different account.':
+    'הזמנה זו נשלחה לחשבון אחר.',
+  "You're currently signed in as": 'אתם מחוברים כעת בתור',
+  'Switch to the account the invitation was sent to in order to accept it.':
+    'עברו לחשבון שאליו נשלחה ההזמנה כדי לאשר אותה.',
+  'Switch account': 'החלפת חשבון',
+  'Use a different account': 'שימוש בחשבון אחר',
+  'Could not sign out. Try switching accounts again.':
+    'לא הצלחנו לנתק את החשבון. נסו שוב להחליף חשבון.',
+  'Signing out...': 'מתנתקים...',
+  'Go to dashboard': 'מעבר ללוח הבקרה',
+  'Invalid invitation link': 'קישור הזמנה לא תקין',
+  'This invitation link is missing required parameters. Please use the link from your invitation email.':
+    'בקישור ההזמנה חסרים פרמטרים נדרשים. השתמשו בקישור מאימייל ההזמנה שקיבלתם.',
+  'Accept invitation': 'אישור ההזמנה',
+  "You've been invited to join": 'הוזמנתם להצטרף אל',
+  'Accept the invitation to get started.': 'אשרו את ההזמנה כדי להתחיל.',
+  "You've been invited to join an organization. Accept the invitation to get started.":
+    'הוזמנתם להצטרף לארגון. אשרו את ההזמנה כדי להתחיל.',
+  'By clicking continue, you agree to our': 'בלחיצה על המשך, אתם מקבלים את',
+  'By continuing, you agree to our': 'בהמשך התהליך, אתם מקבלים את',
+  'Failed to initiate Bitbucket login': 'התחלת ההתחברות עם Bitbucket נכשלה',
+  'Failed to initiate GitHub login': 'התחלת ההתחברות עם GitHub נכשלה',
+  'Failed to initiate GitLab login': 'התחלת ההתחברות עם GitLab נכשלה',
+  'Failed to initiate Google login': 'התחלת ההתחברות עם Google נכשלה',
+  'Signed in but could not open the console':
+    'ההתחברות הצליחה אך לא ניתן היה לפתוח את הקונסולה',
+  'Could not open MFA verification': 'לא ניתן היה לפתוח את אימות ה-MFA',
+  'Failed to sign in': 'ההתחברות נכשלה',
+  'Account created but verification email could not be sent':
+    'החשבון נוצר אך לא ניתן היה לשלוח את אימייל האימות',
+  'Account created but could not open the console':
+    'החשבון נוצר אך לא ניתן היה לפתוח את הקונסולה',
+  'Failed to sign up': 'ההרשמה נכשלה',
+  'Recovery email sent': 'אימייל השחזור נשלח',
+  'Failed to send recovery email': 'שליחת אימייל השחזור נכשלה',
+  'Email verified successfully': 'האימייל אומת בהצלחה',
+  'Verification link is invalid or has expired.':
+    'קישור האימות אינו תקין או שפג תוקפו.',
+  'Verification email sent': 'אימייל האימות נשלח',
+  'Password reset successfully': 'הסיסמה אופסה בהצלחה',
+  'Failed to reset password': 'איפוס הסיסמה נכשל',
+  'Invalid reset link': 'קישור איפוס לא תקין',
+  'This password reset link is invalid or has expired. Please request a new one.':
+    'קישור איפוס הסיסמה אינו תקין או שפג תוקפו. בקשו קישור חדש.',
+  'Request new reset link': 'בקשת קישור איפוס חדש',
+  'Continue to sign in': 'המשך להתחברות',
+
+  // OAuth2 consent and device pages
+  'This authorization request is invalid or has expired.':
+    'בקשת ההרשאה אינה תקינה או שפג תוקפה.',
+  'Could not start authorization.': 'לא ניתן היה להתחיל את תהליך ההרשאה.',
+  'Missing authorization request. Open this page from an application sign-in.':
+    'חסרה בקשת הרשאה. פתחו דף זה מתוך התחברות לאפליקציה.',
+  'Authorization failed': 'ההרשאה נכשלה',
+  'That code is invalid or has expired. Check your device and try again.':
+    'הקוד אינו תקין או שפג תוקפו. בדקו את המכשיר ונסו שוב.',
+  'Could not verify that code.': 'לא ניתן היה לאמת את הקוד.',
+  'Confirm your code': 'אשרו את הקוד שלכם',
+  'Connect a device': 'חיבור מכשיר',
+  'Make sure this matches the code shown on your device, then continue.':
+    'ודאו שהקוד תואם לקוד המוצג במכשיר שלכם, ואז המשיכו.',
+  'Enter the code shown on your device to continue.':
+    'הזינו את הקוד המוצג במכשיר שלכם כדי להמשיך.',
+  'Device code': 'קוד מכשיר',
+  'Verifying…': 'מאמת…',
+  'Device connected': 'המכשיר חובר',
+  "You've authorized": 'אישרתם את הגישה עבור',
+  'the application': 'האפליקציה',
+  'You can return to your device, it will continue automatically.':
+    'תוכלו לחזור למכשיר שלכם, הוא ימשיך באופן אוטומטי.',
+  'Request cancelled': 'הבקשה בוטלה',
+  'No access was granted. You can close this page.':
+    'לא ניתנה גישה. תוכלו לסגור דף זה.',
+
+  // Cloud status banner
+  // pragma: allowlist secret
+  'Some Appwrite Cloud services are temporarily unavailable.':
+    'חלק משירותי Appwrite Cloud אינם זמינים זמנית.', // pragma: allowlist secret
+  'Scheduled maintenance is in progress.': 'תחזוקה מתוכננת מתבצעת כעת.',
+  'We’re experiencing issues with some services.':
+    'אנחנו חווים תקלות בחלק מהשירותים.',
+  'You may have trouble accessing some services. We’re working to restore full access.':
+    'ייתכן שתיתקלו בקשיים בגישה לחלק מהשירותים. אנחנו פועלים לשחזור גישה מלאה.',
+  // pragma: allowlist secret
+  'A subset of Appwrite Cloud services is degraded.':
+    'חלק משירותי Appwrite Cloud פועלים באופן חלקי.', // pragma: allowlist secret
+  'View Status': 'הצגת סטטוס',
+
+  // Paused project curtain
+  'Project resumed successfully': 'הפרויקט הופעל מחדש בהצלחה',
+  'Failed to resume project. Please try again.':
+    'הפעלת הפרויקט מחדש נכשלה. נסו שוב.',
+  'Failed to resume project.': 'הפעלת הפרויקט מחדש נכשלה.',
+  'Project paused': 'הפרויקט מושהה',
+  'Project blocked': 'הפרויקט חסום',
+  'This project is temporarily unavailable. Access has been restricted, which may include a Terms of Service violation. For questions about this restriction or to request a review, contact support.':
+    'הפרויקט הזה אינו זמין זמנית. הגישה אליו הוגבלה, ייתכן בגלל הפרת תנאי שימוש. לשאלות על ההגבלה או לבקשת בדיקה מחדש, פנו לתמיכה.',
+  'This project is temporarily unavailable. Access has been restricted.':
+    'הפרויקט הזה אינו זמין זמנית. הגישה אליו הוגבלה.',
+  '(Blocked)': '(חסום)',
+  'This project has been paused due to inactivity. Your data is safe and will remain intact.':
+    'הפרויקט הזה הושהה עקב חוסר פעילות. הנתונים שלכם בטוחים ויישארו ללא פגע.',
+  'Upgrade your plan to avoid pausing, or restore the project to continue using it now.':
+    'שדרגו את התוכנית כדי להימנע מהשהיה, או שחזרו את הפרויקט כדי להמשיך להשתמש בו כעת.',
+  'Resuming…': 'מפעיל מחדש…',
+  'Restore project': 'שחזור הפרויקט',
+  'Budget limit reached': 'מגבלת התקציב הושגה',
+  'Back to organization': 'חזרה לארגון',
+  'Back to console': 'חזרה לקונסול',
+
+  // Global shell
+  'Skip to content': 'דילוג לתוכן',
+  'Loading wizard...': 'טוען אשף...',
+
+  // Notification center
+  'Mark all as read': 'סימון הכל כנקרא',
+  'Loading notifications...': 'טוען התראות...',
+  'No notifications yet': 'אין התראות עדיין',
+  'We will notify you here when something needs your attention.':
+    'נודיע לכם כאן כשמשהו ידרוש את תשומת לבכם.',
+  'Stay updated on your projects and resources.':
+    'הישארו מעודכנים לגבי הפרויקטים והמשאבים שלכם.',
+  '1 unread notification': 'התראה אחת שלא נקראה',
+  'unread notifications': 'התראות שלא נקראו',
+  Unread: 'לא נקרא',
+  'Refreshing...': 'מרענן...',
+
+  // Agent console protocol surfaces
+  '1 result': 'תוצאה אחת',
+  results: 'תוצאות',
+  'Filter...': 'סינון...',
+  'No results match your filter': 'אין תוצאות התואמות לסינון',
+  Showing: 'מציג',
+  of: 'מתוך',
+  'View all': 'הצגת הכול',
+  'View usage': 'צפייה בשימוש',
+  'No chart data': 'אין נתוני תרשים',
+  'Search docs': 'חיפוש בדוקומנטציה',
+  'Contact support': 'פנייה לתמיכה',
+  'Connect MCP': 'חיבור MCP',
+  'Open in Console': 'פתיחה בקונסול',
+  'Open docs': 'פתיחת דוקומנטציה',
+  'Open agent': 'פתיחת הסוכן',
+  'Close panel': 'סגירת החלונית',
+  'Switch to dark mode': 'מעבר למצב כהה',
+  'Switch to light mode': 'מעבר למצב בהיר',
+  'Use system theme': 'שימוש בערכת הנושא של המערכת',
+
+  // GitHub Education program sign-up flow (/education/join)
+  'Appwrite and GitHub': 'Appwrite ו-GitHub',
+  'Join the Appwrite Education Program': 'הצטרפות ל-Appwrite Education Program',
+  'Enjoy Appwrite Cloud for free throughout your student journey as part of the GitHub Student Developer Pack.':
+    'תיהנו מ-Appwrite Cloud בחינם לאורך כל תקופת הלימודים, כחלק מ-GitHub Student Developer Pack.',
+  'Read about the program': 'מידע על התוכנית',
+  'Checking your account...': 'בודקים את החשבון שלכם...',
+  'Setting up your Education plan organization...':
+    'מגדירים את הארגון שלכם בתוכנית Education...',
+  'Continue to Appwrite': 'המשך אל Appwrite',
+  'GitHub did not complete the sign in. Try again to join the program.':
+    'GitHub לא השלים את ההתחברות. נסו שוב כדי להצטרף לתוכנית.',
+  "It looks like you're not currently eligible for the GitHub Student Developer Pack.":
+    'נראה שאינכם זכאים כרגע ל-GitHub Student Developer Pack.',
+  'You can still use Appwrite without an Education plan.':
+    'עדיין תוכלו להשתמש ב-Appwrite ללא תוכנית Education.',
+  "You've already joined the Education program.":
+    'כבר הצטרפתם לתוכנית Education.',
+  'Continue to Appwrite, then use the organization switcher to find your Education plan.':
+    'המשיכו אל Appwrite והשתמשו בבורר הארגונים כדי למצוא את תוכנית Education שלכם.',
+  "You've already used the Education program.":
+    'כבר השתמשתם בתוכנית Education.',
+  'Each account can join once. Choose a plan to keep building with Appwrite.':
+    'כל חשבון יכול להצטרף פעם אחת. בחרו תוכנית כדי להמשיך לבנות עם Appwrite.',
+  'Choose a plan': 'בחירת תוכנית',
+  'We could not check your GitHub connection':
+    'לא הצלחנו לבדוק את החיבור שלכם ל-GitHub',
+  'We could not set up your Education plan':
+    'לא הצלחנו להגדיר את תוכנית ה-Education שלכם',
+  'We could not reach GitHub': 'לא הצלחנו להתחבר ל-GitHub',
+  'Try again in a moment, or sign in and explore Appwrite.':
+    'נסו שוב בעוד רגע, או התחברו והתנסו ב-Appwrite.',
+  'Signing you in': 'מחברים אתכם',
+  'Please wait while we confirm your magic URL.':
+    'המתינו בזמן שאנחנו מאמתים את ה-Magic URL שלכם.',
+  'Unable to sign you in': 'לא ניתן לחבר אתכם',
+  'Go to sign in': 'מעבר להתחברות',
+  'Access granted': 'הגישה אושרה',
+  'You can close this tab.': 'אפשר לסגור את הכרטיסייה הזו.',
+  "It's safe to close this tab.": 'אפשר לסגור את הכרטיסייה הזו בבטחה.',
+  'Return to your device - it will continue automatically.':
+    'חזרו למכשיר שלכם, הוא ימשיך באופן אוטומטי.',
+  'You can revoke access anytime in your account settings':
+    'ניתן לבטל את הגישה בכל עת בהגדרות החשבון',
+  'You will be automatically redirected back to your app shortly.':
+    'בקרוב תועברו אוטומטית חזרה לאפליקציה שלכם.',
+  'Login failed': 'ההתחברות נכשלה',
+  'An error occurred during the OAuth login flow.':
+    'אירעה שגיאה במהלך תהליך ההתחברות דרך OAuth.',
+  'Error type:': 'סוג השגיאה:',
+  'Missing redirect URL': 'חסרה כתובת URL להפניה',
+  'Preview only': 'תצוגה מקדימה בלבד',
+  'Demo credentials filled in. Submit does not sign in here.':
+    'פרטי הדמו מולאו. שליחה לא מבצעת התחברות כאן.',
+  'Creating demo user': 'יוצרים משתמש דמו',
+  'Failed to create demo user': 'יצירת משתמש הדמו נכשלה',
+  'MFA verification is disabled on this preview route.':
+    'אימות MFA מושבת בנתיב התצוגה המקדימה הזה.',
+
+  // Console account password breach check result
+  breached: 'דלפה',
+  'This password was found in a known data breach. Change it as soon as possible.':
+    'הסיסמה הזו נמצאה בדליפת מידע ידועה. שנו אותה בהקדם האפשרי.',
+
+  // Full-screen curtain for console accounts with a breached password
+  'Your password was found in a data breach': 'הסיסמה שלכם נמצאה בדליפת מידע',
+  'Your security is important to us. We continuously check console passwords against known data breaches, and yours was found in one, which means others may be able to sign in as you.':
+    'האבטחה שלכם חשובה לנו. אנחנו בודקים באופן שוטף את סיסמאות הקונסול מול דליפות מידע ידועות, והסיסמה שלכם נמצאה באחת מהן. המשמעות היא שאחרים עלולים להתחבר בשמכם.',
+  'Set a new password': 'הגדרת סיסמה חדשה',
+  "Pick a strong password you don't use anywhere else.":
+    'בחרו סיסמה חזקה שאינכם משתמשים בה בשום מקום אחר.',
+  'Turn on multi-factor authentication': 'הפעלת אימות רב-שלבי',
+  'Require a second verification step every time you sign in.':
+    'דרישת שלב אימות נוסף בכל התחברות.',
+  'Secure account': 'אבטחת החשבון',
+  'Remind me later': 'הזכירו לי מאוחר יותר',
+
+  // Profile photo
+  'Profile photo': 'תמונת פרופיל',
+  'Shown next to your name across the Console and to the members of your organizations.':
+    'מוצגת לצד השם שלכם בכל הקונסול ולחברי הארגונים שלכם.',
+  'PNG, JPEG, or WebP up to 5MB. Without a photo, the picture from your connected sign-in provider, Gravatar, or your initials is used.':
+    'PNG, JPEG או WebP עד 5MB. ללא תמונה נשתמש בתמונה מספק ה-OAuth המחובר, ב-Gravatar או בראשי התיבות שלכם.',
+  'Upload photo': 'העלאת תמונה',
+  'Remove photo': 'הסרת תמונה',
+  'Photo must be a PNG, JPEG, or WebP image':
+    'התמונה חייבת להיות בפורמט PNG, JPEG או WebP',
+  'Photo must be at most 5MB': 'גודל התמונה יכול להיות עד 5MB',
+  'Profile photo updated': 'תמונת הפרופיל עודכנה',
+  'Failed to update profile photo': 'עדכון תמונת הפרופיל נכשל',
+  'Profile photo removed': 'תמונת הפרופיל הוסרה',
+  'Failed to remove profile photo': 'הסרת תמונת הפרופיל נכשלה',
+  'Remove profile photo': 'הסרת תמונת פרופיל',
+  'Your avatar goes back to the picture from your connected sign-in provider, Gravatar, or your initials. You can upload a new photo at any time.':
+    'האווטאר שלכם יחזור לתמונה מספק ה-OAuth המחובר, ל-Gravatar או לראשי התיבות שלכם. אפשר להעלות תמונה חדשה בכל עת.',
+  // Console passkeys: sign-in and account management
+  'Failed to sign in with a passkey': 'ההתחברות עם מפתח גישה נכשלה',
+  'Passkeys are not set up for this domain.':
+    'מפתחות גישה לא הוגדרו עבור הדומיין הזה.',
+  'That passkey is not recognized. It may have been removed from your account.':
+    'מפתח הגישה הזה לא מזוהה. ייתכן שהוא הוסר מהחשבון שלכם.',
+  'The passkey sign-in expired. Please try again.':
+    'תוקף ההתחברות עם מפתח הגישה פג. נסו שוב.',
+  'Passkey sign-in is not available right now.':
+    'התחברות עם מפתח גישה אינה זמינה כרגע.',
+  'This account has been blocked.': 'החשבון הזה נחסם.',
+  'Your browser could not use a passkey. Please try again.':
+    'הדפדפן שלכם לא הצליח להשתמש במפתח גישה. נסו שוב.',
+  'For your security, sign in again before changing your passkeys.':
+    'לביטחונכם, התחברו מחדש לפני שינוי מפתחות הגישה.',
+  'You can add up to 10 passkeys. Remove one to add another.':
+    'ניתן להוסיף עד 10 מפתחות גישה. הסירו אחד כדי להוסיף אחר.',
+  'This passkey is already added to your account.':
+    'מפתח הגישה הזה כבר נוסף לחשבון שלכם.',
+  'The passkey could not be verified. Please try again.':
+    'לא ניתן היה לאמת את מפתח הגישה. נסו שוב.',
+  'The request expired. Please try again.': 'תוקף הבקשה פג. נסו שוב.',
+  'Passkeys are not available right now.': 'מפתחות גישה אינם זמינים כרגע.',
+  'Sign in again': 'התחברות מחדש',
+  'Passkey added': 'מפתח הגישה נוסף',
+  'Failed to add passkey': 'הוספת מפתח הגישה נכשלה',
+  'Passkey renamed': 'שם מפתח הגישה שונה',
+  'Failed to rename passkey': 'שינוי שם מפתח הגישה נכשל',
+  'Passkey deleted': 'מפתח הגישה נמחק',
+  'Failed to delete passkey': 'מחיקת מפתח הגישה נכשלה',
+  'Sign in with your fingerprint, face or device PIN instead of a password.':
+    'התחברו עם טביעת אצבע, זיהוי פנים או קוד PIN של המכשיר במקום סיסמה.',
+  'Add passkey': 'הוספת מפתח גישה',
+  'Passkeys are not supported in this browser.':
+    'מפתחות גישה אינם נתמכים בדפדפן הזה.',
+  'Failed to load passkeys': 'טעינת מפתחות הגישה נכשלה',
+  'Try again': 'נסו שוב',
+  'No passkeys yet': 'אין עדיין מפתחות גישה',
+  'Add a passkey to sign in without your password.':
+    'הוסיפו מפתח גישה כדי להתחבר בלי הסיסמה שלכם.',
+  Added: 'נוסף',
+  'Passkey name': 'שם מפתח הגישה',
+  'Save name': 'שמירת השם',
+  'Rename passkey': 'שינוי שם מפתח הגישה',
+  'Delete passkey': 'מחיקת מפתח הגישה',
+  'Your browser will ask you to create a passkey on this device or in your password manager.':
+    'הדפדפן יבקש מכם ליצור מפתח גישה במכשיר הזה או במנהל הסיסמאות שלכם.',
+  'You will no longer be able to sign in with this passkey. This action cannot be undone.':
+    'לא תוכלו עוד להתחבר עם מפתח הגישה הזה. לא ניתן לבטל פעולה זו.',
+}

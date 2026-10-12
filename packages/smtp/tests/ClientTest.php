@@ -113,6 +113,51 @@ final class ClientTest extends TestCase
         $this->assertSame(['EHLO relay.example.test', 'HELO relay.example.test'], \array_slice($transport->commands(), 0, 2));
     }
 
+    /**
+     * RFC 5321: a 421 ends the session, so there is nothing to send HELO on. The
+     * refusal surfaces as itself, retryable, instead of a write on a closed socket.
+     */
+    public function testA421ToEhloEndsTheSessionInsteadOfFallingBackToHelo(): void
+    {
+        $transport = new FakeTransport([
+            '220 mail.example.test',
+            '421 4.3.2 Service shutting down, closing transmission channel',
+        ]);
+        $client = new Client($transport, 'relay.example.test', encryption: Encryption::None);
+
+        try {
+            $client->sendRaw($this->envelope(), 'Body');
+            $this->fail('A 421 to EHLO must not be answered with HELO');
+        } catch (TransactionException $exception) {
+            $this->assertTrue($exception->isTransient(), 'a server closing for now may answer the next attempt');
+        }
+
+        $this->assertSame(['EHLO relay.example.test'], $transport->commands());
+        $this->assertTrue($transport->closed, 'a 421 ends the session');
+    }
+
+    /**
+     * A busy server is not one too old for ESMTP: HELO would hide every extension
+     * it has for the rest of the session.
+     */
+    public function testATemporaryRefusalOfEhloIsNotTakenForAServerWithoutEsmtp(): void
+    {
+        $transport = new FakeTransport([
+            '220 mail.example.test',
+            '450 4.7.0 Temporary EHLO failure',
+        ]);
+        $client = new Client($transport, 'relay.example.test', encryption: Encryption::None);
+
+        try {
+            $client->sendRaw($this->envelope(), 'Body');
+            $this->fail('A 4xx to EHLO must not be answered with HELO');
+        } catch (TransactionException $exception) {
+            $this->assertTrue($exception->isTransient());
+        }
+
+        $this->assertSame(['EHLO relay.example.test'], $transport->commands());
+    }
+
     public function testKeepsSendingWhenOnlySomeRecipientsAreRefused(): void
     {
         $transport = $this->transport([
@@ -157,6 +202,39 @@ final class ClientTest extends TestCase
         }
 
         $this->assertContains('RSET', $transport->commands());
+    }
+
+    public function testNamesEachRecipientsRefusalWhenEveryOneIsRefused(): void
+    {
+        $transport = $this->transport(['250 Sender ok', '550 5.1.1 No such user', '450 4.2.1 Mailbox busy', '250 Reset ok']);
+        $client = new Client($transport, encryption: Encryption::None);
+        $envelope = new Envelope('sender@example.test', ['gone@example.test', 'busy@example.test']);
+
+        try {
+            $client->sendRaw($envelope, 'Body');
+            $this->fail('Expected the send to fail');
+        } catch (TransactionException $exception) {
+            $this->assertSame(['gone@example.test', 'busy@example.test'], \array_keys($exception->rejected));
+            $this->assertSame('5.1.1', $exception->rejected['gone@example.test']->status);
+            $this->assertSame('4.2.1', $exception->rejected['busy@example.test']->status);
+        }
+    }
+
+    public function testKeepsEachRecipientsRefusalWhenTheResetIsRefusedToo(): void
+    {
+        $transport = $this->transport(['250 Sender ok', '550 5.1.1 No such user', '450 4.2.1 Mailbox busy', '554 5.5.1 No RSET for you']);
+        $client = new Client($transport, encryption: Encryption::None);
+        $envelope = new Envelope('sender@example.test', ['gone@example.test', 'busy@example.test']);
+
+        try {
+            $client->sendRaw($envelope, 'Body');
+            $this->fail('Expected the send to fail');
+        } catch (TransactionException $exception) {
+            $this->assertSame('Every recipient was refused', $exception->getMessage());
+            $this->assertSame('4.2.1', $exception->rejected['busy@example.test']->status);
+        }
+
+        $this->assertInfinite($client->idle(), 'A session that refused RSET must not be reused');
     }
 
     public function testUpgradesWhenTheServerOffersStartTls(): void

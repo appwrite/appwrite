@@ -59,6 +59,13 @@ class Schedule extends Model
                 'default' => '',
                 'example' => '5 4 * * *',
             ])
+            ->addRule('interval', [
+                'type' => self::TYPE_INTEGER,
+                'description' => 'Minutes between runs. 0 when the schedule has no interval.',
+                'default' => 0,
+                'required' => false,
+                'example' => 60,
+            ])
             ->addRule('data', [
                 'type' => self::TYPE_JSON,
                 'description' => 'Schedule data used to store resource-specific context needed for execution.',

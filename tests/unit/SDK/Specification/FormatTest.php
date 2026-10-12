@@ -73,9 +73,11 @@ use Utopia\Validator\FloatValidator;
 use Utopia\Validator\HexColor;
 use Utopia\Validator\Integer as IntegerValidator;
 use Utopia\Validator\JSON;
+use Utopia\Validator\Multiple;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
 use Utopia\Validator\Text;
+use Utopia\Validator\Validator;
 use Utopia\Validator\WhiteList;
 
 class TestFormat extends Format
@@ -101,7 +103,7 @@ class TestFormat extends Format
     }
 }
 
-class MixedValidator extends \Utopia\Validator
+class MixedValidator extends \Utopia\Validator\Validator
 {
     public function getDescription(): string
     {
@@ -490,6 +492,81 @@ final class FormatTest extends TestCase
         $this->assertSame([], $schemas['labels']->default);
         $this->assertSame(0, $schemas['count']->default);
         $this->assertFalse($schemas['enabled']->default);
+    }
+
+    public function testCustomArrayValidatorsEmitArraySchemas(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $conditions = new class () extends Validator {
+            public function getDescription(): string
+            {
+                return 'Array of conditions.';
+            }
+
+            public function isArray(): bool
+            {
+                return true;
+            }
+
+            public function isValid($value): bool
+            {
+                return \is_array($value);
+            }
+
+            public function getType(): string
+            {
+                return self::TYPE_ARRAY;
+            }
+        };
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('conditions', [], $conditions, 'Conditions.', optional: true);
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        $schema = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties']['conditions'];
+
+        $this->assertSame('array', $schema['type']);
+        $this->assertSame('{}', \json_encode($schema['items']));
+        $this->assertSame([], $schema['default']);
+    }
+
+    public function testMultipleEmitsItsDeclaredType(): void
+    {
+        Method::$processed = [];
+        Method::$errors = [];
+
+        $route = (new Route('POST', '/v1/tests'))
+            ->desc('Create test')
+            ->label('sdk', new Method(
+                namespace: 'test',
+                group: null,
+                name: 'createTest',
+                description: 'Create test.',
+                auth: [AuthType::ADMIN],
+                responses: [],
+            ))
+            ->param('resource', [], new Multiple([], Validator::TYPE_ARRAY), 'Resources.', optional: true)
+            ->param('url', '', new Multiple([new Text(256)], Validator::TYPE_STRING), 'URL.', example: 'https://example.com');
+
+        $spec = (new OpenAPI3(new Container(), [], [$route], [], [], ['console' => 0], 'console'))->parse();
+        $properties = $spec['paths']['/tests']['post']['requestBody']['content']['application/json']['schema']['properties'];
+
+        $this->assertSame('array', $properties['resource']['type']);
+        $this->assertSame(['type' => 'string'], $properties['resource']['items']);
+        $this->assertSame('string', $properties['url']['type']);
+        $this->assertArrayNotHasKey('items', $properties['url']);
+        $this->assertSame('https://example.com', $properties['url']['example']);
     }
 
     public function testArrayListItemTypesAreValidOpenApiTypes(): void

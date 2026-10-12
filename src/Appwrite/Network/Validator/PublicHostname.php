@@ -5,7 +5,7 @@ namespace Appwrite\Network\Validator;
 use InvalidArgumentException;
 use Utopia\Client\Destinations;
 use Utopia\DNS\Lookup;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 /**
  * A hostname or IP literal Appwrite may connect to on a user's behalf: it resolves, and

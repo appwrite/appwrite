@@ -228,9 +228,7 @@ class FilterTest extends TestCase
             ->build();
         $this->assertBindingCount($result);
 
-        // Filter applies to WHERE for main table
-        $this->assertSame('SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND join_active = ? WHERE main_active = ?', $result->query);
-        // JoinFilter applies to ON for join
+        // Filter applies to WHERE for the main table and ON for the join.
         $this->assertSame('SELECT * FROM `users` LEFT JOIN `orders` ON `users`.`id` = `orders`.`user_id` AND join_active = ? WHERE main_active = ?', $result->query);
         // ON binding first, then WHERE binding
         $this->assertSame([1, 1], $result->bindings);

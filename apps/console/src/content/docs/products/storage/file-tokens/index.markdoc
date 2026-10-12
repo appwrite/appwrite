@@ -1,0 +1,1262 @@
+---
+layout: article
+title: File tokens
+description: Easily share files with external users using file tokens.
+---
+
+File tokens are a type of secret that allow you to share files publicly with anyone. By using file tokens, you can let any external user access your file without having to configure bucket or file permissions. File tokens can either be set to expire on a specific date or work indefinitely.
+
+# File tokens vs secure cookies
+
+Currently, Appwrite uses secure cookies to manage sessions for users, which are essential for any Appwrite products with permissions configured. However, because the cookies sent to the users of apps consuming the Appwrite API are considered third-party cookies, certain browsers tend to block them due to their default privacy settings, creating a bad user experience.
+
+One way to circumvent this issue in the past was to connect a custom domain to your Appwrite project, as browsers don't inherently block any cookies returned by subdomains of your app. File tokens offer an alternative, simpler path for file sharing in Appwrite Storage, as they don't depend on the session for authorization to share data.
+
+# Create file tokens
+
+To create a file token, you must [upload a file](/docs/products/storage/upload-download) to a [storage bucket](/docs/products/storage/buckets).
+
+{% tabs %}
+{% tabsitem #console title="Console" %}
+
+Head to the **Storage** page, open a file inside a bucket, scroll down to the **File tokens** section, and click on the **Create file token** button.
+
+{% only_dark %}
+![Create file token](/images/docs/storage/dark/create-file-token.avif)
+{% /only_dark %}
+{% only_light %}
+![Create file token](/images/docs/storage/create-file-token.avif)
+{% /only_light %}
+
+You can then click on the three-dots menu, click on **Copy URL** and get the token-based preview, view, and download URLs for the file.
+
+{% only_dark %}
+![Copy file token-based URL](/images/docs/storage/dark/copy-file-token-url.avif)
+{% /only_dark %}
+{% only_light %}
+![Copy file token-based URL](/images/docs/storage/copy-file-token-url.avif)
+{% /only_light %}
+
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+
+You can create file tokens programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#createFileToken). Appwrite's Server SDKs require an [API key](/docs/partners/project/api-keys) with the `tokens.write` scope enabled.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tokens = new sdk.Tokens(client);
+
+const result = await tokens.createFileToken(
+    '<BUCKET_ID>', // bucketId
+    '<FILE_ID>', // fileId
+    '' // expire (optional)
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tokens import Tokens
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+tokens = Tokens(client)
+
+result = tokens.create_file_token(
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<FILE_ID>',
+    expire = '' # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+Tokens tokens = Tokens(client);
+
+ResourceToken result = await tokens.createFileToken(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    expire: '', // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Tokens;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$tokens = new Tokens($client);
+
+$result = $tokens->createFileToken(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    expire: '' // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+tokens = Tokens.new(client)
+
+result = tokens.create_file_token(
+    bucket_id: '<BUCKET_ID>',
+    file_id: '<FILE_ID>',
+    expire: '' # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+Tokens tokens = new Tokens(client);
+
+ResourceToken result = await tokens.CreateFileToken(
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    expire: "" // optional
+);
+```
+
+```server-deno
+import { Client, Tokens } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tokens = new Tokens(client);
+
+const response = await tokens.createFileToken(
+    '<BUCKET_ID>', // bucketId
+    '<FILE_ID>', // fileId
+    '' // expire (optional)
+);
+```
+
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/client"
+    "github.com/appwrite/sdk-for-go/tokens"
+)
+
+func main() {
+    client := client.NewClient()
+
+    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    client.SetKey("<YOUR_API_KEY>") // Your secret API key
+
+    service := tokens.NewTokens(client)
+    response, error := service.CreateFileToken(
+        "<BUCKET_ID>",
+        "<FILE_ID>",
+        tokens.WithCreateFileTokenExpire(""),
+    )
+
+    if error != nil {
+        panic(error)
+    }
+
+    fmt.Println(response)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let tokens = Tokens(client)
+
+let resourceToken = try await tokens.createFileToken(
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    expire: "" // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Tokens
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val tokens = Tokens(client)
+
+val response = tokens.createFileToken(
+    bucketId = "<BUCKET_ID>",
+    fileId = "<FILE_ID>",
+    expire = "" // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Tokens;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+Tokens tokens = new Tokens(client);
+
+tokens.createFileToken(
+    "<BUCKET_ID>", // bucketId
+    "<FILE_ID>", // fileId
+    "", // expire (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::tokens::Tokens;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        .set_project("<PROJECT_ID>") // Your project ID
+        .set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let tokens = Tokens::new(&client);
+
+    let result = tokens.create_file_token(
+        "<BUCKET_ID>",
+        "<FILE_ID>",
+        Some(""), // expire (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+
+```server-graphql
+mutation {
+    tokensCreateFileToken(
+        bucketId: "<BUCKET_ID>",
+        fileId: "<FILE_ID>",
+        expire: ""
+    ) {
+        _id
+        _createdAt
+        resourceId
+        resourceType
+        expire
+        secret
+        accessedAt
+    }
+}
+```
+
+```server-rest
+POST /v1/tokens/buckets/{bucketId}/files/{fileId} HTTP/1.1
+Host: cloud.appwrite.io
+Content-Type: application/json
+X-Appwrite-Response-Format: 1.7.0
+X-Appwrite-Project: <YOUR_PROJECT_ID>
+X-Appwrite-Key: <YOUR_API_KEY>
+
+{
+  "expire": 
+}
+```
+{% /multicode %}
+
+The created token can then be used along with Appwrite Storage's [view](/docs/references/cloud/server-nodejs/storage#getFileView), [preview](/docs/references/cloud/server-nodejs/storage#getFilePreview), and [download](/docs/references/cloud/server-nodejs/storage#getFileDownload) endpoints.
+{% /tabsitem %}
+{% /tabs %}
+
+# List all file tokens
+
+You can use the Appwrite Console or one of the Server SDKs to view all created file tokens, their expiry dates and the time each token was last accessed at.
+
+{% tabs %}
+{% tabsitem #console title="Console" %}
+
+Head to the **Storage** page, open a file inside a bucket, and scroll down to the **File tokens** section.
+
+{% only_dark %}
+![List of file tokens](/images/docs/storage/dark/list-file-tokens.avif)
+{% /only_dark %}
+{% only_light %}
+![List of file tokens](/images/docs/storage/list-file-tokens.avif)
+{% /only_light %}
+
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+
+You can list all file tokens programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#list). Appwrite's Server SDKs require an [API key](/docs/partners/project/api-keys) with the `tokens.read` scope enabled.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tokens = new sdk.Tokens(client);
+
+const result = await tokens.list(
+    '<BUCKET_ID>', // bucketId
+    '<FILE_ID>', // fileId
+    [] // queries (optional)
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tokens import Tokens
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+tokens = Tokens(client)
+
+result = tokens.list(
+    bucket_id = '<BUCKET_ID>',
+    file_id = '<FILE_ID>',
+    queries = [] # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+Tokens tokens = Tokens(client);
+
+ResourceTokenList result = await tokens.list(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    queries: [], // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Tokens;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$tokens = new Tokens($client);
+
+$result = $tokens->list(
+    bucketId: '<BUCKET_ID>',
+    fileId: '<FILE_ID>',
+    queries: [] // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+tokens = Tokens.new(client)
+
+result = tokens.list(
+    bucket_id: '<BUCKET_ID>',
+    file_id: '<FILE_ID>',
+    queries: [] # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+Tokens tokens = new Tokens(client);
+
+ResourceTokenList result = await tokens.List(
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    queries: new List<string>() // optional
+);
+```
+
+```server-deno
+import { Client, Tokens } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tokens = new Tokens(client);
+
+const response = await tokens.list(
+    '<BUCKET_ID>', // bucketId
+    '<FILE_ID>', // fileId
+    [] // queries (optional)
+);
+```
+
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/client"
+    "github.com/appwrite/sdk-for-go/tokens"
+)
+
+func main() {
+    client := client.NewClient()
+
+    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    client.SetKey("<YOUR_API_KEY>") // Your secret API key
+
+    service := tokens.NewTokens(client)
+    response, error := service.List(
+        "<BUCKET_ID>",
+        "<FILE_ID>",
+        tokens.WithListQueries([]interface{}{}),
+    )
+
+    if error != nil {
+        panic(error)
+    }
+
+    fmt.Println(response)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let tokens = Tokens(client)
+
+let resourceTokenList = try await tokens.list(
+    bucketId: "<BUCKET_ID>",
+    fileId: "<FILE_ID>",
+    queries: [] // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Tokens
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val tokens = Tokens(client)
+
+val response = tokens.list(
+    bucketId = "<BUCKET_ID>",
+    fileId = "<FILE_ID>",
+    queries = listOf() // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Tokens;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+Tokens tokens = new Tokens(client);
+
+tokens.list(
+    "<BUCKET_ID>", // bucketId
+    "<FILE_ID>", // fileId
+    listOf(), // queries (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::tokens::Tokens;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        .set_project("<PROJECT_ID>") // Your project ID
+        .set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let tokens = Tokens::new(&client);
+
+    let result = tokens.list(
+        "<BUCKET_ID>",
+        "<FILE_ID>",
+        None, // queries (optional)
+        None, // total (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+
+```server-rest
+GET /v1/tokens/buckets/{bucketId}/files/{fileId} HTTP/1.1
+Host: cloud.appwrite.io
+X-Appwrite-Response-Format: 1.7.0
+X-Appwrite-Project: <YOUR_PROJECT_ID>
+X-Appwrite-Key: <YOUR_API_KEY>
+```
+{% /multicode %}
+
+Using the token IDs, you can also get data pertaining to an [individual file token](/docs/references/cloud/server-nodejs/tokens#get).
+
+{% multicode %}
+```server-nodejs
+const token = await tokens.get(
+    '<TOKEN_ID>' // tokenId
+);
+```
+
+```server-python
+token = tokens.get(
+    token_id = '<TOKEN_ID>'
+)
+```
+
+```server-dart
+ResourceToken token = await tokens.get(
+    tokenId: '<TOKEN_ID>',
+);
+```
+
+```server-php
+$token = $tokens->get(
+    tokenId: '<TOKEN_ID>'
+);
+```
+
+```server-ruby
+token = tokens.get(
+    token_id: '<TOKEN_ID>'
+)
+```
+
+```server-dotnet
+ResourceToken token = await tokens.Get(
+    tokenId: "<TOKEN_ID>"
+);
+```
+
+```server-deno
+const token = await tokens.get(
+    '<TOKEN_ID>' // tokenId
+);
+```
+
+```server-go
+token, error := service.Get(
+    "<TOKEN_ID>",
+)
+
+if error != nil {
+    panic(error)
+}
+
+fmt.Println(token)
+    ```
+
+```server-swift
+let resourceToken = try await tokens.get(
+    tokenId: "<TOKEN_ID>"
+)
+```
+
+```server-kotlin
+val token = tokens.get(
+    tokenId = "<TOKEN_ID>"
+)```
+
+```server-java
+tokens.get(
+    "<TOKEN_ID>", // tokenId
+    new CoroutineCallback<>((token, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(token);
+    })
+);```
+
+```server-rust
+let token = tokens.get(
+    "<TOKEN_ID>",
+).await?;
+```
+
+```server-rest
+GET /v1/tokens/{tokenId} HTTP/1.1
+Host: cloud.appwrite.io
+X-Appwrite-Response-Format: 1.7.0
+X-Appwrite-Project: <YOUR_PROJECT_ID>
+X-Appwrite-Key: <YOUR_API_KEY>
+```
+{% /multicode %}
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Update file token expiry
+
+File tokens can be set to expire on a specific date or stay active forever. This helps keep your files secure by making sure access ends after a set time.
+
+While the expiry of a file token is set at the time of creation, you can update it later.
+
+{% tabs %}
+{% tabsitem #console title="Console" %}
+
+Head to the **Storage** page, open a file inside a bucket, and scroll down to the **File tokens** section. Click on the three-dots menu next to the created file token and click on **Edit expiry**.
+
+{% only_dark %}
+![Update file token expiry](/images/docs/storage/dark/update-file-token-expiry.avif)
+{% /only_dark %}
+{% only_light %}
+![Update file token expiry](/images/docs/storage/update-file-token-expiry.avif)
+{% /only_light %}
+
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+
+You can update file token expiry programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#update). Appwrite's Server SDKs require an [API key](/docs/partners/project/api-keys) with the `tokens.write` scope enabled.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tokens = new sdk.Tokens(client);
+
+const result = await tokens.update(
+    '<TOKEN_ID>', // tokenId
+    '' // expire (optional)
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tokens import Tokens
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+tokens = Tokens(client)
+
+result = tokens.update(
+    token_id = '<TOKEN_ID>',
+    expire = '' # optional
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+Tokens tokens = Tokens(client);
+
+ResourceToken result = await tokens.update(
+    tokenId: '<TOKEN_ID>',
+    expire: '', // (optional)
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Tokens;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$tokens = new Tokens($client);
+
+$result = $tokens->update(
+    tokenId: '<TOKEN_ID>',
+    expire: '' // optional
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+tokens = Tokens.new(client)
+
+result = tokens.update(
+    token_id: '<TOKEN_ID>',
+    expire: '' # optional
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+Tokens tokens = new Tokens(client);
+
+ResourceToken result = await tokens.Update(
+    tokenId: "<TOKEN_ID>",
+    expire: "" // optional
+);
+```
+
+```server-deno
+import { Client, Tokens } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tokens = new Tokens(client);
+
+const response = await tokens.update(
+    '<TOKEN_ID>', // tokenId
+    '' // expire (optional)
+);
+```
+
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/client"
+    "github.com/appwrite/sdk-for-go/tokens"
+)
+
+func main() {
+    client := client.NewClient()
+
+    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    client.SetKey("<YOUR_API_KEY>") // Your secret API key
+
+    service := tokens.NewTokens(client)
+    response, error := service.Update(
+        "<TOKEN_ID>",
+        tokens.WithUpdateExpire(""),
+    )
+
+    if error != nil {
+        panic(error)
+    }
+
+    fmt.Println(response)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let tokens = Tokens(client)
+
+let resourceToken = try await tokens.update(
+    tokenId: "<TOKEN_ID>",
+    expire: "" // optional
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Tokens
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val tokens = Tokens(client)
+
+val response = tokens.update(
+    tokenId = "<TOKEN_ID>",
+    expire = "" // optional
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Tokens;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+Tokens tokens = new Tokens(client);
+
+tokens.update(
+    "<TOKEN_ID>", // tokenId
+    "", // expire (optional)
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::tokens::Tokens;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        .set_project("<PROJECT_ID>") // Your project ID
+        .set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let tokens = Tokens::new(&client);
+
+    let result = tokens.update(
+        "<TOKEN_ID>",
+        Some(""), // expire (optional)
+    ).await?;
+
+    println!("{:?}", result);
+    Ok(())
+}
+```
+
+```server-graphql
+mutation {
+    tokensUpdate(
+        tokenId: "<TOKEN_ID>",
+        expire: ""
+    ) {
+        _id
+        _createdAt
+        resourceId
+        resourceType
+        expire
+        secret
+        accessedAt
+    }
+}
+```
+
+```server-rest
+PATCH /v1/tokens/{tokenId} HTTP/1.1
+Host: cloud.appwrite.io
+Content-Type: application/json
+X-Appwrite-Response-Format: 1.7.0
+X-Appwrite-Project: <YOUR_PROJECT_ID>
+X-Appwrite-Key: <YOUR_API_KEY>
+
+{
+  "expire": 
+}
+```
+{% /multicode %}
+
+{% /tabsitem %}
+{% /tabs %}
+
+# Delete file tokens
+
+You can use the Appwrite Console or one of the Server SDKs to delete a file token.
+
+{% tabs %}
+{% tabsitem #console title="Console" %}
+
+Head to the **Storage** page, open a file inside a bucket, and scroll down to the **File tokens** section. Click on the three-dots menu next to the created file token and click on **Delete**.
+
+{% only_dark %}
+![Delete file token](/images/docs/storage/dark/delete-file-token.avif)
+{% /only_dark %}
+{% only_light %}
+![Delete file token](/images/docs/storage/delete-file-token.avif)
+{% /only_light %}
+
+{% /tabsitem %}
+
+{% tabsitem #server-sdk title="Server SDK" %}
+
+You can delete a file token programmatically using a [Server SDK](/docs/references/cloud/server-nodejs/tokens#delete). Appwrite's Server SDKs require an [API key](/docs/partners/project/api-keys) with the `tokens.write` scope enabled.
+
+{% multicode %}
+```server-nodejs
+const sdk = require('node-appwrite');
+
+const client = new sdk.Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tokens = new sdk.Tokens(client);
+
+const result = await tokens.delete(
+    '<TOKEN_ID>' // tokenId
+);
+```
+
+```server-python
+from appwrite.client import Client
+from appwrite.services.tokens import Tokens
+
+client = Client()
+client.set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+client.set_project('<YOUR_PROJECT_ID>') # Your project ID
+client.set_key('<YOUR_API_KEY>') # Your secret API key
+
+tokens = Tokens(client)
+
+result = tokens.delete(
+    token_id = '<TOKEN_ID>'
+)
+```
+
+```server-dart
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Client client = Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+Tokens tokens = Tokens(client);
+
+await tokens.delete(
+    tokenId: '<TOKEN_ID>',
+);
+```
+
+```server-php
+<?php
+
+use Appwrite\Client;
+use Appwrite\Services\Tokens;
+
+$client = (new Client())
+    ->setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    ->setProject('<YOUR_PROJECT_ID>') // Your project ID
+    ->setKey('<YOUR_API_KEY>'); // Your secret API key
+
+$tokens = new Tokens($client);
+
+$result = $tokens->delete(
+    tokenId: '<TOKEN_ID>'
+);
+```
+
+```server-ruby
+require 'appwrite'
+
+include Appwrite
+
+client = Client.new
+    .set_endpoint('https://<REGION>.cloud.appwrite.io/v1') # Your API Endpoint
+    .set_project('<YOUR_PROJECT_ID>') # Your project ID
+    .set_key('<YOUR_API_KEY>') # Your secret API key
+
+tokens = Tokens.new(client)
+
+result = tokens.delete(
+    token_id: '<TOKEN_ID>'
+)
+```
+
+```server-dotnet
+using Appwrite;
+using Appwrite.Models;
+using Appwrite.Services;
+
+Client client = new Client()
+    .SetEndPoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    .SetKey("<YOUR_API_KEY>"); // Your secret API key
+
+Tokens tokens = new Tokens(client);
+
+await tokens.Delete(
+    tokenId: "<TOKEN_ID>"
+);
+```
+
+```server-deno
+import { Client, Tokens } from "npm:node-appwrite";
+
+const client = new Client()
+    .setEndpoint('https://<REGION>.cloud.appwrite.io/v1') // Your API Endpoint
+    .setProject('<YOUR_PROJECT_ID>') // Your project ID
+    .setKey('<YOUR_API_KEY>'); // Your secret API key
+
+const tokens = new Tokens(client);
+
+const response = await tokens.delete(
+    '<TOKEN_ID>' // tokenId
+);
+```
+
+```server-go
+package main
+
+import (
+    "fmt"
+    "github.com/appwrite/sdk-for-go/client"
+    "github.com/appwrite/sdk-for-go/tokens"
+)
+
+func main() {
+    client := client.NewClient()
+
+    client.SetEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    client.SetProject("<YOUR_PROJECT_ID>") // Your project ID
+    client.SetKey("<YOUR_API_KEY>") // Your secret API key
+
+    service := tokens.NewTokens(client)
+    response, error := service.Delete(
+        "<TOKEN_ID>",
+    )
+
+    if error != nil {
+        panic(error)
+    }
+
+    fmt.Println(response)
+}
+```
+
+```server-swift
+import Appwrite
+
+let client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+let tokens = Tokens(client)
+
+let result = try await tokens.delete(
+    tokenId: "<TOKEN_ID>"
+)
+```
+
+```server-kotlin
+import io.appwrite.Client
+import io.appwrite.coroutines.CoroutineCallback
+import io.appwrite.services.Tokens
+
+val client = Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>") // Your secret API key
+
+val tokens = Tokens(client)
+
+val response = tokens.delete(
+    tokenId = "<TOKEN_ID>"
+)
+```
+
+```server-java
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.services.Tokens;
+
+Client client = new Client()
+    .setEndpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+    .setProject("<YOUR_PROJECT_ID>") // Your project ID
+    .setKey("<YOUR_API_KEY>"); // Your secret API key
+
+Tokens tokens = new Tokens(client);
+
+tokens.delete(
+    "<TOKEN_ID>", // tokenId
+    new CoroutineCallback<>((result, error) -> {
+        if (error != null) {
+            error.printStackTrace();
+            return;
+        }
+
+        System.out.println(result);
+    })
+);
+```
+
+```server-rust
+use appwrite::Client;
+use appwrite::services::tokens::Tokens;
+
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let client = Client::new()
+        .set_endpoint("https://<REGION>.cloud.appwrite.io/v1") // Your API Endpoint
+        .set_project("<PROJECT_ID>") // Your project ID
+        .set_key("<YOUR_API_KEY>"); // Your secret API key
+
+    let tokens = Tokens::new(&client);
+
+    tokens.delete(
+        "<TOKEN_ID>",
+    ).await?;
+
+    println!("Token deleted successfully");
+    Ok(())
+}
+```
+
+```server-graphql
+mutation {
+    tokensDelete(
+        tokenId: "<TOKEN_ID>"
+    ) {
+        status
+    }
+}
+```
+
+```server-rest
+DELETE /v1/tokens/{tokenId} HTTP/1.1
+Host: cloud.appwrite.io
+Content-Type: application/json
+X-Appwrite-Response-Format: 1.7.0
+X-Appwrite-Project: <YOUR_PROJECT_ID>
+X-Appwrite-Key: <YOUR_API_KEY>
+```
+{% /multicode %}
+
+{% /tabsitem %}
+{% /tabs %}
