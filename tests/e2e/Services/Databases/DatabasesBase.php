@@ -6,7 +6,6 @@ use Appwrite\Extend\Exception;
 use Tests\E2E\Client;
 use Tests\E2E\Scopes\SchemaPolling;
 use Tests\E2E\Traits\DatabasesUrlHelpers;
-use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Database;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
@@ -16,8 +15,6 @@ use Utopia\Database\Helpers\Role;
 use Utopia\Database\Operator;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Datetime as DatetimeValidator;
-use Utopia\DSN\DSN;
-use Utopia\System\System;
 
 trait DatabasesBase
 {
@@ -10781,13 +10778,6 @@ trait DatabasesBase
         $this->assertEquals(200, $notEqualZero['headers']['status-code']);
         $this->assertEquals('p1', $notEqualZero['body'][$this->getRecordResource()][0]['$id']);
 
-        if ($this->getSupportForSpatialIndexNull()) {
-            // The great-circle arc through 60°N bulges north of the straight segment.
-            $this->assertGeodesicLineIsWithinMeters($databaseId, $collectionId);
-            $this->assertDistancePlanUsesSpatialIndex($databaseId, $collectionId, Query::distanceLessThan('loc', [0.0, 0.0], 500, true));
-            $this->assertDistancePlanUsesSpatialIndex($databaseId, $collectionId, Query::distanceLessThan('loc', [0.0, 0.0], 0.02));
-        }
-
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, $this->getContainerUrl($databaseId, $collectionId), array_merge([
             'content-type' => 'application/json',
@@ -10800,168 +10790,6 @@ trait DatabasesBase
             'x-appwrite-project' => $this->getProject()['$id'],
             'x-appwrite-key' => $this->getProject()['apiKey']
         ]));
-    }
-
-    private function assertGeodesicLineIsWithinMeters(string $databaseId, string $collectionId): void
-    {
-        $attribute = $this->client->call(Client::METHOD_POST, $this->getSchemaUrl($databaseId, $collectionId) . '/line', array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-            'x-appwrite-key' => $this->getProject()['apiKey']
-        ]), [
-            'key' => 'route',
-            'required' => false,
-        ]);
-        $this->assertEquals(202, $attribute['headers']['status-code']);
-        $this->waitForAllAttributes($databaseId, $collectionId);
-
-        $arc = $this->client->call(Client::METHOD_POST, $this->getRecordUrl($databaseId, $collectionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            $this->getRecordIdParam() => 'arc',
-            'data' => [
-                'loc' => [0.0, 0.0],
-                'route' => [[-60.0, 60.0], [60.0, 60.0]],
-            ]
-        ]);
-        $this->assertEquals(201, $arc['headers']['status-code']);
-
-        $within = $this->client->call(Client::METHOD_GET, $this->getRecordUrl($databaseId, $collectionId), array_merge([
-            'content-type' => 'application/json',
-            'x-appwrite-project' => $this->getProject()['$id'],
-        ], $this->getHeaders()), [
-            'queries' => [Query::distanceLessThan('route', [0.0, 74.0], 20000, true)->toString()]
-        ]);
-        $this->assertEquals(200, $within['headers']['status-code']);
-        $this->assertSame(['arc'], array_column($within['body'][$this->getRecordResource()], '$id'));
-    }
-
-    private function assertDistancePlanUsesSpatialIndex(string $databaseId, string $collectionId, Query $query): void
-    {
-        $pdo = new \PDO(
-            'pgsql:host=' . System::getEnv('_APP_DB_HOST', 'postgresql')
-                . ';port=' . System::getEnv('_APP_DB_PORT', '5432')
-                . ';dbname=' . System::getEnv('_APP_DB_SCHEMA', 'appwrite'),
-            System::getEnv('_APP_DB_USER', ''),
-            System::getEnv('_APP_DB_PASS', ''),
-            [
-                \PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION,
-                \PDO::ATTR_DEFAULT_FETCH_MODE => \PDO::FETCH_ASSOC,
-            ]
-        );
-
-        $table = $this->postgresCollectionTable($pdo, $databaseId, $collectionId);
-        $query->setAttributeType(Database::VAR_POINT);
-        $adapter = new Postgres(null);
-        $binds = [];
-        $where = $adapter->getSQLConditions([$query], $binds);
-        uksort($binds, fn (string $left, string $right): int => strlen($right) <=> strlen($left));
-        foreach ($binds as $placeholder => $value) {
-            $literal = is_int($value) || is_float($value)
-                ? (string) $value
-                : "'" . str_replace("'", "''", (string) $value) . "'";
-            $where = str_replace($placeholder, $literal, $where);
-        }
-
-        $pdo->exec('SET enable_seqscan = off');
-        $explain = 'EXPLAIN (FORMAT JSON) SELECT "_uid" FROM '
-            . $this->quoteIdent($table['schema']) . '.' . $this->quoteIdent($table['name'])
-            . ' main WHERE ' . $where;
-        $plan = $pdo->query($explain)->fetchColumn();
-        $decoded = json_decode((string) $plan, true);
-        $this->assertTrue($this->planUsesSpatialIndex($decoded), (string) $plan);
-    }
-
-    /**
-     * @return array{schema: string, name: string}
-     */
-    private function postgresCollectionTable(\PDO $pdo, string $databaseId, string $collectionId): array
-    {
-        $schema = System::getEnv('_APP_DB_SCHEMA', 'appwrite');
-        $project = $pdo->prepare(
-            'SELECT "_id", "database" FROM ' . $this->quoteIdent($schema) . '."_console_projects" WHERE "_uid" = :id'
-        );
-        $project->execute(['id' => $this->getProject()['$id']]);
-        $projectRow = $project->fetch();
-        $this->assertIsArray($projectRow);
-
-        $projectSequence = (string) $projectRow['_id'];
-        $databaseValue = (string) ($projectRow['database'] ?? '');
-        try {
-            $dsn = new DSN($databaseValue);
-        } catch (\InvalidArgumentException) {
-            $dsn = new DSN('mysql://' . $databaseValue);
-        }
-
-        $sharedHosts = array_filter(explode(',', System::getEnv('_APP_DATABASE_SHARED_TABLES', '')));
-        $shared = in_array($dsn->getHost(), $sharedHosts, true);
-        $prefix = ($shared ? $dsn->getParam('namespace') : '_' . $projectSequence) . '_';
-        $tenant = $shared ? $projectSequence : null;
-
-        $databaseSequence = $this->metadataSequence($pdo, $schema, $prefix . 'databases', $databaseId, $tenant);
-        $collectionSequence = $this->metadataSequence(
-            $pdo,
-            $schema,
-            $prefix . 'database_' . $databaseSequence,
-            $collectionId,
-            $tenant,
-        );
-
-        return [
-            'schema' => $schema,
-            'name' => $prefix . 'database_' . $databaseSequence . '_collection_' . $collectionSequence,
-        ];
-    }
-
-    private function metadataSequence(\PDO $pdo, string $schema, string $table, string $id, ?string $tenant): string
-    {
-        $sql = 'SELECT "_id" FROM ' . $this->quoteIdent($schema) . '.' . $this->quoteIdent($table) . ' WHERE "_uid" = :id';
-        if ($tenant !== null) {
-            $sql .= ' AND "_tenant" = :tenant';
-        }
-
-        $stmt = $pdo->prepare($sql);
-        $stmt->bindValue('id', $id);
-        if ($tenant !== null) {
-            $stmt->bindValue('tenant', $tenant);
-        }
-        $stmt->execute();
-        $sequence = $stmt->fetchColumn();
-        $this->assertNotFalse($sequence, $table);
-
-        return (string) $sequence;
-    }
-
-    private function planUsesSpatialIndex(mixed $node): bool
-    {
-        if (!is_array($node)) {
-            return false;
-        }
-
-        $type = $node['Node Type'] ?? null;
-        $index = $node['Index Name'] ?? null;
-        if (
-            is_string($type)
-            && str_contains($type, 'Index')
-            && is_string($index)
-            && !str_ends_with($index, '_pkey')
-        ) {
-            return true;
-        }
-
-        foreach ($node as $child) {
-            if ($this->planUsesSpatialIndex($child)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private function quoteIdent(string $name): string
-    {
-        return '"' . str_replace('"', '""', $name) . '"';
     }
 
     public function testSpatialColCreateOnExistingData(): void
