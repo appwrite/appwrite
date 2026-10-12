@@ -1,0 +1,1084 @@
+{
+  "source": "packages/dns/tests/E2E/Validator/DNSTest.php",
+  "cases": [
+    {
+      "name": "CNAME",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "zone",
+                  "zone": {
+                    "name": "appwrite.org",
+                    "soa": {
+                      "name": "appwrite.org",
+                      "type": 6,
+                      "ttl": 60,
+                      "rdata": "ns1.appwrite.org hm.appwrite.org 1 2 3 4 5"
+                    },
+                    "records": [
+                      {
+                        "name": "cname-unit-test.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "appwrite.io"
+                      },
+                      {
+                        "name": "a-unit-test.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "203.0.113.1"
+                      },
+                      {
+                        "name": "aaaa-unit-test.appwrite.org",
+                        "type": 28,
+                        "ttl": 60,
+                        "rdata": "2001:db8::1"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "198.51.100.7"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "elsewhere.example"
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      },
+                      {
+                        "name": "certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "certainly-full.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "128 issuewild \"certainly.com;account=123456;validationmethods=dns-01\""
+                      },
+                      {
+                        "name": "letsencrypt.certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      }
+                    ]
+                  }
+                },
+                "port53": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "validate",
+                "target": "appwrite.io",
+                "type": 5,
+                "values": [
+                  "",
+                  null,
+                  false,
+                  "cname-unit-test.appwrite.org",
+                  "test1.appwrite.org"
+                ]
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain  is missing CNAME record.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "Internal error occurred.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": "Internal error occurred."
+              },
+              {
+                "valid": false,
+                "description": "Internal error occurred.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": "Internal error occurred."
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain cname-unit-test.appwrite.org has incorrect CNAME value 'appwrite.io'.",
+                "records": [
+                  "appwrite.io"
+                ],
+                "value": "cname-unit-test.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain test1.appwrite.org has incorrect CNAME value 'elsewhere.example'.",
+                "records": [
+                  "elsewhere.example"
+                ],
+                "value": "test1.appwrite.org",
+                "count": 1,
+                "reason": ""
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "A",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "zone",
+                  "zone": {
+                    "name": "appwrite.org",
+                    "soa": {
+                      "name": "appwrite.org",
+                      "type": 6,
+                      "ttl": 60,
+                      "rdata": "ns1.appwrite.org hm.appwrite.org 1 2 3 4 5"
+                    },
+                    "records": [
+                      {
+                        "name": "cname-unit-test.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "appwrite.io"
+                      },
+                      {
+                        "name": "a-unit-test.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "203.0.113.1"
+                      },
+                      {
+                        "name": "aaaa-unit-test.appwrite.org",
+                        "type": 28,
+                        "ttl": 60,
+                        "rdata": "2001:db8::1"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "198.51.100.7"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "elsewhere.example"
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      },
+                      {
+                        "name": "certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "certainly-full.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "128 issuewild \"certainly.com;account=123456;validationmethods=dns-01\""
+                      },
+                      {
+                        "name": "letsencrypt.certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      }
+                    ]
+                  }
+                },
+                "port53": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "validate",
+                "target": "203.0.113.1",
+                "type": 1,
+                "values": [
+                  "",
+                  null,
+                  false,
+                  "a-unit-test.appwrite.org",
+                  "test1.appwrite.org"
+                ]
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain  is missing A record.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "Internal error occurred.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": "Internal error occurred."
+              },
+              {
+                "valid": false,
+                "description": "Internal error occurred.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": "Internal error occurred."
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain a-unit-test.appwrite.org has incorrect A value '203.0.113.1'.",
+                "records": [
+                  "203.0.113.1"
+                ],
+                "value": "a-unit-test.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain test1.appwrite.org has incorrect A value '198.51.100.7'.",
+                "records": [
+                  "198.51.100.7"
+                ],
+                "value": "test1.appwrite.org",
+                "count": 1,
+                "reason": ""
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AAAA",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "zone",
+                  "zone": {
+                    "name": "appwrite.org",
+                    "soa": {
+                      "name": "appwrite.org",
+                      "type": 6,
+                      "ttl": 60,
+                      "rdata": "ns1.appwrite.org hm.appwrite.org 1 2 3 4 5"
+                    },
+                    "records": [
+                      {
+                        "name": "cname-unit-test.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "appwrite.io"
+                      },
+                      {
+                        "name": "a-unit-test.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "203.0.113.1"
+                      },
+                      {
+                        "name": "aaaa-unit-test.appwrite.org",
+                        "type": 28,
+                        "ttl": 60,
+                        "rdata": "2001:db8::1"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "198.51.100.7"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "elsewhere.example"
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      },
+                      {
+                        "name": "certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "certainly-full.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "128 issuewild \"certainly.com;account=123456;validationmethods=dns-01\""
+                      },
+                      {
+                        "name": "letsencrypt.certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      }
+                    ]
+                  }
+                },
+                "port53": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "validate",
+                "target": "2001:db8::1",
+                "type": 28,
+                "values": [
+                  "",
+                  null,
+                  false,
+                  "aaaa-unit-test.appwrite.org",
+                  "test1.appwrite.org"
+                ]
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain  is missing AAAA record.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "Internal error occurred.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": "Internal error occurred."
+              },
+              {
+                "valid": false,
+                "description": "Internal error occurred.",
+                "records": [],
+                "value": "",
+                "count": 0,
+                "reason": "Internal error occurred."
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain aaaa-unit-test.appwrite.org has incorrect AAAA value '2001:db8::1'.",
+                "records": [
+                  "2001:db8::1"
+                ],
+                "value": "aaaa-unit-test.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain test1.appwrite.org is missing AAAA record.",
+                "records": [],
+                "value": "test1.appwrite.org",
+                "count": 0,
+                "reason": ""
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CAA",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "zone",
+                  "zone": {
+                    "name": "appwrite.org",
+                    "soa": {
+                      "name": "appwrite.org",
+                      "type": 6,
+                      "ttl": 60,
+                      "rdata": "ns1.appwrite.org hm.appwrite.org 1 2 3 4 5"
+                    },
+                    "records": [
+                      {
+                        "name": "cname-unit-test.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "appwrite.io"
+                      },
+                      {
+                        "name": "a-unit-test.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "203.0.113.1"
+                      },
+                      {
+                        "name": "aaaa-unit-test.appwrite.org",
+                        "type": 28,
+                        "ttl": 60,
+                        "rdata": "2001:db8::1"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "198.51.100.7"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "elsewhere.example"
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      },
+                      {
+                        "name": "certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "certainly-full.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "128 issuewild \"certainly.com;account=123456;validationmethods=dns-01\""
+                      },
+                      {
+                        "name": "letsencrypt.certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      }
+                    ]
+                  }
+                },
+                "port53": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "validate",
+                "target": "certainly.com",
+                "type": 257,
+                "values": [
+                  "caa.appwrite.org",
+                  "sub.caa.appwrite.org",
+                  "sub.sub.caa.appwrite.org",
+                  "certainly-full.caa.appwrite.org",
+                  "certainly.caa.appwrite.org",
+                  "sub.certainly.caa.appwrite.org",
+                  "sub.sub.certainly.caa.appwrite.org",
+                  "letsencrypt.certainly.caa.appwrite.org",
+                  "sub.letsencrypt.certainly.caa.appwrite.org",
+                  "sub.sub.letsencrypt.certainly.caa.appwrite.org"
+                ]
+              },
+              {
+                "kind": "validate",
+                "target": "letsencrypt.org",
+                "type": 257,
+                "values": [
+                  "caa.appwrite.org",
+                  "sub.caa.appwrite.org",
+                  "sub.sub.caa.appwrite.org",
+                  "certainly-full.caa.appwrite.org",
+                  "certainly.caa.appwrite.org",
+                  "sub.certainly.caa.appwrite.org",
+                  "sub.sub.certainly.caa.appwrite.org",
+                  "letsencrypt.certainly.caa.appwrite.org",
+                  "sub.letsencrypt.certainly.caa.appwrite.org",
+                  "sub.sub.letsencrypt.certainly.caa.appwrite.org"
+                ]
+              },
+              {
+                "kind": "validate",
+                "target": "0 issue \"certainly.com\"",
+                "type": 257,
+                "values": [
+                  "certainly-full.caa.appwrite.org"
+                ]
+              },
+              {
+                "kind": "validate",
+                "target": "128 issuewild \"certainly.com;account=123456;validationmethods=dns-01\"",
+                "type": 257,
+                "values": [
+                  "certainly-full.caa.appwrite.org"
+                ]
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain caa.appwrite.org has two incompatible CAA records: 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "caa.appwrite.org",
+                "count": 2,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain caa.appwrite.org has two incompatible CAA records: 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "caa.appwrite.org",
+                "count": 2,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain caa.appwrite.org has two incompatible CAA records: 'letsencrypt.org', 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "letsencrypt.org",
+                  "certainly.com"
+                ],
+                "value": "caa.appwrite.org",
+                "count": 2,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly-full.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly-full.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain letsencrypt.certainly.caa.appwrite.org has incorrect CAA value 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "letsencrypt.org"
+                ],
+                "value": "letsencrypt.certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain letsencrypt.certainly.caa.appwrite.org has incorrect CAA value 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "letsencrypt.org"
+                ],
+                "value": "letsencrypt.certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain letsencrypt.certainly.caa.appwrite.org has incorrect CAA value 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "letsencrypt.org"
+                ],
+                "value": "letsencrypt.certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              }
+            ],
+            [
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain caa.appwrite.org has two incompatible CAA records: 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "letsencrypt.org"
+                ],
+                "value": "caa.appwrite.org",
+                "count": 2,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain caa.appwrite.org has two incompatible CAA records: 'certainly.com', 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com",
+                  "letsencrypt.org"
+                ],
+                "value": "caa.appwrite.org",
+                "count": 2,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain caa.appwrite.org has two incompatible CAA records: 'certainly.com', 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com",
+                  "letsencrypt.org"
+                ],
+                "value": "caa.appwrite.org",
+                "count": 2,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly-full.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly-full.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain letsencrypt.certainly.caa.appwrite.org has incorrect CAA value 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "letsencrypt.org"
+                ],
+                "value": "letsencrypt.certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain letsencrypt.certainly.caa.appwrite.org has incorrect CAA value 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "letsencrypt.org"
+                ],
+                "value": "letsencrypt.certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain letsencrypt.certainly.caa.appwrite.org has incorrect CAA value 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "letsencrypt.org"
+                ],
+                "value": "letsencrypt.certainly.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              }
+            ],
+            [
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly-full.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly-full.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              }
+            ],
+            [
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain certainly-full.caa.appwrite.org has incorrect CAA value 'certainly.com'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com"
+                ],
+                "value": "certainly-full.caa.appwrite.org",
+                "count": 1,
+                "reason": ""
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "descriptions",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "native",
+                "transports": [
+                  "udp",
+                  "tcp"
+                ],
+                "resolver": {
+                  "kind": "zone",
+                  "zone": {
+                    "name": "appwrite.org",
+                    "soa": {
+                      "name": "appwrite.org",
+                      "type": 6,
+                      "ttl": 60,
+                      "rdata": "ns1.appwrite.org hm.appwrite.org 1 2 3 4 5"
+                    },
+                    "records": [
+                      {
+                        "name": "cname-unit-test.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "appwrite.io"
+                      },
+                      {
+                        "name": "a-unit-test.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "203.0.113.1"
+                      },
+                      {
+                        "name": "aaaa-unit-test.appwrite.org",
+                        "type": 28,
+                        "ttl": 60,
+                        "rdata": "2001:db8::1"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 1,
+                        "ttl": 60,
+                        "rdata": "198.51.100.7"
+                      },
+                      {
+                        "name": "test1.appwrite.org",
+                        "type": 5,
+                        "ttl": 60,
+                        "rdata": "elsewhere.example"
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      },
+                      {
+                        "name": "certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"certainly.com\""
+                      },
+                      {
+                        "name": "certainly-full.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "128 issuewild \"certainly.com;account=123456;validationmethods=dns-01\""
+                      },
+                      {
+                        "name": "letsencrypt.certainly.caa.appwrite.org",
+                        "type": 257,
+                        "ttl": 60,
+                        "rdata": "0 issue \"letsencrypt.org\""
+                      }
+                    ]
+                  }
+                },
+                "port53": true
+              }
+            ],
+            "steps": [
+              {
+                "kind": "validate",
+                "target": "nope",
+                "type": 257,
+                "values": [
+                  "appwrite.org",
+                  "caa.appwrite.org"
+                ]
+              },
+              {
+                "kind": "validate",
+                "target": "x",
+                "type": 1,
+                "values": [
+                  "missing.appwrite.org",
+                  "test1.appwrite.org",
+                  null
+                ]
+              },
+              {
+                "kind": "validate",
+                "target": "x",
+                "type": 99,
+                "values": [
+                  "test1.appwrite.org"
+                ]
+              },
+              {
+                "kind": "validate",
+                "target": "x",
+                "type": 16,
+                "values": [
+                  "a..b"
+                ]
+              }
+            ]
+          },
+          "expect": [
+            [
+              {
+                "valid": true,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain appwrite.org is missing CAA record.",
+                "records": [],
+                "value": "appwrite.org",
+                "count": 0,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain caa.appwrite.org has two incompatible CAA records: 'certainly.com', 'letsencrypt.org'. Add new CAA record, or remove all other CAA records.",
+                "records": [
+                  "certainly.com",
+                  "letsencrypt.org"
+                ],
+                "value": "caa.appwrite.org",
+                "count": 2,
+                "reason": ""
+              }
+            ],
+            [
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain missing.appwrite.org is missing A record.",
+                "records": [],
+                "value": "missing.appwrite.org",
+                "count": 0,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain test1.appwrite.org has incorrect A value '198.51.100.7'.",
+                "records": [
+                  "198.51.100.7"
+                ],
+                "value": "test1.appwrite.org",
+                "count": 1,
+                "reason": ""
+              },
+              {
+                "valid": false,
+                "description": "Internal error occurred.",
+                "records": [
+                  "198.51.100.7"
+                ],
+                "value": "test1.appwrite.org",
+                "count": 1,
+                "reason": "Internal error occurred."
+              }
+            ],
+            [
+              {
+                "valid": false,
+                "description": "DNS verification failed with resolver 127.0.0.1. Domain test1.appwrite.org is missing 99 record.",
+                "records": [],
+                "value": "test1.appwrite.org",
+                "count": 0,
+                "reason": ""
+              }
+            ],
+            [
+              {
+                "valid": false,
+                "description": "DNS query failed.",
+                "records": [],
+                "value": "a..b",
+                "count": 0,
+                "reason": "DNS query failed."
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "name": "description before validating",
+      "steps": [
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "dns",
+            "target": "x",
+            "type": 1,
+            "server": "127.0.0.1"
+          },
+          "expect": {
+            "description": "DNS verification failed with resolver 127.0.0.1. Domain  is missing A record.",
+            "type": "string",
+            "array": false
+          }
+        },
+        {
+          "op": "validator.describe",
+          "args": {
+            "validator": "dns"
+          },
+          "expect": {
+            "description": "DNS verification failed with resolver 8.8.8.8. Domain  is missing CNAME record.",
+            "type": "string",
+            "array": false
+          }
+        }
+      ]
+    }
+  ]
+}

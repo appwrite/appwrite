@@ -53,6 +53,7 @@ utopia-config.workspace = true
 utopia-span.workspace = true
 utopia-storage.workspace = true
 utopia-di.workspace = true
+utopia-dns.workspace = true
 utopia-registry.workspace = true
 utopia-schedule.workspace = true
 utopia-emails.workspace = true

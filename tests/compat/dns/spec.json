@@ -1,0 +1,1728 @@
+{
+  "lib": "dns",
+  "description": "utopia-php/dns: the DNS message codec (headers, names with compression, questions, records), zones and zone files, the zone resolver, the Memory and Proxy resolvers, the PROXY protocol, the server over the Native and Swoole adapters (Rust: Tokio) on UDP, TCP and DNS over HTTPS, the client, the recursive lookup and the Name, CAA and DNS validators. Servers run on local ports; no public resolver is ever queried.",
+  "complete": true,
+  "php": {
+    "src": [
+      "packages/dns/src"
+    ],
+    "tests": [
+      "packages/dns/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/dns"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "header.new": {
+      "doc": "new Header(...): its fields (opcode and response code checked)",
+      "covers": [
+        "Utopia\\DNS\\Message\\Header::__construct"
+      ]
+    },
+    "header.encode": {
+      "doc": "new Header(...)->encode()",
+      "covers": [
+        "Utopia\\DNS\\Message\\Header::encode"
+      ]
+    },
+    "header.decode": {
+      "doc": "Header::decode(data, offset)",
+      "covers": [
+        "Utopia\\DNS\\Message\\Header::decode"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 16
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "domain.encode": {
+      "doc": "Domain::encode(name)",
+      "covers": [
+        "Utopia\\DNS\\Message\\Domain::encode"
+      ],
+      "fuzz": [
+        {
+          "name": "names",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "name": {
+                "gen": "ref",
+                "name": "name"
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "long names",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "name": {
+                "gen": "repeat",
+                "part": {
+                  "gen": "string",
+                  "alphabet": "ab",
+                  "min": 0,
+                  "max": 70
+                },
+                "sep": ".",
+                "min": 1,
+                "max": 6
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "domain.decode": {
+      "doc": "Domain::decode(data, offset): {name, offset}",
+      "covers": [
+        "Utopia\\DNS\\Message\\Domain::decode"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 24
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 6
+              }
+            }
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "labels",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "labels"
+              },
+              "offset": {
+                "gen": "int",
+                "min": 0,
+                "max": 4
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "question.new": {
+      "doc": "new Question(name, type, class): {name, type, class}",
+      "covers": [
+        "Utopia\\DNS\\Message\\Question::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "names",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "question": {
+                "gen": "object",
+                "fields": {
+                  "name": {
+                    "gen": "ref",
+                    "name": "name"
+                  },
+                  "type": {
+                    "gen": "int",
+                    "min": 0,
+                    "max": 65535
+                  }
+                }
+              }
+            }
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "question.encode": {
+      "doc": "new Question(...)->encode()",
+      "covers": [
+        "Utopia\\DNS\\Message\\Question::encode"
+      ]
+    },
+    "question.decode": {
+      "doc": "Question::decode(data, offset): {question, offset}",
+      "covers": [
+        "Utopia\\DNS\\Message\\Question::decode"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "labels"
+                  },
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 5
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "record.new": {
+      "doc": "new Record(name, type, class, ttl, rdata, priority, weight, port): its fields",
+      "covers": [
+        "Utopia\\DNS\\Message\\Record::__construct"
+      ]
+    },
+    "record.encode": {
+      "doc": "new Record(...)->encode()",
+      "covers": [
+        "Utopia\\DNS\\Message\\Record::encode"
+      ],
+      "fuzz": [
+        {
+          "name": "records",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "record": {
+                "gen": "ref",
+                "name": "record"
+              }
+            }
+          },
+          "iterations": 8000
+        }
+      ]
+    },
+    "record.decode": {
+      "doc": "Record::decode(data, offset): {record, offset}",
+      "covers": [
+        "Utopia\\DNS\\Message\\Record::decode"
+      ],
+      "fuzz": [
+        {
+          "name": "records",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "wire_record"
+              }
+            }
+          },
+          "iterations": 8000
+        }
+      ]
+    },
+    "record.validate": {
+      "doc": "new Record(...)->validateRdata()",
+      "covers": [
+        "Utopia\\DNS\\Message\\Record::validateRdata"
+      ]
+    },
+    "record.with_name": {
+      "doc": "new Record(...)->withName(name)",
+      "covers": [
+        "Utopia\\DNS\\Message\\Record::withName"
+      ]
+    },
+    "record.type_name_to_code": {
+      "doc": "Record::typeNameToCode(name)",
+      "covers": [
+        "Utopia\\DNS\\Message\\Record::typeNameToCode"
+      ]
+    },
+    "record.type_code_to_name": {
+      "doc": "Record::typeCodeToName(code)",
+      "covers": [
+        "Utopia\\DNS\\Message\\Record::typeCodeToName"
+      ]
+    },
+    "message.new": {
+      "doc": "new Message(header, questions, answers, authority, additional)",
+      "covers": [
+        "Utopia\\DNS\\Message::__construct"
+      ]
+    },
+    "message.query": {
+      "doc": "Message::query(question, id, recursionDesired)",
+      "covers": [
+        "Utopia\\DNS\\Message::query"
+      ]
+    },
+    "message.response": {
+      "doc": "Message::response(header, responseCode, questions, answers, authority, additional, authoritative, truncated, recursionAvailable)",
+      "covers": [
+        "Utopia\\DNS\\Message::response"
+      ]
+    },
+    "message.decode": {
+      "doc": "Message::decode(packet)",
+      "covers": [
+        "Utopia\\DNS\\Message::decode"
+      ],
+      "fuzz": [
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "packet": {
+                "gen": "bytes",
+                "min": 0,
+                "max": 40
+              }
+            }
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "packets",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "packet": {
+                "gen": "ref",
+                "name": "packet"
+              }
+            }
+          },
+          "iterations": 8000
+        }
+      ]
+    },
+    "message.decode_error": {
+      "doc": "the DecodingException Message::decode(packet) throws: {class, message, code, header (PartialDecodingException::getHeader())}, or null",
+      "covers": [
+        "Utopia\\DNS\\Exception\\Message\\PartialDecodingException::__construct",
+        "Utopia\\DNS\\Exception\\Message\\PartialDecodingException::getHeader"
+      ],
+      "fuzz": [
+        {
+          "name": "packets",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "packet": {
+                "gen": "ref",
+                "name": "packet"
+              }
+            }
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "message.encode": {
+      "doc": "new Message(...)->encode(maxSize)",
+      "covers": [
+        "Utopia\\DNS\\Message::encode"
+      ],
+      "fuzz": [
+        {
+          "name": "truncation",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "message": {
+                "gen": "ref",
+                "name": "message"
+              },
+              "maxSize": {
+                "gen": "int",
+                "min": 12,
+                "max": 200
+              }
+            }
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "message.validate": {
+      "doc": "new Message(...)->validate()",
+      "covers": [
+        "Utopia\\DNS\\Message::validate"
+      ]
+    },
+    "zone.new": {
+      "doc": "new Zone(name, records, soa): {name, records, soa}",
+      "covers": [
+        "Utopia\\DNS\\Zone::__construct"
+      ]
+    },
+    "zone.is_authoritative": {
+      "doc": "zone->isAuthoritative(name)",
+      "covers": [
+        "Utopia\\DNS\\Zone::isAuthoritative"
+      ]
+    },
+    "zone.lookup": {
+      "doc": "Zone\\Resolver::lookup(query, zone) after mt_srand(seed) (Rust: zone::lookup_with and a seeded Mt19937)",
+      "covers": [
+        "Utopia\\DNS\\Zone\\Resolver::lookup"
+      ],
+      "fuzz": [
+        {
+          "name": "questions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "zone": {
+                "gen": "ref",
+                "name": "zone"
+              },
+              "query": {
+                "gen": "object",
+                "fields": {
+                  "header": {
+                    "gen": "const",
+                    "value": {
+                      "id": 9,
+                      "recursionDesired": true,
+                      "questionCount": 1
+                    }
+                  },
+                  "questions": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "object",
+                      "fields": {
+                        "name": {
+                          "gen": "ref",
+                          "name": "qname"
+                        },
+                        "type": {
+                          "gen": "pick",
+                          "from": [
+                            1,
+                            2,
+                            5,
+                            6,
+                            15,
+                            16,
+                            28,
+                            33,
+                            99
+                          ]
+                        }
+                      }
+                    },
+                    "min": 1,
+                    "max": 1
+                  }
+                }
+              },
+              "seed": {
+                "gen": "int",
+                "min": 0,
+                "max": 1000
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "memory.resolve": {
+      "doc": "(new Memory(zone))->resolve(new Query(query, ip, port, protocol)) after mt_srand(seed)",
+      "covers": [
+        "Utopia\\DNS\\Resolver\\Memory::__construct",
+        "Utopia\\DNS\\Resolver\\Memory::resolve",
+        "Utopia\\DNS\\Query::__construct"
+      ]
+    },
+    "query.new": {
+      "doc": "new Query(query, ip, port, protocol): its properties and the protocol's maxResponseSize()",
+      "covers": [
+        "Utopia\\DNS\\Query::__construct",
+        "Utopia\\DNS\\Protocol::maxResponseSize"
+      ]
+    },
+    "file.import": {
+      "doc": "File::import(content, defaultOrigin, defaultTTL)",
+      "covers": [
+        "Utopia\\DNS\\Zone\\File::import"
+      ],
+      "fuzz": [
+        {
+          "name": "zone files",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "content": {
+                "gen": "ref",
+                "name": "zone_file"
+              },
+              "defaultOrigin": {
+                "gen": "pick",
+                "from": [
+                  "x.test",
+                  "X.Test.",
+                  ".",
+                  ""
+                ]
+              }
+            }
+          },
+          "iterations": 6000
+        }
+      ]
+    },
+    "file.import_error": {
+      "doc": "the ImportException File::import() throws: {message, content (getContent()), previous}, or null",
+      "covers": [
+        "Utopia\\DNS\\Exception\\Zone\\ImportException::__construct",
+        "Utopia\\DNS\\Exception\\Zone\\ImportException::getContent"
+      ]
+    },
+    "file.export": {
+      "doc": "File::export(zone, includeComments), split into lines (the second holds the time when comments are included)",
+      "covers": [
+        "Utopia\\DNS\\Zone\\File::export"
+      ]
+    },
+    "proxy.parse": {
+      "doc": "ProxyProtocol::parse(buffer): {length, ip, port} or null",
+      "covers": [
+        "Utopia\\DNS\\ProxyProtocol::parse",
+        "Utopia\\DNS\\ProxyProtocol::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "v1",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "buffer": {
+                "gen": "ref",
+                "name": "proxy_v1"
+              }
+            }
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "bytes",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "buffer": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      {
+                        "$bytes": "DQoNCgANClFVSVQK"
+                      },
+                      "PROXY ",
+                      "",
+                      "P"
+                    ]
+                  },
+                  {
+                    "gen": "bytes",
+                    "min": 0,
+                    "max": 40
+                  }
+                ]
+              }
+            }
+          },
+          "iterations": 5000
+        }
+      ]
+    },
+    "validator.check": {
+      "doc": "isValid() and then getDescription() of each value, on one Name (`recordType`) or CAA validator",
+      "covers": [
+        "Utopia\\DNS\\Validator\\Name::__construct",
+        "Utopia\\DNS\\Validator\\Name::isValid",
+        "Utopia\\DNS\\Validator\\Name::getDescription",
+        "Utopia\\DNS\\Validator\\CAA::isValid",
+        "Utopia\\DNS\\Validator\\CAA::getDescription"
+      ],
+      "fuzz": [
+        {
+          "name": "names",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "name"
+              },
+              "recordType": {
+                "gen": "pick",
+                "from": [
+                  1,
+                  5,
+                  16,
+                  28,
+                  null
+                ]
+              },
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "name"
+                },
+                "min": 1,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 6000
+        },
+        {
+          "name": "caa",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "caa"
+              },
+              "values": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "caa"
+                },
+                "min": 1,
+                "max": 3
+              }
+            }
+          },
+          "iterations": 6000
+        }
+      ]
+    },
+    "validator.describe": {
+      "doc": "{description, type, array} of a fresh Name, CAA or DNS validator",
+      "covers": [
+        "Utopia\\DNS\\Validator\\Name::getType",
+        "Utopia\\DNS\\Validator\\Name::isArray",
+        "Utopia\\DNS\\Validator\\CAA::getType",
+        "Utopia\\DNS\\Validator\\CAA::isArray",
+        "Utopia\\DNS\\Validator\\DNS::__construct",
+        "Utopia\\DNS\\Validator\\DNS::getDescription",
+        "Utopia\\DNS\\Validator\\DNS::getType",
+        "Utopia\\DNS\\Validator\\DNS::isArray"
+      ]
+    },
+    "client.new": {
+      "doc": "new Client(server, port, timeout, useTcp) (the server must be an IP address)",
+      "covers": [
+        "Utopia\\DNS\\Client::__construct"
+      ]
+    },
+    "lookup.new": {
+      "doc": "new Recursive(servers)",
+      "covers": [
+        "Utopia\\DNS\\Lookup\\Recursive::__construct"
+      ]
+    },
+    "resolver.new": {
+      "doc": "new Proxy(server, port), new Google(backup), new Cloudflare(backup) (constructed only: Google and Cloudflare are public resolvers no case may query)",
+      "covers": [
+        "Utopia\\DNS\\Resolver\\Proxy::__construct",
+        "Utopia\\DNS\\Resolver\\Google::__construct",
+        "Utopia\\DNS\\Resolver\\Cloudflare::__construct"
+      ]
+    },
+    "adapter.new": {
+      "doc": "new Native(transports), new Swoole(transports), new Swoole\\Http(..., cert, key): the constructors' checks (Rust: Tokio::new, Http::new)",
+      "covers": [
+        "Utopia\\DNS\\Adapter\\Native::__construct",
+        "Utopia\\DNS\\Adapter\\Swoole::__construct",
+        "Utopia\\DNS\\Adapter\\Swoole\\Http::__construct"
+      ]
+    },
+    "server.run": {
+      "doc": "starts fixture servers (tests/compat/dns/fixtures/server.php: Native or Swoole adapter, UDP, TCP, PROXY-protocol TCP and HTTP transports, a resolver of Fixture.php, a seed; Rust: the Tokio adapter in the driver) on local ports, runs steps (query, raw, doh, recursive, proxy, validate, errors, workers, telemetry, sleep) and stops them",
+      "covers": [
+        "Utopia\\DNS\\Server::__construct",
+        "Utopia\\DNS\\Server::error",
+        "Utopia\\DNS\\Server::onWorkerStart",
+        "Utopia\\DNS\\Server::setDebug",
+        "Utopia\\DNS\\Server::setTelemetry",
+        "Utopia\\DNS\\Server::start",
+        "Utopia\\DNS\\Adapter\\Native::onPacket",
+        "Utopia\\DNS\\Adapter\\Native::onWorkerStart",
+        "Utopia\\DNS\\Adapter\\Native::start",
+        "Utopia\\DNS\\Adapter\\Native\\Tcp::__construct",
+        "Utopia\\DNS\\Adapter\\Native\\Transport::__construct",
+        "Utopia\\DNS\\Adapter\\Swoole::onPacket",
+        "Utopia\\DNS\\Adapter\\Swoole::onWorkerStart",
+        "Utopia\\DNS\\Adapter\\Swoole::start",
+        "Utopia\\DNS\\Adapter\\Swoole\\Tcp::__construct",
+        "Utopia\\DNS\\Adapter\\Swoole\\Transport::__construct",
+        "Utopia\\DNS\\Client::query",
+        "Utopia\\DNS\\Lookup\\Recursive::addresses",
+        "Utopia\\DNS\\Resolver\\Proxy::resolve",
+        "Utopia\\DNS\\Validator\\DNS::isValid",
+        "Utopia\\DNS\\Validator\\DNS::getDescription"
+      ]
+    },
+    "peer.serve": {
+      "doc": "interop: serves the fixture zones where the other runtime's client reaches them, and names the runtime (Rust: a Tokio server on `dns-rust-server`, kept until the session resets; PHP: tests/compat/dns/services.sh runs its server, `dns-php-server`)"
+    },
+    "peer.run": {
+      "doc": "interop: server.run's steps against the server of the runtime `peer.serve` named, at `dns-<runtime>-server` (UDP and TCP on its port, HTTP on the next, PROXY-protocol TCP on the one after)"
+    }
+  },
+  "generators": {
+    "name": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "alphabet": "abAB09-_.*@ ",
+          "max": 20,
+          "tricky": 0.2
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "*.",
+                "_dmarc.",
+                "@",
+                "-",
+                " "
+              ]
+            },
+            {
+              "gen": "repeat",
+              "part": {
+                "gen": "string",
+                "alphabet": "ab-_9",
+                "min": 0,
+                "max": 6
+              },
+              "sep": ".",
+              "min": 1,
+              "max": 4
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                ".",
+                "..",
+                "-",
+                " "
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "labels": {
+      "gen": "repeat",
+      "sep": "",
+      "min": 0,
+      "max": 5,
+      "part": {
+        "gen": "pick",
+        "from": [
+          {
+            "$bytes": "A2FiYw=="
+          },
+          {
+            "$bytes": "AWE="
+          },
+          {
+            "$bytes": "AA=="
+          },
+          {
+            "$bytes": "wAA="
+          },
+          {
+            "$bytes": "wAI="
+          },
+          {
+            "$bytes": "wA=="
+          },
+          {
+            "$bytes": "QA=="
+          },
+          {
+            "$bytes": "gA=="
+          },
+          {
+            "$bytes": "BWFi"
+          },
+          {
+            "$bytes": "AS4="
+          }
+        ]
+      }
+    },
+    "qname": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            "",
+            "www.",
+            "a.b.",
+            "x.",
+            "sub.",
+            "*.",
+            "deep.sub.",
+            "cn."
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "example.com",
+            "EXAMPLE.com",
+            "other.org",
+            "com",
+            "",
+            "a.example.com",
+            "example.com."
+          ]
+        }
+      ]
+    },
+    "record": {
+      "gen": "object",
+      "fields": {
+        "name": {
+          "gen": "pick",
+          "from": [
+            "a.test",
+            "A.Test",
+            "",
+            "x..y",
+            " padded "
+          ]
+        },
+        "type": {
+          "gen": "pick",
+          "from": [
+            1,
+            2,
+            5,
+            6,
+            12,
+            15,
+            16,
+            28,
+            33,
+            257,
+            99,
+            0
+          ]
+        },
+        "ttl": {
+          "gen": "int",
+          "min": -5,
+          "max": 5000000000
+        },
+        "rdata": {
+          "gen": "ref",
+          "name": "rdata"
+        },
+        "priority": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "int",
+              "min": -2,
+              "max": 70000
+            }
+          ]
+        },
+        "weight": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "int",
+              "min": -2,
+              "max": 70000
+            }
+          ]
+        },
+        "port": {
+          "gen": "one_of",
+          "of": [
+            {
+              "gen": "null"
+            },
+            {
+              "gen": "int",
+              "min": -2,
+              "max": 70000
+            }
+          ]
+        }
+      }
+    },
+    "rdata": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "1.2.3.4",
+            "256.1.1.1",
+            "1.2.3",
+            "::1",
+            "2001:db8::1",
+            "::ffff:1.2.3.4",
+            "host.test",
+            "",
+            "0aff",
+            "zz",
+            "0 issue \"x\"",
+            "128 issuewild \"a;b\"",
+            "issue \"x\"",
+            "0 issue \"a\\\"b\"",
+            "5 \"x\"",
+            "ns hm 1 2 3 4 5",
+            "( ns hm 1 2 3 4 5 )",
+            "ns a@b 1 2 3 4 5",
+            "ns hm 1 2 3 4 4294967296",
+            "ns hm 1 2 3",
+            "a..b"
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "ab09.:\" @\\()-",
+          "max": 24,
+          "tricky": 0.2
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "0 ",
+                "255 ",
+                "256 ",
+                "",
+                " 7 "
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "issue",
+                "iodef",
+                "is-sue",
+                "",
+                "a_b"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                " ",
+                "  ",
+                "\t"
+              ]
+            },
+            {
+              "gen": "string",
+              "alphabet": "ab\"\\;=. ",
+              "max": 10
+            }
+          ]
+        }
+      ]
+    },
+    "wire_record": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "AWEA"
+            },
+            {
+              "$bytes": "AA=="
+            },
+            {
+              "$bytes": "A2FiYwA="
+            },
+            {
+              "$bytes": "wAA="
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "AAE="
+            },
+            {
+              "$bytes": "ABw="
+            },
+            {
+              "$bytes": "AAU="
+            },
+            {
+              "$bytes": "AA8="
+            },
+            {
+              "$bytes": "ACE="
+            },
+            {
+              "$bytes": "AAY="
+            },
+            {
+              "$bytes": "ABA="
+            },
+            {
+              "$bytes": "AQE="
+            },
+            {
+              "$bytes": "AGM="
+            },
+            {
+              "$bytes": "AAI="
+            }
+          ]
+        },
+        {
+          "gen": "const",
+          "value": {
+            "$bytes": "AAH/////"
+          }
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "AAA="
+            },
+            {
+              "$bytes": "AAQ="
+            },
+            {
+              "$bytes": "ABA="
+            },
+            {
+              "$bytes": "AAM="
+            },
+            {
+              "$bytes": "AAc="
+            },
+            {
+              "$bytes": "ABQ="
+            },
+            {
+              "$bytes": "AAI="
+            },
+            {
+              "$bytes": "AAE="
+            },
+            {
+              "$bytes": "AAY="
+            }
+          ]
+        },
+        {
+          "gen": "bytes",
+          "min": 0,
+          "max": 24
+        }
+      ]
+    },
+    "packet": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "EjSBgAABAAEAAAAA"
+            },
+            {
+              "$bytes": "EjSFgAABAAAAAQAA"
+            },
+            {
+              "$bytes": "EjSFgwABAAAAAAAA"
+            },
+            {
+              "$bytes": "EjQBAAABAAAAAAAA"
+            },
+            {
+              "$bytes": "EjQBAAAAAAAAAAAA"
+            },
+            {
+              "$bytes": "EjSBgAABAAIAAAAB"
+            },
+            {
+              "$bytes": "EjSHgAABAAAAAAAA"
+            }
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": "A3d3dwdleGFtcGxlA2NvbQAAAQAB"
+            },
+            {
+              "$bytes": "AWEAABAAAQ=="
+            },
+            {
+              "$bytes": "AAAGAAE="
+            },
+            {
+              "$bytes": "AWE="
+            },
+            {
+              "$bytes": ""
+            }
+          ]
+        },
+        {
+          "gen": "ref",
+          "name": "wire_record"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            {
+              "$bytes": ""
+            },
+            {
+              "$bytes": "wAwAAQABAAAAPAAEAQIDBA=="
+            },
+            {
+              "$bytes": "wAwABgABAAAAPAAWAm5zAAJobQAAAAABAAAAAgAAAAMAAAAEAAAABQ=="
+            },
+            {
+              "$bytes": "/w=="
+            }
+          ]
+        }
+      ]
+    },
+    "message": {
+      "gen": "object",
+      "fields": {
+        "header": {
+          "gen": "object",
+          "fields": {
+            "id": {
+              "gen": "int",
+              "min": 0,
+              "max": 65535
+            },
+            "isResponse": {
+              "gen": "bool"
+            },
+            "authoritative": {
+              "gen": "bool"
+            },
+            "truncated": {
+              "gen": "bool"
+            },
+            "responseCode": {
+              "gen": "pick",
+              "from": [
+                0,
+                3,
+                2
+              ]
+            },
+            "questionCount": {
+              "gen": "const",
+              "value": 1
+            },
+            "answerCount": {
+              "gen": "const",
+              "value": 3
+            },
+            "authorityCount": {
+              "gen": "const",
+              "value": 2
+            },
+            "additionalCount": {
+              "gen": "const",
+              "value": 2
+            }
+          }
+        },
+        "questions": {
+          "gen": "const",
+          "value": [
+            {
+              "name": "example.com",
+              "type": 1
+            }
+          ]
+        },
+        "answers": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "small_record"
+          },
+          "min": 3,
+          "max": 3
+        },
+        "authority": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "small_record"
+          },
+          "min": 2,
+          "max": 2
+        },
+        "additional": {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "small_record"
+          },
+          "min": 2,
+          "max": 2
+        }
+      }
+    },
+    "small_record": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "object",
+          "fields": {
+            "name": {
+              "gen": "pick",
+              "from": [
+                "example.com",
+                "a.example.com",
+                "longer-name.example.com"
+              ]
+            },
+            "type": {
+              "gen": "const",
+              "value": 1
+            },
+            "ttl": {
+              "gen": "const",
+              "value": 60
+            },
+            "rdata": {
+              "gen": "pick",
+              "from": [
+                "1.1.1.1",
+                "10.0.0.1"
+              ]
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "name": {
+              "gen": "const",
+              "value": "example.com"
+            },
+            "type": {
+              "gen": "const",
+              "value": 6
+            },
+            "ttl": {
+              "gen": "const",
+              "value": 60
+            },
+            "rdata": {
+              "gen": "const",
+              "value": "ns1.example.com hm.example.com 1 2 3 4 5"
+            }
+          }
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "name": {
+              "gen": "const",
+              "value": "example.com"
+            },
+            "type": {
+              "gen": "const",
+              "value": 16
+            },
+            "ttl": {
+              "gen": "const",
+              "value": 60
+            },
+            "rdata": {
+              "gen": "string",
+              "alphabet": "abc",
+              "max": 40
+            }
+          }
+        }
+      ]
+    },
+    "zone": {
+      "gen": "const",
+      "value": {
+        "name": "example.com",
+        "soa": {
+          "name": "example.com",
+          "type": 6,
+          "ttl": 60,
+          "rdata": "ns1.example.com hm.example.com 1 2 3 4 5"
+        },
+        "records": [
+          {
+            "name": "www.example.com",
+            "type": 1,
+            "ttl": 1,
+            "rdata": "10.0.0.1"
+          },
+          {
+            "name": "www.example.com",
+            "type": 1,
+            "ttl": 1,
+            "rdata": "10.0.0.2"
+          },
+          {
+            "name": "www.example.com",
+            "type": 1,
+            "ttl": 1,
+            "rdata": "10.0.0.3"
+          },
+          {
+            "name": "www.example.com",
+            "type": 28,
+            "ttl": 1,
+            "rdata": "::1"
+          },
+          {
+            "name": "*.example.com",
+            "type": 16,
+            "ttl": 1,
+            "rdata": "w"
+          },
+          {
+            "name": "*.a.example.com",
+            "type": 1,
+            "ttl": 1,
+            "rdata": "9.9.9.9"
+          },
+          {
+            "name": "*.a.example.com",
+            "type": 1,
+            "ttl": 1,
+            "rdata": "9.9.9.8"
+          },
+          {
+            "name": "sub.example.com",
+            "type": 2,
+            "ttl": 1,
+            "rdata": "ns.sub.example.com"
+          },
+          {
+            "name": "cn.example.com",
+            "type": 5,
+            "ttl": 1,
+            "rdata": "www.example.com"
+          },
+          {
+            "name": "example.com",
+            "type": 15,
+            "ttl": 1,
+            "rdata": "mx1.example.com",
+            "priority": 10
+          },
+          {
+            "name": "example.com",
+            "type": 15,
+            "ttl": 1,
+            "rdata": "mx2.example.com",
+            "priority": 20
+          }
+        ]
+      }
+    },
+    "zone_file": {
+      "gen": "repeat",
+      "sep": "\n",
+      "min": 1,
+      "max": 6,
+      "part": {
+        "gen": "one_of",
+        "of": [
+          {
+            "gen": "pick",
+            "from": [
+              "$ORIGIN example.com.",
+              "$TTL 300",
+              "@ IN SOA ns hm 1 2 3 4 5",
+              "$INCLUDE x",
+              "; comment",
+              "",
+              "   ",
+              "$ORIGIN",
+              "@ SOA (ns hm",
+              "1 2 3 4 5 )",
+              "$FOO"
+            ]
+          },
+          {
+            "gen": "concat",
+            "parts": [
+              {
+                "gen": "pick",
+                "from": [
+                  "www",
+                  "@",
+                  " ",
+                  "\t",
+                  "a.b.",
+                  "MiXed",
+                  "*",
+                  "\"q\""
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  " ",
+                  "\t",
+                  "  "
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "",
+                  "300 ",
+                  "IN ",
+                  "IN 60 ",
+                  "CH ",
+                  "1h "
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "A",
+                  "AAAA",
+                  "CNAME",
+                  "MX",
+                  "SRV",
+                  "TXT",
+                  "CAA",
+                  "SOA",
+                  "PTR",
+                  "NS",
+                  "HINFO",
+                  "BOGUS",
+                  "txt"
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  " ",
+                  "\t"
+                ]
+              },
+              {
+                "gen": "pick",
+                "from": [
+                  "1.2.3.4",
+                  "host",
+                  "host.",
+                  "10 mx",
+                  "1 2 3 t",
+                  "\"a b\" c",
+                  "\"x\\065y\"",
+                  "0 issue \"x\"",
+                  "0 issue x",
+                  "ns hm 1 2 3 4 5",
+                  "",
+                  "( a",
+                  "\"semi;colon\" ; c",
+                  "a\\;b"
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "proxy_v1": {
+      "gen": "concat",
+      "parts": [
+        {
+          "gen": "const",
+          "value": "PROXY "
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "TCP4 ",
+            "TCP6 ",
+            "UNKNOWN",
+            "UDP4 ",
+            ""
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "1.2.3.4",
+            "::1",
+            "256.1.1.1",
+            "01.2.3.4",
+            "x",
+            ""
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            " 5.6.7.8 ",
+            " ",
+            "  "
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "80",
+            "0",
+            "65535",
+            "65536",
+            "-1",
+            "+5",
+            "08",
+            " 9",
+            "a"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            " 443",
+            "",
+            " 1 2"
+          ]
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "\r\n",
+            "\n",
+            "",
+            "\r\nrest"
+          ]
+        }
+      ]
+    },
+    "caa": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "0",
+                "128",
+                "255",
+                "256",
+                "-1",
+                "1.5",
+                "1e2",
+                " 3",
+                "x",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                " ",
+                "  ",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "issue",
+                "",
+                "x y"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                " ",
+                ""
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\"a\"",
+                "\"\"",
+                "\"",
+                "a",
+                "\"a",
+                "a\"",
+                "\"a b\""
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "alphabet": "0 9\"ab",
+          "max": 12,
+          "tricky": 0.2
+        },
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 5
+        }
+      ]
+    }
+  },
+  "waivers": {
+    "Utopia\\DNS\\Adapter\\Native\\Tcp::bind": "Native select-loop plumbing (socket_create/bind/listen): the Tokio TCP transport binds in Tokio::bind; serving behaviour is compared by server.run",
+    "Utopia\\DNS\\Adapter\\Native\\Tcp::getSockets": "Native select-loop plumbing: the sockets select() watches",
+    "Utopia\\DNS\\Adapter\\Native\\Tcp::onReadable": "Native select-loop plumbing: reading a socket select() reported; framing, PROXY headers and limits are compared by server.run",
+    "Utopia\\DNS\\Adapter\\Native\\Tcp::tick": "Native select-loop plumbing: idle connections are closed by a read timeout in Rust; compared by server.run",
+    "Utopia\\DNS\\Adapter\\Native\\Transport::tick": "Native select-loop plumbing: the base class no-op of tick()",
+    "Utopia\\DNS\\Adapter\\Native\\Udp::bind": "Native select-loop plumbing (socket_create/bind)",
+    "Utopia\\DNS\\Adapter\\Native\\Udp::getSockets": "Native select-loop plumbing: the socket select() watches",
+    "Utopia\\DNS\\Adapter\\Native\\Udp::onReadable": "Native select-loop plumbing: reading a datagram select() reported; answered packets are compared by server.run",
+    "Utopia\\DNS\\Adapter\\Swoole\\Http::attach": "Swoole server plumbing: registering the Request event handler; DNS over HTTPS is compared by server.run",
+    "Utopia\\DNS\\Adapter\\Swoole\\Http::getSettings": "Swoole server plumbing: the settings array Swoole\\Server::set() takes",
+    "Utopia\\DNS\\Adapter\\Swoole\\Http::getSockType": "Swoole server plumbing: the SWOOLE_SOCK_* type of the listener",
+    "Utopia\\DNS\\Adapter\\Swoole\\Tcp::attach": "Swoole server plumbing: registering the Receive and Close event handlers; framing and PROXY headers are compared by server.run",
+    "Utopia\\DNS\\Adapter\\Swoole\\Tcp::getSettings": "Swoole server plumbing: the length-check settings Swoole frames TCP with",
+    "Utopia\\DNS\\Adapter\\Swoole\\Tcp::getSockType": "Swoole server plumbing: the SWOOLE_SOCK_* type of the listener",
+    "Utopia\\DNS\\Adapter\\Swoole\\Udp::attach": "Swoole server plumbing: registering the Packet event handler; answered packets are compared by server.run",
+    "Utopia\\DNS\\Adapter\\Swoole\\Udp::getSettings": "Swoole server plumbing: the (empty) listener settings",
+    "Utopia\\DNS\\Adapter\\Swoole\\Udp::getSockType": "Swoole server plumbing: the SWOOLE_SOCK_* type of the listener"
+  },
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": [
+    {
+      "symbol": "Utopia\\DNS\\Message\\Record::__construct",
+      "php": "`$type` and `$class` are any int, encoded as their low 16 bits by pack('n').",
+      "reason": "Record types and classes are u16 in Rust, as on the wire; an int outside 0..65535 cannot be passed."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Message\\Question::__construct",
+      "php": "`$type` and `$class` are any int, encoded as their low 16 bits.",
+      "reason": "Question types and classes are u16 in Rust, as on the wire."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Message\\Header::__construct",
+      "php": "The id and counts are any int (encoded as their low 16 bits); a negative opcode or response code throws DecodingException.",
+      "reason": "The id and counts are u16 and the opcode and response code u8 in Rust: values above 15 fail as in PHP, negative ones cannot be passed."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Message::response",
+      "php": "`$responseCode` is any int; outside 0..15 the header constructor throws DecodingException('Response code must be 0-15').",
+      "reason": "The response code is a u8: 16..255 fail as in PHP; negative codes cannot be passed."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Query::__construct",
+      "php": "`$port` is any int.",
+      "reason": "Query::port is a u16, as a socket reports it."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Client::__construct",
+      "php": "`$port` and `$timeout` are any int (a negative timeout or port fails in the socket calls).",
+      "reason": "Client::new takes a u16 port and a Duration timeout."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Validator\\DNS::isValid",
+      "php": "PHP asks the server on port 53 (the port is not configurable); the validator keeps records, value, count and reason on the object.",
+      "reason": "Dns::with_port sets the port (the cases run PHP's server on 127.0.0.1:53 and Rust's on a free port); Dns::check returns a DnsCheck, and DnsCheck::refuse is what a non-string does to the last one."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Adapter\\Swoole::__construct",
+      "php": "Swoole starts `workers` worker processes (each calls the worker start callbacks with its id) and closes TCP connections idle for `idleTimeout` with its heartbeat; Swoole\\Tcp frames with package_max_length 65537 and dispatches a zero-length frame instead of closing the connection.",
+      "reason": "The Tokio adapter runs every transport in one runtime, calls worker start callbacks once with id 0, and follows Native\\Tcp's limits (a zero-length frame closes the connection); the cases compare Swoole on what both PHP adapters agree on."
+    },
+    {
+      "symbol": "Utopia\\DNS\\Adapter\\Native\\Udp::onReadable",
+      "php": "Native reads datagrams into 4096 bytes: a larger query is cut.",
+      "reason": "The Tokio UDP transport reads up to 65535 bytes, as Swoole does."
+    }
+  ]
+}

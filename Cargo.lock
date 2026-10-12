@@ -597,6 +597,7 @@ dependencies = [
  "utopia-database",
  "utopia-detector",
  "utopia-di",
+ "utopia-dns",
  "utopia-domains",
  "utopia-dsn",
  "utopia-emails",
@@ -1032,6 +1033,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fnv"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
+
+[[package]]
 name = "foldhash"
 version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1203,6 +1210,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "h2"
+version = "0.4.15"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6cb093c84e8bd9b188d4c4a8cb6579fc016968d14c99882163cd3ff402a4f155"
+dependencies = [
+ "atomic-waker",
+ "bytes",
+ "fnv",
+ "futures-core",
+ "futures-sink",
+ "http",
+ "indexmap",
+ "slab",
+ "tokio",
+ "tokio-util",
+ "tracing",
+]
+
+[[package]]
 name = "half"
 version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1305,7 +1331,9 @@ checksum = "2c3e324da4c95177d6291d4c8730197c0d1822f8a9766814a4a44fa5ab797c9c"
 dependencies = [
  "atomic-waker",
  "bytes",
+ "futures-channel",
  "futures-core",
+ "h2",
  "http",
  "http-body",
  "httparse",
@@ -3597,6 +3625,25 @@ version = "0.1.0"
 dependencies = [
  "foldhash",
  "thiserror",
+]
+
+[[package]]
+name = "utopia-dns"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "getrandom 0.3.4",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "php-std",
+ "rustls",
+ "serde_json",
+ "tokio",
+ "tokio-rustls",
+ "utopia-domains",
+ "utopia-telemetry",
+ "utopia-validators",
 ]
 
 [[package]]

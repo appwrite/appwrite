@@ -1,0 +1,29 @@
+[package]
+name = "utopia-dns"
+description = "DNS messages, zones and zone files, resolvers, a server over UDP, TCP and DNS over HTTPS, a client, a recursive lookup and record validators."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+bytes.workspace = true
+getrandom.workspace = true
+http-body-util.workspace = true
+hyper = { workspace = true, features = ["server", "http1", "http2"] }
+hyper-util = { workspace = true, features = ["server-auto", "http1", "http2", "tokio"] }
+php-std.workspace = true
+rustls.workspace = true
+serde_json.workspace = true
+tokio = { workspace = true, features = ["net", "time", "io-util", "rt", "sync"] }
+tokio-rustls.workspace = true
+utopia-domains.workspace = true
+utopia-telemetry.workspace = true
+utopia-validators.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt", "macros", "net", "time"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

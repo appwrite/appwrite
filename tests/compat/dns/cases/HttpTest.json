@@ -1,0 +1,383 @@
+{
+  "source": "packages/dns/tests/E2E/HttpTest.php",
+  "cases": [
+    {
+      "name": "POST query",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp",
+                  "http"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "\u0001\u0002\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "contentType": "application/dns-message"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "AQKFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAAQABA2RldghhcHB3cml0ZQJpbwAAAQABAAAACgAEtAwDGA=="
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "GET query",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp",
+                  "http"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/?dns=AQMBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAEAAB"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "AQOFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAEAABA2RldghhcHB3cml0ZQJpbwAAEAABAAAAHgATEmF3ZXNvbWUtc2VjcmV0LWtleQ=="
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "large response is not truncated",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp",
+                  "http"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "\u0001\u0004\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0005large\tlocalhost\u0000\u0000\u0010\u0000\u0001",
+                "contentType": "application/dns-message"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "AQSFAAABAAgAAAAABWxhcmdlCWxvY2FsaG9zdAAAEAABBWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABaWU5lcXVlIHBvcnJvIHF1aXNxdWFtIGVzdCBxdWkgZG9sb3JlbSBpcHN1bSBxdWlhIGRvbG9yIHNpdCBhbWV0IGNvbnNlY3RldHVyIGFkaXBpc2NpIHZlbGl0BWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABmZUR1aXMgYXV0ZSBpcnVyZSBkb2xvciBpbiByZXByZWhlbmRlcml0IGluIHZvbHVwdGF0ZSB2ZWxpdCBlc3NlIGNpbGx1bSBkb2xvcmUgZXUgZnVnaWF0IG51bGxhIHBhcmlhdHVyBWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABqaVV0IGVuaW0gYWQgbWluaW0gdmVuaWFtIHF1aXMgbm9zdHJ1ZCBleGVyY2l0YXRpb24gdWxsYW1jbyBsYWJvcmlzIG5pc2kgdXQgYWxpcXVpcCBleCBlYSBjb21tb2RvIGNvbnNlcXVhdAVsYXJnZQlsb2NhbGhvc3QAABAAAQAAASwAc3JTZWQgdXQgcGVyc3BpY2lhdGlzIHVuZGUgb21uaXMgaXN0ZSBuYXR1cyBlcnJvciBzaXQgdm9sdXB0YXRlbSBhY2N1c2FudGl1bSBkb2xvcmVtcXVlIGxhdWRhbnRpdW0gdG90YW0gcmVtIGFwZXJpYW0FbGFyZ2UJbG9jYWxob3N0AAAQAAEAAAEsAG9uTmVtbyBlbmltIGlwc2FtIHZvbHVwdGF0ZW0gcXVpYSB2b2x1cHRhcyBzaXQgYXNwZXJuYXR1ciBhdXQgb2RpdCBhdXQgZnVnaXQgc2VkIHF1aWEgY29uc2VxdXVudHVyIG1hZ25pIGRvbG9yZXMFbGFyZ2UJbG9jYWxob3N0AAAQAAEAAAEsAHl4TG9yZW0gaXBzdW0gZG9sb3Igc2l0IGFtZXQgY29uc2VjdGV0dXIgYWRpcGlzY2luZyBlbGl0IHNlZCBkbyBlaXVzbW9kIHRlbXBvciBpbmNpZGlkdW50IHV0IGxhYm9yZSBldCBkb2xvcmUgbWFnbmEgYWxpcXVhBWxhcmdlCWxvY2FsaG9zdAAAEAABAAABLABtbEV4Y2VwdGV1ciBzaW50IG9jY2FlY2F0IGN1cGlkYXRhdCBub24gcHJvaWRlbnQgc3VudCBpbiBjdWxwYSBxdWkgb2ZmaWNpYSBkZXNlcnVudCBtb2xsaXQgYW5pbSBpZCBlc3QgbGFib3J1bQVsYXJnZQlsb2NhbGhvc3QAABAAAQAAASwAYmFFYXF1ZSBpcHNhIHF1YWUgYWIgaWxsbyBpbnZlbnRvcmUgdmVyaXRhdGlzIGV0IHF1YXNpIGFyY2hpdGVjdG8gYmVhdGFlIHZpdGFlIGRpY3RhIHN1bnQgZXhwbGljYWJv"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "invalid requests",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp",
+                  "http"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/?dns=!!!"
+              },
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/"
+              },
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "raw",
+                "contentType": "text/plain"
+              },
+              {
+                "kind": "doh",
+                "method": "DELETE",
+                "path": "/"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "request variants",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp",
+                  "http"
+                ]
+              }
+            ],
+            "steps": [
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/dns-query?dns=AQIBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB&x=1"
+              },
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/?dns=AQIBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB"
+              },
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/?dns="
+              },
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/?dns[]=AQIBAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB"
+              },
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "\u0001\u0002\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "contentType": "Application/DNS-Message; charset=x"
+              },
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "",
+                "contentType": "application/dns-message"
+              },
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "\u0000\u0001",
+                "contentType": "application/dns-message"
+              },
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "\u00124\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+                "contentType": "application/dns-message"
+              },
+              {
+                "kind": "doh",
+                "method": "PUT",
+                "body": "\u0001\u0002\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "contentType": "application/dns-message"
+              },
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/?dns=AAAA"
+              },
+              {
+                "kind": "doh",
+                "method": "GET",
+                "path": "/?dns=AQUhAAABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "AQKFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAAQABA2RldghhcHB3cml0ZQJpbwAAAQABAAAACgAEtAwDGA=="
+              }
+            },
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "AQKFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAAQABA2RldghhcHB3cml0ZQJpbwAAAQABAAAACgAEtAwDGA=="
+              }
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "AQKFAAABAAEAAAAAA2RldghhcHB3cml0ZQJpbwAAAQABA2RldghhcHB3cml0ZQJpbwAAAQABAAAACgAEtAwDGA=="
+              }
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "EjSBAQAAAAAAAAAA"
+              }
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 400,
+              "contentType": "text/html",
+              "body": ""
+            },
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "AQWhBAAAAAAAAAAA"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "client address behind a proxy",
+      "steps": [
+        {
+          "op": "server.run",
+          "args": {
+            "servers": [
+              {
+                "adapter": "swoole",
+                "transports": [
+                  "udp",
+                  "tcp",
+                  "http"
+                ],
+                "telemetry": false,
+                "trustProxy": true,
+                "resolver": {
+                  "kind": "throw"
+                }
+              }
+            ],
+            "steps": [
+              {
+                "kind": "doh",
+                "method": "POST",
+                "body": "\u0001\u0002\u0001\u0000\u0000\u0001\u0000\u0000\u0000\u0000\u0000\u0000\u0003dev\bappwrite\u0002io\u0000\u0000\u0001\u0000\u0001",
+                "contentType": "application/dns-message",
+                "headers": {
+                  "X-Forwarded-For": "203.0.113.7, 10.0.0.1"
+                }
+              },
+              {
+                "kind": "errors"
+              }
+            ]
+          },
+          "expect": [
+            {
+              "status": 200,
+              "contentType": "application/dns-message",
+              "body": {
+                "$bytes": "AQKBAgABAAAAAAAAA2RldghhcHB3cml0ZQJpbwAAAQAB"
+              }
+            },
+            [
+              {
+                "class": "Exception",
+                "message": "Resolver failed for https"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

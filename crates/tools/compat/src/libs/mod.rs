@@ -25,6 +25,7 @@ pub mod console;
 pub mod database;
 pub mod detector;
 pub mod di;
+pub mod dns;
 pub mod domains;
 pub mod dsn;
 pub mod emails;
@@ -66,6 +67,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("database", database::OPS),
     ("detector", detector::OPS),
     ("di", di::OPS),
+    ("dns", dns::OPS),
     ("domains", domains::OPS),
     ("dsn", dsn::OPS),
     ("emails", emails::OPS),
@@ -109,6 +111,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "database" => database::call(op, args, session).await,
         "detector" => detector::call(op, args, session).await,
         "di" => di::call(op, args, session).await,
+        "dns" => dns::call(op, args, session).await,
         "domains" => domains::call(op, args, session).await,
         "dsn" => dsn::call(op, args, session).await,
         "emails" => emails::call(op, args, session).await,
@@ -153,6 +156,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "console" => console::BENCHES,
         "detector" => detector::BENCHES,
         "di" => di::BENCHES,
+        "dns" => dns::BENCHES,
         "domains" => domains::BENCHES,
         "dsn" => dsn::BENCHES,
         "emails" => emails::BENCHES,
@@ -196,6 +200,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "console" => console::bench(name, session).await,
         "detector" => detector::bench(name, session).await,
         "di" => di::bench(name, session).await,
+        "dns" => dns::bench(name, session).await,
         "domains" => domains::bench(name, session).await,
         "dsn" => dsn::bench(name, session).await,
         "emails" => emails::bench(name, session).await,
