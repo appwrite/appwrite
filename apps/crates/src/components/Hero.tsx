@@ -73,7 +73,7 @@ export function Hero({ index }: { index: Index }) {
   return (
     <section className="grid gap-16 pt-10 pb-6 sm:pt-16">
       <div className="mx-auto grid w-full max-w-[820px] grid-cols-[minmax(0,1fr)] justify-items-center gap-7 text-center">
-        <h1 className="m-0 text-[36px] leading-[1.05] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">Rust libraries for building backend services</h1>
+        <h1 className="m-0 text-[36px] leading-[1.05] tracking-[-0.035em] sm:text-[56px] lg:text-[64px]">Backend building blocks for Rust</h1>
         <p className="m-0 max-w-[58ch] text-[16.5px] leading-relaxed text-muted-foreground">
           Small, focused crates for HTTP, validation, authentication, databases, queues and storage. Use one on its own, or combine them into a
           complete API server.
