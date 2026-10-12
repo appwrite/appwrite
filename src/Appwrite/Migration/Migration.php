@@ -312,6 +312,10 @@ abstract class Migration
             $collectionType = 'buckets';
         }
 
+        if ($from === 'collections') {
+            $collectionType = 'databases';
+        }
+
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
@@ -415,6 +419,10 @@ abstract class Migration
             $collectionType = 'buckets';
         }
 
+        if ($from === 'collections') {
+            $collectionType = 'databases';
+        }
+
         $collection = $this->collections[$collectionType][$from] ?? null;
 
         if ($collection === null) {
@@ -471,6 +479,10 @@ abstract class Migration
 
         if ($from === 'files') {
             $collectionType = 'buckets';
+        }
+
+        if ($from === 'collections') {
+            $collectionType = 'databases';
         }
 
         $collection = $this->collections[$collectionType][$from] ?? null;

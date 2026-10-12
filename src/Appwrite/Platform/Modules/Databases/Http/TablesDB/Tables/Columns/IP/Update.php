@@ -15,6 +15,7 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\IP;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Update extends IPUpdate
 {
@@ -61,6 +62,7 @@ class Update extends IPUpdate
             ->param('required', null, new Boolean(), 'Is column required?')
             ->param('default', null, new Nullable(new IP()), 'Default value. Cannot be set when column is required.', example: '192.0.2.0')
             ->param('newKey', null, fn (Database $dbForProject) => new Nullable(new Key(false, $dbForProject->getAdapter()->getMaxUIDLength())), 'New Column Key.', true, ['dbForProject'])
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

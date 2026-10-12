@@ -19,6 +19,7 @@ use Utopia\Platform\Enum;
 use Utopia\Validator\ArrayList;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 use Utopia\Validator\WhiteList;
 
 class Create extends IndexCreate
@@ -67,6 +68,7 @@ class Create extends IndexCreate
             ->param('columns', null, fn (Database $dbForProject) => new ArrayList(new Key(true, $dbForProject->getAdapter()->getMaxUIDLength()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of columns to index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' columns are allowed, each 32 characters long.', false, ['dbForProject'], example: '["username"]')
             ->param('orders', [], new ArrayList(new WhiteList(['ASC', 'DESC'], false, Database::VAR_STRING), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index orders. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE . ' orders are allowed.', true, enum: new Enum(name: 'OrderBy'))
             ->param('lengths', [], new ArrayList(new Nullable(new Integer()), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Length of index. Maximum of ' . APP_LIMIT_ARRAY_PARAMS_SIZE, optional: true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the index.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -76,8 +78,8 @@ class Create extends IndexCreate
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, array $lengths, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $tableId, string $key, string $type, array $columns, array $orders, array $lengths, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
-        parent::action($databaseId, $tableId, $key, $type, $columns, $orders, $lengths, $response, $dbForProject, $getDatabasesDB, $publisherForDatabase, $queueForEvents, $authorization);
+        parent::action($databaseId, $tableId, $key, $type, $columns, $orders, $lengths, $description, $response, $dbForProject, $getDatabasesDB, $publisherForDatabase, $queueForEvents, $authorization);
     }
 }

@@ -71,6 +71,7 @@ class Update extends Action
             ->param('default', null, new Nullable(new Text(0, 0)), 'Default value for attribute when not provided. Cannot be set when attribute is required.', example: 'Hello World')
             ->param('size', null, new Nullable(new Range(1, 16381, Validator::TYPE_INTEGER)), 'Maximum size of the varchar attribute.', true)
             ->param('newKey', null, new Nullable(new Key()), 'New Attribute Key.', true)
+            ->param('description', null, new Nullable(new Text(1024, 0)), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -87,6 +88,7 @@ class Update extends Action
         ?string        $default,
         ?int           $size,
         ?string        $newKey,
+        ?string        $description,
         UtopiaResponse $response,
         Database       $dbForProject,
         callable       $getDatabasesDB,
@@ -105,7 +107,8 @@ class Update extends Action
             size: $size,
             default: $default,
             required: $required,
-            newKey: $newKey
+            newKey: $newKey,
+            description: $description
         );
 
         $response

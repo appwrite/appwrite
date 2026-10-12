@@ -318,6 +318,7 @@ abstract class Action extends DatabasesAction
     protected function createAttribute(string $databaseId, string $collectionId, Document $attribute, Response $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): Document
     {
         $key = $attribute->getAttribute('key');
+        $description = $attribute->getAttribute('description', '');
         $type = $attribute->getAttribute('type', '');
         $size = $attribute->getAttribute('size', 0);
         $required = $attribute->getAttribute('required', true);
@@ -375,6 +376,7 @@ abstract class Action extends DatabasesAction
             $attribute = new Document([
                 '$id' => ID::custom($db->getSequence() . '_' . $collection->getSequence() . '_' . $key),
                 'key' => $key,
+                'description' => $description,
                 'databaseInternalId' => $db->getSequence(),
                 'databaseId' => $db->getId(),
                 'collectionInternalId' => $collection->getSequence(),
@@ -495,7 +497,7 @@ abstract class Action extends DatabasesAction
         return $attribute;
     }
 
-    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null): Document
+    protected function updateAttribute(string $databaseId, string $collectionId, string $key, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization, string $type, ?int $size = null, ?string $filter = null, string|bool|int|float|array|null $default = null, ?bool $required = null, int|float|null $min = null, int|float|null $max = null, ?array $elements = null, array $options = [], ?string $newKey = null, ?string $description = null): Document
     {
         $db = $authorization->skip(fn () => $dbForProject->getDocument('databases', $databaseId));
 
@@ -551,6 +553,10 @@ abstract class Action extends DatabasesAction
         $attribute
             ->setAttribute('default', $default)
             ->setAttribute('required', $required);
+
+        if (!\is_null($description)) {
+            $attribute->setAttribute('description', $description);
+        }
 
         if (!empty($size)) {
             $attribute->setAttribute('size', $size);

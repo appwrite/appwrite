@@ -21,6 +21,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\Integer;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\Text;
 
 class Create extends Action
 {
@@ -72,6 +73,7 @@ class Create extends Action
             ->param('max', null, new Nullable(new Integer(false, 64)), 'Maximum value', true, example: '1000000')
             ->param('default', null, new Nullable(new Integer(false, 64)), 'Default value. Cannot be set when attribute is required.', true, example: '0')
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -81,7 +83,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?int $min, ?int $max, ?int $default, bool $array, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $min ??= \PHP_INT_MIN;
         $max ??= \PHP_INT_MAX;
@@ -97,6 +99,7 @@ class Create extends Action
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
+            'description' => $description,
             'type' => Database::VAR_BIGINT,
             'size' => 8,
             'required' => $required,

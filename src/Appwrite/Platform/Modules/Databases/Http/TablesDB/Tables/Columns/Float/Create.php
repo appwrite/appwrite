@@ -14,6 +14,7 @@ use Utopia\Http\Adapter\Swoole\Response as SwooleResponse;
 use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Nullable;
+use Utopia\Validator\Text;
 
 class Create extends FloatCreate
 {
@@ -61,6 +62,7 @@ class Create extends FloatCreate
             ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value', true, example: '100.0')
             ->param('default', null, new Nullable(new FloatValidator()), 'Default value. Cannot be set when required.', true, example: '10.5')
             ->param('array', false, new Boolean(), 'Is column an array?', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the column.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')

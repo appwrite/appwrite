@@ -206,12 +206,24 @@ class V25 extends Migration
 
                 case 'databases':
                     if ($collectionType === 'projects') {
-                        try {
-                            $this->createAttributeFromCollection($this->dbForProject, $id, 'status');
-                        } catch (Throwable $th) {
-                            Console::warning("Failed to create attribute \"status\" in collection {$id}: {$th->getMessage()}");
+                        foreach (['status', 'description'] as $attribute) {
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $id, $attribute);
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"{$attribute}\" in collection {$id}: {$th->getMessage()}");
+                            }
                         }
                         $this->dbForProject->purgeCachedCollection($id);
+
+                        foreach ($this->documentsIterator($id) as $database) {
+                            $databaseTable = 'database_' . $database->getSequence();
+                            try {
+                                $this->createAttributeFromCollection($this->dbForProject, $databaseTable, 'description', 'collections');
+                            } catch (Throwable $th) {
+                                Console::warning("Failed to create attribute \"description\" in collection {$databaseTable}: {$th->getMessage()}");
+                            }
+                            $this->dbForProject->purgeCachedCollection($databaseTable);
+                        }
 
                         // Backfill existing databases so the stored value matches the intended default.
                         // Materialize the matched documents before updating any of them: updating
@@ -233,13 +245,12 @@ class V25 extends Migration
                 case 'functions':
                 case 'sites':
                     if ($collectionType === 'projects') {
-                        $attributes = ['providerBranches', 'providerPaths'];
+                        $attributes = ['providerBranches', 'providerPaths', 'description'];
                         if ($id === 'sites') {
                             $attributes[] = 'scopes';
                         }
                         if ($id === 'functions') {
                             $attributes[] = 'interval';
-                            $attributes[] = 'description';
                         }
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
@@ -354,6 +365,31 @@ class V25 extends Migration
                     }
 
                     $this->dbForProject->purgeCachedCollection($id);
+                    break;
+
+                case 'attributes':
+                case 'indexes':
+                case 'variables':
+                    if ($collectionType === 'projects') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
+                    break;
+
+                case 'keys':
+                case 'webhooks':
+                    if ($collectionType === 'console') {
+                        try {
+                            $this->createAttributeFromCollection($this->dbForProject, $id, 'description');
+                        } catch (Throwable $th) {
+                            Console::warning("Failed to create attribute \"description\" in collection {$id}: {$th->getMessage()}");
+                        }
+                        $this->dbForProject->purgeCachedCollection($id);
+                    }
                     break;
 
                 case 'pushLedger':

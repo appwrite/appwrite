@@ -68,6 +68,7 @@ class Create extends CollectionCreate
             ->param('enabled', true, new Boolean(), 'Is table enabled? When set to \'disabled\', users cannot access the table but Server SDKs with and API key can still read and write to the table. No data is lost when this is toggled.', true)
             ->param('columns', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of column definitions to create. Each column should contain: key (string), type (string: string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, point, linestring, polygon, email, url, ip, enum), size (integer, required for string and varchar types), required (boolean, optional), default (mixed, optional), array (boolean, optional), and type-specific options.', true)
             ->param('indexes', [], new ArrayList(new JSONObject(), APP_LIMIT_ARRAY_PARAMS_SIZE), 'Array of index definitions to create. Each index should contain: key (string), type (string: key, fulltext, unique, spatial), attributes (array of column keys), orders (array of ASC/DESC, optional), and lengths (array of integers, optional).', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the table.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -76,8 +77,8 @@ class Create extends CollectionCreate
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $tableId, string $name, ?array $permissions, bool $rowSecurity, bool $enabled, array $columns, array $indexes, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $tableId, string $name, ?array $permissions, bool $rowSecurity, bool $enabled, array $columns, array $indexes, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, Event $queueForEvents, Authorization $authorization): void
     {
-        parent::action($databaseId, $tableId, $name, $permissions, $rowSecurity, $enabled, $columns, $indexes, $response, $dbForProject, $getDatabasesDB, $queueForEvents, $authorization);
+        parent::action($databaseId, $tableId, $name, $permissions, $rowSecurity, $enabled, $columns, $indexes, $description, $response, $dbForProject, $getDatabasesDB, $queueForEvents, $authorization);
     }
 }

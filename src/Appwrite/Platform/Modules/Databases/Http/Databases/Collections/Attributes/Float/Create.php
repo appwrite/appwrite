@@ -21,6 +21,7 @@ use Utopia\Validator\Boolean;
 use Utopia\Validator\FloatValidator;
 use Utopia\Validator\Nullable;
 use Utopia\Validator\Range;
+use Utopia\Validator\Text;
 
 class Create extends Action
 {
@@ -72,6 +73,7 @@ class Create extends Action
             ->param('max', null, new Nullable(new FloatValidator()), 'Maximum value.', true, example: '100.0')
             ->param('default', null, new Nullable(new FloatValidator()), 'Default value. Cannot be set when required.', true, example: '10.5')
             ->param('array', false, new Boolean(), 'Is attribute an array?', true)
+            ->param('description', '', new Text(1024, 0), 'Optional description for the attribute.', true)
             ->inject('response')
             ->inject('dbForProject')
             ->inject('getDatabasesDB')
@@ -81,7 +83,7 @@ class Create extends Action
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
+    public function action(string $databaseId, string $collectionId, string $key, ?bool $required, ?float $min, ?float $max, ?float $default, bool $array, string $description, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, DatabasePublisher $publisherForDatabase, Event $queueForEvents, Authorization $authorization): void
     {
         $min ??= -PHP_FLOAT_MAX;
         $max ??= PHP_FLOAT_MAX;
@@ -97,6 +99,7 @@ class Create extends Action
 
         $attribute = $this->createAttribute($databaseId, $collectionId, new Document([
             'key' => $key,
+            'description' => $description,
             'type' => Database::VAR_FLOAT,
             'size' => 0,
             'required' => $required,
