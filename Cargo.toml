@@ -169,7 +169,7 @@ proc-macro2 = { version = "1", default-features = false, features = ["span-locat
 quote = { version = "1", default-features = false }
 # Streaming XML reader (utopia-storage: S3 responses, decoded as SimpleXML
 # does); pure Rust, maintained.
-quick-xml = "0.38"
+quick-xml = "0.41"
 # Thread-local CSPRNG (ChaCha12 keyed from the OS, rekeyed every 64 KiB) for
 # utopia-auth tokens and salts; pure Rust, already in the tree.
 rand = { version = "0.10", default-features = false, features = ["thread_rng"] }
