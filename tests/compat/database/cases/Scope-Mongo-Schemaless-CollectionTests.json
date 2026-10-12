@@ -1,0 +1,7005 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/CollectionTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/Schemaless/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "CollectionTests::testCreateListExistsDeleteCollection",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "actors",
+            "permissions": [
+              "create(\"any\")",
+              "read(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "actors",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "name": "actors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.list_collections",
+          "args": {},
+          "expect": [
+            {
+              "$document": {
+                "name": "actors",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "actors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}",
+            "collection": "actors"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "actors2",
+            "permissions": [
+              "create(\"any\")",
+              "read(\"any\")"
+            ]
+          },
+          "bind": "s18",
+          "expect": {
+            "$document": {
+              "$id": "actors2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "name": "actors2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.list_collections",
+          "args": {},
+          "expect": [
+            {
+              "$document": {
+                "name": "actors",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "actors"
+              }
+            },
+            {
+              "$document": {
+                "name": "actors2",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "actors2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}",
+            "collection": "actors2"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "actors2"
+          },
+          "expect": {
+            "$document": {
+              "name": "actors2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "actors2"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "_metadata",
+            "id": "actors2",
+            "document": {
+              "$document": {
+                "name": "actors",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$sequence": {
+                  "$ref": "s18",
+                  "path": "/$document/$sequence",
+                  "default": "01a131c0-4e15-7115-a62f-0e46130a997b"
+                },
+                "$id": "actors2"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "actors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "actors2"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "actors2"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.list_collections",
+          "args": {},
+          "expect": [
+            {
+              "$document": {
+                "name": "actors",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "actors"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "actors"
+          },
+          "expect": {
+            "$document": {
+              "name": "actors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "actors"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "actors"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "actors"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "database": "${ns}",
+            "collection": "actors"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testDatabaseHostname",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForHostname",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getHostname",
+            "args": {}
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "each runtime reaches the server under its own host name, on its own connection"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreateCollectionWithSchema",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "withSchema",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attribute1",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute2",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute3",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute4",
+                  "type": "id",
+                  "size": 0,
+                  "required": false,
+                  "signed": false,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "index1",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1"
+                  ],
+                  "lengths": [
+                    256
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index2",
+                  "type": "key",
+                  "attributes": [
+                    "attribute2"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index3",
+                  "type": "key",
+                  "attributes": [
+                    "attribute3",
+                    "attribute2"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "DESC",
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index4",
+                  "type": "key",
+                  "attributes": [
+                    "attribute4"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "withSchema",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "withSchema",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attribute1",
+                    "type": "string",
+                    "size": 256,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute2",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute3",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute4",
+                    "type": "id",
+                    "size": 0,
+                    "required": false,
+                    "signed": false,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index1",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index2",
+                    "type": "key",
+                    "attributes": [
+                      "attribute2"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "DESC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index3",
+                    "type": "key",
+                    "attributes": [
+                      "attribute3",
+                      "attribute2"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "DESC",
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index4",
+                    "type": "key",
+                    "attributes": [
+                      "attribute4"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "DESC"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "withSchema"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "with-dash",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attribute-one",
+                  "type": "string",
+                  "size": 256,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "index-one",
+                  "type": "key",
+                  "attributes": [
+                    "attribute-one"
+                  ],
+                  "lengths": [
+                    256
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "with-dash",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "with-dash",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attribute-one",
+                    "type": "string",
+                    "size": 256,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index-one",
+                    "type": "key",
+                    "attributes": [
+                      "attribute-one"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "with-dash"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreateCollectionValidator",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "validatorTest",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attribute1",
+                  "type": "string",
+                  "size": 2500,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute-2",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute_3",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute.4",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute5",
+                  "type": "string",
+                  "size": 2500,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "index1",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1"
+                  ],
+                  "lengths": [
+                    256
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index-2",
+                  "type": "key",
+                  "attributes": [
+                    "attribute-2"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index_3",
+                  "type": "key",
+                  "attributes": [
+                    "attribute_3"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index.4",
+                  "type": "key",
+                  "attributes": [
+                    "attribute.4"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index_2_attributes",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1",
+                    "attribute5"
+                  ],
+                  "lengths": [
+                    200,
+                    300
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "validatorTest",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "validatorTest",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attribute1",
+                    "type": "string",
+                    "size": 2500,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute-2",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute_3",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute.4",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute5",
+                    "type": "string",
+                    "size": 2500,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index1",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1"
+                    ],
+                    "lengths": [
+                      256
+                    ],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index-2",
+                    "type": "key",
+                    "attributes": [
+                      "attribute-2"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index_3",
+                    "type": "key",
+                    "attributes": [
+                      "attribute_3"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index.4",
+                    "type": "key",
+                    "attributes": [
+                      "attribute.4"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index_2_attributes",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1",
+                      "attribute5"
+                    ],
+                    "lengths": [
+                      200,
+                      300
+                    ],
+                    "orders": [
+                      "DESC"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "validatorTest"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "validator-test",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attribute1",
+                  "type": "string",
+                  "size": 2500,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute-2",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute_3",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute.4",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute5",
+                  "type": "string",
+                  "size": 2500,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "index1",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1"
+                  ],
+                  "lengths": [
+                    256
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index-2",
+                  "type": "key",
+                  "attributes": [
+                    "attribute-2"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index_3",
+                  "type": "key",
+                  "attributes": [
+                    "attribute_3"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index.4",
+                  "type": "key",
+                  "attributes": [
+                    "attribute.4"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index_2_attributes",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1",
+                    "attribute5"
+                  ],
+                  "lengths": [
+                    200,
+                    300
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "validator-test",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "validator-test",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attribute1",
+                    "type": "string",
+                    "size": 2500,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute-2",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute_3",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute.4",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute5",
+                    "type": "string",
+                    "size": 2500,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index1",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1"
+                    ],
+                    "lengths": [
+                      256
+                    ],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index-2",
+                    "type": "key",
+                    "attributes": [
+                      "attribute-2"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index_3",
+                    "type": "key",
+                    "attributes": [
+                      "attribute_3"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index.4",
+                    "type": "key",
+                    "attributes": [
+                      "attribute.4"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index_2_attributes",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1",
+                      "attribute5"
+                    ],
+                    "lengths": [
+                      200,
+                      300
+                    ],
+                    "orders": [
+                      "DESC"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "validator-test"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "validator_test",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attribute1",
+                  "type": "string",
+                  "size": 2500,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute-2",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute_3",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute.4",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute5",
+                  "type": "string",
+                  "size": 2500,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "index1",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1"
+                  ],
+                  "lengths": [
+                    256
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index-2",
+                  "type": "key",
+                  "attributes": [
+                    "attribute-2"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index_3",
+                  "type": "key",
+                  "attributes": [
+                    "attribute_3"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index.4",
+                  "type": "key",
+                  "attributes": [
+                    "attribute.4"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index_2_attributes",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1",
+                    "attribute5"
+                  ],
+                  "lengths": [
+                    200,
+                    300
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "validator_test",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "validator_test",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attribute1",
+                    "type": "string",
+                    "size": 2500,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute-2",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute_3",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute.4",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute5",
+                    "type": "string",
+                    "size": 2500,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index1",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1"
+                    ],
+                    "lengths": [
+                      256
+                    ],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index-2",
+                    "type": "key",
+                    "attributes": [
+                      "attribute-2"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index_3",
+                    "type": "key",
+                    "attributes": [
+                      "attribute_3"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index.4",
+                    "type": "key",
+                    "attributes": [
+                      "attribute.4"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index_2_attributes",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1",
+                      "attribute5"
+                    ],
+                    "lengths": [
+                      200,
+                      300
+                    ],
+                    "orders": [
+                      "DESC"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "validator_test"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "validator.test",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "attribute1",
+                  "type": "string",
+                  "size": 2500,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute-2",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute_3",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute.4",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "attribute5",
+                  "type": "string",
+                  "size": 2500,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "filters": []
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "index1",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1"
+                  ],
+                  "lengths": [
+                    256
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index-2",
+                  "type": "key",
+                  "attributes": [
+                    "attribute-2"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index_3",
+                  "type": "key",
+                  "attributes": [
+                    "attribute_3"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index.4",
+                  "type": "key",
+                  "attributes": [
+                    "attribute.4"
+                  ],
+                  "lengths": [],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "index_2_attributes",
+                  "type": "key",
+                  "attributes": [
+                    "attribute1",
+                    "attribute5"
+                  ],
+                  "lengths": [
+                    200,
+                    300
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "validator.test",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "validator.test",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "attribute1",
+                    "type": "string",
+                    "size": 2500,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute-2",
+                    "type": "integer",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute_3",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute.4",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attribute5",
+                    "type": "string",
+                    "size": 2500,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "index1",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1"
+                    ],
+                    "lengths": [
+                      256
+                    ],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index-2",
+                    "type": "key",
+                    "attributes": [
+                      "attribute-2"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index_3",
+                    "type": "key",
+                    "attributes": [
+                      "attribute_3"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index.4",
+                    "type": "key",
+                    "attributes": [
+                      "attribute.4"
+                    ],
+                    "lengths": [],
+                    "orders": [
+                      "ASC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "index_2_attributes",
+                    "type": "key",
+                    "attributes": [
+                      "attribute1",
+                      "attribute5"
+                    ],
+                    "lengths": [
+                      200,
+                      300
+                    ],
+                    "orders": [
+                      "DESC"
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "validator.test"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCollectionNotFound",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "not_exist"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSizeCollection",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "sizeTest1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "sizeTest1",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "sizeTest1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "sizeTest2"
+          },
+          "expect": {
+            "$document": {
+              "$id": "sizeTest2",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "sizeTest2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_size_of_collection",
+          "args": {
+            "collection": "sizeTest1"
+          },
+          "expect": 24576
+        },
+        {
+          "op": "database.get_size_of_collection",
+          "args": {
+            "collection": "sizeTest2"
+          },
+          "expect": 24576
+        },
+        {
+          "op": "database.analyze_collection",
+          "args": {
+            "collection": "sizeTest2"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSizeCollectionOnDisk",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "sizeTestDisk1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "sizeTestDisk1",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "sizeTestDisk1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "sizeTestDisk2"
+          },
+          "expect": {
+            "$document": {
+              "$id": "sizeTestDisk2",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "sizeTestDisk2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_size_of_collection_on_disk",
+          "args": {
+            "collection": "sizeTestDisk1"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a MongoDB collection's storage size depends on when WiredTiger last checkpointed it"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.get_size_of_collection_on_disk",
+          "args": {
+            "collection": "sizeTestDisk2"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a MongoDB collection's storage size depends on when WiredTiger last checkpointed it"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "id": "string1",
+            "type": "string",
+            "size": 20000,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "id": "string2",
+            "type": "string",
+            "size": 255,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "id": "string3",
+            "type": "string",
+            "size": 255,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "id": "index",
+            "type": "key",
+            "attributes": [
+              "string1",
+              "string2",
+              "string3"
+            ],
+            "lengths": [
+              128,
+              128,
+              128
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string10",
+                "string2": "string20",
+                "string3": "string30"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string10",
+              "string2": "string20",
+              "string3": "string30",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string11",
+                "string2": "string21",
+                "string3": "string31"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string11",
+              "string2": "string21",
+              "string3": "string31",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string12",
+                "string2": "string22",
+                "string3": "string32"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string12",
+              "string2": "string22",
+              "string3": "string32",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string13",
+                "string2": "string23",
+                "string3": "string33"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string13",
+              "string2": "string23",
+              "string3": "string33",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string14",
+                "string2": "string24",
+                "string3": "string34"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string14",
+              "string2": "string24",
+              "string3": "string34",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string15",
+                "string2": "string25",
+                "string3": "string35"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string15",
+              "string2": "string25",
+              "string3": "string35",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string16",
+                "string2": "string26",
+                "string3": "string36"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string16",
+              "string2": "string26",
+              "string3": "string36",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string17",
+                "string2": "string27",
+                "string3": "string37"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string17",
+              "string2": "string27",
+              "string3": "string37",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string18",
+                "string2": "string28",
+                "string3": "string38"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string18",
+              "string2": "string28",
+              "string3": "string38",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string19",
+                "string2": "string29",
+                "string3": "string39"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string19",
+              "string2": "string29",
+              "string3": "string39",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string110",
+                "string2": "string210",
+                "string3": "string310"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string110",
+              "string2": "string210",
+              "string3": "string310",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string111",
+                "string2": "string211",
+                "string3": "string311"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string111",
+              "string2": "string211",
+              "string3": "string311",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string112",
+                "string2": "string212",
+                "string3": "string312"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string112",
+              "string2": "string212",
+              "string3": "string312",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string113",
+                "string2": "string213",
+                "string3": "string313"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string113",
+              "string2": "string213",
+              "string3": "string313",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string114",
+                "string2": "string214",
+                "string3": "string314"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string114",
+              "string2": "string214",
+              "string3": "string314",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string115",
+                "string2": "string215",
+                "string3": "string315"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string115",
+              "string2": "string215",
+              "string3": "string315",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string116",
+                "string2": "string216",
+                "string3": "string316"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string116",
+              "string2": "string216",
+              "string3": "string316",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string117",
+                "string2": "string217",
+                "string3": "string317"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string117",
+              "string2": "string217",
+              "string3": "string317",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string118",
+                "string2": "string218",
+                "string3": "string318"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string118",
+              "string2": "string218",
+              "string3": "string318",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string119",
+                "string2": "string219",
+                "string3": "string319"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string119",
+              "string2": "string219",
+              "string3": "string319",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string120",
+                "string2": "string220",
+                "string3": "string320"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string120",
+              "string2": "string220",
+              "string3": "string320",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string121",
+                "string2": "string221",
+                "string3": "string321"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string121",
+              "string2": "string221",
+              "string3": "string321",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string122",
+                "string2": "string222",
+                "string3": "string322"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string122",
+              "string2": "string222",
+              "string3": "string322",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string123",
+                "string2": "string223",
+                "string3": "string323"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string123",
+              "string2": "string223",
+              "string3": "string323",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string124",
+                "string2": "string224",
+                "string3": "string324"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string124",
+              "string2": "string224",
+              "string3": "string324",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string125",
+                "string2": "string225",
+                "string3": "string325"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string125",
+              "string2": "string225",
+              "string3": "string325",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string126",
+                "string2": "string226",
+                "string3": "string326"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string126",
+              "string2": "string226",
+              "string3": "string326",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string127",
+                "string2": "string227",
+                "string3": "string327"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string127",
+              "string2": "string227",
+              "string3": "string327",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string128",
+                "string2": "string228",
+                "string3": "string328"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string128",
+              "string2": "string228",
+              "string3": "string328",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string129",
+                "string2": "string229",
+                "string3": "string329"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string129",
+              "string2": "string229",
+              "string3": "string329",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string130",
+                "string2": "string230",
+                "string3": "string330"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string130",
+              "string2": "string230",
+              "string3": "string330",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string131",
+                "string2": "string231",
+                "string3": "string331"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string131",
+              "string2": "string231",
+              "string3": "string331",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string132",
+                "string2": "string232",
+                "string3": "string332"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string132",
+              "string2": "string232",
+              "string3": "string332",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string133",
+                "string2": "string233",
+                "string3": "string333"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string133",
+              "string2": "string233",
+              "string3": "string333",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string134",
+                "string2": "string234",
+                "string3": "string334"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string134",
+              "string2": "string234",
+              "string3": "string334",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string135",
+                "string2": "string235",
+                "string3": "string335"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string135",
+              "string2": "string235",
+              "string3": "string335",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string136",
+                "string2": "string236",
+                "string3": "string336"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string136",
+              "string2": "string236",
+              "string3": "string336",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string137",
+                "string2": "string237",
+                "string3": "string337"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string137",
+              "string2": "string237",
+              "string3": "string337",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string138",
+                "string2": "string238",
+                "string3": "string338"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string138",
+              "string2": "string238",
+              "string3": "string338",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "sizeTestDisk2",
+            "document": {
+              "$document": {
+                "string1": "string139",
+                "string2": "string239",
+                "string3": "string339"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string139",
+              "string2": "string239",
+              "string3": "string339",
+              "$id": "<uniqid>",
+              "$collection": "sizeTestDisk2",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_size_of_collection_on_disk",
+          "args": {
+            "collection": "sizeTestDisk2"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a MongoDB collection's storage size depends on when WiredTiger last checkpointed it"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSizeFullText",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForFulltextIndex",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "fullTextSizeTest"
+          },
+          "expect": {
+            "$document": {
+              "$id": "fullTextSizeTest",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "fullTextSizeTest",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_size_of_collection",
+          "args": {
+            "collection": "fullTextSizeTest"
+          },
+          "expect": 24576
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "id": "string1",
+            "type": "string",
+            "size": 128,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "id": "string2",
+            "type": "string",
+            "size": 254,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "id": "string3",
+            "type": "string",
+            "size": 254,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "id": "index",
+            "type": "key",
+            "attributes": [
+              "string1",
+              "string2",
+              "string3"
+            ],
+            "lengths": [
+              128,
+              128,
+              128
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string10",
+                "string2": "string20",
+                "string3": "string30"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string10",
+              "string2": "string20",
+              "string3": "string30",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string11",
+                "string2": "string21",
+                "string3": "string31"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string11",
+              "string2": "string21",
+              "string3": "string31",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string12",
+                "string2": "string22",
+                "string3": "string32"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string12",
+              "string2": "string22",
+              "string3": "string32",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string13",
+                "string2": "string23",
+                "string3": "string33"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string13",
+              "string2": "string23",
+              "string3": "string33",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string14",
+                "string2": "string24",
+                "string3": "string34"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string14",
+              "string2": "string24",
+              "string3": "string34",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string15",
+                "string2": "string25",
+                "string3": "string35"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string15",
+              "string2": "string25",
+              "string3": "string35",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string16",
+                "string2": "string26",
+                "string3": "string36"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string16",
+              "string2": "string26",
+              "string3": "string36",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string17",
+                "string2": "string27",
+                "string3": "string37"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string17",
+              "string2": "string27",
+              "string3": "string37",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string18",
+                "string2": "string28",
+                "string3": "string38"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string18",
+              "string2": "string28",
+              "string3": "string38",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "document": {
+              "$document": {
+                "string1": "string19",
+                "string2": "string29",
+                "string3": "string39"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "string1": "string19",
+              "string2": "string29",
+              "string3": "string39",
+              "$id": "<uniqid>",
+              "$collection": "fullTextSizeTest",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_size_of_collection_on_disk",
+          "args": {
+            "collection": "fullTextSizeTest"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a MongoDB collection's storage size depends on when WiredTiger last checkpointed it"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "fullTextSizeTest",
+            "id": "fulltext_index",
+            "type": "fulltext",
+            "attributes": [
+              "string1"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_size_of_collection_on_disk",
+          "args": {
+            "collection": "fullTextSizeTest"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a MongoDB collection's storage size depends on when WiredTiger last checkpointed it"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testPurgeCollectionCache",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "redis"
+          },
+          "expect": {
+            "$document": {
+              "$id": "redis",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "redis",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "redis",
+            "id": "name",
+            "type": "string",
+            "size": 128,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "redis",
+            "id": "age",
+            "type": "integer",
+            "size": 0,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "redis",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "name": "Richard",
+                "age": 15,
+                "$permissions": [
+                  "read(\"any\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "name": "Richard",
+              "age": 15,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "redis",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "redis",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "name": "Richard",
+              "age": 15,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "redis",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc1"
+            }
+          }
+        },
+        {
+          "op": "database.delete_attribute",
+          "args": {
+            "collection": "redis",
+            "id": "age"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "redis",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "name": "Richard",
+              "age": 15,
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "redis",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc1"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSchemaAttributes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemaAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testRowSizeToLarge",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getDocumentSizeLimit",
+            "args": {}
+          },
+          "expect": 0
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreateCollectionWithSchemaIndexes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForIndexArray",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "collection98",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "username",
+                  "type": "string",
+                  "size": 100,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "cards",
+                  "type": "string",
+                  "size": 5000,
+                  "required": false,
+                  "signed": true,
+                  "array": true
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "idx_username",
+                  "type": "key",
+                  "attributes": [
+                    "username"
+                  ],
+                  "lengths": [
+                    100
+                  ],
+                  "orders": []
+                }
+              },
+              {
+                "$document": {
+                  "$id": "idx_username_uid",
+                  "type": "key",
+                  "attributes": [
+                    "username",
+                    "$id"
+                  ],
+                  "lengths": [
+                    99,
+                    200
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "idx_cards",
+                  "type": "key",
+                  "attributes": [
+                    "cards"
+                  ],
+                  "lengths": [
+                    500
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              }
+            ],
+            "permissions": [
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "collection98",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "collection98",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "username",
+                    "type": "string",
+                    "size": 100,
+                    "required": false,
+                    "signed": true,
+                    "array": false
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "cards",
+                    "type": "string",
+                    "size": 5000,
+                    "required": false,
+                    "signed": true,
+                    "array": true
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "idx_username",
+                    "type": "key",
+                    "attributes": [
+                      "username"
+                    ],
+                    "lengths": [
+                      null
+                    ],
+                    "orders": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "idx_username_uid",
+                    "type": "key",
+                    "attributes": [
+                      "username",
+                      "$id"
+                    ],
+                    "lengths": [
+                      99,
+                      200
+                    ],
+                    "orders": [
+                      "DESC"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "idx_cards",
+                    "type": "key",
+                    "attributes": [
+                      "cards"
+                    ],
+                    "lengths": [
+                      255
+                    ],
+                    "orders": [
+                      null
+                    ]
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForIndexArray",
+            "args": {}
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCollectionUpdate",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "collectionUpdate",
+            "permissions": [
+              "create(\"users\")",
+              "read(\"users\")",
+              "update(\"users\")",
+              "delete(\"users\")"
+            ],
+            "documentSecurity": false
+          },
+          "expect": {
+            "$document": {
+              "$id": "collectionUpdate",
+              "$permissions": [
+                "create(\"users\")",
+                "read(\"users\")",
+                "update(\"users\")",
+                "delete(\"users\")"
+              ],
+              "name": "collectionUpdate",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "collectionUpdate"
+          },
+          "expect": {
+            "$document": {
+              "name": "collectionUpdate",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": false,
+              "$permissions": [
+                "create(\"users\")",
+                "read(\"users\")",
+                "update(\"users\")",
+                "delete(\"users\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "collectionUpdate"
+            }
+          }
+        },
+        {
+          "op": "database.update_collection",
+          "args": {
+            "id": "collectionUpdate",
+            "permissions": [],
+            "documentSecurity": true
+          },
+          "expect": {
+            "$document": {
+              "name": "collectionUpdate",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "collectionUpdate"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "collectionUpdate"
+          },
+          "expect": {
+            "$document": {
+              "name": "collectionUpdate",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "collectionUpdate"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testUpdateDeleteCollectionNotFound",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "not_found"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "database.update_collection",
+          "args": {
+            "id": "not_found",
+            "permissions": [],
+            "documentSecurity": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testGetCollectionId",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForGetConnectionId",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testLabels",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "labels_test"
+          },
+          "expect": {
+            "$document": {
+              "$id": "labels_test",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "labels_test",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "labels_test",
+            "id": "attr1",
+            "type": "string",
+            "size": 10,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "labels_test",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "attr1": "value1",
+                "$permissions": [
+                  "read(\"label:reader\")"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "attr1": "value1",
+              "$permissions": [
+                "read(\"label:reader\")"
+              ],
+              "$collection": "labels_test",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "labels_test"
+          },
+          "expect": []
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "labels_test"
+          },
+          "expect": [
+            {
+              "$document": {
+                "attr1": "value1",
+                "$permissions": [
+                  "read(\"label:reader\")"
+                ],
+                "$collection": "labels_test",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testMetadata",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "key",
+            "value": "value"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "testers"
+          },
+          "expect": {
+            "$document": {
+              "$id": "testers",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "testers",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.get_metadata",
+          "args": {},
+          "expect": {
+            "key": "value"
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.get_metadata",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testDeleteCollectionDeletesRelationships",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "testers"
+          },
+          "expect": {
+            "$document": {
+              "$id": "testers",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "testers",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRelationships",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "devices"
+          },
+          "expect": {
+            "$document": {
+              "$id": "devices",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "devices",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "testers",
+            "relatedCollection": "devices",
+            "type": "oneToMany",
+            "twoWay": true,
+            "twoWayKey": "tester"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "testers"
+          },
+          "expect": {
+            "$document": {
+              "name": "testers",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "devices",
+                    "key": "devices",
+                    "type": "relationship",
+                    "required": false,
+                    "default": null,
+                    "options": {
+                      "relatedCollection": "devices",
+                      "relationType": "oneToMany",
+                      "twoWay": true,
+                      "twoWayKey": "tester",
+                      "onDelete": "restrict",
+                      "side": "parent"
+                    }
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "testers"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "devices"
+          },
+          "expect": {
+            "$document": {
+              "name": "devices",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "tester",
+                    "key": "tester",
+                    "type": "relationship",
+                    "required": false,
+                    "default": null,
+                    "options": {
+                      "relatedCollection": "testers",
+                      "relationType": "oneToMany",
+                      "twoWay": true,
+                      "twoWayKey": "devices",
+                      "onDelete": "restrict",
+                      "side": "child"
+                    }
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "$document": {
+                    "$id": "_index_tester",
+                    "key": "_index_tester",
+                    "type": "key",
+                    "attributes": [
+                      "tester"
+                    ],
+                    "lengths": [],
+                    "orders": [],
+                    "ttl": 1
+                  }
+                }
+              ],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "devices"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "testers"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "testers"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "devices"
+          },
+          "expect": {
+            "$document": {
+              "name": "devices",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "devices"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCascadeMultiDelete",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForRelationships",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "cascadeMultiDelete1"
+          },
+          "expect": {
+            "$document": {
+              "$id": "cascadeMultiDelete1",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "cascadeMultiDelete1",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "cascadeMultiDelete2"
+          },
+          "expect": {
+            "$document": {
+              "$id": "cascadeMultiDelete2",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "cascadeMultiDelete2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "cascadeMultiDelete3"
+          },
+          "expect": {
+            "$document": {
+              "$id": "cascadeMultiDelete3",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "cascadeMultiDelete3",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "cascadeMultiDelete1",
+            "relatedCollection": "cascadeMultiDelete2",
+            "type": "oneToMany",
+            "twoWay": true,
+            "onDelete": "cascade"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_relationship",
+          "args": {
+            "collection": "cascadeMultiDelete2",
+            "relatedCollection": "cascadeMultiDelete3",
+            "type": "oneToMany",
+            "twoWay": true,
+            "onDelete": "cascade"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "cascadeMultiDelete1",
+            "document": {
+              "$document": {
+                "$id": "cascadeMultiDelete1",
+                "$permissions": [
+                  "read(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "cascadeMultiDelete2": [
+                  {
+                    "$id": "cascadeMultiDelete2",
+                    "$permissions": [
+                      "read(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "cascadeMultiDelete3": [
+                      {
+                        "$id": "cascadeMultiDelete3",
+                        "$permissions": [
+                          "read(\"any\")",
+                          "delete(\"any\")"
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "cascadeMultiDelete1",
+              "$permissions": [
+                "read(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "cascadeMultiDelete1",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "cascadeMultiDelete2": [
+                {
+                  "$document": {
+                    "$permissions": [
+                      "read(\"any\")",
+                      "delete(\"any\")"
+                    ],
+                    "$collection": "cascadeMultiDelete2",
+                    "$createdAt": "<now>",
+                    "$updatedAt": "<now>",
+                    "$sequence": "<uuid7>",
+                    "$id": "cascadeMultiDelete2",
+                    "cascadeMultiDelete3": [
+                      {
+                        "$document": {
+                          "$permissions": [
+                            "read(\"any\")",
+                            "delete(\"any\")"
+                          ],
+                          "$collection": "cascadeMultiDelete3",
+                          "$createdAt": "<now>",
+                          "$updatedAt": "<now>",
+                          "$sequence": "<uuid7>",
+                          "$id": "cascadeMultiDelete3"
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "cascadeMultiDelete1",
+            "id": "cascadeMultiDelete1"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "cascadeMultiDelete2",
+            "id": "cascadeMultiDelete2"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "cascadeMultiDelete3",
+            "id": "cascadeMultiDelete3"
+          },
+          "expect": {
+            "$document": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSharedTables",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemas",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreateDuplicates",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "duplicates",
+            "permissions": [
+              "read(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "duplicates",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "duplicates",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "duplicates"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection duplicates already exists"
+            }
+          }
+        },
+        {
+          "op": "database.list_collections",
+          "args": {},
+          "expect": [
+            {
+              "$document": {
+                "name": "duplicates",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "duplicates"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "duplicates"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSharedTablesDuplicates",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemas",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSharedTablesMultiTenantCreateCollection",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemas",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSharedTablesMultiTenantCreate",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_namespace",
+          "args": {},
+          "expect": "compat"
+        },
+        {
+          "op": "database.get_database",
+          "args": {},
+          "expect": "${ns}"
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getIdAttributeType",
+            "args": {}
+          },
+          "expect": "uuid7"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getIdAttributeType",
+            "args": {}
+          },
+          "expect": "uuid7"
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForSchemas",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.set_shared_tables",
+          "args": {
+            "sharedTables": false
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_namespace",
+          "args": {
+            "namespace": "compat"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_database",
+          "args": {
+            "name": "${ns}"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.set_tenant",
+          "args": {
+            "tenant": null
+          },
+          "expect": {
+            "$database": true
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testEvents",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.on",
+                  "args": {
+                    "event": "*",
+                    "name": "test",
+                    "callback": true
+                  }
+                },
+                {
+                  "op": "db.adapter",
+                  "args": {
+                    "method": "getSupportForSchemas",
+                    "args": {}
+                  }
+                },
+                {
+                  "op": "database.list",
+                  "args": {}
+                },
+                {
+                  "op": "database.set_database",
+                  "args": {
+                    "name": "${ns}"
+                  }
+                },
+                {
+                  "op": "database.create_collection",
+                  "args": {
+                    "id": "u0000000000000000001"
+                  }
+                },
+                {
+                  "op": "database.list_collections",
+                  "args": {}
+                },
+                {
+                  "op": "database.get_collection",
+                  "args": {
+                    "id": "u0000000000000000001"
+                  }
+                },
+                {
+                  "op": "database.create_attribute",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "id": "attr1",
+                    "type": "integer",
+                    "size": 2,
+                    "required": false
+                  }
+                },
+                {
+                  "op": "database.update_attribute_required",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "id": "attr1",
+                    "required": true
+                  }
+                },
+                {
+                  "op": "database.create_index",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "id": "index2_u000000000002",
+                    "type": "key",
+                    "attributes": [
+                      "attr1"
+                    ]
+                  }
+                },
+                {
+                  "op": "database.create_document",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "document": {
+                      "$document": {
+                        "$id": "doc1",
+                        "attr1": 10,
+                        "$permissions": [
+                          "delete(\"any\")",
+                          "update(\"any\")",
+                          "read(\"any\")"
+                        ]
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.on",
+                  "args": {
+                    "event": "*",
+                    "name": "should-not-execute",
+                    "callback": true
+                  }
+                },
+                {
+                  "op": "database.silent",
+                  "args": {
+                    "callback": {
+                      "steps": [
+                        {
+                          "op": "database.update_document",
+                          "args": {
+                            "collection": "u0000000000000000001",
+                            "id": "doc1",
+                            "document": {
+                              "$document": {
+                                "$id": "doc1",
+                                "attr1": 15,
+                                "$permissions": [
+                                  "delete(\"any\")",
+                                  "update(\"any\")",
+                                  "read(\"any\")"
+                                ],
+                                "$collection": "u0000000000000000001",
+                                "$createdAt": {
+                                  "$now": 0,
+                                  "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                  "$now": 0,
+                                  "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "01a131c0-5b34-7110-9d55-7385fde6f0fb"
+                              }
+                            }
+                          }
+                        },
+                        {
+                          "op": "database.get_document",
+                          "args": {
+                            "collection": "u0000000000000000001",
+                            "id": "doc1"
+                          }
+                        },
+                        {
+                          "op": "database.find",
+                          "args": {
+                            "collection": "u0000000000000000001"
+                          }
+                        },
+                        {
+                          "op": "database.find_one",
+                          "args": {
+                            "collection": "u0000000000000000001"
+                          }
+                        },
+                        {
+                          "op": "database.count",
+                          "args": {
+                            "collection": "u0000000000000000001"
+                          }
+                        },
+                        {
+                          "op": "database.sum",
+                          "args": {
+                            "collection": "u0000000000000000001",
+                            "attribute": "attr1"
+                          }
+                        },
+                        {
+                          "op": "database.increase_document_attribute",
+                          "args": {
+                            "collection": "u0000000000000000001",
+                            "id": "doc1",
+                            "attribute": "attr1"
+                          }
+                        },
+                        {
+                          "op": "database.decrease_document_attribute",
+                          "args": {
+                            "collection": "u0000000000000000001",
+                            "id": "doc1",
+                            "attribute": "attr1"
+                          }
+                        }
+                      ]
+                    },
+                    "listeners": [
+                      "should-not-execute"
+                    ]
+                  }
+                },
+                {
+                  "op": "database.create_documents",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "documents": [
+                      {
+                        "$document": {
+                          "attr1": 10
+                        }
+                      },
+                      {
+                        "$document": {
+                          "attr1": 20
+                        }
+                      }
+                    ]
+                  }
+                },
+                {
+                  "op": "database.update_documents",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "updates": {
+                      "$document": {
+                        "attr1": 15
+                      }
+                    }
+                  }
+                },
+                {
+                  "op": "database.delete_index",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "id": "index2_u000000000002"
+                  }
+                },
+                {
+                  "op": "database.delete_document",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "id": "doc1"
+                  }
+                },
+                {
+                  "op": "database.delete_documents",
+                  "args": {
+                    "collection": "u0000000000000000001"
+                  }
+                },
+                {
+                  "op": "database.delete_attribute",
+                  "args": {
+                    "collection": "u0000000000000000001",
+                    "id": "attr1"
+                  }
+                },
+                {
+                  "op": "database.delete_collection",
+                  "args": {
+                    "id": "u0000000000000000001"
+                  }
+                },
+                {
+                  "op": "database.delete",
+                  "args": {
+                    "database": "${ns}_hellodb"
+                  }
+                },
+                {
+                  "op": "database.on",
+                  "args": {
+                    "event": "*",
+                    "name": "test",
+                    "callback": null
+                  }
+                },
+                {
+                  "op": "database.on",
+                  "args": {
+                    "event": "*",
+                    "name": "should-not-execute",
+                    "callback": null
+                  }
+                }
+              ]
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a MongoDB listing names every database on the server, other runs' included"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "a MongoDB listing names every database on the server, other runs' included"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreatedAtUpdatedAt",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "created_at"
+          },
+          "expect": {
+            "$document": {
+              "$id": "created_at",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "created_at",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "created_at",
+            "id": "title",
+            "type": "string",
+            "size": 100,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "created_at",
+            "document": {
+              "$document": {
+                "$id": "uid123",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "bind": "s247",
+          "expect": {
+            "$document": {
+              "$id": "uid123",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "created_at",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "title": null
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreatedAtUpdatedAtAssert",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "created_at"
+          },
+          "expect": {
+            "$document": {
+              "$id": "created_at",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "created_at",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "created_at",
+            "id": "title",
+            "type": "string",
+            "size": 100,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "created_at",
+            "document": {
+              "$document": {
+                "$id": "uid123",
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ]
+              }
+            }
+          },
+          "bind": "s247",
+          "expect": {
+            "$document": {
+              "$id": "uid123",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "created_at",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "title": null
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "created_at",
+            "id": "uid123"
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "created_at",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "uid123",
+              "title": null
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "created_at",
+            "id": "uid123",
+            "document": {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")",
+                  "create(\"any\")",
+                  "update(\"any\")",
+                  "delete(\"any\")"
+                ],
+                "$collection": "created_at",
+                "$createdAt": {
+                  "$now": -1,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": -1,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$sequence": {
+                  "$ref": "s247",
+                  "path": "/$document/$sequence",
+                  "default": "01a131c0-5c8f-7344-81df-052b4c9cffa3"
+                },
+                "$id": "uid123",
+                "title": "new title"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "created_at",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "uid123",
+              "title": "new title"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "created_at",
+            "id": "uid123"
+          },
+          "expect": {
+            "$document": {
+              "title": "new title",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "$collection": "created_at",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "uid123"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "created_at"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection created_at already exists"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testTransformations",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "docs",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 767,
+                  "required": true
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "docs",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "docs",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "type": "string",
+                    "size": 767,
+                    "required": true
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "docs",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "name": "value1"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "name": "value1",
+              "$collection": "docs",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "scope",
+            "value": "api.users"
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.before",
+          "args": {
+            "event": "document_read",
+            "name": "test",
+            "callback": {
+              "append": " AND 1=0"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "docs",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.before",
+          "args": {
+            "event": "document_read",
+            "name": "test",
+            "callback": null
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testSetGlobalCollection",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "actors2",
+            "permissions": [
+              "create(\"any\")",
+              "read(\"any\")"
+            ]
+          },
+          "bind": "s18",
+          "expect": {
+            "$document": {
+              "$id": "actors2",
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "name": "actors2",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "_metadata",
+            "id": "actors2",
+            "document": {
+              "$document": {
+                "name": "actors",
+                "attributes": [],
+                "indexes": [],
+                "documentSecurity": true,
+                "$permissions": [
+                  "create(\"any\")",
+                  "read(\"any\")"
+                ],
+                "$collection": "_metadata",
+                "$createdAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$updatedAt": {
+                  "$now": 0,
+                  "format": "Y-m-d\\TH:i:s.vP"
+                },
+                "$sequence": {
+                  "$ref": "s18",
+                  "path": "/$document/$sequence",
+                  "default": "01a131c0-4e15-7115-a62f-0e46130a997b"
+                },
+                "$id": "actors2"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "actors",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "create(\"any\")",
+                "read(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "actors2"
+            }
+          }
+        },
+        {
+          "op": "database.set_global_collections",
+          "args": {
+            "collections": [
+              "globalCollection"
+            ]
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_cache_keys",
+          "args": {
+            "collectionId": "_metadata",
+            "documentId": "globalCollection"
+          },
+          "expect": [
+            "default-cache-compat-database-mongo:compat::collection:_metadata",
+            "default-cache-compat-database-mongo:compat::collection:_metadata:globalCollection",
+            "default-cache-compat-database-mongo:compat::collection:_metadata:globalCollection:902ba0becfb8b628a5c40d3185600afe"
+          ]
+        },
+        {
+          "op": "database.get_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_cache_keys",
+          "args": {
+            "collectionId": "_metadata",
+            "documentId": "nonGlobalCollection"
+          },
+          "expect": [
+            "default-cache-compat-database-mongo:compat::collection:_metadata",
+            "default-cache-compat-database-mongo:compat::collection:_metadata:nonGlobalCollection",
+            "default-cache-compat-database-mongo:compat::collection:_metadata:nonGlobalCollection:902ba0becfb8b628a5c40d3185600afe"
+          ]
+        },
+        {
+          "op": "database.get_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.get_cache_keys",
+          "args": {
+            "collectionId": "globalCollection",
+            "documentId": "u0000000000000000003"
+          },
+          "expect": [
+            "default-cache-compat-database-mongo:compat::collection:globalCollection",
+            "default-cache-compat-database-mongo:compat::collection:globalCollection:u0000000000000000003",
+            "default-cache-compat-database-mongo:compat::collection:globalCollection:u0000000000000000003:902ba0becfb8b628a5c40d3185600afe"
+          ]
+        },
+        {
+          "op": "database.get_shared_tables",
+          "args": {},
+          "expect": false
+        },
+        {
+          "op": "database.reset_global_collections",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.get_global_collections",
+          "args": {},
+          "expect": []
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreateCollectionWithLongId",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreateCollectionConcurrentlyKeepsPeerData",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.open",
+          "args": {
+            "adapter": {
+              "$ref": "db"
+            },
+            "cache": "none"
+          },
+          "bind": "s279",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_authorization",
+          "args": {
+            "db": {
+              "$ref": "s279"
+            },
+            "authorization": {
+              "$ref": "db"
+            }
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "concurrentCreate"
+          },
+          "expect": {
+            "$document": {}
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "db": {
+              "$ref": "s279"
+            },
+            "id": "concurrentCreate",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 128,
+                  "required": false
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "concurrentCreate",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "name": "concurrentCreate",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "db": {
+              "$ref": "s279"
+            },
+            "collection": "concurrentCreate",
+            "document": {
+              "$document": {
+                "$id": "written",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "name": "peer"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "written",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "peer",
+              "$collection": "concurrentCreate",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "concurrentCreate",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 128,
+                  "required": false
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection concurrentCreate already exists"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "db": {
+              "$ref": "s279"
+            },
+            "collection": "concurrentCreate",
+            "id": "written"
+          },
+          "expect": {
+            "$document": {
+              "name": "peer",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "concurrentCreate",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "written"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "db": {
+              "$ref": "s279"
+            },
+            "id": "concurrentCreate"
+          },
+          "expect": {
+            "$document": {
+              "name": "concurrentCreate",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "concurrentCreate"
+            }
+          }
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "concurrentCreate"
+          },
+          "expect": {
+            "$document": {
+              "name": "concurrentCreate",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                  }
+                }
+              ],
+              "indexes": [],
+              "documentSecurity": true,
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")"
+              ],
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "concurrentCreate"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "concurrentCreate",
+            "id": "written"
+          },
+          "expect": {
+            "$document": {
+              "name": "peer",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "concurrentCreate",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "written"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "concurrentCreate"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "CollectionTests::testCreateCollectionDoesNotDropUncommittedPeerTable",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.clean_roles",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.authorization.add_role",
+          "args": {
+            "role": "label:reader"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSharedTables",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "createCollection",
+            "args": {
+              "name": "preCommitCreate",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "type": "string",
+                    "size": 128,
+                    "required": false
+                  }
+                }
+              ]
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "createDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "preCommitCreate",
+                  "$collection": "_metadata",
+                  "name": "preCommitCreate",
+                  "attributes": [
+                    {
+                      "$id": "name",
+                      "type": "string",
+                      "size": 128,
+                      "required": false
+                    }
+                  ],
+                  "indexes": [],
+                  "documentSecurity": true,
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ]
+                }
+              },
+              "document": {
+                "$document": {
+                  "$id": "written",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "name": "peer"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "written",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "name": "peer",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "preCommitCreate",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 128,
+                  "required": false
+                }
+              }
+            ],
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection preCommitCreate already exists"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getDocument",
+            "args": {
+              "collection": {
+                "$document": {
+                  "$id": "preCommitCreate",
+                  "$collection": "_metadata",
+                  "name": "preCommitCreate",
+                  "attributes": [
+                    {
+                      "$id": "name",
+                      "type": "string",
+                      "size": 128,
+                      "required": false
+                    }
+                  ],
+                  "indexes": [],
+                  "documentSecurity": true,
+                  "$permissions": [
+                    "read(\"any\")",
+                    "create(\"any\")",
+                    "update(\"any\")",
+                    "delete(\"any\")"
+                  ]
+                }
+              },
+              "id": "written"
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "peer",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$sequence": "<uuid7>",
+              "$id": "written"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "preCommitCreate"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "deleteCollection",
+            "args": {
+              "id": "preCommitCreate"
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

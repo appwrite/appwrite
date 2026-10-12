@@ -7,6 +7,7 @@ use Tests\Compat\Benchmarks;
 use Tests\Compat\Session;
 use Utopia\Cache\Adapter\None as NoneCache;
 use Utopia\Cache\Cache;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
@@ -16,6 +17,7 @@ use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\Queries\Documents as DocumentsQueries;
 use Utopia\Database\Validator\Structure;
+use Utopia\Mongo\Client;
 
 require_once __DIR__ . '/Values.php';
 
@@ -76,7 +78,7 @@ final class Adapter implements Base, Benchmarks
         ]);
         $document = fn (): Document => new Document(json_decode(self::DOCUMENT, true));
 
-        return [
+        $benchmarks = [
             'query_parse' => ['Parse a list request\'s five queries from their JSON strings', function (Session $s) {
                 return fn () => Query::parseQueries(self::QUERIES);
             }],
@@ -105,8 +107,8 @@ final class Adapter implements Base, Benchmarks
 
                 return fn () => $db->decode($c, clone $stored);
             }],
-            'create_document' => ['Create a user document: validation, encoding and one INSERT round trip', function (Session $s) use ($document) {
-                [$db] = self::database($s, 'create_document');
+            'create_document' => ['Create a user document: validation, encoding and one INSERT round trip', function (Session $s, string $name = 'create_document') use ($document) {
+                [$db] = self::database($s, $name);
                 $doc = $document();
 
                 return fn () => $db->createDocument('users', (clone $doc)->setAttribute('$id', ID::unique()));
@@ -117,22 +119,22 @@ final class Adapter implements Base, Benchmarks
 
                 return fn () => $db->createDocuments('users', array_map(fn () => (clone $doc)->setAttribute('$id', ID::unique()), range(1, 10)));
             }],
-            'get_document' => ['Read a user document by id, uncached (one SELECT round trip)', function (Session $s) use ($document) {
-                [$db] = self::database($s, 'get_document');
+            'get_document' => ['Read a user document by id, uncached (one SELECT round trip)', function (Session $s, string $name = 'get_document') use ($document) {
+                [$db] = self::database($s, $name);
                 $db->createDocument('users', $document());
 
                 return fn () => $db->getDocument('users', 'alice');
             }],
-            'find' => ['Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)', function (Session $s) use ($document) {
-                [$db] = self::database($s, 'find');
+            'find' => ['Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)', function (Session $s, string $name = 'find') use ($document) {
+                [$db] = self::database($s, $name);
                 $doc = $document();
                 $db->createDocuments('users', array_map(fn (int $i) => (clone $doc)->setAttribute('$id', "u{$i}")->setAttribute('name', $i % 2 ? 'Alice' : 'Bob')->setAttribute('age', $i), range(1, 100)));
                 $queries = Query::parseQueries(self::QUERIES);
 
                 return fn () => $db->find('users', $queries);
             }],
-            'update_document' => ['Update one attribute of a user document (a locking read and one UPDATE)', function (Session $s) use ($document) {
-                [$db] = self::database($s, 'update_document');
+            'update_document' => ['Update one attribute of a user document (a locking read and one UPDATE)', function (Session $s, string $name = 'update_document') use ($document) {
+                [$db] = self::database($s, $name);
                 $db->createDocument('users', $document());
                 $age = 0;
 
@@ -141,20 +143,41 @@ final class Adapter implements Base, Benchmarks
                 };
             }],
         ];
+        // The round trips again on MongoDB.
+        $mongo = [
+            'create_document' => 'Create a user document on MongoDB: validation, encoding and one insert round trip',
+            'get_document' => 'Read a user document by id on MongoDB, uncached (one find round trip)',
+            'find' => 'Find users by an indexed name on MongoDB, ordered and limited (one find round trip over 100 documents)',
+            'update_document' => 'Update one attribute of a user document on MongoDB (a read and one update)',
+        ];
+        foreach ($mongo as $name => $description) {
+            $setup = $benchmarks[$name][1];
+            $benchmarks["mongo_{$name}"] = [$description, fn (Session $s) => $setup($s, "mongo_{$name}")];
+        }
+
+        return $benchmarks;
     }
 
     /**
-     * A database of the benchmarks' collection on the compat PostgreSQL,
-     * uncached, in a schema of its own (dropped first when a run left it).
+     * A database of the benchmarks' collection on the compat PostgreSQL (on
+     * the compat MongoDB for the `mongo_` benchmarks), uncached, in a schema
+     * of its own (dropped first when a run left it).
      *
      * @return array{Database, Document}
      */
     private static function database(Session $s, string $name): array
     {
-        $url = parse_url($s->service('database-postgres'));
-        $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
-        $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes());
-        $db = new Database(new Postgres($pdo), new Cache(new NoneCache()));
+        if (str_starts_with($name, 'mongo_')) {
+            $url = parse_url($s->service('database-mongo'));
+            $client = new Client("compat_bench_php_{$name}", $url['host'] ?? '', $url['port'] ?? 27017, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), false);
+            $client->connect();
+            $db = new Database(new Mongo($client), new Cache(new NoneCache()));
+        } else {
+            $url = parse_url($s->service('database-postgres'));
+            $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
+            $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes());
+            $db = new Database(new Postgres($pdo), new Cache(new NoneCache()));
+        }
         $authorization = new Authorization();
         $authorization->addRole('any');
         $db->setAuthorization($authorization);

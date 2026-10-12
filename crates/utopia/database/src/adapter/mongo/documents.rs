@@ -96,7 +96,7 @@ impl Mongo {
         let selections = Self::attribute_selections(queries);
         let projection = !selections.is_empty() && !selections.iter().any(|v| v.loose_eq(&s("*")));
         if projection {
-            options.insert("projection", bson::document(&Self::attribute_projection(&selections))?);
+            options.insert("projection", bson::document(&Self::attribute_projection(&selections)?)?);
         }
         let reply = self
             .client
@@ -611,11 +611,12 @@ impl Mongo {
             single.set(key.to_owned(), value.clone());
             let transformed = replace_chars("$", "_", single);
             let Some(db_key) = transformed.keys().next().map(key_text) else { continue };
-            if !(db_key.is_empty() || db_key == "0")
-                && !record.contains_key(&ArrayKey::normalize(Str::from(db_key.as_str())))
-                && !PROTECTED.contains(&db_key.as_str())
-                && !out.contains(&db_key)
-            {
+            let skip = db_key.is_empty()
+                || db_key == "0"
+                || record.contains_key(&ArrayKey::normalize(Str::from(db_key.as_str())))
+                || PROTECTED.contains(&db_key.as_str())
+                || out.contains(&db_key);
+            if !skip {
                 out.push(db_key);
             }
         }
@@ -653,7 +654,10 @@ impl Mongo {
         let mut record = |result: &Bson| {
             if let Bson::Document(d) = result {
                 let uid = d.get("_uid").map(|v| crate::value::to_text(&bson::decode(v))).unwrap_or_default();
-                let id = d.get("_id").map(|v| crate::value::to_text(&bson::decode(v))).unwrap_or_default();
+                let id = d
+                    .get("_id")
+                    .map(|v| String::from_utf8_lossy(bson::php_string(&bson::decode(v)).as_bytes()).into_owned())
+                    .unwrap_or_default();
                 match sequences.iter_mut().find(|(u, _)| *u == uid) {
                     Some(entry) => entry.1 = id,
                     None => sequences.push((uid, id)),
@@ -784,7 +788,7 @@ impl Mongo {
         let selections = Self::attribute_selections(&queries);
         let projection = !selections.is_empty() && !selections.iter().any(|v| v.loose_eq(&s("*")));
         if projection {
-            fields.insert("projection", bson::document(&Self::attribute_projection(&selections))?);
+            fields.insert("projection", bson::document(&Self::attribute_projection(&selections)?)?);
         }
         let mut sort = BsonDocument::new();
         let mut ors: Vec<Value> = Vec::new();

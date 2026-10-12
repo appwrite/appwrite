@@ -1,0 +1,5539 @@
+{
+  "source": [
+    "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/ObjectAttributeTests.php",
+    "vendor/utopia-php/database/tests/e2e/Adapter/Schemaless/MongoDBTest.php"
+  ],
+  "cases": [
+    {
+      "name": "ObjectAttributeTests::testObjectAttribute",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "u0000000000000000077"
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000077",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "u0000000000000000077",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "meta": {
+                  "age": 25,
+                  "skills": [
+                    "react",
+                    "node"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "IN"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc1",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "meta": {
+                "age": 25,
+                "skills": [
+                  "react",
+                  "node"
+                ],
+                "user": {
+                  "info": {
+                    "country": "IN"
+                  }
+                }
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "age": 25
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 25,
+                  "skills": [
+                    "react",
+                    "node"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "IN"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "user": {
+                        "info": {
+                          "country": "IN"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 25,
+                  "skills": [
+                    "react",
+                    "node"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "IN"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "skills": "react"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 25,
+                  "skills": [
+                    "react",
+                    "node"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "IN"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc2",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "meta": {
+                  "age": 30,
+                  "skills": [
+                    "python",
+                    "java"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc2",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "meta": {
+                "age": 30,
+                "skills": [
+                  "python",
+                  "java"
+                ],
+                "user": {
+                  "info": {
+                    "country": "US"
+                  }
+                }
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "age": 25
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 25,
+                  "skills": [
+                    "react",
+                    "node"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "IN"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "user": {
+                        "info": {
+                          "country": "US"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 30,
+                  "skills": [
+                    "python",
+                    "java"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "id": "doc1",
+            "document": {
+              "$document": {
+                "$id": "doc1",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "age": 26,
+                  "skills": [
+                    "react",
+                    "node",
+                    "typescript"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "age": 26,
+                "skills": [
+                  "react",
+                  "node",
+                  "typescript"
+                ],
+                "user": {
+                  "info": {
+                    "country": "CA"
+                  }
+                }
+              },
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "age": 26
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 26,
+                  "skills": [
+                    "react",
+                    "node",
+                    "typescript"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "skills": "typescript"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 26,
+                  "skills": [
+                    "react",
+                    "node",
+                    "typescript"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "age": 99
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notEqual",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "age": 26
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 30,
+                  "skills": [
+                    "python",
+                    "java"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notEqual",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "age": 26
+                    },
+                    {
+                      "age": 27
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: NotEqual queries require exactly one value."
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notEqual",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "user": {
+                        "info": {
+                          "country": "CA"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 30,
+                  "skills": [
+                    "python",
+                    "java"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "id": "doc1"
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "age": 26,
+                "skills": [
+                  "react",
+                  "node",
+                  "typescript"
+                ],
+                "user": {
+                  "info": {
+                    "country": "CA"
+                  }
+                }
+              },
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "$id",
+                    "meta"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "age": 26
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 26,
+                  "skills": [
+                    "react",
+                    "node",
+                    "typescript"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1",
+                "$collection": "u0000000000000000077"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "$id"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "age": 30
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc2",
+                "$collection": "u0000000000000000077"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc3",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": null
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc3",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": null,
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc4",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc4",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": [],
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc5",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "level1": {
+                    "level2": {
+                      "level3": {
+                        "level4": {
+                          "level5": "deep_value"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc5",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "level1": {
+                  "level2": {
+                    "level3": {
+                      "level4": {
+                        "level5": "deep_value"
+                      }
+                    }
+                  }
+                }
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "level1": {
+                        "level2": {
+                          "level3": {
+                            "level4": {
+                              "level5": "deep_value"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "level1": {
+                    "level2": {
+                      "level3": {
+                        "level4": {
+                          "level5": "deep_value"
+                        }
+                      }
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc5"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "level1": {
+                        "level2": {
+                          "level3": {
+                            "level4": {
+                              "level5": "deep_value"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "level1": {
+                    "level2": {
+                      "level3": {
+                        "level4": {
+                          "level5": "deep_value"
+                        }
+                      }
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc5"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc6",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "string": "text",
+                  "number": 42,
+                  "float": 3.14,
+                  "boolean": true,
+                  "null_value": null,
+                  "array": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "object": {
+                    "key": "value"
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc6",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "string": "text",
+                "number": 42,
+                "float": 3.14,
+                "boolean": true,
+                "null_value": null,
+                "array": [
+                  1,
+                  2,
+                  3
+                ],
+                "object": {
+                  "key": "value"
+                }
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "boolean": true
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "string": "text",
+                  "number": 42,
+                  "float": 3.14,
+                  "boolean": true,
+                  "null_value": null,
+                  "array": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "object": {
+                    "key": "value"
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc6"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "number": 42
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "string": "text",
+                  "number": 42,
+                  "float": 3.14,
+                  "boolean": true,
+                  "null_value": null,
+                  "array": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "object": {
+                    "key": "value"
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc6"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "float": 3.14
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "string": "text",
+                  "number": 42,
+                  "float": 3.14,
+                  "boolean": true,
+                  "null_value": null,
+                  "array": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "object": {
+                    "key": "value"
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc6"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc7",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "tags": [
+                    "php",
+                    "javascript",
+                    "python",
+                    "go",
+                    "rust"
+                  ]
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc7",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "tags": [
+                  "php",
+                  "javascript",
+                  "python",
+                  "go",
+                  "rust"
+                ]
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "tags": "rust"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "tags": [
+                    "php",
+                    "javascript",
+                    "python",
+                    "go",
+                    "rust"
+                  ]
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc7"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc8",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "scores": [
+                    85,
+                    90,
+                    95,
+                    100
+                  ]
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc8",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "scores": [
+                  85,
+                  90,
+                  95,
+                  100
+                ]
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "scores": 95
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "scores": [
+                    85,
+                    90,
+                    95,
+                    100
+                  ]
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc8"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "tags": "kotlin"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "notContains",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "tags": "rust"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 26,
+                  "skills": [
+                    "react",
+                    "node",
+                    "typescript"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "age": 30,
+                  "skills": [
+                    "python",
+                    "java"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc2"
+              }
+            },
+            {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc3"
+              }
+            },
+            {
+              "$document": {
+                "meta": [],
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc4"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "level1": {
+                    "level2": {
+                      "level3": {
+                        "level4": {
+                          "level5": "deep_value"
+                        }
+                      }
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc5"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "string": "text",
+                  "number": 42,
+                  "float": 3.14,
+                  "boolean": true,
+                  "null_value": null,
+                  "array": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "object": {
+                    "key": "value"
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc6"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "scores": [
+                    85,
+                    90,
+                    95,
+                    100
+                  ]
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc8"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc9",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "projects": [
+                    {
+                      "name": "Project A",
+                      "technologies": [
+                        "react",
+                        "node"
+                      ],
+                      "active": true
+                    },
+                    {
+                      "name": "Project B",
+                      "technologies": [
+                        "vue",
+                        "python"
+                      ],
+                      "active": false
+                    }
+                  ],
+                  "company": "TechCorp"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc9",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "projects": [
+                  {
+                    "name": "Project A",
+                    "technologies": [
+                      "react",
+                      "node"
+                    ],
+                    "active": true
+                  },
+                  {
+                    "name": "Project B",
+                    "technologies": [
+                      "vue",
+                      "python"
+                    ],
+                    "active": false
+                  }
+                ],
+                "company": "TechCorp"
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "company": "TechCorp"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "projects": [
+                    {
+                      "name": "Project A",
+                      "technologies": [
+                        "react",
+                        "node"
+                      ],
+                      "active": true
+                    },
+                    {
+                      "name": "Project B",
+                      "technologies": [
+                        "vue",
+                        "python"
+                      ],
+                      "active": false
+                    }
+                  ],
+                  "company": "TechCorp"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc9"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "projects": [
+                        {
+                          "name": "Project A",
+                          "technologies": [
+                            "react",
+                            "node"
+                          ],
+                          "active": true
+                        },
+                        {
+                          "name": "Project B",
+                          "technologies": [
+                            "vue",
+                            "python"
+                          ],
+                          "active": false
+                        }
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "projects": [
+                    {
+                      "name": "Project A",
+                      "technologies": [
+                        "react",
+                        "node"
+                      ],
+                      "active": true
+                    },
+                    {
+                      "name": "Project B",
+                      "technologies": [
+                        "vue",
+                        "python"
+                      ],
+                      "active": false
+                    }
+                  ],
+                  "company": "TechCorp"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc9"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc10",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "description": "Test with \"quotes\" and 'apostrophes'",
+                  "emoji": "🚀🎉",
+                  "symbols": "@#$%^&*()"
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc10",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "description": "Test with \"quotes\" and 'apostrophes'",
+                "emoji": "🚀🎉",
+                "symbols": "@#$%^&*()"
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "emoji": "🚀🎉"
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "description": "Test with \"quotes\" and 'apostrophes'",
+                  "emoji": "🚀🎉",
+                  "symbols": "@#$%^&*()"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc10"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc11",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "meta": {
+                  "config": {
+                    "theme": "dark",
+                    "language": "en"
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc11",
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "meta": {
+                "config": {
+                  "theme": "dark",
+                  "language": "en"
+                }
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "config": {
+                        "theme": "dark",
+                        "language": "en"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "config": {
+                    "theme": "dark",
+                    "language": "en"
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc11"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "config": {
+                        "theme": "dark"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "config": {
+                    "theme": "dark",
+                    "language": "en"
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc11"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "id": "doc11",
+            "document": {
+              "$document": {
+                "$id": "doc11",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "meta": [],
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc11"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "document": {
+              "$document": {
+                "$id": "doc12",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "matrix": [
+                    [
+                      1,
+                      2,
+                      3
+                    ],
+                    [
+                      4,
+                      5,
+                      6
+                    ],
+                    [
+                      7,
+                      8,
+                      9
+                    ]
+                  ]
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "doc12",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "matrix": [
+                  [
+                    1,
+                    2,
+                    3
+                  ],
+                  [
+                    4,
+                    5,
+                    6
+                  ],
+                  [
+                    7,
+                    8,
+                    9
+                  ]
+                ]
+              },
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "matrix": [
+                        [
+                          4,
+                          5,
+                          6
+                        ]
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "matrix": [
+                    [
+                      1,
+                      2,
+                      3
+                    ],
+                    [
+                      4,
+                      5,
+                      6
+                    ],
+                    [
+                      7,
+                      8,
+                      9
+                    ]
+                  ]
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000077",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc12"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "id": "doc6"
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "string": "text",
+                "number": 42,
+                "float": 3.14,
+                "boolean": true,
+                "null_value": null,
+                "array": [
+                  1,
+                  2,
+                  3
+                ],
+                "object": {
+                  "key": "value"
+                }
+              },
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc6"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "u0000000000000000077",
+            "id": "doc10"
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "description": "Test with \"quotes\" and 'apostrophes'",
+                "emoji": "🚀🎉",
+                "symbols": "@#$%^&*()"
+              },
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000077",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "doc10"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "$id",
+                    "$permissions",
+                    "meta"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "level1": {
+                        "level2": {
+                          "level3": {
+                            "level4": {
+                              "level5": "deep_value"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "level1": {
+                    "level2": {
+                      "level3": {
+                        "level4": {
+                          "level5": "deep_value"
+                        }
+                      }
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc5",
+                "$collection": "u0000000000000000077"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "$id",
+                    "meta"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "age": 26,
+                  "skills": [
+                    "react",
+                    "node",
+                    "typescript"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc1",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "age": 30,
+                  "skills": [
+                    "python",
+                    "java"
+                  ],
+                  "user": {
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc2",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc3",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": [],
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc4",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "level1": {
+                    "level2": {
+                      "level3": {
+                        "level4": {
+                          "level5": "deep_value"
+                        }
+                      }
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc5",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "string": "text",
+                  "number": 42,
+                  "float": 3.14,
+                  "boolean": true,
+                  "null_value": null,
+                  "array": [
+                    1,
+                    2,
+                    3
+                  ],
+                  "object": {
+                    "key": "value"
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc6",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "tags": [
+                    "php",
+                    "javascript",
+                    "python",
+                    "go",
+                    "rust"
+                  ]
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc7",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "scores": [
+                    85,
+                    90,
+                    95,
+                    100
+                  ]
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc8",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "projects": [
+                    {
+                      "name": "Project A",
+                      "technologies": [
+                        "react",
+                        "node"
+                      ],
+                      "active": true
+                    },
+                    {
+                      "name": "Project B",
+                      "technologies": [
+                        "vue",
+                        "python"
+                      ],
+                      "active": false
+                    }
+                  ],
+                  "company": "TechCorp"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc9",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "description": "Test with \"quotes\" and 'apostrophes'",
+                  "emoji": "🚀🎉",
+                  "symbols": "@#$%^&*()"
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc10",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": [],
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc11",
+                "$collection": "u0000000000000000077"
+              }
+            },
+            {
+              "$document": {
+                "meta": {
+                  "matrix": [
+                    [
+                      1,
+                      2,
+                      3
+                    ],
+                    [
+                      4,
+                      5,
+                      6
+                    ],
+                    [
+                      7,
+                      8,
+                      9
+                    ]
+                  ]
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc12",
+                "$collection": "u0000000000000000077"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000077",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "meta"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "meta",
+                  "values": [
+                    {
+                      "tags": [
+                        "php",
+                        "javascript",
+                        "python",
+                        "go",
+                        "rust"
+                      ]
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "meta": {
+                  "tags": [
+                    "php",
+                    "javascript",
+                    "python",
+                    "go",
+                    "rust"
+                  ]
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "doc7",
+                "$collection": "u0000000000000000077"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "u0000000000000000077"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeGinIndex",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObjectIndexes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeInvalidCases",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeDefaults",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeIntegersBeyondInt32",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "u0000000000000000078"
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000078",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "u0000000000000000078",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000078",
+            "document": {
+              "$document": {
+                "$id": "bigInts",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "small": -42,
+                  "count": -3408048000,
+                  "nested": {
+                    "deep": 3408048000
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "bigInts",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "small": -42,
+                "count": -3408048000,
+                "nested": {
+                  "deep": 3408048000
+                }
+              },
+              "$collection": "u0000000000000000078",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.purge_cached_document",
+          "args": {
+            "collectionId": "u0000000000000000078",
+            "id": "bigInts"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "u0000000000000000078",
+            "id": "bigInts"
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "small": -42,
+                "count": -3408048000,
+                "nested": {
+                  "deep": 3408048000
+                }
+              },
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000078",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "bigInts"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "u0000000000000000078"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeEmptyObject",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "u0000000000000000079"
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000079",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "u0000000000000000079",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000079",
+            "document": {
+              "$document": {
+                "$id": "emptyObject",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {}
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "emptyObject",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {},
+              "$collection": "u0000000000000000079",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.purge_cached_document",
+          "args": {
+            "collectionId": "u0000000000000000079",
+            "id": "emptyObject"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "u0000000000000000079",
+            "id": "emptyObject"
+          },
+          "expect": {
+            "$document": {
+              "meta": {},
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000079",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "emptyObject"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "u0000000000000000079",
+            "id": "emptyObject"
+          },
+          "expect": {
+            "$document": {
+              "meta": {},
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000079",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "emptyObject"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "u0000000000000000079",
+            "id": "emptyObject",
+            "document": {
+              "$document": {
+                "meta": {}
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "meta": {},
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000079",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "emptyObject"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "u0000000000000000079",
+            "id": "emptyObject",
+            "document": {
+              "$document": {
+                "meta": []
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Authorization",
+              "message": "No permissions provided for action 'update'"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "u0000000000000000079"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testObjectAttributeNestedEmptyObjects",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "u0000000000000000080"
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000080",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "u0000000000000000080",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "u0000000000000000080",
+            "document": {
+              "$document": {
+                "$id": "nestedEmptyObjects",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "meta": {
+                  "inner": {},
+                  "arr": [
+                    {},
+                    {
+                      "x": 1
+                    }
+                  ],
+                  "emptyArray": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "nestedEmptyObjects",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "meta": {
+                "inner": {},
+                "arr": [
+                  {},
+                  {
+                    "x": 1
+                  }
+                ],
+                "emptyArray": []
+              },
+              "$collection": "u0000000000000000080",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.purge_cached_document",
+          "args": {
+            "collectionId": "u0000000000000000080",
+            "id": "nestedEmptyObjects"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "u0000000000000000080",
+            "id": "nestedEmptyObjects"
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "inner": {},
+                "arr": [
+                  {},
+                  {
+                    "x": 1
+                  }
+                ],
+                "emptyArray": []
+              },
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000080",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "nestedEmptyObjects"
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "u0000000000000000080",
+            "id": "nestedEmptyObjects"
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "inner": {},
+                "arr": [
+                  {},
+                  {
+                    "x": 1
+                  }
+                ],
+                "emptyArray": []
+              },
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000080",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "nestedEmptyObjects"
+            }
+          }
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "u0000000000000000080",
+            "id": "nestedEmptyObjects",
+            "document": {
+              "$document": {
+                "meta": {
+                  "inner": {},
+                  "arr": [
+                    {},
+                    {
+                      "x": 1
+                    }
+                  ],
+                  "emptyArray": []
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "meta": {
+                "inner": {},
+                "arr": [
+                  {},
+                  {
+                    "x": 1
+                  }
+                ],
+                "emptyArray": []
+              },
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "$collection": "u0000000000000000080",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "nestedEmptyObjects"
+            }
+          }
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "u0000000000000000080"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testMetadataWithVector",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForVectors",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testNestedObjectAttributeIndexes",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testQueryNestedAttribute",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "ObjectAttributeTests::testNestedObjectAttributeEdgeCases",
+      "state": [
+        "mongo@database-mongo"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo",
+            "schemaless": true
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.set_metadata",
+          "args": {
+            "key": "compat",
+            "value": ""
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.reset_metadata",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForObject",
+            "args": {}
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "u0000000000000000081"
+          },
+          "expect": {
+            "$document": {
+              "$id": "u0000000000000000081",
+              "$permissions": [
+                "create(\"any\")"
+              ],
+              "name": "u0000000000000000081",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "idx_deep_nest",
+            "type": "key",
+            "attributes": [
+              "profile.level1.level2.level3.level4.value"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "deep1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "level1": {
+                      "level2": {
+                        "level3": {
+                          "level4": {
+                            "value": "deep_value_1"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "deep2",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "level1": {
+                      "level2": {
+                        "level3": {
+                          "level4": {
+                            "value": "deep_value_2"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForAttributes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.level1.level2.level3.level4.value",
+                  "values": [
+                    "deep_value_1"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "level1": {
+                    "level2": {
+                      "level3": {
+                        "level4": {
+                          "value": "deep_value_1"
+                        }
+                      }
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "deep1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "idx_email",
+            "type": "key",
+            "attributes": [
+              "profile.user.email"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "idx_country",
+            "type": "key",
+            "attributes": [
+              "profile.user.info.country"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "idx_city",
+            "type": "key",
+            "attributes": [
+              "profile.user.info.city"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "multi1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "multi1@test.com",
+                      "info": {
+                        "country": "US",
+                        "city": "NYC"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "multi2",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "multi2@test.com",
+                      "info": {
+                        "country": "CA",
+                        "city": "TOR"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.email",
+                  "values": [
+                    "multi1@test.com"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.info.country",
+                  "values": [
+                    "US"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.info.city",
+                  "values": [
+                    "TOR"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi2@test.com",
+                    "info": {
+                      "country": "CA",
+                      "city": "TOR"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "null1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": null,
+                      "info": {
+                        "country": "US"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "null2",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "info": {
+                        "country": "CA"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "null3",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": null
+                }
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.email",
+                  "values": [
+                    "non-existent@test.com"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "mixed1",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "name": "Alice",
+                  "age": 25,
+                  "profile": {
+                    "user": {
+                      "email": "alice.mixed@test.com",
+                      "info": {
+                        "country": "US"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "mixed2",
+                  "$permissions": [
+                    "read(\"any\")",
+                    "update(\"any\")"
+                  ],
+                  "name": "Bob",
+                  "age": 30,
+                  "profile": {
+                    "user": {
+                      "email": "bob.mixed@test.com",
+                      "info": {
+                        "country": "CA"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "idx_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "idx_age",
+            "type": "key",
+            "attributes": [
+              "age"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.info.country",
+                  "values": [
+                    "US"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "name",
+                  "values": [
+                    "Alice"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice",
+                "age": 25,
+                "profile": {
+                  "user": {
+                    "email": "alice.mixed@test.com",
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "mixed1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "profile.user.email",
+                        "values": [
+                          "bob.mixed@test.com"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "age",
+                        "values": [
+                          30
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Bob",
+                "age": 30,
+                "profile": {
+                  "user": {
+                    "email": "bob.mixed@test.com",
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "mixed2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "mixed1",
+            "document": {
+              "$document": {
+                "$id": "mixed1",
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "name": "Alice Updated",
+                "age": 26,
+                "profile": {
+                  "user": {
+                    "email": "alice.updated@test.com",
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Alice Updated",
+              "age": 26,
+              "profile": {
+                "user": {
+                  "email": "alice.updated@test.com",
+                  "info": {
+                    "country": "CA"
+                  }
+                }
+              },
+              "$permissions": [
+                "read(\"any\")",
+                "update(\"any\")"
+              ],
+              "$collection": "u0000000000000000081",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>",
+              "$id": "mixed1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.email",
+                  "values": [
+                    "alice.mixed@test.com"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": []
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.email",
+                  "values": [
+                    "alice.updated@test.com"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice Updated",
+                "age": 26,
+                "profile": {
+                  "user": {
+                    "email": "alice.updated@test.com",
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "mixed1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.info.country",
+                  "values": [
+                    "CA"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi2@test.com",
+                    "info": {
+                      "country": "CA",
+                      "city": "TOR"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi2"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "null2"
+              }
+            },
+            {
+              "$document": {
+                "name": "Alice Updated",
+                "age": 26,
+                "profile": {
+                  "user": {
+                    "email": "alice.updated@test.com",
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "mixed1"
+              }
+            },
+            {
+              "$document": {
+                "name": "Bob",
+                "age": 30,
+                "profile": {
+                  "user": {
+                    "email": "bob.mixed@test.com",
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "mixed2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "noindex1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "noindex1@test.com",
+                      "info": {
+                        "country": "US",
+                        "phone": "+1234567890"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "noindex2",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "noindex2@test.com",
+                      "info": {
+                        "country": "CA",
+                        "phone": "+9876543210"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.info.phone",
+                  "values": [
+                    "+1234567890"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "noindex1@test.com",
+                    "info": {
+                      "country": "US",
+                      "phone": "+1234567890"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "noindex1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "complex1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "complex1@test.com",
+                      "info": {
+                        "country": "US",
+                        "city": "NYC",
+                        "zip": "10001"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "complex2",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "complex2@test.com",
+                      "info": {
+                        "country": "US",
+                        "city": "LAX",
+                        "zip": "90001"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "complex3",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "complex3@test.com",
+                      "info": {
+                        "country": "CA",
+                        "city": "TOR",
+                        "zip": "M5H1A1"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "profile.user.info.country",
+                        "values": [
+                          "US"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "profile.user.info.city",
+                        "values": [
+                          "NYC"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi1"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "complex1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC",
+                      "zip": "10001"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "complex1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "or",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "profile.user.info.city",
+                        "values": [
+                          "NYC"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "profile.user.info.city",
+                        "values": [
+                          "TOR"
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi1"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi2@test.com",
+                    "info": {
+                      "country": "CA",
+                      "city": "TOR"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi2"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "complex1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC",
+                      "zip": "10001"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "complex1"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "complex3@test.com",
+                    "info": {
+                      "country": "CA",
+                      "city": "TOR",
+                      "zip": "M5H1A1"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "complex3"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "profile.user.info.country",
+                        "values": [
+                          "US"
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "or",
+                        "attribute": "",
+                        "values": [
+                          {
+                            "$query": {
+                              "method": "equal",
+                              "attribute": "profile.user.info.city",
+                              "values": [
+                                "NYC"
+                              ]
+                            }
+                          },
+                          {
+                            "$query": {
+                              "method": "equal",
+                              "attribute": "profile.user.info.city",
+                              "values": [
+                                "LAX"
+                              ]
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi1"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "complex1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC",
+                      "zip": "10001"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "complex1"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "complex2@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "LAX",
+                      "zip": "90001"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "complex2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "order1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "a@order.com",
+                      "info": {
+                        "country": "US"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "order2",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "b@order.com",
+                      "info": {
+                        "country": "US"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "order3",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "c@order.com",
+                      "info": {
+                        "country": "US"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 3
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.info.country",
+                  "values": [
+                    "US"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "multi1@test.com",
+                    "info": {
+                      "country": "US",
+                      "city": "NYC"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "multi1"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": null,
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "null1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.info.country",
+                  "values": [
+                    "US"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": null,
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "null1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "empty1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "",
+                      "info": {
+                        "country": "US"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 1
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.email",
+                  "values": [
+                    ""
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "",
+                    "info": {
+                      "country": "US"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "empty1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_index",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "idx_email"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.email",
+                  "values": [
+                    "alice.updated@test.com"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice Updated",
+                "age": 26,
+                "profile": {
+                  "user": {
+                    "email": "alice.updated@test.com",
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "mixed1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "u0000000000000000081",
+            "id": "idx_email_recreated",
+            "type": "key",
+            "attributes": [
+              "profile.user.email"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "profile.user.email",
+                  "values": [
+                    "alice.updated@test.com"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Alice Updated",
+                "age": 26,
+                "profile": {
+                  "user": {
+                    "email": "alice.updated@test.com",
+                    "info": {
+                      "country": "CA"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")",
+                  "update(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "mixed1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "db.adapter",
+          "args": {
+            "method": "getSupportForIdenticalIndexes",
+            "args": {}
+          },
+          "expect": false
+        },
+        {
+          "op": "database.create_documents",
+          "args": {
+            "collection": "u0000000000000000081",
+            "documents": [
+              {
+                "$document": {
+                  "$id": "text1",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "text1@example.org",
+                      "info": {
+                        "country": "United States",
+                        "city": "New York City"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "text2",
+                  "$permissions": [
+                    "read(\"any\")"
+                  ],
+                  "profile": {
+                    "user": {
+                      "email": "text2@test.com",
+                      "info": {
+                        "country": "United Kingdom",
+                        "city": "London"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "startsWith",
+                  "attribute": "profile.user.email",
+                  "values": [
+                    "text1@"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "text1@example.org",
+                    "info": {
+                      "country": "United States",
+                      "city": "New York City"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "text1"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "u0000000000000000081",
+            "queries": [
+              {
+                "$query": {
+                  "method": "contains",
+                  "attribute": "profile.user.info.country",
+                  "values": [
+                    "United"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "text1@example.org",
+                    "info": {
+                      "country": "United States",
+                      "city": "New York City"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "text1"
+              }
+            },
+            {
+              "$document": {
+                "profile": {
+                  "user": {
+                    "email": "text2@test.com",
+                    "info": {
+                      "country": "United Kingdom",
+                      "city": "London"
+                    }
+                  }
+                },
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "u0000000000000000081",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$sequence": "<uuid7>",
+                "$id": "text2"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_collection",
+          "args": {
+            "id": "u0000000000000000081"
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

@@ -745,9 +745,8 @@
     }
   },
   "waivers": {
-    "Utopia\\Database\\Adapter::getColumnType": "Phase 2: the base default ('') only applies to adapters without SQL types (Mongo, Memory, Redis); every SQL adapter, Postgres included, runs SQL::getColumnType (covered)",
     "Utopia\\Database\\Adapter::getHostname": "Phase 2: the base getter only applies to adapters that are not SQL; Postgres runs SQL::getHostname (covered)",
-    "Utopia\\Database\\Adapter::getSupportForTTLIndexes": "Phase 2: Postgres overrides it with Postgres::getSupportForTTLIndexes (covered); only the Mongo adapter keeps the base default",
+    "Utopia\\Database\\Adapter::getSupportForTTLIndexes": "Phase 2: Postgres and Mongo override it (Postgres::getSupportForTTLIndexes, Mongo::getSupportForTTLIndexes, covered); only adapters not converted yet keep the base default",
     "Utopia\\Database\\Adapter\\SQL::createAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::createAttribute, covered)",
     "Utopia\\Database\\Adapter\\SQL::deleteAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::deleteAttribute, covered)",
     "Utopia\\Database\\Adapter\\SQL::renameAttribute": "Phase 2: only the MariaDB/MySQL/SQLite adapters use it (Postgres overrides it with Postgres::renameAttribute, covered)",

@@ -1,6 +1,6 @@
 {
   "lib": "database",
-  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter. Phase 1 of 3: the other adapters are waived until phases 2 and 3 convert them.",
+  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL and MongoDB adapters. The other adapters are waived until phases 2 and 3 convert them.",
   "complete": false,
   "php": {
     "src": [
@@ -14,7 +14,8 @@
     "crate": "crates/utopia/database"
   },
   "services": [
-    "database-postgres"
+    "database-postgres",
+    "database-mongo"
   ],
   "state": [],
   "ops": {},
@@ -23,7 +24,6 @@
     "Utopia\\Database\\Adapter\\MariaDB::*": "Phase 2: the MariaDB adapter is not converted yet",
     "Utopia\\Database\\Adapter\\MySQL::*": "Phase 2: the MySQL adapter is not converted yet",
     "Utopia\\Database\\Adapter\\SQLite::*": "Phase 2: the SQLite adapter is not converted yet",
-    "Utopia\\Database\\Adapter\\Mongo::*": "Phase 3: the MongoDB adapter (and utopia-php/mongo) is not converted yet",
     "Utopia\\Database\\Adapter\\Memory::*": "Phase 2: the Memory adapter is not converted yet",
     "Utopia\\Database\\Adapter\\Redis::*": "Phase 3: the Redis database adapter is not converted yet",
     "Utopia\\Database\\Adapter\\Pool::*": "Phase 3: the Pool adapter (over utopia-php/pools) is not converted yet",
@@ -41,7 +41,11 @@
       "create_documents": "One batched INSERT of ten documents on PostgreSQL: the round trip dominates the call",
       "get_document": "One SELECT on PostgreSQL (uncached): the round trip dominates the call",
       "find": "One SELECT over 100 rows on PostgreSQL: the round trip and the server's query dominate the call",
-      "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call"
+      "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call",
+      "mongo_create_document": "One insert command on MongoDB: the round trip, the same server and network for both runtimes, dominates the call",
+      "mongo_get_document": "One find command on MongoDB (uncached): the round trip dominates the call",
+      "mongo_find": "One find command over 100 documents on MongoDB: the round trip and the server's query dominate the call",
+      "mongo_update_document": "A find and an update command on MongoDB: their round trips dominate the call"
     }
   }
 }

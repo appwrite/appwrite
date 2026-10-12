@@ -83,7 +83,7 @@ fn wraps(a: &Array) -> bool {
 }
 
 /// The name PHP gives a value's type in a `TypeError` (`zend_zval_value_name`).
-fn value_name(v: &Value) -> &str {
+pub(crate) fn value_name(v: &Value) -> &str {
     match v {
         Value::Bool(true) => "true",
         Value::Bool(false) => "false",
@@ -94,7 +94,7 @@ fn value_name(v: &Value) -> &str {
 /// A string argument of an internal function in coercive mode
 /// (`zend_parse_arg_str_weak`): scalars convert, `null` is `""` (PHP
 /// deprecates it), anything else is a `TypeError`.
-fn string_arg(v: &Value, function: &str, arg: &str) -> Result<Str> {
+pub(crate) fn string_arg(v: &Value, function: &str, arg: &str) -> Result<Str> {
     match v {
         Value::Array(_) | Value::Object(_) | Value::Ext(_) => Err(Error::new(
             Kind::TypeError,

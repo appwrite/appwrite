@@ -2,9 +2,9 @@
 
 namespace Tests\Compat\Database\Recorder;
 
+use Tests\Compat\Database\Called;
 use Tests\Compat\Database\Core;
 use Tests\Compat\Database\Invocation;
-use Tests\Compat\Database\Called;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Operator;
@@ -527,6 +527,7 @@ final class Recorder
             $value instanceof Operator => ['$operator' => ['method' => $value->getMethod(), 'attribute' => $value->getAttribute(), 'values' => self::encode($value->getValues())]],
             $value instanceof \DateTimeInterface => ['$datetime' => self::relative($value) ?? $value->format('Y-m-d\TH:i:s.uP')],
             $value instanceof \stdClass => (array) $value === [] ? $value : ['$object' => self::encode((array) $value)],
+            $value instanceof \MongoDB\BSON\Type => \Tests\Compat\Database\Values::encode($value),
             $value instanceof PeerDatabase && $value->opened !== null => ['$ref' => "s{$value->opened}"],
             $value === self::$main => ['$ref' => 'db'],
             $value instanceof \Utopia\Database\Adapter && $value === self::$main?->getAdapter() => ['$ref' => 'db'],

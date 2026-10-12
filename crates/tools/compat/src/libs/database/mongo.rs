@@ -14,7 +14,7 @@ use super::core::args::{self, Args, Calls, Fail, R, encode, fault};
 use crate::adapter::{Fault, OpResult, Session};
 
 /// Operations of this area.
-pub const OPS: &[&str] = &["mongo.adapter", "mongo.permission_strings"];
+pub const OPS: &[&str] = &["mongo.adapter", "mongo.permission_strings", "mongo.fuzz_find", "mongo.fuzz_roundtrip"];
 
 /// `mongodb://user:password@host:port` of service `name`.
 fn url(session: &Session, name: &str) -> Result<(String, String, String, u16), Fault> {
@@ -25,6 +25,15 @@ fn url(session: &Session, name: &str) -> Result<(String, String, String, u16), F
     let (user, pass) = auth.split_once(':').unwrap_or((auth, ""));
     let (host, port) = host.rsplit_once(':').unwrap_or((host, "27017"));
     Ok((user.to_owned(), pass.to_owned(), host.to_owned(), port.parse().map_err(|_| Fault::new("invalid port"))?))
+}
+
+/// The benchmarks' adapter: a client of service `database-mongo` on
+/// `database`.
+pub(super) async fn bench_adapter(session: &Session, database: &str) -> Result<Mongo, Fault> {
+    let (user, pass, host, port) = url(session, "database-mongo")?;
+    let config = Config::new(database, host, i64::from(port), user, pass);
+    let client = Client::new(config).map_err(|e| Fault::new(e.to_string()))?;
+    Mongo::new(Arc::new(client)).await.map_err(|e| Fault::new(e.to_string()))
 }
 
 /// The adapter `db.open` with `engine: "mongo"` builds: a client on
@@ -44,7 +53,45 @@ pub(super) async fn open(a: &Args<'_>, session: &mut Session) -> R<Mongo> {
     Ok(Mongo::new(Arc::new(client)).await?)
 }
 
+/// The fuzz profiles' adapters, one per namespace (PHP keeps them in a
+/// static variable of the operation).
+static FUZZ: std::sync::OnceLock<tokio::sync::Mutex<std::collections::HashMap<String, Arc<Mongo>>>> =
+    std::sync::OnceLock::new();
+
+/// The fuzz profiles' adapter on MongoDB: database `${ns}`, seeded as
+/// `adapter.fuzz_*` seed theirs.
+async fn fuzz_adapter(session: &Session) -> Result<Result<Arc<Mongo>, utopia_database::Error>, Fault> {
+    let mut map = FUZZ.get_or_init(Default::default).lock().await;
+    if let Some(db) = map.get(&session.ns) {
+        return Ok(Ok(db.clone()));
+    }
+    let (user, pass, host, port) = url(session, "database-mongo")?;
+    let client = Client::new(Config::new(session.ns.as_str(), host, i64::from(port), user, pass))
+        .map_err(|e| Fault::new(e.to_string()))?;
+    let db = match Mongo::new(Arc::new(client)).await {
+        Ok(db) => db,
+        Err(e) => return Ok(Err(e)),
+    };
+    if let Err(e) = super::adapter::fuzz_seed(&db, &session.ns).await {
+        return Ok(Err(e));
+    }
+    let db = Arc::new(db);
+    map.insert(session.ns.clone(), db.clone());
+    Ok(Ok(db))
+}
+
 pub async fn call(op: &str, json: &Json, session: &mut Session) -> OpResult {
+    if op == "mongo.fuzz_find" || op == "mongo.fuzz_roundtrip" {
+        let db = match fuzz_adapter(session).await? {
+            Ok(db) => db,
+            Err(e) => return Ok(super::codec::error(&e)),
+        };
+        return if op == "mongo.fuzz_find" {
+            super::adapter::fuzz_find(&*db, json).await
+        } else {
+            super::adapter::fuzz_roundtrip(&*db, json).await
+        };
+    }
     args::enter(session);
     let result = match op {
         "mongo.adapter" => adapter(json, session).await,
@@ -257,6 +304,15 @@ async fn adapter(json: &Json, session: &mut Session) -> R<Json> {
             )
             .await?,
         )),
+        // Change objects do not cross the wire: only an empty list does
+        // (the database's upserts exercise the rest).
+        "upsertDocuments" => {
+            if !args.array("changes")?.is_empty() {
+                return fault("mongo.adapter: upsertDocuments takes no changes over the wire");
+            }
+            let collection = args.document("collection")?;
+            Ok(args::documents(&m.upsert_documents(&collection, &args.string_or("attribute", "")?, Vec::new()).await?))
+        }
         "getSequences" => Ok(args::documents(&m.get_sequences(&collection_id()?, args.documents("documents")?).await?)),
         "increaseDocumentAttribute" => boolean(
             m.increase_document_attribute(

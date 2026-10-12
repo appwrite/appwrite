@@ -14,12 +14,14 @@
 use Tests\Compat\Database\Values;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
+use Utopia\Database\Adapter\Mongo;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Adapter\SQL;
 use Utopia\Database\Change;
 use Utopia\Database\Document;
 use Utopia\Database\PDO;
 use Utopia\Database\Validator\Authorization;
+use Utopia\Mongo\Client as MongoClient;
 
 $handle = static function (array $a, Session $s): object {
     $h = $s->get($a['adapter'] ?? null);
@@ -86,12 +88,10 @@ $connect = static function (Session $s): Postgres {
 };
 // The fuzz profiles' adapter: one per namespace, on schema ${ns} (namespace
 // `fz`), with collection `fz` seeded with 24 documents and an empty `rt`.
-$fuzzAdapter = static function (Session $s) use ($connect): Postgres {
-    static $adapters = [];
-    if (isset($adapters[$s->ns])) {
-        return $adapters[$s->ns];
-    }
-    $adapter = $connect($s);
+// The MongoDB twins (mongo.fuzz_*, in crates/tools/compat/src/libs/database/mongo.rs)
+// seed a database `${ns}` on the compat MongoDB the same way.
+$fuzzSeed = static function (\Utopia\Database\Adapter $adapter, Session $s): void {
+    $adapter->setAuthorization(new Authorization());
     $adapter->setDatabase($s->ns);
     $adapter->setNamespace('fz');
     $adapter->delete($s->ns);
@@ -124,6 +124,27 @@ $fuzzAdapter = static function (Session $s) use ($connect): Postgres {
         ]);
     }
     $adapter->createDocuments(new Document(['$id' => 'fz']), $documents);
+};
+$fuzzAdapter = static function (Session $s) use ($connect, $fuzzSeed): Postgres {
+    static $adapters = [];
+    if (isset($adapters[$s->ns])) {
+        return $adapters[$s->ns];
+    }
+    $adapter = $connect($s);
+    $fuzzSeed($adapter, $s);
+
+    return $adapters[$s->ns] = $adapter;
+};
+$fuzzMongo = static function (Session $s) use ($fuzzSeed): Mongo {
+    static $adapters = [];
+    if (isset($adapters[$s->ns])) {
+        return $adapters[$s->ns];
+    }
+    $url = parse_url($s->service('database-mongo'));
+    $client = new MongoClient($s->ns, $url['host'] ?? '', $url['port'] ?? 27017, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), false);
+    $client->connect();
+    $adapter = new Mongo($client);
+    $fuzzSeed($adapter, $s);
 
     return $adapters[$s->ns] = $adapter;
 };
@@ -643,8 +664,8 @@ return [
 
     // ----- Fuzzing: one adapter per namespace, over a seeded collection -----
 
-    'adapter.fuzz_find' => static function (array $a, Session $s) use ($fuzzAdapter, $queries, $strings) {
-        $adapter = $fuzzAdapter($s);
+    'adapter.fuzz_find' => $fuzzFind = static function (array $a, Session $s, ?\Utopia\Database\Adapter $adapter = null) use ($fuzzAdapter, $queries, $strings) {
+        $adapter ??= $fuzzAdapter($s);
         $authorization = new Authorization();
         if (\array_key_exists('roles', $a)) {
             $authorization->cleanRoles();
@@ -667,8 +688,8 @@ return [
             (string) ($a['cursor_direction'] ?? 'after'),
         ));
     },
-    'adapter.fuzz_roundtrip' => static function (array $a, Session $s) use ($fuzzAdapter) {
-        $adapter = $fuzzAdapter($s);
+    'adapter.fuzz_roundtrip' => $fuzzRoundtrip = static function (array $a, Session $s, ?\Utopia\Database\Adapter $adapter = null) use ($fuzzAdapter) {
+        $adapter ??= $fuzzAdapter($s);
         $value = Values::decode($a['value'] ?? null);
         $authorization = new Authorization();
         $authorization->setStatus(false);
@@ -691,4 +712,8 @@ return [
 
         return $out;
     },
+    // The same on the MongoDB adapter (database ${ns} of the compat MongoDB,
+    // seeded the same way). Twins: mongo.rs.
+    'mongo.fuzz_find' => static fn (array $a, Session $s) => $fuzzFind($a, $s, $fuzzMongo($s)),
+    'mongo.fuzz_roundtrip' => static fn (array $a, Session $s) => $fuzzRoundtrip($a, $s, $fuzzMongo($s)),
 ];

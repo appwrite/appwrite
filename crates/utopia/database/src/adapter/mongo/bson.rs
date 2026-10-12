@@ -75,6 +75,19 @@ pub(crate) fn value(v: &Value) -> Result<Bson> {
     })
 }
 
+/// `(string) $value`, with the BSON objects' `__toString()`: an ObjectId's
+/// hex, a UTCDateTime's milliseconds, a Regex as `/pattern/flags`.
+pub(crate) fn php_string(value: &Value) -> Str {
+    match value {
+        Value::Ext(Ext::Bson(b)) => Str::from(match &**b {
+            BsonValue::ObjectId(bytes) => hex::encode(bytes),
+            BsonValue::UtcDateTime(ms) => ms.to_string(),
+            BsonValue::Regex { pattern, flags } => format!("/{pattern}/{flags}"),
+        }),
+        other => other.to_php_string().unwrap_or(Str::EMPTY),
+    }
+}
+
 /// A BSON value as PHP decodes it: documents are `stdClass`, arrays
 /// lists, every integer a PHP integer (utopia-php/mongo unwraps `Int64`).
 pub(crate) fn decode(b: &Bson) -> Value {

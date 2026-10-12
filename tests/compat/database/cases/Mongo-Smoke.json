@@ -2,29 +2,415 @@
   "cases": [
     {
       "name": "collections, attributes, documents and finds on MongoDB",
-      "state": ["mongo@database-mongo"],
+      "state": [
+        "mongo@database-mongo"
+      ],
       "steps": [
-        { "op": "db.open", "args": { "engine": "mongo" }, "bind": "db" },
-        { "op": "database.create_collection", "args": { "id": "people", "permissions": ["read(\"any\")", "create(\"any\")", "update(\"any\")", "delete(\"any\")"] } },
-        { "op": "database.create_attribute", "args": { "collection": "people", "id": "name", "type": "string", "size": 128, "required": true } },
-        { "op": "database.create_attribute", "args": { "collection": "people", "id": "age", "type": "integer", "size": 0, "required": false } },
-        { "op": "database.create_attribute", "args": { "collection": "people", "id": "born", "type": "datetime", "size": 0, "required": false, "filters": ["datetime"] } },
-        { "op": "database.create_index", "args": { "collection": "people", "id": "by_name", "type": "key", "attributes": ["name"] } },
-        { "op": "database.create_document", "args": { "collection": "people", "document": { "$id": "ada", "name": "Ada", "age": 36, "born": "1815-12-10T00:00:00.000+00:00" } } },
-        { "op": "database.create_document", "args": { "collection": "people", "document": { "$id": "grace", "name": "Grace", "age": 85 } } },
-        { "op": "database.get_document", "args": { "collection": "people", "id": "ada" } },
-        { "op": "database.find", "args": { "collection": "people", "queries": [{ "$query": { "method": "greaterThan", "attribute": "age", "values": [40] } }] } },
-        { "op": "database.find", "args": { "collection": "people", "queries": [{ "$query": { "method": "orderDesc", "attribute": "age", "values": [] } }] } },
-        { "op": "database.count", "args": { "collection": "people" } },
-        { "op": "database.sum", "args": { "collection": "people", "attribute": "age" } },
-        { "op": "database.update_document", "args": { "collection": "people", "id": "ada", "document": { "age": 37 } } },
-        { "op": "database.increase_document_attribute", "args": { "collection": "people", "id": "grace", "attribute": "age", "value": 1 } },
-        { "op": "database.find", "args": { "collection": "people", "queries": [{ "$query": { "method": "startsWith", "attribute": "name", "values": ["Gr"] } }] } },
-        { "op": "database.delete_document", "args": { "collection": "people", "id": "ada" } },
-        { "op": "database.find", "args": { "collection": "people" } },
-        { "op": "mongo.adapter", "args": { "method": "getTenantFilters", "args": { "collection": "people" } } },
-        { "op": "mongo.adapter", "args": { "method": "castingBefore", "args": { "collection": { "$id": "people", "attributes": [{ "$id": "born", "type": "datetime", "array": false }] }, "document": { "born": "2024-01-02T03:04:05.678+00:00" } } } },
-        { "op": "mongo.permission_strings", "args": { "roles": ["user:alice.", "users"], "type": "read" } }
+        {
+          "op": "db.open",
+          "args": {
+            "engine": "mongo"
+          },
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "people",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "people",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "people",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "name",
+            "type": "string",
+            "size": 128,
+            "required": true
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "age",
+            "type": "integer",
+            "size": 0,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "people",
+            "id": "born",
+            "type": "datetime",
+            "size": 0,
+            "required": false,
+            "filters": [
+              "datetime"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_index",
+          "args": {
+            "collection": "people",
+            "id": "by_name",
+            "type": "key",
+            "attributes": [
+              "name"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "people",
+            "document": {
+              "$id": "ada",
+              "name": "Ada",
+              "age": 36,
+              "born": "1815-12-10T00:00:00.000+00:00"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "ada",
+              "name": "Ada",
+              "age": 36,
+              "born": "1815-12-10T00:00:00.000+00:00",
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>"
+            }
+          }
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "people",
+            "document": {
+              "$id": "grace",
+              "name": "Grace",
+              "age": 85
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "grace",
+              "name": "Grace",
+              "age": 85,
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "born": null
+            }
+          }
+        },
+        {
+          "op": "database.get_document",
+          "args": {
+            "collection": "people",
+            "id": "ada"
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "age": 36,
+              "born": "1815-12-10T00:00:00.000+00:00",
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "ada"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "people",
+            "queries": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "age",
+                  "values": [
+                    40
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Grace",
+                "age": 85,
+                "$collection": "people",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "grace",
+                "born": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "people",
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderDesc",
+                  "attribute": "age",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Grace",
+                "age": 85,
+                "$collection": "people",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "grace",
+                "born": null
+              }
+            },
+            {
+              "$document": {
+                "name": "Ada",
+                "age": 36,
+                "born": "1815-12-10T00:00:00.000+00:00",
+                "$collection": "people",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "ada"
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.count",
+          "args": {
+            "collection": "people"
+          },
+          "expect": 2
+        },
+        {
+          "op": "database.sum",
+          "args": {
+            "collection": "people",
+            "attribute": "age"
+          },
+          "expect": 121
+        },
+        {
+          "op": "database.update_document",
+          "args": {
+            "collection": "people",
+            "id": "ada",
+            "document": {
+              "age": 37
+            }
+          },
+          "expect": {
+            "$document": {
+              "name": "Ada",
+              "age": 37,
+              "born": "1815-12-10T00:00:00.000+00:00",
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "ada"
+            }
+          }
+        },
+        {
+          "op": "database.increase_document_attribute",
+          "args": {
+            "collection": "people",
+            "id": "grace",
+            "attribute": "age",
+            "value": 1
+          },
+          "expect": {
+            "$document": {
+              "name": "Grace",
+              "age": 86,
+              "$collection": "people",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$permissions": [],
+              "$sequence": "<uuid7>",
+              "$id": "grace",
+              "born": null
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "people",
+            "queries": [
+              {
+                "$query": {
+                  "method": "startsWith",
+                  "attribute": "name",
+                  "values": [
+                    "Gr"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Grace",
+                "age": 86,
+                "$collection": "people",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "grace",
+                "born": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.delete_document",
+          "args": {
+            "collection": "people",
+            "id": "ada"
+          },
+          "expect": true
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "people"
+          },
+          "expect": [
+            {
+              "$document": {
+                "name": "Grace",
+                "age": 86,
+                "$collection": "people",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [],
+                "$sequence": "<uuid7>",
+                "$id": "grace",
+                "born": null
+              }
+            }
+          ]
+        },
+        {
+          "op": "mongo.adapter",
+          "args": {
+            "method": "getTenantFilters",
+            "args": {
+              "collection": "people"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "mongo.adapter",
+          "args": {
+            "method": "castingBefore",
+            "args": {
+              "collection": {
+                "$id": "people",
+                "attributes": [
+                  {
+                    "$id": "born",
+                    "type": "datetime",
+                    "array": false
+                  }
+                ]
+              },
+              "document": {
+                "born": "2024-01-02T03:04:05.678+00:00"
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "TypeError",
+              "message": "array_filter(): Argument #1 ($array) must be of type array, null given"
+            }
+          }
+        },
+        {
+          "op": "mongo.permission_strings",
+          "args": {
+            "roles": [
+              "user:alice.",
+              "users"
+            ],
+            "type": "read"
+          },
+          "expect": [
+            "read(\"user:alice.\")",
+            "read(\"users\")"
+          ]
+        }
       ]
     }
   ]

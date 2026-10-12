@@ -11,7 +11,7 @@ use super::Mongo;
 use crate::adapter::Adapter;
 use crate::database::Database;
 use crate::document::Document;
-use crate::error::{Error, Result};
+use crate::error::{Error, Kind, Result};
 use crate::query::{Method, Query};
 use crate::value::{Array, ArrayKey, BsonValue, Ext, KeyRef, Str, Value};
 
@@ -65,6 +65,24 @@ pub(super) fn pair(key: &str, value: Value) -> Value {
     let mut a = Array::new();
     set(&mut a, key, value);
     Value::Array(a)
+}
+
+/// `$array[$value]`'s key: PHP's cast of a value used as an array offset
+/// (a bool or float is an integer, `null` the empty string); an array or
+/// object is a `TypeError`.
+fn offset(value: &Value) -> Result<ArrayKey> {
+    Ok(match value {
+        Value::Array(_) | Value::Object(_) | Value::Ext(_) => {
+            return Err(Error::new(
+                Kind::TypeError,
+                format!("Cannot access offset of type {} on array", value.debug_type()),
+            ));
+        }
+        Value::Bool(b) => ArrayKey::Int(i64::from(*b)),
+        Value::Float(f) => ArrayKey::Int(php_std::format::dval_to_lval(*f)),
+        Value::Null => ArrayKey::Str(Str::EMPTY),
+        other => ArrayKey::normalize(Str::from(crate::value::to_text(other))),
+    })
 }
 
 /// A key's text (integer keys as their digits).
@@ -121,7 +139,7 @@ pub(super) fn replace_chars(from: &str, to: &str, mut array: Array) -> Array {
     let take = |array: &mut Array, old: &str, new: &str, string: bool| {
         let old = ArrayKey::Str(Str::from(old));
         if let Some(value) = array.get(&old).filter(|v| !super::null(v)).cloned() {
-            let value = if string { Value::Str(value.to_php_string().unwrap_or(Str::EMPTY)) } else { value };
+            let value = if string { Value::Str(super::bson::php_string(&value)) } else { value };
             array.set(ArrayKey::Str(Str::from(new)), value);
             array.remove(&old);
         }
@@ -172,8 +190,26 @@ pub(super) fn remove_null_keys(array: Array) -> Array {
 impl Mongo {
     /// `createSafeRegex($value, $pattern, $flags)`: `value` quoted into
     /// `pattern` (`%s`), refusing a `$` followed by letters.
-    fn safe_regex(&self, value: &Value, pattern: &str, flags: &str) -> Result<Value> {
-        let text = value.to_php_string().map_err(Error::from)?;
+    fn safe_regex(&self, value: &Value, pattern: &str, flags: &str, line: u32) -> Result<Value> {
+        // `string $value` of a userland method in coercive mode: scalars
+        // convert, anything else (null included) is a TypeError naming the
+        // calling line.
+        if matches!(
+            value,
+            Value::Null
+                | Value::Array(_)
+                | Value::Object(_)
+                | Value::Ext(Ext::Document(_) | Ext::Query(_) | Ext::Operator(_))
+        ) {
+            return Err(Error::new(
+                Kind::TypeError,
+                format!(
+                    "Utopia\\Database\\Adapter\\Mongo::createSafeRegex(): Argument #1 ($value) must be of type string, {} given, called in /usr/src/code/vendor/utopia-php/database/src/Database/Adapter/Mongo.php on line {line}",
+                    crate::document::value_name(value)
+                ),
+            ));
+        }
+        let text = super::bson::php_string(value);
         let escaped = quote(text.as_bytes());
         let injected = php_std::pcre::preg_match(br"/\$[a-z]+/i", &escaped, 0, 0)
             .ok()
@@ -219,15 +255,16 @@ impl Mongo {
     /// `getQueryValue($method, $value)`: starts-with and ends-with as
     /// regular expressions.
     fn query_value(method: &Method, value: Value) -> Result<Value> {
+        let text = |v: &Value| crate::document::string_arg(v, "preg_quote", "#1 ($str)");
         Ok(match method {
             Method::StartsWith => {
-                let mut v = quote(value.to_php_string().map_err(Error::from)?.as_bytes());
+                let mut v = quote(text(&value)?.as_bytes());
                 v.extend_from_slice(b".*");
                 Value::Str(Str::from(v))
             }
             Method::EndsWith => {
                 let mut v = b".*".to_vec();
-                v.extend_from_slice(&quote(value.to_php_string().map_err(Error::from)?.as_bytes()));
+                v.extend_from_slice(&quote(text(&value)?.as_bytes()));
                 Value::Str(Str::from(v))
             }
             _ => value,
@@ -332,27 +369,31 @@ impl Mongo {
         } else if operator == "$in" {
             if matches!(method, Method::Contains | Method::ContainsAny) && !query.on_array() {
                 if let Value::Array(items) = &value {
+                    // array_map() keeps the keys: a map is a document.
                     let mut ors = Array::new();
-                    for item in items.values() {
-                        let _ = ors.push(pair(&attribute, pair("$regex", self.safe_regex(item, ".*%s.*", "i")?)));
+                    for (key, item) in items.iter() {
+                        ors.set(
+                            key.to_owned(),
+                            pair(&attribute, pair("$regex", self.safe_regex(item, ".*%s.*", "i", 3203)?)),
+                        );
                     }
                     set(&mut filter, "$or", Value::Array(ors));
                 } else {
-                    set(entry_of(&mut filter, &attribute), "$regex", self.safe_regex(&value, ".*%s.*", "i")?);
+                    set(entry_of(&mut filter, &attribute), "$regex", self.safe_regex(&value, ".*%s.*", "i", 3208)?);
                 }
             } else {
                 set(entry_of(&mut filter, &attribute), "$in", list);
             }
         } else if operator == "notContains" {
             if !query.on_array() {
-                set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, ".*%s.*", "i")?));
+                set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, ".*%s.*", "i", 3215)?));
             } else {
                 set(entry_of(&mut filter, &attribute), "$nin", list);
             }
         } else if operator == "$search" {
             if method == Method::NotSearch {
                 if value.truthy() {
-                    set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, ".*%s.*", "i")?));
+                    set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, ".*%s.*", "i", 3226)?));
                 }
             } else {
                 set(entry_of(&mut filter, "$text"), operator, value);
@@ -367,13 +408,14 @@ impl Mongo {
             let ors = Array::from_list(vec![pair(&attribute, pair("$lt", low)), pair(&attribute, pair("$gt", high))]);
             set(&mut filter, "$or", Value::Array(ors));
         } else if operator == "$regex" && method == Method::NotStartsWith {
-            set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, "^%s", "i")?));
+            set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, "^%s", "i", 3240)?));
         } else if operator == "$regex" && method == Method::NotEndsWith {
-            set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, "%s$", "i")?));
+            set(&mut filter, &attribute, pair("$not", self.safe_regex(&value, "%s$", "i", 3242)?));
         } else if operator == "$exists" {
             for name in values.iter() {
-                let name = crate::value::to_text(name);
-                push(&mut filter, "$or", pair(&name, pair(operator, value.clone())));
+                let mut condition = Array::new();
+                condition.set(offset(name)?, pair(operator, value.clone()));
+                push(&mut filter, "$or", Value::Array(condition));
             }
         } else {
             set(entry_of(&mut filter, &attribute), operator, value);
@@ -462,20 +504,21 @@ impl Mongo {
 
     /// `getAttributeProjection($selections)`: the selected attributes (but
     /// internal ones) and every internal field.
-    pub(super) fn attribute_projection(selections: &[Value]) -> Array {
-        let internal: Vec<String> = Database::internal_attributes_const().iter().map(|a| a.id().to_owned()).collect();
+    pub(super) fn attribute_projection(selections: &[Value]) -> Result<Array> {
+        let internal: Vec<Value> =
+            Database::internal_attributes_const().iter().map(|a| Value::Str(Str::from(a.id()))).collect();
         let mut projection = Array::new();
         for selection in selections {
-            let name = crate::value::to_text(selection);
-            if internal.contains(&name) {
+            // `in_array()`: loose comparison.
+            if internal.iter().any(|i| i.loose_eq(selection)) {
                 continue;
             }
-            projection.set(ArrayKey::normalize(Str::from(name.as_str())), Value::Int(1));
+            projection.set(offset(selection)?, Value::Int(1));
         }
         for field in ["_uid", "_id", "_createdAt", "_updatedAt", "_permissions"] {
             set(&mut projection, field, Value::Int(1));
         }
-        projection
+        Ok(projection)
     }
 
     /// `getAttributeSelections($queries)`: the values of the `select` queries.

@@ -53,7 +53,10 @@ final class Values
                     return (object) self::decodeArray(self::fields($value['$object']));
                 }
                 if (\array_key_exists('$bson', $value)) {
-                    return \MongoDB\BSON\Document::fromJSON(json_encode(['v' => $value['$bson']], JSON_THROW_ON_ERROR))->toPHP()->v;
+                    /** @var \stdClass $decoded */
+                    $decoded = \MongoDB\BSON\Document::fromJSON(json_encode(['v' => $value['$bson']], JSON_THROW_ON_ERROR))->toPHP();
+
+                    return $decoded->v;
                 }
             }
 

@@ -156,6 +156,12 @@ final class Cases
             if (isset($this->producers[$value]) && !isset($this->fakes[$value])) {
                 [$index, $path] = $this->producers[$value];
                 $refs[] = $index;
+                if (self::uuid7($value)) {
+                    // A MongoDB `$sequence`: the value recorded stands in
+                    // when the producing step fails on replay (a slice runs
+                    // without the roles the suite had when it made it).
+                    return ['$ref' => "s{$index}", 'path' => $path, 'default' => $value];
+                }
 
                 return ['$ref' => "s{$index}", 'path' => $path];
             }
@@ -243,12 +249,29 @@ final class Cases
     }
 
     /**
+     * Whether a string is a UUIDv7 made within a day of now (a MongoDB
+     * document's `$sequence`, which the library generates).
+     */
+    public static function uuid7(string $value): bool
+    {
+        if (\strlen($value) !== 36 || $value[14] !== '7' || substr_count($value, '-') !== 4) {
+            return false;
+        }
+        $hex = str_replace('-', '', $value);
+        if (!ctype_xdigit($hex) || strtolower($hex) !== $hex) {
+            return false;
+        }
+
+        return abs(intdiv(hexdec(substr($hex, 0, 12)), 1000) - time()) <= 86400;
+    }
+
+    /**
      * Registers the uniqids in a step's result as produced by it.
      */
     private function produce(mixed $value, int $index, string $path): void
     {
         if (\is_string($value)) {
-            if (self::uniqid($value) && !isset($this->fakes[$value]) && !isset($this->producers[$value])) {
+            if ((self::uniqid($value) || self::uuid7($value)) && !isset($this->fakes[$value]) && !isset($this->producers[$value])) {
                 $this->producers[$value] = [$index, $path];
             }
 
@@ -267,7 +290,7 @@ final class Cases
     private function localProduce(mixed $value, string $bind, string $path, array &$locals): void
     {
         if (\is_string($value)) {
-            if (self::uniqid($value) && !isset($this->fakes[$value]) && !isset($locals[$value]) && !isset($this->producers[$value])) {
+            if ((self::uniqid($value) || self::uuid7($value)) && !isset($this->fakes[$value]) && !isset($locals[$value]) && !isset($this->producers[$value])) {
                 $locals[$value] = [$bind, $path];
             }
 
@@ -379,11 +402,33 @@ final class Cases
         if (str_contains($args, '"method":"cursor') && (str_contains($args, '"attribute":"$createdAt"') || str_contains($args, '"attribute":"$updatedAt"'))) {
             return ['paths' => [''], 'reason' => 'documents written within one millisecond tie on $createdAt/$updatedAt, so the page after a cursor depends on timing'];
         }
+        if (self::lists($step)) {
+            return ['paths' => [''], 'reason' => 'a MongoDB listing names every database on the server, other runs\' included'];
+        }
+        if ($step->op === 'database.get_size_of_collection_on_disk' && str_starts_with(Target::$profile, 'mongo')) {
+            return ['paths' => [''], 'reason' => 'a MongoDB collection\'s storage size depends on when WiredTiger last checkpointed it'];
+        }
+        if ($step->op === 'database.iterate' && str_starts_with(Target::$profile, 'mongo')) {
+            return ['paths' => ['/*/$document/$createdAt', '/*/$document/$updatedAt'], 'reason' => 'PHP\'s MongoDB adapter casts the cursor of the next page in place, so the last document of each page it already yielded holds UTCDateTime objects (an alias of the Document object); Rust yields values'];
+        }
         if ($step->op === 'db.adapter' && \in_array($step->args['method'] ?? '', ['getHostname', 'getConnectionId'], true)) {
             return ['paths' => [''], 'reason' => 'each runtime reaches the server under its own host name, on its own connection'];
         }
 
         return null;
+    }
+
+    /**
+     * Whether a step (or a callback of it) lists the MongoDB server's
+     * databases (`Database::list()` on MongoDB).
+     */
+    private static function lists(Step $step): bool
+    {
+        if (!str_starts_with(Target::$profile, 'mongo')) {
+            return false;
+        }
+
+        return $step->op === 'database.list' || str_contains((string) json_encode($step->callbacks), '"op":"database.list"');
     }
 
     private static function failed(Step $step): bool
@@ -452,24 +497,41 @@ final class Cases
                 }
                 $steps[] = $entry;
                 if ($s->logged) {
-                    $steps[] = ['op' => 'db.log', 'args' => new \stdClass()];
+                    $log = ['op' => 'db.log', 'args' => new \stdClass()];
+                    // A listing's event carries the listing.
+                    if (self::lists($s)) {
+                        $log['mask'] = $mask;
+                    }
+                    $steps[] = $log;
                 }
             }
-            $case = ['name' => "{$trait}::{$test['name']}", 'state' => ['postgres@database-postgres'], 'steps' => $steps];
+            $state = str_starts_with($this->profile, 'mongo') ? 'mongo@database-mongo' : 'postgres@database-postgres';
+            $case = ['name' => "{$trait}::{$test['name']}", 'state' => [$state], 'steps' => $steps];
             $files[$file]['cases'][] = $case;
             $files[$file]['steps'] += \count($steps);
         }
         $written = [];
+        // Per profile: the adapter's test, and the prefix of its scope files.
+        [$adapter, $prefix] = match ($this->profile) {
+            'shared' => ['SharedTables/PostgresTest.php', 'SharedTables-'],
+            'mongo' => ['MongoDBTest.php', 'Mongo-'],
+            'mongo-shared' => ['SharedTables/MongoDBTest.php', 'Mongo-SharedTables-'],
+            'mongo-schemaless' => ['Schemaless/MongoDBTest.php', 'Mongo-Schemaless-'],
+            default => ['PostgresTest.php', ''],
+        };
         foreach ($files as $file => $data) {
-            $adapter = $this->profile === 'shared' ? 'tests/e2e/Adapter/SharedTables/PostgresTest.php' : 'tests/e2e/Adapter/PostgresTest.php';
             $base = 'vendor/utopia-php/database/';
             if ($file === 'PostgresTest.php') {
                 $name = 'PostgresTest.json';
                 $source = [$base . 'tests/e2e/Adapter/PostgresTest.php'];
+            } elseif (!str_starts_with($file, 'Scopes/')) {
+                // A MongoDB test's own methods: Mongo-[SharedTables-|Schemaless-]MongoDBTest.json.
+                $name = $prefix . basename($file, '.php') . '.json';
+                $source = [$base . 'tests/e2e/Adapter/' . $file];
             } else {
                 $relative = substr($file, \strlen('Scopes/'));
-                $name = 'Scope-' . ($this->profile === 'shared' ? 'SharedTables-' : '') . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
-                $source = [$base . 'tests/e2e/Adapter/' . $file, $base . $adapter];
+                $name = 'Scope-' . $prefix . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
+                $source = [$base . 'tests/e2e/Adapter/' . $file, $base . 'tests/e2e/Adapter/' . $adapter];
             }
             if ($filter !== null && array_filter(explode(',', $filter), fn (string $f) => str_contains($name, $f)) === []) {
                 continue;

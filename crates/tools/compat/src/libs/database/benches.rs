@@ -63,6 +63,13 @@ pub const BENCHES: &[(&str, &str)] = &[
     ("get_document", "Read a user document by id, uncached (one SELECT round trip)"),
     ("find", "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)"),
     ("update_document", "Update one attribute of a user document (a locking read and one UPDATE)"),
+    ("mongo_create_document", "Create a user document on MongoDB: validation, encoding and one insert round trip"),
+    ("mongo_get_document", "Read a user document by id on MongoDB, uncached (one find round trip)"),
+    (
+        "mongo_find",
+        "Find users by an indexed name on MongoDB, ordered and limited (one find round trip over 100 documents)",
+    ),
+    ("mongo_update_document", "Update one attribute of a user document on MongoDB (a read and one update)"),
 ];
 
 fn fault(e: impl std::fmt::Display) -> Fault {
@@ -105,19 +112,32 @@ fn collection() -> Result<Document, Fault> {
     Ok(c)
 }
 
-/// A database of the benchmarks' collection on the compat PostgreSQL,
-/// uncached, in a schema of its own (dropped first when a run left it), and
-/// the collection's metadata document.
+/// A database of the benchmarks' collection on the compat PostgreSQL (on
+/// the compat MongoDB for the `mongo_` benchmarks), uncached, in a schema
+/// of its own (dropped first when a run left it), and the collection's
+/// metadata document.
 async fn database(session: &mut Session, name: &str) -> Result<(Database, Document), Fault> {
+    if name.starts_with("mongo_") {
+        let mongo = super::mongo::bench_adapter(session, &format!("compat_bench_rust_{name}")).await?;
+        return setup(Database::new(Arc::new(mongo), uncached(), Vec::new()), name).await;
+    }
     let url = session.service("database-postgres").map_err(fault)?.to_owned();
     open(&url, name).await
+}
+
+fn uncached() -> Arc<Cache> {
+    Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)))
 }
 
 /// [`database`] on the server at `url`.
 async fn open(url: &str, name: &str) -> Result<(Database, Document), Fault> {
     let postgres = Postgres::connect(url).await.map_err(fault)?;
-    let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)));
-    let db = Database::new(Arc::new(postgres), cache, Vec::new());
+    setup(Database::new(Arc::new(postgres), uncached(), Vec::new()), name).await
+}
+
+/// The benchmarks' database `name` on `db`, created afresh with the
+/// collection.
+async fn setup(db: Database, name: &str) -> Result<(Database, Document), Fault> {
     let authorization = Authorization::new();
     authorization.add_role("any");
     db.set_authorization(Arc::new(authorization));
@@ -143,7 +163,9 @@ fn fresh(doc: &Document) -> Document {
 }
 
 pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
-    Ok(match name {
+    // The `mongo_` benchmarks are round-trip ones run on MongoDB.
+    let kind = name.strip_prefix("mongo_").unwrap_or(name);
+    Ok(match kind {
         "query_parse" => Bench::sync(|| {
             black_box(Query::parse_queries(black_box(&QUERIES)).ok());
         }),

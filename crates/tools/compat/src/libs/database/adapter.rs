@@ -281,7 +281,7 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
             Ok(db) => db,
             Err(e) => return Ok(codec::error(&e)),
         };
-        return if op == "adapter.fuzz_find" { fuzz_find(&db, args).await } else { fuzz_roundtrip(&db, args).await };
+        return if op == "adapter.fuzz_find" { fuzz_find(&*db, args).await } else { fuzz_roundtrip(&*db, args).await };
     }
 
     let ns = session.ns.clone();
@@ -877,11 +877,20 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
     }
     let url = session.service("database-postgres").map_err(|f| Error::database(f.0))?.to_owned();
     let db = Postgres::connect(&url).await?;
+    fuzz_seed(&db, &session.ns).await?;
+    let db = Arc::new(db);
+    map.insert(session.ns.clone(), db.clone());
+    Ok(db)
+}
+
+/// Schema `ns`, namespace `fz`, collection `fz` seeded with 24 documents
+/// and an empty `rt`, on `db`.
+pub(super) async fn fuzz_seed<A: Adapter>(db: &A, ns: &str) -> utopia_database::Result<()> {
     db.set_authorization(Arc::new(Authorization::new()));
-    db.set_database(&session.ns)?;
+    db.set_database(ns)?;
     db.set_namespace("fz")?;
-    db.delete(&session.ns).await?;
-    db.create(&session.ns).await?;
+    db.delete(ns).await?;
+    db.create(ns).await?;
     let attribute = |id: &str, kind: &str, size: i64, array: bool| {
         Document::from_array_unchecked(
             [
@@ -952,16 +961,14 @@ async fn fuzz_adapter(session: &Session) -> utopia_database::Result<Arc<Postgres
         documents,
     )
     .await?;
-    let db = Arc::new(db);
-    map.insert(session.ns.clone(), db.clone());
-    Ok(db)
+    Ok(())
 }
 
 fn collection_of(id: &str) -> Document {
     Document::from_array_unchecked([(ArrayKey::from("$id"), Value::Str(id.into()))].into_iter().collect())
 }
 
-async fn fuzz_find(db: &Postgres, args: &Json) -> OpResult {
+pub(super) async fn fuzz_find<A: Adapter>(db: &A, args: &Json) -> OpResult {
     let authorization = Authorization::new();
     if args.get("roles").is_some() {
         authorization.clean_roles();
@@ -1004,7 +1011,7 @@ async fn fuzz_find(db: &Postgres, args: &Json) -> OpResult {
     res(db.find(&collection_of("fz"), &queries, options).await, |d| codec::encode_documents(&d))
 }
 
-async fn fuzz_roundtrip(db: &Postgres, args: &Json) -> OpResult {
+pub(super) async fn fuzz_roundtrip<A: Adapter>(db: &A, args: &Json) -> OpResult {
     let value = value(args, "value")?;
     let authorization = Authorization::new();
     authorization.set_status(false);

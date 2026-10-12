@@ -201,7 +201,13 @@ pub fn substitute(args: &Value, bindings: &HashMap<String, Value>, ns: &str) -> 
             if let Some(name) = o.get("$ref").and_then(Value::as_str) {
                 let bound = bindings.get(name).ok_or_else(|| format!("`$ref` to unknown binding `{name}`"))?;
                 return match o.get("path").and_then(Value::as_str) {
-                    Some(p) => bound.pointer(p).cloned().ok_or_else(|| format!("`{name}` has nothing at `{p}`")),
+                    Some(p) => match (bound.pointer(p), o.get("default")) {
+                        (Some(v), _) => Ok(v.clone()),
+                        // The value recorded, when the binding has none
+                        // there (the producing step failed on replay).
+                        (None, Some(default)) => Ok(default.clone()),
+                        (None, None) => Err(format!("`{name}` has nothing at `{p}`")),
+                    },
                     None => Ok(bound.clone()),
                 };
             }

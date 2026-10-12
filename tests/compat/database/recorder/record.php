@@ -18,7 +18,6 @@
 namespace Tests\Compat\Database\Recorder;
 
 use Tests\Compat\Codec;
-use Tests\Compat\Session;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Database;
 use Utopia\Database\PDO;
@@ -77,8 +76,8 @@ Classes::load();
 
 $profile = $argv[1] ?? 'postgres';
 $filter = $argv[2] ?? null;
-if (!\in_array($profile, ['postgres', 'shared'], true)) {
-    fwrite(STDERR, "usage: record.php <postgres|shared> [<filter>]\n");
+if (!\in_array($profile, ['postgres', 'shared', 'mongo', 'mongo-shared', 'mongo-schemaless'], true)) {
+    fwrite(STDERR, "usage: record.php <postgres|shared|mongo|mongo-shared|mongo-schemaless> [<filter>]\n");
     exit(2);
 }
 
@@ -109,6 +108,40 @@ final class Target
     }
 
     /**
+     * Whether the profile records on MongoDB.
+     */
+    public static function mongo(): bool
+    {
+        return str_starts_with(self::$profile, 'mongo');
+    }
+
+    /**
+     * A recording Database on the compat MongoDB (profiles mongo*): the
+     * client's database is the recorder's schema, dropped first with the
+     * tests' other databases (`<schema>_<name>`).
+     */
+    private static function mongoDatabase(\Utopia\Database\Validator\Authorization $authorization): Database
+    {
+        $client = new \Utopia\Mongo\Client(Recorder::$schema, 'compat-database-mongo', 27017, 'root', 'password', false);
+        $client->connect();
+        foreach ($client->listDatabaseNames()->databases as $existing) {
+            if ($existing->name === Recorder::$schema || str_starts_with($existing->name, Recorder::$schema . '_')) {
+                $client->dropDatabase([], $existing->name);
+            }
+        }
+        $database = new RecordingDatabase(new RecordingMongo($client), \Tests\Compat\Database\Core::cache('memory'));
+        $database->getAdapter()->setSupportForAttributes(self::$profile !== 'mongo-schemaless');
+        $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
+        if (self::$profile === 'mongo-shared') {
+            $database->setSharedTables(true)->setTenant(999);
+        }
+        $database->setNamespace('compat');
+        $database->create();
+
+        return $database;
+    }
+
+    /**
      * A recording Database built like `db.open` builds one for the profile.
      */
     public static function database(\Utopia\Database\Validator\Authorization $authorization): Database
@@ -118,6 +151,15 @@ final class Target
         }
         $was = Recorder::$on;
         Recorder::$on = false;
+        if (self::mongo()) {
+            $database = self::mongoDatabase($authorization);
+            self::$database = $database;
+            Recorder::$main = $database;
+            self::$fresh = self::settings();
+            Recorder::$on = $was;
+
+            return $database;
+        }
         $pdo = self::pdo();
         $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
         // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
@@ -149,6 +191,7 @@ final class Target
         'adapter', 'cache', 'authorization', 'pdo', 'timestamp', 'relationshipWriteStack', 'relationshipFetchStack',
         'relationshipDeleteStack', 'inBatchRelationshipPopulation', 'relationshipFetchDepth', 'filterSignatures',
         'filterSignaturesEncoded', 'filterSignaturesVersion', 'filterSignaturesSource', 'inTransaction', 'hostname', 'message',
+        'client', 'session',
     ];
 
     /**
@@ -296,15 +339,34 @@ final class Target
      */
     public static function open(): array|\stdClass
     {
-        return self::$profile === 'shared' ? ['namespace' => '', 'shared_tables' => true, 'tenant' => 999] : new \stdClass();
+        return match (self::$profile) {
+            'shared' => ['namespace' => '', 'shared_tables' => true, 'tenant' => 999],
+            'mongo' => ['engine' => 'mongo'],
+            'mongo-shared' => ['engine' => 'mongo', 'shared_tables' => true, 'tenant' => 999],
+            'mongo-schemaless' => ['engine' => 'mongo', 'schemaless' => true],
+            default => new \stdClass(),
+        };
     }
 }
 
 Target::$profile = $profile;
-Recorder::$schema = 'cxrecorder' . ($profile === 'shared' ? 's' : 'p');
+Recorder::$schema = 'cxrecorder' . match ($profile) {
+    'shared' => 's',
+    'mongo' => 'm',
+    'mongo-shared' => 'ms',
+    'mongo-schemaless' => 'ml',
+    default => 'p',
+};
 
-$parent = $profile === 'shared' ? 'Tests\\E2E\\Adapter\\SharedTables\\PostgresTest' : 'Tests\\E2E\\Adapter\\PostgresTest';
-$recording = 'Recording' . ($profile === 'shared' ? 'Shared' : 'Postgres') . 'Test';
+$parent = match ($profile) {
+    'shared' => 'Tests\\E2E\\Adapter\\SharedTables\\PostgresTest',
+    'mongo' => 'Tests\\E2E\\Adapter\\MongoDBTest',
+    'mongo-shared' => 'Tests\\E2E\\Adapter\\SharedTables\\MongoDBTest',
+    'mongo-schemaless' => 'Tests\\E2E\\Adapter\\Schemaless\\MongoDBTest',
+    default => 'Tests\\E2E\\Adapter\\PostgresTest',
+};
+$recording = 'Recording' . str_replace(' ', '', ucwords(str_replace('-', ' ', $profile))) . 'Test';
+$mongo = Target::mongo() ? 'true' : 'false';
 eval(<<<PHP
 namespace Tests\\Compat\\Database\\Recorder;
 
@@ -325,13 +387,18 @@ class {$recording} extends \\{$parent}
 
     public function getDatabase(): \\Utopia\\Database\\Database
     {
-        self::\$pdo = Target::pdo();
+        if (!{$mongo}) {
+            self::\$pdo = Target::pdo();
+        }
 
         return Target::database(self::\$authorization);
     }
 
     protected function deleteColumn(string \$collection, string \$column): bool
     {
+        if ({$mongo}) {
+            return true;
+        }
         \$database = \$this->getDatabase();
         \$sql = 'ALTER TABLE "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$collection . '" DROP COLUMN "' . \$column . '"';
         Recorder::sql(Target::pdo(), \$sql, [\$collection]);
@@ -341,6 +408,9 @@ class {$recording} extends \\{$parent}
 
     protected function deleteIndex(string \$collection, string \$index): bool
     {
+        if ({$mongo}) {
+            return true;
+        }
         \$database = \$this->getDatabase();
         \$sql = 'DROP INDEX "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$database->getTenant() . '_' . \$collection . '_' . \$index . '"';
         Recorder::sql(Target::pdo(), \$sql, [\$collection]);
@@ -496,7 +566,7 @@ $written = $cases->write($root . '/tests/compat/database/cases', $filter);
 @mkdir(__DIR__ . '/out');
 file_put_contents(
     __DIR__ . "/out/{$profile}.json",
-    json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
+    json_encode(Codec::encode(\Tests\Compat\Database\Values::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()])), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
 );
 foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {
     fwrite(STDERR, "problem: {$problem}\n");
