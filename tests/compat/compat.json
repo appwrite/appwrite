@@ -126,6 +126,11 @@
       "rust": "127.0.0.0/8",
       "runner": "127.0.0.0/8"
     },
+    "storage-minio": {
+      "php": "http://compat-storage-minio:9000",
+      "rust": "http://localhost:16805",
+      "runner": "http://localhost:16805"
+    },
     "queue-nats": {
       "php": "nats://compat-queue-nats:4222",
       "rust": "nats://localhost:14422",

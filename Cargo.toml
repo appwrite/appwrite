@@ -57,6 +57,7 @@ utopia-balancer = { path = "crates/utopia/balancer" }
 utopia-detector = { path = "crates/utopia/detector" }
 utopia-schedule = { path = "crates/utopia/schedule" }
 utopia-websocket = { path = "crates/utopia/websocket" }
+utopia-storage = { path = "crates/utopia/storage" }
 
 # Appwrite crates
 appwrite-core = { path = "crates/appwrite/core" }
@@ -68,6 +69,9 @@ appwrite-users = { path = "crates/appwrite/users" }
 aho-corasick = "1"
 aes = "0.8"
 aes-gcm = "0.10"
+# Object-safe async traits (utopia-storage's `Device`, which decorators and
+# cross-device copies hold as `dyn Device`); already in the tree.
+async-trait = "0.1"
 argon2 = { version = "0.5", features = ["std"] }
 # NATS client with JetStream (utopia-queue's NATS broker); the official
 # pure-Rust client from the NATS maintainers, on tokio.
@@ -161,8 +165,11 @@ mimalloc = { version = "0.1", default-features = false }
 # PNG encoding with an explicit zlib level and filter (utopia-image maps
 # Imagick's PNG quality onto them); pure Rust, the PNG codec of the image crate.
 png = "0.18"
-proc-macro2 ={ version = "1", default-features = false, features = ["span-locations"] }
+proc-macro2 = { version = "1", default-features = false, features = ["span-locations"] }
 quote = { version = "1", default-features = false }
+# Streaming XML reader (utopia-storage: S3 responses, decoded as SimpleXML
+# does); pure Rust, maintained.
+quick-xml = "0.38"
 # Thread-local CSPRNG (ChaCha12 keyed from the OS, rekeyed every 64 KiB) for
 # utopia-auth tokens and salts; pure Rust, already in the tree.
 rand = { version = "0.10", default-features = false, features = ["thread_rng"] }

@@ -1,0 +1,141 @@
+{
+  "lib": "storage",
+  "environment": {
+    "date": "2026-10-12T00:05:32Z",
+    "commit": "9acda67221",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "local_write",
+      "description": "Write a 64 KB file on the local disk (atomic rename, MD5 ETag)",
+      "php": {
+        "ns": 1996014.0,
+        "min": 1415472.1666666667,
+        "max": 2368951.3333333335,
+        "samples": 15,
+        "calls": 6
+      },
+      "rust": {
+        "ns": 1054291.6666666667,
+        "min": 682465.3333333334,
+        "max": 3162597.1666666665,
+        "samples": 15,
+        "calls": 6,
+        "allocations": 14.011111111111111,
+        "bytes": 1103.3333333333333
+      },
+      "speedup": 1.8932275224281705,
+      "bound": "File system calls (create, write, rename) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+    },
+    {
+      "name": "local_read",
+      "description": "Read a 64 KB local file to the end",
+      "php": {
+        "ns": 422360.55102040817,
+        "min": 297029.7551020408,
+        "max": 828943.8775510204,
+        "samples": 15,
+        "calls": 49
+      },
+      "rust": {
+        "ns": 159031.17322834645,
+        "min": 98026.5748031496,
+        "max": 284598.094488189,
+        "samples": 15,
+        "calls": 127,
+        "allocations": 9.000524934383202,
+        "bytes": 66054.06299212598
+      },
+      "speedup": 2.655834968996661,
+      "bound": "File system calls (open, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+    },
+    {
+      "name": "local_read_range",
+      "description": "Read a 4 KB range from the middle of a 64 KB local file",
+      "php": {
+        "ns": 88868.21705426357,
+        "min": 65106.26356589147,
+        "max": 114771.0,
+        "samples": 15,
+        "calls": 129
+      },
+      "rust": {
+        "ns": 79824.11538461539,
+        "min": 63284.254807692305,
+        "max": 95150.64423076923,
+        "samples": 15,
+        "calls": 208,
+        "allocations": 9.000320512820513,
+        "bytes": 4616.038461538462
+      },
+      "speedup": 1.1133003682667966,
+      "bound": "File system calls (open, seek, read, close) on the mounted /tmp/compat-fs, the same on both runtimes, dominate the call"
+    },
+    {
+      "name": "s3_write",
+      "description": "Write a 64 KB object to MinIO (SigV4-signed PUT)",
+      "php": {
+        "ns": 3786101.285714286,
+        "min": 3011446.4285714286,
+        "max": 5611000.0,
+        "samples": 15,
+        "calls": 7
+      },
+      "rust": {
+        "ns": 2476012.0,
+        "min": 2256815.5714285714,
+        "max": 3040476.1428571427,
+        "samples": 15,
+        "calls": 7,
+        "allocations": 248.0095238095238,
+        "bytes": 29969.14285714286
+      },
+      "speedup": 1.529112656042978,
+      "bound": "A MinIO round trip (PUT of 64 KB, hashing included), the same on both runtimes, dominates the call"
+    },
+    {
+      "name": "validate_file_name",
+      "description": "Validate an upload file name",
+      "php": {
+        "ns": 130.30746468430758,
+        "min": 126.08122773290641,
+        "max": 137.16721234031664,
+        "samples": 15,
+        "calls": 152411
+      },
+      "rust": {
+        "ns": 83.46596464377154,
+        "min": 80.97228000048845,
+        "max": 86.73524347603094,
+        "samples": 15,
+        "calls": 245671,
+        "allocations": 3.000000271365634,
+        "bytes": 56.000032563876076
+      },
+      "speedup": 1.56120480054898,
+      "bound": null
+    }
+  ]
+}

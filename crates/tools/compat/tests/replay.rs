@@ -11,6 +11,9 @@ use compat::runner::spec;
 #[tokio::test(flavor = "current_thread")]
 async fn recorded_php_results_hold_in_rust() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../..").canonicalize().expect("repository root");
+    // The drivers run from the repository root, where cases' relative paths
+    // (fixtures under packages/) resolve.
+    std::env::set_current_dir(&root).expect("repository root");
     let cfg = Config::load(&root).expect("tests/compat/compat.json");
     let mut problems = Vec::new();
     let mut passed = 0;

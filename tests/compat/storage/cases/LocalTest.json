@@ -1,0 +1,5354 @@
+{
+  "source": "packages/storage/tests/Device/LocalTest.php",
+  "cases": [
+    {
+      "name": "paths",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "////storage/functions"
+          },
+          "expect": "/storage/functions"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "storage/functions"
+          },
+          "expect": "/storage/functions"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/storage/functions"
+          },
+          "expect": "/storage/functions"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "//storage///functions//"
+          },
+          "expect": "/storage/functions"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "\\\\\\storage\\functions"
+          },
+          "expect": "/storage/functions"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "..\\\\\\//storage\\//functions"
+          },
+          "expect": "/storage/functions"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "./..\\\\\\//storage\\//functions"
+          },
+          "expect": "/storage/functions"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": ""
+          },
+          "expect": "/"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/"
+          },
+          "expect": "/"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "../.."
+          },
+          "expect": "/"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a/./b/../c"
+          },
+          "expect": "/a/c"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "a/b/../../.."
+          },
+          "expect": "/"
+        },
+        {
+          "op": "device.absolute_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": ".hidden/./x"
+          },
+          "expect": "/.hidden/x"
+        }
+      ]
+    },
+    {
+      "name": "type, root and path",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": "local"
+        },
+        {
+          "op": "device.root",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": "/tmp/compat-fs/${ns}/disk"
+        },
+        {
+          "op": "device.path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "filename": "image.png"
+          },
+          "expect": "/tmp/compat-fs/${ns}/disk/image.png"
+        },
+        {
+          "op": "device.path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "filename": "../up/./image.png"
+          },
+          "expect": "/tmp/compat-fs/${ns}/up/image.png"
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk/"
+          },
+          "bind": "e",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.path",
+          "args": {
+            "device": {
+              "$ref": "e"
+            },
+            "filename": "x"
+          },
+          "expect": "/tmp/compat-fs/${ns}/disk/x"
+        }
+      ]
+    },
+    {
+      "name": "write",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/text.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/text.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "read",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "offset": 6
+          },
+          "expect": "World"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "offset": 6,
+            "length": 3
+          },
+          "expect": "Wor"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "offset": 6,
+            "length": 100
+          },
+          "expect": "World"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "offset": 100
+          },
+          "expect": ""
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "length": 0
+          },
+          "expect": ""
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "offset": 2,
+            "length": 0
+          },
+          "expect": ""
+        }
+      ]
+    },
+    {
+      "name": "write rewinds a partially consumed stream",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-rewind.txt",
+            "data": "Hello World",
+            "content_type": "text/plain",
+            "consumed": 6
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-rewind.txt"
+          },
+          "expect": "Hello World"
+        }
+      ]
+    },
+    {
+      "name": "read a missing file",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/non-existent-file.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "exists",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/exists.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/exists.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/doesnt-exist.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "move",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-move.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/text-for-move.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/text-for-move-new.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-move-new.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-move.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/text-for-move-new.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/deeper/dir/moved.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/deeper/dir/moved.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/missing.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/other.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "copy rejects an invalid chunk size",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk-b"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/kitten.txt",
+            "data": "x",
+            "content_type": "text/plain"
+          },
+          "expect": "9dd4e461268c8034f5c8564e155c67a6"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/kitten.txt",
+            "target": "/tmp/compat-fs/${ns}/disk-b/kitten.txt",
+            "to": {
+              "$ref": "b"
+            },
+            "chunk_size": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Chunk size must be greater than zero"
+            }
+          }
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/kitten.txt",
+            "target": "/tmp/compat-fs/${ns}/disk-b/kitten.txt",
+            "to": {
+              "$ref": "b"
+            },
+            "chunk_size": -1
+          },
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Chunk size must be greater than zero"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "list files",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/list-files/a.txt",
+            "data": "aa",
+            "content_type": "text/plain"
+          },
+          "expect": "4124bc0a9335c27f086f24ba207a4912"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/list-files/nested/b.txt",
+            "data": "bb",
+            "content_type": "text/plain"
+          },
+          "expect": "21ad0bd836b90d08f4cf640b4c298e7c"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/list-files/.hidden",
+            "data": "hh",
+            "content_type": "text/plain"
+          },
+          "expect": "5e36941b3d856737e81516acd45edc50"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/list-files",
+            "max": 2
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/list-files/.hidden",
+                "size": 2,
+                "modified": "<masked>",
+                "etag": null
+              },
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/list-files/a.txt",
+                "size": 2,
+                "modified": "<masked>",
+                "etag": null
+              }
+            ],
+            "cursor": "2"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/list-files",
+            "max": 10,
+            "cursor": "2"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/list-files/nested/b.txt",
+                "size": 2,
+                "modified": "<masked>",
+                "etag": null
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/list-files/",
+            "max": 10,
+            "cursor": "-1"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/list-files/nested/b.txt",
+                "size": 2,
+                "modified": "<masked>",
+                "etag": null
+              }
+            ],
+            "cursor": "0"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/list-files",
+            "max": -1,
+            "cursor": " 1"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/list-files/a.txt",
+                "size": 2,
+                "modified": "<masked>",
+                "etag": null
+              }
+            ],
+            "cursor": "2"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/list-files",
+            "max": 5,
+            "cursor": "x"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/list-files/.hidden",
+                "size": 2,
+                "modified": "<masked>",
+                "etag": null
+              },
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/list-files/a.txt",
+                "size": 2,
+                "modified": "<masked>",
+                "etag": null
+              },
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/list-files/nested/b.txt",
+                "size": 2,
+                "modified": "<masked>",
+                "etag": null
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/list-files",
+            "max": 5,
+            "cursor": "9"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/missing"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/list-files",
+            "recursive": true
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/list-files"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "stat a missing file",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/does-not-exist.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found: /tmp/compat-fs/${ns}/disk/does-not-exist.txt"
+            }
+          }
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/does-not-exist.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found: /tmp/compat-fs/${ns}/disk/does-not-exist.txt"
+            }
+          }
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/does-not-exist.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found: /tmp/compat-fs/${ns}/disk/does-not-exist.txt"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "move to the same name",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/kitten-1.jpg",
+            "target": "/kitten-1.jpg"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-delete.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-delete.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-delete.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-delete.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/dir"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/dir"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.is_dir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/dir"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "recursive delete removes hidden files",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/delete-hidden"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/delete-hidden/.hidden",
+            "data": "secret",
+            "content_type": "text/plain"
+          },
+          "expect": "5ebe2294ecd0e0f08eab7690d2a6ee69"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/delete-hidden/visible",
+            "data": "visible",
+            "content_type": "text/plain"
+          },
+          "expect": "46cf0e59759c9b7f1112ca4b174343ef"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/delete-hidden/sub/..dots",
+            "data": "dots",
+            "content_type": "text/plain"
+          },
+          "expect": "e9c6cfa16d8958cb7752450883950ab8"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/delete-hidden",
+            "recursive": true
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/delete-hidden"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "file size",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "expect": 599639
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/kitten-2.jpg"
+          },
+          "expect": 131958
+        }
+      ]
+    },
+    {
+      "name": "file MIME type",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "expect": "image/jpeg"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/kitten-2.jpg"
+          },
+          "expect": "image/jpeg"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-b/kitten-1.png"
+          },
+          "expect": "image/png"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-b/kitten-2.png"
+          },
+          "expect": "image/png"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/kitten-3.gif"
+          },
+          "expect": "image/gif"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/config.xml"
+          },
+          "expect": "text/xml"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-b/appwrite.svg"
+          },
+          "expect": "image/svg+xml"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/lorem.txt"
+          },
+          "expect": "text/plain"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/large_file.mp4"
+          },
+          "expect": "video/mp4"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a"
+          },
+          "expect": "directory"
+        }
+      ]
+    },
+    {
+      "name": "file MIME type of common contents",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/empty",
+            "data": ""
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/empty"
+          },
+          "expect": "application/x-empty"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/text",
+            "data": "Hello World\n"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text"
+          },
+          "expect": "text/plain"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/json",
+            "data": "{\"a\": [1, 2]}"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/json"
+          },
+          "expect": "application/json"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/html",
+            "data": "<!DOCTYPE html><html><body></body></html>"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/html"
+          },
+          "expect": "text/html"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/binary",
+            "data": {
+              "$bytes": "AAECAwQ="
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/binary"
+          },
+          "expect": "application/octet-stream"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/pdf",
+            "data": "%PDF-1.4\n%..."
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/pdf"
+          },
+          "expect": "application/pdf"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/gzip",
+            "data": {
+              "$bytes": "H4sIAAAAAAAAA0vLz+cCAKjDdDcEAAAA"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/gzip"
+          },
+          "expect": "application/gzip"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/xml",
+            "data": "<?xml version=\"1.0\"?><a/>"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/xml"
+          },
+          "expect": "text/xml"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/svg",
+            "data": "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/svg"
+          },
+          "expect": "image/svg+xml"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/webp",
+            "data": {
+              "$bytes": "UklGRhoAAABXRUJQVlA4TA0AAAAvAAAAEAcQERGIiP4HAA=="
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/webp"
+          },
+          "expect": "image/webp"
+        }
+      ]
+    },
+    {
+      "name": "file hash",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/kitten-1.jpg"
+          },
+          "expect": "7551f343143d2e24ab4aaf4624996b6a"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/kitten-2.jpg"
+          },
+          "expect": "81702fdeef2e55b1a22617bce4951cb5"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-b/kitten-1.png"
+          },
+          "expect": "03010f4f02980521a8fd6213b52ec313"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-b/kitten-2.png"
+          },
+          "expect": "8a9ed992b77e4b62b10e3a5c8ed72062"
+        }
+      ]
+    },
+    {
+      "name": "create a directory",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/new/nested"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/new/nested"
+          },
+          "expect": true
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/new/nested"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.perms",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/new/nested"
+          },
+          "expect": "0755"
+        }
+      ]
+    },
+    {
+      "name": "directory size",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.directory_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/"
+          },
+          "expect": 34921111
+        },
+        {
+          "op": "local.directory_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-b/"
+          },
+          "expect": 3737066
+        },
+        {
+          "op": "local.directory_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a"
+          },
+          "expect": 34921111
+        },
+        {
+          "op": "local.directory_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": ""
+          },
+          "expect": -1
+        },
+        {
+          "op": "local.directory_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/missing"
+          },
+          "expect": -1
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/size/a.txt",
+            "data": "12345",
+            "content_type": "text/plain"
+          },
+          "expect": "827ccb0eea8a706c4c34a16891f84e7b"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/size/sub/b.txt",
+            "data": "123",
+            "content_type": "text/plain"
+          },
+          "expect": "202cb962ac59075b964b07152d234b70"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/size/.hidden",
+            "data": "1234567",
+            "content_type": "text/plain"
+          },
+          "expect": "fcea920f7412b5da7be0cf42b8c93759"
+        },
+        {
+          "op": "local.directory_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/size"
+          },
+          "expect": 8
+        }
+      ]
+    },
+    {
+      "name": "a failed copy neither aborts nor deletes an existing destination",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/other"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/source.txt",
+            "data": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "content_type": "text/plain"
+          },
+          "expect": "59e794d45697b360e18ba972bada0123"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/other/dest.txt",
+            "data": "pre-existing",
+            "content_type": "text/plain"
+          },
+          "expect": "361f6765bb4ecac9f28a4659c9bfc7de"
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/other/tmp_dest.txt",
+            "data": "in the way"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/source.txt",
+            "target": "/tmp/compat-fs/${ns}/other/dest.txt",
+            "to": {
+              "$ref": "o"
+            },
+            "chunk_size": 10
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\StorageException",
+              "message": "Can't write file /tmp/compat-fs/${ns}/other/tmp_dest.txt/dest.part.1"
+            }
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "o"
+            },
+            "path": "/tmp/compat-fs/${ns}/other/dest.txt"
+          },
+          "expect": "pre-existing"
+        }
+      ]
+    },
+    {
+      "name": "part upload, part read and large copy",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk-b"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 1,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 2097152
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 2,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 2097152,
+            "length": 2097152
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 3,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 4194304,
+            "length": 2097152
+          },
+          "expect": 3
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 4,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 6291456,
+            "length": 2097152
+          },
+          "expect": 4
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 5,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 8388608,
+            "length": 2097152
+          },
+          "expect": 5
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 6,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 10485760,
+            "length": 2097152
+          },
+          "expect": 6
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 7,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 12582912,
+            "length": 2097152
+          },
+          "expect": 7
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 8,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 14680064,
+            "length": 2097152
+          },
+          "expect": 8
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 9,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 16777216,
+            "length": 2097152
+          },
+          "expect": 9
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 10,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 18874368,
+            "length": 2097152
+          },
+          "expect": 10
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 11,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 20971520,
+            "length": 2097152
+          },
+          "expect": 11
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 12,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 23068672,
+            "length": 2097152
+          },
+          "expect": 12
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 13,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 25165824,
+            "length": 2097152
+          },
+          "expect": 13
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 14,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 27262976,
+            "length": 2097152
+          },
+          "expect": 14
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 15,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 29360128,
+            "length": 2097152
+          },
+          "expect": 15
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "content_type": "",
+            "chunk": 16,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 31457280,
+            "length": 2097152
+          },
+          "expect": 16
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4"
+          },
+          "expect": 31730705
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4"
+          },
+          "expect": "77916f632e28bf0118a752b4646b803e"
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "parts": [
+              [
+                1,
+                true
+              ],
+              [
+                2,
+                true
+              ],
+              [
+                3,
+                true
+              ],
+              [
+                4,
+                true
+              ],
+              [
+                5,
+                true
+              ],
+              [
+                6,
+                true
+              ],
+              [
+                7,
+                true
+              ],
+              [
+                8,
+                true
+              ],
+              [
+                9,
+                true
+              ],
+              [
+                10,
+                true
+              ],
+              [
+                11,
+                true
+              ],
+              [
+                12,
+                true
+              ],
+              [
+                13,
+                true
+              ],
+              [
+                14,
+                true
+              ],
+              [
+                15,
+                true
+              ],
+              [
+                16,
+                true
+              ]
+            ],
+            "chunks": 16,
+            "whole": false
+          }
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "length": 500
+          },
+          "expect": {
+            "$bytes": "AAAAIGZ0eXBtcDQyAAAAAG1wNDJtcDQxaXNvbWF2YzEAABobbW9vdgAAAGxtdmhkAAAAANydd3vcnXd7AAAAGAAAAcIAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAACFpb2RzAAAAABCAgIAQAE////9//w6AgIAEAAAAAQAAGYZ0cmFrAAAAXHRraGQAAAAH3J13e9ydd3sAAAABAAAAAAAAAcIAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAACgAAAAWgAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAHCAAAAAgABAAAAABj+bWRpYQAAACBtZGhkAAAAANydd3vcnXd7AAAAGAAAAcJVxAAAAAAANmhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABMLVNNQVNIIFZpZGVvIEhhbmRsZXIAAAAYoG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAGGBzdGJsAAAAsnN0c2QAAAAAAAAAAQA="
+          }
+        },
+        {
+          "op": "device.read_digest",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "offset": 30000000
+          },
+          "expect": {
+            "size": 1730705,
+            "md5": "68b29b53de918f514d2ebd4363945cd7"
+          }
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/uploaded.mp4",
+            "target": "/tmp/compat-fs/${ns}/disk-b/largefile.mp4",
+            "to": {
+              "$ref": "b"
+            },
+            "chunk_size": 10000000
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-b/largefile.mp4"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-b/largefile.mp4"
+          },
+          "expect": "video/mp4"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-b/largefile.mp4"
+          },
+          "expect": "77916f632e28bf0118a752b4646b803e"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-b/largefile.mp4"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded.mp4"
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "upload does not finalize until the last chunk",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/phase.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 3,
+            "data": "bbb",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/phase.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/phase.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 3,
+            "data": "aaa",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/phase.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/phase.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 3,
+            "chunks": 3,
+            "data": "ccc",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/phase.txt"
+          },
+          "expect": "aaabbbccc"
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/phase.txt",
+            "chunks": 3,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "parts": [
+              [
+                2,
+                true
+              ],
+              [
+                1,
+                true
+              ],
+              [
+                3,
+                true
+              ]
+            ],
+            "chunks": 3,
+            "whole": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "finalize requires every chunk",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/missing.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 2,
+            "data": "aaa",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/missing.txt",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\UploadException",
+              "message": "Missing chunk 2"
+            }
+          }
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/missing.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/tmp_missing.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "part upload retry",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4",
+            "content_type": "",
+            "chunk": 1,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m1"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 5242880
+          },
+          "expect": 1
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4",
+            "content_type": "",
+            "chunk": 1,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 5242880
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4",
+            "content_type": "",
+            "chunk": 2,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 5242880,
+            "length": 5242880
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4",
+            "content_type": "",
+            "chunk": 3,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 10485760,
+            "length": 5242880
+          },
+          "expect": 3
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4",
+            "content_type": "",
+            "chunk": 4,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 15728640,
+            "length": 5242880
+          },
+          "expect": 4
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4",
+            "content_type": "",
+            "chunk": 5,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 20971520,
+            "length": 5242880
+          },
+          "expect": 5
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4",
+            "content_type": "",
+            "chunk": 6,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 26214400,
+            "length": 5242880
+          },
+          "expect": 6
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4",
+            "content_type": "",
+            "chunk": 7,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 31457280,
+            "length": 5242880
+          },
+          "expect": 7
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4"
+          },
+          "expect": 31730705
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4"
+          },
+          "expect": "77916f632e28bf0118a752b4646b803e"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/uploaded2.mp4"
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "abort",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/abcduploaded.mp4",
+            "content_type": "",
+            "chunk": 1,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m1"
+            },
+            "data": "chunk 0"
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/abcduploaded.mp4",
+            "content_type": "",
+            "chunk": 2,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m1"
+            },
+            "data": "chunk 1"
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/abcduploaded2.mp4",
+            "content_type": "",
+            "chunk": 1,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "data": "chunk 0"
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/abcduploaded2.mp4",
+            "content_type": "",
+            "chunk": 2,
+            "chunks": 16,
+            "metadata": {
+              "$ref": "m2"
+            },
+            "data": "chunk 1"
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/abcduploaded.mp4"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/abcduploaded2.mp4"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/never-uploaded.mp4"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/no-such-dir/file.mp4"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File doesn't exist: /tmp/compat-fs/${ns}/no-such-dir"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "partition space",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fs.mkdir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk"
+          },
+          "expect": true
+        },
+        {
+          "op": "local.partition_free_space",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "local.partition_total_space",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": "<masked>"
+        }
+      ]
+    },
+    {
+      "name": "copy small",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk-b"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "target": "/tmp/compat-fs/${ns}/disk-b/hello.txt",
+            "to": {
+              "$ref": "b"
+            },
+            "chunk_size": 10000000
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-b/hello.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "b"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-b/hello.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/text-for-read.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/same-device.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/missing.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/x.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found: /tmp/compat-fs/${ns}/disk/missing.txt"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "copy in chunks within a device",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/src.txt",
+            "data": "abcdefghijklmnopqrstuvwxyz0123",
+            "content_type": "text/plain"
+          },
+          "expect": "71da0db811d4c94847964ecef1e28f4e"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/src.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/dst.txt",
+            "chunk_size": 7
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/dst.txt"
+          },
+          "expect": "abcdefghijklmnopqrstuvwxyz0123"
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/dst.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/moved/dst.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/moved/dst.txt"
+          },
+          "expect": "abcdefghijklmnopqrstuvwxyz0123"
+        }
+      ]
+    },
+    {
+      "name": "delete path",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/bucket/text-for-delete-path.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/bucket/text-for-delete-path.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "bucket"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/bucket/text-for-delete-path.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/bucket/text-for-delete-path1.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/bucket/text-for-delete-path2.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/bucket/.hidden.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "bucket/"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/bucket/text-for-delete-path1.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/bucket/.hidden.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "missing"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/file.txt",
+            "data": "x",
+            "content_type": "text/plain"
+          },
+          "expect": "9dd4e461268c8034f5c8564e155c67a6"
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "file.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "list files of an empty and a growing directory",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/get-files-test"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/get-files-test"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/get-files-test/new-file.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/get-files-test/new-file-two.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk/get-files-test"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/get-files-test/new-file-two.txt",
+                "size": 11,
+                "modified": "<masked>",
+                "etag": null
+              },
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/get-files-test/new-file.txt",
+                "size": 11,
+                "modified": "<masked>",
+                "etag": null
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "get-files-test"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "nested delete path",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/nested"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/nested/new-file.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/nested/dir2"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/nested/dir2/new-file-2.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "local.create_directory",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/nested/dir2/dir3"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/nested/dir2/dir3/new-file-3.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "nested"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/nested"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "join chunks assembles content and cleans up",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/join"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 3,
+            "data": "AAAA"
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 3,
+            "data": "BBBB"
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 3,
+            "chunks": 3,
+            "data": "CCCC"
+          },
+          "expect": 3
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/test.dat"
+          },
+          "expect": "AAAABBBBCCCC"
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/tmp_test.dat"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/tmp_test.dat/test.part.1"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "join chunks with a missing part does not finalize",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/join"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 3,
+            "data": "AAAA"
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 3,
+            "data": "BBBB"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fs.unlink",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/tmp_test.dat/test.part.1"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 3,
+            "chunks": 3,
+            "data": "CCCC"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/test.dat"
+          },
+          "expect": false
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/tmp_test.dat/test.part.2"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 3,
+            "data": "AAAA"
+          },
+          "expect": 3
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/test.dat"
+          },
+          "expect": "AAAABBBBCCCC"
+        }
+      ]
+    },
+    {
+      "name": "a stale assembly file is not used",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/join"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 3,
+            "data": "AAAA"
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 3,
+            "data": "BBBB"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fs.put",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/tmp_assemble_test.dat",
+            "data": "STALE_GARBAGE_DATA"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/test.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 3,
+            "chunks": 3,
+            "data": "CCCC"
+          },
+          "expect": 3
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/test.dat"
+          },
+          "expect": "AAAABBBBCCCC"
+        }
+      ]
+    },
+    {
+      "name": "out of order upload",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/join"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/ooo.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 3,
+            "chunks": 3,
+            "data": "CCCC"
+          },
+          "expect": 1
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/ooo.dat"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/ooo.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 3,
+            "data": "AAAA"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/ooo.dat"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/ooo.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 3,
+            "data": "BBBB"
+          },
+          "expect": 3
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/ooo.dat"
+          },
+          "expect": "AAAABBBBCCCC"
+        }
+      ]
+    },
+    {
+      "name": "out of order upload with retry",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/join"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/r.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 3,
+            "data": "BBBB",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/r.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 3,
+            "data": "AAAA",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/r.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 3,
+            "data": "BBBB",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/r.dat"
+          },
+          "expect": false
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "parts": [
+              [
+                2,
+                true
+              ],
+              [
+                1,
+                true
+              ]
+            ],
+            "chunks": 2,
+            "whole": false
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/r.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 3,
+            "chunks": 3,
+            "data": "CCCC",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 3
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/r.dat"
+          },
+          "expect": "AAAABBBBCCCC"
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "parts": [
+              [
+                2,
+                true
+              ],
+              [
+                1,
+                true
+              ],
+              [
+                3,
+                true
+              ]
+            ],
+            "chunks": 3,
+            "whole": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "a second assembly of a finished upload",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/join"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/p.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 2,
+            "data": "AAAA",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/p.dat",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 2,
+            "data": "BBBB",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/p.dat"
+          },
+          "expect": "AAAABBBB"
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/join/p.dat",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/join/p.dat"
+          },
+          "expect": "AAAABBBB"
+        }
+      ]
+    },
+    {
+      "name": "file info",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/info.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/info.txt"
+          },
+          "mask": {
+            "paths": [
+              "/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "path": "/tmp/compat-fs/${ns}/disk/info.txt",
+            "size": 11,
+            "modified": "<masked>",
+            "etag": "b10a8db164e0754105b7a99be72e3fe5"
+          }
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/missing.txt"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\NotFoundException",
+              "message": "File not found: /tmp/compat-fs/${ns}/disk/missing.txt"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "create writes only where nothing is",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/created.txt",
+            "data": "first"
+          },
+          "expect": "8b04d5e3775d298e78455efc5ca404d5"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/created.txt"
+          },
+          "expect": "first"
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/created.txt",
+            "data": "second"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+              "message": "File /tmp/compat-fs/${ns}/disk/created.txt already exists"
+            }
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/created.txt"
+          },
+          "expect": "first"
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/new/dir/created.txt",
+            "data": "nested"
+          },
+          "expect": "83d3784ea62518eafc60e98d84f877ad"
+        }
+      ]
+    },
+    {
+      "name": "replace writes over the named version only",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/replaced.txt",
+            "data": "first"
+          },
+          "bind": "e",
+          "expect": "8b04d5e3775d298e78455efc5ca404d5"
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/replaced.txt",
+            "data": "second",
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "expect": "a9f0e61a137d86aa9db53465e0801612"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/replaced.txt"
+          },
+          "expect": "second"
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/replaced.txt",
+            "data": "third",
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+              "message": "File /tmp/compat-fs/${ns}/disk/replaced.txt no longer has ETag 8b04d5e3775d298e78455efc5ca404d5"
+            }
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/replaced.txt"
+          },
+          "expect": "second"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/replaced.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/replaced.txt",
+            "data": "third",
+            "etag": "a9f0e61a137d86aa9db53465e0801612"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+              "message": "File /tmp/compat-fs/${ns}/disk/replaced.txt is gone"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "read with an ETag refuses a replaced file",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/conditional.txt",
+            "data": "Hello World"
+          },
+          "bind": "e",
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/conditional.txt",
+            "offset": 6,
+            "length": 5,
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "expect": "World"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/conditional.txt",
+            "data": "Goodbye World",
+            "content_type": "text/plain"
+          },
+          "expect": "2a799bfecbec1e7c6cebdc26391aee0d"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/conditional.txt",
+            "offset": 6,
+            "length": 5,
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\PreconditionFailedException",
+              "message": "File /tmp/compat-fs/${ns}/disk/conditional.txt no longer has ETag b10a8db164e0754105b7a99be72e3fe5"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a single chunk of an upload with unknown count is joined",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/single.txt",
+            "data": "old contents",
+            "content_type": "text/plain"
+          },
+          "expect": "69ed5188b1330617905f4fdda973a413"
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/single.txt",
+            "content_type": "text/plain",
+            "chunk": 1,
+            "chunks": 0,
+            "data": "new contents",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/single.txt"
+          },
+          "expect": "old contents"
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/single.txt",
+            "chunks": 1,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/single.txt"
+          },
+          "expect": "new contents"
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/single.txt",
+            "chunks": 1,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "parts": [
+              [
+                1,
+                true
+              ]
+            ],
+            "chunks": 1,
+            "whole": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "finalize replaces an existing file",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/rbu.txt",
+            "data": "old contents",
+            "content_type": "text/plain"
+          },
+          "expect": "69ed5188b1330617905f4fdda973a413"
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/rbu.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 0,
+            "data": "new ",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/rbu.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 0,
+            "data": "contents",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/rbu.txt"
+          },
+          "expect": "old contents"
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/rbu.txt",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/rbu.txt"
+          },
+          "expect": "new contents"
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/rbu.txt",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "finalize with a missing chunk does not claim an existing file",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/incomplete.txt",
+            "data": "old contents",
+            "content_type": "text/plain"
+          },
+          "expect": "69ed5188b1330617905f4fdda973a413"
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/incomplete.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 3,
+            "data": "new ",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/incomplete.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 3,
+            "chunks": 3,
+            "data": "!",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/incomplete.txt",
+            "chunks": 3,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Storage\\Exception\\UploadException",
+              "message": "Missing chunk 2"
+            }
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/incomplete.txt"
+          },
+          "expect": "old contents"
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/incomplete.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "a stale part does not hijack a whole file upload",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/hijacked.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 0,
+            "data": "abandoned chunk",
+            "metadata": {
+              "$ref": "a"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/hijacked.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 1,
+            "data": "whole file",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/hijacked.txt",
+            "chunks": 1,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/hijacked.txt"
+          },
+          "expect": "whole file"
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/hijacked.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/hijacked.txt",
+            "chunks": 1,
+            "metadata": {
+              "$ref": "n"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "a failed create gives the path back",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/failed-create.txt",
+            "failing": true
+          },
+          "expect": {
+            "$error": {
+              "class": "DomainException",
+              "message": "Stream failed"
+            }
+          }
+        },
+        {
+          "op": "fs.exists",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/failed-create.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/failed-create.txt",
+            "data": "taken"
+          },
+          "expect": "bad841dbbeb7132a68b2c649f4a7b875"
+        }
+      ]
+    },
+    {
+      "name": "a failed replace leaves the previous version in place",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/failed-replace.txt",
+            "data": "first"
+          },
+          "bind": "e",
+          "expect": "8b04d5e3775d298e78455efc5ca404d5"
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/failed-replace.txt",
+            "failing": true,
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "DomainException",
+              "message": "Stream failed"
+            }
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/failed-replace.txt"
+          },
+          "expect": "first"
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/failed-replace.txt"
+          },
+          "mask": {
+            "paths": [
+              "/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "path": "/tmp/compat-fs/${ns}/disk/failed-replace.txt",
+            "size": 5,
+            "modified": "<masked>",
+            "etag": "8b04d5e3775d298e78455efc5ca404d5"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/failed-write.txt",
+            "failing": true
+          },
+          "expect": {
+            "$error": {
+              "class": "DomainException",
+              "message": "Stream failed"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "a replacement does not disturb a reader already streaming",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/atomic.txt",
+            "data": "first version"
+          },
+          "bind": "e",
+          "expect": "e9e2371570daec2e7b70faa4f0f1eab8"
+        },
+        {
+          "op": "device.read_stream",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/atomic.txt",
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "bind": "r",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/atomic.txt",
+            "data": "second",
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "expect": "a9f0e61a137d86aa9db53465e0801612"
+        },
+        {
+          "op": "stream.read",
+          "args": {
+            "stream": {
+              "$ref": "r"
+            },
+            "length": 100
+          },
+          "expect": "first version"
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/atomic.txt"
+          },
+          "expect": "second"
+        }
+      ]
+    },
+    {
+      "name": "a replaced file keeps readable permissions",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/permissions.txt",
+            "data": "first"
+          },
+          "bind": "e",
+          "expect": "8b04d5e3775d298e78455efc5ca404d5"
+        },
+        {
+          "op": "fs.perms",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/permissions.txt"
+          },
+          "expect": "0644"
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/permissions.txt",
+            "data": "second",
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "expect": "a9f0e61a137d86aa9db53465e0801612"
+        },
+        {
+          "op": "fs.perms",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/permissions.txt"
+          },
+          "expect": "0644"
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/chunked.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 2,
+            "data": "a"
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/chunked.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 2,
+            "data": "b"
+          },
+          "expect": 2
+        },
+        {
+          "op": "fs.perms",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/chunked.txt"
+          },
+          "expect": "0644"
+        }
+      ]
+    },
+    {
+      "name": "upload a whole file",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/whole.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 1,
+            "data": "whole",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": {
+            "parts": [
+              [
+                1,
+                true
+              ]
+            ],
+            "chunks": 1,
+            "whole": true
+          }
+        },
+        {
+          "op": "fs.get",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/whole.txt"
+          },
+          "expect": "whole"
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "p",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.prepare",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/prepared/x.txt",
+            "content_type": "text/plain",
+            "chunks": 3,
+            "metadata": {
+              "$ref": "p"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "p"
+            }
+          },
+          "expect": {
+            "parts": [],
+            "chunks": 0
+          }
+        },
+        {
+          "op": "fs.is_dir",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/disk/prepared"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "binary round trips",
+      "steps": [
+        {
+          "op": "local.write_read",
+          "args": {
+            "path": "bin.bin",
+            "data": {
+              "$bytes": "AP8A/wECAwQ="
+            },
+            "offset": 2,
+            "length": 3
+          },
+          "expect": {
+            "etag": "cfeeab7453c1bc730d8a0f64f2edc3a6",
+            "read": {
+              "$bytes": "AP8B"
+            },
+            "size": 8,
+            "hash": "cfeeab7453c1bc730d8a0f64f2edc3a6"
+          }
+        },
+        {
+          "op": "local.write_read",
+          "args": {
+            "path": "empty.bin",
+            "data": "",
+            "offset": 0,
+            "length": null
+          },
+          "expect": {
+            "etag": "d41d8cd98f00b204e9800998ecf8427e",
+            "read": "",
+            "size": 0,
+            "hash": "d41d8cd98f00b204e9800998ecf8427e"
+          }
+        },
+        {
+          "op": "local.write_read",
+          "args": {
+            "path": "text.bin",
+            "data": "Hello World",
+            "offset": 50,
+            "length": 5
+          },
+          "expect": {
+            "etag": "b10a8db164e0754105b7a99be72e3fe5",
+            "read": "",
+            "size": 11,
+            "hash": "b10a8db164e0754105b7a99be72e3fe5"
+          }
+        }
+      ]
+    }
+  ]
+}

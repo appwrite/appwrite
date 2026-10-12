@@ -1,0 +1,1172 @@
+{
+  "source": "packages/storage/tests/Device/S3/RetryStrategyTest.php",
+  "cases": [
+    {
+      "name": "a transient XML error is retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>SlowDown</Code><Message>m</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "the backoff window grows exponentially with jitter",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 4,
+            "delay": 0.5,
+            "max_delay": 1.5,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            },
+            "attempt": 1
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 4,
+            "delay": 0.5,
+            "max_delay": 1.5,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            },
+            "attempt": 2
+          },
+          "expect": 1.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 4,
+            "delay": 0.5,
+            "max_delay": 1.5,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            },
+            "attempt": 3
+          },
+          "expect": 1.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 4,
+            "delay": 0.5,
+            "max_delay": 1.5,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            },
+            "attempt": 4
+          },
+          "expect": 1.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 4,
+            "delay": 0.5,
+            "max_delay": 1.5,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            },
+            "attempt": 5
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "random": 0.5,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.25
+        }
+      ]
+    },
+    {
+      "name": "a non-transient XML error is not retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 404,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>NoSuchKey</Code><Message>m</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "the status is the fallback",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 0.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 429,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 0.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 500,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 0.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 502,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 0.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 0.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 504,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 0.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 501,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 0.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 400,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 0.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 200,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "an internal error is retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt?partNumber=2&uploadId=upload-1",
+              "headers": []
+            },
+            "response": {
+              "status": 500,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploadId=upload-1",
+              "headers": []
+            },
+            "response": {
+              "status": 500,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "a maybe-applied multipart creation is not retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploads=",
+              "headers": []
+            },
+            "response": {
+              "status": 500,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploads=",
+              "headers": []
+            },
+            "error": {
+              "error": "timeout",
+              "message": "Operation timed out",
+              "code": 28
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploads=",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "a maybe-applied batch delete is not retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?delete=",
+              "headers": []
+            },
+            "response": {
+              "status": 500,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?delete=",
+              "headers": []
+            },
+            "error": {
+              "error": "timeout",
+              "message": "Operation timed out",
+              "code": 28
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?delete=",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "a maybe-applied conditional write is not retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": [
+                [
+                  "If-None-Match",
+                  "*"
+                ]
+              ]
+            },
+            "response": {
+              "status": 500,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": [
+                [
+                  "If-None-Match",
+                  "*"
+                ]
+              ]
+            },
+            "error": {
+              "error": "connection",
+              "message": "Connection reset by peer",
+              "code": 56
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": [
+                [
+                  "If-None-Match",
+                  "*"
+                ]
+              ]
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": [
+                [
+                  "If-Match",
+                  "\"etag\""
+                ]
+              ]
+            },
+            "response": {
+              "status": 500,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": [
+                [
+                  "If-Match",
+                  "\"etag\""
+                ]
+              ]
+            },
+            "error": {
+              "error": "connection",
+              "message": "Connection reset by peer",
+              "code": 56
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": [
+                [
+                  "If-Match",
+                  "\"etag\""
+                ]
+              ]
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "GET",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": [
+                [
+                  "If-Match",
+                  "\"etag\""
+                ]
+              ]
+            },
+            "response": {
+              "status": 500,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>InternalError</Code><Message>internal incident</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "a 503 with a non-transient XML error is not retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>AccessDenied</Code><Message>m</Message></Error>",
+              "headers": []
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "Retry-After is honoured within the ceiling",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "max_delay": 5.0,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": [
+                [
+                  "Retry-After",
+                  "2"
+                ]
+              ]
+            }
+          },
+          "expect": 2.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "max_delay": 5.0,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": [
+                [
+                  "Retry-After",
+                  "120"
+                ]
+              ]
+            }
+          },
+          "expect": 5.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "max_delay": 5.0,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": [
+                [
+                  "Retry-After",
+                  "Wed, 21 Oct 2026 07:28:00 GMT"
+                ]
+              ]
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "max_delay": 5.0,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": [
+                [
+                  "Retry-After",
+                  "-3"
+                ]
+              ]
+            }
+          },
+          "expect": 0.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "max_delay": 5.0,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": [
+                [
+                  "Retry-After",
+                  " 1.5"
+                ]
+              ]
+            }
+          },
+          "expect": 1.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "max_delay": 5.0,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": [
+                [
+                  "Retry-After",
+                  "0x10"
+                ]
+              ]
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "delay": 0.5,
+            "max_delay": 5.0,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": [
+                [
+                  "Retry-After",
+                  ""
+                ]
+              ]
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "retries are capped",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 2,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            },
+            "attempt": 1
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 2,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            },
+            "attempt": 2
+          },
+          "expect": 1.0
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 2,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "",
+              "headers": []
+            },
+            "attempt": 3
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "failures before sending are retried for every request",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploads=",
+              "headers": []
+            },
+            "error": {
+              "error": "connection",
+              "message": "Could not connect to server",
+              "code": 7
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploads=",
+              "headers": []
+            },
+            "error": {
+              "error": "connection",
+              "message": "Connection refused",
+              "code": 111
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploads=",
+              "headers": []
+            },
+            "error": {
+              "error": "dns",
+              "message": "Could not resolve host",
+              "code": 6
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploads=",
+              "headers": []
+            },
+            "error": {
+              "error": "tls",
+              "message": "refused",
+              "code": 7
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploads=",
+              "headers": []
+            },
+            "error": {
+              "error": "network",
+              "message": "other",
+              "code": 0
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "a dropped or timed out PUT is retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "error": {
+              "error": "connection",
+              "message": "Connection reset by peer",
+              "code": 56
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "error": {
+              "error": "timeout",
+              "message": "Operation timed out",
+              "code": 28
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "a timed out completion is retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "POST",
+              "url": "https://s3.example.com/root/file.txt?uploadId=upload-1",
+              "headers": []
+            },
+            "error": {
+              "error": "timeout",
+              "message": "Operation timed out",
+              "code": 28
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "DELETE",
+              "url": "https://s3.example.com/root/file.txt?uploadId=upload-1",
+              "headers": []
+            },
+            "error": {
+              "error": "timeout",
+              "message": "Operation timed out",
+              "code": 28
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    },
+    {
+      "name": "a TLS failure is not retried",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "error": {
+              "error": "tls",
+              "message": "SSL connect error",
+              "code": 35
+            }
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "transport retries are capped",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 1,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "error": {
+              "error": "timeout",
+              "message": "Operation timed out",
+              "code": 28
+            },
+            "attempt": 1
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "retries": 1,
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "error": {
+              "error": "timeout",
+              "message": "Operation timed out",
+              "code": 28
+            },
+            "attempt": 2
+          },
+          "expect": null
+        }
+      ]
+    },
+    {
+      "name": "reading the body leaves it readable",
+      "steps": [
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 503,
+              "body": "<?xml version=\"1.0\" encoding=\"UTF-8\"?><Error><Code>SlowDown</Code></Error>",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 500,
+              "body": "  <Error><Code>Throttling</Code></Error>",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        },
+        {
+          "op": "retry.delay",
+          "args": {
+            "random": 1.0,
+            "request": {
+              "method": "PUT",
+              "url": "https://s3.example.com/root/file.txt",
+              "headers": []
+            },
+            "response": {
+              "status": 500,
+              "body": "<?xml broken",
+              "headers": []
+            }
+          },
+          "expect": 0.5
+        }
+      ]
+    }
+  ]
+}

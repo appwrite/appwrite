@@ -1,0 +1,2015 @@
+{
+  "source": "packages/storage/tests/E2E/S3Base.php",
+  "cases": [
+    {
+      "name": "list files",
+      "steps": [
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.jpg",
+            "file": "packages/storage/tests/resources/disk-a/kitten-1.jpg",
+            "content_type": "image/jpeg",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.jpg",
+            "file": "packages/storage/tests/resources/disk-a/kitten-2.jpg",
+            "content_type": "image/jpeg",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.png",
+            "file": "packages/storage/tests/resources/disk-b/kitten-1.png",
+            "content_type": "image/png",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.png",
+            "file": "packages/storage/tests/resources/disk-b/kitten-2.png",
+            "content_type": "image/png",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/testing/"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "${ns}/testing/kitten-1.jpg",
+                "size": 599639,
+                "modified": "<masked>",
+                "etag": "7551f343143d2e24ab4aaf4624996b6a"
+              },
+              {
+                "path": "${ns}/testing/kitten-1.png",
+                "size": 3038056,
+                "modified": "<masked>",
+                "etag": "03010f4f02980521a8fd6213b52ec313"
+              },
+              {
+                "path": "${ns}/testing/kitten-2.jpg",
+                "size": 131958,
+                "modified": "<masked>",
+                "etag": "81702fdeef2e55b1a22617bce4951cb5"
+              },
+              {
+                "path": "${ns}/testing/kitten-2.png",
+                "size": 690494,
+                "modified": "<masked>",
+                "etag": "8a9ed992b77e4b62b10e3a5c8ed72062"
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/testing/",
+            "max": 3
+          },
+          "bind": "l",
+          "mask": {
+            "paths": [
+              "/files/*/modified",
+              "/cursor"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "${ns}/testing/kitten-1.jpg",
+                "size": 599639,
+                "modified": "<masked>",
+                "etag": "7551f343143d2e24ab4aaf4624996b6a"
+              },
+              {
+                "path": "${ns}/testing/kitten-1.png",
+                "size": 3038056,
+                "modified": "<masked>",
+                "etag": "03010f4f02980521a8fd6213b52ec313"
+              },
+              {
+                "path": "${ns}/testing/kitten-2.jpg",
+                "size": 131958,
+                "modified": "<masked>",
+                "etag": "81702fdeef2e55b1a22617bce4951cb5"
+              }
+            ],
+            "cursor": "<masked>"
+          }
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/testing/",
+            "max": 1000,
+            "cursor": {
+              "$ref": "l",
+              "path": "/cursor"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "${ns}/testing/kitten-2.png",
+                "size": 690494,
+                "modified": "<masked>",
+                "etag": "8a9ed992b77e4b62b10e3a5c8ed72062"
+              }
+            ],
+            "cursor": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "list a single object",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/single/only.txt",
+            "data": "one",
+            "content_type": "text/plain"
+          },
+          "expect": "f97c5d29941bfb1b2fdab0874906ab82"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/single/"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "${ns}/single/only.txt",
+                "size": 3,
+                "modified": "<masked>",
+                "etag": "f97c5d29941bfb1b2fdab0874906ab82"
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/single/only.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "${ns}/single/"
+          },
+          "expect": {
+            "files": [],
+            "cursor": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "type, root and path",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": "s3"
+        },
+        {
+          "op": "device.root",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": "${ns}"
+        },
+        {
+          "op": "device.path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "filename": "image.png"
+          },
+          "expect": "${ns}/image.png"
+        }
+      ]
+    },
+    {
+      "name": "write, read and delete",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text.txt",
+            "offset": 6
+          },
+          "expect": "World"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text.txt",
+            "offset": 2,
+            "length": 3
+          },
+          "expect": "llo"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/non-existent-file.txt",
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/message"
+            ],
+            "reason": "MinIO puts a random request ID in every error message"
+          },
+          "expect": {
+            "class": "Utopia\\Storage\\Exception\\NotFoundException",
+            "message": "<masked>",
+            "code": 404,
+            "error_code": null,
+            "previous": false
+          }
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text.txt"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "exists, size, MIME type and hash",
+      "steps": [
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.jpg",
+            "file": "packages/storage/tests/resources/disk-a/kitten-1.jpg",
+            "content_type": "image/jpeg",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.jpg",
+            "file": "packages/storage/tests/resources/disk-a/kitten-2.jpg",
+            "content_type": "image/jpeg",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.png",
+            "file": "packages/storage/tests/resources/disk-b/kitten-1.png",
+            "content_type": "image/png",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.png",
+            "file": "packages/storage/tests/resources/disk-b/kitten-2.png",
+            "content_type": "image/png",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.jpg"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-5.jpg"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.jpg"
+          },
+          "expect": 599639
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.jpg"
+          },
+          "expect": 131958
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.png"
+          },
+          "expect": 3038056
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.png"
+          },
+          "expect": 690494
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.jpg"
+          },
+          "expect": "image/jpeg"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.jpg"
+          },
+          "expect": "image/jpeg"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.png"
+          },
+          "expect": "image/jpeg"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.png"
+          },
+          "expect": "image/jpeg"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.jpg"
+          },
+          "expect": "7551f343143d2e24ab4aaf4624996b6a"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.jpg"
+          },
+          "expect": "81702fdeef2e55b1a22617bce4951cb5"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.png"
+          },
+          "expect": "03010f4f02980521a8fd6213b52ec313"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.png"
+          },
+          "expect": "8a9ed992b77e4b62b10e3a5c8ed72062"
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.png"
+          },
+          "mask": {
+            "paths": [
+              "/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "path": "${ns}/testing/kitten-1.png",
+            "size": 3038056,
+            "modified": "<masked>",
+            "etag": "03010f4f02980521a8fd6213b52ec313"
+          }
+        }
+      ]
+    },
+    {
+      "name": "move",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text-for-move.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "${ns}/text-for-move.txt",
+            "target": "${ns}/text-for-move-new.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text-for-move-new.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text-for-move.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/kitten-1.jpg",
+            "target": "/kitten-1.jpg"
+          },
+          "expect": false
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "n"
+            },
+            "path": "${ns}/streamed.txt",
+            "data": "streamed",
+            "content_type": "text/plain"
+          },
+          "expect": "2cb638eedb2a1c0e53e7f73b81ce030e"
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "n"
+            },
+            "source": "${ns}/streamed.txt",
+            "target": "${ns}/streamed-new.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "n"
+            },
+            "path": "${ns}/streamed-new.txt"
+          },
+          "expect": "streamed"
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "n"
+            },
+            "path": "${ns}/streamed.txt"
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "copy on the same device",
+      "steps": [
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m0",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}",
+            "bucket": "compat"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.jpg",
+            "file": "packages/storage/tests/resources/disk-a/kitten-1.jpg",
+            "content_type": "image/jpeg",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.jpg",
+            "file": "packages/storage/tests/resources/disk-a/kitten-2.jpg",
+            "content_type": "image/jpeg",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-1.png",
+            "file": "packages/storage/tests/resources/disk-b/kitten-1.png",
+            "content_type": "image/png",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-2.png",
+            "file": "packages/storage/tests/resources/disk-b/kitten-2.png",
+            "content_type": "image/png",
+            "metadata": {
+              "$ref": "m0"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "${ns}/testing/kitten-1.jpg",
+            "target": "${ns}/testing/kitten-copy.jpg"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-copy.jpg"
+          },
+          "expect": "7551f343143d2e24ab4aaf4624996b6a"
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-copy.jpg"
+          },
+          "expect": 599639
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/kitten-copy.jpg"
+          },
+          "expect": "image/jpeg"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "${ns}/testing/missing.jpg",
+            "target": "${ns}/testing/x.jpg",
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/message"
+            ],
+            "reason": "MinIO puts a random request ID in every error message"
+          },
+          "expect": {
+            "class": "Utopia\\Storage\\Exception\\NotFoundException",
+            "message": "<masked>",
+            "code": 404,
+            "error_code": null,
+            "previous": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "SVG and XML uploads",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/appwrite.svg",
+            "file": "packages/storage/tests/resources/disk-b/appwrite.svg",
+            "content_type": "image/svg+xml",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.read_digest",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/appwrite.svg"
+          },
+          "expect": {
+            "size": 8516,
+            "md5": "5489ac1fc15b1ed59ef56ad10b63a8a2"
+          }
+        },
+        {
+          "op": "fs.md5",
+          "args": {
+            "path": "packages/storage/tests/resources/disk-b/appwrite.svg"
+          },
+          "expect": "5489ac1fc15b1ed59ef56ad10b63a8a2"
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/config.xml",
+            "file": "packages/storage/tests/resources/disk-a/config.xml",
+            "content_type": "text/xml",
+            "metadata": {
+              "$ref": "n"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/config.xml"
+          },
+          "expect": "<?xml version=\"1.0\"?>\n<customers>\n   <customer id=\"55000\">\n      <name>Charter Group</name>\n      <address>\n         <street>100 Main</street>\n         <city>Framingham</city>\n         <state>MA</state>\n         <zip>01701</zip>\n      </address>\n      <address>\n         <street>720 Prospect</street>\n         <city>Framingham</city>\n         <state>MA</state>\n         <zip>01701</zip>\n      </address>\n      <address>\n         <street>120 Ridge</street>\n         <state>MA</state>\n         <zip>01760</zip>\n      </address>\n   </customer>\n</customers>"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/config.xml"
+          },
+          "expect": "text/xml"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/testing/config.xml"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "delete path",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/bucket/text-for-delete-path1.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/bucket/text-for-delete-path2.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/bucket/deeper/x.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "bucket"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/bucket/text-for-delete-path1.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/bucket/deeper/x.txt"
+          },
+          "expect": false
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "bucket"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "part upload, part read and large copy",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk-a"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {
+              "parts": [],
+              "chunks": 0,
+              "content_type": "video/mp4"
+            }
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "content_type": "video/mp4",
+            "chunk": 1,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 5242880
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "content_type": "video/mp4",
+            "chunk": 2,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 5242880,
+            "length": 5242880
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "content_type": "video/mp4",
+            "chunk": 3,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 10485760,
+            "length": 5242880
+          },
+          "expect": 3
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "content_type": "video/mp4",
+            "chunk": 4,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 15728640,
+            "length": 5242880
+          },
+          "expect": 4
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "content_type": "video/mp4",
+            "chunk": 5,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 20971520,
+            "length": 5242880
+          },
+          "expect": 5
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "content_type": "video/mp4",
+            "chunk": 6,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 26214400,
+            "length": 5242880
+          },
+          "expect": 6
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "content_type": "video/mp4",
+            "chunk": 7,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 31457280,
+            "length": 5242880
+          },
+          "expect": 7
+        },
+        {
+          "op": "metadata.get",
+          "args": {
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/uploadId"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "parts": [
+              [
+                1,
+                "\"e42a92ef1249b726dea28e51cc462922\""
+              ],
+              [
+                2,
+                "\"82860803d22de29760ec56e80a470941\""
+              ],
+              [
+                3,
+                "\"c7d9bb7258044cc02c8095c4a663f205\""
+              ],
+              [
+                4,
+                "\"a643b2c357144f29d039100f19fbe811\""
+              ],
+              [
+                5,
+                "\"e338879e861a27fd246fd23093e3881d\""
+              ],
+              [
+                6,
+                "\"f486a77e6d7a64d66df01cf15db1fea5\""
+              ],
+              [
+                7,
+                "\"1489ae1f37cb05fba54ba0a2aaef1ce0\""
+              ]
+            ],
+            "chunks": 7,
+            "content_type": "video/mp4",
+            "uploadId": "<masked>"
+          }
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4"
+          },
+          "expect": 31730705
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4"
+          },
+          "expect": "d247caef78390e1fe0874d3e3515f4dd-7"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "length": 500
+          },
+          "expect": {
+            "$bytes": "AAAAIGZ0eXBtcDQyAAAAAG1wNDJtcDQxaXNvbWF2YzEAABobbW9vdgAAAGxtdmhkAAAAANydd3vcnXd7AAAAGAAAAcIAAQAAAQAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAAACFpb2RzAAAAABCAgIAQAE////9//w6AgIAEAAAAAQAAGYZ0cmFrAAAAXHRraGQAAAAH3J13e9ydd3sAAAABAAAAAAAAAcIAAAAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAAAABAAAAACgAAAAWgAAAAAAAkZWR0cwAAABxlbHN0AAAAAAAAAAEAAAHCAAAAAgABAAAAABj+bWRpYQAAACBtZGhkAAAAANydd3vcnXd7AAAAGAAAAcJVxAAAAAAANmhkbHIAAAAAAAAAAHZpZGUAAAAAAAAAAAAAAABMLVNNQVNIIFZpZGVvIEhhbmRsZXIAAAAYoG1pbmYAAAAUdm1oZAAAAAEAAAAAAAAAAAAAACRkaW5mAAAAHGRyZWYAAAAAAAAAAQAAAAx1cmwgAAAAAQAAGGBzdGJsAAAAsnN0c2QAAAAAAAAAAQA="
+          }
+        },
+        {
+          "op": "device.read_digest",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4",
+            "offset": 30000000
+          },
+          "expect": {
+            "size": 1730705,
+            "md5": "68b29b53de918f514d2ebd4363945cd7"
+          }
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "${ns}/uploaded.mp4",
+            "target": "/tmp/compat-fs/${ns}/disk-a/largefile.mp4",
+            "to": {
+              "$ref": "l"
+            },
+            "chunk_size": 10000000
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "l"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-a/largefile.mp4"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "l"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-a/largefile.mp4"
+          },
+          "expect": "video/mp4"
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "l"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-a/largefile.mp4"
+          },
+          "expect": "77916f632e28bf0118a752b4646b803e"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "l"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-a/largefile.mp4"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/uploaded.mp4"
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "part upload retry and out of order",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {
+              "parts": [],
+              "chunks": 0,
+              "content_type": "video/mp4"
+            }
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4",
+            "content_type": "video/mp4",
+            "chunk": 1,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 5242880
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4",
+            "content_type": "video/mp4",
+            "chunk": 1,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 5242880
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4",
+            "content_type": "video/mp4",
+            "chunk": 2,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 5242880,
+            "length": 5242880
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4",
+            "content_type": "video/mp4",
+            "chunk": 3,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 10485760,
+            "length": 5242880
+          },
+          "expect": 3
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4",
+            "content_type": "video/mp4",
+            "chunk": 4,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 15728640,
+            "length": 5242880
+          },
+          "expect": 4
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4",
+            "content_type": "video/mp4",
+            "chunk": 5,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 20971520,
+            "length": 5242880
+          },
+          "expect": 5
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4",
+            "content_type": "video/mp4",
+            "chunk": 6,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 26214400,
+            "length": 5242880
+          },
+          "expect": 6
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4",
+            "content_type": "video/mp4",
+            "chunk": 7,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "m"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 31457280,
+            "length": 5242880
+          },
+          "expect": 7
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4"
+          },
+          "expect": 31730705
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {
+              "parts": [],
+              "chunks": 0,
+              "content_type": "video/mp4"
+            }
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4",
+            "content_type": "video/mp4",
+            "chunk": 7,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "o"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 31457280,
+            "length": 5242880
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4",
+            "content_type": "video/mp4",
+            "chunk": 6,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "o"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 26214400,
+            "length": 5242880
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4",
+            "content_type": "video/mp4",
+            "chunk": 5,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "o"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 20971520,
+            "length": 5242880
+          },
+          "expect": 3
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4",
+            "content_type": "video/mp4",
+            "chunk": 4,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "o"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 15728640,
+            "length": 5242880
+          },
+          "expect": 4
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4",
+            "content_type": "video/mp4",
+            "chunk": 3,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "o"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 10485760,
+            "length": 5242880
+          },
+          "expect": 5
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4",
+            "content_type": "video/mp4",
+            "chunk": 2,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "o"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 5242880,
+            "length": 5242880
+          },
+          "expect": 6
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4",
+            "content_type": "video/mp4",
+            "chunk": 1,
+            "chunks": 7,
+            "metadata": {
+              "$ref": "o"
+            },
+            "file": "packages/storage/tests/resources/disk-a/large_file.mp4",
+            "offset": 0,
+            "length": 5242880
+          },
+          "expect": 7
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4"
+          },
+          "expect": 31730705
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4"
+          },
+          "expect": "d247caef78390e1fe0874d3e3515f4dd-7"
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/retry.mp4"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/ooo.mp4"
+          },
+          "expect": true
+        }
+      ],
+      "state": []
+    },
+    {
+      "name": "copy small and missing",
+      "steps": [
+        {
+          "op": "s3.new",
+          "args": {
+            "minio": true,
+            "root": "${ns}"
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk-a"
+          },
+          "bind": "l",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/text-for-read.txt",
+            "data": "Hello World",
+            "content_type": "text/plain"
+          },
+          "expect": "b10a8db164e0754105b7a99be72e3fe5"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "${ns}/text-for-read.txt",
+            "target": "/tmp/compat-fs/${ns}/disk-a/hello.txt",
+            "to": {
+              "$ref": "l"
+            },
+            "chunk_size": 10000000
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "l"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk-a/hello.txt"
+          },
+          "expect": "Hello World"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "${ns}/non-existent-file.txt",
+            "target": "/tmp/compat-fs/${ns}/disk-a/x.txt",
+            "to": {
+              "$ref": "l"
+            },
+            "catch": true
+          },
+          "mask": {
+            "paths": [
+              "/message"
+            ],
+            "reason": "MinIO puts a random request ID in every error message"
+          },
+          "expect": {
+            "class": "Utopia\\Storage\\Exception\\NotFoundException",
+            "message": "<masked>",
+            "code": 404,
+            "error_code": null,
+            "previous": false
+          }
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "l"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk-a/hello.txt",
+            "target": "${ns}/from-local.txt",
+            "to": {
+              "$ref": "d"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "${ns}/from-local.txt"
+          },
+          "expect": "Hello World"
+        }
+      ]
+    }
+  ]
+}

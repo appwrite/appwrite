@@ -16,6 +16,7 @@ name = "compat-driver"
 path = "src/bin/compat-driver.rs"
 
 [dependencies]
+async-trait.workspace = true
 base64.workspace = true
 bytes.workspace = true
 futures-util.workspace = true
@@ -24,6 +25,7 @@ httparse.workspace = true
 image.workspace = true
 image-webp.workspace = true
 indexmap.workspace = true
+chrono.workspace = true
 mimalloc.workspace = true
 p256 = { workspace = true, features = ["pem"] }
 proc-macro2.workspace = true
@@ -33,7 +35,7 @@ serde.workspace = true
 serde_json.workspace = true
 sha2.workspace = true
 syn.workspace = true
-tokio = { workspace = true, features = ["io-std", "io-util", "rt", "macros"] }
+tokio = { workspace = true, features = ["fs", "io-std", "io-util", "rt", "macros"] }
 
 # Libraries under test (one adapter each in src/libs).
 php-std.workspace = true
@@ -48,6 +50,7 @@ utopia-domains.workspace = true
 utopia-dsn.workspace = true
 utopia-config.workspace = true
 utopia-span.workspace = true
+utopia-storage.workspace = true
 utopia-di.workspace = true
 utopia-registry.workspace = true
 utopia-schedule.workspace = true

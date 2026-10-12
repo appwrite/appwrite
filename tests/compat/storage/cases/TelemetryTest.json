@@ -1,0 +1,563 @@
+{
+  "source": "packages/storage/tests/Device/TelemetryTest.php",
+  "cases": [
+    {
+      "name": "the histogram is created on the first record",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "u"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.recorded",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": {}
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "packages/storage/tests/resources/disk-a/lorem.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "telemetry.recorded",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "storage.operation": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "the decorated device is accessible",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "u"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.device_is",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "of": {
+              "$ref": "u"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "telemetry.device_is",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "of": {
+              "$ref": "v"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "device.type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": "local"
+        },
+        {
+          "op": "device.root",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": "/tmp/compat-fs/${ns}/disk"
+        }
+      ]
+    },
+    {
+      "name": "conditional operations are forwarded and measured",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "u"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.create",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry.txt",
+            "data": "one"
+          },
+          "bind": "e",
+          "expect": "f97c5d29941bfb1b2fdab0874906ab82"
+        },
+        {
+          "op": "device.replace",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry.txt",
+            "data": "two",
+            "etag": {
+              "$ref": "e"
+            }
+          },
+          "expect": "b8a9f715dbb64fd5c56e7783c6820a61"
+        },
+        {
+          "op": "device.read",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry.txt",
+            "etag": "b8a9f715dbb64fd5c56e7783c6820a61"
+          },
+          "expect": "two"
+        },
+        {
+          "op": "device.file_info",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry.txt"
+          },
+          "mask": {
+            "paths": [
+              "/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry.txt",
+            "size": 3,
+            "modified": "<masked>",
+            "etag": "b8a9f715dbb64fd5c56e7783c6820a61"
+          }
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "u"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/telemetry.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "telemetry.recorded",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "storage.operation": 4
+          }
+        }
+      ]
+    },
+    {
+      "name": "listing uploads on a device without them is refused",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "u"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.list_uploads",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "BadMethodCallException",
+              "message": "Utopia\\Storage\\Device\\Local does not list multipart uploads"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "every operation is forwarded and measured",
+      "steps": [
+        {
+          "op": "local.new",
+          "args": {
+            "root": "/tmp/compat-fs/${ns}/disk"
+          },
+          "bind": "u",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "telemetry.new",
+          "args": {
+            "device": {
+              "$ref": "u"
+            }
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "filename": "a.txt"
+          },
+          "expect": "/tmp/compat-fs/${ns}/disk/a.txt"
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "m",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/a.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 2,
+            "data": "aa",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/a.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 2,
+            "chunks": 2,
+            "data": "bb",
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": 2
+        },
+        {
+          "op": "device.finalize",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/a.txt",
+            "chunks": 2,
+            "metadata": {
+              "$ref": "m"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "device.write",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/b.txt",
+            "data": "b",
+            "content_type": "text/plain"
+          },
+          "expect": "92eb5ffee6ae2fec3ad71c777531578f"
+        },
+        {
+          "op": "device.copy",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/b.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/c.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.move",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "source": "/tmp/compat-fs/${ns}/disk/c.txt",
+            "target": "/tmp/compat-fs/${ns}/disk/d.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.exists",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/d.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.file_size",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/a.txt"
+          },
+          "expect": 4
+        },
+        {
+          "op": "device.file_hash",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/a.txt"
+          },
+          "expect": "5e394281dfac81c1e7dddcaf4d35d1f6"
+        },
+        {
+          "op": "device.file_mime_type",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/a.txt"
+          },
+          "expect": "text/plain"
+        },
+        {
+          "op": "device.list_files",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "prefix": "/tmp/compat-fs/${ns}/disk"
+          },
+          "mask": {
+            "paths": [
+              "/files/*/modified"
+            ],
+            "reason": "modification times and upload IDs differ between runs"
+          },
+          "expect": {
+            "files": [
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/a.txt",
+                "size": 4,
+                "modified": "<masked>",
+                "etag": null
+              },
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/b.txt",
+                "size": 1,
+                "modified": "<masked>",
+                "etag": null
+              },
+              {
+                "path": "/tmp/compat-fs/${ns}/disk/d.txt",
+                "size": 1,
+                "modified": "<masked>",
+                "etag": null
+              }
+            ],
+            "cursor": null
+          }
+        },
+        {
+          "op": "metadata.new",
+          "args": {
+            "value": {}
+          },
+          "bind": "n",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "device.upload",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/e.txt",
+            "content_type": "application/octet-stream",
+            "chunk": 1,
+            "chunks": 2,
+            "data": "x",
+            "metadata": {
+              "$ref": "n"
+            }
+          },
+          "expect": 1
+        },
+        {
+          "op": "device.abort",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/e.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "/tmp/compat-fs/${ns}/disk/b.txt"
+          },
+          "expect": true
+        },
+        {
+          "op": "device.delete_path",
+          "args": {
+            "device": {
+              "$ref": "d"
+            },
+            "path": "nothing"
+          },
+          "expect": false
+        },
+        {
+          "op": "telemetry.recorded",
+          "args": {
+            "device": {
+              "$ref": "d"
+            }
+          },
+          "expect": {
+            "storage.operation": 21
+          }
+        }
+      ]
+    }
+  ]
+}
