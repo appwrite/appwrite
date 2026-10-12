@@ -2237,6 +2237,7 @@ trait MigrationsBase
         ], [
             'fileId' => ID::unique(),
             'file' => new CURLFile(realpath(__DIR__ . '/../../../resources/logo.png'), 'image/png', 'logo.png'),
+            'folder' => 'albums/2026',
             'permissions' => [
                 Permission::read(Role::any()),
                 Permission::update(Role::any()),
@@ -2288,6 +2289,8 @@ trait MigrationsBase
         $this->assertNotEmpty($response['body']['$id']);
 
         $this->assertEquals($fileId, $response['body']['$id']);
+        $this->assertSame('albums/2026/', $response['body']['folder']);
+        $this->assertSame('albums/2026/logo.png', $response['body']['key']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/storage/buckets/' . $bucketId . '/files/' . $fileId, [
@@ -2490,6 +2493,100 @@ trait MigrationsBase
         ]);
     }
 
+    public function testAppwriteMigrationFunctionSettings(): void
+    {
+        // A fresh source project gives its first function and first site the same internal ID, which is
+        // when Appwrite's function list also returns the site's variables.
+        $source = $this->getProject(true);
+        $sourceHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $source['$id'],
+            'x-appwrite-key' => $source['apiKey'],
+        ];
+        $destinationHeaders = [
+            'content-type' => 'application/json',
+            'x-appwrite-project' => $this->getDestinationProject()['$id'],
+            'x-appwrite-key' => $this->getDestinationProject()['apiKey'],
+        ];
+
+        $function = $this->client->call(Client::METHOD_POST, '/functions', $sourceHeaders, [
+            'functionId' => ID::unique(),
+            'name' => 'Hourly sync',
+            'runtime' => 'node-22',
+            'interval' => 60,
+            'deploymentRetention' => 7,
+        ]);
+        $this->assertSame(201, $function['headers']['status-code'], 'Create function failed: ' . json_encode($function['body'], JSON_PRETTY_PRINT));
+        $functionId = $function['body']['$id'];
+
+        $site = $this->client->call(Client::METHOD_POST, '/sites', $sourceHeaders, [
+            'siteId' => ID::unique(),
+            'name' => 'Storefront',
+            'framework' => 'other',
+            'buildRuntime' => 'node-22',
+        ]);
+        $this->assertSame(201, $site['headers']['status-code'], 'Create site failed: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
+        $siteId = $site['body']['$id'];
+
+        foreach ([['API_TOKEN', 'token', true], ['REGION', 'eu', false]] as [$key, $value, $secret]) {
+            $variable = $this->client->call(Client::METHOD_POST, '/functions/' . $functionId . '/variables', $sourceHeaders, [
+                'variableId' => ID::unique(),
+                'key' => $key,
+                'value' => $value,
+                'secret' => $secret,
+            ]);
+            $this->assertSame(201, $variable['headers']['status-code'], 'Create function variable failed: ' . json_encode($variable['body'], JSON_PRETTY_PRINT));
+        }
+
+        $variable = $this->client->call(Client::METHOD_POST, '/sites/' . $siteId . '/variables', $sourceHeaders, [
+            'variableId' => ID::unique(),
+            'key' => 'STRIPE_KEY',
+            'value' => 'sk_test',
+            'secret' => true,
+        ]);
+        $this->assertSame(201, $variable['headers']['status-code'], 'Create site variable failed: ' . json_encode($variable['body'], JSON_PRETTY_PRINT));
+
+        $result = $this->performMigrationSync([
+            'resources' => [
+                Resource::TYPE_FUNCTION,
+                Resource::TYPE_ENVIRONMENT_VARIABLE,
+                Resource::TYPE_SITE,
+                Resource::TYPE_SITE_VARIABLE,
+            ],
+            'endpoint' => $this->webEndpoint,
+            'projectId' => $source['$id'],
+            'apiKey' => $source['apiKey'],
+        ]);
+
+        $this->assertSame('completed', $result['status'], 'Migration failed: ' . json_encode($result['errors'] ?? [], JSON_PRETTY_PRINT));
+        $this->assertSame(1, $result['statusCounters'][Resource::TYPE_FUNCTION]['success']);
+        $this->assertSame(2, $result['statusCounters'][Resource::TYPE_ENVIRONMENT_VARIABLE]['success']);
+        $this->assertSame(1, $result['statusCounters'][Resource::TYPE_SITE]['success']);
+        $this->assertSame(1, $result['statusCounters'][Resource::TYPE_SITE_VARIABLE]['success']);
+
+        $function = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId, $destinationHeaders);
+
+        $this->assertSame(200, $function['headers']['status-code']);
+        $this->assertSame(60, $function['body']['interval']);
+        $this->assertSame('', $function['body']['schedule']);
+        $this->assertSame(7, $function['body']['deploymentRetention']);
+
+        $functionVariables = $this->client->call(Client::METHOD_GET, '/functions/' . $functionId . '/variables', $destinationHeaders);
+
+        $this->assertSame(200, $functionVariables['headers']['status-code']);
+        $secrets = \array_column($functionVariables['body']['variables'], 'secret', 'key');
+        \ksort($secrets);
+        $this->assertSame(['API_TOKEN' => true, 'REGION' => false], $secrets, 'The function must not take the site\'s variable.');
+
+        $siteVariables = $this->client->call(Client::METHOD_GET, '/sites/' . $siteId . '/variables', $destinationHeaders);
+
+        $this->assertSame(200, $siteVariables['headers']['status-code']);
+        $this->assertSame(['STRIPE_KEY' => true], \array_column($siteVariables['body']['variables'], 'secret', 'key'));
+
+        $this->client->call(Client::METHOD_DELETE, '/functions/' . $functionId, $destinationHeaders);
+        $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, $destinationHeaders);
+    }
+
     /**
      * Sites
      */
@@ -2506,6 +2603,9 @@ trait MigrationsBase
             'buildRuntime' => 'node-22',
             'adapter' => 'static',
             'outputDirectory' => './',
+            'startCommand' => 'npm run start',
+            'deploymentRetention' => 14,
+            'scopes' => ['users.read', 'files.read'],
         ]);
 
         $this->assertEquals(201, $site['headers']['status-code'], 'Create site failed: ' . json_encode($site['body'], JSON_PRETTY_PRINT));
@@ -2549,6 +2649,7 @@ trait MigrationsBase
         ], [
             'key' => 'TEST_VAR',
             'value' => 'test_value',
+            'secret' => true,
         ]);
 
         $this->assertEquals(201, $variable['headers']['status-code']);
@@ -2591,6 +2692,9 @@ trait MigrationsBase
         $this->assertEquals('node-22', $response['body']['buildRuntime']);
         $this->assertEquals('other', $response['body']['framework']);
         $this->assertEquals('static', $response['body']['adapter']);
+        $this->assertSame('npm run start', $response['body']['startCommand']);
+        $this->assertSame(14, $response['body']['deploymentRetention']);
+        $this->assertSame(['users.read', 'files.read'], $response['body']['scopes']);
 
         // Verify deployment in destination
         $this->assertEventually(function () use ($siteId) {
@@ -2616,6 +2720,7 @@ trait MigrationsBase
         $this->assertEquals(200, $variables['headers']['status-code']);
         $this->assertEquals(1, $variables['body']['total']);
         $this->assertEquals('TEST_VAR', $variables['body']['variables'][0]['key']);
+        $this->assertTrue($variables['body']['variables'][0]['secret']);
 
         // Cleanup
         $this->client->call(Client::METHOD_DELETE, '/sites/' . $siteId, [
@@ -3264,6 +3369,19 @@ trait MigrationsBase
         ]);
         $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceKeyHeaders, [
             'userEmail' => false,
+            'userAccessedAt' => true,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $sourceKeyHeaders, [
+            'min' => 12,
+            'uppercase' => true,
+            'number' => true,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', $sourceKeyHeaders, [
+            'email' => false,
+            'custom' => true,
+        ]);
+        $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-free-email', $sourceKeyHeaders, [
+            'enabled' => true,
         ]);
 
         $result = $this->performMigrationSync([
@@ -3295,6 +3413,22 @@ trait MigrationsBase
         $membershipPrivacy = $this->client->call(Client::METHOD_GET, '/project/policies/membership-privacy', $destinationKeyHeaders);
         $this->assertSame(200, $membershipPrivacy['headers']['status-code']);
         $this->assertFalse($membershipPrivacy['body']['userEmail'], 'membership-privacy userEmail should be migrated as false');
+        $this->assertTrue($membershipPrivacy['body']['userAccessedAt'], 'membership-privacy userAccessedAt should be migrated as true');
+
+        $passwordStrength = $this->client->call(Client::METHOD_GET, '/project/policies/password-strength', $destinationKeyHeaders);
+        $this->assertSame(200, $passwordStrength['headers']['status-code']);
+        $this->assertSame(12, $passwordStrength['body']['min']);
+        $this->assertTrue($passwordStrength['body']['uppercase']);
+        $this->assertTrue($passwordStrength['body']['number']);
+
+        $mfaFactors = $this->client->call(Client::METHOD_GET, '/project/policies/mfa-factors', $destinationKeyHeaders);
+        $this->assertSame(200, $mfaFactors['headers']['status-code']);
+        $this->assertFalse($mfaFactors['body']['email']);
+        $this->assertTrue($mfaFactors['body']['custom']);
+
+        $denyFreeEmail = $this->client->call(Client::METHOD_GET, '/project/policies/deny-free-email', $destinationKeyHeaders);
+        $this->assertSame(200, $denyFreeEmail['headers']['status-code']);
+        $this->assertTrue($denyFreeEmail['body']['enabled']);
 
         // Restore both projects to defaults.
         $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceKeyHeaders, ['total' => 0]);
@@ -3303,6 +3437,12 @@ trait MigrationsBase
         $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $destinationKeyHeaders, ['total' => 0]);
         $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $destinationKeyHeaders, ['enabled' => false]);
         $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $destinationKeyHeaders, ['userEmail' => true]);
+        foreach ([$sourceKeyHeaders, $destinationKeyHeaders] as $headers) {
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $headers, ['userAccessedAt' => false]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $headers, ['min' => 8, 'uppercase' => false, 'number' => false]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', $headers, ['email' => true, 'custom' => false]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-free-email', $headers, ['enabled' => false]);
+        }
     }
 
     public function testAppwriteMigrationSMTP(): void

@@ -137,22 +137,57 @@ function webPlatform(hostname: string) {
   }
 }
 
-type Platform = ReturnType<typeof webPlatform>
+/** Google's sample debug key, the one project-sesame-426206.appspot.com trusts. */
+const FINGERPRINT =
+  '4F:20:47:1F:D9:9A:BA:96:47:8D:59:27:C2:C8:A6:EA:8E:D2:8D:14:C0:B6:A2:39:99:9F:A3:4D:47:3D:FA:11'
+const ANDROID_ORIGIN =
+  'android:apk-key-hash:TyBHH9maupZHjVknwsim6o7SjRTAtqI5mZ-jTUc9-hE'
 
-/** Mirrors the server: web platforms on the relying party ID, plus localhost. */
+function androidPlatform(fingerprints: string[] = []) {
+  return {
+    $id: 'android-app',
+    $createdAt: NOW,
+    $updatedAt: NOW,
+    name: 'Android app',
+    type: 'android',
+    applicationId: 'com.example.app',
+    fingerprints,
+  }
+}
+
+type Platform =
+  | ReturnType<typeof webPlatform>
+  | ReturnType<typeof androidPlatform>
+
+function hostnames(platforms: Platform[]): string[] {
+  return platforms.flatMap((platform) =>
+    'hostname' in platform ? [platform.hostname] : [],
+  )
+}
+
+/**
+ * Mirrors the server: Android apps by their signing certificates and web
+ * platforms on the relying party ID, plus localhost.
+ */
 function passkeyOrigins(rpId: string, platforms: Platform[]): string[] {
-  const hostnames = platforms.map((platform) => platform.hostname)
-  const origins = hostnames
+  const production = rpId !== '' && rpId !== 'localhost'
+  const apps = platforms.flatMap((platform) =>
+    production && 'fingerprints' in platform
+      ? platform.fingerprints.map(
+          (fingerprint) =>
+            `android:apk-key-hash:${Buffer.from(fingerprint.replaceAll(':', ''), 'hex').toString('base64url')}`,
+        )
+      : [],
+  )
+  const origins = hostnames(platforms)
     .filter(
       (hostname) =>
-        rpId !== '' &&
-        rpId !== 'localhost' &&
-        (hostname === rpId || hostname.endsWith(`.${rpId}`)),
+        production && (hostname === rpId || hostname.endsWith(`.${rpId}`)),
     )
     .map((hostname) => `https://${hostname}`)
-  return hostnames.includes('localhost')
-    ? [...origins, 'http://localhost', 'https://localhost']
-    : origins
+  return hostnames(platforms).includes('localhost')
+    ? [...apps, ...origins, 'http://localhost', 'https://localhost']
+    : [...apps, ...origins]
 }
 
 const CONFIGURED_PLATFORMS = [
@@ -216,6 +251,7 @@ type MockOptions = {
 type Calls = {
   policyPatches: Request[]
   methodPatches: Request[]
+  platformUpdates: Request[]
 }
 
 function corsHeaders(route: Route): Record<string, string> {
@@ -238,11 +274,15 @@ async function mockAppwriteApi(
   options: MockOptions = {},
 ): Promise<Calls> {
   let rpId = options.rpId ?? 'example.com'
-  const platforms = options.platforms ?? CONFIGURED_PLATFORMS
+  const platforms = [...(options.platforms ?? CONFIGURED_PLATFORMS)]
   let passkeyEnabled = options.passkeyEnabled ?? false
   const account = { ...ACCOUNT, prefs: options.accountPrefs ?? ACCOUNT.prefs }
   const localOrigin = new URL(String(test.info().project.use.baseURL)).origin
-  const calls: Calls = { policyPatches: [], methodPatches: [] }
+  const calls: Calls = {
+    policyPatches: [],
+    methodPatches: [],
+    platformUpdates: [],
+  }
 
   await page.route('**/*', async (route) => {
     const request = route.request()
@@ -332,6 +372,16 @@ async function mockAppwriteApi(
       })
     if (apiPath === '/project/platforms')
       return json(200, { total: platforms.length, platforms })
+    const platformId = apiPath.match(
+      /^\/project\/platforms(?:\/android)?\/([^/]+)$/,
+    )?.[1]
+    const index = platforms.findIndex((platform) => platform.$id === platformId)
+    if (index !== -1 && request.method() === 'PUT') {
+      calls.platformUpdates.push(request)
+      platforms[index] = { ...platforms[index], ...request.postDataJSON() }
+      return json(200, platforms[index])
+    }
+    if (index !== -1) return json(200, platforms[index])
     if (apiPath === '/project/mock-phones')
       return json(200, { total: 0, mockNumbers: [] })
 
@@ -706,5 +756,57 @@ test.describe('passkeys (mocked API)', () => {
 
     await openAuthSettings(page)
     await expect(page.locator(`#${PASSKEY_ID}`)).toBeVisible()
+  })
+  test('Android apps show where passkeys work by their signing certificate', async ({
+    page,
+  }) => {
+    await mockAppwriteApi(page, {
+      platforms: [...CONFIGURED_PLATFORMS, androidPlatform([FINGERPRINT])],
+    })
+    await openPasskeyPolicies(page)
+
+    const origins = page.getByTestId('passkey-platform-origins')
+    await expect(origins).toContainText(`${ANDROID_ORIGIN} (Android app)`)
+    await expect(origins).toContainText('https://example.com')
+
+    // An unsaved domain is previewed the same way the server derives it
+    await rpIdInput(page).fill('app.example.com')
+    await expect(origins).toContainText(ANDROID_ORIGIN)
+    await expect(origins).not.toContainText('https://example.com')
+  })
+
+  test('the app drawer saves signing certificate fingerprints', async ({
+    page,
+  }) => {
+    const calls = await mockAppwriteApi(page, {
+      platforms: [...CONFIGURED_PLATFORMS, androidPlatform()],
+    })
+    await page.goto(`/projects/${PROJECT_ID}/apps`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await page
+      .getByRole('button', { name: /Android app/ })
+      .first()
+      .click({ timeout: 30_000 })
+
+    const fingerprints = page.locator('#platform-fingerprints')
+    await expect(fingerprints).toHaveValue('')
+
+    await fingerprints.fill('14:6D:E9')
+    await page.getByRole('button', { name: 'Update', exact: true }).click()
+    await expect(
+      page.getByText('14:6D:E9 is not a SHA-256 fingerprint.', {
+        exact: false,
+      }),
+    ).toBeVisible()
+    expect(calls.platformUpdates).toHaveLength(0)
+
+    await fingerprints.fill(`${FINGERPRINT.toLowerCase()}\n${FINGERPRINT}`)
+    await page.getByRole('button', { name: 'Update', exact: true }).click()
+    await expect.poll(() => calls.platformUpdates.length).toBe(1)
+    expect(calls.platformUpdates[0].postDataJSON()).toMatchObject({
+      applicationId: 'com.example.app',
+      fingerprints: [FINGERPRINT],
+    })
   })
 })

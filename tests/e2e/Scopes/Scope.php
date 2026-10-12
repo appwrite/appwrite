@@ -9,10 +9,6 @@ use Appwrite\Tests\Async;
 use Appwrite\Tests\Retryable;
 use PHPUnit\Framework\TestCase;
 use Tests\E2E\Client;
-use Utopia\Cache\Adapter\Pool as CachePool;
-use Utopia\Cache\Adapter\Sharding;
-use Utopia\Cache\Cache;
-use Utopia\Config\Config;
 use Utopia\Database\DateTime;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -103,10 +99,7 @@ abstract class Scope extends TestCase
         $seed = function () use ($account, $params, $teamId) {
             global $register;
             $pools = $register->get('pools');
-            $cache = new Cache(new Sharding(array_map(
-                fn (string $name) => new CachePool($pools->get($name)),
-                Config::getParam('pools-cache', []),
-            )));
+            $cache = $register->get('cache');
             $authorization = new Authorization();
             $database = (new Factory($pools, $cache, $authorization))->platform();
 

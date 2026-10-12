@@ -87,6 +87,10 @@ class Create extends Action
             ],
             'passwordHistory' => 0,
             'passwordDictionary' => false,
+            'passwordRotation' => [
+                'enabled' => false,
+                'maxAge' => 31536000,
+            ],
             'duration' => TOKEN_EXPIRATION_LOGIN_LONG,
             'personalDataCheck' => false,
             'passwordPwned' => [
