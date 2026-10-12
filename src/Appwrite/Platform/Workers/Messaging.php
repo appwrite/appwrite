@@ -248,10 +248,13 @@ class Messaging extends Action
         $deliveryErrors = [];
         $hasRecipients = false;
 
+        $isWakeupSignalEnabled = $providerType === MESSAGE_TYPE_PUSH
+            && $this->checkAppwritePushEnabled($dbForProject, $default);
+
         // Users who'll get the message over Appwrite push (MQTT). For them, any other push provider is
         // sent a wake-up signal instead of a full notification. Found first so the order a user's
         // targets arrive in doesn't change the outcome. Topics handle this per page instead.
-        $mqttUsers = $providerType === MESSAGE_TYPE_PUSH
+        $mqttUsers = $isWakeupSignalEnabled
             ? $this->getMqttExplicitUsers($dbForProject, $userIds, $targetIds, $providers, $default)
             : [];
 
@@ -263,7 +266,7 @@ class Messaging extends Action
 
             // A topic can have a huge number of subscribers, so find the Appwrite-push users page by page.
             $pageMqttUsers = [];
-            if (!$perUser && $providerType === MESSAGE_TYPE_PUSH) {
+            if (!$perUser && $isWakeupSignalEnabled) {
                 foreach ($page as $providerId => $identifiers) {
                     if ($this->resolveProvider($dbForProject, $providerId, $providers, $default)->getAttribute('provider') !== self::APPWRITE_PUSH_PROVIDER) {
                         continue;
@@ -680,6 +683,20 @@ class Messaging extends Action
         $providers[$providerId] = $provider;
 
         return $provider;
+    }
+
+    private function checkAppwritePushEnabled(Database $dbForProject, Document $default): bool
+    {
+        if ($default->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+            return true;
+        }
+
+        return !$dbForProject->findOne('providers', [
+            Query::equal('provider', [self::APPWRITE_PUSH_PROVIDER]),
+            Query::equal('type', [MESSAGE_TYPE_PUSH]),
+            Query::equal('enabled', [true]),
+            Query::select(['$id']),
+        ])->isEmpty();
     }
 
     /**
