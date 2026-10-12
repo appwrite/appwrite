@@ -429,6 +429,49 @@
           "iterations": 400
         },
         {
+          "name": "one flipped byte after the Snappy length",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "algorithm": {
+                "gen": "const",
+                "value": {
+                  "class": "Snappy"
+                }
+              },
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "bytes",
+                    "min": 1,
+                    "max": 400
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "text"
+                  }
+                ]
+              },
+              "from": {
+                "gen": "const",
+                "value": 5
+              },
+              "at": {
+                "gen": "int",
+                "min": 0,
+                "max": 100000
+              },
+              "xor": {
+                "gen": "int",
+                "min": 1,
+                "max": 255
+              }
+            }
+          },
+          "iterations": 400
+        },
+        {
           "name": "one flipped byte after the zstd frame header",
           "args": {
             "gen": "object",
@@ -951,9 +994,6 @@
         },
         {
           "class": "GZIP"
-        },
-        {
-          "class": "Snappy"
         }
       ]
     }
@@ -1007,6 +1047,11 @@
       "symbol": "Utopia\\Compression\\Algorithms\\Zstd::decompress",
       "php": "zstd_uncompress() allocates the content size a frame header claims before decoding: a corrupt header claiming more than the memory limit is a fatal error that ends the PHP process.",
       "reason": "A fatal error cannot be reproduced or compared; Rust fails with Error::Codec ('zstd_uncompress(): insufficient memory') when the allocation fails, and decodes otherwise. The corrupt fuzz profile for Zstd leaves the frame header (the first 18 bytes) intact."
+    },
+    {
+      "symbol": "Utopia\\Compression\\Algorithms\\Snappy::decompress",
+      "php": "snappy_uncompress() allocates the uncompressed length the stream's varint preamble claims before decoding: a corrupt preamble claiming more than the memory limit is a fatal error that ends the PHP process (seen at 3.3 GB).",
+      "reason": "A fatal error cannot be reproduced or compared; Rust bounds its buffer by what the stream can produce (255 bytes per input byte) and fails with Error::Codec ('snappy_uncompress : data error') when the stream does not fill the claimed length, which is PHP's answer whenever its allocation succeeds. The corrupt fuzz profile for Snappy leaves the preamble (at most 5 bytes) intact."
     }
   ],
   "bench": {
