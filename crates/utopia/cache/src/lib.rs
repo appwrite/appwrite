@@ -28,7 +28,7 @@
 //!
 //! | PHP | Rust |
 //! |---|---|
-//! | `Utopia\Cache\Cache` | [`Cache`] (`getSize` is [`Cache::size`], `getGeneration` [`Cache::generation`]) |
+//! | `Utopia\Cache\Cache` | [`Cache`] (`getSize` is [`Cache::size`], `getGeneration` [`Cache::generation`], `recordPurges` [`Cache::record_purges`] returning [`Purges`]) |
 //! | `Utopia\Cache\Adapter` | [`Adapter`], [`DynAdapter`] |
 //! | `Feature\Batchable`, `Feature\Leasable`, `Feature\Telemetry` | [`Adapter::batchable`], [`Adapter::leasable`], [`Adapter::set_telemetry`] and their methods |
 //! | `Feature\Retryable` | [`Retry`] (`with_max_retries`, `with_retry_delay` on each adapter) |
@@ -89,7 +89,7 @@ pub use utopia_telemetry as telemetry;
 
 pub use adapter::{Adapter, BoxFuture, DynAdapter, Fields, Retry};
 pub use breaker::CircuitBreaker;
-pub use cache::Cache;
+pub use cache::{Cache, Purges};
 pub use codec::{AnyCodec, Codec, Igbinary, Json};
 pub use envelope::Envelope;
 pub use error::{Error, Result};

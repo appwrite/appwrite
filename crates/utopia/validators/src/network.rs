@@ -4,12 +4,12 @@ use php_std::filter::{
     FILTER_FLAG_HOSTNAME, FILTER_FLAG_IPV4, FILTER_FLAG_IPV6, FILTER_VALIDATE_DOMAIN, FILTER_VALIDATE_IP,
     FILTER_VALIDATE_URL,
 };
-use php_std::string::{explode, strtolower};
+use php_std::string::{ctype_digit, explode, strtolower};
 use php_std::url::parse_url;
 use php_std::url::rfc3986::Uri;
 
 use crate::input::{filter, filter_str, loose_str_eq};
-use crate::{Error, Input, Type, Validator, Verdict, is_valid_via_validate};
+use crate::{Error, Input, Type, Validator, Verdict, View, is_valid_via_validate};
 
 /// A [`Domain`] restriction: domains ending with `hostname` must have exactly
 /// `levels` labels (when set) and must not start with any of
@@ -329,6 +329,72 @@ impl Validator for Url {
             }
         }
         Ok(Verdict::VALID)
+    }
+
+    /// Expects a string ([`Type::String`]).
+    fn kind(&self) -> Type {
+        Type::String
+    }
+}
+
+/// A published port as Docker accepts it: a port (`8080`), or a port bound to
+/// one host interface (`127.0.0.1:8080`, `[::1]:8080`).
+///
+/// PHP: `Utopia\Validator\Port`.
+#[derive(Debug, Clone, Copy, Default)]
+pub struct Port;
+
+impl Port {
+    /// An IPv4 address, or an IPv6 address in brackets.
+    fn is_valid_host(host: &[u8]) -> bool {
+        if let Some(inner) = host.strip_prefix(b"[").and_then(|h| h.strip_suffix(b"]")) {
+            return filter_str(inner, FILTER_VALIDATE_IP, FILTER_FLAG_IPV6);
+        }
+        // `[` alone starts and ends with a bracket too; `substr('[', 1, -1)` is empty.
+        if host == b"[" {
+            return false;
+        }
+        filter_str(host, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4)
+    }
+
+    /// Decimal digits without a leading zero, between 1 and 65535.
+    fn is_valid_port(port: &[u8]) -> bool {
+        if !ctype_digit(port) || port.starts_with(b"0") {
+            return false;
+        }
+        // Six digits or more without a leading zero exceed 65535 (PHP's `(int)`
+        // saturates the longest, which are out of range too).
+        port.len() <= 5 && port.iter().fold(0u32, |n, d| n * 10 + u32::from(d - b'0')) <= 65535
+    }
+}
+
+impl Validator for Port {
+    /// Returns "Value must be a port between 1 and 65535, optionally prefixed
+    /// by a host IP address (e.g. 127.0.0.1:80)".
+    fn description(&self) -> String {
+        "Value must be a port between 1 and 65535, optionally prefixed by a host IP address (e.g. 127.0.0.1:80)"
+            .to_owned()
+    }
+
+    is_valid_via_validate!();
+
+    /// Valid for an integer or a string that is a port, or an IPv4 address or
+    /// a bracketed IPv6 address, `:` and a port (split at the last `:`).
+    fn validate(&self, value: Input<'_>) -> Result<Verdict, Error> {
+        let int;
+        let value: &[u8] = match value.view() {
+            View::Int(i) => {
+                int = i.to_string();
+                int.as_bytes()
+            }
+            View::Str(s) => s,
+            _ => return Ok(Verdict::INVALID),
+        };
+        let valid = match value.iter().rposition(|&b| b == b':') {
+            None => Self::is_valid_port(value),
+            Some(at) => Self::is_valid_host(&value[..at]) && Self::is_valid_port(&value[at + 1..]),
+        };
+        Ok(Verdict::of(valid))
     }
 
     /// Expects a string ([`Type::String`]).

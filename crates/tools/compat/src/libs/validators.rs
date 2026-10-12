@@ -16,8 +16,8 @@ use php_std::{Array, ArrayKey, Str, Value as Php};
 use serde_json::{Map, Value, json};
 use utopia_validators::{
     AllOf, AnyOf, ArrayList, Assoc, Boolean, Contains, Domain, Error, Float, Globstar, HexColor, Host, Hostname,
-    Identifier, Input, Integer, Ip, IpVersion, Json, Multiple, NoneOf, Nullable, Numeric, Phone, Range, Restriction,
-    Text, Type, Url, Validator, Verdict, WhiteList, Wildcard, json as js,
+    Identifier, Input, Integer, Ip, IpVersion, Json, Multiple, NoneOf, Nullable, Numeric, Phone, Port, Range,
+    Restriction, Text, Type, Url, Validator, Verdict, WhiteList, Wildcard, json as js,
 };
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, bytes_value, float, float_value};
@@ -405,6 +405,7 @@ fn build(spec: &Value, session: &Session) -> Result<Result<Held, Error>, Fault> 
         "JSON\\ObjectValidator" => Held::new(js::Object { length: a.usize("length", 0)? }),
         "JSON\\FCM" => Held::new(js::Fcm),
         "Numeric" => Held::new(Numeric),
+        "Port" => Held::new(Port),
         "Phone" => {
             Held::new(Phone { allow_empty: a.bool("allowEmpty", false)?, normalize: a.bool("normalize", false)? })
         }

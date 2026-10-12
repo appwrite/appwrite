@@ -7,7 +7,7 @@
 //! [`Integer`], [`Float`], [`Numeric`], [`Range`]), strings ([`Text`],
 //! [`Identifier`], [`Contains`], [`Globstar`], [`HexColor`], [`Phone`]),
 //! lists and maps ([`ArrayList`], [`Assoc`], [`WhiteList`], [`Nullable`]),
-//! network values ([`Domain`], [`Hostname`], [`Host`], [`Ip`], [`Url`]) and
+//! network values ([`Domain`], [`Hostname`], [`Host`], [`Ip`], [`Port`], [`Url`]) and
 //! JSON ([`Json`] and the [`json`] module), and combines validators
 //! ([`AllOf`], [`AnyOf`], [`NoneOf`], [`Multiple`]). [`Wildcard`] accepts
 //! everything.
@@ -25,7 +25,7 @@
 //! | `Boolean`, `Integer`, `FloatValidator`, `Numeric`, `Range` | [`Boolean`], [`Integer`], [`Float`], [`Numeric`], [`Range`] |
 //! | `Text`, `Identifier` | [`Text`], [`Identifier`] |
 //! | `Contains`, `Globstar`, `HexColor`, `Phone`, `Wildcard` | [`Contains`], [`Globstar`], [`HexColor`], [`Phone`], [`Wildcard`] |
-//! | `Domain` (+ `createRestriction`), `Host`, `Hostname`, `IP`, `URL` | [`Domain`] ([`Restriction`]), [`Host`], [`Hostname`], [`Ip`], [`Url`] |
+//! | `Domain` (+ `createRestriction`), `Host`, `Hostname`, `IP`, `Port`, `URL` | [`Domain`] ([`Restriction`]), [`Host`], [`Hostname`], [`Ip`], [`Port`], [`Url`] |
 //! | `JSON`, `JSON\ArrayValidator`, `JSON\ObjectValidator`, `JSON\FCM` | [`Json`], [`json::Array`], [`json::Object`], [`json::Fcm`] |
 //! | `\InvalidArgumentException`, `\Exception`, `\Error`, `\TypeError` | [`Error`] |
 //!
@@ -101,7 +101,7 @@ pub use hostname::{Host, Hostname};
 pub use input::{Entries, Input, View};
 pub use json::Json;
 pub use list::{ArrayList, Assoc, Nullable, WhiteList};
-pub use network::{Domain, Ip, IpVersion, Restriction, Url};
+pub use network::{Domain, Ip, IpVersion, Port, Restriction, Url};
 pub use scalar::{Boolean, Float, Integer, Numeric, Range};
 pub use string::{Contains, Globstar, HexColor, Phone, Wildcard};
 pub use text::{Identifier, Text};

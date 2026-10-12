@@ -2,16 +2,17 @@
 
 use std::collections::BTreeMap;
 use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicI64, Ordering};
 
-use php_std::types::Value;
+use php_std::types::{Array, ArrayKey, Str, Value};
 use serde_json::{Map, Value as Json, json};
 use utopia_cache::telemetry::{Kind, MemoryTelemetry, Telemetry};
 use utopia_cache::{
     Adapter, AnyCodec, Cache, CircuitBreaker, Codec, DynAdapter, Envelope, Error, Fields, Filesystem, Hazelcast,
-    Memcached, MemcachedClient, Memory, Multiplexing, MultiplexingOptions, Native, None as NoneAdapter, Pool, Redis,
-    RedisCluster, Retry, Sharding, resp,
+    Memcached, MemcachedClient, Memory, Multiplexing, MultiplexingOptions, Native, None as NoneAdapter, Pool, Purges,
+    Redis, RedisCluster, Retry, Sharding, resp,
 };
 
 use crate::adapter::{Args, Fault, OpResult, Outcome, Session, bytes, bytes_value};
@@ -44,6 +45,7 @@ pub const OPS: &[&str] = &[
     "cache.set_case_sensitivity",
     "cache.case_sensitive",
     "cache.set_telemetry",
+    "cache.record_purges",
     "adapter.set_telemetry",
     "adapter.name",
     "adapter.retry",
@@ -439,6 +441,62 @@ async fn method<A: Adapter + ?Sized>(target: Target<'_, A>, op: &str, a: &Args<'
     })
 }
 
+/// Why a recording's steps stopped: a broken case, or an error the library threw.
+enum Stop {
+    Fault(Fault),
+    Thrown(Outcome),
+}
+
+impl From<Fault> for Stop {
+    fn from(f: Fault) -> Self {
+        Stop::Fault(f)
+    }
+}
+
+/// `$cache->recordPurges()` over a callback running `steps` (see `recordPurges()` in Adapter.php):
+/// cache methods, `fail` (an `Exception`) and nested `record`s, whose errors are their results.
+fn record_purges<'a>(cache: &'a Cache, steps: &'a Json) -> Pin<Box<dyn Future<Output = OpResult> + 'a>> {
+    Box::pin(async move {
+        let steps = steps.as_array().ok_or_else(|| Fault::new("steps must be a list"))?;
+        let mut results = Vec::new();
+        let recorded = cache
+            .record_purges(async {
+                for step in steps {
+                    let a = Args(step);
+                    let result = match a.str("op")? {
+                        "fail" => return Err(Stop::Thrown(Outcome::err("Exception", a.str("message")?))),
+                        "record" => record_purges(cache, a.value("steps")?).await?.to_json(),
+                        op => match method(Target::Cache(cache), op, &a).await? {
+                            Outcome::Ok(v) => v,
+                            thrown => return Err(Stop::Thrown(thrown)),
+                        },
+                    };
+                    results.push(result);
+                }
+                Ok(())
+            })
+            .await;
+        match recorded {
+            Ok(purges) => Ok(Outcome::Ok(json!({ "purges": typed::dump(&dump_purges(purges)), "results": results }))),
+            Err(Stop::Thrown(thrown)) => Ok(thrown),
+            Err(Stop::Fault(f)) => Err(f),
+        }
+    })
+}
+
+/// The `[key => [hash => true]]` array PHP returns for `purges`.
+fn dump_purges(purges: Purges) -> Value {
+    let key = |k: &str| ArrayKey::normalize(Str::from(k));
+    Value::Array(
+        purges
+            .iter()
+            .map(|(k, hashes)| {
+                (key(k), Value::Array(hashes.iter().map(|h| (key(h), Value::Bool(true))).collect::<Array>()))
+            })
+            .collect::<Array>(),
+    )
+}
+
 /// What a method runs on: the facade, or an adapter directly.
 enum Target<'a, A: ?Sized> {
     Cache(&'a Cache<A>),
@@ -683,6 +741,10 @@ pub async fn call(op: &str, args: &Json, session: &mut Session) -> OpResult {
         }
         "cache.set_case_sensitivity" => Outcome::ok(cache(session, &a)?.set_case_sensitivity(a.bool("value")?)),
         "cache.case_sensitive" => Outcome::ok(cache(session, &a)?.case_sensitive()),
+        "cache.record_purges" => {
+            let c = cache(session, &a)?;
+            record_purges(&c, a.value("steps")?).await?
+        }
         "cache.set_telemetry" => {
             let t = telemetry(session, a.value("telemetry")?)?;
             cache(session, &a)?.set_telemetry(Arc::new(t));

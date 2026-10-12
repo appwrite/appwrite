@@ -37,9 +37,9 @@ const POLICIES = [
     { name: 'project.policies.passkey.update', route: 'PATCH /v1/project/policies/passkey', path: 'passkey', body: { rpId: '' } },
     { name: 'project.policies.passwordDictionary.update', route: 'PATCH /v1/project/policies/password-dictionary', path: 'password-dictionary', body: { enabled: false } },
     { name: 'project.policies.passwordHistory.update', route: 'PATCH /v1/project/policies/password-history', path: 'password-history', body: { total: null } },
-    { name: 'project.policies.passwordRotation.update', route: 'PATCH /v1/project/policies/password-rotation', path: 'password-rotation', body: { enabled: false } },
     { name: 'project.policies.passwordPersonalData.update', route: 'PATCH /v1/project/policies/password-personal-data', path: 'password-personal-data', body: { enabled: false } },
     { name: 'project.policies.passwordPwned.update', route: 'PATCH /v1/project/policies/password-pwned', path: 'password-pwned', body: { enabled: true, sessions: false, users: false } },
+    { name: 'project.policies.passwordRotation.update', route: 'PATCH /v1/project/policies/password-rotation', path: 'password-rotation', body: { enabled: false, maxAge: 31536000 } },
     {
         name: 'project.policies.passwordStrength.update', route: 'PATCH /v1/project/policies/password-strength', path: 'password-strength',
         body: { min: 8, uppercase: false, lowercase: false, number: false, symbols: false },

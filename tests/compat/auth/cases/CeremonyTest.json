@@ -7530,6 +7530,311 @@
       ]
     },
     {
+      "name": "android app origin matches exactly",
+      "steps": [
+        {
+          "op": "passkeys.ceremony",
+          "args": {
+            "id": "example.com",
+            "name": "Test",
+            "origins": [
+              "https://example.com",
+              "android:apk-key-hash:FG3pg8VzBlDY7rmVLzT8ZBagg0LmHb6oigSWsj_PROU"
+            ]
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "passkeys.register",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "name": "user@example.com",
+            "display_name": "User"
+          },
+          "bind": "ch",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rp": {
+                "id": "example.com",
+                "name": "Test"
+              },
+              "user": {
+                "id": "<masked>",
+                "name": "user@example.com",
+                "displayName": "User"
+              },
+              "pubKeyCredParams": [
+                {
+                  "type": "public-key",
+                  "alg": -7
+                },
+                {
+                  "type": "public-key",
+                  "alg": -257
+                }
+              ],
+              "authenticatorSelection": {
+                "requireResidentKey": true,
+                "userVerification": "required",
+                "residentKey": "required"
+              },
+              "attestation": "none",
+              "excludeCredentials": []
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "register",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "ch",
+              "path": "/options"
+            },
+            "origin": "android:apk-key-hash:FG3pg8VzBlDY7rmVLzT8ZBagg0LmHb6oigSWsj_PROU"
+          },
+          "bind": "cred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "attestationObject": "o2NmbXRkbm9uZWdhdHRTdG10oGhhdXRoRGF0YViUo3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUddAAAAAAAAAAAAAAAAAAAAAAAAAAAAENJM05Pq0zEF4sOSj27A2ZWlAQIDJiABIVggCg6cRTDlWgpOcm-lt8zUh1Qsy3HfQ-knu6r2uaEL4wgiWCBkGpoVufEJHufdQCLjHjtwo_HyJYOQK58_7D7X4tCQ5A",
+              "transports": [
+                "internal"
+              ]
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_registration",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "ch",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "cred"
+            }
+          },
+          "bind": "reg",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 0,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "example.com",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au",
+              "path": "/options"
+            },
+            "origin": "https://example.com",
+            "counter": 1,
+            "user_handle": {
+              "$ref": "ch",
+              "path": "/options/user/id"
+            }
+          },
+          "bind": "acred",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "o3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUcdAAAAAQ",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "acred"
+            },
+            "record": {
+              "$ref": "reg",
+              "path": "/record"
+            }
+          },
+          "bind": "signed",
+          "expect": {
+            "identifier": "df72242d360e1c2f6ba711a34449a1aba780a2a7e0624cf3bee68534c05f5c57",
+            "record": {
+              "publicKeyCredentialId": "0kzTk-rTMQXiw5KPbsDZlQ",
+              "type": "public-key",
+              "transports": [
+                "internal"
+              ],
+              "attestationType": "none",
+              "trustPath": [],
+              "aaguid": "00000000-0000-0000-0000-000000000000",
+              "credentialPublicKey": "pQECAyYgASFYIAoOnEUw5VoKTnJvpbfM1IdULMtx30PpJ7uq9rmhC-MIIlggZBqaFbnxCR7n3UAi4x47cKPx8iWDkCufP-w-1-LQkOQ",
+              "userHandle": "<masked>",
+              "counter": 1,
+              "backupEligible": true,
+              "backupStatus": true,
+              "uvInitialized": true
+            }
+          }
+        },
+        {
+          "op": "$equal",
+          "args": {
+            "a": {
+              "$ref": "reg",
+              "path": "/identifier"
+            },
+            "b": {
+              "$ref": "signed",
+              "path": "/identifier"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "passkeys.authenticate",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            }
+          },
+          "bind": "au2",
+          "expect": {
+            "options": {
+              "challenge": "<masked>",
+              "timeout": 300000,
+              "rpId": "example.com",
+              "allowCredentials": [],
+              "userVerification": "required"
+            },
+            "state": "<masked>"
+          }
+        },
+        {
+          "op": "passkeys.authenticator",
+          "args": {
+            "kind": "authenticate",
+            "key": "-----BEGIN PRIVATE KEY-----\nMIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQglbwwOdQKESzxZgXJ\nUkBy/bJaGpK63dMuUKPUdoY6ayWhRANCAAQKDpxFMOVaCk5yb6W3zNSHVCzLcd9D\n6Se7qva5oQvjCGQamhW58Qke591AIuMeO3Cj8fIlg5Arnz/sPtfi0JDk\n-----END PRIVATE KEY-----\n",
+            "credential_id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "options": {
+              "$ref": "au2",
+              "path": "/options"
+            },
+            "origin": "android:apk-key-hash:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+            "counter": 2,
+            "user_handle": {
+              "$ref": "ch",
+              "path": "/options/user/id"
+            }
+          },
+          "bind": "acred2",
+          "expect": {
+            "id": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "rawId": "0kzTk-rTMQXiw5KPbsDZlQ",
+            "type": "public-key",
+            "response": {
+              "clientDataJSON": "<masked>",
+              "authenticatorData": "o3mm9u6vuaVeN4wRgDTidR5oL6ufLTCrE9ISVYbOGUcdAAAAAg",
+              "signature": "<masked>",
+              "userHandle": "<masked>"
+            },
+            "clientExtensionResults": {}
+          }
+        },
+        {
+          "op": "passkeys.verify_authentication",
+          "args": {
+            "ceremony": {
+              "$ref": "c"
+            },
+            "state": {
+              "$ref": "au2",
+              "path": "/state"
+            },
+            "credential": {
+              "$ref": "acred2"
+            },
+            "record": {
+              "$ref": "reg",
+              "path": "/record"
+            }
+          },
+          "bind": "signed2",
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Auth\\Passkeys\\Exception",
+              "message": "Credential verification failed: Invalid origin. Not in the list of allowed origins."
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "a wildcard origin matches a host that is only its suffix",
       "steps": [
         {

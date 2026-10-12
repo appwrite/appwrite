@@ -211,6 +211,7 @@ final class Adapter implements Base, Benchmarks
             'cache.new' => fn (array $a, Session $s) => $s->handle(new Cache(self::adapter($a['adapter'], $s))),
             'cache.set_case_sensitivity' => fn (array $a, Session $s) => self::cache($a, $s)->setCaseSensitivity($a['value']),
             'cache.case_sensitive' => fn (array $a, Session $s) => self::cache($a, $s)->caseSensitive,
+            'cache.record_purges' => fn (array $a, Session $s) => self::recordPurges(self::cache($a, $s), (array) $a['steps']),
             'cache.set_telemetry' => function (array $a, Session $s) {
                 $telemetry = $s->get($a['telemetry']);
                 self::cache($a, $s)->setTelemetry($telemetry instanceof Telemetry ? $telemetry : throw new Fault('not a telemetry'));
@@ -377,6 +378,36 @@ final class Adapter implements Base, Benchmarks
         }
 
         return Typed::dump($result);
+    }
+
+    /**
+     * `$cache->recordPurges()` over a callback running `steps` on the cache: cache methods
+     * (`{"op": "purge", "key": ...}`), `{"op": "fail", "message"}` throwing an \Exception, and
+     * `{"op": "record", "steps"}`, a nested recording whose error is reported as its result.
+     *
+     * @param array<mixed> $steps
+     * @return array{purges: mixed, results: list<mixed>}
+     */
+    private static function recordPurges(Cache $cache, array $steps): array
+    {
+        $results = [];
+        $purges = $cache->recordPurges(function () use ($cache, $steps, &$results): void {
+            foreach ($steps as $step) {
+                $results[] = match ($step['op']) {
+                    'fail' => throw new \Exception($step['message']),
+                    'record' => (function () use ($cache, $step): mixed {
+                        try {
+                            return self::recordPurges($cache, $step['steps']);
+                        } catch (\Exception $e) {
+                            return ['$error' => ['class' => $e::class, 'message' => $e->getMessage()]];
+                        }
+                    })(),
+                    default => self::call($cache, $step['op'], $step),
+                };
+            }
+        });
+
+        return ['purges' => Typed::dump($purges), 'results' => $results];
     }
 
     /**
