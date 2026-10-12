@@ -15,6 +15,27 @@
           }
         },
         {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
           "op": "database.with_cache",
           "args": {
             "key": "answer",
@@ -333,7 +354,7 @@
           "expect": [
             "default-cache-compat-database-postgres:badname::collection:movies",
             "default-cache-compat-database-postgres:badname::collection:movies:alien",
-            "default-cache-compat-database-postgres:badname::collection:movies:alien:628c024681900fe48fe35915caedb308"
+            "default-cache-compat-database-postgres:badname::collection:movies:alien:9ecd88052f3642db9a6b7c63e9eeb878"
           ]
         },
         {
@@ -362,7 +383,7 @@
           "expect": [
             "default-cache-compat-database-postgres:badname::collection:movies",
             "default-cache-compat-database-postgres:badname::collection:movies:alien",
-            "default-cache-compat-database-postgres:badname::collection:movies:alien:47f212a2a0c38dbe2e95156984ddf4c0"
+            "default-cache-compat-database-postgres:badname::collection:movies:alien:1f0a92d249ba34a168ec06a5c2d2665b"
           ]
         },
         {
@@ -414,7 +435,7 @@
             "result": [
               "default-cache-compat-database-postgres:badname::collection:movies",
               "default-cache-compat-database-postgres:badname::collection:movies:alien",
-              "default-cache-compat-database-postgres:badname::collection:movies:alien:ef368e5131dc058d68f2e2fee652f7da"
+              "default-cache-compat-database-postgres:badname::collection:movies:alien:c0974230fe1f3008af516714853b2d8a"
             ],
             "calls": {
               "callback": [
@@ -424,7 +445,7 @@
                     [
                       "default-cache-compat-database-postgres:badname::collection:movies",
                       "default-cache-compat-database-postgres:badname::collection:movies:alien",
-                      "default-cache-compat-database-postgres:badname::collection:movies:alien:ef368e5131dc058d68f2e2fee652f7da"
+                      "default-cache-compat-database-postgres:badname::collection:movies:alien:c0974230fe1f3008af516714853b2d8a"
                     ]
                   ]
                 }
