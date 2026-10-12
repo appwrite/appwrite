@@ -7,6 +7,7 @@ pub mod compare;
 pub mod config;
 pub mod coverage;
 pub mod crates;
+pub mod dependencies;
 pub mod docs;
 pub mod engine;
 pub mod examples;
