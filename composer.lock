@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "ce3b55bab998fcc888ae01b55bc48acd",
+    "content-hash": "10d9bf325b4e98b6ee74efa5255292df",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,27 +69,32 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "27.1.0",
+            "version": "30.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "24685bc34928c0e5479d4977dc47ea4aa721f025"
+                "reference": "ec301b5d92af2fd99e8a7b1155a8f1016310b2a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/24685bc34928c0e5479d4977dc47ea4aa721f025",
-                "reference": "24685bc34928c0e5479d4977dc47ea4aa721f025",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/ec301b5d92af2fd99e8a7b1155a8f1016310b2a4",
+                "reference": "ec301b5d92af2fd99e8a7b1155a8f1016310b2a4",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "ext-curl": "*",
                 "ext-json": "*",
-                "php": ">=8.2.0"
+                "php": ">=8.5",
+                "utopia-php/client": "^0.6"
             },
             "require-dev": {
-                "mockery/mockery": "1.6.12",
-                "phpunit/phpunit": "^12"
+                "laravel/pint": "^1.25",
+                "mockery/mockery": "1.6.15",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-mockery": "^2.0",
+                "phpunit/phpunit": "^12",
+                "rector/rector": "^2.2"
             },
             "type": "library",
             "autoload": {
@@ -105,10 +110,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/27.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/30.2.2",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-07-24T06:10:52+00:00"
+            "time": "2026-10-12T13:46:08+00:00"
         },
         {
             "name": "appwrite/php-clamav",
@@ -4494,26 +4499,29 @@
         },
         {
             "name": "utopia-php/migration",
-            "version": "3.0.1",
+            "version": "3.1.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/utopia-php/migration.git",
-                "reference": "150b88b46a4f9cb58f83da6352d371fd3f96dcb8"
+                "reference": "0d46eb6592b40daeabe14f06fb0aa0a32cf1500a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/utopia-php/migration/zipball/150b88b46a4f9cb58f83da6352d371fd3f96dcb8",
-                "reference": "150b88b46a4f9cb58f83da6352d371fd3f96dcb8",
+                "url": "https://api.github.com/repos/utopia-php/migration/zipball/0d46eb6592b40daeabe14f06fb0aa0a32cf1500a",
+                "reference": "0d46eb6592b40daeabe14f06fb0aa0a32cf1500a",
                 "shasum": ""
             },
             "require": {
-                "appwrite/appwrite": "^27.0",
+                "appwrite/appwrite": "^30.2.2",
                 "ext-curl": "*",
                 "ext-openssl": "*",
                 "halaxa/json-machine": "^1.2",
                 "php": ">=8.5",
+                "psr/http-client": "^1.0",
+                "utopia-php/client": "^0.6",
                 "utopia-php/database": "^8.0",
                 "utopia-php/dsn": "0.2.*",
+                "utopia-php/psr7": "^0.2.1",
                 "utopia-php/storage": "4.*"
             },
             "require-dev": {
@@ -4549,9 +4557,9 @@
             ],
             "support": {
                 "issues": "https://github.com/utopia-php/migration/issues",
-                "source": "https://github.com/utopia-php/migration/tree/3.0.1"
+                "source": "https://github.com/utopia-php/migration/tree/3.1.0"
             },
-            "time": "2026-10-12T05:43:52+00:00"
+            "time": "2026-10-12T14:11:16+00:00"
         },
         {
             "name": "utopia-php/mongo",
@@ -7412,16 +7420,16 @@
         },
         {
             "name": "symfony/polyfill-php85",
-            "version": "v1.41.0",
+            "version": "v1.43.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-php85.git",
-                "reference": "255fab485aaa1006ed411040c42aecd7b5302d7a"
+                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/255fab485aaa1006ed411040c42aecd7b5302d7a",
-                "reference": "255fab485aaa1006ed411040c42aecd7b5302d7a",
+                "url": "https://api.github.com/repos/symfony/polyfill-php85/zipball/86a42cbcc07adc331481a5ab310a4024bfc227f6",
+                "reference": "86a42cbcc07adc331481a5ab310a4024bfc227f6",
                 "shasum": ""
             },
             "require": {
@@ -7468,7 +7476,7 @@
                 "shim"
             ],
             "support": {
-                "source": "https://github.com/symfony/polyfill-php85/tree/v1.41.0"
+                "source": "https://github.com/symfony/polyfill-php85/tree/v1.43.0"
             },
             "funding": [
                 {
@@ -7488,7 +7496,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-01T12:47:55+00:00"
+            "time": "2026-09-25T15:46:47+00:00"
         },
         {
             "name": "symfony/process",
