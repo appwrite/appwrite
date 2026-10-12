@@ -26,12 +26,6 @@ fn base_attribute(attribute: &str) -> &str {
     attribute.split_once('.').map_or(attribute, |(base, _)| base)
 }
 
-/// The values of `array` at the positions `0..count` (`$array[$i]`, `null`
-/// when unset), as an adapter reads them per index attribute.
-fn positional(array: &Array, count: usize) -> Vec<Value> {
-    (0..count).map(|i| array.get(&ArrayKey::Int(i as i64)).cloned().unwrap_or(Value::Null)).collect()
-}
-
 /// The strings of an index's `attributes`.
 fn strings_at(index: &Document, key: &str) -> Vec<String> {
     match index.get(key) {
@@ -191,13 +185,13 @@ impl Database {
 
         if !exists_in_schema {
             let result = adapter
-                .create_index(
+                .create_index_arrays(
                     collection.id(),
                     id,
                     kind,
                     &attributes,
-                    &positional(&lengths, attributes.len()),
-                    &positional(&orders, attributes.len()),
+                    &lengths,
+                    &orders,
                     &attribute_types,
                     &[],
                     ttl,
@@ -361,13 +355,13 @@ impl Database {
             });
             async move {
                 adapter
-                    .create_index(
+                    .create_index_arrays(
                         &collection_id,
                         &id,
                         &kind,
                         &attributes,
-                        &positional(&lengths, attributes.len()),
-                        &positional(&orders, attributes.len()),
+                        &lengths,
+                        &orders,
                         &attribute_types,
                         &[],
                         ttl,
