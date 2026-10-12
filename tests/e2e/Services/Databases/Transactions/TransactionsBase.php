@@ -4486,6 +4486,11 @@ trait TransactionsBase
             // MongoDB cuts each fractional result toward zero (9, then 7). Main kept the double 9.5 in the integer
             // field and only cut it when read, so its next change started from 9.5; an integer column cannot hold that.
             $this->assertSame(getenv('_APP_DB_ADAPTER') === 'mongodb' ? 7 : 8, $rounded['body']['counter'], 'main stores 8 + 1.5 as 10 and 10 - 1.5 as 8, rounding half to even');
+
+            $reset = $this->client->call(Client::METHOD_PATCH, $url, $keyHeaders, [
+                'data' => ['counter' => 8],
+            ]);
+            $this->assertSame(200, $reset['headers']['status-code']);
         }
 
         $transaction = $this->client->call(Client::METHOD_POST, $this->getTransactionUrl(), $headers);
