@@ -3380,10 +3380,37 @@ trait MigrationsBase
             'email' => false,
             'custom' => true,
         ]);
+        // Plan-gated on Cloud, where the source keeps it disabled; the destination must match the source.
         $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-free-email', $sourceKeyHeaders, [
             'enabled' => true,
         ]);
+        $sourceDenyFreeEmail = $this->client->call(Client::METHOD_GET, '/project/policies/deny-free-email', $sourceKeyHeaders);
+        $this->assertSame(200, $sourceDenyFreeEmail['headers']['status-code']);
 
+        try {
+            $this->assertPoliciesMigrated($sourceProjectId, $destinationKeyHeaders, $sourceDenyFreeEmail['body']['enabled']);
+        } finally {
+            // Restore both projects to defaults, so a failed assertion does not leave policies that break later tests.
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceKeyHeaders, ['total' => 0]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceKeyHeaders, ['enabled' => false]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceKeyHeaders, ['userEmail' => true]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $destinationKeyHeaders, ['total' => 0]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $destinationKeyHeaders, ['enabled' => false]);
+            $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $destinationKeyHeaders, ['userEmail' => true]);
+            foreach ([$sourceKeyHeaders, $destinationKeyHeaders] as $headers) {
+                $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $headers, ['userAccessedAt' => false]);
+                $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $headers, ['min' => 8, 'uppercase' => false, 'number' => false]);
+                $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', $headers, ['email' => true, 'custom' => false]);
+                $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-free-email', $headers, ['enabled' => false]);
+            }
+        }
+    }
+
+    /**
+     * @param array<string, string> $destinationKeyHeaders
+     */
+    private function assertPoliciesMigrated(string $sourceProjectId, array $destinationKeyHeaders, bool $denyFreeEmail): void
+    {
         $result = $this->performMigrationSync([
             'resources' => [
                 Resource::TYPE_POLICIES,
@@ -3426,23 +3453,9 @@ trait MigrationsBase
         $this->assertFalse($mfaFactors['body']['email']);
         $this->assertTrue($mfaFactors['body']['custom']);
 
-        $denyFreeEmail = $this->client->call(Client::METHOD_GET, '/project/policies/deny-free-email', $destinationKeyHeaders);
-        $this->assertSame(200, $denyFreeEmail['headers']['status-code']);
-        $this->assertTrue($denyFreeEmail['body']['enabled']);
-
-        // Restore both projects to defaults.
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $sourceKeyHeaders, ['total' => 0]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $sourceKeyHeaders, ['enabled' => false]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $sourceKeyHeaders, ['userEmail' => true]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/password-history', $destinationKeyHeaders, ['total' => 0]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/session-alert', $destinationKeyHeaders, ['enabled' => false]);
-        $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $destinationKeyHeaders, ['userEmail' => true]);
-        foreach ([$sourceKeyHeaders, $destinationKeyHeaders] as $headers) {
-            $this->client->call(Client::METHOD_PATCH, '/project/policies/membership-privacy', $headers, ['userAccessedAt' => false]);
-            $this->client->call(Client::METHOD_PATCH, '/project/policies/password-strength', $headers, ['min' => 8, 'uppercase' => false, 'number' => false]);
-            $this->client->call(Client::METHOD_PATCH, '/project/policies/mfa-factors', $headers, ['email' => true, 'custom' => false]);
-            $this->client->call(Client::METHOD_PATCH, '/project/policies/deny-free-email', $headers, ['enabled' => false]);
-        }
+        $destinationDenyFreeEmail = $this->client->call(Client::METHOD_GET, '/project/policies/deny-free-email', $destinationKeyHeaders);
+        $this->assertSame(200, $destinationDenyFreeEmail['headers']['status-code']);
+        $this->assertSame($denyFreeEmail, $destinationDenyFreeEmail['body']['enabled']);
     }
 
     public function testAppwriteMigrationSMTP(): void
