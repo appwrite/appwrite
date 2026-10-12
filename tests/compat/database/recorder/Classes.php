@@ -4,7 +4,7 @@ namespace Tests\Compat\Database\Recorder;
 
 /**
  * Generates the recording subclasses (RecordingDatabase, RecordingPostgres,
- * RecordingAuthorization): every public, non-static, non-final method is
+ * RecordingMariaDB, RecordingMySQL, RecordingAuthorization): every public, non-static, non-final method is
  * overridden to go through Recorder::call with the same signature.
  */
 final class Classes
@@ -14,6 +14,8 @@ final class Classes
         $code = 'namespace Tests\\Compat\\Database\\Recorder;' . "\n"
             . self::subclass(\Utopia\Database\Database::class, 'RecordingDatabase', 'database', ['getAdapter', 'getAuthorization'])
             . self::subclass(\Utopia\Database\Adapter\Postgres::class, 'RecordingPostgres', 'adapter', [])
+            . self::subclass(\Utopia\Database\Adapter\MariaDB::class, 'RecordingMariaDB', 'adapter', [])
+            . self::subclass(\Utopia\Database\Adapter\MySQL::class, 'RecordingMySQL', 'adapter', [])
             . self::subclass(\Utopia\Database\Validator\Authorization::class, 'RecordingAuthorization', 'authorization', ['isValid', 'getDescription', 'isArray', 'getType'])
             . <<<'PHP'
                 /**

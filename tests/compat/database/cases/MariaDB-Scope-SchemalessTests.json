@@ -1,0 +1,2216 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/SchemalessTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/MariaDBTest.php"
+    ],
+    "cases": [
+        {
+            "name": "SchemalessTests::testSchemalessDocumentOperation",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessDocumentInvalidInteralAttributeValidation",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessSelectionOnUnknownAttributes",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessIncrement",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessDecrement",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessUpdateDocumentWithQuery",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessDeleteDocumentWithQuery",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessUpdateDocumentsWithQuery",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessDeleteDocumentsWithQuery",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessOperationsWithCallback",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessIndexCreateListDelete",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessIndexDuplicatePrevention",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessObjectIndexes",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessPermissions",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessInternalAttributes",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessDates",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessExists",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessNotExists",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testElemMatch",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testElemMatchComplex",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessNestedObjectAttributeQueries",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testUpsertFieldRemoval",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessTTLIndexes",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessTTLIndexDuplicatePrevention",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessDatetimeCreationAndFetching",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessTTLExpiry",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessTTLWithCacheExpiry",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testStringAndDatetime",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testStringAndDateWithTTL",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessMongoDotNotationIndexes",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testQueryWithDatetime",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "SchemalessTests::testSchemalessCreatedAndUpdatedAtQuery",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                }
+            ]
+        }
+    ]
+}

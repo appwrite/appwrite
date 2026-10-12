@@ -3,14 +3,17 @@
 /**
  * Ports utopia-php/database's e2e suites to compat cases by recording them.
  *
- *   bin/compat-php tests/compat/database/recorder/record.php <postgres|shared> [<file filter>[,<file filter>...]]
+ *   bin/compat-php tests/compat/database/recorder/record.php <profile> [<file filter>[,<file filter>...]]
  *
  * Runs every test method of tests/e2e/Adapter/PostgresTest.php (`postgres`)
  * or tests/e2e/Adapter/SharedTables/PostgresTest.php (`shared`) against the
- * compat PostgreSQL, in declaration order (honouring @depends and
+ * compat PostgreSQL, or of MariaDBTest/MySQLTest (`mariadb`, `mysql`) and
+ * their SharedTables twins (`shared-mariadb`, `shared-mysql`) against the
+ * compat MariaDB/MySQL, in declaration order (honouring @depends and
  * @dataProvider), with a recording Database, adapter and Authorization. Each
  * test method becomes a self-contained case (see README.md here), written
- * to tests/compat/database/cases/Scope-*.json (and PostgresTest.json); what
+ * to tests/compat/database/cases/[MariaDB-|MySQL-]Scope-*.json (and
+ * PostgresTest.json); what
  * PHP returned while recording goes to recorder/out/<profile>.json for
  * `fidelity.php`. Expectations are then written by `bin/compat record`.
  */
@@ -19,6 +22,7 @@ namespace Tests\Compat\Database\Recorder;
 
 use Tests\Compat\Codec;
 use Tests\Compat\Session;
+use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Database;
 use Utopia\Database\PDO;
@@ -77,9 +81,65 @@ Classes::load();
 
 $profile = $argv[1] ?? 'postgres';
 $filter = $argv[2] ?? null;
-if (!\in_array($profile, ['postgres', 'shared'], true)) {
-    fwrite(STDERR, "usage: record.php <postgres|shared> [<filter>]\n");
+if (!\in_array($profile, Profile::ALL, true)) {
+    fwrite(STDERR, 'usage: record.php <' . implode('|', Profile::ALL) . "> [<filter>]\n");
     exit(2);
+}
+
+/**
+ * What a recording profile runs: the engine (`postgres`, `mariadb`,
+ * `mysql`), whether its tables are shared, and where its cases go.
+ */
+final class Profile
+{
+    public const ALL = ['postgres', 'shared', 'mariadb', 'shared-mariadb', 'mysql', 'shared-mysql'];
+
+    public static function engine(string $profile): string
+    {
+        return match ($profile) {
+            'postgres', 'shared' => 'postgres',
+            default => str_replace('shared-', '', $profile),
+        };
+    }
+
+    public static function shared(string $profile): bool
+    {
+        return $profile === 'shared' || str_starts_with($profile, 'shared-');
+    }
+
+    /** The library's test class (and adapter class) name: `Postgres`, `MariaDB`, `MySQL`. */
+    public static function className(string $profile): string
+    {
+        return match (self::engine($profile)) {
+            'mariadb' => 'MariaDB',
+            'mysql' => 'MySQL',
+            default => 'Postgres',
+        };
+    }
+
+    /** The case files' prefix: none for PostgreSQL, `MariaDB-` or `MySQL-`. */
+    public static function prefix(string $profile): string
+    {
+        return self::engine($profile) === 'postgres' ? '' : self::className($profile) . '-';
+    }
+
+    /** The snapshot the cases take. */
+    public static function state(string $profile): string
+    {
+        $engine = self::engine($profile);
+
+        return $engine === 'postgres' ? 'postgres@database-postgres' : "mysql@database-{$engine}";
+    }
+
+    /** The recorder's schema (database). */
+    public static function schema(string $profile): string
+    {
+        return 'cxrecorder' . (self::shared($profile) ? 's' : 'p') . match (self::engine($profile)) {
+            'mariadb' => 'm',
+            'mysql' => 'y',
+            default => '',
+        };
+    }
 }
 
 /**
@@ -93,16 +153,27 @@ final class Target
 
     public static ?Database $database = null;
 
+    public static function engine(): string
+    {
+        return Profile::engine(self::$profile);
+    }
+
     public static function url(): array
     {
-        return parse_url('postgres://root:password@compat-database-postgres:5432/root');
+        return parse_url(match (self::engine()) {
+            'mariadb' => 'mysql://root:password@compat-database-mariadb:3306',
+            'mysql' => 'mysql://root:password@compat-database-mysql:3306',
+            default => 'postgres://root:password@compat-database-postgres:5432/root',
+        });
     }
 
     public static function pdo(): PDO
     {
         if (self::$pdo === null) {
             $url = self::url();
-            self::$pdo = new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=root", $url['user'], $url['pass'], Postgres::getPDOAttributes());
+            self::$pdo = self::engine() === 'postgres'
+                ? new PDO("pgsql:host={$url['host']};port={$url['port']};dbname=root", $url['user'], $url['pass'], Postgres::getPDOAttributes())
+                : new PDO("mysql:host={$url['host']};port={$url['port']};charset=utf8mb4", $url['user'], $url['pass'], MariaDB::getPDOAttributes());
         }
 
         return self::$pdo;
@@ -119,16 +190,27 @@ final class Target
         $was = Recorder::$on;
         Recorder::$on = false;
         $pdo = self::pdo();
-        $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
-        // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
-        $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
-        $others->execute([Recorder::$schema . '_']);
-        foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
-            $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+        if (self::engine() === 'postgres') {
+            $pdo->exec('DROP SCHEMA IF EXISTS "' . Recorder::$schema . '" CASCADE');
+            // And the tests' other databases, which the recorder isolates as `<schema>_<name>`.
+            $others = $pdo->prepare('SELECT nspname FROM pg_namespace WHERE starts_with(nspname, ?)');
+            $others->execute([Recorder::$schema . '_']);
+            foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
+                $pdo->exec('DROP SCHEMA IF EXISTS "' . $other . '" CASCADE');
+            }
+            $adapter = new RecordingPostgres($pdo);
+        } else {
+            $pdo->exec('DROP DATABASE IF EXISTS `' . Recorder::$schema . '`');
+            $others = $pdo->prepare('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE LEFT(SCHEMA_NAME, ?) = ?');
+            $others->execute([\strlen(Recorder::$schema) + 1, Recorder::$schema . '_']);
+            foreach ($others->fetchAll(\PDO::FETCH_COLUMN) as $other) {
+                $pdo->exec('DROP DATABASE IF EXISTS `' . $other . '`');
+            }
+            $adapter = self::engine() === 'mariadb' ? new RecordingMariaDB($pdo) : new RecordingMySQL($pdo);
         }
-        $database = new RecordingDatabase(new RecordingPostgres($pdo), \Tests\Compat\Database\Core::cache('memory'));
+        $database = new RecordingDatabase($adapter, \Tests\Compat\Database\Core::cache('memory'));
         $database->setAuthorization($authorization)->setDatabase(Recorder::$schema);
-        if (self::$profile === 'shared') {
+        if (Profile::shared(self::$profile)) {
             $database->setSharedTables(true)->setTenant(999)->setNamespace('');
         } else {
             $database->setNamespace('compat');
@@ -296,15 +378,28 @@ final class Target
      */
     public static function open(): array|\stdClass
     {
-        return self::$profile === 'shared' ? ['namespace' => '', 'shared_tables' => true, 'tenant' => 999] : new \stdClass();
+        $open = Profile::shared(self::$profile) ? ['namespace' => '', 'shared_tables' => true, 'tenant' => 999] : [];
+        if (self::engine() !== 'postgres') {
+            $open = ['driver' => self::engine(), ...$open];
+        }
+
+        return $open === [] ? new \stdClass() : $open;
     }
 }
 
 Target::$profile = $profile;
-Recorder::$schema = 'cxrecorder' . ($profile === 'shared' ? 's' : 'p');
+Recorder::$schema = Profile::schema($profile);
 
-$parent = $profile === 'shared' ? 'Tests\\E2E\\Adapter\\SharedTables\\PostgresTest' : 'Tests\\E2E\\Adapter\\PostgresTest';
-$recording = 'Recording' . ($profile === 'shared' ? 'Shared' : 'Postgres') . 'Test';
+$parent = 'Tests\\E2E\\Adapter\\' . (Profile::shared($profile) ? 'SharedTables\\' : '') . Profile::className($profile) . 'Test';
+$recording = 'Recording' . (Profile::shared($profile) ? 'Shared' : '') . Profile::className($profile) . 'Test';
+// The suite's raw statements (deleteColumn/deleteIndex), quoted for the engine.
+if (Target::engine() === 'postgres') {
+    $deleteColumn = '\'ALTER TABLE "\' . Recorder::$schema . \'"."\' . $database->getNamespace() . \'_\' . $collection . \'" DROP COLUMN "\' . $column . \'"\'';
+    $deleteIndex = '\'DROP INDEX "\' . Recorder::$schema . \'"."\' . $database->getNamespace() . \'_\' . $database->getTenant() . \'_\' . $collection . \'_\' . $index . \'"\'';
+} else {
+    $deleteColumn = '\'ALTER TABLE `\' . Recorder::$schema . \'`.`\' . $database->getNamespace() . \'_\' . $collection . \'` DROP COLUMN `\' . $column . \'`\'';
+    $deleteIndex = '\'DROP INDEX `\' . $index . \'` ON `\' . Recorder::$schema . \'`.`\' . $database->getNamespace() . \'_\' . $collection . \'`\'';
+}
 eval(<<<PHP
 namespace Tests\\Compat\\Database\\Recorder;
 
@@ -323,7 +418,7 @@ class {$recording} extends \\{$parent}
         \$this->testDatabase = Recorder::\$schema;
     }
 
-    public function getDatabase(): \\Utopia\\Database\\Database
+    public function getDatabase(bool \$fresh = false): \\Utopia\\Database\\Database
     {
         self::\$pdo = Target::pdo();
 
@@ -333,7 +428,7 @@ class {$recording} extends \\{$parent}
     protected function deleteColumn(string \$collection, string \$column): bool
     {
         \$database = \$this->getDatabase();
-        \$sql = 'ALTER TABLE "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$collection . '" DROP COLUMN "' . \$column . '"';
+        \$sql = {$deleteColumn};
         Recorder::sql(Target::pdo(), \$sql, [\$collection]);
 
         return true;
@@ -342,7 +437,7 @@ class {$recording} extends \\{$parent}
     protected function deleteIndex(string \$collection, string \$index): bool
     {
         \$database = \$this->getDatabase();
-        \$sql = 'DROP INDEX "' . Recorder::\$schema . '"."' . \$database->getNamespace() . '_' . \$database->getTenant() . '_' . \$collection . '_' . \$index . '"';
+        \$sql = {$deleteIndex};
         Recorder::sql(Target::pdo(), \$sql, [\$collection]);
 
         return true;
@@ -496,7 +591,7 @@ $written = $cases->write($root . '/tests/compat/database/cases', $filter);
 @mkdir(__DIR__ . '/out');
 file_put_contents(
     __DIR__ . "/out/{$profile}.json",
-    json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => $cases->originals()]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
+    json_encode(Codec::encode(['tests' => $tests, 'not_ported' => $notPorted, 'originals' => \Tests\Compat\Database\Values::encode($cases->originals())]), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE) . "\n"
 );
 foreach (array_merge(Recorder::$problems, $cases->problems) as $problem) {
     fwrite(STDERR, "problem: {$problem}\n");

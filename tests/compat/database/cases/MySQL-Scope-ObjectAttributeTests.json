@@ -1,0 +1,781 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/ObjectAttributeTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
+    ],
+    "cases": [
+        {
+            "name": "ObjectAttributeTests::testObjectAttribute",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObject",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testObjectAttributeGinIndex",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObjectIndexes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testObjectAttributeInvalidCases",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObject",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testObjectAttributeDefaults",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObject",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testObjectAttributeIntegersBeyondInt32",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObject",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testObjectAttributeEmptyObject",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObject",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testObjectAttributeNestedEmptyObjects",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObject",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testMetadataWithVector",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForVectors",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testNestedObjectAttributeIndexes",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObjectIndexes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testQueryNestedAttribute",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObjectIndexes",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ObjectAttributeTests::testNestedObjectAttributeEdgeCases",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForObject",
+                        "args": {}
+                    }
+                }
+            ]
+        }
+    ]
+}

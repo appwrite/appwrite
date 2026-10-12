@@ -708,9 +708,9 @@ impl MariaDB {
         let mysql = self.mysql();
         let mut columns = Vec::with_capacity(attributes.len());
         for (i, attr_name) in attributes.iter().enumerate() {
-            let attribute = collection_attributes.iter().find(|a| {
-                attr(a, "$id").is_some_and(|v| interpolate(v).eq_ignore_ascii_case(attr_name))
-            });
+            let attribute = collection_attributes
+                .iter()
+                .find(|a| attr(a, "$id").is_some_and(|v| interpolate(v).eq_ignore_ascii_case(attr_name)));
             let order = match orders.get(i) {
                 Some(v) if !is_empty(v) && kind != Database::INDEX_FULLTEXT => interpolate(v),
                 _ => String::new(),

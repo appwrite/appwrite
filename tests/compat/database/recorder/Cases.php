@@ -455,20 +455,21 @@ final class Cases
                     $steps[] = ['op' => 'db.log', 'args' => new \stdClass()];
                 }
             }
-            $case = ['name' => "{$trait}::{$test['name']}", 'state' => ['postgres@database-postgres'], 'steps' => $steps];
+            $case = ['name' => "{$trait}::{$test['name']}", 'state' => [Profile::state($this->profile)], 'steps' => $steps];
             $files[$file]['cases'][] = $case;
             $files[$file]['steps'] += \count($steps);
         }
         $written = [];
         foreach ($files as $file => $data) {
-            $adapter = $this->profile === 'shared' ? 'tests/e2e/Adapter/SharedTables/PostgresTest.php' : 'tests/e2e/Adapter/PostgresTest.php';
+            $class = Profile::className($this->profile);
+            $adapter = 'tests/e2e/Adapter/' . (Profile::shared($this->profile) ? 'SharedTables/' : '') . $class . 'Test.php';
             $base = 'vendor/utopia-php/database/';
-            if ($file === 'PostgresTest.php') {
-                $name = 'PostgresTest.json';
-                $source = [$base . 'tests/e2e/Adapter/PostgresTest.php'];
+            if ($file === $class . 'Test.php') {
+                $name = $class . 'Test.json';
+                $source = [$base . 'tests/e2e/Adapter/' . $class . 'Test.php'];
             } else {
                 $relative = substr($file, \strlen('Scopes/'));
-                $name = 'Scope-' . ($this->profile === 'shared' ? 'SharedTables-' : '') . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
+                $name = Profile::prefix($this->profile) . 'Scope-' . (Profile::shared($this->profile) ? 'SharedTables-' : '') . str_replace('/', '-', substr($relative, 0, -4)) . '.json';
                 $source = [$base . 'tests/e2e/Adapter/' . $file, $base . $adapter];
             }
             if ($filter !== null && array_filter(explode(',', $filter), fn (string $f) => str_contains($name, $f)) === []) {

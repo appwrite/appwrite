@@ -28,6 +28,7 @@
 //! | `Utopia\Database\Validator\Authorization` | [`Authorization`] |
 //! | `Utopia\Database\Adapter` | [`Adapter`] |
 //! | `Utopia\Database\Adapter\Postgres` (with `Adapter\SQL`) | [`adapter::postgres::Postgres`] |
+//! | `Utopia\Database\Adapter\MariaDB`, `Adapter\MySQL` (with `Adapter\SQL`) | `adapter::mariadb::MariaDB` (features `mariadb`, `mysql`; `Flavor`) |
 //! | `Utopia\Database\Exception` and `Exception\*` | [`Error`], [`Kind`] |
 //! | PHP values (`mixed`) | [`Value`] (`php_std::Value` with [`value::Ext`]) |
 //!

@@ -1,0 +1,996 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/CustomDocumentTypeTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/MariaDBTest.php"
+    ],
+    "cases": [
+        {
+            "name": "CustomDocumentTypeTests::testSetDocumentType",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "users",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "users"
+                    }
+                },
+                {
+                    "op": "database.clear_document_type",
+                    "args": {
+                        "collection": "users"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testGetDocumentTypeReturnsNull",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "nonexistent_collection"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testSetDocumentTypeWithInvalidClass",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "users",
+                        "className": "NonExistentClass"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testSetDocumentTypeWithNonDocumentClass",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "users",
+                        "className": "stdClass"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testClearDocumentType",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "users",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "users"
+                    }
+                },
+                {
+                    "op": "database.clear_document_type",
+                    "args": {
+                        "collection": "users"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "users"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testClearAllDocumentTypes",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "users",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "posts",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "users"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "posts"
+                    }
+                },
+                {
+                    "op": "database.clear_all_document_types",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "users"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "posts"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testMethodChaining",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "users",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "users",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "posts",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "users"
+                    }
+                },
+                {
+                    "op": "database.get_document_type",
+                    "args": {
+                        "collection": "posts"
+                    }
+                },
+                {
+                    "op": "database.clear_all_document_types",
+                    "args": {}
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testCustomDocumentTypeWithGetDocument",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "customUsers",
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "customUsers",
+                        "id": "email",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "customUsers",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "customUsers",
+                        "id": "status",
+                        "type": "string",
+                        "size": 50,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "customUsers",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "customUsers",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000005",
+                                "email": "test@example.com",
+                                "name": "Test User",
+                                "status": "active",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "customUsers",
+                        "id": "u0000000000000000005"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "customUsers"
+                    }
+                },
+                {
+                    "op": "database.clear_document_type",
+                    "args": {
+                        "collection": "customUsers"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testCustomDocumentTypeWithFind",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "customPosts",
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "customPosts",
+                        "id": "title",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "customPosts",
+                        "id": "content",
+                        "type": "string",
+                        "size": 5000,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "customPosts",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestPost"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "customPosts",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000006",
+                                "title": "First Post",
+                                "content": "This is the first post",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "customPosts",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000007",
+                                "title": "Second Post",
+                                "content": "This is the second post",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "customPosts",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        10
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "customPosts"
+                    }
+                },
+                {
+                    "op": "database.clear_document_type",
+                    "args": {
+                        "collection": "customPosts"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testCustomDocumentTypeWithUpdateDocument",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "customUsersUpdate",
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "customUsersUpdate",
+                        "id": "email",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "customUsersUpdate",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "customUsersUpdate",
+                        "id": "status",
+                        "type": "string",
+                        "size": 50,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.set_document_type",
+                    "args": {
+                        "collection": "customUsersUpdate",
+                        "className": "Tests\\E2E\\Adapter\\Scopes\\TestUser"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "customUsersUpdate",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000008",
+                                "email": "original@example.com",
+                                "name": "Original Name",
+                                "status": "active",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "customUsersUpdate",
+                        "id": "u0000000000000000008",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000008",
+                                "email": "updated@example.com",
+                                "name": "Updated Name",
+                                "status": "inactive"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "customUsersUpdate"
+                    }
+                },
+                {
+                    "op": "database.clear_document_type",
+                    "args": {
+                        "collection": "customUsersUpdate"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "CustomDocumentTypeTests::testDefaultDocumentForUnmappedCollection",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "label:reader"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "unmappedCollection",
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "unmappedCollection",
+                        "id": "data",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "unmappedCollection",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000009",
+                                "data": "test data",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "unmappedCollection"
+                    }
+                }
+            ]
+        }
+    ]
+}

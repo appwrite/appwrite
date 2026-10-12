@@ -920,16 +920,12 @@
     }
   ],
   "tests_waived": {
-    "vendor/utopia-php/database/tests/e2e/Adapter/MariaDBTest.php": "Phase 2: the MariaDB adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
-    "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php": "Phase 2: the MySQL adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/SQLiteTest.php": "Phase 2: the SQLite adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/MemoryTest.php": "Phase 2: the Memory adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/MongoDBTest.php": "Phase 3: the MongoDB adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/RedisTest.php": "Phase 3: the Redis adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/PoolTest.php": "Phase 3: the Pool adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/MirrorTest.php": "Phase 3: the Mirror adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
-    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MariaDBTest.php": "Phase 2: the MariaDB adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
-    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php": "Phase 2: the MySQL adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/SQLiteTest.php": "Phase 2: the SQLite adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MongoDBTest.php": "Phase 3: the MongoDB adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
     "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/RedisTest.php": "Phase 3: the Redis adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",

@@ -1,0 +1,5144 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/Relationships/ManyToOneTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php"
+    ],
+    "cases": [
+        {
+            "name": "ManyToOneTests::testManyToOneOneWayRelationship",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "review"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "movie"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "review",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "movie",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "movie",
+                        "id": "length",
+                        "type": "integer",
+                        "size": 0,
+                        "required": true,
+                        "formatOptions": {
+                            "min": 0,
+                            "max": 999
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "movie",
+                        "id": "date",
+                        "type": "datetime",
+                        "size": 0,
+                        "required": false,
+                        "filters": [
+                            "datetime"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "review",
+                        "id": "date",
+                        "type": "datetime",
+                        "size": 0,
+                        "required": false,
+                        "filters": [
+                            "datetime"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "review",
+                        "relatedCollection": "movie",
+                        "type": "manyToOne",
+                        "twoWayKey": "reviews"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "id": "review"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "id": "movie"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "review",
+                        "document": {
+                            "$document": {
+                                "$id": "review1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Review 1",
+                                "date": "2023-04-03 10:35:27.390",
+                                "movie": {
+                                    "$id": "movie1",
+                                    "$permissions": [
+                                        "read(\"any\")",
+                                        "update(\"any\")",
+                                        "delete(\"any\")"
+                                    ],
+                                    "name": "Movie 1",
+                                    "date": "2023-04-03 10:35:27.390",
+                                    "length": 120
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1",
+                        "document": {
+                            "$document": {
+                                "$id": "review1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Review 1",
+                                "date": "2023-04-03T10:35:27.390+00:00",
+                                "$collection": "review",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "1",
+                                "movie": "no-movie"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1",
+                        "document": {
+                            "$document": {
+                                "$id": "review1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Review 1",
+                                "date": "2023-04-03T10:35:27.390+00:00",
+                                "$collection": "review",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "1",
+                                "movie": "movie1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "review",
+                        "document": {
+                            "$document": {
+                                "$id": "review10",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Review 10",
+                                "movie": "movie1",
+                                "date": "2023-04-03 10:35:27.390"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "movie",
+                        "document": {
+                            "$document": {
+                                "$id": "movie2",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Movie 2",
+                                "length": 90,
+                                "date": "2023-04-03 10:35:27.390"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "review",
+                        "document": {
+                            "$document": {
+                                "$id": "review2",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Review 2",
+                                "movie": "movie2",
+                                "date": "2023-04-03 10:35:27.390"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "review",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "date",
+                                        "movie.date"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "movie",
+                        "id": "movie1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "movie",
+                        "id": "movie2"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "review"
+                    }
+                },
+                {
+                    "op": "database.find_one",
+                    "args": {
+                        "collection": "review",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "*",
+                                        "movie.name"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "*",
+                                        "movie.name"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1",
+                        "document": {
+                            "$document": {
+                                "$id": "review1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Review 1 Updated",
+                                "date": "2023-04-03T10:35:27.390+00:00",
+                                "$collection": "review",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "1",
+                                "movie": "movie1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1",
+                        "document": {
+                            "$document": {
+                                "name": "Review 1 Updated",
+                                "date": "2023-04-03T10:35:27.390+00:00",
+                                "$sequence": "1",
+                                "$id": "review1",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "review",
+                                "movie": {
+                                    "name": "Movie 1 Updated",
+                                    "length": 120,
+                                    "date": "2023-04-03T10:35:27.390+00:00",
+                                    "$id": "movie1",
+                                    "$sequence": "1",
+                                    "$createdAt": {
+                                        "$now": 0,
+                                        "format": "Y-m-d\\TH:i:s.vP"
+                                    },
+                                    "$updatedAt": {
+                                        "$now": 0,
+                                        "format": "Y-m-d\\TH:i:s.vP"
+                                    },
+                                    "$permissions": [
+                                        "read(\"any\")",
+                                        "update(\"any\")",
+                                        "delete(\"any\")"
+                                    ],
+                                    "$collection": "movie"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "review",
+                        "document": {
+                            "$document": {
+                                "$id": "review5",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Review 5"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review5",
+                        "document": {
+                            "$document": {
+                                "$id": "review5",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Review 5",
+                                "$collection": "review",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "4",
+                                "date": null,
+                                "movie": {
+                                    "$id": "movie5",
+                                    "$permissions": [
+                                        "read(\"any\")",
+                                        "update(\"any\")",
+                                        "delete(\"any\")"
+                                    ],
+                                    "name": "Movie 5",
+                                    "length": 90
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review5"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1",
+                        "document": {
+                            "$document": {
+                                "name": "Review 1 Updated",
+                                "date": "2023-04-03T10:35:27.390+00:00",
+                                "$sequence": "1",
+                                "$id": "review1",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "review",
+                                "movie": "movie2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "review",
+                        "id": "movie",
+                        "newKey": "newMovie"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1",
+                        "document": {
+                            "$document": {
+                                "name": "Review 1 Updated",
+                                "date": "2023-04-03T10:35:27.390+00:00",
+                                "$sequence": "1",
+                                "$id": "review1",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "review",
+                                "newMovie": "movie1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "movie",
+                        "document": {
+                            "$document": {
+                                "$id": "movie3",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Movie 3",
+                                "length": 90
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "movie",
+                        "id": "movie3"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "movie",
+                        "id": "movie3"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "movie",
+                        "id": "movie1"
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "review",
+                        "id": "newMovie",
+                        "onDelete": "setNull"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "movie",
+                        "id": "movie1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1"
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "review",
+                        "id": "newMovie",
+                        "onDelete": "cascade"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "movie",
+                        "id": "movie2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "movie",
+                        "id": "movie2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review2"
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "review",
+                        "id": "newMovie"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "review",
+                        "id": "review1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testManyToOneTwoWayRelationship",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "product"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "store"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "store",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "store",
+                        "id": "opensAt",
+                        "type": "string",
+                        "size": 5,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "product",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "product",
+                        "relatedCollection": "store",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "twoWayKey": "products"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "id": "product"
+                    }
+                },
+                {
+                    "op": "database.get_collection",
+                    "args": {
+                        "id": "store"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "product",
+                        "document": {
+                            "$document": {
+                                "$id": "product1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Product 1",
+                                "store": {
+                                    "$id": "store1",
+                                    "$permissions": [
+                                        "read(\"any\")",
+                                        "update(\"any\")",
+                                        "delete(\"any\")"
+                                    ],
+                                    "name": "Store 1",
+                                    "opensAt": "09:00"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1",
+                        "document": {
+                            "$document": {
+                                "$id": "product1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Product 1",
+                                "$collection": "product",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "1",
+                                "store": "no-store"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1",
+                        "document": {
+                            "$document": {
+                                "$id": "product1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Product 1",
+                                "$collection": "product",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "1",
+                                "store": "store1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "store",
+                        "document": {
+                            "$document": {
+                                "$id": "store2",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Store 2",
+                                "opensAt": "09:30"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "product",
+                        "document": {
+                            "$document": {
+                                "$id": "product2",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Product 2",
+                                "store": "store2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "store",
+                        "document": {
+                            "$document": {
+                                "$id": "store3",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Store 3",
+                                "opensAt": "11:30",
+                                "products": [
+                                    {
+                                        "$id": "product3",
+                                        "$permissions": [
+                                            "read(\"any\")",
+                                            "update(\"any\")",
+                                            "delete(\"any\")"
+                                        ],
+                                        "name": "Product 3"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "product",
+                        "document": {
+                            "$document": {
+                                "$id": "product4",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Product 4"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "store",
+                        "document": {
+                            "$document": {
+                                "$id": "store4",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Store 4",
+                                "opensAt": "11:30",
+                                "products": [
+                                    "product4"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product3"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product4"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store3"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store4"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "product"
+                    }
+                },
+                {
+                    "op": "database.find_one",
+                    "args": {
+                        "collection": "product",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "*",
+                                        "store.name"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "*",
+                                        "store.name"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1",
+                        "document": {
+                            "$document": {
+                                "$id": "product1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Product 1 Updated",
+                                "$collection": "product",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "1",
+                                "store": "store1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1",
+                        "document": {
+                            "$document": {
+                                "name": "Store 1 Updated",
+                                "opensAt": "09:00",
+                                "$sequence": "1",
+                                "$id": "store1",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "store",
+                                "products": [
+                                    {
+                                        "name": "Product 1 Updated",
+                                        "$id": "product1",
+                                        "$sequence": "1",
+                                        "$createdAt": {
+                                            "$now": 0,
+                                            "format": "Y-m-d\\TH:i:s.vP"
+                                        },
+                                        "$updatedAt": {
+                                            "$now": 0,
+                                            "format": "Y-m-d\\TH:i:s.vP"
+                                        },
+                                        "$permissions": [
+                                            "read(\"any\")",
+                                            "update(\"any\")",
+                                            "delete(\"any\")"
+                                        ],
+                                        "$collection": "product"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1",
+                        "document": {
+                            "$document": {
+                                "name": "Product 1 Updated",
+                                "$sequence": "1",
+                                "$id": "product1",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "product",
+                                "store": {
+                                    "name": "Store 1 Updated",
+                                    "opensAt": "09:00",
+                                    "$id": "store1",
+                                    "$sequence": "1",
+                                    "$createdAt": {
+                                        "$now": 0,
+                                        "format": "Y-m-d\\TH:i:s.vP"
+                                    },
+                                    "$updatedAt": {
+                                        "$now": 0,
+                                        "format": "Y-m-d\\TH:i:s.vP"
+                                    },
+                                    "$permissions": [
+                                        "read(\"any\")",
+                                        "update(\"any\")",
+                                        "delete(\"any\")"
+                                    ],
+                                    "$collection": "store"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1",
+                        "document": {
+                            "$document": {
+                                "name": "Store 1 Updated",
+                                "opensAt": "09:00",
+                                "$sequence": "1",
+                                "$id": "store1",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "store",
+                                "products": [
+                                    {
+                                        "name": "Product 1 Updated",
+                                        "$id": "product1",
+                                        "$sequence": "1",
+                                        "$createdAt": {
+                                            "$now": 0,
+                                            "format": "Y-m-d\\TH:i:s.vP"
+                                        },
+                                        "$updatedAt": {
+                                            "$now": 0,
+                                            "format": "Y-m-d\\TH:i:s.vP"
+                                        },
+                                        "$permissions": [
+                                            "read(\"any\")",
+                                            "update(\"any\")",
+                                            "delete(\"any\")"
+                                        ],
+                                        "$collection": "product"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "product",
+                        "document": {
+                            "$document": {
+                                "$id": "product5",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Product 5"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product5",
+                        "document": {
+                            "$document": {
+                                "$id": "product5",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Product 5",
+                                "$collection": "product",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "5",
+                                "store": {
+                                    "$id": "store5",
+                                    "$permissions": [
+                                        "read(\"any\")",
+                                        "update(\"any\")",
+                                        "delete(\"any\")"
+                                    ],
+                                    "name": "Store 5",
+                                    "opensAt": "09:00"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product5"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "store",
+                        "document": {
+                            "$document": {
+                                "$id": "store6",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Store 6",
+                                "opensAt": "09:00"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store6",
+                        "document": {
+                            "$document": {
+                                "$id": "store6",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Store 6",
+                                "opensAt": "09:00",
+                                "$collection": "store",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$sequence": "6",
+                                "products": [
+                                    {
+                                        "$id": "product6",
+                                        "$permissions": [
+                                            "read(\"any\")",
+                                            "update(\"any\")",
+                                            "delete(\"any\")"
+                                        ],
+                                        "name": "Product 6"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store6"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1",
+                        "document": {
+                            "$document": {
+                                "name": "Product 1 Updated",
+                                "$sequence": "1",
+                                "$id": "product1",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "product",
+                                "store": "store2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1",
+                        "document": {
+                            "$document": {
+                                "name": "Store 1 Updated",
+                                "opensAt": "09:00",
+                                "$sequence": "1",
+                                "$id": "store1",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "store",
+                                "products": [
+                                    "product1"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store2"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store2",
+                        "document": {
+                            "$document": {
+                                "name": "Store 2",
+                                "opensAt": "09:30",
+                                "$sequence": "2",
+                                "$id": "store2",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "store",
+                                "products": [
+                                    "product1",
+                                    "product2"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "product",
+                        "id": "store",
+                        "newKey": "newStore",
+                        "newTwoWayKey": "newProducts"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1",
+                        "document": {
+                            "$document": {
+                                "name": "Store 1 Updated",
+                                "opensAt": "09:00",
+                                "$sequence": "1",
+                                "$id": "store1",
+                                "$createdAt": {
+                                    "$now": -1,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "$collection": "store",
+                                "newProducts": [
+                                    "product1"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "store",
+                        "document": {
+                            "$document": {
+                                "$id": "store7",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Store 7",
+                                "opensAt": "09:00"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store7"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store7"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product5"
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "product",
+                        "id": "newStore",
+                        "onDelete": "setNull"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "store",
+                        "document": {
+                            "$document": {
+                                "$id": "store8",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Store 8",
+                                "opensAt": "10:00"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store8"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store8"
+                    }
+                },
+                {
+                    "op": "database.update_relationship",
+                    "args": {
+                        "collection": "product",
+                        "id": "newStore",
+                        "onDelete": "cascade"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product2"
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "product",
+                        "id": "newStore"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "product",
+                        "id": "product1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "store",
+                        "id": "store1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testNestedManyToOne_OneToOneRelationship",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "towns"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "homelands"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "capitals"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "towns",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "homelands",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "capitals",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "towns",
+                        "relatedCollection": "homelands",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "homeland"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "homelands",
+                        "relatedCollection": "capitals",
+                        "type": "oneToOne",
+                        "twoWay": true,
+                        "id": "capital",
+                        "twoWayKey": "homeland"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "towns",
+                        "document": {
+                            "$document": {
+                                "$id": "town1",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "City 1",
+                                "homeland": {
+                                    "$id": "homeland1",
+                                    "$permissions": [
+                                        "read(\"any\")"
+                                    ],
+                                    "name": "Country 1",
+                                    "capital": {
+                                        "$id": "capital1",
+                                        "$permissions": [
+                                            "read(\"any\")"
+                                        ],
+                                        "name": "Flag 1"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "towns",
+                        "id": "town1"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "capitals",
+                        "document": {
+                            "$document": {
+                                "$id": "capital2",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "Flag 2",
+                                "homeland": {
+                                    "$id": "homeland2",
+                                    "$permissions": [
+                                        "read(\"any\")"
+                                    ],
+                                    "name": "Country 2",
+                                    "towns": [
+                                        {
+                                            "$id": "town2",
+                                            "$permissions": [
+                                                "read(\"any\")"
+                                            ],
+                                            "name": "Town 2"
+                                        },
+                                        {
+                                            "$id": "town3",
+                                            "$permissions": [
+                                                "read(\"any\")"
+                                            ],
+                                            "name": "Town 3"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "capitals",
+                        "id": "capital2"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testNestedManyToOne_OneToManyRelationship",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "players"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "teams"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "supporters"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "players",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "teams",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "supporters",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "players",
+                        "relatedCollection": "teams",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "team"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "teams",
+                        "relatedCollection": "supporters",
+                        "type": "oneToMany",
+                        "twoWay": true,
+                        "id": "supporters",
+                        "twoWayKey": "team"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "players",
+                        "document": {
+                            "$document": {
+                                "$id": "player1",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "Player 1",
+                                "team": {
+                                    "$id": "team1",
+                                    "$permissions": [
+                                        "read(\"any\")"
+                                    ],
+                                    "name": "Team 1",
+                                    "supporters": [
+                                        {
+                                            "$id": "supporter1",
+                                            "$permissions": [
+                                                "read(\"any\")"
+                                            ],
+                                            "name": "Supporter 1"
+                                        },
+                                        {
+                                            "$id": "supporter2",
+                                            "$permissions": [
+                                                "read(\"any\")"
+                                            ],
+                                            "name": "Supporter 2"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "players",
+                        "id": "player1"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "supporters",
+                        "document": {
+                            "$document": {
+                                "$id": "supporter3",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "Supporter 3",
+                                "team": {
+                                    "$id": "team2",
+                                    "$permissions": [
+                                        "read(\"any\")"
+                                    ],
+                                    "name": "Team 2",
+                                    "players": [
+                                        {
+                                            "$id": "player2",
+                                            "$permissions": [
+                                                "read(\"any\")"
+                                            ],
+                                            "name": "Player 2"
+                                        },
+                                        {
+                                            "$id": "player3",
+                                            "$permissions": [
+                                                "read(\"any\")"
+                                            ],
+                                            "name": "Player 3"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "supporters",
+                        "id": "supporter3"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testNestedManyToOne_ManyToOne",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "cows"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "farms"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "farmer"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "cows",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "farms",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "farmer",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "cows",
+                        "relatedCollection": "farms",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "farm"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "farms",
+                        "relatedCollection": "farmer",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "farmer"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "cows",
+                        "document": {
+                            "$document": {
+                                "$id": "cow1",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "Cow 1",
+                                "farm": {
+                                    "$id": "farm1",
+                                    "$permissions": [
+                                        "read(\"any\")"
+                                    ],
+                                    "name": "Farm 1",
+                                    "farmer": {
+                                        "$id": "farmer1",
+                                        "$permissions": [
+                                            "read(\"any\")"
+                                        ],
+                                        "name": "Farmer 1"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "cows",
+                        "id": "cow1"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "farmer",
+                        "document": {
+                            "$document": {
+                                "$id": "farmer2",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "Farmer 2",
+                                "farms": [
+                                    {
+                                        "$id": "farm2",
+                                        "$permissions": [
+                                            "read(\"any\")"
+                                        ],
+                                        "name": "Farm 2",
+                                        "cows": [
+                                            {
+                                                "$id": "cow2",
+                                                "$permissions": [
+                                                    "read(\"any\")"
+                                                ],
+                                                "name": "Cow 2"
+                                            },
+                                            {
+                                                "$id": "cow3",
+                                                "$permissions": [
+                                                    "read(\"any\")"
+                                                ],
+                                                "name": "Cow 3"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "farmer",
+                        "id": "farmer2"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testNestedManyToOne_ManyToManyRelationship",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "books"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "entrants"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "rooms"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "books",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "entrants",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "rooms",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "books",
+                        "relatedCollection": "entrants",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "entrant"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "entrants",
+                        "relatedCollection": "rooms",
+                        "type": "manyToMany",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "books",
+                        "document": {
+                            "$document": {
+                                "$id": "book1",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "name": "Book 1",
+                                "entrant": {
+                                    "$id": "entrant1",
+                                    "$permissions": [
+                                        "read(\"any\")"
+                                    ],
+                                    "name": "Entrant 1",
+                                    "rooms": [
+                                        {
+                                            "$id": "class1",
+                                            "$permissions": [
+                                                "read(\"any\")"
+                                            ],
+                                            "name": "Class 1"
+                                        },
+                                        {
+                                            "$id": "class2",
+                                            "$permissions": [
+                                                "read(\"any\")"
+                                            ],
+                                            "name": "Class 2"
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "books",
+                        "id": "book1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testExceedMaxDepthManyToOneParent",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "level1ManyToOneParent"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "level2ManyToOneParent"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "level3ManyToOneParent"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "level4ManyToOneParent"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "level1ManyToOneParent",
+                        "relatedCollection": "level2ManyToOneParent",
+                        "type": "manyToOne",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "level2ManyToOneParent",
+                        "relatedCollection": "level3ManyToOneParent",
+                        "type": "manyToOne",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "level3ManyToOneParent",
+                        "relatedCollection": "level4ManyToOneParent",
+                        "type": "manyToOne",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "level1ManyToOneParent",
+                        "document": {
+                            "$document": {
+                                "$id": "level1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ],
+                                "level2ManyToOneParent": {
+                                    "$id": "level2",
+                                    "level3ManyToOneParent": {
+                                        "$id": "level3",
+                                        "level4ManyToOneParent": {
+                                            "$id": "level4"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "level3ManyToOneParent",
+                        "id": "level3"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "level3ManyToOneParent",
+                        "id": "level3",
+                        "document": {
+                            "$document": {
+                                "$sequence": "1",
+                                "$id": "level3",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ],
+                                "$collection": "level3ManyToOneParent",
+                                "level4ManyToOneParent": {
+                                    "$id": "level4"
+                                },
+                                "level2ManyToOneParent": [
+                                    {
+                                        "$id": "level2",
+                                        "$sequence": "1",
+                                        "$createdAt": {
+                                            "$now": 0,
+                                            "format": "Y-m-d\\TH:i:s.vP"
+                                        },
+                                        "$updatedAt": {
+                                            "$now": 0,
+                                            "format": "Y-m-d\\TH:i:s.vP"
+                                        },
+                                        "$permissions": [
+                                            "read(\"any\")",
+                                            "update(\"any\")"
+                                        ],
+                                        "$collection": "level2ManyToOneParent",
+                                        "level1ManyToOneParent": [
+                                            {
+                                                "$id": "level1",
+                                                "$sequence": "1",
+                                                "$createdAt": {
+                                                    "$now": 0,
+                                                    "format": "Y-m-d\\TH:i:s.vP"
+                                                },
+                                                "$updatedAt": {
+                                                    "$now": 0,
+                                                    "format": "Y-m-d\\TH:i:s.vP"
+                                                },
+                                                "$permissions": [
+                                                    "read(\"any\")",
+                                                    "update(\"any\")"
+                                                ],
+                                                "$collection": "level1ManyToOneParent"
+                                            }
+                                        ]
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "level3ManyToOneParent",
+                        "id": "level3"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "level1ManyToOneParent",
+                        "id": "level1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testManyToOneRelationshipKeyWithSymbols",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "$symbols_coll.ection5"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "$symbols_coll.ection6"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "$symbols_coll.ection5",
+                        "relatedCollection": "$symbols_coll.ection6",
+                        "type": "manyToOne",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "$symbols_coll.ection6",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000075",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "$symbols_coll.ection5",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000076",
+                                "$symbols_coll.ection6": "u0000000000000000075",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "$symbols_coll.ection6",
+                        "id": "u0000000000000000075"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "$symbols_coll.ection5",
+                        "id": "u0000000000000000076"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testRecreateManyToOneOneWayRelationshipFromParent",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "one",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "format": "",
+                                    "size": 100,
+                                    "signed": true,
+                                    "required": false,
+                                    "default": null,
+                                    "array": false,
+                                    "filters": []
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "two",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "format": "",
+                                    "size": 100,
+                                    "signed": true,
+                                    "required": false,
+                                    "default": null,
+                                    "array": false,
+                                    "filters": []
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "one",
+                        "relatedCollection": "two",
+                        "type": "manyToOne"
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "one",
+                        "id": "two"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "one",
+                        "relatedCollection": "two",
+                        "type": "manyToOne"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "one"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "two"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testRecreateManyToOneOneWayRelationshipFromChild",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "one",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "format": "",
+                                    "size": 100,
+                                    "signed": true,
+                                    "required": false,
+                                    "default": null,
+                                    "array": false,
+                                    "filters": []
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "two",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "format": "",
+                                    "size": 100,
+                                    "signed": true,
+                                    "required": false,
+                                    "default": null,
+                                    "array": false,
+                                    "filters": []
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "one",
+                        "relatedCollection": "two",
+                        "type": "manyToOne"
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "two",
+                        "id": "one"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "one",
+                        "relatedCollection": "two",
+                        "type": "manyToOne"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "one"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "two"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testRecreateManyToOneTwoWayRelationshipFromParent",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "one",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "format": "",
+                                    "size": 100,
+                                    "signed": true,
+                                    "required": false,
+                                    "default": null,
+                                    "array": false,
+                                    "filters": []
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "two",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "format": "",
+                                    "size": 100,
+                                    "signed": true,
+                                    "required": false,
+                                    "default": null,
+                                    "array": false,
+                                    "filters": []
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "one",
+                        "relatedCollection": "two",
+                        "type": "manyToOne",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "one",
+                        "id": "two"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "one",
+                        "relatedCollection": "two",
+                        "type": "manyToOne",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "one"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "two"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testRecreateManyToOneTwoWayRelationshipFromChild",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "one",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "format": "",
+                                    "size": 100,
+                                    "signed": true,
+                                    "required": false,
+                                    "default": null,
+                                    "array": false,
+                                    "filters": []
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "two",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "format": "",
+                                    "size": 100,
+                                    "signed": true,
+                                    "required": false,
+                                    "default": null,
+                                    "array": false,
+                                    "filters": []
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "one",
+                        "relatedCollection": "two",
+                        "type": "manyToOne",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.delete_relationship",
+                    "args": {
+                        "collection": "two",
+                        "id": "one"
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "one",
+                        "relatedCollection": "two",
+                        "type": "manyToOne",
+                        "twoWay": true
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "one"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "two"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testDeleteBulkDocumentsManyToOneRelationship",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForBatchOperations",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "bulk_delete_person_m2o"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "bulk_delete_library_m2o"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "bulk_delete_library_m2o",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "bulk_delete_library_m2o",
+                        "id": "area",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o",
+                        "relatedCollection": "bulk_delete_library_m2o",
+                        "type": "manyToOne"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o",
+                        "document": {
+                            "$document": {
+                                "$id": "person1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Person 1",
+                                "bulk_delete_library_m2o": {
+                                    "$id": "library1",
+                                    "$permissions": [
+                                        "read(\"any\")",
+                                        "update(\"any\")",
+                                        "delete(\"any\")"
+                                    ],
+                                    "name": "Library 1",
+                                    "area": "Area 1"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o",
+                        "document": {
+                            "$document": {
+                                "$id": "person2",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Person 2",
+                                "bulk_delete_library_m2o": {
+                                    "$id": "library1"
+                                }
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o",
+                        "id": "person1"
+                    }
+                },
+                {
+                    "op": "database.delete_documents",
+                    "args": {
+                        "collection": "bulk_delete_library_m2o"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o"
+                    }
+                },
+                {
+                    "op": "database.delete_documents",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o"
+                    }
+                },
+                {
+                    "op": "database.delete_documents",
+                    "args": {
+                        "collection": "bulk_delete_library_m2o"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "bulk_delete_library_m2o"
+                    }
+                },
+                {
+                    "op": "database.delete_documents",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "bulk_delete_person_m2o"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testUpdateParentAndChild_ManyToOne",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForBatchOperations",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "parent_combined_m2o"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "child_combined_m2o"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "parent_combined_m2o",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "child_combined_m2o",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "child_combined_m2o",
+                        "id": "parentNumber",
+                        "type": "integer",
+                        "size": 0,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "child_combined_m2o",
+                        "relatedCollection": "parent_combined_m2o",
+                        "type": "manyToOne"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parent_combined_m2o",
+                        "document": {
+                            "$document": {
+                                "$id": "parent1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Parent 1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "child_combined_m2o",
+                        "document": {
+                            "$document": {
+                                "$id": "child1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Child 1",
+                                "parentNumber": null
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_documents",
+                    "args": {
+                        "collection": "parent_combined_m2o",
+                        "updates": {
+                            "$document": {
+                                "name": "Parent 1 Updated"
+                            }
+                        },
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "equal",
+                                    "attribute": "$id",
+                                    "values": [
+                                        "parent1"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parent_combined_m2o",
+                        "id": "parent1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "child_combined_m2o",
+                        "id": "child1"
+                    }
+                },
+                {
+                    "op": "database.update_documents",
+                    "args": {
+                        "collection": "child_combined_m2o",
+                        "updates": {
+                            "$document": {
+                                "parentNumber": "not-a-number"
+                            }
+                        },
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "equal",
+                                    "attribute": "$id",
+                                    "values": [
+                                        "child1"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parent_combined_m2o",
+                        "id": "parent1"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "parent_combined_m2o"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "child_combined_m2o"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testDeleteDocumentsRelationshipErrorDoesNotDeleteParent_ManyToOne",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForBatchOperations",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "parent_relationship_error_many_to_one"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "child_relationship_error_many_to_one"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "parent_relationship_error_many_to_one",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "child_relationship_error_many_to_one",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "child_relationship_error_many_to_one",
+                        "relatedCollection": "parent_relationship_error_many_to_one",
+                        "type": "manyToOne"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "parent_relationship_error_many_to_one",
+                        "document": {
+                            "$document": {
+                                "$id": "parent1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Parent 1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "child_relationship_error_many_to_one",
+                        "document": {
+                            "$document": {
+                                "$id": "child1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Child 1",
+                                "parent_relationship_error_many_to_one": "parent1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_documents",
+                    "args": {
+                        "collection": "parent_relationship_error_many_to_one",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "equal",
+                                    "attribute": "$id",
+                                    "values": [
+                                        "parent1"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "parent_relationship_error_many_to_one",
+                        "id": "parent1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "child_relationship_error_many_to_one",
+                        "id": "child1"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "parent_relationship_error_many_to_one"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "child_relationship_error_many_to_one"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testPartialUpdateManyToOneParentSide",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "companies"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "employees"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "companies",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "employees",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "employees",
+                        "id": "salary",
+                        "type": "integer",
+                        "size": 0,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "employees",
+                        "relatedCollection": "companies",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "company",
+                        "twoWayKey": "employees"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "companies",
+                        "document": {
+                            "$document": {
+                                "$id": "company1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ],
+                                "name": "Tech Corp"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "companies",
+                        "document": {
+                            "$document": {
+                                "$id": "company2",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ],
+                                "name": "Design Inc"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "employees",
+                        "document": {
+                            "$document": {
+                                "$id": "emp1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ],
+                                "name": "Alice",
+                                "salary": 100000,
+                                "company": "company1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "employees",
+                        "id": "emp1",
+                        "document": {
+                            "$document": {
+                                "$id": "emp1",
+                                "$collection": "employees",
+                                "salary": 120000,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "employees",
+                        "id": "emp1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "employees",
+                        "id": "emp1",
+                        "document": {
+                            "$document": {
+                                "$id": "emp1",
+                                "$collection": "employees",
+                                "company": "company2",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "employees",
+                        "id": "emp1"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "companies"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "employees"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testPartialUpdateManyToOneChildSide",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForRelationships",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "departments"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "staff"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "departments",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "departments",
+                        "id": "budget",
+                        "type": "integer",
+                        "size": 0,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "staff",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "staff",
+                        "relatedCollection": "departments",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "department",
+                        "twoWayKey": "staff"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "departments",
+                        "document": {
+                            "$document": {
+                                "$id": "dept1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ],
+                                "name": "Engineering",
+                                "budget": 1000000,
+                                "staff": [
+                                    {
+                                        "$id": "staff1",
+                                        "$permissions": [
+                                            "read(\"any\")"
+                                        ],
+                                        "name": "Bob"
+                                    },
+                                    {
+                                        "$id": "staff2",
+                                        "$permissions": [
+                                            "read(\"any\")"
+                                        ],
+                                        "name": "Carol"
+                                    }
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "departments",
+                        "id": "dept1",
+                        "document": {
+                            "$document": {
+                                "$id": "dept1",
+                                "$collection": "departments",
+                                "budget": 1200000,
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "departments",
+                        "id": "dept1"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "departments"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "staff"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testManyToOneSetNullAfterSelectDelete",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "mto_select_parent",
+                        "permissions": [
+                            "create(\"any\")",
+                            "read(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "mto_select_child",
+                        "permissions": [
+                            "create(\"any\")",
+                            "read(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "mto_select_parent",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "mto_select_child",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "mto_select_parent",
+                        "relatedCollection": "mto_select_child",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "child",
+                        "twoWayKey": "parent",
+                        "onDelete": "setNull"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "mto_select_child",
+                        "document": {
+                            "$document": {
+                                "$id": "child1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Child"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "mto_select_parent",
+                        "document": {
+                            "$document": {
+                                "$id": "parent1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Parent",
+                                "child": "child1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.delete_documents",
+                    "args": {
+                        "collection": "mto_select_child",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "select",
+                                    "attribute": "",
+                                    "values": [
+                                        "$id",
+                                        "name"
+                                    ]
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "equal",
+                                    "attribute": "$id",
+                                    "values": [
+                                        "child1"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "mto_select_parent",
+                        "id": "parent1"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "ManyToOneTests::testManyToOneSetNullClearsUnreadableReferences",
+            "state": [
+                "mysql@database-mysql"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mysql"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "mto_hidden_product",
+                        "permissions": [
+                            "create(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "mto_hidden_store",
+                        "permissions": [
+                            "create(\"any\")",
+                            "read(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "mto_hidden_product",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "mto_hidden_store",
+                        "id": "name",
+                        "type": "string",
+                        "size": 255,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_relationship",
+                    "args": {
+                        "collection": "mto_hidden_product",
+                        "relatedCollection": "mto_hidden_store",
+                        "type": "manyToOne",
+                        "twoWay": true,
+                        "id": "store",
+                        "twoWayKey": "products",
+                        "onDelete": "setNull"
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "mto_hidden_store",
+                        "document": {
+                            "$document": {
+                                "$id": "store1",
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ],
+                                "name": "Store"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "mto_hidden_product",
+                        "document": {
+                            "$document": {
+                                "$id": "product1",
+                                "$permissions": [
+                                    "read(\"user:someone-else\")",
+                                    "update(\"user:someone-else\")"
+                                ],
+                                "name": "Hidden Product",
+                                "store": "store1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "mto_hidden_product",
+                        "id": "product1"
+                    }
+                },
+                {
+                    "op": "database.delete_document",
+                    "args": {
+                        "collection": "mto_hidden_store",
+                        "id": "store1"
+                    }
+                },
+                {
+                    "op": "db.authorization.skip",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.get_document",
+                                    "args": {
+                                        "collection": "mto_hidden_product",
+                                        "id": "product1"
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                }
+            ]
+        }
+    ]
+}

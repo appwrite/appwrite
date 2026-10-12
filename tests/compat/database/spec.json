@@ -1,6 +1,6 @@
 {
   "lib": "database",
-  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter. Phase 1 of 3: the other adapters are waived until phases 2 and 3 convert them.",
+  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL, MariaDB and MySQL adapters. Phase 1 of 3: the other adapters are waived until phases 2 and 3 convert them.",
   "complete": false,
   "php": {
     "src": [
@@ -22,8 +22,6 @@
   "ops": {},
   "generators": {},
   "waivers": {
-    "Utopia\\Database\\Adapter\\MariaDB::*": "Phase 2: the MariaDB adapter is not converted yet",
-    "Utopia\\Database\\Adapter\\MySQL::*": "Phase 2: the MySQL adapter is not converted yet",
     "Utopia\\Database\\Adapter\\SQLite::*": "Phase 2: the SQLite adapter is not converted yet",
     "Utopia\\Database\\Adapter\\Mongo::*": "Phase 3: the MongoDB adapter (and utopia-php/mongo) is not converted yet",
     "Utopia\\Database\\Adapter\\Memory::*": "Phase 2: the Memory adapter is not converted yet",
@@ -43,7 +41,17 @@
       "create_documents": "One batched INSERT of ten documents on PostgreSQL: the round trip dominates the call",
       "get_document": "One SELECT on PostgreSQL (uncached): the round trip dominates the call",
       "find": "One SELECT over 100 rows on PostgreSQL: the round trip and the server's query dominate the call",
-      "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call"
+      "update_document": "A transaction with a locking read and an UPDATE on PostgreSQL: its round trips dominate the call",
+      "create_document_mariadb": "One INSERT of the document and one of its permissions on MariaDB: the round trips dominate the call",
+      "create_documents_mariadb": "One batched INSERT of ten documents (and one of their permissions) on MariaDB: the round trips dominate the call",
+      "get_document_mariadb": "One SELECT on MariaDB (uncached): the round trip dominates the call",
+      "find_mariadb": "One SELECT over 100 rows on MariaDB: the round trip and the server's query dominate the call",
+      "update_document_mariadb": "A transaction with a locking read and an UPDATE on MariaDB: its round trips dominate the call",
+      "create_document_mysql": "One INSERT of the document and one of its permissions on MySQL: the round trips dominate the call",
+      "create_documents_mysql": "One batched INSERT of ten documents (and one of their permissions) on MySQL: the round trips dominate the call",
+      "get_document_mysql": "One SELECT on MySQL (uncached): the round trip dominates the call",
+      "find_mysql": "One SELECT over 100 rows on MySQL: the round trip and the server's query dominate the call",
+      "update_document_mysql": "A transaction with a locking read and an UPDATE on MySQL: its round trips dominate the call"
     }
   }
 }

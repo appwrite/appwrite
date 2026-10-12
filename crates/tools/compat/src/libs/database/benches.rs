@@ -7,6 +7,8 @@ use std::rc::Rc;
 use std::sync::Arc;
 
 use utopia_cache::Cache;
+use utopia_database::adapter::Adapter;
+use utopia_database::adapter::mariadb::{Flavor, MariaDB};
 use utopia_database::adapter::postgres::Postgres;
 use utopia_database::helpers::id;
 use utopia_database::validator::queries::documents::Documents as DocumentsQueries;
@@ -63,6 +65,19 @@ pub const BENCHES: &[(&str, &str)] = &[
     ("get_document", "Read a user document by id, uncached (one SELECT round trip)"),
     ("find", "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows)"),
     ("update_document", "Update one attribute of a user document (a locking read and one UPDATE)"),
+    ("create_document_mariadb", "Create a user document: validation, encoding and one INSERT round trip on MariaDB"),
+    ("create_documents_mariadb", "Create ten user documents in one batch (one INSERT round trip) on MariaDB"),
+    ("get_document_mariadb", "Read a user document by id, uncached (one SELECT round trip) on MariaDB"),
+    (
+        "find_mariadb",
+        "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MariaDB",
+    ),
+    ("update_document_mariadb", "Update one attribute of a user document (a locking read and one UPDATE) on MariaDB"),
+    ("create_document_mysql", "Create a user document: validation, encoding and one INSERT round trip on MySQL"),
+    ("create_documents_mysql", "Create ten user documents in one batch (one INSERT round trip) on MySQL"),
+    ("get_document_mysql", "Read a user document by id, uncached (one SELECT round trip) on MySQL"),
+    ("find_mysql", "Find users by an indexed name, ordered and limited (one SELECT round trip over 100 rows) on MySQL"),
+    ("update_document_mysql", "Update one attribute of a user document (a locking read and one UPDATE) on MySQL"),
 ];
 
 fn fault(e: impl std::fmt::Display) -> Fault {
@@ -108,16 +123,26 @@ fn collection() -> Result<Document, Fault> {
 /// A database of the benchmarks' collection on the compat PostgreSQL,
 /// uncached, in a schema of its own (dropped first when a run left it), and
 /// the collection's metadata document.
+///
+/// A name ending in `_mariadb` or `_mysql` opens it on that server instead.
 async fn database(session: &mut Session, name: &str) -> Result<(Database, Document), Fault> {
-    let url = session.service("database-postgres").map_err(fault)?.to_owned();
-    open(&url, name).await
+    let (service, flavor) = match name {
+        n if n.ends_with("_mariadb") => ("database-mariadb", Some(Flavor::MariaDB)),
+        n if n.ends_with("_mysql") => ("database-mysql", Some(Flavor::MySQL)),
+        _ => ("database-postgres", None),
+    };
+    let url = session.service(service).map_err(fault)?.to_owned();
+    open(&url, name, flavor).await
 }
 
-/// [`database`] on the server at `url`.
-async fn open(url: &str, name: &str) -> Result<(Database, Document), Fault> {
-    let postgres = Postgres::connect(url).await.map_err(fault)?;
+/// [`database`] on the server at `url` (MariaDB or MySQL for a flavor).
+async fn open(url: &str, name: &str, flavor: Option<Flavor>) -> Result<(Database, Document), Fault> {
+    let adapter: Arc<dyn Adapter> = match flavor {
+        None => Arc::new(Postgres::connect(url).await.map_err(fault)?),
+        Some(flavor) => Arc::new(MariaDB::connect_as(url, flavor).await.map_err(fault)?),
+    };
     let cache = Arc::new(Cache::from_dyn(Arc::new(utopia_cache::None)));
-    let db = Database::new(Arc::new(postgres), cache, Vec::new());
+    let db = Database::new(adapter, cache, Vec::new());
     let authorization = Authorization::new();
     authorization.add_role("any");
     db.set_authorization(Arc::new(authorization));
@@ -182,7 +207,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "create_document" => {
+        "create_document" | "create_document_mariadb" | "create_document_mysql" => {
             let (db, _) = database(session, name).await?;
             let state = Rc::new((db, document()?));
             Bench::future(move || {
@@ -192,7 +217,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "create_documents" => {
+        "create_documents" | "create_documents_mariadb" | "create_documents_mysql" => {
             let (db, _) = database(session, name).await?;
             let state = Rc::new((db, document()?));
             Bench::future(move || {
@@ -205,7 +230,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "get_document" => {
+        "get_document" | "get_document_mariadb" | "get_document_mysql" => {
             let (db, _) = database(session, name).await?;
             db.create_document("users", document()?).await.map_err(fault)?;
             let db = Rc::new(db);
@@ -216,7 +241,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "find" => {
+        "find" | "find_mariadb" | "find_mysql" => {
             let (db, _) = database(session, name).await?;
             let doc = document()?;
             let rows = (1..=100)
@@ -238,7 +263,7 @@ pub async fn bench(name: &str, session: &mut Session) -> Result<Bench, Fault> {
                 }
             })
         }
-        "update_document" => {
+        "update_document" | "update_document_mariadb" | "update_document_mysql" => {
             let (db, _) = database(session, name).await?;
             db.create_document("users", document()?).await.map_err(fault)?;
             let state = Rc::new((db, std::cell::Cell::new(0i64)));

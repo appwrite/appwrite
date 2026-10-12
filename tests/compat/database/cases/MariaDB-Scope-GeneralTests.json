@@ -1,0 +1,3362 @@
+{
+    "source": [
+        "vendor/utopia-php/database/tests/e2e/Adapter/Scopes/GeneralTests.php",
+        "vendor/utopia-php/database/tests/e2e/Adapter/MariaDBTest.php"
+    ],
+    "cases": [
+        {
+            "name": "GeneralTests::testPing",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.ping",
+                    "args": {}
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testQueryTimeout",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForTimeouts",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "global-timeouts"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "id": "longtext",
+                        "type": "string",
+                        "size": 100000000,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.set_timeout",
+                    "args": {
+                        "milliseconds": 1
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "global-timeouts",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "notEqual",
+                                    "attribute": "longtext",
+                                    "values": [
+                                        "appwrite"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.clear_timeout",
+                    "args": {}
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "global-timeouts"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testCountTimeout",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForTimeouts",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "count-timeouts"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "id": "longtext",
+                        "type": "string",
+                        "size": 100000000,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "document": {
+                            "$document": {
+                                "longtext": {
+                                    "$repeat": "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.\nDuis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.\nExcepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.\n",
+                                    "times": 32336
+                                },
+                                "$permissions": [
+                                    "read(\"any\")",
+                                    "update(\"any\")",
+                                    "delete(\"any\")"
+                                ]
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.set_timeout",
+                    "args": {
+                        "milliseconds": 1
+                    }
+                },
+                {
+                    "op": "database.count",
+                    "args": {
+                        "collection": "count-timeouts",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "contains",
+                                    "attribute": "longtext",
+                                    "values": [
+                                        "needle-that-does-not-exist"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.clear_timeout",
+                    "args": {}
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "count-timeouts"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testPreserveDatesUpdate",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.authorization.disable",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.set_preserve_dates",
+                    "args": {
+                        "preserve": true
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "preserve_update_dates"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "id": "attr1",
+                        "type": "string",
+                        "size": 10,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "document": {
+                            "$document": {
+                                "$id": "doc1",
+                                "$permissions": [],
+                                "attr1": "value1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "document": {
+                            "$document": {
+                                "$id": "doc2",
+                                "$permissions": [],
+                                "attr1": "value2"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "document": {
+                            "$document": {
+                                "$id": "doc3",
+                                "$permissions": [],
+                                "attr1": "value3"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "id": "doc1",
+                        "document": {
+                            "$document": {
+                                "$id": "doc1",
+                                "$permissions": [],
+                                "attr1": "value1",
+                                "$collection": "preserve_update_dates",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": "",
+                                "$sequence": "1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.update_documents",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "updates": {
+                            "$document": {
+                                "$updatedAt": ""
+                            }
+                        },
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "equal",
+                                    "attribute": "$id",
+                                    "values": [
+                                        "doc2",
+                                        "doc3"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "id": "doc1",
+                        "document": {
+                            "$document": {
+                                "$id": "doc1",
+                                "$permissions": [],
+                                "attr1": "value1",
+                                "$collection": "preserve_update_dates",
+                                "$createdAt": {
+                                    "$now": 0,
+                                    "format": "Y-m-d\\TH:i:s.vP"
+                                },
+                                "$updatedAt": "2000-01-01T10:00:00.000+00:00",
+                                "$sequence": "1"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "id": "doc1"
+                    }
+                },
+                {
+                    "op": "database.update_documents",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "updates": {
+                            "$document": {
+                                "$updatedAt": "2000-01-01T10:00:00.000+00:00"
+                            }
+                        },
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "equal",
+                                    "attribute": "$id",
+                                    "values": [
+                                        "doc2",
+                                        "doc3"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "id": "doc2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "preserve_update_dates",
+                        "id": "doc3"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "preserve_update_dates"
+                    }
+                },
+                {
+                    "op": "database.set_preserve_dates",
+                    "args": {
+                        "preserve": false
+                    }
+                },
+                {
+                    "op": "db.authorization.reset",
+                    "args": {}
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testPreserveDatesCreate",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.authorization.disable",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForAttributes",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.set_preserve_dates",
+                    "args": {
+                        "preserve": true
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "preserve_create_dates"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "id": "attr1",
+                        "type": "string",
+                        "size": 10,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "document": {
+                            "$document": {
+                                "$id": "doc1",
+                                "$permissions": [],
+                                "attr1": "value1",
+                                "$createdAt": ""
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_documents",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "doc2",
+                                    "$permissions": [],
+                                    "attr1": "value2",
+                                    "$createdAt": ""
+                                }
+                            },
+                            {
+                                "$document": {
+                                    "$id": "doc3",
+                                    "$permissions": [],
+                                    "attr1": "value3",
+                                    "$createdAt": ""
+                                }
+                            }
+                        ],
+                        "batchSize": 2
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "document": {
+                            "$document": {
+                                "$id": "doc1",
+                                "$permissions": [],
+                                "attr1": "value1",
+                                "$createdAt": "2000-01-01T10:00:00.000+00:00"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_documents",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "doc2",
+                                    "$permissions": [],
+                                    "attr1": "value2",
+                                    "$createdAt": "2000-01-01T10:00:00.000+00:00"
+                                }
+                            },
+                            {
+                                "$document": {
+                                    "$id": "doc3",
+                                    "$permissions": [],
+                                    "attr1": "value3",
+                                    "$createdAt": "2000-01-01T10:00:00.000+00:00"
+                                }
+                            },
+                            {
+                                "$document": {
+                                    "$id": "doc4",
+                                    "$permissions": [],
+                                    "attr1": "value3",
+                                    "$createdAt": null
+                                }
+                            },
+                            {
+                                "$document": {
+                                    "$id": "doc5",
+                                    "$permissions": [],
+                                    "attr1": "value3"
+                                }
+                            }
+                        ],
+                        "batchSize": 2
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "id": "doc1"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "id": "doc2"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "id": "doc3"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "id": "doc4"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "preserve_create_dates",
+                        "id": "doc5"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "preserve_create_dates"
+                    }
+                },
+                {
+                    "op": "database.set_preserve_dates",
+                    "args": {
+                        "preserve": false
+                    }
+                },
+                {
+                    "op": "db.authorization.reset",
+                    "args": {}
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testGetAttributeLimit",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.get_limit_for_attributes",
+                    "args": {}
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testGetIndexLimit",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.get_limit_for_indexes",
+                    "args": {}
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testSharedTablesUpdateTenant",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.get_shared_tables",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForSchemas",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.exists",
+                    "args": {
+                        "database": "${ns}_sharedTables"
+                    }
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}_sharedTables"
+                    }
+                },
+                {
+                    "op": "database.delete",
+                    "args": {}
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}_sharedTables"
+                    }
+                },
+                {
+                    "op": "database.set_namespace",
+                    "args": {
+                        "namespace": ""
+                    }
+                },
+                {
+                    "op": "database.set_shared_tables",
+                    "args": {
+                        "sharedTables": true
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": null
+                    }
+                },
+                {
+                    "op": "database.create",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "testSharedTablesUpdateTenant",
+                        "documentSecurity": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "_metadata",
+                        "id": "testSharedTablesUpdateTenant",
+                        "document": {
+                            "$document": {
+                                "$id": "testSharedTablesUpdateTenant",
+                                "name": "Scooby Doo"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": null
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "_metadata",
+                        "id": "testSharedTablesUpdateTenant"
+                    }
+                },
+                {
+                    "op": "database.set_shared_tables",
+                    "args": {
+                        "sharedTables": false
+                    }
+                },
+                {
+                    "op": "database.set_namespace",
+                    "args": {
+                        "namespace": "compat"
+                    }
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testFindOrderByAfterException",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "movies",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "limit",
+                                    "attribute": "",
+                                    "values": [
+                                        2
+                                    ]
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "offset",
+                                    "attribute": "",
+                                    "values": [
+                                        0
+                                    ]
+                                }
+                            },
+                            {
+                                "$query": {
+                                    "method": "cursorAfter",
+                                    "attribute": "",
+                                    "values": [
+                                        {
+                                            "$document": {
+                                                "$collection": "other collection"
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testNestedQueryValidation",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "testNestedQueryValidation",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "name",
+                                    "type": "string",
+                                    "size": 255,
+                                    "required": true
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_documents",
+                    "args": {
+                        "collection": "testNestedQueryValidation",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "u0000000000000000083",
+                                    "name": "test1"
+                                }
+                            },
+                            {
+                                "$document": {
+                                    "$id": "u0000000000000000084",
+                                    "name": "doc2"
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "testNestedQueryValidation",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "or",
+                                    "attribute": "",
+                                    "values": [
+                                        {
+                                            "$query": {
+                                                "method": "equal",
+                                                "attribute": "name",
+                                                "values": [
+                                                    "test1"
+                                                ]
+                                            }
+                                        },
+                                        {
+                                            "$query": {
+                                                "method": "search",
+                                                "attribute": "name",
+                                                "values": [
+                                                    "doc"
+                                                ]
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testSharedTablesTenantPerDocument",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.get_shared_tables",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_tenant_per_document",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_namespace",
+                    "args": {}
+                },
+                {
+                    "op": "database.get_database",
+                    "args": {}
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForSchemas",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.exists",
+                    "args": {
+                        "database": "${ns}_sharedTablesTenantPerDocument"
+                    }
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}_sharedTablesTenantPerDocument"
+                    }
+                },
+                {
+                    "op": "database.set_namespace",
+                    "args": {
+                        "namespace": ""
+                    }
+                },
+                {
+                    "op": "database.set_shared_tables",
+                    "args": {
+                        "sharedTables": true
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": null
+                    }
+                },
+                {
+                    "op": "database.create",
+                    "args": {}
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "testSharedTablesTenantPerDocument",
+                        "permissions": [
+                            "create(\"any\")",
+                            "read(\"any\")",
+                            "update(\"any\")"
+                        ],
+                        "documentSecurity": false
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "name",
+                        "type": "string",
+                        "size": 100,
+                        "required": false
+                    }
+                },
+                {
+                    "op": "database.create_index",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "nameIndex",
+                        "type": "key",
+                        "attributes": [
+                            "name"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": null
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000085",
+                                "$tenant": 1,
+                                "name": "Spiderman"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "u0000000000000000085"
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": null
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "document": {
+                            "$document": {
+                                "$id": "u0000000000000000086",
+                                "$tenant": 2,
+                                "name": "Batman"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 2
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "u0000000000000000086"
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForUpserts",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": null
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": true
+                    }
+                },
+                {
+                    "op": "database.upsert_documents",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "u0000000000000000087",
+                                    "$tenant": 3,
+                                    "name": "Superman3"
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 3
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "u0000000000000000087"
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument"
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 1
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "u0000000000000000087"
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": null
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": true
+                    }
+                },
+                {
+                    "op": "database.upsert_documents",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "u0000000000000000088",
+                                    "$tenant": 4,
+                                    "name": "Superman4"
+                                }
+                            },
+                            {
+                                "$document": {
+                                    "$id": "u0000000000000000089",
+                                    "$tenant": 5,
+                                    "name": "Superman5"
+                                }
+                            }
+                        ],
+                        "onNext": true
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 4
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "u0000000000000000088"
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 5
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "u0000000000000000089"
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": null
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": true
+                    }
+                },
+                {
+                    "op": "database.upsert_documents",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "documents": [
+                            {
+                                "$document": {
+                                    "$id": "u0000000000000000088",
+                                    "$tenant": 4,
+                                    "name": "Superman4 updated"
+                                }
+                            },
+                            {
+                                "$document": {
+                                    "$id": "u0000000000000000089",
+                                    "$tenant": 5,
+                                    "name": "Superman5 updated"
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 4
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "u0000000000000000088"
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 5
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testSharedTablesTenantPerDocument",
+                        "id": "u0000000000000000089"
+                    }
+                },
+                {
+                    "op": "database.set_shared_tables",
+                    "args": {
+                        "sharedTables": false
+                    }
+                },
+                {
+                    "op": "database.set_tenant_per_document",
+                    "args": {
+                        "enabled": false
+                    }
+                },
+                {
+                    "op": "database.set_namespace",
+                    "args": {
+                        "namespace": "compat"
+                    }
+                },
+                {
+                    "op": "database.set_database",
+                    "args": {
+                        "name": "${ns}"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testCacheFallback",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 5
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForCacheSkipOnFailure",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "db.authorization.clean_roles",
+                    "args": {}
+                },
+                {
+                    "op": "db.authorization.add_role",
+                    "args": {
+                        "role": "any"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "testRedisFallback",
+                        "attributes": [
+                            {
+                                "$document": {
+                                    "$id": "string",
+                                    "type": "string",
+                                    "size": 767,
+                                    "required": true
+                                }
+                            }
+                        ],
+                        "permissions": [
+                            "read(\"any\")",
+                            "create(\"any\")",
+                            "update(\"any\")",
+                            "delete(\"any\")"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "testRedisFallback",
+                        "document": {
+                            "$document": {
+                                "$id": "doc1",
+                                "string": "text📝"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.create_index",
+                    "args": {
+                        "collection": "testRedisFallback",
+                        "id": "index1",
+                        "type": "key",
+                        "attributes": [
+                            "string"
+                        ]
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "testRedisFallback",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "equal",
+                                    "attribute": "string",
+                                    "values": [
+                                        "text📝"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.find",
+                    "args": {
+                        "collection": "testRedisFallback",
+                        "queries": [
+                            {
+                                "$query": {
+                                    "method": "equal",
+                                    "attribute": "string",
+                                    "values": [
+                                        "text📝"
+                                    ]
+                                }
+                            }
+                        ]
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "testRedisFallback",
+                        "id": "doc1"
+                    }
+                },
+                {
+                    "op": "database.update_document",
+                    "args": {
+                        "collection": "testRedisFallback",
+                        "id": "doc1",
+                        "document": {
+                            "$document": {
+                                "string": "text📝 updated"
+                            }
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testTransactionAtomicity",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 5
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "transactionAtomicity"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "transactionAtomicity",
+                        "id": "title",
+                        "type": "string",
+                        "size": 128,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.with_transaction",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "transactionAtomicity",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "tx_success",
+                                                "$permissions": [
+                                                    "read(\"any\")"
+                                                ],
+                                                "title": "Committed"
+                                            }
+                                        }
+                                    },
+                                    "return": true
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "transactionAtomicity",
+                        "id": "tx_success"
+                    }
+                },
+                {
+                    "op": "database.with_transaction",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "transactionAtomicity",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "tx_fail",
+                                                "$permissions": [
+                                                    "read(\"any\")"
+                                                ],
+                                                "title": "Should be rolled back"
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "op": "$throw",
+                                    "args": {
+                                        "class": "Exception",
+                                        "message": "Intentional failure to trigger rollback"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "transactionAtomicity",
+                        "id": "tx_fail"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "transactionAtomicity"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testTransactionStateAfterKnownException",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 5
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "txKnownException"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "txKnownException",
+                        "id": "title",
+                        "type": "string",
+                        "size": 128,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "txKnownException",
+                        "document": {
+                            "$document": {
+                                "$id": "existing_doc",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "title": "Original"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_transaction",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "txKnownException",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "existing_doc",
+                                                "$permissions": [
+                                                    "read(\"any\")"
+                                                ],
+                                                "title": "Duplicate"
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "inTransaction",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "txKnownException",
+                        "id": "existing_doc"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "txKnownException"
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testTransactionStateAfterRetriesExhausted",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 5
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForTransactionRetries",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.with_transaction",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "$throw",
+                                    "args": {
+                                        "class": "RuntimeException",
+                                        "message": "Persistent failure"
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "inTransaction",
+                        "args": {}
+                    }
+                }
+            ]
+        },
+        {
+            "name": "GeneralTests::testNestedTransactionState",
+            "state": [
+                "mysql@database-mariadb"
+            ],
+            "steps": [
+                {
+                    "op": "db.open",
+                    "args": {
+                        "driver": "mariadb"
+                    },
+                    "bind": "db"
+                },
+                {
+                    "op": "database.set_tenant",
+                    "args": {
+                        "tenant": 5
+                    }
+                },
+                {
+                    "op": "database.set_metadata",
+                    "args": {
+                        "key": "compat",
+                        "value": ""
+                    }
+                },
+                {
+                    "op": "database.reset_metadata",
+                    "args": {}
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRange"
+                    }
+                },
+                {
+                    "op": "db.add_format",
+                    "args": {
+                        "name": "priceRangeNew"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "encrypt"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "subQueryProbe"
+                    }
+                },
+                {
+                    "op": "database.add_filter",
+                    "args": {
+                        "name": "operator_double_decode"
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "getSupportForNestedTransactions",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.create_collection",
+                    "args": {
+                        "id": "txNested"
+                    }
+                },
+                {
+                    "op": "database.create_attribute",
+                    "args": {
+                        "collection": "txNested",
+                        "id": "title",
+                        "type": "string",
+                        "size": 128,
+                        "required": true
+                    }
+                },
+                {
+                    "op": "database.create_document",
+                    "args": {
+                        "collection": "txNested",
+                        "document": {
+                            "$document": {
+                                "$id": "nested_existing",
+                                "$permissions": [
+                                    "read(\"any\")"
+                                ],
+                                "title": "Original"
+                            }
+                        }
+                    }
+                },
+                {
+                    "op": "database.with_transaction",
+                    "args": {
+                        "callback": {
+                            "steps": [
+                                {
+                                    "op": "database.create_document",
+                                    "args": {
+                                        "collection": "txNested",
+                                        "document": {
+                                            "$document": {
+                                                "$id": "outer_doc",
+                                                "$permissions": [
+                                                    "read(\"any\")"
+                                                ],
+                                                "title": "Outer"
+                                            }
+                                        }
+                                    }
+                                },
+                                {
+                                    "op": "database.with_transaction",
+                                    "args": {
+                                        "callback": {
+                                            "steps": [
+                                                {
+                                                    "op": "database.create_document",
+                                                    "args": {
+                                                        "collection": "txNested",
+                                                        "document": {
+                                                            "$document": {
+                                                                "$id": "nested_existing",
+                                                                "$permissions": [
+                                                                    "read(\"any\")"
+                                                                ],
+                                                                "title": "Duplicate"
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "catch": true
+                                },
+                                {
+                                    "op": "$return",
+                                    "args": {
+                                        "value": true
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "op": "db.adapter",
+                    "args": {
+                        "method": "inTransaction",
+                        "args": {}
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "txNested",
+                        "id": "outer_doc"
+                    }
+                },
+                {
+                    "op": "database.get_document",
+                    "args": {
+                        "collection": "txNested",
+                        "id": "nested_existing"
+                    }
+                },
+                {
+                    "op": "database.delete_collection",
+                    "args": {
+                        "id": "txNested"
+                    }
+                }
+            ]
+        }
+    ]
+}
