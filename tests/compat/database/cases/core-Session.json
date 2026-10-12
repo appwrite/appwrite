@@ -1,0 +1,869 @@
+{
+  "cases": [
+    {
+      "name": "callbacks, scopes, cache keys, filters, listeners and databases",
+      "state": [
+        "postgres@database-postgres"
+      ],
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "subQueryProbe"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "operator_double_decode"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "answer",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": 42
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 42,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "answer",
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": 7
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 42,
+            "calls": {
+              "callback": []
+            }
+          }
+        },
+        {
+          "op": "database.with_cache",
+          "args": {
+            "key": "nohash",
+            "hash": null,
+            "callback": {
+              "steps": [
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": [
+                      1,
+                      2
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              1,
+              2
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_tenant",
+          "args": {
+            "tenant": 5,
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_tenant",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": 5,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    5
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_tenant",
+          "args": {},
+          "expect": null
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_namespace",
+                  "args": {},
+                  "bind": "n"
+                },
+                {
+                  "op": "$throw",
+                  "args": {
+                    "class": "Exception",
+                    "message": "roll back"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "roll back"
+            }
+          }
+        },
+        {
+          "op": "database.with_transaction",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.set_namespace",
+                  "args": {
+                    "namespace": "bad name!"
+                  },
+                  "catch": true
+                },
+                {
+                  "op": "$return",
+                  "args": {
+                    "value": {
+                      "$document": {
+                        "kept": true
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": {
+              "$document": {
+                "kept": true
+              }
+            },
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "$database": true
+                    },
+                    null
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.silent",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.with_preserve_sequence",
+                  "args": {
+                    "callback": {
+                      "steps": [
+                        {
+                          "op": "database.get_preserve_sequence",
+                          "args": {},
+                          "return": true
+                        }
+                      ]
+                    }
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": true,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    {
+                      "result": true,
+                      "calls": {
+                        "callback": [
+                          {
+                            "args": [],
+                            "steps": [
+                              true
+                            ]
+                          }
+                        ]
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.skip_validation",
+          "args": {
+            "callback": true
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "db.authorization.skip",
+          "args": {
+            "callback": {
+              "steps": [
+                {
+                  "op": "db.authorization.get_status",
+                  "args": {},
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": false,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    false
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.with_request_timestamp",
+          "args": {
+            "requestTimestamp": {
+              "$datetime": "-3600 seconds"
+            },
+            "callback": true
+          },
+          "expect": {
+            "result": null,
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": []
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.get_cache_keys",
+          "args": {
+            "collectionId": "movies",
+            "documentId": "alien",
+            "selects": [
+              "b",
+              "a"
+            ]
+          },
+          "expect": [
+            "default-cache-compat-database-postgres:badname::collection:movies",
+            "default-cache-compat-database-postgres:badname::collection:movies:alien",
+            "default-cache-compat-database-postgres:badname::collection:movies:alien:247b5c68124675377dc56fda2828594b"
+          ]
+        },
+        {
+          "op": "database.get_cache_base_keys",
+          "args": {
+            "collectionId": "movies"
+          },
+          "expect": [
+            "default-cache-compat-database-postgres:badname::collection:movies",
+            ""
+          ]
+        },
+        {
+          "op": "database.add_filter",
+          "args": {
+            "name": "encrypt"
+          },
+          "expect": null
+        },
+        {
+          "op": "database.get_cache_keys",
+          "args": {
+            "collectionId": "movies",
+            "documentId": "alien"
+          },
+          "expect": [
+            "default-cache-compat-database-postgres:badname::collection:movies",
+            "default-cache-compat-database-postgres:badname::collection:movies:alien",
+            "default-cache-compat-database-postgres:badname::collection:movies:alien:902ba0becfb8b628a5c40d3185600afe"
+          ]
+        },
+        {
+          "op": "database.disable_filters",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.get_cache_keys",
+          "args": {
+            "collectionId": "movies",
+            "documentId": "alien"
+          },
+          "expect": [
+            "default-cache-compat-database-postgres:badname::collection:movies",
+            "default-cache-compat-database-postgres:badname::collection:movies:alien",
+            "default-cache-compat-database-postgres:badname::collection:movies:alien:2bade45ce35ff1760455ea095375d607"
+          ]
+        },
+        {
+          "op": "database.enable_filters",
+          "args": {},
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.skip_filters",
+          "args": {
+            "filters": [
+              "json"
+            ],
+            "callback": {
+              "steps": [
+                {
+                  "op": "database.get_cache_keys",
+                  "args": {
+                    "collectionId": "movies",
+                    "documentId": "alien"
+                  },
+                  "return": true
+                }
+              ]
+            }
+          },
+          "expect": {
+            "result": [
+              "default-cache-compat-database-postgres:badname::collection:movies",
+              "default-cache-compat-database-postgres:badname::collection:movies:alien",
+              "default-cache-compat-database-postgres:badname::collection:movies:alien:6a88424e387814cef12a5d9883fc7b73"
+            ],
+            "calls": {
+              "callback": [
+                {
+                  "args": [],
+                  "steps": [
+                    [
+                      "default-cache-compat-database-postgres:badname::collection:movies",
+                      "default-cache-compat-database-postgres:badname::collection:movies:alien",
+                      "default-cache-compat-database-postgres:badname::collection:movies:alien:6a88424e387814cef12a5d9883fc7b73"
+                    ]
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.on",
+          "args": {
+            "event": "*",
+            "name": "log",
+            "callback": true
+          },
+          "expect": {
+            "$database": true
+          }
+        },
+        {
+          "op": "database.list",
+          "args": {},
+          "expect": []
+        },
+        {
+          "op": "database.exists",
+          "args": {
+            "collection": "_metadata"
+          },
+          "expect": false
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "event": "database_list",
+              "listener": "log",
+              "data": []
+            }
+          ]
+        },
+        {
+          "op": "database.get_collection",
+          "args": {
+            "id": "_metadata"
+          },
+          "expect": {
+            "$document": {
+              "$id": "_metadata",
+              "$collection": "_metadata",
+              "name": "collections",
+              "attributes": [
+                {
+                  "$document": {
+                    "$id": "name",
+                    "key": "name",
+                    "type": "string",
+                    "size": 256,
+                    "required": true,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "attributes",
+                    "key": "attributes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "indexes",
+                    "key": "indexes",
+                    "type": "string",
+                    "size": 1000000,
+                    "required": false,
+                    "signed": true,
+                    "array": false,
+                    "filters": [
+                      "json"
+                    ]
+                  }
+                },
+                {
+                  "$document": {
+                    "$id": "documentSecurity",
+                    "key": "documentSecurity",
+                    "type": "boolean",
+                    "size": 0,
+                    "required": true,
+                    "signed": true,
+                    "array": false,
+                    "filters": []
+                  }
+                }
+              ],
+              "indexes": []
+            }
+          }
+        },
+        {
+          "op": "db.log",
+          "args": {},
+          "expect": [
+            {
+              "event": "collection_read",
+              "listener": "log",
+              "data": {
+                "$document": {
+                  "$id": "_metadata",
+                  "$collection": "_metadata",
+                  "name": "collections",
+                  "attributes": [
+                    {
+                      "$document": {
+                        "$id": "name",
+                        "key": "name",
+                        "type": "string",
+                        "size": 256,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "attributes",
+                        "key": "attributes",
+                        "type": "string",
+                        "size": 1000000,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": [
+                          "json"
+                        ]
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "indexes",
+                        "key": "indexes",
+                        "type": "string",
+                        "size": 1000000,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": [
+                          "json"
+                        ]
+                      }
+                    },
+                    {
+                      "$document": {
+                        "$id": "documentSecurity",
+                        "key": "documentSecurity",
+                        "type": "boolean",
+                        "size": 0,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    }
+                  ],
+                  "indexes": []
+                }
+              }
+            }
+          ]
+        },
+        {
+          "op": "database.encode",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "c",
+                "attributes": [
+                  {
+                    "$id": "when",
+                    "type": "datetime",
+                    "array": false,
+                    "filters": [
+                      "datetime"
+                    ]
+                  },
+                  {
+                    "$id": "tags",
+                    "type": "string",
+                    "array": true,
+                    "default": [
+                      "x"
+                    ],
+                    "filters": [
+                      "json"
+                    ]
+                  },
+                  {
+                    "$id": "p",
+                    "type": "point",
+                    "array": false,
+                    "filters": [
+                      "point"
+                    ]
+                  },
+                  {
+                    "$id": "o",
+                    "type": "object",
+                    "array": false,
+                    "filters": [
+                      "object"
+                    ]
+                  },
+                  {
+                    "$id": "v",
+                    "type": "vector",
+                    "array": false,
+                    "filters": [
+                      "vector"
+                    ]
+                  }
+                ]
+              }
+            },
+            "document": {
+              "$id": "d",
+              "when": "2024-01-02T03:04:05.678+02:00",
+              "p": [
+                1.5,
+                2
+              ],
+              "o": {
+                "a": {},
+                "b": [
+                  1
+                ]
+              },
+              "v": [
+                1,
+                2.5
+              ],
+              "$createdAt": ""
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d",
+              "when": "2024-01-02 01:04:05.678",
+              "p": "POINT(1.5 2)",
+              "o": "{\"a\":{},\"b\":[1]}",
+              "v": "[1,2.5]",
+              "$createdAt": null,
+              "tags": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "database.decode",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "c",
+                "attributes": [
+                  {
+                    "$id": "when",
+                    "type": "datetime",
+                    "array": false,
+                    "filters": [
+                      "datetime"
+                    ]
+                  },
+                  {
+                    "$id": "o",
+                    "type": "object",
+                    "array": false,
+                    "filters": [
+                      "object"
+                    ]
+                  },
+                  {
+                    "$id": "v",
+                    "type": "vector",
+                    "array": false,
+                    "filters": [
+                      "vector"
+                    ]
+                  },
+                  {
+                    "$id": "p",
+                    "type": "point",
+                    "array": false,
+                    "filters": [
+                      "point"
+                    ]
+                  }
+                ]
+              }
+            },
+            "document": {
+              "$id": "d",
+              "when": "2024-01-02 01:04:05.678",
+              "o": "{\"a\":{},\"b\":[1]}",
+              "v": "[1.0,2.5]",
+              "p": "POINT(1.5 2)",
+              "$createdAt": "2024-01-02 01:04:05.678"
+            },
+            "selections": []
+          },
+          "expect": {
+            "$document": {
+              "$id": "d",
+              "when": "2024-01-02T01:04:05.678+00:00",
+              "o": {
+                "a": {},
+                "b": [
+                  1
+                ]
+              },
+              "v": [
+                1.0,
+                2.5
+              ],
+              "p": [
+                1.5,
+                2.0
+              ],
+              "$createdAt": "2024-01-02T01:04:05.678+00:00",
+              "$sequence": null,
+              "$collection": null,
+              "$updatedAt": null
+            }
+          }
+        },
+        {
+          "op": "database.casting",
+          "args": {
+            "collection": {
+              "$document": {
+                "$id": "c",
+                "attributes": [
+                  {
+                    "$id": "n",
+                    "type": "integer",
+                    "array": true
+                  },
+                  {
+                    "$id": "b",
+                    "type": "boolean"
+                  },
+                  {
+                    "$id": "f",
+                    "type": "double"
+                  },
+                  {
+                    "$id": "big",
+                    "type": "bigint",
+                    "signed": true
+                  }
+                ]
+              }
+            },
+            "document": {
+              "$id": "d",
+              "n": "[\"1\",\"2\"]",
+              "b": "0",
+              "f": "1.5",
+              "big": "9223372036854775807",
+              "$sequence": 5
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d",
+              "n": [
+                1,
+                2
+              ],
+              "b": false,
+              "f": 1.5,
+              "big": 9223372036854775807,
+              "$sequence": "5"
+            }
+          }
+        },
+        {
+          "op": "db.sql",
+          "args": {
+            "sql": "SELECT count(*) AS n FROM \"${ns}\".\"compat__metadata\""
+          },
+          "expect": [
+            {
+              "n": "0"
+            }
+          ]
+        },
+        {
+          "op": "database.delete",
+          "args": {},
+          "expect": true
+        },
+        {
+          "op": "database.exists",
+          "args": {},
+          "expect": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,4989 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/QueryTest.php",
+  "cases": [
+    {
+      "name": "regex is not a parseable method",
+      "steps": [
+        {
+          "op": "query.regex",
+          "args": {
+            "attribute": "name",
+            "pattern": "^a.*$"
+          },
+          "bind": "r",
+          "expect": {
+            "$query": {
+              "method": "regex",
+              "attribute": "name",
+              "values": [
+                "^a.*$"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "r"
+            }
+          },
+          "bind": "s",
+          "expect": "{\"method\":\"regex\",\"attribute\":\"name\",\"values\":[\"^a.*$\"]}"
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: regex"
+            }
+          }
+        },
+        {
+          "op": "query.is_method",
+          "args": {
+            "value": "regex"
+          },
+          "expect": false
+        },
+        {
+          "op": "query.is_method",
+          "args": {
+            "value": "elemMatch"
+          },
+          "expect": true
+        },
+        {
+          "op": "query.is_method",
+          "args": {
+            "value": "containsAny"
+          },
+          "expect": true
+        },
+        {
+          "op": "query.is_method",
+          "args": {
+            "value": "EQUAL"
+          },
+          "expect": false
+        },
+        {
+          "op": "query.is_method",
+          "args": {
+            "value": ""
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "groupByType falls back to the limit",
+      "steps": [
+        {
+          "op": "query.group_by_type",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    5
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    9
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "filters": [],
+            "selections": [],
+            "limit": 5,
+            "offset": 5,
+            "orderAttributes": [],
+            "orderTypes": [],
+            "cursor": null,
+            "cursorDirection": null
+          }
+        },
+        {
+          "op": "query.group_by_type",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    null
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    3
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "x"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "filters": [],
+            "selections": [],
+            "limit": 3,
+            "offset": null,
+            "orderAttributes": [],
+            "orderTypes": [],
+            "cursor": {
+              "$document": {
+                "$id": "x"
+              }
+            },
+            "cursorDirection": "after"
+          }
+        },
+        {
+          "op": "query.group_by_type",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    null
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    7
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    null
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "y"
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "filters": [],
+            "selections": [],
+            "limit": null,
+            "offset": 7,
+            "orderAttributes": [],
+            "orderTypes": [],
+            "cursor": {
+              "$document": {
+                "$id": "y"
+              }
+            },
+            "cursorDirection": "before"
+          }
+        },
+        {
+          "op": "query.group_by_type",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": {
+                    "a": 4,
+                    "0": 6
+                  }
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": {
+                    "1": 2
+                  }
+                }
+              }
+            ]
+          },
+          "expect": {
+            "filters": [],
+            "selections": [],
+            "limit": 6,
+            "offset": 6,
+            "orderAttributes": [],
+            "orderTypes": [],
+            "cursor": null,
+            "cursorDirection": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "groupByType splits every kind",
+      "steps": [
+        {
+          "op": "query.group_by_type",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "a",
+                    "b"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderDesc",
+                  "attribute": "score",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderRandom",
+                  "attribute": "",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "0",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    25
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "offset",
+                  "attribute": "",
+                  "values": [
+                    10
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "abc"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "foo",
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "isNull",
+                        "attribute": "b",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              },
+              "not a query",
+              5,
+              null,
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "c"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "filters": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "foo",
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "isNull",
+                        "attribute": "b",
+                        "values": []
+                      }
+                    }
+                  ]
+                }
+              }
+            ],
+            "selections": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "a",
+                    "b"
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "c"
+                  ]
+                }
+              }
+            ],
+            "limit": 25,
+            "offset": 10,
+            "orderAttributes": [
+              "$sequence",
+              "score"
+            ],
+            "orderTypes": [
+              "ASC",
+              "DESC",
+              "RANDOM",
+              "ASC"
+            ],
+            "cursor": {
+              "$document": {
+                "$id": "abc"
+              }
+            },
+            "cursorDirection": "after"
+          }
+        },
+        {
+          "op": "query.group_by_type",
+          "args": {
+            "queries": []
+          },
+          "expect": {
+            "filters": [],
+            "selections": [],
+            "limit": null,
+            "offset": null,
+            "orderAttributes": [],
+            "orderTypes": [],
+            "cursor": null,
+            "cursorDirection": null
+          }
+        }
+      ]
+    },
+    {
+      "name": "getByType and getCursorQueries",
+      "steps": [
+        {
+          "op": "query.get_by_type",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "b",
+                  "values": [
+                    2
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "foo",
+                  "attribute": "",
+                  "values": []
+                }
+              }
+            ],
+            "types": [
+              "equal",
+              "foo"
+            ]
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "equal",
+                "attribute": "b",
+                "values": [
+                  2
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "foo",
+                "attribute": "",
+                "values": []
+              }
+            }
+          ]
+        },
+        {
+          "op": "query.get_by_type",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ],
+            "types": []
+          },
+          "expect": []
+        },
+        {
+          "op": "query.get_cursor_queries",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "cursorBefore",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$document": {
+                        "$id": "a"
+                      }
+                    }
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "limit",
+                  "attribute": "",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "cursorAfter",
+                  "attribute": "",
+                  "values": [
+                    "b"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "cursorBefore",
+                "attribute": "",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "a"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "cursorAfter",
+                "attribute": "",
+                "values": [
+                  "b"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "logical values that are not queries",
+      "steps": [
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on int"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  1.5
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on float"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  "x"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on string"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  true
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on true"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  false
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on false"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  null
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on null"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on array"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  {
+                    "$object": {
+                      "a": 1
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to undefined method stdClass::toArray()"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "d"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to undefined method Utopia\\Database\\Document::toArray()"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  {}
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to undefined method stdClass::toArray()"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "or",
+                "attribute": "",
+                "values": [
+                  {
+                    "$operator": {
+                      "method": "increment",
+                      "attribute": "n",
+                      "values": [
+                        1
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "or",
+            "values": [
+              {
+                "method": "increment",
+                "attribute": "n",
+                "values": [
+                  1
+                ]
+              }
+            ]
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "elemMatch",
+                "attribute": "tags",
+                "values": [
+                  {
+                    "$query": {
+                      "method": "equal",
+                      "attribute": "a",
+                      "values": [
+                        1
+                      ]
+                    }
+                  },
+                  2
+                ]
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Error",
+              "message": "Call to a member function toArray() on int"
+            }
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "and"
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "or",
+                "attribute": "x",
+                "values": []
+              }
+            }
+          },
+          "expect": "{\"method\":\"or\",\"attribute\":\"x\"}"
+        }
+      ]
+    },
+    {
+      "name": "attribute 0 is empty",
+      "steps": [
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "0",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "values": [
+              1
+            ]
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "00",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"00\",\"values\":[1]}"
+        },
+        {
+          "op": "query.group_by_type",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "orderAsc",
+                  "attribute": "0",
+                  "values": []
+                }
+              },
+              {
+                "$query": {
+                  "method": "orderDesc",
+                  "attribute": " ",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": {
+            "filters": [],
+            "selections": [],
+            "limit": null,
+            "offset": null,
+            "orderAttributes": [
+              " "
+            ],
+            "orderTypes": [
+              "ASC",
+              "DESC"
+            ],
+            "cursor": null,
+            "cursorDirection": null
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"orderAsc\",\"attribute\":\"\"}"
+          },
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"orderDesc\"}"
+          },
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"orderRandom\",\"attribute\":\"\"}"
+          },
+          "expect": {
+            "$query": {
+              "method": "orderRandom",
+              "attribute": "",
+              "values": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "keyed values keep their keys",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":{\"x\":1,\"0\":2}}"
+          },
+          "bind": "k",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": {
+                "x": 1,
+                "0": 2
+              }
+            }
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$ref": "k"
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "a",
+            "values": {
+              "x": 1,
+              "0": 2
+            },
+            "value": 2,
+            "valueOr": 2,
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$ref": "k"
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "a",
+            "values": [
+              1,
+              2
+            ]
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "k"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1,2]}"
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"or\",\"values\":{\"k\":{\"method\":\"isNull\",\"attribute\":\"b\"},\"5\":\"{\\\"method\\\":\\\"isNotNull\\\"}\"}}"
+          },
+          "bind": "o",
+          "expect": {
+            "$query": {
+              "method": "or",
+              "attribute": "",
+              "values": {
+                "k": {
+                  "$query": {
+                    "method": "isNull",
+                    "attribute": "b",
+                    "values": []
+                  }
+                },
+                "5": {
+                  "$query": {
+                    "method": "isNotNull",
+                    "attribute": "",
+                    "values": []
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "o"
+            }
+          },
+          "expect": "{\"method\":\"or\",\"values\":{\"k\":{\"method\":\"isNull\",\"attribute\":\"b\",\"values\":[]},\"5\":{\"method\":\"isNotNull\",\"values\":[]}}}"
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": {
+                  "1": "one",
+                  "2": "two"
+                }
+              }
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "a",
+            "values": {
+              "1": "one",
+              "2": "two"
+            },
+            "value": null,
+            "valueOr": "default",
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  null,
+                  2
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "a",
+            "values": [
+              null,
+              2
+            ],
+            "value": null,
+            "valueOr": "default",
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "a",
+            "values": [],
+            "value": null,
+            "valueOr": "default",
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {
+              "method": "notExists",
+              "values": {
+                "a": "x"
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "notExists",
+              "attribute": "",
+              "values": {
+                "a": "x"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "parse errors",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": ""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "null"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query. Must be an array, got NULL"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "1"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query. Must be an array, got integer"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "\"x\""
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query. Must be an array, got string"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "[]"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: "
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: "
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "[1,2]"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: "
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\"}"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":null,\"attribute\":null,\"values\":null}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: "
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":1}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method. Must be a string, got integer"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":1.5}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method. Must be a string, got double"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":true}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method. Must be a string, got boolean"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":{}}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method. Must be a string, got array"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"nope\"}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: nope"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":1}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query attribute. Must be a string, got integer"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":false}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query attribute. Must be a string, got boolean"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"values\":1}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query values. Must be an array, got integer"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"values\":null}"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"values\":1.5}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query values. Must be an array, got double"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"values\":true}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query values. Must be an array, got boolean"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[null]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid nested query. Must be an array or string, got NULL"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[1.5]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid nested query. Must be an array or string, got double"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[true]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid nested query. Must be an array or string, got boolean"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[\"nope\"]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[\"[1]\"]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: "
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[{\"method\":\"nope\"}]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: nope"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"elemMatch\",\"attribute\":\"t\",\"values\":[[]]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: "
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"values\":[1]} trailing"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"\\u00e9\"}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: é"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":\"\\ud800\"}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Single unpaired UTF-16 surrogate in unicode escape"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "ï»¿{}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"a\":1,\"a\":2,\"method\":\"isNull\"}"
+          },
+          "expect": {
+            "$query": {
+              "method": "isNull",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"isNull\",\"method\":\"equal\"}"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": {
+              "$bytes": "/w=="
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "deep nesting",
+      "steps": [
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"values\":[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[[]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Maximum stack depth exceeded"
+            }
+          }
+        },
+        {
+          "op": "query.shape",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"isNull\",\"attribute\":\"x\"}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}"
+          },
+          "expect": "and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(and:(isNull:x))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))))"
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"isNull\",\"attribute\":\"x\"}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}"
+          },
+          "expect": "{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"isNull\",\"attribute\":\"x\",\"values\":[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}"
+        },
+        {
+          "op": "query.fingerprint",
+          "args": {
+            "queries": [
+              "{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"isNull\",\"attribute\":\"x\"}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}",
+              "{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"isNull\",\"attribute\":\"x\"}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}"
+            ]
+          },
+          "expect": "06b9a64d8551c32f2009f883a7cddc35"
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"isNull\",\"attribute\":\"x\"}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}"
+          },
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "and",
+                    "attribute": "",
+                    "values": [
+                      {
+                        "$query": {
+                          "method": "and",
+                          "attribute": "",
+                          "values": [
+                            {
+                              "$query": {
+                                "method": "and",
+                                "attribute": "",
+                                "values": [
+                                  {
+                                    "$query": {
+                                      "method": "and",
+                                      "attribute": "",
+                                      "values": [
+                                        {
+                                          "$query": {
+                                            "method": "and",
+                                            "attribute": "",
+                                            "values": [
+                                              {
+                                                "$query": {
+                                                  "method": "and",
+                                                  "attribute": "",
+                                                  "values": [
+                                                    {
+                                                      "$query": {
+                                                        "method": "and",
+                                                        "attribute": "",
+                                                        "values": [
+                                                          {
+                                                            "$query": {
+                                                              "method": "and",
+                                                              "attribute": "",
+                                                              "values": [
+                                                                {
+                                                                  "$query": {
+                                                                    "method": "and",
+                                                                    "attribute": "",
+                                                                    "values": [
+                                                                      {
+                                                                        "$query": {
+                                                                          "method": "and",
+                                                                          "attribute": "",
+                                                                          "values": [
+                                                                            {
+                                                                              "$query": {
+                                                                                "method": "and",
+                                                                                "attribute": "",
+                                                                                "values": [
+                                                                                  {
+                                                                                    "$query": {
+                                                                                      "method": "and",
+                                                                                      "attribute": "",
+                                                                                      "values": [
+                                                                                        {
+                                                                                          "$query": {
+                                                                                            "method": "and",
+                                                                                            "attribute": "",
+                                                                                            "values": [
+                                                                                              {
+                                                                                                "$query": {
+                                                                                                  "method": "and",
+                                                                                                  "attribute": "",
+                                                                                                  "values": [
+                                                                                                    {
+                                                                                                      "$query": {
+                                                                                                        "method": "and",
+                                                                                                        "attribute": "",
+                                                                                                        "values": [
+                                                                                                          {
+                                                                                                            "$query": {
+                                                                                                              "method": "and",
+                                                                                                              "attribute": "",
+                                                                                                              "values": [
+                                                                                                                {
+                                                                                                                  "$query": {
+                                                                                                                    "method": "and",
+                                                                                                                    "attribute": "",
+                                                                                                                    "values": [
+                                                                                                                      {
+                                                                                                                        "$query": {
+                                                                                                                          "method": "and",
+                                                                                                                          "attribute": "",
+                                                                                                                          "values": [
+                                                                                                                            {
+                                                                                                                              "$query": {
+                                                                                                                                "method": "and",
+                                                                                                                                "attribute": "",
+                                                                                                                                "values": [
+                                                                                                                                  {
+                                                                                                                                    "$query": {
+                                                                                                                                      "method": "isNull",
+                                                                                                                                      "attribute": "x",
+                                                                                                                                      "values": []
+                                                                                                                                    }
+                                                                                                                                  }
+                                                                                                                                ]
+                                                                                                                              }
+                                                                                                                            }
+                                                                                                                          ]
+                                                                                                                        }
+                                                                                                                      }
+                                                                                                                    ]
+                                                                                                                  }
+                                                                                                                }
+                                                                                                              ]
+                                                                                                            }
+                                                                                                          }
+                                                                                                        ]
+                                                                                                      }
+                                                                                                    }
+                                                                                                  ]
+                                                                                                }
+                                                                                              }
+                                                                                            ]
+                                                                                          }
+                                                                                        }
+                                                                                      ]
+                                                                                    }
+                                                                                  }
+                                                                                ]
+                                                                              }
+                                                                            }
+                                                                          ]
+                                                                        }
+                                                                      }
+                                                                    ]
+                                                                  }
+                                                                }
+                                                              ]
+                                                            }
+                                                          }
+                                                        ]
+                                                      }
+                                                    }
+                                                  ]
+                                                }
+                                              }
+                                            ]
+                                          }
+                                        }
+                                      ]
+                                    }
+                                  }
+                                ]
+                              }
+                            }
+                          ]
+                        }
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[{\"method\":\"and\",\"values\":[]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}]}"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Maximum stack depth exceeded"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "numbers and strings round trip",
+      "steps": [
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              1
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              1.0
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                1.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              -0.0
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                -0.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[-0]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              0.1
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                0.1
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[0.1]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              1e+100
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                1e+100
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1.0e+100]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              1.5e-7
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                1.5e-7
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1.5e-7]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              9007199254740993
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                9007199254740993
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[9007199254740993]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              -9223372036854775808
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                -9223372036854775808
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[-9223372036854775808]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              "é"
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "é"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"\\u00e9\"]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              "😀"
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "😀"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"\\ud83d\\ude00\"]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              "a\u0000b"
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "a\u0000b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"a\\u0000b\"]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              "‮abc"
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "‮abc"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"\\u202eabc\"]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              ""
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"\"]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              "0"
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                "0"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\"0\"]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              " "
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                " "
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[\" \"]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              {
+                "$bytes": "gA=="
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                {
+                  "$bytes": "gA=="
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid Json: Malformed UTF-8 characters, possibly incorrectly encoded"
+            }
+          }
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              {
+                "$float": "INF"
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                {
+                  "$float": "INF"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid Json: Inf and NaN cannot be JSON encoded"
+            }
+          }
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              {
+                "$float": "NAN"
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                {
+                  "$float": "NAN"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid Json: Inf and NaN cannot be JSON encoded"
+            }
+          }
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              [
+                1,
+                [
+                  2,
+                  [
+                    3
+                  ]
+                ]
+              ]
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                [
+                  1,
+                  [
+                    2,
+                    [
+                      3
+                    ]
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[[1,[2,[3]]]]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              {
+                "a": {
+                  "b": null
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                {
+                  "a": {
+                    "b": null
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[{\"a\":{\"b\":null}}]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              {}
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                {}
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[{}]}"
+        },
+        {
+          "op": "query.equal",
+          "args": {
+            "attribute": "a",
+            "values": [
+              {
+                "$object": {
+                  "x": 1
+                }
+              }
+            ]
+          },
+          "bind": "v",
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                {
+                  "$object": {
+                    "x": 1
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$ref": "v"
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[{\"x\":1}]}"
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[1.0,1e2,-0,12345678901234567890,0.30000000000000004]}"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                1.0,
+                100.0,
+                0,
+                1.2345678901234567e+19,
+                0.30000000000000004
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.parse",
+          "args": {
+            "query": "{\"method\":\"equal\",\"attribute\":\"\\u00e9\\ud83d\\ude00\",\"values\":[\"\\u0000\",\"\\/\"]}"
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "é😀",
+              "values": [
+                "\u0000",
+                "/"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "documents and objects in values",
+      "steps": [
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "x",
+                      "n": {
+                        "$document": {}
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[{\"$id\":\"x\",\"n\":{}}]}"
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  {
+                    "$document": {}
+                  },
+                  {
+                    "$query": {
+                      "method": "limit",
+                      "attribute": "",
+                      "values": [
+                        1
+                      ]
+                    }
+                  },
+                  {
+                    "$operator": {
+                      "method": "toggle",
+                      "attribute": "",
+                      "values": []
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[{},{},{}]}"
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "cursorBefore",
+                "attribute": "",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "abc",
+                      "x": 1
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "z"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": "{\"method\":\"cursorBefore\",\"values\":[\"abc\",\"z\"]}"
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "cursorAfter",
+                "attribute": "",
+                "values": [
+                  {
+                    "$document": {}
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "cursorAfter",
+            "values": [
+              ""
+            ]
+          }
+        },
+        {
+          "op": "query.to_array",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  {
+                    "$document": {
+                      "$id": "x"
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "equal",
+            "attribute": "a",
+            "values": [
+              {
+                "$document": {
+                  "$id": "x"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "query.to_string",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  {
+                    "$object": {
+                      "k": [
+                        1
+                      ]
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": "{\"method\":\"equal\",\"attribute\":\"a\",\"values\":[{\"k\":[1]}]}"
+        }
+      ]
+    },
+    {
+      "name": "constructors",
+      "steps": [
+        {
+          "op": "query.not_equal",
+          "args": {
+            "attribute": "a",
+            "value": [
+              1,
+              2
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "a",
+              "values": [
+                1,
+                2
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_equal",
+          "args": {
+            "attribute": "a",
+            "value": {
+              "k": 1
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "a",
+              "values": [
+                {
+                  "k": 1
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_equal",
+          "args": {
+            "attribute": "a",
+            "value": []
+          },
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "a",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.not_equal",
+          "args": {
+            "attribute": "a",
+            "value": 1.5
+          },
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "a",
+              "values": [
+                1.5
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_equal",
+          "args": {
+            "attribute": "a",
+            "value": false
+          },
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "a",
+              "values": [
+                false
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_exists",
+          "args": {
+            "attribute": "a"
+          },
+          "expect": {
+            "$query": {
+              "method": "notExists",
+              "attribute": "",
+              "values": [
+                "a"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_exists",
+          "args": {
+            "attribute": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "notExists",
+              "attribute": "",
+              "values": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_exists",
+          "args": {
+            "attribute": {
+              "k": "a"
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "notExists",
+              "attribute": "",
+              "values": {
+                "k": "a"
+              }
+            }
+          }
+        },
+        {
+          "op": "query.exists",
+          "args": {
+            "attributes": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "exists",
+              "attribute": "",
+              "values": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.contains_any",
+          "args": {
+            "attribute": "tags",
+            "values": [
+              "a",
+              1
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "containsAny",
+              "attribute": "tags",
+              "values": [
+                "a",
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.contains_all",
+          "args": {
+            "attribute": "tags",
+            "values": [
+              "a",
+              "b"
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "containsAll",
+              "attribute": "tags",
+              "values": [
+                "a",
+                "b"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.contains",
+          "args": {
+            "attribute": "title",
+            "values": [
+              "x"
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "contains",
+              "attribute": "title",
+              "values": [
+                "x"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.less_than_equal",
+          "args": {
+            "attribute": "n",
+            "value": 1.0
+          },
+          "expect": {
+            "$query": {
+              "method": "lessThanEqual",
+              "attribute": "n",
+              "values": [
+                1.0
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.greater_than_equal",
+          "args": {
+            "attribute": "n",
+            "value": "5"
+          },
+          "expect": {
+            "$query": {
+              "method": "greaterThanEqual",
+              "attribute": "n",
+              "values": [
+                "5"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.less_than",
+          "args": {
+            "attribute": "n",
+            "value": true
+          },
+          "expect": {
+            "$query": {
+              "method": "lessThan",
+              "attribute": "n",
+              "values": [
+                true
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.between",
+          "args": {
+            "attribute": "n",
+            "start": 1.5,
+            "end": "9"
+          },
+          "expect": {
+            "$query": {
+              "method": "between",
+              "attribute": "n",
+              "values": [
+                1.5,
+                "9"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.order_asc",
+          "args": {},
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.order_desc",
+          "args": {},
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.order_desc",
+          "args": {
+            "attribute": ""
+          },
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.offset",
+          "args": {
+            "value": 0
+          },
+          "expect": {
+            "$query": {
+              "method": "offset",
+              "attribute": "",
+              "values": [
+                0
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.limit",
+          "args": {
+            "value": -1
+          },
+          "expect": {
+            "$query": {
+              "method": "limit",
+              "attribute": "",
+              "values": [
+                -1
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.cursor_before",
+          "args": {
+            "document": {
+              "$document": {
+                "$id": "abc",
+                "$sequence": 5
+              }
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "cursorBefore",
+              "attribute": "",
+              "values": [
+                {
+                  "$document": {
+                    "$id": "abc",
+                    "$sequence": 5
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.and",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              "{\"method\":\"isNull\",\"attribute\":\"b\"}"
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "isNull",
+                    "attribute": "b",
+                    "values": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.and",
+          "args": {
+            "queries": []
+          },
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.elem_match",
+          "args": {
+            "attribute": "items",
+            "queries": [
+              {
+                "$query": {
+                  "method": "greaterThan",
+                  "attribute": "qty",
+                  "values": [
+                    2
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "elemMatch",
+              "attribute": "items",
+              "values": [
+                {
+                  "$query": {
+                    "method": "greaterThan",
+                    "attribute": "qty",
+                    "values": [
+                      2
+                    ]
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.search",
+          "args": {
+            "attribute": "body",
+            "value": ""
+          },
+          "expect": {
+            "$query": {
+              "method": "search",
+              "attribute": "body",
+              "values": [
+                ""
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.starts_with",
+          "args": {
+            "attribute": "a",
+            "value": "é"
+          },
+          "expect": {
+            "$query": {
+              "method": "startsWith",
+              "attribute": "a",
+              "values": [
+                "é"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.ends_with",
+          "args": {
+            "attribute": "a",
+            "value": "😀"
+          },
+          "expect": {
+            "$query": {
+              "method": "endsWith",
+              "attribute": "a",
+              "values": [
+                "😀"
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.select",
+          "args": {
+            "attributes": []
+          },
+          "expect": {
+            "$query": {
+              "method": "select",
+              "attribute": "",
+              "values": []
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "spatial and vector constructors",
+      "steps": [
+        {
+          "op": "query.distance_equal",
+          "args": {
+            "attribute": "loc",
+            "values": [
+              [
+                1,
+                2
+              ],
+              [
+                3.5,
+                4
+              ]
+            ],
+            "distance": 10,
+            "meters": false
+          },
+          "expect": {
+            "$query": {
+              "method": "distanceEqual",
+              "attribute": "loc",
+              "values": [
+                [
+                  [
+                    [
+                      1,
+                      2
+                    ],
+                    [
+                      3.5,
+                      4
+                    ]
+                  ],
+                  10,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.distance_not_equal",
+          "args": {
+            "attribute": "loc",
+            "values": [
+              [
+                1,
+                2
+              ],
+              [
+                3.5,
+                4
+              ]
+            ],
+            "distance": 1.5,
+            "meters": true
+          },
+          "expect": {
+            "$query": {
+              "method": "distanceNotEqual",
+              "attribute": "loc",
+              "values": [
+                [
+                  [
+                    [
+                      1,
+                      2
+                    ],
+                    [
+                      3.5,
+                      4
+                    ]
+                  ],
+                  1.5,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.distance_greater_than",
+          "args": {
+            "attribute": "loc",
+            "values": [
+              [
+                1,
+                2
+              ],
+              [
+                3.5,
+                4
+              ]
+            ],
+            "distance": 0,
+            "meters": false
+          },
+          "expect": {
+            "$query": {
+              "method": "distanceGreaterThan",
+              "attribute": "loc",
+              "values": [
+                [
+                  [
+                    [
+                      1,
+                      2
+                    ],
+                    [
+                      3.5,
+                      4
+                    ]
+                  ],
+                  0,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.distance_less_than",
+          "args": {
+            "attribute": "loc",
+            "values": [
+              [
+                1,
+                2
+              ],
+              [
+                3.5,
+                4
+              ]
+            ],
+            "distance": -0.5,
+            "meters": true
+          },
+          "expect": {
+            "$query": {
+              "method": "distanceLessThan",
+              "attribute": "loc",
+              "values": [
+                [
+                  [
+                    [
+                      1,
+                      2
+                    ],
+                    [
+                      3.5,
+                      4
+                    ]
+                  ],
+                  -0.5,
+                  true
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.distance_equal",
+          "args": {
+            "attribute": "loc",
+            "values": [
+              1,
+              2
+            ],
+            "distance": 3
+          },
+          "expect": {
+            "$query": {
+              "method": "distanceEqual",
+              "attribute": "loc",
+              "values": [
+                [
+                  [
+                    1,
+                    2
+                  ],
+                  3,
+                  false
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.intersects",
+          "args": {
+            "attribute": "shape",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "intersects",
+              "attribute": "shape",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_intersects",
+          "args": {
+            "attribute": "shape",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "notIntersects",
+              "attribute": "shape",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.crosses",
+          "args": {
+            "attribute": "shape",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "crosses",
+              "attribute": "shape",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_crosses",
+          "args": {
+            "attribute": "shape",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "notCrosses",
+              "attribute": "shape",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.overlaps",
+          "args": {
+            "attribute": "shape",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "overlaps",
+              "attribute": "shape",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_overlaps",
+          "args": {
+            "attribute": "shape",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "notOverlaps",
+              "attribute": "shape",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.touches",
+          "args": {
+            "attribute": "shape",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "touches",
+              "attribute": "shape",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.not_touches",
+          "args": {
+            "attribute": "shape",
+            "values": [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "notTouches",
+              "attribute": "shape",
+              "values": [
+                [
+                  [
+                    0,
+                    0
+                  ],
+                  [
+                    1,
+                    1
+                  ]
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.vector_dot",
+          "args": {
+            "attribute": "v",
+            "vector": []
+          },
+          "expect": {
+            "$query": {
+              "method": "vectorDot",
+              "attribute": "v",
+              "values": [
+                []
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.vector_cosine",
+          "args": {
+            "attribute": "v",
+            "vector": [
+              1,
+              0.5,
+              -2
+            ]
+          },
+          "expect": {
+            "$query": {
+              "method": "vectorCosine",
+              "attribute": "v",
+              "values": [
+                [
+                  1,
+                  0.5,
+                  -2
+                ]
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "distanceLessThan",
+                "attribute": "loc",
+                "values": [
+                  [
+                    [
+                      1,
+                      2
+                    ],
+                    5,
+                    true
+                  ]
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "distanceLessThan",
+            "attribute": "loc",
+            "values": [
+              [
+                [
+                  1,
+                  2
+                ],
+                5,
+                true
+              ]
+            ],
+            "value": [
+              [
+                1,
+                2
+              ],
+              5,
+              true
+            ],
+            "valueOr": [
+              [
+                1,
+                2
+              ],
+              5,
+              true
+            ],
+            "isNested": false,
+            "isSpatialQuery": true,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "vectorDot",
+                "attribute": "v",
+                "values": [
+                  [
+                    1
+                  ]
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "vectorDot",
+            "attribute": "v",
+            "values": [
+              [
+                1
+              ]
+            ],
+            "value": [
+              1
+            ],
+            "valueOr": [
+              1
+            ],
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "accessors and setters",
+      "steps": [
+        {
+          "op": "query.set",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "notEqual",
+            "attribute": "b",
+            "values": {
+              "x": 3
+            }
+          },
+          "bind": "s",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "b",
+              "values": {
+                "x": 3
+              }
+            }
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$ref": "s"
+            }
+          },
+          "expect": {
+            "method": "notEqual",
+            "attribute": "b",
+            "values": {
+              "x": 3
+            },
+            "value": null,
+            "valueOr": "default",
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.set",
+          "args": {
+            "query": {
+              "$ref": "s"
+            },
+            "value": null
+          },
+          "bind": "t",
+          "expect": {
+            "$query": {
+              "method": "notEqual",
+              "attribute": "b",
+              "values": [
+                null
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$ref": "t"
+            }
+          },
+          "expect": {
+            "method": "notEqual",
+            "attribute": "b",
+            "values": [
+              null
+            ],
+            "value": null,
+            "valueOr": "default",
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.set",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "method": "orderAsc",
+            "attribute": ""
+          },
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.attribute_type",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "type": "point",
+            "onArray": true
+          },
+          "expect": {
+            "attributeType": "point",
+            "isSpatialAttribute": true,
+            "isObjectAttribute": false,
+            "onArray": true
+          }
+        },
+        {
+          "op": "query.attribute_type",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "type": "linestring"
+          },
+          "expect": {
+            "attributeType": "linestring",
+            "isSpatialAttribute": true,
+            "isObjectAttribute": false,
+            "onArray": false
+          }
+        },
+        {
+          "op": "query.attribute_type",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "type": "polygon"
+          },
+          "expect": {
+            "attributeType": "polygon",
+            "isSpatialAttribute": true,
+            "isObjectAttribute": false,
+            "onArray": false
+          }
+        },
+        {
+          "op": "query.attribute_type",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "type": "object"
+          },
+          "expect": {
+            "attributeType": "object",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": true,
+            "onArray": false
+          }
+        },
+        {
+          "op": "query.attribute_type",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "type": "Point"
+          },
+          "expect": {
+            "attributeType": "Point",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false,
+            "onArray": false
+          }
+        },
+        {
+          "op": "query.attribute_type",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            },
+            "type": ""
+          },
+          "expect": {
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false,
+            "onArray": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "and",
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNested": true,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "or",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "or",
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNested": true,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "elemMatch",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "elemMatch",
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNested": true,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "crosses",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "crosses",
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNested": false,
+            "isSpatialQuery": true,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "notTouches",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "notTouches",
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNested": false,
+            "isSpatialQuery": true,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "distanceEqual",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "distanceEqual",
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNested": false,
+            "isSpatialQuery": true,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "regex",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "regex",
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.inspect",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "nope",
+                "attribute": "a",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "method": "nope",
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "value": 1,
+            "valueOr": 1,
+            "isNested": false,
+            "isSpatialQuery": false,
+            "onArray": false,
+            "attributeType": "",
+            "isSpatialAttribute": false,
+            "isObjectAttribute": false
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "orderAsc"
+          },
+          "expect": {
+            "$query": {
+              "method": "orderAsc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "orderDesc",
+            "attribute": ""
+          },
+          "expect": {
+            "$query": {
+              "method": "orderDesc",
+              "attribute": "$sequence",
+              "values": []
+            }
+          }
+        },
+        {
+          "op": "query.new",
+          "args": {
+            "method": "whatever",
+            "attribute": "x",
+            "values": {
+              "k": 1
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "whatever",
+              "attribute": "x",
+              "values": {
+                "k": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "parseQuery and parseQueries",
+      "steps": [
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {}
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: "
+            }
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                1
+              ]
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                1
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {
+              "method": "and",
+              "values": [
+                {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                },
+                "{\"method\":\"isNull\",\"attribute\":\"b\"}"
+              ]
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "and",
+              "attribute": "",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ]
+                  }
+                },
+                {
+                  "$query": {
+                    "method": "isNull",
+                    "attribute": "b",
+                    "values": []
+                  }
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {
+              "method": "and",
+              "values": [
+                {
+                  "$query": {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ]
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid nested query. Must be an array or string, got object"
+            }
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {
+              "method": "and",
+              "values": [
+                {
+                  "$object": {
+                    "method": "isNull"
+                  }
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid nested query. Must be an array or string, got object"
+            }
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {
+              "method": "equal",
+              "attribute": {
+                "$object": {
+                  "a": 1
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query attribute. Must be a string, got object"
+            }
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {
+              "method": "equal",
+              "values": {}
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query values. Must be an array, got object"
+            }
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": {
+              "method": "equal",
+              "attribute": {
+                "$bytes": "YQ=="
+              },
+              "values": [
+                {
+                  "$bytes": "/w=="
+                }
+              ]
+            }
+          },
+          "expect": {
+            "$query": {
+              "method": "equal",
+              "attribute": "a",
+              "values": [
+                {
+                  "$bytes": "/w=="
+                }
+              ]
+            }
+          }
+        },
+        {
+          "op": "query.parse_query",
+          "args": {
+            "query": [
+              1,
+              2
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query method: "
+            }
+          }
+        },
+        {
+          "op": "query.parse_queries",
+          "args": {
+            "queries": []
+          },
+          "expect": []
+        },
+        {
+          "op": "query.parse_queries",
+          "args": {
+            "queries": [
+              "{\"method\":\"limit\",\"values\":[1]}",
+              "{\"method\":\"offset\",\"values\":[2]}"
+            ]
+          },
+          "expect": [
+            {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            },
+            {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  2
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "op": "query.parse_queries",
+          "args": {
+            "queries": [
+              "{\"method\":\"limit\",\"values\":[1]}",
+              "bad"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "fingerprint edge cases",
+      "steps": [
+        {
+          "op": "query.fingerprint",
+          "args": {
+            "queries": [
+              "{\"method\":\"isNull\",\"attribute\":\"a\"}",
+              "nope"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Syntax error"
+            }
+          }
+        },
+        {
+          "op": "query.fingerprint",
+          "args": {
+            "queries": [
+              null
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query element for fingerprint: expected string or Query instance"
+            }
+          }
+        },
+        {
+          "op": "query.fingerprint",
+          "args": {
+            "queries": [
+              [
+                1
+              ]
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query element for fingerprint: expected string or Query instance"
+            }
+          }
+        },
+        {
+          "op": "query.fingerprint",
+          "args": {
+            "queries": [
+              {
+                "$document": {}
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query element for fingerprint: expected string or Query instance"
+            }
+          }
+        },
+        {
+          "op": "query.fingerprint",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a|b",
+                  "values": [
+                    1
+                  ]
+                }
+              },
+              {
+                "$query": {
+                  "method": "equal",
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": "2019d66aba622f0ae8cb774ebcfacf84"
+        },
+        {
+          "op": "query.fingerprint",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "and",
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "b",
+                        "values": [
+                          1
+                        ]
+                      }
+                    },
+                    {
+                      "$query": {
+                        "method": "equal",
+                        "attribute": "a",
+                        "values": [
+                          1
+                        ]
+                      }
+                    },
+                    3
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": "728424d2c177a1fe36ac8be35e2cbe84"
+        },
+        {
+          "op": "query.fingerprint",
+          "args": {
+            "queries": [
+              {
+                "$query": {
+                  "method": "foo",
+                  "attribute": "x",
+                  "values": []
+                }
+              }
+            ]
+          },
+          "expect": "53938616fa906dc6bb049ee9a7204085"
+        },
+        {
+          "op": "query.shape",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "or",
+                "attribute": "",
+                "values": [
+                  {
+                    "$query": {
+                      "method": "equal",
+                      "attribute": "B",
+                      "values": []
+                    }
+                  },
+                  {
+                    "$query": {
+                      "method": "equal",
+                      "attribute": "a",
+                      "values": []
+                    }
+                  },
+                  {
+                    "$query": {
+                      "method": "equal",
+                      "attribute": "_",
+                      "values": []
+                    }
+                  },
+                  {
+                    "$query": {
+                      "method": "equal",
+                      "attribute": "é",
+                      "values": []
+                    }
+                  },
+                  {
+                    "$query": {
+                      "method": "equal",
+                      "attribute": "10",
+                      "values": []
+                    }
+                  },
+                  {
+                    "$query": {
+                      "method": "equal",
+                      "attribute": "9",
+                      "values": []
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": "or:(equal:10|equal:9|equal:B|equal:_|equal:a|equal:é)"
+        },
+        {
+          "op": "query.shape",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": "and:()"
+        },
+        {
+          "op": "query.shape",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "and",
+                "attribute": "",
+                "values": [
+                  1,
+                  "x"
+                ]
+              }
+            }
+          },
+          "expect": "and:()"
+        },
+        {
+          "op": "query.shape",
+          "args": {
+            "query": {
+              "$query": {
+                "method": "equal",
+                "attribute": "",
+                "values": [
+                  {
+                    "$query": {
+                      "method": "isNull",
+                      "attribute": "x",
+                      "values": []
+                    }
+                  }
+                ]
+              }
+            }
+          },
+          "expect": "equal:"
+        }
+      ]
+    }
+  ]
+}

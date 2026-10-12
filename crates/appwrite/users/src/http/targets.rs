@@ -1,7 +1,7 @@
 //! Messaging targets of a user.
 
 use serde_json::{Value, json};
-use utopia_database::{FindOptions, FromRow, Param, Query, QueryGroups};
+use utopia_database::legacy::{FindOptions, FromRow, Param, Query, QueryGroups};
 use utopia_emails::EmailValidator;
 use utopia_http::Response;
 use utopia_validators::{Text, Validator, WhiteList, php};
@@ -42,7 +42,7 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let provider_id = ctx.optional_str("providerId", "", &uid())?.unwrap_or_default();
     let name = ctx.optional_str("name", "", &Text::new(128))?.unwrap_or_default();
 
-    let target_id = if target_id == "unique()" { utopia_database::id::unique() } else { target_id };
+    let target_id = if target_id == "unique()" { utopia_database::legacy::id::unique() } else { target_id };
     let provider = provider(ctx, &provider_id).await?;
     validate_identifier(&provider_type, &identifier)?;
     let user = base::user_or_404(ctx, &user_id, Relations::NONE).await?;
@@ -63,7 +63,9 @@ pub async fn create(ctx: &mut Context) -> Result<Response> {
     let row = match db.insert("targets", &target_id, &base::owner_permissions(&user.id), columns, Target::COLUMNS).await
     {
         Ok(row) => row,
-        Err(utopia_database::Error::Duplicate(_)) => return Err(Error::new(ErrorType::UserTargetAlreadyExists)),
+        Err(utopia_database::legacy::Error::Duplicate(_)) => {
+            return Err(Error::new(ErrorType::UserTargetAlreadyExists));
+        }
         Err(e) => return Err(e.into()),
     };
     let target = Target::from_row(&row)?;
@@ -84,7 +86,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let db = ctx.db()?;
     let targets = match db.find::<Target>(&collections::TARGETS, FindOptions::from_groups(&groups, None)).await {
         Ok(t) => t,
-        Err(utopia_database::Error::NotFound(m)) if m.starts_with("cursor:") => {
+        Err(utopia_database::legacy::Error::NotFound(m)) if m.starts_with("cursor:") => {
             let id = groups.cursor.as_ref().map(|c| c.id.clone()).unwrap_or_default();
             return Err(Error::with_message(
                 ErrorType::GeneralCursorNotFound,
@@ -162,7 +164,9 @@ pub async fn update(ctx: &mut Context) -> Result<Response> {
     let row = match db.update("targets", &target.id, columns, Target::COLUMNS).await {
         Ok(Some(row)) => row,
         Ok(None) => return Err(Error::new(ErrorType::UserTargetNotFound)),
-        Err(utopia_database::Error::Duplicate(_)) => return Err(Error::new(ErrorType::UserTargetAlreadyExists)),
+        Err(utopia_database::legacy::Error::Duplicate(_)) => {
+            return Err(Error::new(ErrorType::UserTargetAlreadyExists));
+        }
         Err(e) => return Err(e.into()),
     };
     let updated = Target::from_row(&row)?;

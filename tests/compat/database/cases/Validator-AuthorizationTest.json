@@ -1,0 +1,926 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/AuthorizationTest.php",
+  "cases": [
+    {
+      "name": "testValues",
+      "steps": [
+        {
+          "op": "authorization.new",
+          "args": {},
+          "bind": "auth",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "authorization.add_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "any"
+          },
+          "expect": null
+        },
+        {
+          "op": "document.get_read",
+          "args": {
+            "doc": {
+              "$id": "x",
+              "$collection": "y",
+              "$permissions": [
+                "read(\"user:123\")",
+                "read(\"team:123\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ]
+            }
+          },
+          "expect": [
+            "user:123",
+            "team:123"
+          ]
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[\"any\"]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": []
+          },
+          "expect": {
+            "valid": false,
+            "description": "No permissions provided for action 'read'"
+          }
+        },
+        {
+          "op": "authorization.get_description",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": "No permissions provided for action 'read'"
+        },
+        {
+          "op": "authorization.add_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "user:456"
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.add_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "user:123"
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.has_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "user:456"
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization.has_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "user:457"
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization.has_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": ""
+          },
+          "expect": false
+        },
+        {
+          "op": "authorization.has_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "any"
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "No permissions provided for action 'read'"
+          }
+        },
+        {
+          "op": "authorization.clean_roles",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.add_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "team:123"
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.clean_roles",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.disable",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.reset",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.set_default_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.disable",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.reset",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.enable",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.add_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "textX"
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.get_roles",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": [
+            "textX"
+          ]
+        },
+        {
+          "op": "authorization.remove_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "textX"
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.get_roles",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Missing \"read\" permission for role \"team:123\". Only \"[]\" scopes are allowed and \"[\"user:123\",\"team:123\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.skip",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "user:123",
+              "team:123"
+            ]
+          },
+          "expect": {
+            "inside": [
+              false
+            ],
+            "valid": true,
+            "after": true
+          }
+        },
+        {
+          "op": "authorization.get_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testNestedSkips",
+      "steps": [
+        {
+          "op": "authorization.new",
+          "args": {},
+          "bind": "auth",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "authorization.get_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization.skip",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "depth": 3
+          },
+          "expect": {
+            "inside": [
+              false,
+              false,
+              false,
+              false,
+              false
+            ],
+            "valid": null,
+            "after": true
+          }
+        },
+        {
+          "op": "authorization.get_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "numeric roles are integer keys",
+      "steps": [
+        {
+          "op": "authorization.new",
+          "args": {
+            "roles": [
+              "123",
+              "0",
+              "-1",
+              "01",
+              " 1",
+              "1.5",
+              "9223372036854775808",
+              "user:1"
+            ]
+          },
+          "bind": "auth",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "authorization.get_roles",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": [
+            "any",
+            123,
+            0,
+            -1,
+            "01",
+            " 1",
+            "1.5",
+            "9223372036854775808",
+            "user:1"
+          ]
+        },
+        {
+          "op": "authorization.has_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "123"
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": [
+              "01"
+            ]
+          },
+          "expect": {
+            "valid": true,
+            "description": "Authorization Error"
+          }
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "update",
+            "permissions": [
+              "124",
+              "x"
+            ]
+          },
+          "expect": {
+            "valid": false,
+            "description": "Missing \"update\" permission for role \"x\". Only \"[\"any\",123,0,-1,\"01\",\" 1\",\"1.5\",\"9223372036854775808\",\"user:1\"]\" scopes are allowed and \"[\"124\",\"x\"]\" was given."
+          }
+        },
+        {
+          "op": "authorization.remove_role",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "role": "123"
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.get_roles",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": [
+            "any",
+            0,
+            -1,
+            "01",
+            " 1",
+            "1.5",
+            "9223372036854775808",
+            "user:1"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "the failure message json_encodes roles and permissions",
+      "op": "authorization.is_valid",
+      "args": {
+        "roles": [
+          "user:1/a",
+          "é",
+          "\"q\"",
+          "<t>",
+          "\\"
+        ],
+        "action": "read",
+        "permissions": [
+          "team:1/owner",
+          "ü",
+          "a\"b",
+          ""
+        ]
+      },
+      "expect": {
+        "valid": false,
+        "description": "Missing \"read\" permission for role \"\". Only \"[\"any\",\"user:1\\/a\",\"\\u00e9\",\"\\\"q\\\"\",\"<t>\",\"\\\\\"]\" scopes are allowed and \"[\"team:1\\/owner\",\"\\u00fc\",\"a\\\"b\",\"\"]\" was given."
+      }
+    },
+    {
+      "name": "the failure message names the last permission",
+      "op": "authorization.is_valid",
+      "args": {
+        "action": "delete",
+        "permissions": [
+          "a",
+          "b",
+          "c"
+        ]
+      },
+      "expect": {
+        "valid": false,
+        "description": "Missing \"delete\" permission for role \"c\". Only \"[\"any\"]\" scopes are allowed and \"[\"a\",\"b\",\"c\"]\" was given."
+      }
+    },
+    {
+      "name": "an empty action",
+      "op": "authorization.is_valid",
+      "args": {
+        "action": "",
+        "permissions": []
+      },
+      "expect": {
+        "valid": false,
+        "description": "No permissions provided for action ''"
+      }
+    },
+    {
+      "name": "a matching permission",
+      "op": "authorization.is_valid",
+      "args": {
+        "roles": [
+          "users"
+        ],
+        "action": "read",
+        "permissions": [
+          "guests",
+          "users"
+        ]
+      },
+      "expect": {
+        "valid": true,
+        "description": "Authorization Error"
+      }
+    },
+    {
+      "name": "invalid UTF-8 in the message makes json_encode fail",
+      "op": "authorization.is_valid",
+      "args": {
+        "roles": [],
+        "action": "read",
+        "permissions": [
+          "xÿ"
+        ]
+      },
+      "expect": {
+        "valid": false,
+        "description": "Missing \"read\" permission for role \"xÿ\". Only \"[\"any\"]\" scopes are allowed and \"[\"x\\u00ff\"]\" was given."
+      }
+    },
+    {
+      "name": "the default description",
+      "op": "authorization.get_description",
+      "args": {},
+      "expect": "Authorization Error"
+    },
+    {
+      "name": "a value that is not an Input",
+      "op": "authorization.is_valid_value",
+      "args": {
+        "value": [
+          "read"
+        ]
+      },
+      "expect": {
+        "valid": false,
+        "description": "Invalid input provided"
+      }
+    },
+    {
+      "name": "null is not an Input",
+      "op": "authorization.is_valid_value",
+      "args": {
+        "value": null
+      },
+      "expect": {
+        "valid": false,
+        "description": "Invalid input provided"
+      }
+    },
+    {
+      "name": "isArray",
+      "op": "authorization.is_array",
+      "args": {},
+      "expect": false
+    },
+    {
+      "name": "getType",
+      "op": "authorization.get_type",
+      "args": {},
+      "expect": "array"
+    },
+    {
+      "name": "a disabled authorization skips the empty-permissions check",
+      "steps": [
+        {
+          "op": "authorization.new",
+          "args": {},
+          "bind": "auth",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "authorization.set_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.is_valid",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "action": "read",
+            "permissions": []
+          },
+          "expect": {
+            "valid": true,
+            "description": "Authorization Error"
+          }
+        },
+        {
+          "op": "authorization.get_description",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": "Authorization Error"
+        },
+        {
+          "op": "authorization.set_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "status": true
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.get_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "skip restores the status after an exception",
+      "steps": [
+        {
+          "op": "authorization.new",
+          "args": {},
+          "bind": "auth",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "authorization.skip",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "depth": 2,
+            "throw": true
+          },
+          "expect": {
+            "$error": {
+              "class": "Exception",
+              "message": "thrown inside skip"
+            }
+          }
+        },
+        {
+          "op": "authorization.get_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "authorization.disable",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": null
+        },
+        {
+          "op": "authorization.skip",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            },
+            "depth": 1,
+            "action": "read",
+            "permissions": [
+              "nobody"
+            ]
+          },
+          "expect": {
+            "inside": [
+              false
+            ],
+            "valid": true,
+            "after": false
+          }
+        },
+        {
+          "op": "authorization.get_status",
+          "args": {
+            "auth": {
+              "$ref": "auth"
+            }
+          },
+          "expect": false
+        }
+      ]
+    },
+    {
+      "name": "Input setters",
+      "op": "authorization.input",
+      "args": {
+        "action": "read",
+        "permissions": [
+          "a"
+        ],
+        "set_action": "update",
+        "set_permissions": [
+          "b",
+          "c"
+        ]
+      },
+      "expect": {
+        "action": "update",
+        "permissions": [
+          "b",
+          "c"
+        ]
+      }
+    },
+    {
+      "name": "Input getters",
+      "op": "authorization.input",
+      "args": {
+        "action": "read",
+        "permissions": [
+          "any",
+          "users"
+        ]
+      },
+      "expect": {
+        "action": "read",
+        "permissions": [
+          "any",
+          "users"
+        ]
+      }
+    }
+  ]
+}

@@ -84,6 +84,8 @@ while (($line = fgets(STDIN)) !== false) {
                 return true;
             })(),
             '$inventory' => Inventory::take(array_values((array) ($args['src'] ?? []))),
+            // Test files (`*Test.php`, `*Tests.php`) under directories of the image, for coverage.
+            '$tests' => Inventory::tests(array_values(array_map(strval(...), (array) ($args['dirs'] ?? [])))),
             '$docs' => Inventory::docs(array_values(array_map(strval(...), (array) ($args['symbols'] ?? [])))),
             '$equal' => ($args['a'] ?? null) === ($args['b'] ?? null),
             // Lists a library's benchmarks, or times one (see Bench.php).

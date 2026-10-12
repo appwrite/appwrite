@@ -1,0 +1,2332 @@
+{
+  "ops": {
+    "validator.new": {
+      "doc": "new Utopia\\Database\\Validator\\<class>(...$spec): a handle (see ops/validators.php for specs)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::__construct",
+        "Utopia\\Database\\Validator\\BigInt::__construct",
+        "Utopia\\Database\\Validator\\ByteLength::__construct",
+        "Utopia\\Database\\Validator\\Datetime::__construct",
+        "Utopia\\Database\\Validator\\Index::__construct",
+        "Utopia\\Database\\Validator\\IndexDependency::__construct",
+        "Utopia\\Database\\Validator\\IndexedQueries::__construct",
+        "Utopia\\Database\\Validator\\Key::__construct",
+        "Utopia\\Database\\Validator\\Label::__construct",
+        "Utopia\\Database\\Validator\\Operator::__construct",
+        "Utopia\\Database\\Validator\\Permissions::__construct",
+        "Utopia\\Database\\Validator\\Queries::__construct",
+        "Utopia\\Database\\Validator\\Queries\\Document::__construct",
+        "Utopia\\Database\\Validator\\Queries\\Documents::__construct",
+        "Utopia\\Database\\Validator\\Query\\Cursor::__construct",
+        "Utopia\\Database\\Validator\\Query\\Filter::__construct",
+        "Utopia\\Database\\Validator\\Query\\Limit::__construct",
+        "Utopia\\Database\\Validator\\Query\\Offset::__construct",
+        "Utopia\\Database\\Validator\\Query\\Order::__construct",
+        "Utopia\\Database\\Validator\\Query\\Select::__construct",
+        "Utopia\\Database\\Validator\\Roles::__construct",
+        "Utopia\\Database\\Validator\\Sequence::__construct",
+        "Utopia\\Database\\Validator\\Spatial::__construct",
+        "Utopia\\Database\\Validator\\Structure::__construct",
+        "Utopia\\Database\\Validator\\UID::__construct",
+        "Utopia\\Database\\Validator\\Vector::__construct"
+      ]
+    },
+    "validator.check": {
+      "doc": "{valid: (new <class>(...$spec))->isValid($value), description: ->getDescription(), value: the document after, for documents}",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::isValid",
+        "Utopia\\Database\\Validator\\BigInt::isValid",
+        "Utopia\\Database\\Validator\\ByteLength::isValid",
+        "Utopia\\Database\\Validator\\Datetime::isValid",
+        "Utopia\\Database\\Validator\\Index::isValid",
+        "Utopia\\Database\\Validator\\IndexDependency::isValid",
+        "Utopia\\Database\\Validator\\IndexedQueries::isValid",
+        "Utopia\\Database\\Validator\\Key::isValid",
+        "Utopia\\Database\\Validator\\Label::isValid",
+        "Utopia\\Database\\Validator\\ObjectValidator::isValid",
+        "Utopia\\Database\\Validator\\Operator::isValid",
+        "Utopia\\Database\\Validator\\PartialStructure::isValid",
+        "Utopia\\Database\\Validator\\Permissions::isValid",
+        "Utopia\\Database\\Validator\\Queries::isValid",
+        "Utopia\\Database\\Validator\\Query\\Cursor::isValid",
+        "Utopia\\Database\\Validator\\Query\\Filter::isValid",
+        "Utopia\\Database\\Validator\\Query\\Limit::isValid",
+        "Utopia\\Database\\Validator\\Query\\Offset::isValid",
+        "Utopia\\Database\\Validator\\Query\\Order::isValid",
+        "Utopia\\Database\\Validator\\Query\\Select::isValid",
+        "Utopia\\Database\\Validator\\Roles::isValid",
+        "Utopia\\Database\\Validator\\Sequence::isValid",
+        "Utopia\\Database\\Validator\\Spatial::isValid",
+        "Utopia\\Database\\Validator\\Structure::isValid",
+        "Utopia\\Database\\Validator\\Vector::isValid"
+      ],
+      "fuzz": [
+        {
+          "name": "key",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "key"
+              },
+              "allowInternal": {
+                "gen": "bool"
+              },
+              "maxLength": {
+                "gen": "int",
+                "min": -1,
+                "max": 40
+              },
+              "value": {
+                "gen": "ref",
+                "name": "keyish"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "uid",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "uid"
+              },
+              "maxLength": {
+                "gen": "int",
+                "min": 0,
+                "max": 40
+              },
+              "value": {
+                "gen": "ref",
+                "name": "keyish"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "label",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "label"
+              },
+              "allowInternal": {
+                "gen": "bool"
+              },
+              "maxLength": {
+                "gen": "int",
+                "min": 0,
+                "max": 40
+              },
+              "value": {
+                "gen": "ref",
+                "name": "keyish"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "permissions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "permissions"
+              },
+              "length": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              },
+              "allowed": {
+                "gen": "pick",
+                "from": [
+                  [
+                    "create",
+                    "read",
+                    "update",
+                    "delete",
+                    "write"
+                  ],
+                  [
+                    "read"
+                  ],
+                  [
+                    "read",
+                    "write",
+                    ""
+                  ],
+                  [
+                    "update",
+                    "delete"
+                  ]
+                ]
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "permstr"
+                    },
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "scalar"
+                    },
+                    "min": 0,
+                    "max": 2
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "length",
+              "allowed"
+            ]
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "roles",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "roles"
+              },
+              "length": {
+                "gen": "int",
+                "min": 0,
+                "max": 3
+              },
+              "allowed": {
+                "gen": "pick",
+                "from": [
+                  [
+                    "any",
+                    "guests",
+                    "users",
+                    "user",
+                    "team",
+                    "member",
+                    "label"
+                  ],
+                  [
+                    "user",
+                    "team"
+                  ],
+                  [
+                    "us",
+                    "x",
+                    ""
+                  ]
+                ]
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "rolestr"
+                    },
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "scalar"
+                    },
+                    "min": 0,
+                    "max": 2
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "length",
+              "allowed"
+            ]
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "datetime",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "datetime"
+              },
+              "precision": {
+                "gen": "pick",
+                "from": [
+                  "any",
+                  "days",
+                  "hours",
+                  "minutes",
+                  "seconds"
+                ]
+              },
+              "min": {
+                "gen": "pick",
+                "from": [
+                  "0000-01-01",
+                  "1970-01-01",
+                  "2000-01-01 12:00:00"
+                ]
+              },
+              "max": {
+                "gen": "pick",
+                "from": [
+                  "9999-12-31",
+                  "2100-01-01",
+                  "2030-06-30 23:59:59"
+                ]
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "datestr"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "scalar"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "precision",
+              "min",
+              "max"
+            ]
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "structure",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "structure"
+              },
+              "collection": {
+                "gen": "const",
+                "value": {
+                  "$document": {
+                    "$id": "movies",
+                    "$collection": "_metadata",
+                    "name": "movies",
+                    "attributes": [
+                      {
+                        "$id": "title",
+                        "type": "string",
+                        "format": "",
+                        "size": 16,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "count",
+                        "type": "integer",
+                        "format": "",
+                        "size": 4,
+                        "required": false,
+                        "signed": false,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "price",
+                        "type": "double",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "published",
+                        "type": "boolean",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "tags",
+                        "type": "string",
+                        "format": "",
+                        "size": 8,
+                        "required": false,
+                        "signed": true,
+                        "array": true,
+                        "filters": []
+                      },
+                      {
+                        "$id": "big",
+                        "type": "bigint",
+                        "format": "",
+                        "size": 8,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "when",
+                        "type": "datetime",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": false,
+                        "array": false,
+                        "filters": [
+                          "datetime"
+                        ]
+                      },
+                      {
+                        "$id": "body",
+                        "type": "text",
+                        "format": "",
+                        "size": 20,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "loc",
+                        "type": "point",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "vec",
+                        "type": "vector",
+                        "format": "",
+                        "size": 2,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "meta",
+                        "type": "object",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "ref",
+                        "type": "id",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    ]
+                  }
+                }
+              },
+              "idAttributeType": {
+                "gen": "pick",
+                "from": [
+                  "integer",
+                  "uuid7"
+                ]
+              },
+              "value": {
+                "gen": "ref",
+                "name": "document"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "partial structure",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "partial_structure"
+              },
+              "collection": {
+                "gen": "const",
+                "value": {
+                  "$document": {
+                    "$id": "movies",
+                    "$collection": "_metadata",
+                    "name": "movies",
+                    "attributes": [
+                      {
+                        "$id": "title",
+                        "type": "string",
+                        "format": "",
+                        "size": 16,
+                        "required": true,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "count",
+                        "type": "integer",
+                        "format": "",
+                        "size": 4,
+                        "required": false,
+                        "signed": false,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "price",
+                        "type": "double",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "published",
+                        "type": "boolean",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "tags",
+                        "type": "string",
+                        "format": "",
+                        "size": 8,
+                        "required": false,
+                        "signed": true,
+                        "array": true,
+                        "filters": []
+                      },
+                      {
+                        "$id": "big",
+                        "type": "bigint",
+                        "format": "",
+                        "size": 8,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "when",
+                        "type": "datetime",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": false,
+                        "array": false,
+                        "filters": [
+                          "datetime"
+                        ]
+                      },
+                      {
+                        "$id": "body",
+                        "type": "text",
+                        "format": "",
+                        "size": 20,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "loc",
+                        "type": "point",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "vec",
+                        "type": "vector",
+                        "format": "",
+                        "size": 2,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "meta",
+                        "type": "object",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      },
+                      {
+                        "$id": "ref",
+                        "type": "id",
+                        "format": "",
+                        "size": 0,
+                        "required": false,
+                        "signed": true,
+                        "array": false,
+                        "filters": []
+                      }
+                    ]
+                  }
+                }
+              },
+              "idAttributeType": {
+                "gen": "const",
+                "value": "integer"
+              },
+              "value": {
+                "gen": "ref",
+                "name": "document"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "documents queries",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "queries_documents"
+              },
+              "attributes": {
+                "gen": "const",
+                "value": [
+                  {
+                    "$document": {
+                      "$id": "title",
+                      "key": "title",
+                      "type": "string",
+                      "size": 64,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "age",
+                      "key": "age",
+                      "type": "integer",
+                      "size": 4,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "price",
+                      "key": "price",
+                      "type": "double",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "published",
+                      "key": "published",
+                      "type": "boolean",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "tags",
+                      "key": "tags",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "signed": true,
+                      "array": true,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "created",
+                      "key": "created",
+                      "type": "datetime",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": [
+                        "datetime"
+                      ]
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "author",
+                      "key": "author",
+                      "type": "relationship",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": [],
+                      "options": {
+                        "relationType": "manyToOne",
+                        "side": "parent",
+                        "twoWay": false
+                      }
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "meta",
+                      "key": "meta",
+                      "type": "object",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "loc",
+                      "key": "loc",
+                      "type": "point",
+                      "size": 0,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "vec",
+                      "key": "vec",
+                      "type": "vector",
+                      "size": 3,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "big",
+                      "key": "big",
+                      "type": "bigint",
+                      "size": 0,
+                      "required": false,
+                      "signed": false,
+                      "array": false,
+                      "filters": []
+                    }
+                  },
+                  {
+                    "$document": {
+                      "$id": "secret",
+                      "key": "secret",
+                      "type": "string",
+                      "size": 32,
+                      "required": false,
+                      "signed": true,
+                      "array": false,
+                      "filters": [
+                        "encrypt"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "indexes": {
+                "gen": "const",
+                "value": [
+                  {
+                    "$document": {
+                      "$id": "ft",
+                      "type": "fulltext",
+                      "attributes": [
+                        "title"
+                      ]
+                    }
+                  }
+                ]
+              },
+              "idAttributeType": {
+                "gen": "pick",
+                "from": [
+                  "integer",
+                  "uuid7"
+                ]
+              },
+              "maxValuesCount": {
+                "gen": "pick",
+                "from": [
+                  5000,
+                  2
+                ]
+              },
+              "supportForAttributes": {
+                "gen": "bool"
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "query"
+                    },
+                    "min": 0,
+                    "max": 4
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "scalar"
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "spatial",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "spatial"
+              },
+              "spatialType": {
+                "gen": "pick",
+                "from": [
+                  "point",
+                  "linestring",
+                  "polygon",
+                  "circle"
+                ]
+              },
+              "value": {
+                "gen": "ref",
+                "name": "spatialvalue"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "vector",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "vector"
+              },
+              "size": {
+                "gen": "int",
+                "min": 0,
+                "max": 4
+              },
+              "value": {
+                "gen": "ref",
+                "name": "vectorvalue"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "big int",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "big_int"
+              },
+              "signed": {
+                "gen": "bool"
+              },
+              "supportUnsigned64Bit": {
+                "gen": "bool"
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 22,
+                    "tricky": 0.0,
+                    "alphabet": "-0123456789\n "
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "18446744073709551615",
+                      "18446744073709551616",
+                      "-9223372036854775808",
+                      "-9223372036854775809"
+                    ]
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "scalar"
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "sequence",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "sequence"
+              },
+              "idAttributeType": {
+                "gen": "pick",
+                "from": [
+                  "integer",
+                  "uuid7",
+                  "string"
+                ]
+              },
+              "primary": {
+                "gen": "bool"
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  {
+                    "gen": "string",
+                    "min": 30,
+                    "max": 37,
+                    "tricky": 0.0,
+                    "alphabet": "0123456789abcdef-7"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "0190d3f8-7e7c-7c8a-9a3e-123456789abc",
+                      "0190D3F8-7E7C-7C8A-BA3E-123456789ABC\n",
+                      "1"
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "object",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "validator": {
+                "gen": "const",
+                "value": "object"
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "anyvalue"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "{",
+                      "{}",
+                      "[1]",
+                      "null",
+                      "1",
+                      "\"a\""
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "validator.is_valid": {
+      "doc": "{valid: $validator->isValid($value), description: ->getDescription(), value: the document after, for documents}",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::isValid",
+        "Utopia\\Database\\Validator\\BigInt::isValid",
+        "Utopia\\Database\\Validator\\ByteLength::isValid",
+        "Utopia\\Database\\Validator\\Datetime::isValid",
+        "Utopia\\Database\\Validator\\Index::isValid",
+        "Utopia\\Database\\Validator\\IndexDependency::isValid",
+        "Utopia\\Database\\Validator\\IndexedQueries::isValid",
+        "Utopia\\Database\\Validator\\Key::isValid",
+        "Utopia\\Database\\Validator\\Label::isValid",
+        "Utopia\\Database\\Validator\\ObjectValidator::isValid",
+        "Utopia\\Database\\Validator\\Operator::isValid",
+        "Utopia\\Database\\Validator\\PartialStructure::isValid",
+        "Utopia\\Database\\Validator\\Permissions::isValid",
+        "Utopia\\Database\\Validator\\Queries::isValid",
+        "Utopia\\Database\\Validator\\Query\\Cursor::isValid",
+        "Utopia\\Database\\Validator\\Query\\Filter::isValid",
+        "Utopia\\Database\\Validator\\Query\\Limit::isValid",
+        "Utopia\\Database\\Validator\\Query\\Offset::isValid",
+        "Utopia\\Database\\Validator\\Query\\Order::isValid",
+        "Utopia\\Database\\Validator\\Query\\Select::isValid",
+        "Utopia\\Database\\Validator\\Roles::isValid",
+        "Utopia\\Database\\Validator\\Sequence::isValid",
+        "Utopia\\Database\\Validator\\Spatial::isValid",
+        "Utopia\\Database\\Validator\\Structure::isValid",
+        "Utopia\\Database\\Validator\\Vector::isValid"
+      ]
+    },
+    "validator.description": {
+      "doc": "$validator->getDescription()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::getDescription",
+        "Utopia\\Database\\Validator\\BigInt::getDescription",
+        "Utopia\\Database\\Validator\\ByteLength::getDescription",
+        "Utopia\\Database\\Validator\\Datetime::getDescription",
+        "Utopia\\Database\\Validator\\Index::getDescription",
+        "Utopia\\Database\\Validator\\IndexDependency::getDescription",
+        "Utopia\\Database\\Validator\\Key::getDescription",
+        "Utopia\\Database\\Validator\\ObjectValidator::getDescription",
+        "Utopia\\Database\\Validator\\Operator::getDescription",
+        "Utopia\\Database\\Validator\\Permissions::getDescription",
+        "Utopia\\Database\\Validator\\Queries::getDescription",
+        "Utopia\\Database\\Validator\\Query\\Base::getDescription",
+        "Utopia\\Database\\Validator\\Roles::getDescription",
+        "Utopia\\Database\\Validator\\Sequence::getDescription",
+        "Utopia\\Database\\Validator\\Spatial::getDescription",
+        "Utopia\\Database\\Validator\\Structure::getDescription",
+        "Utopia\\Database\\Validator\\UID::getDescription",
+        "Utopia\\Database\\Validator\\Vector::getDescription"
+      ]
+    },
+    "validator.meta": {
+      "doc": "{type: getType(), is_array: isArray(), method_type: getMethodType(), max_values_count: getMaxValuesCount(), spatial_type: getSpatialType()} (those the class has)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::getType",
+        "Utopia\\Database\\Validator\\BigInt::getType",
+        "Utopia\\Database\\Validator\\ByteLength::getType",
+        "Utopia\\Database\\Validator\\Datetime::getType",
+        "Utopia\\Database\\Validator\\Index::getType",
+        "Utopia\\Database\\Validator\\IndexDependency::getType",
+        "Utopia\\Database\\Validator\\Key::getType",
+        "Utopia\\Database\\Validator\\ObjectValidator::getType",
+        "Utopia\\Database\\Validator\\Operator::getType",
+        "Utopia\\Database\\Validator\\Permissions::getType",
+        "Utopia\\Database\\Validator\\Queries::getType",
+        "Utopia\\Database\\Validator\\Query\\Base::getType",
+        "Utopia\\Database\\Validator\\Roles::getType",
+        "Utopia\\Database\\Validator\\Sequence::getType",
+        "Utopia\\Database\\Validator\\Spatial::getType",
+        "Utopia\\Database\\Validator\\Structure::getType",
+        "Utopia\\Database\\Validator\\Vector::getType",
+        "Utopia\\Database\\Validator\\Attribute::isArray",
+        "Utopia\\Database\\Validator\\BigInt::isArray",
+        "Utopia\\Database\\Validator\\ByteLength::isArray",
+        "Utopia\\Database\\Validator\\Datetime::isArray",
+        "Utopia\\Database\\Validator\\Index::isArray",
+        "Utopia\\Database\\Validator\\IndexDependency::isArray",
+        "Utopia\\Database\\Validator\\Key::isArray",
+        "Utopia\\Database\\Validator\\ObjectValidator::isArray",
+        "Utopia\\Database\\Validator\\Operator::isArray",
+        "Utopia\\Database\\Validator\\Permissions::isArray",
+        "Utopia\\Database\\Validator\\Queries::isArray",
+        "Utopia\\Database\\Validator\\Query\\Base::isArray",
+        "Utopia\\Database\\Validator\\Roles::isArray",
+        "Utopia\\Database\\Validator\\Sequence::isArray",
+        "Utopia\\Database\\Validator\\Spatial::isArray",
+        "Utopia\\Database\\Validator\\Structure::isArray",
+        "Utopia\\Database\\Validator\\Vector::isArray",
+        "Utopia\\Database\\Validator\\Query\\Cursor::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Filter::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Limit::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Offset::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Order::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Select::getMethodType",
+        "Utopia\\Database\\Validator\\Query\\Filter::getMaxValuesCount",
+        "Utopia\\Database\\Validator\\Spatial::getSpatialType"
+      ]
+    },
+    "validator.call": {
+      "doc": "{valid: $validator->check<Step>($document), description} for Attribute's and Index's public check methods",
+      "covers": [
+        "Utopia\\Database\\Validator\\Attribute::checkAttributeLimits",
+        "Utopia\\Database\\Validator\\Attribute::checkDefaultValue",
+        "Utopia\\Database\\Validator\\Attribute::checkDuplicateId",
+        "Utopia\\Database\\Validator\\Attribute::checkDuplicateInSchema",
+        "Utopia\\Database\\Validator\\Attribute::checkFormat",
+        "Utopia\\Database\\Validator\\Attribute::checkRequiredFilters",
+        "Utopia\\Database\\Validator\\Attribute::checkType",
+        "Utopia\\Database\\Validator\\Index::checkArrayIndexes",
+        "Utopia\\Database\\Validator\\Index::checkDuplicatedAttributes",
+        "Utopia\\Database\\Validator\\Index::checkEmptyIndexAttributes",
+        "Utopia\\Database\\Validator\\Index::checkFulltextIndexNonString",
+        "Utopia\\Database\\Validator\\Index::checkIdenticalIndexes",
+        "Utopia\\Database\\Validator\\Index::checkIndexLengths",
+        "Utopia\\Database\\Validator\\Index::checkKeyUniqueFulltextSupport",
+        "Utopia\\Database\\Validator\\Index::checkMultipleFulltextIndexes",
+        "Utopia\\Database\\Validator\\Index::checkNonSpatialIndexOnSpatialAttributes",
+        "Utopia\\Database\\Validator\\Index::checkObjectIndexes",
+        "Utopia\\Database\\Validator\\Index::checkReservedNames",
+        "Utopia\\Database\\Validator\\Index::checkSpatialIndexes",
+        "Utopia\\Database\\Validator\\Index::checkTTLIndexes",
+        "Utopia\\Database\\Validator\\Index::checkTrigramIndexes",
+        "Utopia\\Database\\Validator\\Index::checkValidAttributes",
+        "Utopia\\Database\\Validator\\Index::checkValidIndex",
+        "Utopia\\Database\\Validator\\Index::checkVectorIndexes"
+      ]
+    },
+    "validator.big_int": {
+      "doc": "BigInt::<fn>($value, ...): isIntegerString, fitsPhpInt, fitsBigIntRange, normalizeUnsignedString, compareUnsignedStrings, formatIntegerString",
+      "covers": [
+        "Utopia\\Database\\Validator\\BigInt::isIntegerString",
+        "Utopia\\Database\\Validator\\BigInt::fitsPhpInt",
+        "Utopia\\Database\\Validator\\BigInt::fitsBigIntRange",
+        "Utopia\\Database\\Validator\\BigInt::normalizeUnsignedString",
+        "Utopia\\Database\\Validator\\BigInt::compareUnsignedStrings",
+        "Utopia\\Database\\Validator\\BigInt::formatIntegerString"
+      ],
+      "fuzz": [
+        {
+          "name": "statics",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "fn": {
+                "gen": "pick",
+                "from": [
+                  "isIntegerString",
+                  "fitsPhpInt",
+                  "fitsBigIntRange",
+                  "normalizeUnsignedString",
+                  "compareUnsignedStrings",
+                  "formatIntegerString"
+                ]
+              },
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 24,
+                    "tricky": 0.0,
+                    "alphabet": "-0123456789\n \t"
+                  },
+                  {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 12,
+                    "tricky": 0.5
+                  }
+                ]
+              },
+              "signed": {
+                "gen": "bool"
+              },
+              "supportUnsigned64Bit": {
+                "gen": "bool"
+              },
+              "other": {
+                "gen": "string",
+                "min": 0,
+                "max": 22,
+                "tricky": 0.0,
+                "alphabet": "0123456789 "
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "validator.spatial_wkt": {
+      "doc": "Spatial::isWKTString($value)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Spatial::isWKTString"
+      ],
+      "fuzz": [
+        {
+          "name": "wkt",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 14,
+                    "tricky": 0.0,
+                    "alphabet": "POINTLINESTRGpolygon( \t\n\u000b\f)"
+                  },
+                  {
+                    "gen": "string",
+                    "min": 0,
+                    "max": 12,
+                    "tricky": 0.5
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "validator.format_add": {
+      "doc": "Structure::addFormat($name, <factory>, $type), factory one of email, text, range, enum (the case formats)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::addFormat"
+      ]
+    },
+    "validator.format_remove": {
+      "doc": "Structure::removeFormat($name)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::removeFormat"
+      ]
+    },
+    "validator.format_has": {
+      "doc": "Structure::hasFormat($name, $type)",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::hasFormat"
+      ]
+    },
+    "validator.format_get": {
+      "doc": "['type' => Structure::getFormat($name, $type)['type']]",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::getFormat"
+      ]
+    },
+    "validator.formats": {
+      "doc": "name => type of Structure::getFormats()",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::getFormats"
+      ]
+    },
+    "role.parse": {
+      "doc": "Role::parse($role) as {role, identifier, dimension, string}",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Role::parse",
+        "Utopia\\Database\\Helpers\\Role::getRole",
+        "Utopia\\Database\\Helpers\\Role::getIdentifier",
+        "Utopia\\Database\\Helpers\\Role::getDimension",
+        "Utopia\\Database\\Helpers\\Role::toString"
+      ],
+      "fuzz": [
+        {
+          "name": "role strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "role": {
+                "gen": "ref",
+                "name": "rolestr"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "role.new": {
+      "doc": "new Role($role, $identifier, $dimension) as role.parse",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Role::__construct"
+      ]
+    },
+    "role.of": {
+      "doc": "Role::<kind>(...) (any, guests, users, user, team, member, label) as role.parse",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Role::any",
+        "Utopia\\Database\\Helpers\\Role::guests",
+        "Utopia\\Database\\Helpers\\Role::users",
+        "Utopia\\Database\\Helpers\\Role::user",
+        "Utopia\\Database\\Helpers\\Role::team",
+        "Utopia\\Database\\Helpers\\Role::member",
+        "Utopia\\Database\\Helpers\\Role::label"
+      ]
+    },
+    "permission.parse": {
+      "doc": "Permission::parse($permission) as {permission, role, identifier, dimension, string}",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Permission::parse",
+        "Utopia\\Database\\Helpers\\Permission::getPermission",
+        "Utopia\\Database\\Helpers\\Permission::getRole",
+        "Utopia\\Database\\Helpers\\Permission::getIdentifier",
+        "Utopia\\Database\\Helpers\\Permission::getDimension",
+        "Utopia\\Database\\Helpers\\Permission::toString"
+      ],
+      "fuzz": [
+        {
+          "name": "permission strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "permission": {
+                "gen": "ref",
+                "name": "permstr"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "permission.new": {
+      "doc": "new Permission($permission, $role, $identifier, $dimension) as permission.parse",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Permission::__construct"
+      ]
+    },
+    "permission.of": {
+      "doc": "Permission::<kind>(new Role($role, $identifier, $dimension)) (read, create, update, delete, write)",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Permission::read",
+        "Utopia\\Database\\Helpers\\Permission::create",
+        "Utopia\\Database\\Helpers\\Permission::update",
+        "Utopia\\Database\\Helpers\\Permission::delete",
+        "Utopia\\Database\\Helpers\\Permission::write"
+      ]
+    },
+    "permission.aggregate": {
+      "doc": "Permission::aggregate($permissions[, $allowed])",
+      "covers": [
+        "Utopia\\Database\\Helpers\\Permission::aggregate"
+      ],
+      "fuzz": [
+        {
+          "name": "aggregate",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "permissions": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "permstr"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "allowed": {
+                "gen": "pick",
+                "from": [
+                  [
+                    "create",
+                    "read",
+                    "update",
+                    "delete"
+                  ],
+                  [
+                    "update"
+                  ],
+                  [],
+                  [
+                    "write",
+                    "x"
+                  ]
+                ]
+              }
+            },
+            "optional": [
+              "allowed"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    }
+  },
+  "generators": {
+    "scalar": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.5
+        },
+        {
+          "gen": "int",
+          "min": -5,
+          "max": 5
+        },
+        {
+          "gen": "float",
+          "min": -1000.0,
+          "max": 1000.0
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "keyish": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 40,
+          "tricky": 0.2,
+          "alphabet": "abcAZ09_.-$ é\n"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "$id",
+            "$createdAt",
+            "$updatedAt",
+            "$permissions",
+            "$",
+            "_a",
+            ".a",
+            "-a",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+            "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+          ]
+        },
+        {
+          "gen": "int",
+          "min": -3,
+          "max": 3
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "bool"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "string",
+            "min": 1,
+            "max": 3,
+            "tricky": 0.0,
+            "alphabet": "abc"
+          },
+          "min": 0,
+          "max": 2
+        }
+      ]
+    },
+    "rolestr": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "any",
+                "guests",
+                "users",
+                "user",
+                "team",
+                "member",
+                "label",
+                "role",
+                "x",
+                "",
+                "*",
+                "us/ers"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                ":",
+                ":",
+                "::"
+              ]
+            },
+            {
+              "gen": "string",
+              "min": 0,
+              "max": 8,
+              "tricky": 0.0,
+              "alphabet": "abcAZ09_.-$é"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "",
+                "/",
+                "//"
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "",
+                "verified",
+                "unverified",
+                "owner",
+                "0",
+                "a/b",
+                "project-123-dev",
+                "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.6
+        }
+      ]
+    },
+    "permstr": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "pick",
+              "from": [
+                "read",
+                "create",
+                "update",
+                "delete",
+                "write",
+                "list",
+                "",
+                "read("
+              ]
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "(\"",
+                "(\"",
+                "(",
+                ""
+              ]
+            },
+            {
+              "gen": "ref",
+              "name": "rolestr"
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "\")",
+                "\")",
+                ")",
+                "",
+                "\")\")"
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.6
+        }
+      ]
+    },
+    "datestr": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "pick",
+          "from": [
+            "2000-01-01",
+            "2020-02-29 10:20:30",
+            "2021-02-29",
+            "0000-01-01 00:00:00",
+            "9999-12-31 23:59:59",
+            "10000-01-01",
+            "1975-12-06 13:00:00.123",
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T00:00:00+05:00",
+            "now",
+            "tomorrow",
+            "+1 day",
+            "1 January 2020",
+            "12345",
+            "2020-13-01",
+            "20200101",
+            "0",
+            "",
+            "2020-01-01 00:00:00.5",
+            "1970-01-01 00:00:01",
+            "-0001-01-01",
+            "2020-01-01 24:00:00",
+            "@86400",
+            "2020-1-1",
+            "2050-06-01 12:00:00"
+          ]
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 25,
+          "tricky": 0.0,
+          "alphabet": "0123456789-:T .Z+"
+        },
+        {
+          "gen": "concat",
+          "parts": [
+            {
+              "gen": "int",
+              "min": 0,
+              "max": 12000
+            },
+            {
+              "gen": "pick",
+              "from": [
+                "-01-01",
+                "-12-31 23:59:59",
+                ""
+              ]
+            }
+          ]
+        },
+        {
+          "gen": "string",
+          "min": 0,
+          "max": 12,
+          "tricky": 0.5
+        }
+      ]
+    },
+    "number": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "int",
+          "min": -200,
+          "max": 200
+        },
+        {
+          "gen": "float",
+          "min": -200,
+          "max": 200
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "10",
+            "1e2",
+            " 5",
+            "abc",
+            "",
+            null,
+            true,
+            [
+              1
+            ]
+          ]
+        },
+        {
+          "gen": "float",
+          "min": -1e+300,
+          "max": 1e+300
+        }
+      ]
+    },
+    "point": {
+      "gen": "array",
+      "items": {
+        "gen": "ref",
+        "name": "number"
+      },
+      "min": 0,
+      "max": 3
+    },
+    "spatialvalue": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "point"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "point"
+          },
+          "min": 0,
+          "max": 5
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "array",
+            "items": {
+              "gen": "ref",
+              "name": "point"
+            },
+            "min": 0,
+            "max": 5
+          },
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "POINT(1 2)",
+            " linestring (1 2, 3 4)",
+            "Polygon((0 0,1 1))",
+            "POINTX",
+            "point",
+            "",
+            "CIRCLE(1)"
+          ]
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "pick",
+          "from": [
+            [
+              [
+                0,
+                0
+              ],
+              [
+                1,
+                0
+              ],
+              [
+                1,
+                1
+              ],
+              [
+                0,
+                0
+              ]
+            ],
+            [
+              [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ],
+                [
+                  0,
+                  0
+                ]
+              ]
+            ],
+            [
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                0
+              ],
+              [
+                0,
+                1
+              ]
+            ],
+            [
+              181,
+              0
+            ],
+            [
+              0,
+              -91
+            ],
+            [
+              "1",
+              "2"
+            ]
+          ]
+        }
+      ]
+    },
+    "vectorvalue": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "number"
+          },
+          "min": 0,
+          "max": 4
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "[1,2]",
+            "[1.5, 2, 3]",
+            "[]",
+            "{\"a\":1}",
+            "[\"1\"]",
+            "nope",
+            "[1,2,3,4]"
+          ]
+        },
+        {
+          "gen": "null"
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 2
+        }
+      ]
+    },
+    "anyvalue": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "ref",
+            "name": "scalar"
+          },
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "any",
+          "depth": 2
+        }
+      ]
+    },
+    "querymethod": {
+      "gen": "pick",
+      "from": [
+        "equal",
+        "notEqual",
+        "lessThan",
+        "lessThanEqual",
+        "greaterThan",
+        "greaterThanEqual",
+        "contains",
+        "containsAny",
+        "containsAll",
+        "notContains",
+        "search",
+        "notSearch",
+        "isNull",
+        "isNotNull",
+        "between",
+        "notBetween",
+        "startsWith",
+        "notStartsWith",
+        "endsWith",
+        "notEndsWith",
+        "regex",
+        "exists",
+        "notExists",
+        "select",
+        "orderAsc",
+        "orderDesc",
+        "orderRandom",
+        "limit",
+        "offset",
+        "cursorAfter",
+        "cursorBefore",
+        "and",
+        "or",
+        "elemMatch",
+        "crosses",
+        "distanceEqual",
+        "intersects",
+        "vectorDot",
+        "vectorCosine",
+        "unknown"
+      ]
+    },
+    "queryattr": {
+      "gen": "pick",
+      "from": [
+        "",
+        "title",
+        "age",
+        "price",
+        "published",
+        "tags",
+        "created",
+        "$id",
+        "$sequence",
+        "$createdAt",
+        "$updatedAt",
+        "missing",
+        "author.name",
+        "meta",
+        "meta.key",
+        "loc",
+        "vec",
+        "big",
+        "secret"
+      ]
+    },
+    "leafquery": {
+      "gen": "object",
+      "fields": {
+        "$query": {
+          "gen": "object",
+          "fields": {
+            "method": {
+              "gen": "ref",
+              "name": "querymethod"
+            },
+            "attribute": {
+              "gen": "ref",
+              "name": "queryattr"
+            },
+            "values": {
+              "gen": "array",
+              "items": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "scalar"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "datestr"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "number"
+                    },
+                    "min": 0,
+                    "max": 3
+                  }
+                ]
+              },
+              "min": 0,
+              "max": 3
+            }
+          },
+          "optional": []
+        }
+      },
+      "optional": []
+    },
+    "query": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "leafquery"
+        },
+        {
+          "gen": "object",
+          "fields": {
+            "$query": {
+              "gen": "object",
+              "fields": {
+                "method": {
+                  "gen": "pick",
+                  "from": [
+                    "and",
+                    "or",
+                    "elemMatch"
+                  ]
+                },
+                "attribute": {
+                  "gen": "ref",
+                  "name": "queryattr"
+                },
+                "values": {
+                  "gen": "array",
+                  "items": {
+                    "gen": "ref",
+                    "name": "leafquery"
+                  },
+                  "min": 0,
+                  "max": 3
+                }
+              },
+              "optional": []
+            }
+          },
+          "optional": []
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "{\"method\":\"equal\",\"attribute\":\"title\",\"values\":[\"a\"]}",
+            "{\"method\":\"limit\",\"values\":[5]}",
+            "nope",
+            "{\"method\":\"foo\"}"
+          ]
+        },
+        {
+          "gen": "int",
+          "min": 0,
+          "max": 2
+        },
+        {
+          "gen": "null"
+        }
+      ]
+    },
+    "docvalue": {
+      "gen": "one_of",
+      "of": [
+        {
+          "gen": "ref",
+          "name": "scalar"
+        },
+        {
+          "gen": "ref",
+          "name": "number"
+        },
+        {
+          "gen": "array",
+          "items": {
+            "gen": "one_of",
+            "of": [
+              {
+                "gen": "ref",
+                "name": "scalar"
+              },
+              {
+                "gen": "ref",
+                "name": "number"
+              }
+            ]
+          },
+          "min": 0,
+          "max": 3
+        },
+        {
+          "gen": "ref",
+          "name": "datestr"
+        },
+        {
+          "gen": "pick",
+          "from": [
+            "123",
+            "-9223372036854775808",
+            "18446744073709551615",
+            "9223372036854775808",
+            "12\n",
+            "007"
+          ]
+        }
+      ]
+    },
+    "document": {
+      "gen": "object",
+      "fields": {
+        "$document": {
+          "gen": "object",
+          "fields": {
+            "$collection": {
+              "gen": "pick",
+              "from": [
+                "movies",
+                "movies",
+                "movies",
+                "",
+                "0"
+              ]
+            },
+            "$id": {
+              "gen": "pick",
+              "from": [
+                "doc1",
+                "",
+                "_bad"
+              ]
+            },
+            "$createdAt": {
+              "gen": "pick",
+              "from": [
+                "2020-01-01 00:00:00",
+                "2020-01-01 00:00:00",
+                "bad",
+                null
+              ]
+            },
+            "$updatedAt": {
+              "gen": "pick",
+              "from": [
+                "2020-01-01 00:00:00",
+                "2020-01-01 00:00:00",
+                "",
+                5
+              ]
+            },
+            "$permissions": {
+              "gen": "array",
+              "items": {
+                "gen": "pick",
+                "from": [
+                  "read(\"any\")",
+                  "x"
+                ]
+              },
+              "min": 0,
+              "max": 2
+            },
+            "title": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "string",
+                  "min": 0,
+                  "max": 20,
+                  "tricky": 0.3
+                },
+                {
+                  "gen": "ref",
+                  "name": "scalar"
+                }
+              ]
+            },
+            "count": {
+              "gen": "ref",
+              "name": "docvalue"
+            },
+            "price": {
+              "gen": "ref",
+              "name": "docvalue"
+            },
+            "published": {
+              "gen": "ref",
+              "name": "docvalue"
+            },
+            "tags": {
+              "gen": "ref",
+              "name": "docvalue"
+            },
+            "big": {
+              "gen": "ref",
+              "name": "docvalue"
+            },
+            "when": {
+              "gen": "ref",
+              "name": "docvalue"
+            },
+            "body": {
+              "gen": "ref",
+              "name": "docvalue"
+            },
+            "loc": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "ref",
+                  "name": "spatialvalue"
+                },
+                {
+                  "gen": "ref",
+                  "name": "docvalue"
+                }
+              ]
+            },
+            "vec": {
+              "gen": "one_of",
+              "of": [
+                {
+                  "gen": "ref",
+                  "name": "vectorvalue"
+                },
+                {
+                  "gen": "ref",
+                  "name": "docvalue"
+                }
+              ]
+            },
+            "meta": {
+              "gen": "ref",
+              "name": "anyvalue"
+            },
+            "ref": {
+              "gen": "ref",
+              "name": "docvalue"
+            },
+            "unknown": {
+              "gen": "ref",
+              "name": "scalar"
+            }
+          },
+          "optional": [
+            "$id",
+            "$createdAt",
+            "$updatedAt",
+            "$permissions",
+            "title",
+            "count",
+            "price",
+            "published",
+            "tags",
+            "big",
+            "when",
+            "body",
+            "loc",
+            "vec",
+            "meta",
+            "ref",
+            "unknown",
+            "$collection"
+          ]
+        }
+      },
+      "optional": []
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": []
+}

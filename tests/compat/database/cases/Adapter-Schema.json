@@ -1,0 +1,4794 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/Postgres.php",
+  "cases": [
+    {
+      "name": "databases",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.list",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "database": "${ns}nope"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "none"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.exists",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "${ns}x\"; DROP"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "collections with every attribute type",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "all",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "s1",
+                  "type": "string",
+                  "size": 10,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "s2",
+                  "type": "string",
+                  "size": 16381,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "s3",
+                  "type": "string",
+                  "size": 16382,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "v1",
+                  "type": "varchar",
+                  "size": 300,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t1",
+                  "type": "text",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t2",
+                  "type": "mediumtext",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t3",
+                  "type": "longtext",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "i1",
+                  "type": "integer",
+                  "size": 4,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "i2",
+                  "type": "integer",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "b1",
+                  "type": "bigint",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "f1",
+                  "type": "double",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "bo",
+                  "type": "boolean",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "dt",
+                  "type": "datetime",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ob",
+                  "type": "object",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "pt",
+                  "type": "point",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ls",
+                  "type": "linestring",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "pg",
+                  "type": "polygon",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ve",
+                  "type": "vector",
+                  "size": 3,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ar",
+                  "type": "integer",
+                  "size": 4,
+                  "required": false,
+                  "signed": true,
+                  "array": true
+                }
+              },
+              {
+                "$document": {
+                  "$id": "id1",
+                  "type": "id",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r1",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToOne",
+                    "twoWay": false,
+                    "side": "parent"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r2",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToOne",
+                    "twoWay": false,
+                    "side": "child"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r3",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToOne",
+                    "twoWay": true,
+                    "side": "child"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r4",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToMany",
+                    "side": "parent"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r5",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "oneToMany",
+                    "side": "child"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r6",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "manyToOne",
+                    "side": "child"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r7",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "manyToOne",
+                    "side": "parent"
+                  }
+                }
+              },
+              {
+                "$document": {
+                  "$id": "r8",
+                  "type": "relationship",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false,
+                  "options": {
+                    "relationType": "manyToMany",
+                    "side": "parent"
+                  }
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "k1",
+                  "type": "key",
+                  "attributes": [
+                    "s1",
+                    "i1"
+                  ],
+                  "orders": [
+                    "ASC",
+                    "DESC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "u1",
+                  "type": "unique",
+                  "attributes": [
+                    "s1"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ft",
+                  "type": "fulltext",
+                  "attributes": [
+                    "t1"
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "sp",
+                  "type": "spatial",
+                  "attributes": [
+                    "pt"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ob",
+                  "type": "object",
+                  "attributes": [
+                    "ob"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "tg",
+                  "type": "trigram",
+                  "attributes": [
+                    "s1",
+                    "v1"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "h1",
+                  "type": "hnsw_euclidean",
+                  "attributes": [
+                    "ve"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "h2",
+                  "type": "hnsw_cosine",
+                  "attributes": [
+                    "ve"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "h3",
+                  "type": "hnsw_dot",
+                  "attributes": [
+                    "ve"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "in",
+                  "type": "key",
+                  "attributes": [
+                    "$id",
+                    "$createdAt",
+                    "$updatedAt",
+                    "$sequence",
+                    "$permissions"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_all' ORDER BY ordinal_position"
+          },
+          "expect": [
+            {
+              "column_name": "_id",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "_uid",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_createdAt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": "NULL::timestamp without time zone",
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "_updatedAt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": "NULL::timestamp without time zone",
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "s1",
+              "data_type": "character varying",
+              "character_maximum_length": "10",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "s2",
+              "data_type": "character varying",
+              "character_maximum_length": "16381",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "s3",
+              "data_type": "text",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "text"
+            },
+            {
+              "column_name": "v1",
+              "data_type": "character varying",
+              "character_maximum_length": "300",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "t1",
+              "data_type": "text",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "text"
+            },
+            {
+              "column_name": "t2",
+              "data_type": "text",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "text"
+            },
+            {
+              "column_name": "t3",
+              "data_type": "text",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "text"
+            },
+            {
+              "column_name": "i1",
+              "data_type": "integer",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int4"
+            },
+            {
+              "column_name": "i2",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "b1",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "f1",
+              "data_type": "double precision",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "float8"
+            },
+            {
+              "column_name": "bo",
+              "data_type": "boolean",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "bool"
+            },
+            {
+              "column_name": "dt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "ob",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            },
+            {
+              "column_name": "pt",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "geometry"
+            },
+            {
+              "column_name": "ls",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "geometry"
+            },
+            {
+              "column_name": "pg",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "geometry"
+            },
+            {
+              "column_name": "ve",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "vector"
+            },
+            {
+              "column_name": "ar",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            },
+            {
+              "column_name": "id1",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "r1",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "r3",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "r5",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "r7",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_permissions",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_all' ORDER BY indexname"
+          },
+          "expect": [
+            {
+              "indexname": "ns__all_ft",
+              "def": "CREATE INDEX ns__all_ft ON t USING btree (t1)"
+            },
+            {
+              "indexname": "ns__all_h1",
+              "def": "CREATE INDEX ns__all_h1 ON t USING hnsw (ve vector_l2_ops)"
+            },
+            {
+              "indexname": "ns__all_h2",
+              "def": "CREATE INDEX ns__all_h2 ON t USING hnsw (ve vector_cosine_ops)"
+            },
+            {
+              "indexname": "ns__all_h3",
+              "def": "CREATE INDEX ns__all_h3 ON t USING hnsw (ve vector_ip_ops)"
+            },
+            {
+              "indexname": "ns__all_in",
+              "def": "CREATE INDEX ns__all_in ON t USING btree (_uid, \"_createdAt\", \"_updatedAt\", _id, _permissions)"
+            },
+            {
+              "indexname": "ns__all_k1",
+              "def": "CREATE INDEX ns__all_k1 ON t USING btree (s1, i1 DESC)"
+            },
+            {
+              "indexname": "ns__all_ob",
+              "def": "CREATE INDEX ns__all_ob ON t USING gin (ob)"
+            },
+            {
+              "indexname": "ns__all_sp",
+              "def": "CREATE INDEX ns__all_sp ON t USING gist (pt)"
+            },
+            {
+              "indexname": "ns__all_tg",
+              "def": "CREATE INDEX ns__all_tg ON t USING gin (s1 gin_trgm_ops, v1 gin_trgm_ops)"
+            },
+            {
+              "indexname": "ns__all_u1",
+              "def": "CREATE UNIQUE INDEX ns__all_u1 ON t USING btree (s1)"
+            },
+            {
+              "indexname": "ns_all_created",
+              "def": "CREATE INDEX ns_all_created ON t USING btree (\"_createdAt\")"
+            },
+            {
+              "indexname": "ns_all_permissions",
+              "def": "CREATE INDEX ns_all_permissions ON t USING gin (_permissions)"
+            },
+            {
+              "indexname": "ns_all_pkey",
+              "def": "CREATE UNIQUE INDEX ns_all_pkey ON t USING btree (_id)"
+            },
+            {
+              "indexname": "ns_all_uid",
+              "def": "CREATE UNIQUE INDEX ns_all_uid ON t USING btree (_uid COLLATE utf8_ci_ai)"
+            },
+            {
+              "indexname": "ns_all_updated",
+              "def": "CREATE INDEX ns_all_updated ON t USING btree (\"_updatedAt\")"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_all_perms' ORDER BY ordinal_position"
+          },
+          "expect": [
+            {
+              "column_name": "_id",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "_tenant",
+              "data_type": "integer",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int4"
+            },
+            {
+              "column_name": "_type",
+              "data_type": "character varying",
+              "character_maximum_length": "12",
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_permission",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_document",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "varchar"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_all_perms' ORDER BY indexname"
+          },
+          "expect": [
+            {
+              "indexname": "ns_all_permission",
+              "def": "CREATE INDEX ns_all_permission ON t USING btree (_permission, _type)"
+            },
+            {
+              "indexname": "ns_all_perms_pkey",
+              "def": "CREATE UNIQUE INDEX ns_all_perms_pkey ON t USING btree (_id)"
+            },
+            {
+              "indexname": "ns_all_ukey",
+              "def": "CREATE UNIQUE INDEX ns_all_ukey ON t USING btree (_document COLLATE utf8_ci_ai, _type, _permission)"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT f_geometry_column, type, srid FROM geometry_columns WHERE f_table_schema = '${ns}' ORDER BY 1"
+          },
+          "expect": [
+            {
+              "f_geometry_column": "ls",
+              "type": "LINESTRING",
+              "srid": "4326"
+            },
+            {
+              "f_geometry_column": "pg",
+              "type": "POLYGON",
+              "srid": "4326"
+            },
+            {
+              "f_geometry_column": "pt",
+              "type": "POINT",
+              "srid": "4326"
+            }
+          ]
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "all"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "Mixed-Case_1"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "w h@t"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns_Mixed-Case_1"
+            },
+            {
+              "table_name": "ns_Mixed-Case_1_perms"
+            },
+            {
+              "table_name": "ns_all"
+            },
+            {
+              "table_name": "ns_all_perms"
+            },
+            {
+              "table_name": "ns_wht"
+            },
+            {
+              "table_name": "ns_wht_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.size_of_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "on-disk sizes depend on the server's storage, not on the adapter"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.size_of_collection_on_disk",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "on-disk sizes depend on the server's storage, not on the adapter"
+          },
+          "expect": "<masked>"
+        },
+        {
+          "op": "adapter.size_of_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing"
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "adapter.size_of_collection_on_disk",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing"
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "adapter.analyze_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "expect": false
+        },
+        {
+          "op": "adapter.schema_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.schema_indexes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "all"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.delete_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "id": "all"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "id": "all"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "id": "whte"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns_Mixed-Case_1"
+            },
+            {
+              "table_name": "ns_Mixed-Case_1_perms"
+            },
+            {
+              "table_name": "ns_wht"
+            },
+            {
+              "table_name": "ns_wht_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_all\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"s1\" VARCHAR(10),  \"s2\" VARCHAR(16381),  \"s3\" TEXT,  \"v1\" VARCHAR(300),  \"t1\" TEXT,  \"t2\" TEXT,  \"t3\" TEXT,  \"i1\" INTEGER,  \"i2\" BIGINT,  \"b1\" BIGINT,  \"f1\" DOUBLE PRECISION,  \"bo\" BOOLEAN,  \"dt\" TIMESTAMP(3),  \"ob\" JSONB,  \"pt\" GEOMETRY(POINT,4326),  \"ls\" GEOMETRY(LINESTRING,4326),  \"pg\" GEOMETRY(POLYGON,4326),  \"ve\" VECTOR(3),  \"ar\" JSONB,  \"id1\" BIGINT,  \"r1\" VARCHAR(255),  \"r3\" VARCHAR(255),  \"r5\" VARCHAR(255),  \"r7\" VARCHAR(255), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_all_uid\" ON \"${ns}\".\"ns_all\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_all_created\" ON \"${ns}\".\"ns_all\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_all_updated\" ON \"${ns}\".\"ns_all\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_all_permissions\" ON \"${ns}\".\"ns_all\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_all_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_all_ukey\" \n                    ON \"${ns}\".\"ns_all_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_all_permission\" \n                    ON \"${ns}\".\"ns_all_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_k1\" ON \"${ns}\".\"ns_all\" (\"s1\" ASC, \"i1\" DESC)"
+            ],
+            [
+              "*",
+              "CREATE UNIQUE INDEX \"ns__all_u1\" ON \"${ns}\".\"ns_all\" (\"s1\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_ft\" ON \"${ns}\".\"ns_all\" (\"t1\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_sp\" ON \"${ns}\".\"ns_all\" USING GIST (\"pt\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_ob\" ON \"${ns}\".\"ns_all\" USING GIN (\"ob\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_tg\" ON \"${ns}\".\"ns_all\" USING GIN (\"s1\" gin_trgm_ops, \"v1\" gin_trgm_ops)"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_h1\" ON \"${ns}\".\"ns_all\" USING HNSW (\"ve\"  vector_l2_ops)"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_h2\" ON \"${ns}\".\"ns_all\" USING HNSW (\"ve\"  vector_cosine_ops)"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_h3\" ON \"${ns}\".\"ns_all\" USING HNSW (\"ve\"  vector_ip_ops)"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__all_in\" ON \"${ns}\".\"ns_all\" (\"_uid\" , \"_createdAt\" , \"_updatedAt\" , \"_id\" , \"_permissions\" )"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_all\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_all_uid\" ON \"${ns}\".\"ns_all\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_all_created\" ON \"${ns}\".\"ns_all\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_all_updated\" ON \"${ns}\".\"ns_all\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_all_permissions\" ON \"${ns}\".\"ns_all\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_all_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_all_ukey\" \n                    ON \"${ns}\".\"ns_all_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_all_permission\" \n                    ON \"${ns}\".\"ns_all_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_Mixed-Case_1\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_Mixed-Case_1_uid\" ON \"${ns}\".\"ns_Mixed-Case_1\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_Mixed-Case_1_created\" ON \"${ns}\".\"ns_Mixed-Case_1\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_Mixed-Case_1_updated\" ON \"${ns}\".\"ns_Mixed-Case_1\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_Mixed-Case_1_permissions\" ON \"${ns}\".\"ns_Mixed-Case_1\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_Mixed-Case_1_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_Mixed-Case_1_ukey\" \n                    ON \"${ns}\".\"ns_Mixed-Case_1_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_Mixed-Case_1_permission\" \n                    ON \"${ns}\".\"ns_Mixed-Case_1_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_wht\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_wht_uid\" ON \"${ns}\".\"ns_wht\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_wht_created\" ON \"${ns}\".\"ns_wht\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_wht_updated\" ON \"${ns}\".\"ns_wht\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_wht_permissions\" ON \"${ns}\".\"ns_wht\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_wht_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_wht_ukey\" \n                    ON \"${ns}\".\"ns_wht_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_wht_permission\" \n                    ON \"${ns}\".\"ns_wht_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "DROP TABLE \"${ns}\".\"ns_all\", \"${ns}\".\"ns_all_perms\""
+            ],
+            [
+              "*",
+              "DROP TABLE \"${ns}\".\"ns_all\", \"${ns}\".\"ns_all_perms\""
+            ],
+            [
+              "*",
+              "DROP TABLE \"${ns}\".\"ns_whte\", \"${ns}\".\"ns_whte_perms\""
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "collection creation failures",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "nope",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown Type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, object, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "string",
+                  "size": 10,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "nope",
+                  "attributes": [
+                    "x"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown index type: nope. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns_bad"
+            },
+            {
+              "table_name": "ns_bad_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad2",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "string",
+                  "size": 10,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "key",
+                  "attributes": [
+                    "missing"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns_bad"
+            },
+            {
+              "table_name": "ns_bad2"
+            },
+            {
+              "table_name": "ns_bad2_perms"
+            },
+            {
+              "table_name": "ns_bad_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad3",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "p",
+                  "type": "point",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "spatial",
+                  "attributes": [
+                    "p"
+                  ],
+                  "orders": [
+                    "ASC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Spatial indexes with explicit orders are not supported. Remove the orders to create this index."
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns_bad"
+            },
+            {
+              "table_name": "ns_bad2"
+            },
+            {
+              "table_name": "ns_bad2_perms"
+            },
+            {
+              "table_name": "ns_bad3"
+            },
+            {
+              "table_name": "ns_bad3_perms"
+            },
+            {
+              "table_name": "ns_bad_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad4",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "string",
+                  "size": 10,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "x",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns_bad"
+            },
+            {
+              "table_name": "ns_bad2"
+            },
+            {
+              "table_name": "ns_bad2_perms"
+            },
+            {
+              "table_name": "ns_bad3"
+            },
+            {
+              "table_name": "ns_bad3_perms"
+            },
+            {
+              "table_name": "ns_bad_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad5",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "o",
+                  "type": "object",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "key",
+                  "attributes": [
+                    "o.a b"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad6",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "o",
+                  "type": "object",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "i",
+                  "type": "key",
+                  "attributes": [
+                    "o.a"
+                  ],
+                  "orders": [
+                    "DESC"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "bad7",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "v",
+                  "type": "vector",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[22023]: Invalid parameter value: 7 ERROR:  dimensions for type vector must be at least 1\nLINE 8:                 \"v\" VECTOR(0), \n                            ^"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns_bad"
+            },
+            {
+              "table_name": "ns_bad2"
+            },
+            {
+              "table_name": "ns_bad2_perms"
+            },
+            {
+              "table_name": "ns_bad3"
+            },
+            {
+              "table_name": "ns_bad3_perms"
+            },
+            {
+              "table_name": "ns_bad5"
+            },
+            {
+              "table_name": "ns_bad5_perms"
+            },
+            {
+              "table_name": "ns_bad6"
+            },
+            {
+              "table_name": "ns_bad6_perms"
+            },
+            {
+              "table_name": "ns_bad_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"x\" VARCHAR(10), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_bad_uid\" ON \"${ns}\".\"ns_bad\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_bad_created\" ON \"${ns}\".\"ns_bad\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_bad_updated\" ON \"${ns}\".\"ns_bad\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_bad_permissions\" ON \"${ns}\".\"ns_bad\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_bad_ukey\" \n                    ON \"${ns}\".\"ns_bad_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_bad_permission\" \n                    ON \"${ns}\".\"ns_bad_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad2\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"x\" VARCHAR(10), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_bad2_uid\" ON \"${ns}\".\"ns_bad2\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_bad2_created\" ON \"${ns}\".\"ns_bad2\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_bad2_updated\" ON \"${ns}\".\"ns_bad2\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_bad2_permissions\" ON \"${ns}\".\"ns_bad2\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad2_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_bad2_ukey\" \n                    ON \"${ns}\".\"ns_bad2_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_bad2_permission\" \n                    ON \"${ns}\".\"ns_bad2_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__bad2_i\" ON \"${ns}\".\"ns_bad2\" (\"missing\" )"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad3\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"p\" GEOMETRY(POINT,4326), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_bad3_uid\" ON \"${ns}\".\"ns_bad3\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_bad3_created\" ON \"${ns}\".\"ns_bad3\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_bad3_updated\" ON \"${ns}\".\"ns_bad3\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_bad3_permissions\" ON \"${ns}\".\"ns_bad3\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad3_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_bad3_ukey\" \n                    ON \"${ns}\".\"ns_bad3_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_bad3_permission\" \n                    ON \"${ns}\".\"ns_bad3_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad4\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"x\" VARCHAR(10),  \"x\" INTEGER, \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_bad4_uid\" ON \"${ns}\".\"ns_bad4\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_bad4_created\" ON \"${ns}\".\"ns_bad4\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_bad4_updated\" ON \"${ns}\".\"ns_bad4\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_bad4_permissions\" ON \"${ns}\".\"ns_bad4\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad4_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_bad4_ukey\" \n                    ON \"${ns}\".\"ns_bad4_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_bad4_permission\" \n                    ON \"${ns}\".\"ns_bad4_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad5\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"o\" JSONB, \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_bad5_uid\" ON \"${ns}\".\"ns_bad5\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_bad5_created\" ON \"${ns}\".\"ns_bad5\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_bad5_updated\" ON \"${ns}\".\"ns_bad5\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_bad5_permissions\" ON \"${ns}\".\"ns_bad5\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad5_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_bad5_ukey\" \n                    ON \"${ns}\".\"ns_bad5_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_bad5_permission\" \n                    ON \"${ns}\".\"ns_bad5_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__bad5_i\" ON \"${ns}\".\"ns_bad5\" (\"oab\" )"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad6\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"o\" JSONB, \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_bad6_uid\" ON \"${ns}\".\"ns_bad6\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_bad6_created\" ON \"${ns}\".\"ns_bad6\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_bad6_updated\" ON \"${ns}\".\"ns_bad6\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_bad6_permissions\" ON \"${ns}\".\"ns_bad6\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad6_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_bad6_ukey\" \n                    ON \"${ns}\".\"ns_bad6_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_bad6_permission\" \n                    ON \"${ns}\".\"ns_bad6_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__bad6_i\" ON \"${ns}\".\"ns_bad6\" (\"oa\" DESC)"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad7\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"v\" VECTOR(0), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_bad7_uid\" ON \"${ns}\".\"ns_bad7\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_bad7_created\" ON \"${ns}\".\"ns_bad7\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_bad7_updated\" ON \"${ns}\".\"ns_bad7\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_bad7_permissions\" ON \"${ns}\".\"ns_bad7\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_bad7_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_bad7_ukey\" \n                    ON \"${ns}\".\"ns_bad7_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_bad7_permission\" \n                    ON \"${ns}\".\"ns_bad7_perms\" USING btree (_permission,_type); \n            "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "long names are shortened to 63 bytes",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_namespace",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "namespace": "namespace_long_enough_to_matter"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "a_collection_with_a_rather_long_name_xyz",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "type": "string",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "an_index_with_a_long_name",
+                  "type": "key",
+                  "attributes": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "67bb86485a98ff83388d4c118e5c6968_perms"
+            },
+            {
+              "table_name": "80ddfa2b9b545bbe6e5b8662f8faf107_perms"
+            },
+            {
+              "table_name": "91ebffdc6375cc355dcf42f0232fe84b"
+            },
+            {
+              "table_name": "a2c38ba5f0512c2b84afdd45985a0b4d_xyz"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'namespace_long_enough_to_matter_a_collection_with_a_rather_long' ORDER BY indexname"
+          },
+          "expect": []
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a_collection_with_a_rather_long_name_xyz",
+            "old": "an_index_with_a_long_name",
+            "new": "renamed_index_with_a_long_name"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a_collection_with_a_rather_long_name_xyz",
+            "id": "renamed_index_with_a_long_name"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a_collection_with_a_rather_long_name_xyz",
+            "document": {
+              "$document": {
+                "$id": "d",
+                "a": "x"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d",
+              "a": "x",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a_collection_with_a_rather_long_name_xyz"
+          },
+          "expect": [
+            {
+              "$document": {
+                "a": "x",
+                "$id": "d",
+                "$sequence": "1",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": []
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"<id>dd45985a0b4d_xyz\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"a\" VARCHAR(8), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"<id>c630963d5027_uid\" ON \"${ns}\".\"<id>dd45985a0b4d_xyz\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"<id>9d1ce357928a_created\" ON \"${ns}\".\"<id>dd45985a0b4d_xyz\" (\"_createdAt\");\n            \tCREATE INDEX \"<id>bb452615d0bf_updated\" ON \"${ns}\".\"<id>dd45985a0b4d_xyz\" (\"_updatedAt\");\n            \tCREATE INDEX \"<id>8083d3972bfe_permissions\" ON \"${ns}\".\"<id>dd45985a0b4d_xyz\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"<id>4c118e5c6968_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"<id>91fb195dc1c5_ukey\" \n                    ON \"${ns}\".\"<id>4c118e5c6968_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"<id>5e7d511ef337_permission\" \n                    ON \"${ns}\".\"<id>4c118e5c6968_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "CREATE INDEX \"<id>943fe11ea4bd_name\" ON \"${ns}\".\"<id>dd45985a0b4d_xyz\" (\"a\" )"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"<id>42f0232fe84b\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"<id>6e94b0d4b72c_uid\" ON \"${ns}\".\"<id>42f0232fe84b\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"<id>0c59f5db3d1c_created\" ON \"${ns}\".\"<id>42f0232fe84b\" (\"_createdAt\");\n            \tCREATE INDEX \"<id>0e147fa3bb46_updated\" ON \"${ns}\".\"<id>42f0232fe84b\" (\"_updatedAt\");\n            \tCREATE INDEX \"<id>8bf025509733_permissions\" ON \"${ns}\".\"<id>42f0232fe84b\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"<id>8662f8faf107_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"<id>8ca8b641275d_ukey\" \n                    ON \"${ns}\".\"<id>8662f8faf107_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"<id>7e25c8d9233f_permission\" \n                    ON \"${ns}\".\"<id>8662f8faf107_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "ALTER INDEX \"${ns}\".\"<id>943fe11ea4bd_name\" RENAME TO \"<id>659973662b96_name\""
+            ],
+            [
+              "*",
+              "DROP INDEX IF EXISTS \"${ns}\".\"<id>659973662b96_name\""
+            ],
+            [
+              "*",
+              "\n\t\t\tINSERT INTO \"${ns}\".\"<id>dd45985a0b4d_xyz\" (\"a\", \"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2, :key_3,  :_uid)\n\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT \"main\".*\n            FROM \"${ns}\".\"<id>dd45985a0b4d_xyz\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "shared tables",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "args": {
+            "shared_tables": true,
+            "tenant": 3
+          },
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "st",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "type": "string",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ],
+            "indexes": [
+              {
+                "$document": {
+                  "$id": "ia",
+                  "type": "key",
+                  "attributes": [
+                    "a"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "ua",
+                  "type": "unique",
+                  "attributes": [
+                    "a"
+                  ]
+                }
+              },
+              {
+                "$document": {
+                  "$id": "fa",
+                  "type": "fulltext",
+                  "attributes": [
+                    "a"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_st' ORDER BY ordinal_position"
+          },
+          "expect": [
+            {
+              "column_name": "_id",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "_uid",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_tenant",
+              "data_type": "integer",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int4"
+            },
+            {
+              "column_name": "_createdAt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": "NULL::timestamp without time zone",
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "_updatedAt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": "NULL::timestamp without time zone",
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "a",
+              "data_type": "character varying",
+              "character_maximum_length": "8",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_permissions",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_st' ORDER BY indexname"
+          },
+          "expect": [
+            {
+              "indexname": "ns_3_st_created",
+              "def": "CREATE INDEX ns_3_st_created ON t USING btree (_tenant, \"_createdAt\")"
+            },
+            {
+              "indexname": "ns_3_st_fa",
+              "def": "CREATE INDEX ns_3_st_fa ON t USING btree (a)"
+            },
+            {
+              "indexname": "ns_3_st_ia",
+              "def": "CREATE INDEX ns_3_st_ia ON t USING btree (_tenant, a)"
+            },
+            {
+              "indexname": "ns_3_st_permissions",
+              "def": "CREATE INDEX ns_3_st_permissions ON t USING gin (_permissions)"
+            },
+            {
+              "indexname": "ns_3_st_tenant_id",
+              "def": "CREATE INDEX ns_3_st_tenant_id ON t USING btree (_tenant, _id)"
+            },
+            {
+              "indexname": "ns_3_st_ua",
+              "def": "CREATE UNIQUE INDEX ns_3_st_ua ON t USING btree (_tenant, a)"
+            },
+            {
+              "indexname": "ns_3_st_uid",
+              "def": "CREATE UNIQUE INDEX ns_3_st_uid ON t USING btree (_uid COLLATE utf8_ci_ai, _tenant)"
+            },
+            {
+              "indexname": "ns_3_st_updated",
+              "def": "CREATE INDEX ns_3_st_updated ON t USING btree (_tenant, \"_updatedAt\")"
+            },
+            {
+              "indexname": "ns_st_pkey",
+              "def": "CREATE UNIQUE INDEX ns_st_pkey ON t USING btree (_id)"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_st_perms' ORDER BY indexname"
+          },
+          "expect": [
+            {
+              "indexname": "ns_3_st_permission",
+              "def": "CREATE INDEX ns_3_st_permission ON t USING btree (_tenant, _permission, _type)"
+            },
+            {
+              "indexname": "ns_3_st_ukey",
+              "def": "CREATE UNIQUE INDEX ns_3_st_ukey ON t USING btree (_tenant, _document, _type, _permission)"
+            },
+            {
+              "indexname": "ns_st_perms_pkey",
+              "def": "CREATE UNIQUE INDEX ns_st_perms_pkey ON t USING btree (_id)"
+            }
+          ]
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": null
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "st"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "st",
+            "id": "ib",
+            "type": "key",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_st' ORDER BY indexname"
+          },
+          "expect": [
+            {
+              "indexname": "ns_3_st_created",
+              "def": "CREATE INDEX ns_3_st_created ON t USING btree (_tenant, \"_createdAt\")"
+            },
+            {
+              "indexname": "ns_3_st_fa",
+              "def": "CREATE INDEX ns_3_st_fa ON t USING btree (a)"
+            },
+            {
+              "indexname": "ns_3_st_ia",
+              "def": "CREATE INDEX ns_3_st_ia ON t USING btree (_tenant, a)"
+            },
+            {
+              "indexname": "ns_3_st_permissions",
+              "def": "CREATE INDEX ns_3_st_permissions ON t USING gin (_permissions)"
+            },
+            {
+              "indexname": "ns_3_st_tenant_id",
+              "def": "CREATE INDEX ns_3_st_tenant_id ON t USING btree (_tenant, _id)"
+            },
+            {
+              "indexname": "ns_3_st_ua",
+              "def": "CREATE UNIQUE INDEX ns_3_st_ua ON t USING btree (_tenant, a)"
+            },
+            {
+              "indexname": "ns_3_st_uid",
+              "def": "CREATE UNIQUE INDEX ns_3_st_uid ON t USING btree (_uid COLLATE utf8_ci_ai, _tenant)"
+            },
+            {
+              "indexname": "ns_3_st_updated",
+              "def": "CREATE INDEX ns_3_st_updated ON t USING btree (_tenant, \"_updatedAt\")"
+            },
+            {
+              "indexname": "ns__st_ib",
+              "def": "CREATE INDEX ns__st_ib ON t USING btree (_tenant, a)"
+            },
+            {
+              "indexname": "ns_st_pkey",
+              "def": "CREATE UNIQUE INDEX ns_st_pkey ON t USING btree (_id)"
+            }
+          ]
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": "x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "st",
+            "id": "ia"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.set_tenant",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "tenant": 3
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "st",
+            "id": "ia"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "st",
+            "old": "ua",
+            "new": "ub"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_st' ORDER BY indexname"
+          },
+          "expect": [
+            {
+              "indexname": "ns_3_st_created",
+              "def": "CREATE INDEX ns_3_st_created ON t USING btree (_tenant, \"_createdAt\")"
+            },
+            {
+              "indexname": "ns_3_st_fa",
+              "def": "CREATE INDEX ns_3_st_fa ON t USING btree (a)"
+            },
+            {
+              "indexname": "ns_3_st_permissions",
+              "def": "CREATE INDEX ns_3_st_permissions ON t USING gin (_permissions)"
+            },
+            {
+              "indexname": "ns_3_st_tenant_id",
+              "def": "CREATE INDEX ns_3_st_tenant_id ON t USING btree (_tenant, _id)"
+            },
+            {
+              "indexname": "ns_3_st_ub",
+              "def": "CREATE UNIQUE INDEX ns_3_st_ub ON t USING btree (_tenant, a)"
+            },
+            {
+              "indexname": "ns_3_st_uid",
+              "def": "CREATE UNIQUE INDEX ns_3_st_uid ON t USING btree (_uid COLLATE utf8_ci_ai, _tenant)"
+            },
+            {
+              "indexname": "ns_3_st_updated",
+              "def": "CREATE INDEX ns_3_st_updated ON t USING btree (_tenant, \"_updatedAt\")"
+            },
+            {
+              "indexname": "ns__st_ib",
+              "def": "CREATE INDEX ns__st_ib ON t USING btree (_tenant, a)"
+            },
+            {
+              "indexname": "ns_st_pkey",
+              "def": "CREATE UNIQUE INDEX ns_st_pkey ON t USING btree (_id)"
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_st\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                _tenant INTEGER DEFAULT NULL,\n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"a\" VARCHAR(8), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_3_st_uid\" ON \"${ns}\".\"ns_st\" (\"_uid\" COLLATE utf8_ci_ai, \"_tenant\");\n            \tCREATE INDEX \"ns_3_st_created\" ON \"${ns}\".\"ns_st\" (_tenant, \"_createdAt\");\n            \tCREATE INDEX \"ns_3_st_updated\" ON \"${ns}\".\"ns_st\" (_tenant, \"_updatedAt\");\n            \tCREATE INDEX \"ns_3_st_tenant_id\" ON \"${ns}\".\"ns_st\" (_tenant, _id);\n            \tCREATE INDEX \"ns_3_st_permissions\" ON \"${ns}\".\"ns_st\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_st_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_3_st_ukey\" \n                    ON \"${ns}\".\"ns_st_perms\" USING btree (_tenant,_document,_type,_permission);\n                CREATE INDEX \"ns_3_st_permission\" \n                    ON \"${ns}\".\"ns_st_perms\" USING btree (_tenant,_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns_3_st_ia\" ON \"${ns}\".\"ns_st\" (_tenant, \"a\" )"
+            ],
+            [
+              "*",
+              "CREATE UNIQUE INDEX \"ns_3_st_ua\" ON \"${ns}\".\"ns_st\" (_tenant, \"a\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns_3_st_fa\" ON \"${ns}\".\"ns_st\" (\"a\" )"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_st\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                _tenant INTEGER DEFAULT NULL,\n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns__st_uid\" ON \"${ns}\".\"ns_st\" (\"_uid\" COLLATE utf8_ci_ai, \"_tenant\");\n            \tCREATE INDEX \"ns__st_created\" ON \"${ns}\".\"ns_st\" (_tenant, \"_createdAt\");\n            \tCREATE INDEX \"ns__st_updated\" ON \"${ns}\".\"ns_st\" (_tenant, \"_updatedAt\");\n            \tCREATE INDEX \"ns__st_tenant_id\" ON \"${ns}\".\"ns_st\" (_tenant, _id);\n            \tCREATE INDEX \"ns__st_permissions\" ON \"${ns}\".\"ns_st\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_st_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns__st_ukey\" \n                    ON \"${ns}\".\"ns_st_perms\" USING btree (_tenant,_document,_type,_permission);\n                CREATE INDEX \"ns__st_permission\" \n                    ON \"${ns}\".\"ns_st_perms\" USING btree (_tenant,_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__st_ib\" ON \"${ns}\".\"ns_st\" (_tenant, \"a\" )"
+            ],
+            [
+              "*",
+              "DROP INDEX IF EXISTS \"${ns}\".\"ns_x_st_ia\""
+            ],
+            [
+              "*",
+              "DROP INDEX IF EXISTS \"${ns}\".\"ns_3_st_ia\""
+            ],
+            [
+              "*",
+              "ALTER INDEX \"${ns}\".\"ns_3_st_ua\" RENAME TO \"ns_3_st_ub\""
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "attributes",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "at",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "type": "string",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_string20",
+            "type": "string",
+            "size": 20,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_string20000",
+            "type": "string",
+            "size": 20000,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_integer4",
+            "type": "integer",
+            "size": 4,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_integer8",
+            "type": "integer",
+            "size": 8,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_double0",
+            "type": "double",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_boolean0",
+            "type": "boolean",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_datetime0",
+            "type": "datetime",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_object0",
+            "type": "object",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_point0",
+            "type": "point",
+            "size": 0,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector4",
+            "type": "vector",
+            "size": 4,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector0",
+            "type": "vector",
+            "size": 0,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector dimensions must be a positive integer"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector16001",
+            "type": "vector",
+            "size": 16001,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector dimensions cannot exceed 16000"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector16000",
+            "type": "vector",
+            "size": 16000,
+            "array": false
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_varchar5",
+            "type": "varchar",
+            "size": 5,
+            "array": true
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_nope1",
+            "type": "nope",
+            "size": 1,
+            "array": false
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown Type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, object, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "a",
+            "type": "string",
+            "size": 8
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing",
+            "id": "a",
+            "type": "string",
+            "size": 8
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "attributes": [
+              {
+                "$id": "m1",
+                "type": "string",
+                "size": 5
+              },
+              {
+                "$id": "m2",
+                "type": "integer",
+                "size": 4,
+                "signed": false,
+                "required": true
+              },
+              {
+                "$id": "m3",
+                "type": "text",
+                "size": 0,
+                "array": true
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "attributes": [
+              {
+                "$id": "m4",
+                "type": "string",
+                "size": 5
+              },
+              {
+                "$id": "m1",
+                "type": "string",
+                "size": 5
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Attribute already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_attributes",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "attributes": [
+              {
+                "$id": "m5",
+                "type": "bad",
+                "size": 5
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown Type: bad. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, object, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_at' ORDER BY ordinal_position"
+          },
+          "expect": [
+            {
+              "column_name": "_id",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "_uid",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_createdAt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": "NULL::timestamp without time zone",
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "_updatedAt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": "NULL::timestamp without time zone",
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "a",
+              "data_type": "character varying",
+              "character_maximum_length": "8",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_permissions",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            },
+            {
+              "column_name": "c_string20",
+              "data_type": "character varying",
+              "character_maximum_length": "20",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "c_string20000",
+              "data_type": "text",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "text"
+            },
+            {
+              "column_name": "c_integer4",
+              "data_type": "integer",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int4"
+            },
+            {
+              "column_name": "c_integer8",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "c_double0",
+              "data_type": "double precision",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "float8"
+            },
+            {
+              "column_name": "c_boolean0",
+              "data_type": "boolean",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "bool"
+            },
+            {
+              "column_name": "c_datetime0",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "c_object0",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            },
+            {
+              "column_name": "c_point0",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "geometry"
+            },
+            {
+              "column_name": "c_vector4",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "vector"
+            },
+            {
+              "column_name": "c_vector16000",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "vector"
+            },
+            {
+              "column_name": "c_varchar5",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            },
+            {
+              "column_name": "m1",
+              "data_type": "character varying",
+              "character_maximum_length": "5",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "m2",
+              "data_type": "integer",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int4"
+            },
+            {
+              "column_name": "m3",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            }
+          ]
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "document": {
+              "$document": {
+                "$id": "d1",
+                "a": "abcdefgh",
+                "c_integer4": 7,
+                "c_datetime0": "2021-03-04 05:06:07.891"
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d1",
+              "a": "abcdefgh",
+              "c_integer4": 7,
+              "c_datetime0": "2021-03-04 05:06:07.891",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "a",
+            "type": "string",
+            "size": 4
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Truncate",
+              "message": "Resize would result in data truncation"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "a",
+            "type": "string",
+            "size": 12
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "a",
+            "type": "string",
+            "size": 12,
+            "new_key": "b"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "b",
+            "type": "string",
+            "size": 12,
+            "new_key": "0"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "b",
+            "type": "string",
+            "size": 12,
+            "new_key": "b"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_integer4",
+            "type": "string",
+            "size": 10
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_datetime0",
+            "type": "datetime"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42883]: Undefined function: 7 ERROR:  function to_timestamp(timestamp without time zone, unknown) does not exist\nLINE 3: ...etime0\" TYPE TIMESTAMP(3) without time zone USING TO_TIMESTA...\n                                                             ^\nHINT:  No function matches the given name and argument types. You might need to add explicit type casts."
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_string20",
+            "type": "datetime"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector4",
+            "type": "vector",
+            "size": 0
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Vector dimensions must be a positive integer"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "c_vector4",
+            "type": "vector",
+            "size": 6
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "missing",
+            "type": "string",
+            "size": 6
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "missing",
+            "type": "string",
+            "size": 6,
+            "new_key": "other"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42703]: Undefined column: 7 ERROR:  column \"missing\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "m1",
+            "type": "nope",
+            "size": 6
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown Type: nope. Must be one of string, varchar, text, mediumtext, longtext, integer, bigint, double, boolean, datetime, relationship, object, point, linestring, polygon"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "old": "b",
+            "new": "bb"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.rename_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "old": "b",
+            "new": "bb"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42703]: Undefined column: 7 ERROR:  column \"b\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "old": "bb",
+            "new": "m1"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42701]: Duplicate column: 7 ERROR:  column \"m1\" of relation \"ns_at\" already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "bb"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at",
+            "id": "bb"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_attribute",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing",
+            "id": "bb"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation \"${ns}.ns_missing\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT column_name, data_type, character_maximum_length, is_nullable, column_default, udt_name FROM information_schema.columns WHERE table_schema = '${ns}' AND table_name = 'ns_at' ORDER BY ordinal_position"
+          },
+          "expect": [
+            {
+              "column_name": "_id",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "_uid",
+              "data_type": "character varying",
+              "character_maximum_length": "255",
+              "is_nullable": "NO",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "_createdAt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": "NULL::timestamp without time zone",
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "_updatedAt",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": "NULL::timestamp without time zone",
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "_permissions",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            },
+            {
+              "column_name": "c_string20",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "c_string20000",
+              "data_type": "text",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "text"
+            },
+            {
+              "column_name": "c_integer4",
+              "data_type": "character varying",
+              "character_maximum_length": "10",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "c_integer8",
+              "data_type": "bigint",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int8"
+            },
+            {
+              "column_name": "c_double0",
+              "data_type": "double precision",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "float8"
+            },
+            {
+              "column_name": "c_boolean0",
+              "data_type": "boolean",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "bool"
+            },
+            {
+              "column_name": "c_datetime0",
+              "data_type": "timestamp without time zone",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "timestamp"
+            },
+            {
+              "column_name": "c_object0",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            },
+            {
+              "column_name": "c_point0",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "geometry"
+            },
+            {
+              "column_name": "c_vector4",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "vector"
+            },
+            {
+              "column_name": "c_vector16000",
+              "data_type": "USER-DEFINED",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "vector"
+            },
+            {
+              "column_name": "c_varchar5",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            },
+            {
+              "column_name": "m1",
+              "data_type": "character varying",
+              "character_maximum_length": "5",
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "varchar"
+            },
+            {
+              "column_name": "m2",
+              "data_type": "integer",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "int4"
+            },
+            {
+              "column_name": "m3",
+              "data_type": "jsonb",
+              "character_maximum_length": null,
+              "is_nullable": "YES",
+              "column_default": null,
+              "udt_name": "jsonb"
+            }
+          ]
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.find",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "at"
+          },
+          "expect": [
+            {
+              "$document": {
+                "c_string20": null,
+                "c_string20000": null,
+                "c_integer4": "7",
+                "c_integer8": null,
+                "c_double0": null,
+                "c_boolean0": null,
+                "c_datetime0": "2021-03-04 05:06:07.891",
+                "c_object0": null,
+                "c_point0": null,
+                "c_vector4": null,
+                "c_vector16000": null,
+                "c_varchar5": null,
+                "m1": null,
+                "m2": null,
+                "m3": null,
+                "$id": "d1",
+                "$sequence": "1",
+                "$createdAt": null,
+                "$updatedAt": null,
+                "$permissions": []
+              }
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_at\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"a\" VARCHAR(8), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_at_uid\" ON \"${ns}\".\"ns_at\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_at_created\" ON \"${ns}\".\"ns_at\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_at_updated\" ON \"${ns}\".\"ns_at\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_at_permissions\" ON \"${ns}\".\"ns_at\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_at_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_at_ukey\" \n                    ON \"${ns}\".\"ns_at_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_at_permission\" \n                    ON \"${ns}\".\"ns_at_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_string20\" VARCHAR(20)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_string20000\" TEXT\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_integer4\" INTEGER\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_integer8\" BIGINT\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_double0\" DOUBLE PRECISION\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_boolean0\" BOOLEAN\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_datetime0\" TIMESTAMP(3)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_object0\" JSONB\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_point0\" GEOMETRY(POINT,4326)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_vector4\" VECTOR(4)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_vector16000\" VECTOR(16000)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"c_varchar5\" JSONB\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tADD COLUMN \"a\" VARCHAR(8)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_missing\"\n\t\t\tADD COLUMN \"a\" VARCHAR(8)\n\t\t"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_at\" ADD COLUMN \"m1\" VARCHAR(5), ADD COLUMN \"m2\" INTEGER, ADD COLUMN \"m3\" JSONB ;"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_at\" ADD COLUMN \"m4\" VARCHAR(5), ADD COLUMN \"m1\" VARCHAR(5) ;"
+            ],
+            [
+              "*",
+              "\n\t\t\tINSERT INTO \"${ns}\".\"ns_at\" (\"a\", \"c_integer4\", \"c_datetime0\", \"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2, :key_3, :key_4, :key_5,  :_uid)\n\t\t"
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"a\" TYPE VARCHAR(4)\n            "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"a\" TYPE VARCHAR(12)\n            "
+            ],
+            [
+              "*",
+              "\n                    ALTER TABLE \"${ns}\".\"ns_at\"\n                    RENAME COLUMN \"a\" TO \"b\"\n                "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"b\" TYPE VARCHAR(12)\n            "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"b\" TYPE VARCHAR(12)\n            "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"b\" TYPE VARCHAR(12)\n            "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"c_integer4\" TYPE VARCHAR(10)\n            "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"c_datetime0\" TYPE TIMESTAMP(3) without time zone USING TO_TIMESTAMP(\"c_datetime0\", 'YYYY-MM-DD HH24:MI:SS.MS')\n            "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"c_string20\" TYPE TIMESTAMP(3) without time zone USING TO_TIMESTAMP(\"c_string20\", 'YYYY-MM-DD HH24:MI:SS.MS')\n            "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"c_vector4\" TYPE VECTOR(6)\n            "
+            ],
+            [
+              "*",
+              "\n                ALTER TABLE \"${ns}\".\"ns_at\"\n                ALTER COLUMN \"missing\" TYPE VARCHAR(6)\n            "
+            ],
+            [
+              "*",
+              "\n                    ALTER TABLE \"${ns}\".\"ns_at\"\n                    RENAME COLUMN \"missing\" TO \"other\"\n                "
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\" \n\t\t\tRENAME COLUMN \"b\" TO \"bb\"\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\" \n\t\t\tRENAME COLUMN \"b\" TO \"bb\"\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\" \n\t\t\tRENAME COLUMN \"bb\" TO \"m1\"\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tDROP COLUMN \"bb\";\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_at\"\n\t\t\tDROP COLUMN \"bb\";\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tALTER TABLE \"${ns}\".\"ns_missing\"\n\t\t\tDROP COLUMN \"bb\";\n\t\t"
+            ],
+            [
+              "*",
+              "\n            SELECT \"main\".*\n            FROM \"${ns}\".\"ns_at\" AS \"main\"\n            \n            \n            LIMIT :limit;\n        "
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "indexes",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "ix",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "a",
+                  "type": "string",
+                  "size": 8,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "n",
+                  "type": "integer",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "o",
+                  "type": "object",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "p",
+                  "type": "point",
+                  "size": 0,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "v",
+                  "type": "vector",
+                  "size": 3,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "t",
+                  "type": "string",
+                  "size": 2000,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "k",
+            "type": "key",
+            "attributes": [
+              "a",
+              "n"
+            ],
+            "orders": [
+              "ASC",
+              null
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "k2",
+            "type": "key",
+            "attributes": [
+              "a"
+            ],
+            "orders": [
+              "desc"
+            ],
+            "lengths": [
+              5
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "u",
+            "type": "unique",
+            "attributes": [
+              "a"
+            ],
+            "orders": [
+              "",
+              "x"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "f",
+            "type": "fulltext",
+            "attributes": [
+              "t"
+            ],
+            "orders": [
+              "DESC"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "sp",
+            "type": "spatial",
+            "attributes": [
+              "p"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "ob",
+            "type": "object",
+            "attributes": [
+              "o"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "nest",
+            "type": "key",
+            "attributes": [
+              "o.a.b",
+              "a"
+            ],
+            "orders": [
+              "DESC"
+            ],
+            "attribute_types": {
+              "o.a.b": "object"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "nest2",
+            "type": "unique",
+            "attributes": [
+              "o.x"
+            ],
+            "attribute_types": {
+              "o.x": "object"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "nest3",
+            "type": "key",
+            "attributes": [
+              "o.x y"
+            ],
+            "attribute_types": {
+              "o.x y": "object"
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid JSON key x y"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "tg",
+            "type": "trigram",
+            "attributes": [
+              "a",
+              "t"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "h",
+            "type": "hnsw_cosine",
+            "attributes": [
+              "v"
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "ttl",
+            "type": "ttl",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Unknown index type: ttl. Must be one of key, unique, fulltext, spatial, object, hnsw_euclidean, hnsw_cosine, hnsw_dot"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "bad",
+            "type": "key",
+            "attributes": [
+              "missing"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Attribute not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "k",
+            "type": "key",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "missing",
+            "id": "k",
+            "type": "key",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\NotFound",
+              "message": "Collection not found"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "h2",
+            "type": "hnsw_dot",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42804]: Datatype mismatch: 7 ERROR:  operator class \"vector_ip_ops\" does not accept data type character varying"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_ix' ORDER BY indexname"
+          },
+          "expect": [
+            {
+              "indexname": "ns__ix_f",
+              "def": "CREATE INDEX ns__ix_f ON t USING btree (t)"
+            },
+            {
+              "indexname": "ns__ix_h",
+              "def": "CREATE INDEX ns__ix_h ON t USING hnsw (v vector_cosine_ops)"
+            },
+            {
+              "indexname": "ns__ix_k",
+              "def": "CREATE INDEX ns__ix_k ON t USING btree (a, n)"
+            },
+            {
+              "indexname": "ns__ix_k2",
+              "def": "CREATE INDEX ns__ix_k2 ON t USING btree (a DESC)"
+            },
+            {
+              "indexname": "ns__ix_nest",
+              "def": "CREATE INDEX ns__ix_nest ON t USING btree ((((o -> 'a'::text) ->> 'b'::text)) DESC, a)"
+            },
+            {
+              "indexname": "ns__ix_nest2",
+              "def": "CREATE UNIQUE INDEX ns__ix_nest2 ON t USING btree (((o ->> 'x'::text)))"
+            },
+            {
+              "indexname": "ns__ix_ob",
+              "def": "CREATE INDEX ns__ix_ob ON t USING gin (o)"
+            },
+            {
+              "indexname": "ns__ix_sp",
+              "def": "CREATE INDEX ns__ix_sp ON t USING gist (p)"
+            },
+            {
+              "indexname": "ns__ix_tg",
+              "def": "CREATE INDEX ns__ix_tg ON t USING gin (a gin_trgm_ops, t gin_trgm_ops)"
+            },
+            {
+              "indexname": "ns__ix_u",
+              "def": "CREATE UNIQUE INDEX ns__ix_u ON t USING btree (a)"
+            },
+            {
+              "indexname": "ns_ix_created",
+              "def": "CREATE INDEX ns_ix_created ON t USING btree (\"_createdAt\")"
+            },
+            {
+              "indexname": "ns_ix_permissions",
+              "def": "CREATE INDEX ns_ix_permissions ON t USING gin (_permissions)"
+            },
+            {
+              "indexname": "ns_ix_pkey",
+              "def": "CREATE UNIQUE INDEX ns_ix_pkey ON t USING btree (_id)"
+            },
+            {
+              "indexname": "ns_ix_uid",
+              "def": "CREATE UNIQUE INDEX ns_ix_uid ON t USING btree (_uid COLLATE utf8_ci_ai)"
+            },
+            {
+              "indexname": "ns_ix_updated",
+              "def": "CREATE INDEX ns_ix_updated ON t USING btree (\"_updatedAt\")"
+            }
+          ]
+        },
+        {
+          "op": "adapter.set_authorization",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "status": false
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "document": {
+              "$document": {
+                "$id": "d1",
+                "a": "same",
+                "o": {
+                  "x": 1
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d1",
+              "a": "same",
+              "o": {
+                "x": 1
+              },
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "document": {
+              "$document": {
+                "$id": "d2",
+                "a": "SAME",
+                "o": {
+                  "x": 1
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Document already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "document": {
+              "$document": {
+                "$id": "d3",
+                "a": "same",
+                "o": {
+                  "x": 2
+                }
+              }
+            }
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "u"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "document": {
+              "$document": {
+                "$id": "d4",
+                "a": "same",
+                "o": {
+                  "x": 3
+                }
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "d4",
+              "a": "same",
+              "o": {
+                "x": 3
+              },
+              "$sequence": "4"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "u",
+            "type": "unique",
+            "attributes": [
+              "a"
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Unique",
+              "message": "Unique index violation"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "u3",
+            "type": "unique",
+            "attributes": [
+              "o.x"
+            ],
+            "attribute_types": {
+              "o.x": "object"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "id": "missing"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "old": "k",
+            "new": "k3"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "old": "k",
+            "new": "k4"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation \"${ns}.ns__ix_k\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.rename_index",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "ix",
+            "old": "k3",
+            "new": "ob"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42P07]: Duplicate table: 7 ERROR:  relation \"ns__ix_ob\" already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT indexname, regexp_replace(indexdef, ' ON [^ ]+ ', ' ON t ') AS def FROM pg_indexes WHERE schemaname = '${ns}' AND tablename = 'ns_ix' ORDER BY indexname"
+          },
+          "expect": [
+            {
+              "indexname": "ns__ix_f",
+              "def": "CREATE INDEX ns__ix_f ON t USING btree (t)"
+            },
+            {
+              "indexname": "ns__ix_h",
+              "def": "CREATE INDEX ns__ix_h ON t USING hnsw (v vector_cosine_ops)"
+            },
+            {
+              "indexname": "ns__ix_k2",
+              "def": "CREATE INDEX ns__ix_k2 ON t USING btree (a DESC)"
+            },
+            {
+              "indexname": "ns__ix_k3",
+              "def": "CREATE INDEX ns__ix_k3 ON t USING btree (a, n)"
+            },
+            {
+              "indexname": "ns__ix_nest",
+              "def": "CREATE INDEX ns__ix_nest ON t USING btree ((((o -> 'a'::text) ->> 'b'::text)) DESC, a)"
+            },
+            {
+              "indexname": "ns__ix_nest2",
+              "def": "CREATE UNIQUE INDEX ns__ix_nest2 ON t USING btree (((o ->> 'x'::text)))"
+            },
+            {
+              "indexname": "ns__ix_ob",
+              "def": "CREATE INDEX ns__ix_ob ON t USING gin (o)"
+            },
+            {
+              "indexname": "ns__ix_sp",
+              "def": "CREATE INDEX ns__ix_sp ON t USING gist (p)"
+            },
+            {
+              "indexname": "ns__ix_tg",
+              "def": "CREATE INDEX ns__ix_tg ON t USING gin (a gin_trgm_ops, t gin_trgm_ops)"
+            },
+            {
+              "indexname": "ns__ix_u3",
+              "def": "CREATE UNIQUE INDEX ns__ix_u3 ON t USING btree (((o ->> 'x'::text)))"
+            },
+            {
+              "indexname": "ns_ix_created",
+              "def": "CREATE INDEX ns_ix_created ON t USING btree (\"_createdAt\")"
+            },
+            {
+              "indexname": "ns_ix_permissions",
+              "def": "CREATE INDEX ns_ix_permissions ON t USING gin (_permissions)"
+            },
+            {
+              "indexname": "ns_ix_pkey",
+              "def": "CREATE UNIQUE INDEX ns_ix_pkey ON t USING btree (_id)"
+            },
+            {
+              "indexname": "ns_ix_uid",
+              "def": "CREATE UNIQUE INDEX ns_ix_uid ON t USING btree (_uid COLLATE utf8_ci_ai)"
+            },
+            {
+              "indexname": "ns_ix_updated",
+              "def": "CREATE INDEX ns_ix_updated ON t USING btree (\"_updatedAt\")"
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_ix\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"a\" VARCHAR(8),  \"n\" INTEGER,  \"o\" JSONB,  \"p\" GEOMETRY(POINT,4326),  \"v\" VECTOR(3),  \"t\" VARCHAR(2000), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_ix_uid\" ON \"${ns}\".\"ns_ix\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_ix_created\" ON \"${ns}\".\"ns_ix\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_ix_updated\" ON \"${ns}\".\"ns_ix\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_ix_permissions\" ON \"${ns}\".\"ns_ix\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_ix_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_ix_ukey\" \n                    ON \"${ns}\".\"ns_ix_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_ix_permission\" \n                    ON \"${ns}\".\"ns_ix_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_k\" ON \"${ns}\".\"ns_ix\" (\"a\" ASC, \"n\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_k2\" ON \"${ns}\".\"ns_ix\" (\"a\" desc)"
+            ],
+            [
+              "*",
+              "CREATE UNIQUE INDEX \"ns__ix_u\" ON \"${ns}\".\"ns_ix\" (\"a\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_f\" ON \"${ns}\".\"ns_ix\" (\"t\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_sp\" ON \"${ns}\".\"ns_ix\" USING GIST (\"p\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_ob\" ON \"${ns}\".\"ns_ix\" USING GIN (\"o\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_nest\" ON \"${ns}\".\"ns_ix\" (((\"o\"->'a'->>'b')::text) DESC, \"a\" )"
+            ],
+            [
+              "*",
+              "CREATE UNIQUE INDEX \"ns__ix_nest2\" ON \"${ns}\".\"ns_ix\" (((\"o\"->>'x')::text))"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_tg\" ON \"${ns}\".\"ns_ix\" USING GIN (\"a\" gin_trgm_ops, \"t\" gin_trgm_ops)"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_h\" ON \"${ns}\".\"ns_ix\" USING HNSW (\"v\"  vector_cosine_ops)"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_bad\" ON \"${ns}\".\"ns_ix\" (\"missing\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_k\" ON \"${ns}\".\"ns_ix\" (\"a\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__missing_k\" ON \"${ns}\".\"ns_missing\" (\"a\" )"
+            ],
+            [
+              "*",
+              "CREATE INDEX \"ns__ix_h2\" ON \"${ns}\".\"ns_ix\" USING HNSW (\"a\"  vector_ip_ops)"
+            ],
+            [
+              "*",
+              "\n\t\t\tINSERT INTO \"${ns}\".\"ns_ix\" (\"a\", \"o\", \"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2, :key_3, :key_4,  :_uid)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tINSERT INTO \"${ns}\".\"ns_ix\" (\"a\", \"o\", \"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2, :key_3, :key_4,  :_uid)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tINSERT INTO \"${ns}\".\"ns_ix\" (\"a\", \"o\", \"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2, :key_3, :key_4,  :_uid)\n\t\t"
+            ],
+            [
+              "*",
+              "DROP INDEX IF EXISTS \"${ns}\".\"ns__ix_u\""
+            ],
+            [
+              "*",
+              "\n\t\t\tINSERT INTO \"${ns}\".\"ns_ix\" (\"a\", \"o\", \"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2, :key_3, :key_4,  :_uid)\n\t\t"
+            ],
+            [
+              "*",
+              "CREATE UNIQUE INDEX \"ns__ix_u\" ON \"${ns}\".\"ns_ix\" (\"a\" )"
+            ],
+            [
+              "*",
+              "CREATE UNIQUE INDEX \"ns__ix_u3\" ON \"${ns}\".\"ns_ix\" (((\"o\"->>'x')::text))"
+            ],
+            [
+              "*",
+              "DROP INDEX IF EXISTS \"${ns}\".\"ns__ix_missing\""
+            ],
+            [
+              "*",
+              "ALTER INDEX \"${ns}\".\"ns__ix_k\" RENAME TO \"ns__ix_k3\""
+            ],
+            [
+              "*",
+              "ALTER INDEX \"${ns}\".\"ns__ix_k\" RENAME TO \"ns__ix_k4\""
+            ],
+            [
+              "*",
+              "ALTER INDEX \"${ns}\".\"ns__ix_k3\" RENAME TO \"ns__ix_ob\""
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

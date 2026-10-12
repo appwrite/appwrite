@@ -1,0 +1,191 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/TransactionRetryTest.php",
+  "cases": [
+    {
+      "name": "testTimeoutIsNotRetried",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "t"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t",
+            "document": {
+              "$id": "x"
+            },
+            "fail": "timeout",
+            "fail_times": 99
+          },
+          "expect": {
+            "calls": 1,
+            "error": {
+              "class": "Utopia\\Database\\Exception\\Timeout",
+              "message": "callback failed"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testDuplicateIsNotRetried",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "t"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t",
+            "document": {
+              "$id": "x"
+            },
+            "fail": "duplicate",
+            "fail_times": 99
+          },
+          "expect": {
+            "calls": 1,
+            "error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "callback failed"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "testGenericFailureIsRetried",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "args": {},
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "t"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.with_transaction",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "t",
+            "document": {
+              "$id": "x"
+            },
+            "fail": "database",
+            "fail_times": 99
+          },
+          "expect": {
+            "calls": 3,
+            "error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "callback failed"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

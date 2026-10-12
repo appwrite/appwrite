@@ -1,92 +1,86 @@
-//! Datetime handling with `Utopia\Database\DateTime` formats.
+//! Dates as the database stores them: `Y-m-d H:i:s.v` in the default
+//! timezone ([`FORMAT_DB`]), and as the API shows them, with the offset
+//! ([`FORMAT_TZ`]).
 //!
-//! * storage / bind format: `Y-m-d H:i:s.v` (UTC, `TIMESTAMP(3)` columns)
-//! * API format (`formatTz`): `Y-m-d\TH:i:s.vP`, always `+00:00`
+//! Dates are [`php_std::datetime::DateTime`], a port of PHP's own date
+//! library, so parsing, timezone conversion and formatting are PHP's.
+//!
+//! PHP: `Utopia\Database\DateTime`. PHP's default timezone
+//! (`date_default_timezone_get()`) is UTC, as Appwrite sets it; here it is
+//! UTC.
+//!
+//! ```
+//! use utopia_database::datetime;
+//!
+//! assert_eq!(datetime::set_timezone("2024-01-02 03:04:05.678+02:00").unwrap(), "2024-01-02 01:04:05.678");
+//! assert_eq!(datetime::format_tz(Some("2024-01-02 01:04:05.678")).as_deref(), Some("2024-01-02T01:04:05.678+00:00"));
+//! ```
 
-use chrono::{DateTime, Duration, FixedOffset, NaiveDate, NaiveDateTime, NaiveTime, TimeZone, Timelike, Utc};
+use php_std::datetime::{DateTime, Interval, TimeZone, TzInfo};
 
-/// Current UTC time truncated to milliseconds (`DateTime::now()`).
-pub fn now() -> NaiveDateTime {
-    truncate(Utc::now().naive_utc())
+use crate::error::{Error, Kind, Result};
+
+/// How the database stores dates (`DateTime::$formatDb`).
+pub const FORMAT_DB: &str = "Y-m-d H:i:s.v";
+
+/// How dates are shown with their offset (`DateTime::$formatTz`).
+pub const FORMAT_TZ: &str = "Y-m-d\\TH:i:s.vP";
+
+/// The current time in the database format.
+///
+/// PHP: `DateTime::now()`.
+pub fn now() -> String {
+    // "now" always parses.
+    DateTime::new(b"now", None, &TzInfo::utc()).map(|date| format(&date)).unwrap_or_default()
 }
 
-/// Drops sub-millisecond precision (TIMESTAMP(3) semantics).
-pub fn truncate(dt: NaiveDateTime) -> NaiveDateTime {
-    let nanos = dt.nanosecond() / 1_000_000 * 1_000_000;
-    dt.with_nanosecond(nanos).unwrap_or(dt)
+/// `date` in the database format ([`FORMAT_DB`]).
+///
+/// PHP: `DateTime::format($date)`.
+pub fn format(date: &DateTime) -> String {
+    text(date.format(FORMAT_DB.as_bytes()))
 }
 
-/// `Y-m-d H:i:s.v`.
-pub fn format_db(dt: &NaiveDateTime) -> String {
-    dt.format("%Y-%m-%d %H:%M:%S%.3f").to_string()
+/// Adds `seconds` (negative to subtract) to `date`, and returns it in the
+/// database format.
+///
+/// Fails like PHP for `i64::MIN` seconds, which PHP's interval parser does
+/// not read as a number (a [`Kind::DateMalformedIntervalString`] error).
+///
+/// PHP: `DateTime::addSeconds($date, $seconds)`.
+pub fn add_seconds(date: &mut DateTime, seconds: i64) -> Result<String> {
+    let interval = Interval::from_date_string(format!("{seconds} seconds").as_bytes())
+        .map_err(|e| Error::new(Kind::DateMalformedIntervalString, e.message()))?;
+    date.add(&interval);
+    Ok(format(date))
 }
 
-/// `Y-m-d\TH:i:s.v+00:00`.
-pub fn format_tz(dt: &NaiveDateTime) -> String {
-    dt.format("%Y-%m-%dT%H:%M:%S%.3f+00:00").to_string()
+/// `datetime` (any string PHP's `DateTime` parses) converted to the default
+/// timezone, in the database format.
+///
+/// Fails with the parser's message when `datetime` is not a date
+/// ([`Kind::Database`]).
+///
+/// PHP: `DateTime::setTimezone($datetime)`.
+pub fn set_timezone(datetime: impl AsRef<[u8]>) -> Result<String> {
+    let mut value = DateTime::new(datetime.as_ref(), None, &TzInfo::utc()).map_err(|e| Error::database(e.message()))?;
+    value.set_timezone(&TimeZone::utc());
+    Ok(format(&value))
 }
 
-/// Adds seconds (`DateTime::addSeconds`).
-pub fn add_seconds(dt: NaiveDateTime, seconds: i64) -> NaiveDateTime {
-    dt + Duration::seconds(seconds)
+/// `value` with its offset ([`FORMAT_TZ`]); `value` itself when it is not
+/// a date, and `None` for `None`.
+///
+/// PHP: `DateTime::formatTz($dbFormat)`.
+pub fn format_tz(value: Option<&str>) -> Option<String> {
+    let value = value?;
+    Some(match DateTime::new(value.as_bytes(), None, &TzInfo::utc()) {
+        Ok(date) => text(date.format(FORMAT_TZ.as_bytes())),
+        Err(_) => value.to_owned(),
+    })
 }
 
-/// Parses the date formats Appwrite clients send (a subset of PHP's
-/// permissive `new \DateTime()`): `Y-m-d`, `Y-m-d H:i[:s[.f]]`, ISO 8601 with
-/// `T`, optional fraction and optional `Z` / `±hh:mm` / `±hhmm` offsets.
-/// The result is normalised to UTC.
-pub fn parse(input: &str) -> Option<NaiveDateTime> {
-    let s = input.trim();
-    if s.is_empty() {
-        return None;
-    }
-    if let Ok(dt) = DateTime::parse_from_rfc3339(s) {
-        return Some(dt.with_timezone(&Utc).naive_utc());
-    }
-    for fmt in
-        ["%Y-%m-%dT%H:%M:%S%.f%:z", "%Y-%m-%dT%H:%M:%S%.f%z", "%Y-%m-%d %H:%M:%S%.f%:z", "%Y-%m-%d %H:%M:%S%.f%z"]
-    {
-        if let Ok(dt) = DateTime::<FixedOffset>::parse_from_str(s, fmt) {
-            return Some(dt.with_timezone(&Utc).naive_utc());
-        }
-    }
-    let s = s.strip_suffix('Z').unwrap_or(s);
-    for fmt in ["%Y-%m-%dT%H:%M:%S%.f", "%Y-%m-%d %H:%M:%S%.f", "%Y-%m-%dT%H:%M", "%Y-%m-%d %H:%M"] {
-        if let Ok(dt) = NaiveDateTime::parse_from_str(s, fmt) {
-            return Some(dt);
-        }
-    }
-    if let Ok(d) = NaiveDate::parse_from_str(s, "%Y-%m-%d") {
-        return Some(d.and_time(NaiveTime::MIN));
-    }
-    None
-}
-
-/// Converts a stored value into the API format; invalid input is returned unchanged.
-pub fn format_tz_str(stored: &str) -> String {
-    match parse(stored) {
-        Some(dt) => format_tz(&dt),
-        None => stored.to_owned(),
-    }
-}
-
-/// Unix timestamp helper.
-pub fn from_unix(secs: i64) -> NaiveDateTime {
-    Utc.timestamp_opt(secs, 0).single().map(|d| d.naive_utc()).unwrap_or_default()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn formats() {
-        let dt = parse("2024-01-02 03:04:05.6").unwrap();
-        assert_eq!(format_db(&dt), "2024-01-02 03:04:05.600");
-        assert_eq!(format_tz(&dt), "2024-01-02T03:04:05.600+00:00");
-        let dt = parse("2024-01-02T05:04:05.123+02:00").unwrap();
-        assert_eq!(format_db(&dt), "2024-01-02 03:04:05.123");
-        assert_eq!(format_db(&parse("2024-01-02").unwrap()), "2024-01-02 00:00:00.000");
-        assert!(parse("nope").is_none());
-    }
+/// Formatted bytes as text (the formats here only produce ASCII).
+fn text(bytes: Vec<u8>) -> String {
+    String::from_utf8(bytes).unwrap_or_else(|e| String::from_utf8_lossy(e.as_bytes()).into_owned())
 }

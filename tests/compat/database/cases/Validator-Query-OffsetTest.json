@@ -1,0 +1,694 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/Validator/Query/OffsetTest.php",
+  "cases": [
+    {
+      "name": "testValueSuccess",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_offset",
+            "maxOffset": 5000
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  5000
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        }
+      ]
+    },
+    {
+      "name": "testValueFailure",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_offset",
+            "maxOffset": 5000
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  -1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid offset: Value must be a valid range between 0 and 5,000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid offset: Value must be a valid range between 0 and 5,000"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  5001
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid offset: Value must be a valid range between 0 and 5,000"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "equal",
+                "attribute": "attr",
+                "values": [
+                  "v"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query method invalid: equal"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderAsc",
+                "attribute": "attr",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query method invalid: orderAsc"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "orderDesc",
+                "attribute": "attr",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query method invalid: orderDesc"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "limit",
+                "attribute": "",
+                "values": [
+                  100
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Query method invalid: limit"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: default max and description",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_offset"
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  9223372036854775807
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  -1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid offset: Value must be a valid range between 0 and 9,223,372,036,854,775,807"
+        },
+        {
+          "op": "validator.meta",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": {
+            "type": "object",
+            "is_array": false,
+            "method_type": "offset"
+          }
+        }
+      ]
+    },
+    {
+      "name": "edge: odd values",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_offset",
+            "maxOffset": 5000
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  "5"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  "-1"
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid offset: Value must be a valid range between 0 and 5,000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid offset: Value must be a valid range between 0 and 5,000"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  5.0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid offset: Value must be a valid range between 0 and 5,000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid offset: Value must be a valid range between 0 and 5,000"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  0.5
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid offset: Value must be a valid range between 0 and 5,000"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid offset: Value must be a valid range between 0 and 5,000"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  null
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  false
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": []
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  1,
+                  2
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid limit: Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": "offset"
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": null
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid limit: Value must be a valid number"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid limit: Value must be a valid number"
+        }
+      ]
+    },
+    {
+      "name": "edge: zero max",
+      "steps": [
+        {
+          "op": "validator.new",
+          "args": {
+            "validator": "query_offset",
+            "maxOffset": 0
+          },
+          "bind": "v",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  0
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": true,
+            "description": "Invalid query"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid query"
+        },
+        {
+          "op": "validator.is_valid",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            },
+            "value": {
+              "$query": {
+                "method": "offset",
+                "attribute": "",
+                "values": [
+                  1
+                ]
+              }
+            }
+          },
+          "expect": {
+            "valid": false,
+            "description": "Invalid offset: Value must be a valid range between 0 and 0"
+          }
+        },
+        {
+          "op": "validator.description",
+          "args": {
+            "validator": {
+              "$ref": "v"
+            }
+          },
+          "expect": "Invalid offset: Value must be a valid range between 0 and 0"
+        }
+      ]
+    }
+  ]
+}

@@ -7,7 +7,7 @@ use bytes::Bytes;
 use http::StatusCode;
 use serde::Serialize;
 use serde_json::Value;
-use utopia_database::Database;
+use utopia_database::legacy::Database;
 use utopia_http::{Request, Response};
 use utopia_validators::{Validator, php};
 
@@ -204,16 +204,16 @@ impl Context {
     /// The `queries` parameter validated against an allow-listed schema.
     pub fn queries(
         &self,
-        collection: &utopia_database::Collection,
+        collection: &utopia_database::legacy::Collection,
         allowed: &[&str],
-    ) -> Result<Vec<utopia_database::Query>> {
+    ) -> Result<Vec<utopia_database::legacy::Query>> {
         let Some(value) = self.param("queries") else {
             return Ok(Vec::new());
         };
         if value.is_null() {
             return Ok(Vec::new());
         }
-        utopia_database::validator::Queries::new(collection, allowed)
+        utopia_database::legacy::validator::Queries::new(collection, allowed)
             .validate(value)
             .map_err(|m| Error::invalid_param("queries", &m))
     }

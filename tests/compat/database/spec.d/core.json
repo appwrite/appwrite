@@ -1,0 +1,943 @@
+{
+  "ops": {
+    "database.add_filter": {
+      "doc": "Database::addFilter(name, ...) with the named fixture filter of the e2e suite (encrypt, subQueryProbe, operator_double_decode); each call is logged to db.log ({\"filter\", \"call\"})",
+      "covers": [
+        "Utopia\\Database\\Database::addFilter"
+      ]
+    },
+    "database.analyze_collection": {
+      "doc": "$db->analyzeCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::analyzeCollection"
+      ]
+    },
+    "database.before": {
+      "doc": "$db->before(event, name, callback): callback {\"append\": \"<sql>\"} registers a transformation appending to the statement and logging it to db.log ({\"transform\", \"name\", \"sql\"}); null removes it",
+      "covers": [
+        "Utopia\\Database\\Database::before"
+      ]
+    },
+    "database.casting": {
+      "doc": "$db->casting(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::casting"
+      ]
+    },
+    "database.check_attribute": {
+      "doc": "$db->checkAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::checkAttribute"
+      ]
+    },
+    "database.clear_all_document_types": {
+      "doc": "$db->clearAllDocumentTypes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::clearAllDocumentTypes"
+      ]
+    },
+    "database.clear_document_type": {
+      "doc": "$db->clearDocumentType(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::clearDocumentType"
+      ]
+    },
+    "database.clear_timeout": {
+      "doc": "$db->clearTimeout(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::clearTimeout"
+      ]
+    },
+    "database.convert_queries": {
+      "doc": "$db->convertQueries(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::convertQueries"
+      ]
+    },
+    "database.convert_query": {
+      "doc": "$db->convertQuery(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::convertQuery"
+      ]
+    },
+    "database.count": {
+      "doc": "$db->count(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::count"
+      ]
+    },
+    "database.create": {
+      "doc": "$db->create(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::create"
+      ]
+    },
+    "database.create_attribute": {
+      "doc": "$db->createAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::createAttribute"
+      ]
+    },
+    "database.create_attributes": {
+      "doc": "$db->createAttributes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::createAttributes"
+      ]
+    },
+    "database.create_collection": {
+      "doc": "$db->createCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::createCollection"
+      ]
+    },
+    "database.create_document": {
+      "doc": "$db->createDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::createDocument"
+      ]
+    },
+    "database.create_documents": {
+      "doc": "$db->createDocuments(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::createDocuments"
+      ]
+    },
+    "database.create_index": {
+      "doc": "$db->createIndex(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::createIndex"
+      ]
+    },
+    "database.create_relationship": {
+      "doc": "$db->createRelationship(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::createRelationship"
+      ]
+    },
+    "database.decode": {
+      "doc": "$db->decode(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::decode"
+      ]
+    },
+    "database.decrease_document_attribute": {
+      "doc": "$db->decreaseDocumentAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::decreaseDocumentAttribute"
+      ]
+    },
+    "database.delete": {
+      "doc": "$db->delete(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::delete"
+      ]
+    },
+    "database.delete_attribute": {
+      "doc": "$db->deleteAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::deleteAttribute"
+      ]
+    },
+    "database.delete_collection": {
+      "doc": "$db->deleteCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::deleteCollection"
+      ]
+    },
+    "database.delete_document": {
+      "doc": "$db->deleteDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::deleteDocument"
+      ]
+    },
+    "database.delete_documents": {
+      "doc": "$db->deleteDocuments(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::deleteDocuments"
+      ]
+    },
+    "database.delete_index": {
+      "doc": "$db->deleteIndex(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::deleteIndex"
+      ]
+    },
+    "database.delete_relationship": {
+      "doc": "$db->deleteRelationship(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::deleteRelationship"
+      ]
+    },
+    "database.disable_filters": {
+      "doc": "$db->disableFilters(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::disableFilters"
+      ]
+    },
+    "database.disable_validation": {
+      "doc": "$db->disableValidation(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::disableValidation"
+      ]
+    },
+    "database.enable_filters": {
+      "doc": "$db->enableFilters(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::enableFilters"
+      ]
+    },
+    "database.enable_locks": {
+      "doc": "$db->enableLocks(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::enableLocks"
+      ]
+    },
+    "database.enable_validation": {
+      "doc": "$db->enableValidation(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::enableValidation"
+      ]
+    },
+    "database.encode": {
+      "doc": "$db->encode(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::encode"
+      ]
+    },
+    "database.exists": {
+      "doc": "$db->exists(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::exists"
+      ]
+    },
+    "database.find": {
+      "doc": "$db->find(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::find"
+      ]
+    },
+    "database.find_one": {
+      "doc": "$db->findOne(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::findOne"
+      ]
+    },
+    "database.foreach": {
+      "doc": "$db->foreach(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::foreach"
+      ]
+    },
+    "database.get_adapter": {
+      "doc": "$db->getAdapter(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getAdapter"
+      ]
+    },
+    "database.get_authorization": {
+      "doc": "$db->getAuthorization(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getAuthorization"
+      ]
+    },
+    "database.get_cache": {
+      "doc": "$db->getCache(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getCache"
+      ]
+    },
+    "database.get_cache_base_keys": {
+      "doc": "$db->getCacheBaseKeys(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getCacheBaseKeys"
+      ]
+    },
+    "database.get_cache_keys": {
+      "doc": "$db->getCacheKeys(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getCacheKeys"
+      ]
+    },
+    "database.get_cache_name": {
+      "doc": "$db->getCacheName(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getCacheName"
+      ]
+    },
+    "database.get_collection": {
+      "doc": "$db->getCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getCollection"
+      ]
+    },
+    "database.get_connection_id": {
+      "doc": "$db->getConnectionId(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getConnectionId"
+      ],
+      "mask": {
+        "paths": [
+          ""
+        ],
+        "reason": "the server's backend process id differs between connections"
+      }
+    },
+    "database.get_database": {
+      "doc": "$db->getDatabase(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getDatabase"
+      ]
+    },
+    "database.get_document": {
+      "doc": "$db->getDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getDocument"
+      ]
+    },
+    "database.get_document_type": {
+      "doc": "$db->getDocumentType(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getDocumentType"
+      ]
+    },
+    "database.get_drop_unknown_attributes": {
+      "doc": "$db->getDropUnknownAttributes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getDropUnknownAttributes"
+      ]
+    },
+    "database.get_global_collections": {
+      "doc": "$db->getGlobalCollections(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getGlobalCollections"
+      ]
+    },
+    "database.get_id_attribute_type": {
+      "doc": "$db->getIdAttributeType(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getIdAttributeType"
+      ]
+    },
+    "database.get_instance_filters": {
+      "doc": "$db->getInstanceFilters(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getInstanceFilters"
+      ]
+    },
+    "database.get_internal_attributes": {
+      "doc": "$db->getInternalAttributes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getInternalAttributes"
+      ]
+    },
+    "database.get_keywords": {
+      "doc": "$db->getKeywords(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getKeywords"
+      ]
+    },
+    "database.get_limit_for_attributes": {
+      "doc": "$db->getLimitForAttributes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getLimitForAttributes"
+      ]
+    },
+    "database.get_limit_for_indexes": {
+      "doc": "$db->getLimitForIndexes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getLimitForIndexes"
+      ]
+    },
+    "database.get_max_query_values": {
+      "doc": "$db->getMaxQueryValues(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getMaxQueryValues"
+      ]
+    },
+    "database.get_metadata": {
+      "doc": "$db->getMetadata(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getMetadata"
+      ]
+    },
+    "database.get_namespace": {
+      "doc": "$db->getNamespace(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getNamespace"
+      ]
+    },
+    "database.get_preserve_dates": {
+      "doc": "$db->getPreserveDates(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getPreserveDates"
+      ]
+    },
+    "database.get_preserve_sequence": {
+      "doc": "$db->getPreserveSequence(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getPreserveSequence"
+      ]
+    },
+    "database.get_query_cache_field": {
+      "doc": "$db->getQueryCacheField(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getQueryCacheField"
+      ]
+    },
+    "database.get_query_cache_key": {
+      "doc": "$db->getQueryCacheKey(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getQueryCacheKey"
+      ]
+    },
+    "database.get_schema_attributes": {
+      "doc": "$db->getSchemaAttributes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getSchemaAttributes"
+      ]
+    },
+    "database.get_schema_indexes": {
+      "doc": "$db->getSchemaIndexes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getSchemaIndexes"
+      ]
+    },
+    "database.get_shared_tables": {
+      "doc": "$db->getSharedTables(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getSharedTables"
+      ]
+    },
+    "database.get_size_of_collection": {
+      "doc": "$db->getSizeOfCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getSizeOfCollection"
+      ]
+    },
+    "database.get_size_of_collection_on_disk": {
+      "doc": "$db->getSizeOfCollectionOnDisk(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getSizeOfCollectionOnDisk"
+      ]
+    },
+    "database.get_tenant": {
+      "doc": "$db->getTenant(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getTenant"
+      ]
+    },
+    "database.get_tenant_per_document": {
+      "doc": "$db->getTenantPerDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::getTenantPerDocument"
+      ]
+    },
+    "database.increase_document_attribute": {
+      "doc": "$db->increaseDocumentAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::increaseDocumentAttribute"
+      ]
+    },
+    "database.is_migrating": {
+      "doc": "$db->isMigrating(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::isMigrating"
+      ]
+    },
+    "database.iterate": {
+      "doc": "$db->iterate(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::iterate"
+      ]
+    },
+    "database.list": {
+      "doc": "$db->list(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::list"
+      ]
+    },
+    "database.list_collections": {
+      "doc": "$db->listCollections(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::listCollections"
+      ]
+    },
+    "database.on": {
+      "doc": "$db->on(event, name, callback): callback true registers a listener logging each event to db.log ({\"event\", \"listener\", \"data\"}); null removes it",
+      "covers": [
+        "Utopia\\Database\\Database::on"
+      ]
+    },
+    "database.ping": {
+      "doc": "$db->ping(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::ping"
+      ]
+    },
+    "database.purge_cached_collection": {
+      "doc": "$db->purgeCachedCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::purgeCachedCollection"
+      ]
+    },
+    "database.purge_cached_document": {
+      "doc": "$db->purgeCachedDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::purgeCachedDocument"
+      ]
+    },
+    "database.purge_cached_queries": {
+      "doc": "$db->purgeCachedQueries(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::purgeCachedQueries"
+      ]
+    },
+    "database.reconnect": {
+      "doc": "$db->reconnect(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::reconnect"
+      ]
+    },
+    "database.rename_attribute": {
+      "doc": "$db->renameAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::renameAttribute"
+      ]
+    },
+    "database.rename_index": {
+      "doc": "$db->renameIndex(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::renameIndex"
+      ]
+    },
+    "database.reset_global_collections": {
+      "doc": "$db->resetGlobalCollections(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::resetGlobalCollections"
+      ]
+    },
+    "database.reset_metadata": {
+      "doc": "$db->resetMetadata(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::resetMetadata"
+      ]
+    },
+    "database.set_authorization": {
+      "doc": "$db->setAuthorization(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setAuthorization"
+      ]
+    },
+    "database.set_cache": {
+      "doc": "$db->setCache(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setCache"
+      ]
+    },
+    "database.set_cache_name": {
+      "doc": "$db->setCacheName(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setCacheName"
+      ]
+    },
+    "database.set_database": {
+      "doc": "$db->setDatabase(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setDatabase"
+      ]
+    },
+    "database.set_document_type": {
+      "doc": "$db->setDocumentType(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setDocumentType"
+      ]
+    },
+    "database.set_drop_unknown_attributes": {
+      "doc": "$db->setDropUnknownAttributes(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setDropUnknownAttributes"
+      ]
+    },
+    "database.set_global_collections": {
+      "doc": "$db->setGlobalCollections(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setGlobalCollections"
+      ]
+    },
+    "database.set_max_query_values": {
+      "doc": "$db->setMaxQueryValues(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setMaxQueryValues"
+      ]
+    },
+    "database.set_metadata": {
+      "doc": "$db->setMetadata(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setMetadata"
+      ]
+    },
+    "database.set_migrating": {
+      "doc": "$db->setMigrating(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setMigrating"
+      ]
+    },
+    "database.set_namespace": {
+      "doc": "$db->setNamespace(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setNamespace"
+      ]
+    },
+    "database.set_preserve_dates": {
+      "doc": "$db->setPreserveDates(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setPreserveDates"
+      ]
+    },
+    "database.set_preserve_sequence": {
+      "doc": "$db->setPreserveSequence(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setPreserveSequence"
+      ]
+    },
+    "database.set_shared_tables": {
+      "doc": "$db->setSharedTables(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setSharedTables"
+      ]
+    },
+    "database.set_tenant": {
+      "doc": "$db->setTenant(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setTenant"
+      ]
+    },
+    "database.set_tenant_per_document": {
+      "doc": "$db->setTenantPerDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setTenantPerDocument"
+      ]
+    },
+    "database.set_timeout": {
+      "doc": "$db->setTimeout(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::setTimeout"
+      ]
+    },
+    "database.silent": {
+      "doc": "$db->silent(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::silent"
+      ]
+    },
+    "database.skip_duplicates": {
+      "doc": "$db->skipDuplicates(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::skipDuplicates"
+      ]
+    },
+    "database.skip_filters": {
+      "doc": "$db->skipFilters(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::skipFilters"
+      ]
+    },
+    "database.skip_relationships": {
+      "doc": "$db->skipRelationships(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::skipRelationships"
+      ]
+    },
+    "database.skip_relationships_exist_check": {
+      "doc": "$db->skipRelationshipsExistCheck(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::skipRelationshipsExistCheck"
+      ]
+    },
+    "database.skip_validation": {
+      "doc": "$db->skipValidation(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::skipValidation"
+      ]
+    },
+    "database.sum": {
+      "doc": "$db->sum(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::sum"
+      ]
+    },
+    "database.update_attribute": {
+      "doc": "$db->updateAttribute(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateAttribute"
+      ]
+    },
+    "database.update_attribute_default": {
+      "doc": "$db->updateAttributeDefault(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateAttributeDefault"
+      ]
+    },
+    "database.update_attribute_filters": {
+      "doc": "$db->updateAttributeFilters(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateAttributeFilters"
+      ]
+    },
+    "database.update_attribute_format": {
+      "doc": "$db->updateAttributeFormat(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateAttributeFormat"
+      ]
+    },
+    "database.update_attribute_format_options": {
+      "doc": "$db->updateAttributeFormatOptions(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateAttributeFormatOptions"
+      ]
+    },
+    "database.update_attribute_required": {
+      "doc": "$db->updateAttributeRequired(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateAttributeRequired"
+      ]
+    },
+    "database.update_collection": {
+      "doc": "$db->updateCollection(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateCollection"
+      ]
+    },
+    "database.update_document": {
+      "doc": "$db->updateDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateDocument"
+      ]
+    },
+    "database.update_documents": {
+      "doc": "$db->updateDocuments(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::updateDocuments"
+      ]
+    },
+    "database.update_relationship": {
+      "doc": "$db->updateRelationship(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::updateRelationship"
+      ]
+    },
+    "database.upsert_document": {
+      "doc": "$db->upsertDocument(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true)",
+      "covers": [
+        "Utopia\\Database\\Database::upsertDocument"
+      ]
+    },
+    "database.upsert_documents": {
+      "doc": "$db->upsertDocuments(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::upsertDocuments"
+      ]
+    },
+    "database.upsert_documents_with_increase": {
+      "doc": "$db->upsertDocumentsWithIncrease(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::upsertDocumentsWithIncrease"
+      ]
+    },
+    "database.with_cache": {
+      "doc": "$db->withCache(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::withCache"
+      ]
+    },
+    "database.with_preserve_dates": {
+      "doc": "$db->withPreserveDates(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::withPreserveDates"
+      ]
+    },
+    "database.with_preserve_sequence": {
+      "doc": "$db->withPreserveSequence(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::withPreserveSequence"
+      ]
+    },
+    "database.with_request_timestamp": {
+      "doc": "$db->withRequestTimestamp(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::withRequestTimestamp"
+      ]
+    },
+    "database.with_tenant": {
+      "doc": "$db->withTenant(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::withTenant"
+      ]
+    },
+    "database.with_transaction": {
+      "doc": "$db->withTransaction(...) with named arguments (Values-decoded; Document parameters take arrays; callables take {\"steps\": [...]} or true); with a callback the result is {\"result\", \"calls\": {\"<param>\": [{\"args\", \"steps\"}]}}",
+      "covers": [
+        "Utopia\\Database\\Database::withTransaction"
+      ]
+    },
+    "db.authorization.add_role": {
+      "doc": "$db->getAuthorization()->addRole(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::addRole"
+      ]
+    },
+    "db.authorization.clean_roles": {
+      "doc": "$db->getAuthorization()->cleanRoles(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::cleanRoles"
+      ]
+    },
+    "db.authorization.disable": {
+      "doc": "$db->getAuthorization()->disable(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::disable"
+      ]
+    },
+    "db.authorization.enable": {
+      "doc": "$db->getAuthorization()->enable(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::enable"
+      ]
+    },
+    "db.authorization.get_description": {
+      "doc": "$db->getAuthorization()->getDescription(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::getDescription"
+      ]
+    },
+    "db.authorization.get_roles": {
+      "doc": "$db->getAuthorization()->getRoles(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::getRoles"
+      ]
+    },
+    "db.authorization.get_status": {
+      "doc": "$db->getAuthorization()->getStatus(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::getStatus"
+      ]
+    },
+    "db.authorization.get_type": {
+      "doc": "$db->getAuthorization()->getType(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::getType"
+      ]
+    },
+    "db.authorization.has_role": {
+      "doc": "$db->getAuthorization()->hasRole(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::hasRole"
+      ]
+    },
+    "db.authorization.is_array": {
+      "doc": "$db->getAuthorization()->isArray(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::isArray"
+      ]
+    },
+    "db.authorization.is_valid": {
+      "doc": "$db->getAuthorization()->isValid(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::isValid"
+      ]
+    },
+    "db.authorization.remove_role": {
+      "doc": "$db->getAuthorization()->removeRole(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::removeRole"
+      ]
+    },
+    "db.authorization.reset": {
+      "doc": "$db->getAuthorization()->reset(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::reset"
+      ]
+    },
+    "db.authorization.set_default_status": {
+      "doc": "$db->getAuthorization()->setDefaultStatus(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::setDefaultStatus"
+      ]
+    },
+    "db.authorization.set_status": {
+      "doc": "$db->getAuthorization()->setStatus(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::setStatus"
+      ]
+    },
+    "db.authorization.skip": {
+      "doc": "$db->getAuthorization()->skip(...), named arguments as database.*",
+      "covers": [
+        "Utopia\\Database\\Validator\\Authorization::skip"
+      ]
+    },
+    "db.open": {
+      "doc": "A Database on PostgreSQL service database-postgres: new Database(new Postgres(PDO), Cache(Memory|None)) with its own Authorization (roles, default [\"any\"]), setDatabase(database ?? ${ns}), setSharedTables, setTenant, setTenantPerDocument, setNamespace(namespace ?? \"compat\") and create() (unless create: false). Args: namespace?, database?, shared_tables?, tenant?, tenant_per_document?, cache?: \"memory\"|\"none\", create?, roles?, adapter? (a database handle: a peer on its adapter, not made current). Returns a handle; the database becomes the current one.",
+      "covers": [
+        "Utopia\\Database\\Database::__construct"
+      ],
+      "services": [
+        "database-postgres"
+      ]
+    },
+    "db.select": {
+      "doc": "Makes the database `db` (a handle) the current one; true"
+    },
+    "db.adapter": {
+      "doc": "$db->getAdapter()->{method}(...args): any public adapter method (capabilities, limits, raw adapter calls), named arguments as database.*"
+    },
+    "db.log": {
+      "doc": "The entries fixtures logged since the last db.log (listener events, filter calls, transformations), in order; clears them"
+    },
+    "db.sql": {
+      "doc": "A statement on the database's own connection, naming no schema but the database's: rows as lists of column => text"
+    },
+    "db.add_format": {
+      "doc": "Structure::addFormat(name, ...) with the named fixture format of the e2e suite (priceRange, priceRangeNew: a Range from formatOptions min/max, integer); true",
+      "covers": [
+        "Utopia\\Database\\Validator\\Structure::addFormat"
+      ]
+    }
+  },
+  "scrub": [
+    {
+      "kind": "now",
+      "seconds": 180000,
+      "reason": "documents carry the time they were written ($createdAt, $updatedAt, _createdAt, ...); the e2e suite also writes datetimes a day around now. Within 50 hours of the runner clock they read <now>"
+    },
+    {
+      "kind": "uniqid",
+      "reason": "ID::unique() makes ids from the clock and random bytes when a document has no $id"
+    },
+    {
+      "kind": "long",
+      "reason": "the e2e suite's 14 MB longtext.txt documents stay out of the case files: long strings compare by length and SHA-256"
+    }
+  ],
+  "tests_waived": {
+    "vendor/utopia-php/database/tests/e2e/Adapter/MariaDBTest.php": "Phase 2: the MariaDB adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MySQLTest.php": "Phase 2: the MySQL adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SQLiteTest.php": "Phase 2: the SQLite adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MemoryTest.php": "Phase 2: the Memory adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MongoDBTest.php": "Phase 3: the MongoDB adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/RedisTest.php": "Phase 3: the Redis adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/PoolTest.php": "Phase 3: the Pool adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/MirrorTest.php": "Phase 3: the Mirror adapter is not converted yet (its scope traits run against PostgreSQL in Scope-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MariaDBTest.php": "Phase 2: the MariaDB adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MySQLTest.php": "Phase 2: the MySQL adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/SQLiteTest.php": "Phase 2: the SQLite adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/MongoDBTest.php": "Phase 3: the MongoDB adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/SharedTables/RedisTest.php": "Phase 3: the Redis adapter is not converted yet (shared tables run against PostgreSQL in Scope-SharedTables-*.json)",
+    "vendor/utopia-php/database/tests/e2e/Adapter/Schemaless/MongoDBTest.php": "Phase 3: schemaless MongoDB is not converted yet",
+    "vendor/utopia-php/database/tests/unit/FilterRegistryTest.php": "Phase 3: every assertion reads whether a cached document was served, which needs a cache that keeps the hash field of an entry (the test's HashAwareMemoryCache); the cases' caches are Memory and None, which ignore it, and a hash-aware cache (Redis) comes with phase 3. Its tests also reset the static registry by reflection, which a driver process cannot do between cases. The keys it relies on are covered: CacheKeyTest.json and core-Session.json pin that registering a filter, instance filters and disabled filters change the document cache key",
+    "vendor/utopia-php/database/tests/unit/QueryCacheTest.php": "Phase 3: withCache() and the query cache are asserted through hash-aware cache adapters (the test's HashMemoryCache and JsonHashMemoryCache), which the cases' Memory and None caches are not; they come with phase 3's Redis cache. getQueryCacheKey and getQueryCacheField are covered by CacheKeyTest.json and core-Database.json",
+    "vendor/utopia-php/database/tests/unit/WithCacheLeaseTest.php": "Phase 3: asserts generation leases of a Leasable cache adapter (Utopia\\Cache\\Feature\\Leasable, the test's LeasableMemoryCache); the cases' caches are Memory and None, which have none. Lease-aware caching comes with phase 3's Redis cache",
+    "vendor/utopia-php/database/tests/unit/PoolTimeoutTest.php": "Phase 3: tests Utopia\\Database\\Adapter\\Pool (timeouts replayed on each pooled checkout); the Pool adapter is not converted yet",
+    "vendor/utopia-php/database/tests/unit/MongoPermissionStringsTest.php": "Phase 3: tests Utopia\\Database\\Adapter\\Mongo::permissionStrings (private, by reflection); the MongoDB adapter is not converted yet"
+  }
+}

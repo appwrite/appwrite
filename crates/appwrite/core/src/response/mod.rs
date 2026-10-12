@@ -10,7 +10,7 @@ mod models;
 pub use models::*;
 
 use chrono::NaiveDateTime;
-use utopia_database::datetime;
+use utopia_database::legacy::datetime;
 
 /// A `X-Appwrite-Response-Format` version.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

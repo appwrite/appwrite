@@ -5,10 +5,10 @@ use chrono::NaiveDateTime;
 use serde_json::Value;
 use tokio_postgres::types::{IsNull, ToSql, Type, to_sql_checked};
 
-use crate::datetime;
-use crate::query::{Method, Query};
-use crate::schema::{Attribute, AttributeType, Collection};
-use crate::{Error, Result};
+use crate::legacy::datetime;
+use crate::legacy::query::{Method, Query};
+use crate::legacy::schema::{Attribute, AttributeType, Collection};
+use crate::legacy::{Error, Result};
 
 /// A bind parameter with an explicit PostgreSQL type.
 ///
@@ -298,7 +298,7 @@ pub fn fulltext_value(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::schema::Attribute;
+    use crate::legacy::schema::Attribute;
     use serde_json::json;
 
     const ATTRS: &[Attribute] = &[

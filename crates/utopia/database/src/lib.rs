@@ -1,46 +1,69 @@
-//! Utopia Database for Rust.
+//! A document database: collections with typed attributes and indexes,
+//! documents with permissions, queries, relationships, tenancy and caching,
+//! over pluggable storage adapters.
 //!
-//! This crate reads and writes the **same tables** as `utopia-php/database`
-//! so PHP and Rust services can operate on one dataset at the same time:
+//! [`Database`] is the entry point: it validates and encodes documents,
+//! checks permissions against an [`Authorization`], caches reads, resolves
+//! relationships and hands storage to an [`Adapter`] ([`adapter::postgres`]).
+//! [`Document`] carries attributes as PHP values ([`Value`]), [`Query`]
+//! filters, orders and pages finds, and [`Operator`] updates attributes
+//! atomically.
 //!
-//! * identical table naming (`"appwrite"."<namespace>_<collection>"`), system
-//!   columns (`_id`, `_uid`, `_createdAt`, `_updatedAt`, `_permissions`,
-//!   `_tenant`) and `_perms` side tables;
-//! * identical query semantics (filters, fulltext search, cursor pagination,
-//!   default ordering) and validation messages;
-//! * identical cache keys, so writes purge PHP's Redis cache entries.
+//! The crate reads and writes the same tables, rows and metadata as
+//! `utopia-php/database`, so PHP and Rust services share one dataset.
 //!
-//! It is intentionally *not* a port of the PHP class hierarchy. Rows are
-//! decoded into caller-defined types via [`FromRow`]; writes are expressed
-//! as column/value lists and executed as single statements (data-modifying
-//! CTEs) so each write is one network round trip.
+//! PHP: `utopia-php/database` 7.4. Each PHP class maps onto one item:
+//!
+//! | PHP | Rust |
+//! |---|---|
+//! | `Utopia\Database\Database` | [`Database`] (constants as associated constants: `Database::VAR_STRING`) |
+//! | `Utopia\Database\Document` | [`Document`] |
+//! | `Utopia\Database\Query` | [`Query`], [`query::Method`] |
+//! | `Utopia\Database\Operator` | [`Operator`], [`operator::OperatorMethod`] |
+//! | `Utopia\Database\Change` | [`Change`] |
+//! | `Utopia\Database\Connection` | [`connection`] |
+//! | `Utopia\Database\DateTime` | [`datetime`] |
+//! | `Utopia\Database\Helpers\{ID, Role, Permission}` | [`helpers::id`], [`helpers::role`], [`helpers::permission`] |
+//! | `Utopia\Database\Validator\*` | [`validator`] |
+//! | `Utopia\Database\Validator\Authorization` | [`Authorization`] |
+//! | `Utopia\Database\Adapter` | [`Adapter`] |
+//! | `Utopia\Database\Adapter\Postgres` (with `Adapter\SQL`) | [`adapter::postgres::Postgres`] |
+//! | `Utopia\Database\Exception` and `Exception\*` | [`Error`], [`Kind`] |
+//! | PHP values (`mixed`) | [`Value`] (`php_std::Value` with [`value::Ext`]) |
+//!
+//! [`legacy`] is the earlier row-level PostgreSQL layer the Appwrite crates
+//! still use; it is replaced by [`Database`] as they migrate.
 
+#![warn(missing_docs)]
+
+/// The getting started guide (`guide.md`), compiled and run with the doctests.
+#[cfg(doctest)]
+#[doc = include_str!("../guide.md")]
+pub struct GettingStarted;
+
+pub mod adapter;
+pub mod change;
+pub mod connection;
+pub mod database;
 pub mod datetime;
-pub mod id;
-pub mod permission;
+pub mod document;
+pub mod error;
+pub mod helpers;
+pub mod operator;
 pub mod query;
-pub mod schema;
 pub mod validator;
+pub mod value;
 
-mod error;
-mod postgres;
-pub mod sql;
+#[cfg(feature = "postgres")]
+#[allow(missing_docs)]
+pub mod legacy;
 
-pub use error::Error;
-pub use postgres::{Database, FindOptions, FromRow, Pool, PoolOptions, row};
-pub use query::{Cursor, CursorDirection, Method, Order, OrderDirection, Query, QueryGroups};
-pub use schema::{Attribute, AttributeType, Collection};
-pub use sql::Param;
-
-pub use deadpool_postgres;
-pub use tokio_postgres;
-pub use tokio_postgres::Row;
-
-/// Database `schema` used by Appwrite for every table (`APP_DATABASE`).
-pub const DEFAULT_SCHEMA: &str = "appwrite";
-
-/// Default page size when no limit query is given.
-pub const DEFAULT_LIMIT: i64 = 25;
-
-/// Result alias.
-pub type Result<T, E = Error> = std::result::Result<T, E>;
+pub use adapter::Adapter;
+pub use change::Change;
+pub use database::Database;
+pub use document::Document;
+pub use error::{Error, Kind, Result};
+pub use operator::Operator;
+pub use query::Query;
+pub use validator::authorization::Authorization;
+pub use value::{Array, Value};

@@ -45,7 +45,7 @@ bin/compat bench <lib>... [--write]  # time each library's benchmarks on PHP and
 
 `bin/compat report` runs every case and fuzz profile (200 inputs each by default) with both runtimes' results kept, compares every public PHP method's signature with its Rust counterpart's, maps each PHP symbol to the Rust items whose docs name it, and writes the JSON [`apps/compat`](../../apps/compat) renders. `bin/compat crates` writes the documentation of every Utopia library, converted or not, for [`apps/crates`](../../apps/crates), reading PHP signatures through the PHP driver. `bin/compat examples` runs every example in the crates' docs: the Rust doctests and the PHP twin written after each one (see [`apps/crates/README.md`](../../apps/crates/README.md#writing-examples)).
 
-`cargo test -p compat` replays every recorded expectation against Rust without PHP (cases needing Redis or a database only with `COMPAT_SERVICES=1`), so the workspace test run guards compatibility too `COMPAT_LIB=<lib>` and `COMPAT_CASE=<text>` (a substring of `<lib>/<file>#<case>`) narrow it, a fast loop while converting a library.
+`cargo test -p compat` replays every recorded expectation against Rust without PHP (cases needing Redis or a database only with `COMPAT_SERVICES=1`), so the workspace test run guards compatibility too. `COMPAT_LIB=<lib>` and `COMPAT_CASE=<text>` (a substring of `<lib>/<file>#<case>`) narrow it, a fast loop while converting a library. Which cases need services: those that snapshot state (`state`) or list the `services` requirement, and, once any operation of the spec declares the services it needs (`"services": [...]` on the op), those with a step of such an operation; a spec whose operations declare none keeps the older rule (every case of a spec listing `services` needs them).
 
 Environment: `COMPAT_PHP` / `COMPAT_RUST` override the driver commands, `COMPAT_TIMEOUT` the seconds to wait for a reply (60), `COMPAT_SEED` the fuzz seed, `COMPAT_FUZZ_DUMP` a file to append every generated fuzz input to (JSON lines, to replay a driver crash input by input), `COMPAT_IMAGE` / `COMPAT_NETWORK` the PHP driver's image and network. Service endpoints for each runtime and for the runner are in `compat.json` (`${VAR}` reads the environment, then `.env`): `php` on the dev stack's network, `rust` and `runner` through the host's forwarded ports, and optionally `rust-container`, where a Rust driver in a container on the network reaches the service (`compat bench`; see [Benchmarks](#benchmarks)).
 
@@ -98,7 +98,17 @@ for s in tests/compat/*/services.sh; do "$s" down; done
 }
 ```
 
-A large spec can be split: `spec.d/*.json` files hold more `ops`, `generators`, `waivers`, `tests_waived`, `tasks`, `tasks_waived`, `quirks` and `deviations` (one file per area or owner), merged into `spec.json`; a name defined twice is an error.
+A large spec can be split: `spec.d/*.json` files hold more `ops`, `generators`, `waivers`, `tests_waived`, `tasks`, `tasks_waived`, `quirks`, `deviations` and `scrub` (one file per area or owner), merged into `spec.json`; a name defined twice is an error.
+
+`scrub` replaces values a library generates nondeterministically in every result and snapshot, before comparing and recording (bound results keep the raw values, so later steps use the real ids). Each entry has a `kind` and a `reason` (`crates/tools/compat/src/runner/scrub.rs`):
+
+| Kind | Replaces | With |
+|---|---|---|
+| `now` | a datetime string within `seconds` (default 3600) of the runner's clock, as `Y-m-d\TH:i:s.vP`, `Y-m-d H:i:s.v` or `Y-m-d H:i:s` (zone optional) | `<now>` |
+| `uniqid` | a token of 13 to 36 lowercase hex digits whose first 8 are a unix time within a day of the clock (`uniqid()` plus padding, as `ID::unique()` makes), alone or delimited inside a string | `<uniqid>` |
+| `long` | a string over 64 KiB, kept out of the case files | `<long:<bytes>:<sha256>>` |
+
+PHP test files to port (`php.tests`) are the `*Test.php` classes and the `*Tests.php` traits test classes are assembled from (utopia-php/database's e2e scopes hold the test bodies). Directories that are not on the host (`vendor/`, which only the dev image has) are listed by the PHP driver (`$tests`).
 
 A fuzz profile with `"isolate": true` runs in fresh PHP and Rust driver processes, for functions with process-wide state that other operations touch on one side only (PHP's PCRE cache and JIT switch, which engine functions like `filter_var` also fill). Each library's `run`, `fuzz` and `record` also starts fresh drivers, so a library never inherits another's process-wide state: after `php-std`'s fuzzing has switched the PCRE JIT off, `user-agent`'s backtracking cases would run interpreted, much slower. A library behaves in `ci` exactly as it does alone.
 
@@ -208,8 +218,74 @@ The runner snapshots shared state itself after each case, per namespace, for the
 |---|---|
 | `redis` | every key containing the namespace: type, value, whether it expires |
 | `files` | every file under `/tmp/compat-fs/${ns}/` (mounted into the PHP driver's container at the same path): relative path and content |
+| `redis@<service>[/<db>,...]` | like `redis`, on another Redis service of `compat.json` |
+| `postgres@<service>` | the PostgreSQL schema named `${ns}` on a service of `compat.json` (its `runner` URL): whether it exists, and per table (sorted) its columns in order (name, type with length or precision, nullability, default, identity, generated), indexes (`pg_get_indexdef`), constraints (`pg_get_constraintdef`) and rows (ordered by `_id`, then every column's text; every value as `::text`). Cleanup drops the schema and every `${ns}_<name>` schema (`DROP SCHEMA ... CASCADE`) |
 
 A library that writes to another service adds a kind there (PostgreSQL tables, MongoDB collections, files), touching only resources whose names contain the namespace.
+
+## database
+
+utopia-php/database is converted area by area (`tests/compat/database/ops/<area>.php`, `crates/tools/compat/src/libs/database/<area>.rs` (`core/`, split by the `Database` area that implements each operation: `schema.rs`, `documents.rs`, `relationships.rs`, sharing `args.rs`), `spec.d/<area>.json`). Values cross through `Values.php` and `codec.rs`.
+
+### The `core` vocabulary
+
+Area `core` drives `Utopia\Database\Database` itself, on PostgreSQL service `database-postgres` (`tests/compat/database/services.sh up`). A case opens a database first; each runtime's database lives in schema `${ns}`, which the `postgres@database-postgres` snapshot compares. The cache is `Utopia\Cache\Adapter\Memory` (or `None`): private to each runtime, so neither reads the other's entries (a shared Redis cache, and its igbinary format, is phase 3).
+
+| Operation | Arguments | Result |
+|---|---|---|
+| `db.open` | `namespace` (`"compat"`), `database` (`${ns}`), `shared_tables`, `tenant`, `tenant_per_document`, `cache` (`"memory"` or `"none"`), `create` (true), `roles` (`["any"]`), `adapter` (a database handle: a peer on that database's adapter, not made current), `filters` (instance filters: name => filter fixture name) | a handle; the database becomes the session's current one. Registers every filter fixture (below), then builds `new Database(new Postgres(PDO), Cache, filters)` with its own `Authorization` holding `roles`, then `setDatabase`, `setSharedTables`, `setTenant`, `setTenantPerDocument`, `setNamespace` and `create()` |
+| `db.select` | `db` | `true`; makes `db` current |
+| `database.<method>` | the method's parameters by name; `db` picks a database other than the current one | the result, encoded (below) |
+| `db.authorization.<method>` | as `database.*`, on `$db->getAuthorization()` | |
+| `db.adapter` | `method`, `args` (by name) | `$db->getAdapter()->$method(...)`: capabilities, limits, direct adapter calls |
+| `database.add_filter` | `name`: `encrypt`, `subQueryProbe` or `operator_double_decode` (the e2e suite's filters) | `null`; `Database::addFilter` with that fixture, process-wide like PHP's. The fixtures are static methods of `FilterFixtures` (`ops/core.php`), so their signatures, which cache keys carry, are `Class::method` and do not move when the file is edited; every `db.open` registers all of them, so a case's cache keys do not depend on the cases its driver ran before |
+| `db.add_format` | `name`: `priceRange` or `priceRangeNew` | `true`; `Structure::addFormat` with that fixture (a `Range` from the attribute's `formatOptions`, integer) |
+| `database.on` | `event`, `name`, `callback`: `true` (a listener logging each event) or `null` (removes it) | `{"$database": true}` |
+| `database.before` | `event`, `name`, `callback`: `{"append": "<sql>"}` (a transformation appending to the statement, logging the result) or `null` | `{"$database": true}` |
+| `db.log` | | what fixtures logged since the last `db.log`, in order, then cleared: `{"event", "listener", "data"}`, `{"filter", "call": "encode"|"decode"}`, `{"transform", "name", "sql"}` |
+| `db.sql` | `sql`, naming no schema but the database's (`"${ns}".`) | rows, as lists of column => text |
+
+`database.<method>` and `db.authorization.<method>` are every public method in snake_case (`createDocument` is `database.create_document`). Arguments are decoded for each parameter's type: `Document` parameters (and `array<Document>` ones, by their docblock) take `$document` tags or plain arrays, `queries` takes `$query` tags or arrays/strings, `DateTime` a string for `new DateTime()` (relative forms such as `-3600 seconds` count from now), `Cache` `"memory"` or `"none"`, `Authorization` `{"roles": [...]}` or a database handle (that database's own), `Adapter`/`Database` a database handle. Before that, anywhere in the arguments: `{"$datetime": "<string>"}` is a `DateTime`, `{"$now": <seconds>, "format": "<DateTime::format>"}` the string of now plus the seconds, `{"$repeat": "<text>", "times": <n>}` the repeated text.
+
+A callable parameter takes `true` (a callback that only records its calls) or `{"steps": [...]}`, steps run at each call by a small interpreter: `{"op", "args", "bind"?, "catch"?, "return"?}`, where `{"$local": <bind>, "path"?}` in arguments is an earlier step's encoded result and `{"$arg": <n>, "path"?}` the callback's n-th argument. Arguments are encoded as the call receives them: PHP may change a document after the call (`iterate()` encodes its last document in place as the next page's cursor), which a Rust callback, owning its copy, never sees. A step that throws records `{"$error": ...}` and, without `"catch": true`, the exception leaves the callback (and, say, rolls the transaction back). `{"op": "$throw", "args": {"class", "message"}}` throws; `{"op": "$return", "args": {"value"}}` sets the callback's return value, as does `"return": true` on a step (its raw result). With a callback, the result is `{"result": <encoded>, "calls": {"<param>": [{"args": [...], "steps": [<result or $error>, ...]}, ...]}}`.
+
+Results are `Values::encode`d, plus: a `Database` (fluent setters) is `{"$database": true}`, an adapter `{"$adapter": "Postgres"}`, a cache `{"$cache": true}`, an authorization `{"$authorization": true}`, a `DateTime` `{"$datetime": "Y-m-d\TH:i:s.uP"}`, an exception (`onError`'s argument) `{"$error": {"class", "message"}}`, a generator (`iterate`) the list it yields.
+
+### The e2e suites
+
+`tests/compat/database/recorder/` ports `tests/e2e/Adapter/PostgresTest.php` and `SharedTables/PostgresTest.php` (shared tables, tenant 999), with every scope trait they use, by running them in the dev image (PHPUnit's `TestCase` from its vendor, outside PHPUnit's runner: declaration order, `@depends` first, `@dataProvider` sets) against the compat PostgreSQL with a recording `Database`, adapter and `Authorization` (generated subclasses). Each call test code makes, at depth 0 (not the library's own calls to itself), becomes a step: `database.*`, `db.adapter` or `db.authorization.*`, named arguments encoded before the call. A callback the library runs opens a frame of its own, whose calls become the callback's `steps` (`catch` when the test caught a step's exception, `$throw` when the callback threw on its own, `return` or `$return` for its return value). Test code that builds a second `Database` (`new Database(...)`) loads from a copy where that is a recorded peer (`db.open` with `adapter`). Filters, formats, listeners and query transformations are recorded by name (core's fixtures), and a `db.log` follows every step during which they ran.
+
+Every test method becomes a case `<Trait>::<method>[#<data set>]` in `cases/Scope-[SharedTables-]<Trait>.json` (`PostgresTest.json` for the two tests of PostgresTest itself), self-contained:
+
+- `db.open` (bound `db`), then, when the database's settings differed from a fresh one's as the test began (leftovers of earlier tests: roles, tenant, metadata, document types, ...), the last call of each setting before it;
+- a dependency slice: every earlier write touching a collection the test touches, closed over the collections those writes touch (a collection deleted before the test starts afresh), every step whose result a kept step refers to, and process-wide registrations (filters, formats);
+- the test's own steps.
+
+Ids the tests generate (`ID::unique()`, `uniqid()`: they first appear in arguments) become deterministic fakes of the same length (`u000...1`); ids the library generates (they first appear in a result) become `{"$ref": "s<step>", "path": ...}` (or `{"$local": ...}` inside a callback). Datetimes within 50 hours of the clock become `$now` (strings) or relative `$datetime` (objects); long strings `$repeat` (a random one, in `AttributeTests::testUpdateAttributeSize`, becomes a repetition of its start of the same length); the recorder's schema `${ns}`, and the other databases the tests name (`sharedTables`, `schema1`, `hellodb`, ...) `${ns}_<name>`, so each runtime works in schemas of its own, which the cleanup of `${ns}` drops too. Finds ordered by `Query::orderRandom()` and the adapter's host name and connection id are masked. Every case snapshots `postgres@database-postgres`. The cases use a Memory cache, which ignores the hash field of an entry, so the suite's cache tests that rely on per-projection entries (`DocumentTests::testGetDocumentSelect`, `testCacheEmptyDocumentSelect`, `CollectionTests::testPurgeCollectionCache`, `AttributeTests::testFilterNotAppliedWhenAttributeNotSelected`, and the `PermissionTests` reads that a second role repeats: `testCollectionPermissions{Find,Get,RelationshipsFind,RelationshipsGet}Works`) record what PHP does over Memory, where their assertions fail; a hash-aware cache comes with phase 3's Redis. The recorder writes what PHP returned while recording to `recorder/out/` (not committed); `recorder/fidelity.py` compares it with the recorded expectations, test by test, to show where a slice does not reproduce the suite's state.
+
+Not ported, by design: `GeneralTests::testCacheReconnect` (stops and restarts a Redis cache server); the planner statistics of `PostgresTest::testReadDoesNotTouchThePermissionsTable` and `testVectorSearchUsesTheIndex` (`pg_stat_*` counters, timing dependent; their Database calls are ported). The e2e test files of the other adapters are waived until their phase.
+
+The library's unit tests run on the compat PostgreSQL where they drive `Database` (their `Memory` adapter is phase 2), writing behind the cache with `db.sql` where they write through the adapter. Not ported, by design: `CacheKeyTest`'s mocked adapter answers (its hostname and tenant come from the PostgreSQL adapter and `db.open` here) and `testQueryCacheFieldValidatesQueryTypes` (a non-`Query` in `queries` cannot cross the wire); `CreateCollectionRaceTest::testCreateCollectionStillReportsDuplicateWhenCachePurgeFails` (a cache adapter that throws on purge); `TransactionRetryTest::testNonRetriableActionAbortsWhenRollbackFails` (an adapter subclass whose rollback throws) and `testRedisRollbackFailureClearsJournalStack` (the Redis adapter, phase 3); `SpatialFilterTest` runs on two PostgreSQL databases instead of mocks returning different points. `FilterRegistryTest`, `QueryCacheTest` and `WithCacheLeaseTest` need hash-aware or leasable caches and `PoolTimeoutTest` and `MongoPermissionStringsTest` their adapters: they are waived to phase 3 (`spec.d/core.json`).
+
+```bash
+bin/compat-php tests/compat/database/recorder/record.php postgres   # cases/Scope-*.json, PostgresTest.json
+bin/compat-php tests/compat/database/recorder/record.php shared     # cases/Scope-SharedTables-*.json
+bin/compat record database --case Scope                             # their expectations
+```
+
+### Tasks
+
+The PHP package ships no `bin` in its `composer.json`, and its scripts (`build`, `start`, `test`, `lint`, `format`, `check`, `coverage`) are development tooling. Its programs are the benchmarking CLI under `bin/`, waived (record them under `tasks_waived` in `spec.d/core.json` once this branch has the tasks tooling):
+
+| Program | Waiver |
+|---|---|
+| `vendor/utopia-php/database/bin/cli.php` | The entry point of the benchmarking tasks below (a `Utopia\CLI` app); no product behaviour |
+| `vendor/utopia-php/database/bin/tasks/load.php` | Development benchmark: fills a scratch MariaDB, MySQL, PostgreSQL or MongoDB database of the library's docker-compose stack with mock articles through Swoole PDO pools and times it; `bin/compat bench database` compares both runtimes' writes |
+| `vendor/utopia-php/database/bin/tasks/index.php` | Development benchmark: adds the mock data's indexes to that scratch database and times them |
+| `vendor/utopia-php/database/bin/tasks/query.php` | Development benchmark: times queries over the mock data for growing role counts and writes the timings to `bin/view/results`; `bin/compat bench database` compares both runtimes' finds |
+| `vendor/utopia-php/database/bin/tasks/relationships.php` | Development benchmark: loads and times mock relationship graphs in that scratch database |
+| `vendor/utopia-php/database/bin/tasks/operators.php` | Development benchmark: times operator updates against read-modify-write in that scratch database |
+| `vendor/utopia-php/database/bin/view/index.php` | An HTML page charting the `query` task's result files; no library behaviour |
 
 ## php-std
 

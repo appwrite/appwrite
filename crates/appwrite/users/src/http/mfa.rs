@@ -1,7 +1,7 @@
 //! Multi-factor authentication management.
 
 use serde_json::Value;
-use utopia_database::{Param, datetime};
+use utopia_database::legacy::{Param, datetime};
 use utopia_http::Response;
 use utopia_validators::{Boolean, Text, WhiteList, php};
 

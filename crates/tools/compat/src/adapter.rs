@@ -5,7 +5,7 @@
 //! PHP library. Adapters are glue: they decode arguments, call the library and
 //! encode the result. They hold no logic of their own.
 
-use std::any::Any;
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
 use base64::Engine as _;
@@ -83,6 +83,8 @@ pub struct Session {
     /// Service endpoints for this runtime, e.g. `{"redis": "redis://localhost:9513"}`.
     pub services: Map<String, Value>,
     handles: HashMap<String, Box<dyn Any + Send>>,
+    /// Per-type state an adapter keeps for the session ([`Session::state`]).
+    states: HashMap<TypeId, Box<dyn Any + Send>>,
     next: u64,
 }
 
@@ -94,12 +96,24 @@ impl Default for Session {
 
 impl Session {
     pub fn new(ns: impl Into<String>, services: Map<String, Value>) -> Self {
-        Self { ns: ns.into(), services, handles: HashMap::new(), next: 0 }
+        Self { ns: ns.into(), services, handles: HashMap::new(), states: HashMap::new(), next: 0 }
     }
 
     /// Drops every handle.
     pub fn reset(&mut self) {
         self.handles.clear();
+        self.states.clear();
+    }
+
+    /// The session's state of type `T` (created with `T::default()` on first
+    /// use, dropped by [`Session::reset`]): what an adapter keeps besides
+    /// handles, such as the current object operations act on.
+    pub fn state<T: Any + Send + Default>(&mut self) -> &mut T {
+        self.states
+            .entry(TypeId::of::<T>())
+            .or_insert_with(|| Box::new(T::default()))
+            .downcast_mut::<T>()
+            .expect("states are keyed by their type")
     }
 
     /// Stores an object and returns its handle (`{"$handle": "h1"}`).

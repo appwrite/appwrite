@@ -3,8 +3,8 @@
 use bytes::Bytes;
 use utopia_auth::Hash;
 use utopia_auth::hashes::{Argon2, Sha};
-use utopia_database::sql::Builder;
-use utopia_database::{Database, FromRow, Param, datetime, permission};
+use utopia_database::legacy::sql::Builder;
+use utopia_database::legacy::{Database, FromRow, Param, datetime, permission};
 use utopia_emails::Email;
 
 use appwrite_core::crypto;
@@ -72,7 +72,7 @@ pub async fn targets_of(db: &Database, user_id: &str) -> Result<Vec<Target>> {
         db.table("users")
     );
     let rows = db.query(&sql, &b).await?;
-    Ok(rows.iter().map(Target::from_row).collect::<utopia_database::Result<Vec<_>>>()?)
+    Ok(rows.iter().map(Target::from_row).collect::<utopia_database::legacy::Result<Vec<_>>>()?)
 }
 
 /// Sparse update of a user. `user` holds the merged (post-update) values so
@@ -165,7 +165,7 @@ pub async fn create_target(
     provider_type: &str,
     identifier: &str,
 ) -> Result<Option<Target>> {
-    let id = utopia_database::id::unique();
+    let id = utopia_database::legacy::id::unique();
     let columns = vec![
         ("userId", Param::text(user.id.as_str())),
         ("userInternalId", Param::Text(user.sequence.to_string())),
@@ -175,7 +175,7 @@ pub async fn create_target(
     ];
     match db.insert("targets", &id, &owner_permissions(&user.id), columns, Target::COLUMNS).await {
         Ok(row) => Ok(Some(Target::from_row(&row)?)),
-        Err(utopia_database::Error::Duplicate(_)) => target_by_identifier(db, identifier).await,
+        Err(utopia_database::legacy::Error::Duplicate(_)) => target_by_identifier(db, identifier).await,
         Err(e) => Err(e.into()),
     }
 }
@@ -236,7 +236,7 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
         return Err(Error::new(ErrorType::UserEmailAlreadyExists));
     }
 
-    let user_id = if input.user_id == "unique()" { utopia_database::id::unique() } else { input.user_id };
+    let user_id = if input.user_id == "unique()" { utopia_database::legacy::id::unique() } else { input.user_id };
 
     if ctx.project.auth_bool("personalDataCheck", false)
         && !appwrite_core::validators::personal_data_ok(
@@ -312,7 +312,7 @@ pub async fn create_user(ctx: &mut Context, input: NewUser) -> Result<User> {
     ];
     let row = match db.insert("users", &user_id, &permissions, columns, User::COLUMNS).await {
         Ok(row) => row,
-        Err(utopia_database::Error::Duplicate(_)) => return Err(Error::new(ErrorType::UserAlreadyExists)),
+        Err(utopia_database::legacy::Error::Duplicate(_)) => return Err(Error::new(ErrorType::UserAlreadyExists)),
         Err(e) => return Err(e.into()),
     };
     user = User::from_row(&row)?;

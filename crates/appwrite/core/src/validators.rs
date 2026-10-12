@@ -4,7 +4,7 @@
 use std::collections::HashSet;
 
 use serde_json::{Map, Value};
-use utopia_database::id::{Key, Uid};
+use utopia_database::legacy::id::{Key, Uid};
 use utopia_validators::Validator;
 
 /// Maximum UID length for SQL adapters.

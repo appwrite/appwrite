@@ -105,6 +105,12 @@ crc32fast = "1"
 ctr = "0.9"
 deadpool-postgres = "0.14"
 fancy-regex = "0.14"
+# The PostgreSQL wire protocol and SCRAM (utopia-database's Postgres adapter,
+# which speaks libpq's simple query protocol itself to send statements as the
+# bytes PHP's PDO sends and read the transaction status); already in the tree
+# through tokio-postgres, as is fallible-iterator, which its parsers return.
+postgres-protocol = "0.6"
+fallible-iterator = "0.2"
 # SIMD resampling (utopia-image: thumbnails with Lanczos3, scales with the box
 # filter ImageMagick's scaleImage uses); pure Rust.
 fast_image_resize = { version = "6", default-features = false, features = ["std"] }

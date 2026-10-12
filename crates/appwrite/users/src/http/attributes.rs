@@ -2,8 +2,8 @@
 
 use serde_json::Value;
 use utopia_auth::proofs::Password;
-use utopia_database::sql::Builder;
-use utopia_database::{Param, datetime};
+use utopia_database::legacy::sql::Builder;
+use utopia_database::legacy::{Param, datetime};
 use utopia_emails::EmailValidator;
 use utopia_http::Response;
 use utopia_validators::{AllOf, ArrayList, Boolean, Text, Validator, php};

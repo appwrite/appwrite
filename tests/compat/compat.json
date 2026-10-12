@@ -16,6 +16,12 @@
       "rust": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@localhost:9512/${_APP_DB_SCHEMA}",
       "runner": "postgres://${_APP_DB_USER}:${_APP_DB_PASS}@localhost:9512/${_APP_DB_SCHEMA}"
     },
+    "database-postgres": {
+      "php": "postgres://root:password@compat-database-postgres:5432/root",
+      "rust": "postgres://root:password@localhost:16432/root",
+      "rust-container": "postgres://root:password@compat-database-postgres:5432/root",
+      "runner": "postgres://root:password@localhost:16432/root"
+    },
     "domains-http": {
       "php": "http://compat-domains-http:8080",
       "rust": "http://localhost:9590",

@@ -3,7 +3,7 @@
 //! Only attributes that matter for query validation and SQL typing are
 //! listed; `Queries` validators further restrict them to an allow-list.
 
-use utopia_database::schema::{Attribute, Collection};
+use utopia_database::legacy::schema::{Attribute, Collection};
 
 pub const USERS: Collection = Collection {
     id: "users",

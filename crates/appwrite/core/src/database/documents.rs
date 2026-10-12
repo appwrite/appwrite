@@ -5,14 +5,14 @@
 
 use chrono::NaiveDateTime;
 use serde_json::Value;
-use utopia_database::row;
-use utopia_database::sql::Builder;
-use utopia_database::{Database, FromRow, Param, Row};
+use utopia_database::legacy::row;
+use utopia_database::legacy::sql::Builder;
+use utopia_database::legacy::{Database, FromRow, Param, Row};
 
 use crate::Result;
 use crate::crypto;
 
-type DbResult<T> = utopia_database::Result<T>;
+type DbResult<T> = utopia_database::legacy::Result<T>;
 
 fn decrypted(r: &Row, column: &str) -> DbResult<Option<String>> {
     Ok(row::string(r, column)?.and_then(|s| crypto::decrypt_env(&s)))
@@ -458,7 +458,7 @@ pub async fn load_user(db: &Database, id: &str, relations: Relations) -> Result<
     let authenticators =
         with_id(relation_sql::<Authenticator>(db, "authenticators", "\"_createdAt\" DESC, \"_id\" DESC"));
 
-    let none = || async { Ok::<Vec<Row>, utopia_database::tokio_postgres::Error>(Vec::new()) };
+    let none = || async { Ok::<Vec<Row>, utopia_database::legacy::tokio_postgres::Error>(Vec::new()) };
     let user_params = ub.typed();
     let t_params = targets.1.typed();
     let s_params = sessions.1.typed();
@@ -475,13 +475,13 @@ pub async fn load_user(db: &Database, id: &str, relations: Relations) -> Result<
             if relations.authenticators { client.query_typed(&authenticators.0, &a_params).await } else { none().await }
         },
     );
-    let user_rows = user_rows.map_err(utopia_database::Error::from)?;
+    let user_rows = user_rows.map_err(utopia_database::legacy::Error::from)?;
     let Some(row) = user_rows.first() else {
         return Ok(None);
     };
     let mut user = User::from_row(row)?;
-    let decode = |rows: std::result::Result<Vec<Row>, utopia_database::tokio_postgres::Error>| {
-        rows.map_err(utopia_database::Error::from)
+    let decode = |rows: std::result::Result<Vec<Row>, utopia_database::legacy::tokio_postgres::Error>| {
+        rows.map_err(utopia_database::legacy::Error::from)
     };
     user.targets = decode(t_rows)?.iter().map(Target::from_row).collect::<DbResult<_>>()?;
     user.sessions = decode(s_rows)?.iter().map(Session::from_row).collect::<DbResult<_>>()?;

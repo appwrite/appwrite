@@ -1,0 +1,942 @@
+{
+  "source": "vendor/utopia-php/database/src/Database/Adapter/Postgres.php",
+  "cases": [
+    {
+      "name": "relationship columns and junction tables",
+      "steps": [
+        {
+          "op": "adapter.open",
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "adapter.before",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "event": "*",
+            "name": "capture"
+          },
+          "expect": null
+        },
+        {
+          "op": "adapter.create",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "_metadata",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "name",
+                  "type": "string",
+                  "size": 16,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "_metadata",
+            "document": {
+              "$document": {
+                "$id": "a",
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "a",
+              "$permissions": [],
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_document",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "_metadata",
+            "document": {
+              "$document": {
+                "$id": "b",
+                "$permissions": []
+              }
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "b",
+              "$permissions": [],
+              "$sequence": "2"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "a"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "b"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "id": "b1",
+            "two_way_key": "a1"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "two_way": true,
+            "id": "b2",
+            "two_way_key": "a2"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToMany",
+            "id": "bs",
+            "two_way_key": "a3"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "id": "b4",
+            "two_way_key": "as"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToMany",
+            "id": "m",
+            "two_way_key": "n"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "other",
+            "id": "x"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid relationship type"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "id": "b1"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42701]: Duplicate column: 7 ERROR:  column \"b1\" of relation \"ns_a\" already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "missing",
+            "type": "oneToOne",
+            "two_way": true,
+            "id": "b9",
+            "two_way_key": "z"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42P01]: Undefined table: 7 ERROR:  relation \"${ns}.ns_missing\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns__metadata",
+              "column_name": "name",
+              "udt_name": "varchar",
+              "character_maximum_length": "16"
+            },
+            {
+              "table_name": "ns_a",
+              "column_name": "b1",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns_a",
+              "column_name": "b2",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns_a",
+              "column_name": "b4",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns_b",
+              "column_name": "a2",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns_b",
+              "column_name": "a3",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            }
+          ]
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "_1_2",
+            "attributes": [
+              {
+                "$document": {
+                  "$id": "m",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              },
+              {
+                "$document": {
+                  "$id": "n",
+                  "type": "string",
+                  "size": 255,
+                  "required": false,
+                  "signed": true,
+                  "array": false
+                }
+              }
+            ]
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "key": "b1",
+            "two_way_key": "a1",
+            "side": "parent",
+            "new_key": "b1x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "two_way": true,
+            "key": "b2",
+            "two_way_key": "a2",
+            "side": "parent",
+            "new_key": "b2",
+            "new_two_way_key": "a2x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToMany",
+            "key": "bs",
+            "two_way_key": "a3",
+            "side": "parent",
+            "new_two_way_key": "a3x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToMany",
+            "key": "bs",
+            "two_way_key": "a3",
+            "side": "child",
+            "new_key": "bs"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "key": "b4",
+            "two_way_key": "as",
+            "side": "parent",
+            "new_key": "b4x"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "key": "b4",
+            "two_way_key": "as",
+            "side": "child",
+            "new_two_way_key": "asx"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42703]: Undefined column: 7 ERROR:  column \"as\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToMany",
+            "two_way": true,
+            "key": "m",
+            "two_way_key": "n",
+            "side": "parent",
+            "new_key": "mx",
+            "new_two_way_key": "nx"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "key": "b1x",
+            "two_way_key": "a1",
+            "side": "parent"
+          },
+          "mask": {
+            "paths": [
+              "/$error/message"
+            ],
+            "reason": "libpq's caret line for an error positioned after the schema name depends on the length of the run's namespace"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "adapter.update_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "nope",
+            "key": "k",
+            "two_way_key": "t",
+            "side": "parent"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid relationship type"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns__1_2",
+              "column_name": "mx",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns__1_2",
+              "column_name": "nx",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns__metadata",
+              "column_name": "name",
+              "udt_name": "varchar",
+              "character_maximum_length": "16"
+            },
+            {
+              "table_name": "ns_a",
+              "column_name": "b1x",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns_a",
+              "column_name": "b2",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns_a",
+              "column_name": "b4x",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns_b",
+              "column_name": "a2x",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            },
+            {
+              "table_name": "ns_b",
+              "column_name": "a3x",
+              "udt_name": "varchar",
+              "character_maximum_length": "255"
+            }
+          ]
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "key": "b1x",
+            "two_way_key": "a1",
+            "side": "parent"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "two_way": true,
+            "key": "b2",
+            "two_way_key": "a2x",
+            "side": "child"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToOne",
+            "key": "b2",
+            "two_way_key": "a2x",
+            "side": "other"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "oneToMany",
+            "key": "bs",
+            "two_way_key": "a3x",
+            "side": "parent"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "key": "b4x",
+            "two_way_key": "asx",
+            "side": "parent"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToOne",
+            "key": "b4x",
+            "two_way_key": "asx",
+            "side": "child"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42703]: Undefined column: 7 ERROR:  column \"asx\" of relation \"ns_b\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.create_collection",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "name": "_1_2_perms"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Duplicate",
+              "message": "Collection already exists"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "manyToMany",
+            "key": "mx",
+            "two_way_key": "nx",
+            "side": "parent"
+          },
+          "expect": true
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "b",
+            "related_collection": "a",
+            "type": "manyToMany",
+            "key": "mx",
+            "two_way_key": "nx",
+            "side": "child"
+          },
+          "expect": {
+            "$error": {
+              "class": "PDOException",
+              "message": "SQLSTATE[42P01]: Undefined table: 7 ERROR:  table \"ns__1_2\" does not exist"
+            }
+          }
+        },
+        {
+          "op": "adapter.delete_relationship",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "collection": "a",
+            "related_collection": "b",
+            "type": "nope",
+            "key": "k",
+            "two_way_key": "t",
+            "side": "parent"
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception",
+              "message": "Invalid relationship type"
+            }
+          }
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name, column_name, udt_name, character_maximum_length FROM information_schema.columns WHERE table_schema = '${ns}' AND column_name NOT LIKE '\\_%%' ORDER BY table_name, column_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns__metadata",
+              "column_name": "name",
+              "udt_name": "varchar",
+              "character_maximum_length": "16"
+            }
+          ]
+        },
+        {
+          "op": "adapter.driver_query",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            },
+            "sql": "SELECT table_name FROM information_schema.tables WHERE table_schema = '${ns}' ORDER BY table_name"
+          },
+          "expect": [
+            {
+              "table_name": "ns__metadata"
+            },
+            {
+              "table_name": "ns__metadata_perms"
+            },
+            {
+              "table_name": "ns_a"
+            },
+            {
+              "table_name": "ns_a_perms"
+            },
+            {
+              "table_name": "ns_b"
+            },
+            {
+              "table_name": "ns_b_perms"
+            }
+          ]
+        },
+        {
+          "op": "adapter.captured",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": [
+            [
+              "*",
+              "CREATE SCHEMA \"${ns}\""
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns__metadata\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"name\" VARCHAR(16), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns__metadata_uid\" ON \"${ns}\".\"ns__metadata\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns__metadata_created\" ON \"${ns}\".\"ns__metadata\" (\"_createdAt\");\n            \tCREATE INDEX \"ns__metadata_updated\" ON \"${ns}\".\"ns__metadata\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns__metadata_permissions\" ON \"${ns}\".\"ns__metadata\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns__metadata_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns__metadata_ukey\" \n                    ON \"${ns}\".\"ns__metadata_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns__metadata_permission\" \n                    ON \"${ns}\".\"ns__metadata_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n\t\t\tINSERT INTO \"${ns}\".\"ns__metadata\" (\"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2,  :_uid)\n\t\t"
+            ],
+            [
+              "*",
+              "\n\t\t\tINSERT INTO \"${ns}\".\"ns__metadata\" (\"_createdAt\", \"_updatedAt\", \"_permissions\",  \"_uid\")\n\t\t\tVALUES (:key_0, :key_1, :key_2,  :_uid)\n\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_a\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_a_uid\" ON \"${ns}\".\"ns_a\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_a_created\" ON \"${ns}\".\"ns_a\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_a_updated\" ON \"${ns}\".\"ns_a\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_a_permissions\" ON \"${ns}\".\"ns_a\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_a_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_a_ukey\" \n                    ON \"${ns}\".\"ns_a_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_a_permission\" \n                    ON \"${ns}\".\"ns_a_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_b\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns_b_uid\" ON \"${ns}\".\"ns_b\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns_b_created\" ON \"${ns}\".\"ns_b\" (\"_createdAt\");\n            \tCREATE INDEX \"ns_b_updated\" ON \"${ns}\".\"ns_b\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns_b_permissions\" ON \"${ns}\".\"ns_b\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns_b_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns_b_ukey\" \n                    ON \"${ns}\".\"ns_b_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns_b_permission\" \n                    ON \"${ns}\".\"ns_b_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b1\" VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b2\" VARCHAR(255) DEFAULT NULL;ALTER TABLE \"${ns}\".\"ns_b\" ADD COLUMN \"a2\" VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_b\" ADD COLUMN \"a3\" VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b4\" VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b1\" VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" ADD COLUMN \"b9\" VARCHAR(255) DEFAULT NULL;ALTER TABLE \"${ns}\".\"ns_missing\" ADD COLUMN \"z\" VARCHAR(255) DEFAULT NULL;"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns__1_2\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"m\" VARCHAR(255),  \"n\" VARCHAR(255), \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns__1_2_uid\" ON \"${ns}\".\"ns__1_2\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns__1_2_created\" ON \"${ns}\".\"ns__1_2\" (\"_createdAt\");\n            \tCREATE INDEX \"ns__1_2_updated\" ON \"${ns}\".\"ns__1_2\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns__1_2_permissions\" ON \"${ns}\".\"ns__1_2\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns__1_2_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns__1_2_ukey\" \n                    ON \"${ns}\".\"ns__1_2_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns__1_2_permission\" \n                    ON \"${ns}\".\"ns__1_2_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b1\" TO \"b1x\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"a2\" TO \"a2x\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"a3\" TO \"a3x\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b4\" TO \"b4x\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_b\" RENAME COLUMN \"as\" TO \"asx\";"
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns__1_2\" RENAME COLUMN \"m\" TO \"mx\";ALTER TABLE \"${ns}\".\"ns__1_2\" RENAME COLUMN \"n\" TO \"nx\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" RENAME COLUMN \"b1x\" TO \"\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b1x\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"a2x\";ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b2\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"a3x\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_a\" DROP COLUMN \"b4x\";"
+            ],
+            [
+              "*",
+              "ALTER TABLE \"${ns}\".\"ns_b\" DROP COLUMN \"asx\";"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns__1_2_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _uid VARCHAR(255) NOT NULL,\n                \n                \"_createdAt\" TIMESTAMP(3) DEFAULT NULL,\n                \"_updatedAt\" TIMESTAMP(3) DEFAULT NULL,\n                \n                _permissions JSONB DEFAULT NULL\n            );\n        \n\t\t\t\tCREATE UNIQUE INDEX \"ns__1_2_perms_uid\" ON \"${ns}\".\"ns__1_2_perms\" (\"_uid\" COLLATE utf8_ci_ai);\n            \tCREATE INDEX \"ns__1_2_perms_created\" ON \"${ns}\".\"ns__1_2_perms\" (\"_createdAt\");\n            \tCREATE INDEX \"ns__1_2_perms_updated\" ON \"${ns}\".\"ns__1_2_perms\" (\"_updatedAt\");\n            \tCREATE INDEX \"ns__1_2_perms_permissions\" ON \"${ns}\".\"ns__1_2_perms\" USING gin (_permissions);\n\t\t\t"
+            ],
+            [
+              "*",
+              "\n            CREATE TABLE \"${ns}\".\"ns__1_2_perms_perms\" (\n                _id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,\n                _tenant INTEGER DEFAULT NULL,\n                _type VARCHAR(12) NOT NULL,\n                _permission VARCHAR(255) NOT NULL,\n                _document VARCHAR(255) NOT NULL\n            );\n        \n                CREATE UNIQUE INDEX \"ns__1_2_perms_ukey\" \n                    ON \"${ns}\".\"ns__1_2_perms_perms\" USING btree (_document COLLATE utf8_ci_ai,_type,_permission);\n                CREATE INDEX \"ns__1_2_perms_permission\" \n                    ON \"${ns}\".\"ns__1_2_perms_perms\" USING btree (_permission,_type); \n            "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "DROP TABLE \"${ns}\".\"ns__1_2\"; DROP TABLE \"${ns}\".\"ns__1_2_perms\""
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "\n\t\t    SELECT \"main\".*\n            FROM \"${ns}\".\"ns__metadata\" AS \"main\"\n            WHERE \"main\".\"_uid\" = :_uid \n            \n\t\t "
+            ],
+            [
+              "*",
+              "DROP TABLE \"${ns}\".\"ns__1_2\"; DROP TABLE \"${ns}\".\"ns__1_2_perms\""
+            ]
+          ]
+        },
+        {
+          "op": "adapter.delete",
+          "args": {
+            "adapter": {
+              "$ref": "a"
+            }
+          },
+          "expect": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 //! User preferences.
 
 use serde_json::{Map, Value};
-use utopia_database::Param;
+use utopia_database::legacy::Param;
 use utopia_http::Response;
 use utopia_validators::Assoc;
 

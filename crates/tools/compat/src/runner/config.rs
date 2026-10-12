@@ -53,9 +53,13 @@ impl Config {
 
     /// Service endpoints as one runtime (`php` or `rust`) sees them. A
     /// containerised Rust driver uses a service's `rust-container` address,
-    /// else [`in_network`] of its `php` and `rust` ones.
+    /// else [`in_network`] of its `php` and `rust` ones. Rust also gets
+    /// PHP's address of each service as `<name>@php`, for values that name
+    /// the server as PHP reaches it (a database adapter's host name in
+    /// cache keys).
     pub fn services_for(&self, side: &str) -> Map<String, Value> {
-        self.services
+        let mut services: Map<String, Value> = self
+            .services
             .iter()
             .filter_map(|(name, v)| {
                 let url = if side == "rust" && self.rust_in_container {
@@ -68,7 +72,15 @@ impl Config {
                 };
                 url.map(|url| (name.clone(), url))
             })
-            .collect()
+            .collect();
+        if side == "rust" {
+            for (name, v) in &self.services {
+                if let Some(php) = v.get("php") {
+                    services.insert(format!("{name}@php"), php.clone());
+                }
+            }
+        }
+        services
     }
 
     /// Endpoint the runner uses to snapshot a service.

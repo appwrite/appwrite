@@ -1,0 +1,763 @@
+{
+  "source": "vendor/utopia-php/database/tests/unit/SelectProjectionTest.php",
+  "cases": [
+    {
+      "name": "testAMalformedSelectionIsRefusedRatherThanFatal#nested array",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "widgets",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "widgets",
+            "id": "sku",
+            "type": "string",
+            "size": 255,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "widgets",
+            "document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "widgets",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    [
+                      "sku"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAMalformedSelectionIsRefusedRatherThanFatal#nested wildcard",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "widgets",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "widgets",
+            "id": "sku",
+            "type": "string",
+            "size": 255,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "widgets",
+            "document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "widgets",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    [
+                      "*"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAMalformedSelectionIsRefusedRatherThanFatal#mixed flat and nested",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "widgets",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "widgets",
+            "id": "sku",
+            "type": "string",
+            "size": 255,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "widgets",
+            "document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "widgets",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "sku",
+                    [
+                      "x"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testAMalformedSelectionIsRefusedRatherThanFatal#two nested values",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "widgets",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "widgets",
+            "id": "sku",
+            "type": "string",
+            "size": 255,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "widgets",
+            "document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "widgets",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    [
+                      "a"
+                    ],
+                    [
+                      "b"
+                    ]
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute selection must be a string, got array"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "testTheLegitimateFlatFormStillProjects",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "widgets",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "widgets",
+            "id": "sku",
+            "type": "string",
+            "size": 255,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "widgets",
+            "document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "widgets",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "sku"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "sku": "abc",
+                "$id": "widget",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "widgets"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testTheWildcardStillProjects",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "widgets",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "widgets",
+            "id": "sku",
+            "type": "string",
+            "size": 255,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "widgets",
+            "document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "widgets",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "*"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": [
+            {
+              "$document": {
+                "sku": "abc",
+                "$id": "widget",
+                "$sequence": "1",
+                "$createdAt": "<now>",
+                "$updatedAt": "<now>",
+                "$permissions": [
+                  "read(\"any\")"
+                ],
+                "$collection": "widgets"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "testAnUnknownAttributeIsStillRefusedBySchema",
+      "steps": [
+        {
+          "op": "db.open",
+          "args": {},
+          "bind": "db",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "database.create_collection",
+          "args": {
+            "id": "widgets",
+            "permissions": [
+              "read(\"any\")",
+              "create(\"any\")",
+              "update(\"any\")",
+              "delete(\"any\")"
+            ]
+          },
+          "expect": {
+            "$document": {
+              "$id": "widgets",
+              "$permissions": [
+                "read(\"any\")",
+                "create(\"any\")",
+                "update(\"any\")",
+                "delete(\"any\")"
+              ],
+              "name": "widgets",
+              "attributes": [],
+              "indexes": [],
+              "documentSecurity": true,
+              "$collection": "_metadata",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.create_attribute",
+          "args": {
+            "collection": "widgets",
+            "id": "sku",
+            "type": "string",
+            "size": 255,
+            "required": false
+          },
+          "expect": true
+        },
+        {
+          "op": "database.create_document",
+          "args": {
+            "collection": "widgets",
+            "document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc"
+            }
+          },
+          "expect": {
+            "$document": {
+              "$id": "widget",
+              "$permissions": [
+                "read(\"any\")"
+              ],
+              "sku": "abc",
+              "$collection": "widgets",
+              "$createdAt": "<now>",
+              "$updatedAt": "<now>",
+              "$sequence": "1"
+            }
+          }
+        },
+        {
+          "op": "database.find",
+          "args": {
+            "collection": "widgets",
+            "queries": [
+              {
+                "$query": {
+                  "method": "select",
+                  "attribute": "",
+                  "values": [
+                    "nope"
+                  ]
+                }
+              }
+            ]
+          },
+          "expect": {
+            "$error": {
+              "class": "Utopia\\Database\\Exception\\Query",
+              "message": "Invalid query: Attribute not found in schema: nope"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -2,8 +2,8 @@
 
 use serde_json::{Value, json};
 use utopia_auth::hashes::Plaintext;
-use utopia_database::sql::Builder;
-use utopia_database::{FindOptions, FromRow, Param, Query, QueryGroups};
+use utopia_database::legacy::sql::Builder;
+use utopia_database::legacy::{FindOptions, FromRow, Param, Query, QueryGroups};
 use utopia_http::Response;
 use utopia_validators::{AllOf, Nullable, Text, Validator};
 
@@ -79,7 +79,7 @@ pub async fn list(ctx: &mut Context) -> Result<Response> {
     let (users, total) = futures_util::join!(find, count);
     let mut users = match users {
         Ok(u) => u,
-        Err(utopia_database::Error::NotFound(m)) if m.starts_with("cursor:") => {
+        Err(utopia_database::legacy::Error::NotFound(m)) if m.starts_with("cursor:") => {
             let id = groups.cursor.as_ref().map(|c| c.id.clone()).unwrap_or_default();
             return Err(Error::with_message(
                 ErrorType::GeneralCursorNotFound,
@@ -117,7 +117,8 @@ pub async fn get(ctx: &mut Context) -> Result<Response> {
     let user_id = ctx.required_str("userId", &uid())?;
     let user = base::user_or_404(ctx, &user_id, Relations::TARGETS).await?;
     if let Some(roles) = ctx.auth_roles() {
-        let readable = utopia_database::permission::roles_for(&user.permissions, "read").any(|r| roles.contains(&r));
+        let readable =
+            utopia_database::legacy::permission::roles_for(&user.permissions, "read").any(|r| roles.contains(&r));
         if !readable {
             return Err(Error::new(ErrorType::UserNotFound));
         }
