@@ -295,11 +295,12 @@ class Messaging extends Action
                     default => throw new \Exception('Provider with the requested ID is of the incorrect type')
                 };
 
-                // A user- or target-addressed Appwrite push is delivered on the reserved per-user
-                // topic users/<userId>, so a user's targets collapse to one implicit topic. Topic
-                // campaigns (and every other provider) keep sending to the resolved identifiers.
-                $recipients = \array_keys($identifiers);
+                $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
+                    && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
+
                 if ($perUser && $resolvedProviderType === MESSAGE_TYPE_PUSH && $provider->getAttribute('provider') === self::APPWRITE_PUSH_PROVIDER) {
+                    // Appwrite push delivers on the reserved per-user topic users/<userId>, so a user's
+                    // targets collapse to that one topic.
                     $userTopics = [];
                     foreach ($identifiers as $userId) {
                         if (!empty($userId)) {
@@ -307,20 +308,18 @@ class Messaging extends Action
                         }
                     }
                     $recipients = \array_keys($userTopics);
-                }
-
-                // If the user already gets the message over Appwrite push, don't send their other push
-                // providers a full notification here — they get a wake-up signal after the loop instead.
-                // Everyone else gets the full notification as normal.
-                $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
-                    && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
-                if ($perUser && $isWakeProvider && \count($mqttUsers) > 0) {
+                } elseif ($perUser && $isWakeProvider && \count($mqttUsers) > 0) {
+                    // If the user already gets the message over Appwrite push, don't send their other
+                    // push providers a full notification — they get a wake-up signal after the loop.
                     $recipients = [];
                     foreach ($identifiers as $identifier => $userId) {
                         if (empty($userId) || !isset($mqttUsers[$userId])) {
                             $recipients[] = $identifier;
                         }
                     }
+                } else {
+                    // Topic campaigns and every other provider send to the resolved identifiers.
+                    $recipients = \array_keys($identifiers);
                 }
 
                 foreach (\array_chunk($recipients, $adapter->getMaxMessagesPerRequest()) as $batch) {
