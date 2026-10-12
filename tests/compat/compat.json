@@ -213,6 +213,17 @@
       "php": "host.docker.internal",
       "rust": "127.0.0.1",
       "runner": "127.0.0.1"
+    },
+    "cdn-http": {
+      "php": "http://compat-cdn-http:8080",
+      "rust": "http://127.0.0.1:16710",
+      "rust-container": "http://compat-cdn-http:8080",
+      "runner": "http://127.0.0.1:16710"
+    },
+    "orchestration-php": {
+      "php": "http://compat-orchestration-php:8080",
+      "rust": "http://127.0.0.1:16906",
+      "runner": "http://127.0.0.1:16906"
     }
   }
 }

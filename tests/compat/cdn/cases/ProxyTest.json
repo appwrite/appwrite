@@ -1,0 +1,854 @@
+{
+  "source": "packages/cdn/tests/Certificates/Provider/ProxyTest.php",
+  "cases": [
+    {
+      "name": "routes and aggregates providers",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "app",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false
+          },
+          "bind": "app",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "network",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "pending",
+            "instant": false,
+            "renew": true
+          },
+          "bind": "network",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "cloudflare",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "unknown",
+            "instant": true,
+            "renew": false
+          },
+          "bind": "instant",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "fastly",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false,
+            "date": "2027-01-01"
+          },
+          "bind": "fastly",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "app.example.com",
+            "app": {
+              "$ref": "app"
+            },
+            "network": {
+              "$ref": "network"
+            },
+            "custom": [
+              {
+                "$ref": "instant"
+              },
+              {
+                "$ref": "fastly"
+              }
+            ]
+          },
+          "bind": "proxy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "issueCertificate",
+            "domain": "custom.example.com",
+            "cert_name": "cert"
+          },
+          "expect": {
+            "result": "2027-01-01"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "isInstantGeneration",
+            "domain": "custom.example.com"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "getCertificateStatus",
+            "domain": "custom.example.com"
+          },
+          "expect": {
+            "result": "issued"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "isRenewRequired",
+            "domain": "site.example.com",
+            "domain_type": "site"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "deleteCertificate",
+            "domain": "app.example.com"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "deleteCertificate",
+            "domain": "site.example.com",
+            "domain_type": "site"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            "cloudflare:issue:custom.example.com",
+            "fastly:issue:custom.example.com",
+            "app:delete:app.example.com",
+            "network:delete:site.example.com"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "normalizes domain before routing and delegating",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "app",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false
+          },
+          "bind": "app",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "network",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false
+          },
+          "bind": "network",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "custom",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false
+          },
+          "bind": "custom",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "App.Example.COM",
+            "app": {
+              "$ref": "app"
+            },
+            "network": {
+              "$ref": "network"
+            },
+            "custom": [
+              {
+                "$ref": "custom"
+              }
+            ]
+          },
+          "bind": "proxy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "deleteCertificate",
+            "domain": "APP.Example.CoM"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            "app:delete:app.example.com"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "passes normalized domain to custom providers",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "app",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false
+          },
+          "bind": "app",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "custom",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false
+          },
+          "bind": "custom",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "app.example.com",
+            "app": {
+              "$ref": "app"
+            },
+            "network": {
+              "$ref": "app"
+            },
+            "custom": [
+              {
+                "$ref": "custom"
+              }
+            ]
+          },
+          "bind": "proxy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "issueCertificate",
+            "domain": "Custom.EXAMPLE.com",
+            "cert_name": "cert"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            "custom:issue:custom.example.com"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rejects missing custom providers",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "app",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false
+          },
+          "bind": "app",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "app.example.com",
+            "app": {
+              "$ref": "app"
+            },
+            "network": {
+              "$ref": "app"
+            },
+            "custom": []
+          },
+          "bind": "proxy",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "issueCertificate",
+            "domain": "custom.example.com",
+            "cert_name": "cert"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Configuration",
+              "message": "No certificate providers are configured for custom domains."
+            }
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "isRenewRequired",
+            "domain": "app.example.com"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "getCertificateStatus",
+            "domain": "x.example.com",
+            "domain_type": "network"
+          },
+          "expect": {
+            "result": "issued"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "deleteCertificate",
+            "domain": "x.example.com",
+            "domain_type": "redirect"
+          },
+          "expect": {
+            "result": null
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "proxy"
+            },
+            "method": "deleteCertificate",
+            "domain": "x.example.com",
+            "domain_type": "other"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Cdn\\Exception\\Configuration",
+              "message": "No certificate providers are configured for custom domains."
+            }
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            "app:delete:x.example.com"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "rejects a malformed app domain",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "app",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false
+          },
+          "bind": "app",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "https://app.example.com",
+            "app": {
+              "$ref": "app"
+            },
+            "network": {
+              "$ref": "app"
+            },
+            "custom": []
+          },
+          "bind": "proxy",
+          "expect": {
+            "$error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "aggregation",
+      "steps": [
+        {
+          "op": "log.new",
+          "args": {},
+          "bind": "calls",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "a",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": false,
+            "renew": false,
+            "date": "2027-01-01"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "b",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "pending",
+            "instant": false,
+            "renew": true
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "c",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "issued",
+            "instant": true,
+            "renew": false,
+            "date": "2028-01-01"
+          },
+          "bind": "c",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "recorder",
+            "name": "d",
+            "log": {
+              "$ref": "calls"
+            },
+            "status": "processing",
+            "instant": true,
+            "renew": false
+          },
+          "bind": "d",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "app.example.com",
+            "app": {
+              "$ref": "a"
+            },
+            "network": {
+              "$ref": "a"
+            },
+            "custom": [
+              {
+                "$ref": "a"
+              },
+              {
+                "$ref": "b"
+              },
+              {
+                "$ref": "c"
+              }
+            ]
+          },
+          "bind": "p1",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p1"
+            },
+            "method": "issueCertificate",
+            "domain": "x.example.com"
+          },
+          "expect": {
+            "result": "2028-01-01"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p1"
+            },
+            "method": "isInstantGeneration",
+            "domain": "x.example.com"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p1"
+            },
+            "method": "getCertificateStatus",
+            "domain": "x.example.com"
+          },
+          "expect": {
+            "result": "pending"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p1"
+            },
+            "method": "isRenewRequired",
+            "domain": "x.example.com"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p1"
+            },
+            "method": "isRenewRequired",
+            "domain": "bad domain"
+          },
+          "expect": {
+            "error": {
+              "class": "InvalidArgumentException",
+              "message": "Domain must be a hostname without a scheme, port, path, or trailing slash."
+            }
+          }
+        },
+        {
+          "op": "certificates.new",
+          "args": {
+            "type": "proxy",
+            "app_domain": "app.example.com",
+            "app": {
+              "$ref": "a"
+            },
+            "network": {
+              "$ref": "a"
+            },
+            "custom": [
+              {
+                "$ref": "c"
+              },
+              {
+                "$ref": "d"
+              }
+            ]
+          },
+          "bind": "p2",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p2"
+            },
+            "method": "isInstantGeneration",
+            "domain": "x.example.com"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p2"
+            },
+            "method": "getCertificateStatus",
+            "domain": "x.example.com"
+          },
+          "expect": {
+            "result": "issued"
+          }
+        },
+        {
+          "op": "certificates.call",
+          "args": {
+            "provider": {
+              "$ref": "p2"
+            },
+            "method": "issueCertificate",
+            "domain": "x.example.com"
+          },
+          "expect": {
+            "result": "2028-01-01"
+          }
+        },
+        {
+          "op": "log.take",
+          "args": {
+            "log": {
+              "$ref": "calls"
+            }
+          },
+          "expect": [
+            "a:issue:x.example.com",
+            "b:issue:x.example.com",
+            "c:issue:x.example.com",
+            "c:issue:x.example.com",
+            "d:issue:x.example.com"
+          ]
+        }
+      ]
+    }
+  ]
+}

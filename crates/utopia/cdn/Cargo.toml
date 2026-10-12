@@ -1,0 +1,21 @@
+[package]
+name = "utopia-cdn"
+description = "CDN cache purges (Cloudflare, Fastly, and a fan-out over several) and certificate providers (Cloudflare custom hostnames, Fastly domains and TLS subscriptions, and a proxy routing between them)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+php-std.workspace = true
+thiserror.workspace = true
+tokio = { workspace = true, features = ["time"] }
+utopia-balancer.workspace = true
+utopia-client.workspace = true
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "time"] }
+
+[package.metadata.utopia]
+php-sync = "809d2819d7da00d8b2f486e3bcb4c98a5265e950"

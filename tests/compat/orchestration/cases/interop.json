@@ -1,0 +1,725 @@
+{
+  "source": "packages/orchestration/src",
+  "cases": [
+    {
+      "name": "cli runs, api finds, executes and removes",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "cli",
+            "namespace": "interop"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "a"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-shared",
+            "command": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "owner",
+                "a"
+              ]
+            ],
+            "vars": [
+              [
+                "GREETING",
+                "hello from a"
+              ]
+            ]
+          },
+          "bind": "id",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "label",
+                "owner=a"
+              ],
+              [
+                "name",
+                "orchestration-${ns}-shared"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-shared",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "interop-created": "<masked>",
+                  "interop-type": "runtime",
+                  "owner": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-shared",
+            "command": [
+              "sh",
+              "-c",
+              "echo -n $GREETING"
+            ]
+          },
+          "expect": {
+            "result": true,
+            "output": "hello from a"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-shared",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "a"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "name",
+                "orchestration-${ns}-shared"
+              ]
+            ]
+          },
+          "expect": {
+            "result": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "api runs, cli finds, executes and removes",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api",
+            "namespace": "interop"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "cli"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "a"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-shared",
+            "command": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "owner",
+                "a"
+              ]
+            ],
+            "vars": [
+              [
+                "GREETING",
+                "hello from a"
+              ]
+            ]
+          },
+          "bind": "id",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "label",
+                "owner=a"
+              ],
+              [
+                "name",
+                "orchestration-${ns}-shared"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-shared",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "interop-created": "<masked>",
+                  "interop-type": "runtime",
+                  "owner": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-shared",
+            "command": [
+              "sh",
+              "-c",
+              "echo -n $GREETING"
+            ]
+          },
+          "expect": {
+            "result": true,
+            "output": "hello from a"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-shared",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "a"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "name",
+                "orchestration-${ns}-shared"
+              ]
+            ]
+          },
+          "expect": {
+            "result": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "cli runs, cli finds, executes and removes",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "cli",
+            "namespace": "interop"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "cli"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "a"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-shared",
+            "command": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "owner",
+                "a"
+              ]
+            ],
+            "vars": [
+              [
+                "GREETING",
+                "hello from a"
+              ]
+            ]
+          },
+          "bind": "id",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "label",
+                "owner=a"
+              ],
+              [
+                "name",
+                "orchestration-${ns}-shared"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-shared",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "interop-created": "<masked>",
+                  "interop-type": "runtime",
+                  "owner": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-shared",
+            "command": [
+              "sh",
+              "-c",
+              "echo -n $GREETING"
+            ]
+          },
+          "expect": {
+            "result": true,
+            "output": "hello from a"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-shared",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "a"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "name",
+                "orchestration-${ns}-shared"
+              ]
+            ]
+          },
+          "expect": {
+            "result": []
+          }
+        }
+      ]
+    },
+    {
+      "name": "api runs, api finds, executes and removes",
+      "interop": true,
+      "steps": [
+        {
+          "side": "a",
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "side": "a",
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api",
+            "namespace": "interop"
+          },
+          "bind": "a",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "b",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "side": "a",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "a"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-shared",
+            "command": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "owner",
+                "a"
+              ]
+            ],
+            "vars": [
+              [
+                "GREETING",
+                "hello from a"
+              ]
+            ]
+          },
+          "bind": "id",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "label",
+                "owner=a"
+              ],
+              [
+                "name",
+                "orchestration-${ns}-shared"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-shared",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "interop-created": "<masked>",
+                  "interop-type": "runtime",
+                  "owner": "a"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-shared",
+            "command": [
+              "sh",
+              "-c",
+              "echo -n $GREETING"
+            ]
+          },
+          "expect": {
+            "result": true,
+            "output": "hello from a"
+          }
+        },
+        {
+          "side": "b",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "b"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-shared",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "side": "a",
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "a"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "name",
+                "orchestration-${ns}-shared"
+              ]
+            ]
+          },
+          "expect": {
+            "result": []
+          }
+        }
+      ]
+    }
+  ]
+}

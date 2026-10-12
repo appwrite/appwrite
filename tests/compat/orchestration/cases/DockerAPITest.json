@@ -1,0 +1,2865 @@
+{
+  "source": "packages/orchestration/tests/E2E/Adapter/DockerAPITest.php",
+  "cases": [
+    {
+      "name": "pull image",
+      "steps": [
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "pull",
+            "image": "localhost:16905/compat/alpine:latest"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "pull",
+            "image": "localhost:16905/compat/missing:latest"
+          },
+          "expect": {
+            "result": false
+          }
+        }
+      ]
+    },
+    {
+      "name": "create container",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/testfile.txt",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper."
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/testfile.txt"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/index.sh",
+            "content": "echo -n \"Hello World! $test\""
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/index.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/timeout.sh",
+            "content": "sleep 5"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/timeout.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/logs.sh",
+            "content": "set -e\nCHARS_128=\"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\"\nCHARS_1KB=\"$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128\"\nCHARS_16KB=\"$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB\"\nCHARS_128KB=\"$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB\"\nCHARS_1MB=\"$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB\"\necho -n \"START\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"END\"\n"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/logs.sh"
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "-c",
+              "cp /tmp/index.sh /usr/local/src/index.sh && cp /tmp/logs.sh /usr/local/src/logs.sh && tail -f /dev/null"
+            ],
+            "workdir": "/usr/local/src/",
+            "volumes": [
+              "/tmp/compat-fs/${ns}/resources:/test:rw"
+            ],
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ]
+          },
+          "bind": "main",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "daemon.inspect",
+          "args": {
+            "container": "orchestration-${ns}-main"
+          },
+          "mask": {
+            "paths": [
+              "/hostname",
+              "/labels/utopia-created",
+              "/labels/compat-created"
+            ],
+            "reason": "the hostname defaults to the random container ID, and the created label is the time it was run"
+          },
+          "expect": {
+            "name": "orchestration-${ns}-main",
+            "image": "localhost:16905/compat/alpine:latest",
+            "cmd": [
+              "sh",
+              "-c",
+              "cp /tmp/index.sh /usr/local/src/index.sh && cp /tmp/logs.sh /usr/local/src/logs.sh && tail -f /dev/null"
+            ],
+            "entrypoint": null,
+            "workdir": "/usr/local/src",
+            "hostname": "<masked>",
+            "env": [
+              "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "labels": {
+              "compat": "orchestration",
+              "utopia-created": "<masked>",
+              "utopia-type": "runtime"
+            },
+            "binds": [
+              "/tmp/compat-fs/${ns}/resources:/test:rw",
+              "/tmp/compat-fs/${ns}/resources:/tmp"
+            ],
+            "memory": 0,
+            "swap": 0,
+            "nano_cpus": 0,
+            "cpu_quota": 0,
+            "cpu_period": 100000,
+            "auto_remove": false,
+            "network_mode": "bridge",
+            "restart": "no",
+            "networks": [
+              "bridge"
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-always",
+            "command": [
+              "sh",
+              "-c",
+              "echo \"Custom start\" && sleep 1 && exit 0"
+            ],
+            "workdir": "/usr/local/src/",
+            "volumes": [
+              "/tmp/compat-fs/${ns}/resources:/test:rw"
+            ],
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ],
+            "restart": "always"
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-no",
+            "command": [
+              "sh",
+              "-c",
+              "echo \"Custom start\" && sleep 1 && exit 0"
+            ],
+            "workdir": "/usr/local/src/",
+            "volumes": [
+              "/tmp/compat-fs/${ns}/resources:/test:rw"
+            ],
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ],
+            "restart": "no"
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "daemon.wait",
+          "args": {
+            "seconds": 6
+          },
+          "expect": true
+        },
+        {
+          "op": "daemon.restarted",
+          "args": {
+            "container": "orchestration-${ns}-always"
+          },
+          "expect": true
+        },
+        {
+          "op": "daemon.restarted",
+          "args": {
+            "container": "orchestration-${ns}-no"
+          },
+          "expect": false
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-always",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-no",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/missing:latest",
+            "name": "orchestration-${ns}-missing",
+            "command": [
+              "sh",
+              "-c",
+              "cp /tmp/index.sh /usr/local/src/index.sh && cp /tmp/logs.sh /usr/local/src/logs.sh && tail -f /dev/null"
+            ],
+            "workdir": "/usr/local/src/",
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Missing image \"localhost:16905/compat/missing:latest\" and failed to pull it."
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "-c",
+              "cp /tmp/index.sh /usr/local/src/index.sh && cp /tmp/logs.sh /usr/local/src/logs.sh && tail -f /dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Container with name \"orchestration-${ns}-main\" already exists."
+            }
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "networks",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/testfile.txt",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper."
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/testfile.txt"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/index.sh",
+            "content": "echo -n \"Hello World! $test\""
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/index.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/timeout.sh",
+            "content": "sleep 5"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/timeout.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/logs.sh",
+            "content": "set -e\nCHARS_128=\"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\"\nCHARS_1KB=\"$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128\"\nCHARS_16KB=\"$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB\"\nCHARS_128KB=\"$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB\"\nCHARS_1MB=\"$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB\"\necho -n \"START\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"END\"\n"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/logs.sh"
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "-c",
+              "cp /tmp/index.sh /usr/local/src/index.sh && cp /tmp/logs.sh /usr/local/src/logs.sh && tail -f /dev/null"
+            ],
+            "workdir": "/usr/local/src/",
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "createNetwork",
+            "name": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "createNetwork",
+            "name": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Network with name \"orchestration-${ns}-net\" already exists: {\"message\":\"network with name orchestration-${ns}-net already exists\"}\n"
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "createNetwork",
+            "name": "orchestration-${ns}-internal",
+            "internal": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "listNetworks",
+            "match": "orchestration-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id"
+            ],
+            "reason": "network IDs are random"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-internal",
+                "id": "<masked>",
+                "driver": "bridge",
+                "scope": "local"
+              },
+              {
+                "name": "orchestration-${ns}-net",
+                "id": "<masked>",
+                "driver": "bridge",
+                "scope": "local"
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkExists",
+            "name": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-rm",
+            "command": [
+              "sh",
+              "-c",
+              "echo Hello World!"
+            ],
+            "workdir": "/usr/local/src/",
+            "vars": [
+              [
+                "teasdsa",
+                ""
+              ]
+            ],
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "test2",
+                "Hello World!"
+              ],
+              [
+                "compat",
+                "orchestration"
+              ]
+            ],
+            "remove": true,
+            "network": "orchestration-${ns}-net"
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkConnect",
+            "container": "orchestration-${ns}-main",
+            "network": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkConnect",
+            "container": "orchestration-${ns}-main",
+            "network": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Error attaching network: {\"message\":\"endpoint with name orchestration-${ns}-main already exists in network orchestration-${ns}-net\"}\n"
+            }
+          }
+        },
+        {
+          "op": "daemon.inspect",
+          "args": {
+            "container": "orchestration-${ns}-main"
+          },
+          "mask": {
+            "paths": [
+              "/hostname",
+              "/labels/utopia-created",
+              "/labels/compat-created"
+            ],
+            "reason": "the hostname defaults to the random container ID, and the created label is the time it was run"
+          },
+          "expect": {
+            "name": "orchestration-${ns}-main",
+            "image": "localhost:16905/compat/alpine:latest",
+            "cmd": [
+              "sh",
+              "-c",
+              "cp /tmp/index.sh /usr/local/src/index.sh && cp /tmp/logs.sh /usr/local/src/logs.sh && tail -f /dev/null"
+            ],
+            "entrypoint": null,
+            "workdir": "/usr/local/src",
+            "hostname": "<masked>",
+            "env": [
+              "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "labels": {
+              "compat": "orchestration",
+              "utopia-created": "<masked>",
+              "utopia-type": "runtime"
+            },
+            "binds": [
+              "/tmp/compat-fs/${ns}/resources:/tmp"
+            ],
+            "memory": 0,
+            "swap": 0,
+            "nano_cpus": 0,
+            "cpu_quota": 0,
+            "cpu_period": 100000,
+            "auto_remove": false,
+            "network_mode": "bridge",
+            "restart": "no",
+            "networks": [
+              "bridge",
+              "orchestration-${ns}-net"
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkDisconnect",
+            "container": "orchestration-${ns}-main",
+            "network": "orchestration-${ns}-net",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkDisconnect",
+            "container": "orchestration-${ns}-main",
+            "network": "orchestration-${ns}-net"
+          },
+          "mask": {
+            "paths": [
+              "/error/message"
+            ],
+            "reason": "Docker's refusal quotes the container's random ID"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "<masked>"
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkConnect",
+            "container": "orchestration-${ns}-nobody",
+            "network": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Error attaching network: {\"message\":\"No such container: orchestration-${ns}-nobody\"}\n"
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "removeNetwork",
+            "name": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "removeNetwork",
+            "name": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Network with name \"orchestration-${ns}-net\" does not exist: {\"message\":\"network orchestration-${ns}-net not found\"}\n"
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "removeNetwork",
+            "name": "orchestration-${ns}-internal"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkExists",
+            "name": "orchestration-${ns}-net"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "network exists",
+      "steps": [
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkExists",
+            "name": "orchestration-${ns}-exists"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "createNetwork",
+            "name": "orchestration-${ns}-exists"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkExists",
+            "name": "orchestration-${ns}-exists"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkExists",
+            "name": "orchestration-${ns}"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "removeNetwork",
+            "name": "orchestration-${ns}-exists"
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "networkExists",
+            "name": "orchestration-${ns}-exists"
+          },
+          "expect": {
+            "result": false
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "execute in a container",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/testfile.txt",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper."
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/testfile.txt"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/index.sh",
+            "content": "echo -n \"Hello World! $test\""
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/index.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/timeout.sh",
+            "content": "sleep 5"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/timeout.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/logs.sh",
+            "content": "set -e\nCHARS_128=\"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\"\nCHARS_1KB=\"$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128\"\nCHARS_16KB=\"$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB\"\nCHARS_128KB=\"$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB\"\nCHARS_1MB=\"$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB\"\necho -n \"START\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"END\"\n"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/logs.sh"
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "-c",
+              "cp /tmp/index.sh /usr/local/src/index.sh && cp /tmp/logs.sh /usr/local/src/logs.sh && tail -f /dev/null"
+            ],
+            "workdir": "/usr/local/src/",
+            "volumes": [
+              "/tmp/compat-fs/${ns}/resources:/test:rw"
+            ],
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "daemon.wait",
+          "args": {
+            "seconds": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-nonexistent",
+            "command": [
+              "sh",
+              "index.sh"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Failed to create execute command: {\"message\":\"No such container: orchestration-${ns}-nonexistent\"}\n Response Code: 404"
+            },
+            "output": ""
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "doesnotexist.sh"
+            ],
+            "vars": [
+              [
+                "test",
+                "testEnviromentVariable"
+              ]
+            ],
+            "timeout": 20
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Failed to execute command. Exit code: 2"
+            },
+            "output": "sh: can't open 'doesnotexist.sh': No such file or directory\n"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "index.sh"
+            ],
+            "vars": [
+              [
+                "test",
+                "testEnviromentVariable"
+              ]
+            ]
+          },
+          "expect": {
+            "result": true,
+            "output": "Hello World! testEnviromentVariable"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "logs.sh"
+            ],
+            "summary": true
+          },
+          "expect": {
+            "result": true,
+            "output": {
+              "length": 5242888,
+              "start": "START111",
+              "end": "11111END"
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "cat",
+              "/test/testfile.txt"
+            ]
+          },
+          "expect": {
+            "result": true,
+            "output": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper."
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "-c",
+              "echo out; echo err >&2; echo out2"
+            ],
+            "vars": [
+              [
+                "A B!",
+                "1"
+              ],
+              [
+                "AB",
+                "2"
+              ],
+              [
+                "x.y-z_1",
+                "v=w"
+              ]
+            ]
+          },
+          "expect": {
+            "result": true,
+            "output": "out\nout2\nerr\n"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "-c",
+              "echo \"$AB|$x.y-z_1\"; env | grep -c \"^AB=\" ; exit 3"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Failed to execute command. Exit code: 3"
+            },
+            "output": "|.y-z_1\n0\n"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "-c",
+              "printf \"\\377\\376binary\""
+            ]
+          },
+          "expect": {
+            "result": true,
+            "output": {
+              "$bytes": "//5iaW5hcnk="
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "nonexistent-binary"
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Failed to execute command. Exit code: 127"
+            },
+            "output": "OCI runtime exec failed: exec failed: unable to start container process: exec: \"nonexistent-binary\": executable file not found in $PATH: unknown\r\n"
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "timeouts",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/testfile.txt",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper."
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/testfile.txt"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/index.sh",
+            "content": "echo -n \"Hello World! $test\""
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/index.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/timeout.sh",
+            "content": "sleep 5"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/timeout.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/logs.sh",
+            "content": "set -e\nCHARS_128=\"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\"\nCHARS_1KB=\"$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128\"\nCHARS_16KB=\"$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB\"\nCHARS_128KB=\"$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB\"\nCHARS_1MB=\"$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB\"\necho -n \"START\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"END\"\n"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/logs.sh"
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-timeout",
+            "command": [
+              "sh",
+              "-c",
+              "cp /tmp/timeout.sh /usr/local/src/timeout.sh && tail -f /dev/null"
+            ],
+            "workdir": "/usr/local/src/",
+            "vars": [
+              [
+                "teasdsa",
+                ""
+              ]
+            ],
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "test2",
+                "Hello World!"
+              ],
+              [
+                "compat",
+                "orchestration"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "daemon.wait",
+          "args": {
+            "seconds": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-timeout",
+            "command": [
+              "sh",
+              "timeout.sh"
+            ],
+            "timeout": 1
+          },
+          "mask": {
+            "paths": [
+              "/error/message"
+            ],
+            "reason": "the API's timeout message reports the milliseconds it waited"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Timeout",
+              "message": "<masked>"
+            },
+            "output": ""
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-timeout",
+            "command": [
+              "sh",
+              "timeout.sh"
+            ],
+            "timeout": 10
+          },
+          "expect": {
+            "result": true,
+            "output": ""
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "execute",
+            "name": "orchestration-${ns}-timeout",
+            "command": [
+              "sh",
+              "-c",
+              "echo -n Hello World!"
+            ],
+            "timeout": 10
+          },
+          "expect": {
+            "result": true,
+            "output": "Hello World!"
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "list containers",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/testfile.txt",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper."
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/testfile.txt"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/index.sh",
+            "content": "echo -n \"Hello World! $test\""
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/index.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/timeout.sh",
+            "content": "sleep 5"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/timeout.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/logs.sh",
+            "content": "set -e\nCHARS_128=\"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\"\nCHARS_1KB=\"$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128\"\nCHARS_16KB=\"$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB\"\nCHARS_128KB=\"$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB\"\nCHARS_1MB=\"$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB\"\necho -n \"START\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"END\"\n"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/logs.sh"
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "sh",
+              "-c",
+              "cp /tmp/index.sh /usr/local/src/index.sh && cp /tmp/logs.sh /usr/local/src/logs.sh && tail -f /dev/null"
+            ],
+            "workdir": "/usr/local/src/",
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ]
+          },
+          "bind": "main",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-second",
+            "command": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "role",
+                "second"
+              ]
+            ]
+          },
+          "bind": "second",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "match": "orchestration-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-second",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "role": "second",
+                  "utopia-created": "<masked>",
+                  "utopia-type": "runtime"
+                }
+              },
+              {
+                "name": "orchestration-${ns}-main",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/binds/0/Source": "/tmp/compat-fs/${ns}/resources",
+                  "desktop.docker.io/binds/0/SourceKind": "hostFile",
+                  "desktop.docker.io/binds/0/Target": "/tmp",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "utopia-created": "<masked>",
+                  "utopia-type": "runtime"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "id",
+                {
+                  "$ref": "main",
+                  "path": "/result"
+                }
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-main",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/binds/0/Source": "/tmp/compat-fs/${ns}/resources",
+                  "desktop.docker.io/binds/0/SourceKind": "hostFile",
+                  "desktop.docker.io/binds/0/Target": "/tmp",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "utopia-created": "<masked>",
+                  "utopia-type": "runtime"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "label",
+                "role=second"
+              ]
+            ],
+            "match": "orchestration-${ns}"
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-second",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "role": "second",
+                  "utopia-created": "<masked>",
+                  "utopia-type": "runtime"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "name",
+                "orchestration-${ns}-second"
+              ],
+              [
+                "label",
+                "compat=orchestration"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-second",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "compat": "orchestration",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "role": "second",
+                  "utopia-created": "<masked>",
+                  "utopia-type": "runtime"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "label",
+                "role=none"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": []
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "status",
+                "exited"
+              ],
+              [
+                "name",
+                "orchestration-${ns}"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": []
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "nonsense",
+                "x"
+              ]
+            ]
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "{\"message\":\"invalid filter 'nonsense'\"}\n"
+            }
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "preserves label values with single quotes",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-quote",
+            "command": [
+              "sh",
+              "-c",
+              "tail -f /dev/null"
+            ],
+            "labels": [
+              [
+                "author",
+                "O'Brien"
+              ],
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "spaced",
+                "a b+c"
+              ],
+              [
+                "multi",
+                "a=b"
+              ]
+            ]
+          },
+          "bind": "id",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "id",
+                {
+                  "$ref": "id",
+                  "path": "/result"
+                }
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/id",
+              "/result/*/status",
+              "/result/*/labels/utopia-created",
+              "/result/*/labels/compat-created",
+              "/result/*/labels/interop-created"
+            ],
+            "reason": "IDs are random, statuses say how long ago a container started, and the created label is the time it was run"
+          },
+          "expect": {
+            "result": [
+              {
+                "name": "orchestration-${ns}-quote",
+                "id": "<masked>",
+                "status": "<masked>",
+                "labels": {
+                  "author": "O'Brien",
+                  "compat": "orchestration",
+                  "desktop.docker.io/ports.scheme": "v2",
+                  "multi": "a=b",
+                  "spaced": "a b+c",
+                  "utopia-created": "<masked>",
+                  "utopia-type": "runtime"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-quote",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "remove container",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-main"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Failed to remove container: {\"message\":\"cannot remove container \\\"orchestration-${ns}-main\\\": container is running: stop the container before removing or force remove\"}\n Response Code: 409"
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-main",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-main",
+            "force": true
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Failed to remove container: {\"message\":\"No such container: orchestration-${ns}-main\"}\n Response Code: 404"
+            }
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-main"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Failed to remove container: {\"message\":\"No such container: orchestration-${ns}-main\"}\n Response Code: 404"
+            }
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "run remove",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-rm",
+            "command": [
+              "sh",
+              "-c",
+              "echo Hello World!"
+            ],
+            "workdir": "/usr/local/src/",
+            "vars": [
+              [
+                "teasdsa",
+                ""
+              ]
+            ],
+            "labels": [
+              [
+                "test2",
+                "Hello World!"
+              ],
+              [
+                "compat",
+                "orchestration"
+              ]
+            ],
+            "remove": true
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "daemon.wait_gone",
+          "args": {
+            "name": "orchestration-${ns}-rm",
+            "seconds": 30
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "list",
+            "filters": [
+              [
+                "name",
+                "orchestration-${ns}-rm"
+              ]
+            ]
+          },
+          "expect": {
+            "result": []
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "usage stats",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api",
+            "cpus": 1
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-stats1",
+            "command": [
+              "sh",
+              "-c",
+              "tail -f /dev/null"
+            ],
+            "workdir": "/usr/local/src/",
+            "labels": [
+              [
+                "utopia-container-type",
+                "stats"
+              ],
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "compat-run",
+                "${ns}"
+              ]
+            ]
+          },
+          "bind": "s1",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-stats2",
+            "command": [
+              "sh",
+              "-c",
+              "tail -f /dev/null"
+            ],
+            "workdir": "/usr/local/src/",
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "compat-run",
+                "${ns}"
+              ]
+            ]
+          },
+          "bind": "s2",
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "daemon.wait",
+          "args": {
+            "seconds": 1
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "getStats",
+            "filters": [
+              [
+                "label",
+                "compat-run=${ns}"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/container_id",
+              "/result/*/cpu_usage",
+              "/result/*/memory_usage",
+              "/result/*/disk_io",
+              "/result/*/memory_io",
+              "/result/*/network_io"
+            ],
+            "reason": "IDs are random and usage changes from one moment to the next"
+          },
+          "expect": {
+            "result": [
+              {
+                "container_id": "<masked>",
+                "container_name": "orchestration-${ns}-stats2",
+                "cpu_usage": "<masked>",
+                "memory_usage": "<masked>",
+                "disk_io": "<masked>",
+                "memory_io": "<masked>",
+                "network_io": "<masked>"
+              },
+              {
+                "container_id": "<masked>",
+                "container_name": "orchestration-${ns}-stats1",
+                "cpu_usage": "<masked>",
+                "memory_usage": "<masked>",
+                "disk_io": "<masked>",
+                "memory_io": "<masked>",
+                "network_io": "<masked>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "getStats",
+            "container": {
+              "$ref": "s1",
+              "path": "/result"
+            }
+          },
+          "mask": {
+            "paths": [
+              "/result/*/container_id",
+              "/result/*/cpu_usage",
+              "/result/*/memory_usage",
+              "/result/*/disk_io",
+              "/result/*/memory_io",
+              "/result/*/network_io"
+            ],
+            "reason": "IDs are random and usage changes from one moment to the next"
+          },
+          "expect": {
+            "result": [
+              {
+                "container_id": "<masked>",
+                "container_name": "orchestration-${ns}-stats1",
+                "cpu_usage": "<masked>",
+                "memory_usage": "<masked>",
+                "disk_io": "<masked>",
+                "memory_io": "<masked>",
+                "network_io": "<masked>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "getStats",
+            "container": "orchestration-${ns}-stats2"
+          },
+          "mask": {
+            "paths": [
+              "/result/*/container_id",
+              "/result/*/cpu_usage",
+              "/result/*/memory_usage",
+              "/result/*/disk_io",
+              "/result/*/memory_io",
+              "/result/*/network_io"
+            ],
+            "reason": "IDs are random and usage changes from one moment to the next"
+          },
+          "expect": {
+            "result": [
+              {
+                "container_id": "<masked>",
+                "container_name": "orchestration-${ns}-stats2",
+                "cpu_usage": "<masked>",
+                "memory_usage": "<masked>",
+                "disk_io": "<masked>",
+                "memory_io": "<masked>",
+                "network_io": "<masked>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "getStats",
+            "filters": [
+              [
+                "label",
+                "utopia-container-type=stats"
+              ],
+              [
+                "label",
+                "compat-run=${ns}"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/container_id",
+              "/result/*/cpu_usage",
+              "/result/*/memory_usage",
+              "/result/*/disk_io",
+              "/result/*/memory_io",
+              "/result/*/network_io"
+            ],
+            "reason": "IDs are random and usage changes from one moment to the next"
+          },
+          "expect": {
+            "result": [
+              {
+                "container_id": "<masked>",
+                "container_name": "orchestration-${ns}-stats2",
+                "cpu_usage": "<masked>",
+                "memory_usage": "<masked>",
+                "disk_io": "<masked>",
+                "memory_io": "<masked>",
+                "network_io": "<masked>"
+              },
+              {
+                "container_id": "<masked>",
+                "container_name": "orchestration-${ns}-stats1",
+                "cpu_usage": "<masked>",
+                "memory_usage": "<masked>",
+                "disk_io": "<masked>",
+                "memory_io": "<masked>",
+                "network_io": "<masked>"
+              }
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "getStats",
+            "filters": [
+              [
+                "label",
+                "utopia-container-type=non-existing-type"
+              ]
+            ]
+          },
+          "mask": {
+            "paths": [
+              "/result/*/container_id",
+              "/result/*/cpu_usage",
+              "/result/*/memory_usage",
+              "/result/*/disk_io",
+              "/result/*/memory_io",
+              "/result/*/network_io"
+            ],
+            "reason": "IDs are random and usage changes from one moment to the next"
+          },
+          "expect": {
+            "result": []
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "getStats",
+            "container": "IDontExist"
+          },
+          "mask": {
+            "paths": [
+              "/result/*/container_id",
+              "/result/*/cpu_usage",
+              "/result/*/memory_usage",
+              "/result/*/disk_io",
+              "/result/*/memory_io",
+              "/result/*/network_io"
+            ],
+            "reason": "IDs are random and usage changes from one moment to the next"
+          },
+          "expect": {
+            "result": []
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-stats1",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "remove",
+            "name": "orchestration-${ns}-stats2",
+            "force": true
+          },
+          "expect": {
+            "result": true
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "settings reach the container",
+      "steps": [
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api",
+            "namespace": "compat",
+            "cpus": 0.5,
+            "memory": 64,
+            "swap": 128
+          },
+          "bind": "o",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/testfile.txt",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras dapibus turpis mauris, ac consectetur odio varius ullamcorper."
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/testfile.txt"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/index.sh",
+            "content": "echo -n \"Hello World! $test\""
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/index.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/timeout.sh",
+            "content": "sleep 5"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/timeout.sh"
+        },
+        {
+          "op": "fixture.write",
+          "args": {
+            "path": "/tmp/compat-fs/${ns}/resources/logs.sh",
+            "content": "set -e\nCHARS_128=\"11111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111111\"\nCHARS_1KB=\"$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128$CHARS_128\"\nCHARS_16KB=\"$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB$CHARS_1KB\"\nCHARS_128KB=\"$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB$CHARS_16KB\"\nCHARS_1MB=\"$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB$CHARS_128KB\"\necho -n \"START\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"$CHARS_1MB\"\necho -n \"END\"\n"
+          },
+          "expect": "/tmp/compat-fs/${ns}/resources/logs.sh"
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-main",
+            "command": [
+              "-c",
+              "tail -f /dev/null"
+            ],
+            "entrypoint": "sh",
+            "workdir": "/srv",
+            "volumes": [
+              "/tmp/compat-fs/${ns}/resources:/test:ro"
+            ],
+            "mount_folder": "/tmp/compat-fs/${ns}/resources",
+            "hostname": "box",
+            "vars": [
+              [
+                "APP_ENV",
+                "production"
+              ],
+              [
+                "A B!",
+                "first"
+              ],
+              [
+                "AB",
+                "second"
+              ],
+              [
+                "x.y-z_1",
+                "v=w"
+              ],
+              [
+                "EMPTY",
+                ""
+              ]
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ],
+              [
+                "compat-type",
+                "mine"
+              ],
+              [
+                "team",
+                "billing"
+              ]
+            ],
+            "restart": "unless-stopped"
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "daemon.inspect",
+          "args": {
+            "container": "orchestration-${ns}-main"
+          },
+          "mask": {
+            "paths": [
+              "/hostname",
+              "/labels/utopia-created",
+              "/labels/compat-created"
+            ],
+            "reason": "the hostname defaults to the random container ID, and the created label is the time it was run"
+          },
+          "expect": {
+            "name": "orchestration-${ns}-main",
+            "image": "localhost:16905/compat/alpine:latest",
+            "cmd": [
+              "-c",
+              "tail -f /dev/null"
+            ],
+            "entrypoint": [
+              "sh"
+            ],
+            "workdir": "/srv",
+            "hostname": "<masked>",
+            "env": [
+              "AB=second",
+              "APP_ENV=production",
+              "EMPTY=",
+              "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+              "x.y-z_1=v=w"
+            ],
+            "labels": {
+              "compat": "orchestration",
+              "compat-created": "<masked>",
+              "compat-type": "runtime",
+              "team": "billing"
+            },
+            "binds": [
+              "/tmp/compat-fs/${ns}/resources:/test:ro",
+              "/tmp/compat-fs/${ns}/resources:/tmp"
+            ],
+            "memory": 64000000,
+            "swap": 128000000,
+            "nano_cpus": 0,
+            "cpu_quota": 50000,
+            "cpu_period": 100000,
+            "auto_remove": false,
+            "network_mode": "bridge",
+            "restart": "unless-stopped",
+            "networks": [
+              "bridge"
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-onfailure",
+            "command": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ],
+            "restart": "on-failure"
+          },
+          "mask": {
+            "paths": [
+              "/result"
+            ],
+            "reason": "container IDs are random"
+          },
+          "expect": {
+            "result": "<masked>"
+          }
+        },
+        {
+          "op": "daemon.inspect",
+          "args": {
+            "container": "orchestration-${ns}-onfailure"
+          },
+          "mask": {
+            "paths": [
+              "/hostname",
+              "/labels/utopia-created",
+              "/labels/compat-created"
+            ],
+            "reason": "the hostname defaults to the random container ID, and the created label is the time it was run"
+          },
+          "expect": {
+            "name": "orchestration-${ns}-onfailure",
+            "image": "localhost:16905/compat/alpine:latest",
+            "cmd": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "entrypoint": null,
+            "workdir": "/",
+            "hostname": "<masked>",
+            "env": [
+              "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ],
+            "labels": {
+              "compat": "orchestration",
+              "compat-created": "<masked>",
+              "compat-type": "runtime"
+            },
+            "binds": [],
+            "memory": 64000000,
+            "swap": 128000000,
+            "nano_cpus": 0,
+            "cpu_quota": 50000,
+            "cpu_period": 100000,
+            "auto_remove": false,
+            "network_mode": "bridge",
+            "restart": "on-failure",
+            "networks": [
+              "bridge"
+            ]
+          }
+        },
+        {
+          "op": "orchestration.call",
+          "args": {
+            "orchestration": {
+              "$ref": "o"
+            },
+            "method": "run",
+            "image": "localhost:16905/compat/alpine:latest",
+            "name": "orchestration-${ns}-badrestart",
+            "command": [
+              "tail",
+              "-f",
+              "/dev/null"
+            ],
+            "labels": [
+              [
+                "compat",
+                "orchestration"
+              ]
+            ],
+            "restart": "sometimes"
+          },
+          "expect": {
+            "error": {
+              "class": "Utopia\\Orchestration\\Exception\\Orchestration",
+              "message": "Failed to create function environment: {\"message\":\"invalid restart policy: unknown policy 'sometimes'; use one of 'no', 'always', 'on-failure', or 'unless-stopped'\"}\n Response Code: 400"
+            }
+          }
+        },
+        {
+          "op": "daemon.cleanup",
+          "args": {
+            "match": "orchestration-${ns}"
+          },
+          "expect": true
+        }
+      ]
+    },
+    {
+      "name": "constructors",
+      "steps": [
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api"
+          },
+          "bind": "plain",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api",
+            "credentials": {
+              "username": "user"
+            }
+          },
+          "bind": "user only",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api",
+            "credentials": {
+              "password": "secret"
+            }
+          },
+          "bind": "password only",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api",
+            "credentials": {
+              "username": "user",
+              "password": "0",
+              "email": "user@example.com"
+            }
+          },
+          "bind": "zero",
+          "expect": {
+            "$handle": "*"
+          }
+        },
+        {
+          "op": "orchestration.new",
+          "args": {
+            "adapter": "api",
+            "credentials": {
+              "username": "user",
+              "password": "secret",
+              "email": "user@example.com"
+            }
+          },
+          "bind": "api credentials",
+          "expect": {
+            "$handle": "*"
+          }
+        }
+      ]
+    }
+  ]
+}

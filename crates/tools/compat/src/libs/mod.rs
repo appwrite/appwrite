@@ -16,6 +16,7 @@ pub mod auth;
 pub mod balancer;
 pub mod bus;
 pub mod cache;
+pub mod cdn;
 pub mod circuit_breaker;
 pub mod cli;
 pub mod client;
@@ -36,6 +37,7 @@ pub mod lock;
 pub mod mqtt;
 pub mod nats;
 pub mod openapi;
+pub mod orchestration;
 pub mod php_std;
 pub mod platform;
 pub mod pools;
@@ -61,6 +63,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("balancer", balancer::OPS),
     ("bus", bus::OPS),
     ("cache", cache::OPS),
+    ("cdn", cdn::OPS),
     ("circuit-breaker", circuit_breaker::OPS),
     ("cli", cli::OPS),
     ("client", client::OPS),
@@ -81,6 +84,7 @@ pub const LIBS: &[(&str, &[&str])] = &[
     ("mqtt", mqtt::OPS),
     ("nats", nats::OPS),
     ("openapi", openapi::OPS),
+    ("orchestration", orchestration::OPS),
     ("php-std", php_std::OPS),
     ("platform", platform::OPS),
     ("pools", pools::OPS),
@@ -108,6 +112,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "balancer" => balancer::call(op, args, session).await,
         "bus" => bus::call(op, args, session).await,
         "cache" => cache::call(op, args, session).await,
+        "cdn" => cdn::call(op, args, session).await,
         "circuit-breaker" => circuit_breaker::call(op, args, session).await,
         "cli" => cli::call(op, args, session).await,
         "client" => client::call(op, args, session).await,
@@ -128,6 +133,7 @@ pub async fn call(lib: &str, op: &str, args: &Value, session: &mut Session) -> O
         "mqtt" => mqtt::call(op, args, session).await,
         "nats" => nats::call(op, args, session).await,
         "openapi" => openapi::call(op, args, session).await,
+        "orchestration" => orchestration::call(op, args, session).await,
         "php-std" => php_std::call(op, args, session).await,
         "platform" => platform::call(op, args, session).await,
         "pools" => pools::call(op, args, session).await,
@@ -157,6 +163,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "balancer" => balancer::BENCHES,
         "bus" => bus::BENCHES,
         "cache" => cache::BENCHES,
+        "cdn" => cdn::BENCHES,
         "circuit-breaker" => circuit_breaker::BENCHES,
         "cli" => cli::BENCHES,
         "client" => client::BENCHES,
@@ -176,6 +183,7 @@ pub fn benches(lib: &str) -> &'static [(&'static str, &'static str)] {
         "mqtt" => mqtt::BENCHES,
         "nats" => nats::BENCHES,
         "openapi" => openapi::BENCHES,
+        "orchestration" => orchestration::BENCHES,
         "php-std" => php_std::BENCHES,
         "platform" => platform::BENCHES,
         "pools" => pools::BENCHES,
@@ -204,6 +212,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "balancer" => balancer::bench(name, session).await,
         "bus" => bus::bench(name, session).await,
         "cache" => cache::bench(name, session).await,
+        "cdn" => cdn::bench(name, session).await,
         "circuit-breaker" => circuit_breaker::bench(name, session).await,
         "cli" => cli::bench(name, session).await,
         "client" => client::bench(name, session).await,
@@ -223,6 +232,7 @@ pub async fn bench(lib: &str, name: &str, session: &mut Session) -> Result<Bench
         "mqtt" => mqtt::bench(name, session).await,
         "nats" => nats::bench(name, session).await,
         "openapi" => openapi::bench(name, session).await,
+        "orchestration" => orchestration::bench(name, session).await,
         "php-std" => php_std::bench(name, session).await,
         "platform" => platform::bench(name, session).await,
         "pools" => pools::bench(name, session).await,
