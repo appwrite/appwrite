@@ -5,6 +5,9 @@
       "covers": [
         "Utopia\\Database\\Adapter\\SQL::__construct",
         "Utopia\\Database\\Adapter::setAuthorization"
+      ],
+      "services": [
+        "database-postgres"
       ]
     },
     "adapter.set_authorization": {
