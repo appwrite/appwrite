@@ -287,6 +287,15 @@ final class IntegerOperatorsTest extends TestCase
         $this->assertSame($expected, $resolved->getMethod() === OperatorType::Increment ? $stored + $resolved->getValue() : $stored - $resolved->getValue());
     }
 
+    public function testAnOperandTooLongForAnIntegerIsLeftForTheLibraryToRefuse(): void
+    {
+        $operators = new IntegerOperators(Engine::PostgreSQL);
+
+        foreach ([Operator::multiply('1e1000000000', 1.5), Operator::multiply(1.5, '1e1000000000'), new Operator(OperatorType::Divide, 'count', ['1e-1000000000', 0.5])] as $operator) {
+            $this->assertSame($operator, $operators->resolve($operator, 10));
+        }
+    }
+
     public function testFractionalArrayItemsAreCutTowardZero(): void
     {
         $this->assertSame([1, -1, -2, 2, 0, 7], IntegerOperators::wholeItems(Operator::arrayAppend([1.5, -1.5, -2.5, 2.5, 0.9999, 7]))->getValues());

@@ -24,6 +24,12 @@ final readonly class IntegerOperators
     /**
      * PostgreSQL computed these in NUMERIC, exactly at any size, where the other engines used a double.
      */
+    /**
+     * Digits of an operand worth computing exactly: far past a BIGINT and the precision of any fraction an engine
+     * kept; longer ones only overflow, so the library refuses them.
+     */
+    private const int MAXIMUM_DIGITS = 64;
+
     private const array EXACT_ON_POSTGRESQL = [OperatorType::Multiply, OperatorType::Divide, OperatorType::Modulo];
 
     private const array CAST_TO_INTEGER_ON_POSTGRESQL = [OperatorType::Increment, OperatorType::Decrement, OperatorType::Multiply, OperatorType::Divide];
@@ -88,7 +94,7 @@ final readonly class IntegerOperators
         $rounding = $this->engine->rounding($method, !self::isFractional($amount));
         if ($this->engine === Engine::PostgreSQL && \in_array($method, self::EXACT_ON_POSTGRESQL, true)) {
             $exact = self::rational($method, $current, $amount);
-            if ($exact === null) {
+            if ($exact === null || ($limit !== null && self::decimal($limit) === null)) {
                 return $operator;
             }
             if ($limit !== null && $this->beyondRational($method, $exact, $amount, $limit)) {
@@ -145,7 +151,11 @@ final readonly class IntegerOperators
      */
     private static function rational(OperatorType $method, int|string $current, int|float|string $amount): ?array
     {
-        [$numerator, $scale] = self::decimal($amount);
+        $decimal = self::decimal($amount);
+        if ($decimal === null) {
+            return null;
+        }
+        [$numerator, $scale] = $decimal;
         $power = self::powerOfTen($scale);
 
         if ($method === OperatorType::Multiply) {
@@ -170,12 +180,17 @@ final readonly class IntegerOperators
      */
     private function beyondRational(OperatorType $method, array $exact, int|float|string $amount, int|float|string $limit): bool
     {
-        if (BigInt::compare(self::decimal($amount)[0], 0) === 0) {
+        $factor = self::decimal($amount);
+        $bound = self::decimal($limit);
+        if ($factor === null || $bound === null) {
+            return false;
+        }
+        if (BigInt::compare($factor[0], 0) === 0) {
             return false;
         }
 
         [$numerator, $denominator] = $exact;
-        [$limitNumerator, $limitScale] = self::decimal($limit);
+        [$limitNumerator, $limitScale] = $bound;
         $comparison = BigInt::compare(
             BigInt::multiply($numerator, self::powerOfTen($limitScale)),
             BigInt::multiply($limitNumerator, $denominator),
@@ -189,15 +204,20 @@ final readonly class IntegerOperators
     }
 
     /**
-     * A number as an integer and the power of ten that divides it, from the text main bound for it.
+     * A number as an integer and the power of ten that divides it, from the text main bound for it; null when it
+     * has more digits than any integer column result could need, which is left for the library to refuse.
      *
-     * @return array{int|string, int}
+     * @return array{int|string, int}|null
      */
-    private static function decimal(int|float|string $value): array
+    private static function decimal(int|float|string $value): ?array
     {
         $text = \strtolower(\trim((string) $value));
         [$mantissa, $exponent] = \explode('e', $text, 2) + [1 => '0'];
         [$whole, $fraction] = \explode('.', $mantissa, 2) + [1 => ''];
+        if (\strlen($exponent) > self::MAXIMUM_DIGITS || \abs((int) $exponent) + \strlen($whole . $fraction) > self::MAXIMUM_DIGITS) {
+            return null;
+        }
+
         $scale = \strlen($fraction) - (int) $exponent;
         $digits = $whole . $fraction;
 
