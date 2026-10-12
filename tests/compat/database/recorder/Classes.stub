@@ -14,6 +14,18 @@ class RecordingPostgres extends \Utopia\Database\Adapter\Postgres
 {
 }
 
+class RecordingPool extends \Utopia\Database\Adapter\Pool
+{
+}
+
+class RecordingRedis extends \Utopia\Database\Adapter\Redis
+{
+}
+
+class RecordingMirror extends \Utopia\Database\Mirror
+{
+}
+
 class RecordingAuthorization extends \Utopia\Database\Validator\Authorization
 {
 }

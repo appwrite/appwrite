@@ -1,6 +1,6 @@
 {
   "lib": "database",
-  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter. Phase 1 of 3: the other adapters are waived until phases 2 and 3 convert them.",
+  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter; phase 3's Redis adapter, Pool adapter, Mirror (with its Mirroring filters) and the shared Redis caches are converted too. Still pending: the MariaDB/MySQL, SQLite and Memory adapters (phase 2) and MongoDB (phase 3), waived until their branches land.",
   "complete": false,
   "php": {
     "src": [
