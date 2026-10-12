@@ -1,0 +1,733 @@
+---
+layout: post
+title: "Announcing email triggers for Appwrite Functions"
+description: Appwrite Functions can now execute when an email arrives. Each function has a built-in email address, and you can connect your own domain with MX and TXT records.
+date: 2026-09-23
+cover: /images/blog/announcing-function-email-triggers/cover.avif
+timeToRead: 6
+author: torsten-dittmann
+category: announcements
+featured: false
+callToAction: true
+faqs:
+  - question: "What is an email trigger in Appwrite Functions?"
+    answer: "An email trigger executes an Appwrite Function when an email arrives at an address that is connected to the function. Appwrite receives the email, stores its content and attachments, and sends the parsed email to the function as JSON."
+  - question: "Do I need to configure DNS to receive email in a function?"
+    answer: "No. Each function has a built-in address that ends with `<FUNCTION_ID>.appwrite.email`, and any name before the `@` works. DNS records are necessary only when you connect your own domain. A custom domain needs an MX record and a TXT record."
+  - question: "Can Appwrite Functions send email?"
+    answer: "Email triggers only receive email. To send email, use [Appwrite Messaging](/docs/products/messaging) from the function, for example to reply to the sender."
+  - question: "What happens when the same email arrives two times?"
+    answer: "Appwrite can deliver an email more than one time, for example when the sending mail server retries. Each email has a unique `id`. Use it as the row ID or store it, so that the function processes each email one time."
+  - question: "How does a function get the attachments of an email?"
+    answer: "The request body contains an `attachments` list. Each attachment has a name, a content type, a size, and a download URL. The URLs expire 5 minutes after the execution starts, so download the files at the start of the function and upload them to Storage if you need them later."
+---
+
+Many apps receive work by email. Customers send support requests, vendors send invoices, and monitoring services send alerts. To process that email in code, you usually need an inbound email provider, a webhook endpoint, and a MIME parser.
+
+Appwrite Functions now have **email triggers**. A function can execute when an email arrives at its address. Appwrite receives the email, parses it, stores the attachments, and sends the result to your function as JSON.
+
+# How email triggers work
+
+Each email that arrives at a connected address creates one asynchronous execution of your function. The execution is a `POST` request, and the `x-appwrite-trigger` header is `email`.
+
+Appwrite handles each email in this order:
+
+1. Receive the email over SMTP.
+2. Confirm that the address belongs to a function with an active deployment.
+3. Store the original email and each attachment.
+4. Parse the headers, the plain text body, and the HTML body.
+5. Execute the function with the parsed email as the request body.
+
+The function receives JSON, so it needs no MIME parser and no mail server of its own.
+
+# Receive email at the built-in address
+
+{% info title="SMTP-DOCS-TODO: Screenshot pending (blog-built-in-address)" %}
+**SMTP-DOCS-TODO screenshot:blog-built-in-address.** Capture the **Domains** tab of a function that shows the built-in email address card. Dark theme, 1460x822 viewport at 2x, screenshot mode on. Save as `/images/blog/announcing-function-email-triggers/built-in-address.avif`, then replace this block with the image.
+{% /info %}
+
+Each function has a built-in email address that ends with `<FUNCTION_ID>.appwrite.email`. You can use any name before the `@`, so `support@<FUNCTION_ID>.appwrite.email` and `billing@<FUNCTION_ID>.appwrite.email` both execute the same function. The function can read which address received the email.
+
+The built-in address does not need DNS records.
+
+{% info title="SMTP-DOCS-TODO: Console steps pending (blog-built-in-address)" %}
+**SMTP-DOCS-TODO steps:blog-built-in-address.** Confirm these steps against the released Console, then remove this block.
+
+1. In the Appwrite Console, go to **Functions**.
+2. Open your function.
+3. On the **Domains** tab, copy the email address.
+{% /info %}
+
+# Connect your own domain
+
+{% info title="SMTP-DOCS-TODO: Screenshot pending (blog-custom-domain)" %}
+**SMTP-DOCS-TODO screenshot:blog-custom-domain.** Capture the Console screen that shows the MX and TXT records for a new email domain. Dark theme, 1460x822 viewport at 2x, screenshot mode on. Save as `/images/blog/announcing-function-email-triggers/custom-domain.avif`, then replace this block with the image.
+{% /info %}
+
+You can connect a domain that you own, such as `mail.example.com`. Email to any address at that domain executes your function. To verify the domain, add two DNS records at your registrar:
+
+- An `MX` record that points the domain to the Appwrite mail server.
+- A `TXT` record at `_appwrite.mail.example.com` with the verification token from the Console.
+
+The email rule and the HTTP rule of a domain are separate. A domain such as `support.example.com` can serve a site and also send its email to a function.
+
+{% info title="SMTP-DOCS-TODO: Console steps pending (blog-custom-domain)" %}
+**SMTP-DOCS-TODO steps:blog-custom-domain.** The Console does not have this flow yet. Write the numbered steps to add an email domain, copy the DNS records, and verify the domain. Then remove this block.
+{% /info %}
+
+# Handle an email in your function
+
+The request body contains the sender, the recipients, the subject, the plain text and HTML bodies, a selection of headers, and a download URL for each attachment and for the original email.
+
+```json
+{
+  "id": "5f0c2a9e3b7d4e1f8a6c0b2d4e6f8a1c",
+  "envelope": {
+    "from": "walter@example.net",
+    "to": ["support@6a51290fe3d0727e293a.appwrite.email"]
+  },
+  "from": "Walter O'Brien <walter@example.net>",
+  "subject": "Order 1042 did not arrive",
+  "text": "Hi, my order 1042 did not arrive yet.",
+  "html": "<p>Hi, my order 1042 did not arrive yet.</p>",
+  "attachments": [
+    {
+      "id": "attachment-0",
+      "name": "receipt.pdf",
+      "contentType": "application/pdf",
+      "size": 48213,
+      "url": "https://<REGION>.cloud.appwrite.io/v1/smtp/deliveries/5f0c2a9e3b7d4e1f8a6c0b2d4e6f8a1c/files/attachment-0?token=<TOKEN>"
+    }
+  ]
+}
+```
+
+This example saves each email as a row in a table. It uses the email `id` as the row ID. If Appwrite delivers the same email again, the second insert fails with a `409` error and the function skips it. Give the function the `rows.write` scope so that its ephemeral API key can create rows.
+
+{% multicode %}
+```server-nodejs
+import { Client, TablesDB } from 'node-appwrite';
+
+export default async ({ req, res, log, error }) => {
+  if (req.headers['x-appwrite-trigger'] !== 'email') {
+    return res.text('Not an email', 400);
+  }
+
+  const email = req.bodyJson;
+
+  const client = new Client()
+    .setEndpoint(process.env.APPWRITE_FUNCTION_API_ENDPOINT)
+    .setProject(process.env.APPWRITE_FUNCTION_PROJECT_ID)
+    .setKey(req.headers['x-appwrite-key']);
+
+  const tablesDB = new TablesDB(client);
+
+  try {
+    await tablesDB.createRow({
+      databaseId: '<DATABASE_ID>',
+      tableId: '<TABLE_ID>',
+      rowId: email.id,
+      data: {
+        from: email.from,
+        subject: email.subject,
+        text: email.text
+      }
+    });
+  } catch (e) {
+    if (e.code === 409) {
+      log(`Email ${email.id} is already saved`);
+      return res.empty();
+    }
+    error('Failed to save email: ' + e.message);
+    throw e;
+  }
+
+  log(`Saved email ${email.id}`);
+  return res.empty();
+};
+```
+```php
+<?php
+
+require(__DIR__ . '/../vendor/autoload.php');
+
+use Appwrite\AppwriteException;
+use Appwrite\Client;
+use Appwrite\Services\TablesDB;
+
+return function ($context) {
+    if (($context->req->headers['x-appwrite-trigger'] ?? '') !== 'email') {
+        return $context->res->text('Not an email', 400);
+    }
+
+    $email = $context->req->bodyJson;
+
+    $client = (new Client())
+        ->setEndpoint(getenv('APPWRITE_FUNCTION_API_ENDPOINT'))
+        ->setProject(getenv('APPWRITE_FUNCTION_PROJECT_ID'))
+        ->setKey($context->req->headers['x-appwrite-key']);
+
+    $tablesDB = new TablesDB($client);
+
+    try {
+        $tablesDB->createRow(
+            databaseId: '<DATABASE_ID>',
+            tableId: '<TABLE_ID>',
+            rowId: $email['id'],
+            data: [
+                'from' => $email['from'],
+                'subject' => $email['subject'],
+                'text' => $email['text'],
+            ]
+        );
+    } catch (AppwriteException $e) {
+        if ($e->getCode() === 409) {
+            $context->log('Email ' . $email['id'] . ' is already saved');
+            return $context->res->empty();
+        }
+        $context->error('Failed to save email: ' . $e->getMessage());
+        throw $e;
+    }
+
+    $context->log('Saved email ' . $email['id']);
+    return $context->res->empty();
+};
+```
+```python
+import os
+
+from appwrite.client import Client
+from appwrite.exception import AppwriteException
+from appwrite.services.tables_db import TablesDB
+
+
+def main(context):
+    if context.req.headers.get("x-appwrite-trigger") != "email":
+        return context.res.text("Not an email", 400)
+
+    email = context.req.body_json
+
+    client = (
+        Client()
+        .set_endpoint(os.environ["APPWRITE_FUNCTION_API_ENDPOINT"])
+        .set_project(os.environ["APPWRITE_FUNCTION_PROJECT_ID"])
+        .set_key(context.req.headers["x-appwrite-key"])
+    )
+
+    tables_db = TablesDB(client)
+
+    try:
+        tables_db.create_row(
+            database_id="<DATABASE_ID>",
+            table_id="<TABLE_ID>",
+            row_id=email["id"],
+            data={
+                "from": email["from"],
+                "subject": email["subject"],
+                "text": email["text"],
+            },
+        )
+    except AppwriteException as e:
+        if e.code == 409:
+            context.log(f"Email {email['id']} is already saved")
+            return context.res.empty()
+        context.error(f"Failed to save email: {e.message}")
+        raise
+
+    context.log(f"Saved email {email['id']}")
+    return context.res.empty()
+```
+```ruby
+require 'appwrite'
+
+include Appwrite
+
+def main(context)
+  if context.req.headers['x-appwrite-trigger'] != 'email'
+    return context.res.text('Not an email', 400)
+  end
+
+  email = context.req.body_json
+
+  client = Client.new
+    .set_endpoint(ENV['APPWRITE_FUNCTION_API_ENDPOINT'])
+    .set_project(ENV['APPWRITE_FUNCTION_PROJECT_ID'])
+    .set_key(context.req.headers['x-appwrite-key'])
+
+  tables_db = TablesDB.new(client)
+
+  begin
+    tables_db.create_row(
+      database_id: '<DATABASE_ID>',
+      table_id: '<TABLE_ID>',
+      row_id: email['id'],
+      data: {
+        from: email['from'],
+        subject: email['subject'],
+        text: email['text']
+      }
+    )
+  rescue Appwrite::Exception => e
+    if e.code == 409
+      context.log("Email #{email['id']} is already saved")
+      return context.res.empty
+    end
+    context.error("Failed to save email: #{e.message}")
+    raise
+  end
+
+  context.log("Saved email #{email['id']}")
+  context.res.empty
+end
+```
+```deno
+import { Client, TablesDB } from "npm:node-appwrite";
+
+export default async ({ req, res, log, error }: any) => {
+  if (req.headers["x-appwrite-trigger"] !== "email") {
+    return res.text("Not an email", 400);
+  }
+
+  const email = req.bodyJson;
+
+  const client = new Client()
+    .setEndpoint(Deno.env.get("APPWRITE_FUNCTION_API_ENDPOINT") ?? "")
+    .setProject(Deno.env.get("APPWRITE_FUNCTION_PROJECT_ID") ?? "")
+    .setKey(req.headers["x-appwrite-key"] ?? "");
+
+  const tablesDB = new TablesDB(client);
+
+  try {
+    await tablesDB.createRow({
+      databaseId: "<DATABASE_ID>",
+      tableId: "<TABLE_ID>",
+      rowId: email.id,
+      data: {
+        from: email.from,
+        subject: email.subject,
+        text: email.text,
+      },
+    });
+  } catch (e: any) {
+    if (e.code === 409) {
+      log(`Email ${email.id} is already saved`);
+      return res.empty();
+    }
+    error("Failed to save email: " + e.message);
+    throw e;
+  }
+
+  log(`Saved email ${email.id}`);
+  return res.empty();
+};
+```
+```go
+package handler
+
+import (
+	"errors"
+	"fmt"
+	"os"
+
+	"github.com/appwrite/sdk-for-go/appwrite"
+	"github.com/appwrite/sdk-for-go/client"
+	"github.com/open-runtimes/types-for-go/v4/openruntimes"
+)
+
+type Email struct {
+	Id      string `json:"id"`
+	From    string `json:"from"`
+	Subject string `json:"subject"`
+	Text    string `json:"text"`
+}
+
+func Main(Context openruntimes.Context) openruntimes.Response {
+	if Context.Req.Headers["x-appwrite-trigger"] != "email" {
+		return Context.Res.Text("Not an email", Context.Res.WithStatusCode(400))
+	}
+
+	var email Email
+	if err := Context.Req.BodyJson(&email); err != nil {
+		return Context.Res.Text("Invalid email payload", Context.Res.WithStatusCode(400))
+	}
+
+	appwriteClient := appwrite.NewClient(
+		appwrite.WithEndpoint(os.Getenv("APPWRITE_FUNCTION_API_ENDPOINT")),
+		appwrite.WithProject(os.Getenv("APPWRITE_FUNCTION_PROJECT_ID")),
+		appwrite.WithKey(Context.Req.Headers["x-appwrite-key"]),
+	)
+
+	tablesDB := appwrite.NewTablesDB(appwriteClient)
+
+	_, err := tablesDB.CreateRow(
+		"<DATABASE_ID>",
+		"<TABLE_ID>",
+		email.Id,
+		map[string]interface{}{
+			"from":    email.From,
+			"subject": email.Subject,
+			"text":    email.Text,
+		},
+	)
+
+	if err != nil {
+		var appwriteErr *client.AppwriteError
+		if errors.As(err, &appwriteErr) && appwriteErr.GetStatusCode() == 409 {
+			Context.Log(fmt.Sprintf("Email %s is already saved", email.Id))
+			return Context.Res.Empty()
+		}
+		Context.Error(fmt.Sprintf("Failed to save email: %v", err))
+		return Context.Res.Text("Failed to save email", Context.Res.WithStatusCode(500))
+	}
+
+	Context.Log(fmt.Sprintf("Saved email %s", email.Id))
+	return Context.Res.Empty()
+}
+```
+```dart
+import 'dart:io';
+import 'package:dart_appwrite/dart_appwrite.dart';
+
+Future<dynamic> main(final context) async {
+  if (context.req.headers['x-appwrite-trigger'] != 'email') {
+    return context.res.text('Not an email', 400);
+  }
+
+  final email = context.req.bodyJson;
+
+  final client = Client()
+      .setEndpoint(Platform.environment['APPWRITE_FUNCTION_API_ENDPOINT']!)
+      .setProject(Platform.environment['APPWRITE_FUNCTION_PROJECT_ID']!)
+      .setKey(context.req.headers['x-appwrite-key']);
+
+  final tablesDB = TablesDB(client);
+
+  try {
+    await tablesDB.createRow(
+      databaseId: '<DATABASE_ID>',
+      tableId: '<TABLE_ID>',
+      rowId: email['id'],
+      data: {
+        'from': email['from'],
+        'subject': email['subject'],
+        'text': email['text'],
+      },
+    );
+  } on AppwriteException catch (e) {
+    if (e.code == 409) {
+      context.log('Email ${email['id']} is already saved');
+      return context.res.empty();
+    }
+    context.error('Failed to save email: ${e.message}');
+    rethrow;
+  }
+
+  context.log('Saved email ${email['id']}');
+  return context.res.empty();
+}
+```
+```kotlin
+package io.openruntimes.kotlin.src
+
+import io.appwrite.Client
+import io.appwrite.exceptions.AppwriteException
+import io.appwrite.services.TablesDB
+import io.openruntimes.kotlin.RuntimeContext
+import io.openruntimes.kotlin.RuntimeOutput
+import kotlinx.coroutines.runBlocking
+
+class Main {
+    fun main(context: RuntimeContext): RuntimeOutput {
+        if (context.req.headers["x-appwrite-trigger"] != "email") {
+            return context.res.text("Not an email", 400)
+        }
+
+        val email = context.req.bodyJson
+        val emailId = email["id"] as String
+
+        val client = Client()
+            .setEndpoint(System.getenv("APPWRITE_FUNCTION_API_ENDPOINT"))
+            .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+            .setKey(context.req.headers["x-appwrite-key"] ?: "")
+
+        val tablesDB = TablesDB(client)
+
+        try {
+            runBlocking {
+                tablesDB.createRow(
+                    databaseId = "<DATABASE_ID>",
+                    tableId = "<TABLE_ID>",
+                    rowId = emailId,
+                    data = mapOf(
+                        "from" to email["from"],
+                        "subject" to email["subject"],
+                        "text" to email["text"]
+                    )
+                )
+            }
+        } catch (e: AppwriteException) {
+            if (e.code == 409) {
+                context.log("Email $emailId is already saved")
+                return context.res.empty()
+            }
+            context.error("Failed to save email: ${e.message}")
+            throw e
+        }
+
+        context.log("Saved email $emailId")
+        return context.res.empty()
+    }
+}
+```
+```java
+package io.openruntimes.java.src;
+
+import io.appwrite.Client;
+import io.appwrite.coroutines.CoroutineCallback;
+import io.appwrite.exceptions.AppwriteException;
+import io.appwrite.services.TablesDB;
+import io.openruntimes.java.RuntimeContext;
+import io.openruntimes.java.RuntimeOutput;
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+
+public class Main {
+    public RuntimeOutput main(RuntimeContext context) throws Exception {
+        if (!"email".equals(context.getReq().getHeaders().get("x-appwrite-trigger"))) {
+            return context.getRes().text("Not an email", 400);
+        }
+
+        Map<String, Object> email = context.getReq().getBodyJson();
+        String emailId = (String) email.get("id");
+
+        Client client = new Client()
+            .setEndpoint(System.getenv("APPWRITE_FUNCTION_API_ENDPOINT"))
+            .setProject(System.getenv("APPWRITE_FUNCTION_PROJECT_ID"))
+            .setKey(context.getReq().getHeaders().get("x-appwrite-key"));
+
+        TablesDB tablesDB = new TablesDB(client);
+        CompletableFuture<Throwable> result = new CompletableFuture<>();
+
+        tablesDB.createRow(
+            "<DATABASE_ID>",
+            "<TABLE_ID>",
+            emailId,
+            Map.of(
+                "from", email.get("from"),
+                "subject", email.get("subject"),
+                "text", email.get("text")
+            ),
+            null, // permissions
+            null, // transactionId
+            new CoroutineCallback<>((row, error) -> result.complete(error))
+        );
+
+        Throwable error = result.get();
+        if (error instanceof AppwriteException && ((AppwriteException) error).getCode() == 409) {
+            context.log("Email " + emailId + " is already saved");
+            return context.getRes().empty();
+        }
+        if (error != null) {
+            context.error("Failed to save email: " + error.getMessage());
+            throw new Exception(error);
+        }
+
+        context.log("Saved email " + emailId);
+        return context.getRes().empty();
+    }
+}
+```
+```swift
+import Appwrite
+import Foundation
+
+func main(context: RuntimeContext) async throws -> RuntimeOutput {
+    if context.req.headers["x-appwrite-trigger"] != "email" {
+        return context.res.text("Not an email", 400)
+    }
+
+    let email = context.req.bodyJson
+    let emailId = email["id"] as? String ?? ""
+
+    let client = Client()
+        .setEndpoint(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_API_ENDPOINT"] ?? "")
+        .setProject(ProcessInfo.processInfo.environment["APPWRITE_FUNCTION_PROJECT_ID"] ?? "")
+        .setKey(context.req.headers["x-appwrite-key"] ?? "")
+
+    let tablesDB = TablesDB(client)
+
+    do {
+        _ = try await tablesDB.createRow(
+            databaseId: "<DATABASE_ID>",
+            tableId: "<TABLE_ID>",
+            rowId: emailId,
+            data: [
+                "from": email["from"] ?? "",
+                "subject": email["subject"] ?? "",
+                "text": email["text"] ?? ""
+            ]
+        )
+    } catch let error as AppwriteError where error.code == 409 {
+        context.log("Email \(emailId) is already saved")
+        return context.res.empty()
+    } catch {
+        context.error("Failed to save email: \(error.localizedDescription)")
+        throw error
+    }
+
+    context.log("Saved email \(emailId)")
+    return context.res.empty()
+}
+```
+```csharp
+using System.Text.Json;
+using Appwrite;
+using Appwrite.Services;
+
+namespace DotNetRuntime;
+
+public class Handler
+{
+    public async Task<RuntimeOutput> Main(RuntimeContext Context)
+    {
+        if (Context.Req.Headers.GetValueOrDefault("x-appwrite-trigger") != "email")
+        {
+            return Context.Res.Text("Not an email", 400);
+        }
+
+        var email = (Dictionary<string, object>)Context.Req.BodyJson;
+        var emailId = email["id"].ToString()!;
+
+        var client = new Client()
+            .SetEndpoint(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_API_ENDPOINT"))
+            .SetProject(Environment.GetEnvironmentVariable("APPWRITE_FUNCTION_PROJECT_ID"))
+            .SetKey(Context.Req.Headers["x-appwrite-key"]);
+
+        var tablesDB = new TablesDB(client);
+
+        try
+        {
+            await tablesDB.CreateRow(
+                databaseId: "<DATABASE_ID>",
+                tableId: "<TABLE_ID>",
+                rowId: emailId,
+                data: new Dictionary<string, object>
+                {
+                    ["from"] = email["from"],
+                    ["subject"] = email["subject"],
+                    ["text"] = email["text"]
+                });
+        }
+        catch (AppwriteException e) when (e.Code == 409)
+        {
+            Context.Log($"Email {emailId} is already saved");
+            return Context.Res.Empty();
+        }
+        catch (AppwriteException e)
+        {
+            Context.Error($"Failed to save email: {e.Message}");
+            throw;
+        }
+
+        Context.Log($"Saved email {emailId}");
+        return Context.Res.Empty();
+    }
+}
+```
+```rust
+use appwrite::services::tables_db::TablesDB;
+use appwrite::Client;
+use openruntimes::{Context, Response};
+use serde_json::{json, Value};
+use std::env;
+
+pub fn main(context: Context) -> Response {
+    if context.req.headers.get("x-appwrite-trigger").map(String::as_str) != Some("email") {
+        return context.res.text("Not an email", Some(400), None);
+    }
+
+    let email: Value = context.req.body_json().unwrap_or(Value::Null);
+    let email_id = email["id"].as_str().unwrap_or_default().to_string();
+
+    let client = Client::new()
+        .set_endpoint(env::var("APPWRITE_FUNCTION_API_ENDPOINT").unwrap_or_default())
+        .set_project(env::var("APPWRITE_FUNCTION_PROJECT_ID").unwrap_or_default())
+        .set_key(
+            context
+                .req
+                .headers
+                .get("x-appwrite-key")
+                .cloned()
+                .unwrap_or_default(),
+        );
+
+    let tables_db = TablesDB::new(&client);
+
+    let runtime = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
+
+    let row_id = email_id.clone();
+    let result = runtime.block_on(async move {
+        tables_db
+            .create_row(
+                "<DATABASE_ID>",
+                "<TABLE_ID>",
+                &row_id,
+                json!({
+                    "from": email["from"],
+                    "subject": email["subject"],
+                    "text": email["text"]
+                }),
+                None,
+                None,
+            )
+            .await
+    });
+
+    match result {
+        Ok(_) => {
+            context.log(format!("Saved email {}", email_id));
+            context.res.empty()
+        }
+        Err(e) if e.status_code() == 409 => {
+            context.log(format!("Email {} is already saved", email_id));
+            context.res.empty()
+        }
+        Err(e) => {
+            context.error(format!("Failed to save email: {}", e));
+            context.res.text("Failed to save email", Some(500), None)
+        }
+    }
+}
+```
+{% /multicode %}
+
+# Duplicate emails and attachments
+
+Plan for two behaviors when you write an email function:
+
+- **Delivery is at least once.** A sending mail server can retry, so the same email can arrive more than one time. Use the email `id` to detect duplicates.
+- **Download URLs expire.** The attachment URLs and the URL of the original email expire 5 minutes after the execution starts. Download the files at the start of the function, and upload them to [Storage](/docs/products/storage) if you need them later.
+
+Appwrite accepts an email before your function executes. A failed execution does not send a bounce message to the sender, so check the execution logs of the function for errors.
+
+# Use cases
+
+- **Support inbox.** Save each email to a table, and reply to the customer with [Messaging](/docs/products/messaging).
+- **Invoice processing.** Read PDF attachments from vendors and store the extracted totals.
+- **Alerts from other services.** Parse the alerts that monitoring services send by email and open an incident.
+- **Reply by email.** Give each conversation its own address, such as `ticket-1042@<FUNCTION_ID>.appwrite.email`, and read the address in the function to find the conversation.
+
+# Get started
+
+Email triggers are available for Appwrite Functions on Appwrite Cloud. The [email triggers documentation](/docs/products/functions/email) has the full request format, the DNS setup for custom domains, and the limits.
+
+# Resources
+
+- [Email triggers documentation](/docs/products/functions/email)
+- [Appwrite Functions documentation](/docs/products/functions)
+- [Function execution](/docs/products/functions/execute)
+- [Appwrite Messaging documentation](/docs/products/messaging)
+- [Join the Appwrite Discord](https://appwrite.io/discord)
