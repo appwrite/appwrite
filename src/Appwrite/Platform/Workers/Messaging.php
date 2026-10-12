@@ -315,7 +315,7 @@ class Messaging extends Action
                 $recipientGroup = $recipients;
                 $isWakeProvider = $resolvedProviderType === MESSAGE_TYPE_PUSH
                     && \in_array($provider->getAttribute('provider'), self::APPWRITE_PUSH_WAKEUP_SIGNAL_PROVIDERS, true);
-                if ($perUser && $isWakeProvider && $mqttUsers !== []) {
+                if ($perUser && $isWakeProvider && \count($mqttUsers) > 0) {
                     $recipientGroup = [];
                     foreach ($identifiers as $identifier => $userId) {
                         if (empty($userId) || !isset($mqttUsers[$userId])) {
@@ -344,7 +344,7 @@ class Messaging extends Action
 
             // For topic sends, send the wake-up signal to this page's Appwrite-push users on their other
             // devices (user/target sends do this once after the loop instead).
-            if (!$perUser && $pageMqttUsers !== []) {
+            if (!$perUser && \count($pageMqttUsers) > 0) {
                 foreach ($this->wakeTasks($pageMqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore) as $task) {
                     $tasks[] = $task;
                 }
@@ -396,7 +396,7 @@ class Messaging extends Action
 
         // Send the wake-up signal to every device of the Appwrite-push users, so a device that wasn't
         // named in the send still gets woken.
-        if ($mqttUsers !== []) {
+        if (\count($mqttUsers) > 0) {
             foreach (batch($this->wakeTasks($mqttUsers, $providers, $default, $dbForProject, $project, $message, $publisherForUsage, $semaphore)) as $result) {
                 $wakeSignals += $result['delivered'];
             }
@@ -776,7 +776,7 @@ class Messaging extends Action
         UsagePublisher $publisherForUsage,
         Semaphore $semaphore
     ): array {
-        if ($mqttUsers === []) {
+        if (\count($mqttUsers) === 0) {
             return [];
         }
 
