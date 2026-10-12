@@ -1681,13 +1681,13 @@ return [
         'description' => 'The caption language code is not a valid ISO 639-2 code.',
         'code' => 400,
     ],
-    Exception::VIDEO_PREVIEW_NOT_FOUND => [
-        'name' => Exception::VIDEO_PREVIEW_NOT_FOUND,
-        'description' => 'Video preview with the requested ID could not be found.',
+    Exception::VIDEO_SPRITE_NOT_FOUND => [
+        'name' => Exception::VIDEO_SPRITE_NOT_FOUND,
+        'description' => 'Video sprite with the requested ID could not be found.',
         'code' => 404,
     ],
-    Exception::VIDEO_TIMELINE_NOT_FOUND => [
-        'name' => Exception::VIDEO_TIMELINE_NOT_FOUND,
+    Exception::VIDEO_TIMELINES_NOT_FOUND => [
+        'name' => Exception::VIDEO_TIMELINES_NOT_FOUND,
         'description' => 'Video timeline could not be found. The video may still be processing.',
         'code' => 404,
     ],

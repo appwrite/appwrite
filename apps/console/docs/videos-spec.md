@@ -50,7 +50,7 @@ The root resource. Points at a source file in Storage and holds probed media met
 | `bucketId` | string | Bucket holding the source file |
 | `fileId` | string | Source file ID |
 | `name` | string | Defaults to the source file name. Max 128 chars |
-| `previewId` | string | Preview image ID, from the sprite timeline |
+| `previewId` | string | Poster sprite ID from the timeline |
 | `size` | number | Source size in bytes |
 | `format` | string | Container format |
 | `duration` | number | Milliseconds |
@@ -205,29 +205,29 @@ List model: `Models.VideoSubtitleList` (`{ total, subtitles }`).
 
 ---
 
-## 5. Timeline and Preview
+## 5. Timelines and Sprites
 
 Sprite sheets plus a WebVTT index used for scrubbing thumbnails. The video's `previewId` points at one of these sprites.
 
 ### Rules
 
 - No precondition: the job downloads the source itself and probes it if needed.
-- Audio-only sources are accepted but produce no WebVTT, so `getTimeline` keeps returning `video_timeline_not_found`. The Console disables the action once probe metadata shows no video track.
-- `createTimeline` returns immediately. Poll `getTimeline` until it returns WebVTT instead of `video_timeline_not_found`.
+- Audio-only sources are accepted but produce no WebVTT, so `getTimelines` keeps returning `video_timelines_not_found`. The Console disables the action once probe metadata shows no video track.
+- `createTimeline` returns immediately. Poll `getTimelines` until it returns WebVTT instead of `video_timelines_not_found`.
 
 ### Endpoints
 
 | Method | SDK | HTTP | Returns |
 | --- | --- | --- | --- |
 | Create timeline | `createTimeline({ videoId })` | `POST /videos/{videoId}/timeline` | `Models.Video` |
-| Get timeline | `getTimeline({ videoId })` | `GET /videos/{videoId}/timeline` | WebVTT text |
-| Get preview | `getPreview({ videoId, previewId, width?, height?, output? })` | `GET /videos/{videoId}/previews/{previewId}` | Image URL. `output` is `ImageFormat` (jpeg, jpg, png, gif, webp) |
+| Get timelines | `getTimelines({ videoId })` | `GET /videos/{videoId}/timelines` | WebVTT text |
+| Get sprite | `getSprite({ videoId, spriteId, width?, height?, output? })` | `GET /videos/{videoId}/sprites/{spriteId}` | Image URL. `output` is `ImageFormat` (jpeg, jpg, png, gif, webp) |
 
 ### Errors
 
 | Code | When |
 | --- | --- |
-| `video_timeline_not_found` | Timeline not generated yet |
+| `video_timelines_not_found` | Timeline not generated yet |
 
 ---
 

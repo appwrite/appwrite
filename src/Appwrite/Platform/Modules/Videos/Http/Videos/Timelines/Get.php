@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Timeline;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Timelines;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -26,15 +26,15 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getTimeline';
+        return 'getTimelines';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/timeline')
-            ->desc('Get timeline')
+            ->setHttpPath('/v1/videos/:videoId/timelines')
+            ->desc('Get timelines')
             ->groups(['api', 'videos'])
             ->label('scope', ['videos.play', 'videos.read'])
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
@@ -42,8 +42,8 @@ class Get extends Base
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
-                name: 'getTimeline',
-                description: '/docs/references/videos/get-timeline.md',
+                name: 'getTimelines',
+                description: '/docs/references/videos/get-timelines.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -85,19 +85,19 @@ class Get extends Base
         ]));
 
         if (empty($sprites)) {
-            throw new Exception(Exception::VIDEO_TIMELINE_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_TIMELINES_NOT_FOUND);
         }
 
         $path = $deviceForVideos->getPath($video->getId() . '/timeline') . '/timeline.vtt';
 
         if (!$deviceForVideos->exists($path)) {
-            throw new Exception(Exception::VIDEO_TIMELINE_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_TIMELINES_NOT_FOUND);
         }
 
-        // Disk stores bare `previews/{id}#xywh=...`. Players resolve those
-        // without inheriting the timeline's ?project=, and cannot send the
-        // project header, so every cue URL must carry the query itself.
-        $vtt = $this->withProjectOnPreviewCues((string) $deviceForVideos->read($path), $project);
+        // Disk may still store bare `previews/{id}#xywh=...` from older jobs.
+        // Players resolve relative cues from /timelines to /sprites/{id}, and
+        // cannot send the project header, so every cue URL must carry the query.
+        $vtt = $this->withProjectOnSpriteCues((string) $deviceForVideos->read($path), $project);
 
         $response
             ->setContentType('text/vtt')
@@ -106,17 +106,20 @@ class Get extends Base
     }
 
     /**
-     * Appends `?project=` to each `previews/{id}` cue URI, before any `#xywh=`
-     * fragment. The on-disk VTT is left unchanged.
+     * Rewrites `previews/{id}` and `sprites/{id}` cue URIs to
+     * `sprites/{id}?project=...` before any `#xywh=` fragment. The on-disk
+     * VTT is left unchanged.
      */
-    private function withProjectOnPreviewCues(string $vtt, Document $project): string
+    private function withProjectOnSpriteCues(string $vtt, Document $project): string
     {
         $lines = \explode("\n", $vtt);
 
         foreach ($lines as $index => $line) {
             $trimmed = \rtrim($line, "\r");
 
-            if (!\str_starts_with($trimmed, 'previews/')) {
+            if (\str_starts_with($trimmed, 'previews/')) {
+                $trimmed = 'sprites/' . \substr($trimmed, \strlen('previews/'));
+            } elseif (!\str_starts_with($trimmed, 'sprites/')) {
                 continue;
             }
 

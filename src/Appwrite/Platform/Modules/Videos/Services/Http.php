@@ -19,12 +19,12 @@ use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\DASH\Manifest\Get as Ge
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\HLS\Manifest\Get as GetHlsManifest;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Segments\Get as GetSegment;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Outputs\Renditions\Streams\Manifest\Get as GetStreamManifest;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Previews\Get as GetPreview;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Create as CreateRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Delete as DeleteRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\Get as GetRendition;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Renditions\XList as ListRenditions;
-use Appwrite\Platform\Modules\Videos\Http\Videos\Timeline\Get as GetTimeline;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Sprites\Get as GetSprite;
+use Appwrite\Platform\Modules\Videos\Http\Videos\Timelines\Get as GetTimelines;
 use Appwrite\Platform\Modules\Videos\Http\Videos\Update as UpdateVideo;
 use Appwrite\Platform\Modules\Videos\Http\Videos\XList as ListVideos;
 use Utopia\Platform\Service;
@@ -42,9 +42,9 @@ class Http extends Service
         $this->addAction(UpdateVideo::getName(), new UpdateVideo());
         $this->addAction(DeleteVideo::getName(), new DeleteVideo());
 
-        // Timeline and previews
-        $this->addAction(GetTimeline::getName(), new GetTimeline());
-        $this->addAction(GetPreview::getName(), new GetPreview());
+        // Timelines and sprites
+        $this->addAction(GetTimelines::getName(), new GetTimelines());
+        $this->addAction(GetSprite::getName(), new GetSprite());
 
         // Captions
         $this->addAction(CreateCaption::getName(), new CreateCaption());

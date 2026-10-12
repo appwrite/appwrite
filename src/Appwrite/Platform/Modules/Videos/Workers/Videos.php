@@ -260,7 +260,7 @@ class Videos extends Action
                 $queueForRealtime,
                 $project,
                 $video,
-                'videos.[videoId].timeline.update',
+                'videos.[videoId].timelines.update',
                 ['videoId' => $video->getId()],
                 $permissions
             );
@@ -279,7 +279,7 @@ class Videos extends Action
                     $queueForRealtime,
                     $project,
                     $video,
-                    'videos.[videoId].timeline.update',
+                    'videos.[videoId].timelines.update',
                     ['videoId' => $video->getId()],
                     $permissions
                 );
@@ -295,8 +295,8 @@ class Videos extends Action
                 Query::limit(APP_LIMIT_SUBQUERY),
             ]);
 
-            foreach ($existing as $preview) {
-                $path = $preview->getAttribute('path', '');
+            foreach ($existing as $sprite) {
+                $path = $sprite->getAttribute('path', '');
                 if (!empty($path) && $deviceForVideos->exists($path)) {
                     try {
                         $deviceForVideos->delete($path);
@@ -304,17 +304,17 @@ class Videos extends Action
                         // Best-effort; the DB row is the source of truth for readiness.
                     }
                 }
-                $dbForProject->deleteDocument('videos_timelines', $preview->getId());
+                $dbForProject->deleteDocument('videos_timelines', $sprite->getId());
             }
 
-            // Appwrite rewrites sheet URLs to preview endpoints, so skip the
+            // Appwrite rewrites sheet URLs to sprite endpoints, so skip the
             // library-written VTT and render our own from cues().
             $stage = 'tile';
             $phaseStart = \microtime(true);
             $sheet = $encoder->tile(
                 $inPath,
                 \rtrim($workspace['outDir'], '/'),
-                // 480px stays sharp on HiDPI screens and enlarged previews; a 4x4
+                // 480px stays sharp on HiDPI screens and enlarged sprites; a 4x4
                 // grid keeps each sheet at ~1920x1080, small enough for hover scrubbing.
                 (new Tile())->width(480)->grid(4, 4)->quality(2)->vtt(false)
             );
@@ -336,7 +336,7 @@ class Videos extends Action
                 $bytes = $data->getSize() ?? (\filesize($localFile) ?: 0);
                 $size += $bytes;
 
-                $preview = $dbForProject->createDocument('videos_timelines', new Document([
+                $sprite = $dbForProject->createDocument('videos_timelines', new Document([
                     'videoId' => $video->getId(),
                     'videoInternalId' => $video->getSequence(),
                     'name' => $fileName,
@@ -350,9 +350,9 @@ class Videos extends Action
                     'image/jpeg'
                 );
 
-                // Relative to /v1/videos/{videoId}/timeline so the player resolves
-                // to /v1/videos/{videoId}/previews/{previewId}.
-                $urls[$fileName] = 'previews/' . $preview->getId();
+                // Relative to /v1/videos/{videoId}/timelines so the player resolves
+                // to /v1/videos/{videoId}/sprites/{spriteId}.
+                $urls[$fileName] = 'sprites/' . $sprite->getId();
             }
 
             if (!empty($urls)) {
@@ -372,7 +372,7 @@ class Videos extends Action
                 $queueForRealtime,
                 $project,
                 $video,
-                'videos.[videoId].timeline.update',
+                'videos.[videoId].timelines.update',
                 ['videoId' => $video->getId()],
                 $permissions
             );
@@ -387,7 +387,7 @@ class Videos extends Action
                 $queueForRealtime,
                 $project,
                 $video,
-                'videos.[videoId].timeline.update',
+                'videos.[videoId].timelines.update',
                 ['videoId' => $video->getId()],
                 $permissions
             );

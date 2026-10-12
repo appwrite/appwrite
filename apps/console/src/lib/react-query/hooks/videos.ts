@@ -211,7 +211,7 @@ function parseVttTimestamp(value: string): number {
   return parts.reduce((total, part) => total * 60 + part, 0)
 }
 
-/** Parse a sprite-sheet WebVTT (`previews/{id}#xywh=x,y,w,h` cues). */
+/** Parse a sprite-sheet WebVTT (`sprites/{id}#xywh=x,y,w,h` cues). */
 export function parseVideoTimelineVtt(
   vtt: string,
   timelineUrl: string,
@@ -248,10 +248,34 @@ export function getVideoTimelineUrl(
 ): string {
   const endpoint = sdk.forProject(projectId).client.config.endpoint
   const url = new URL(
-    `${endpoint}/videos/${encodeURIComponent(videoId)}/timeline`,
+    `${endpoint}/videos/${encodeURIComponent(videoId)}/timelines`,
   )
   url.searchParams.set('project', projectId)
   url.searchParams.set('mode', 'admin')
+  return url.toString()
+}
+
+export function getVideoSpriteUrl(
+  projectId: string,
+  videoId: string,
+  spriteId: string,
+  options?: { width?: number; height?: number; output?: string },
+): string {
+  const endpoint = sdk.forProject(projectId).client.config.endpoint
+  const url = new URL(
+    `${endpoint}/videos/${encodeURIComponent(videoId)}/sprites/${encodeURIComponent(spriteId)}`,
+  )
+  url.searchParams.set('project', projectId)
+  url.searchParams.set('mode', 'admin')
+  if (options?.width != null && options.width > 0) {
+    url.searchParams.set('width', String(options.width))
+  }
+  if (options?.height != null && options.height > 0) {
+    url.searchParams.set('height', String(options.height))
+  }
+  if (options?.output) {
+    url.searchParams.set('output', options.output)
+  }
   return url.toString()
 }
 

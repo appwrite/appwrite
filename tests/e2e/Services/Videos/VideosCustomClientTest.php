@@ -119,7 +119,7 @@ final class VideosCustomClientTest extends Scope
     public function testGuestPlayUnknownVideoNotFound(): void
     {
         foreach ([
-            '/videos/doesnotexist/timeline',
+            '/videos/doesnotexist/timelines',
             '/videos/doesnotexist/outputs/hls/master.m3u8',
         ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
@@ -248,7 +248,7 @@ final class VideosCustomClientTest extends Scope
             '/videos/' . $videoId,
             '/videos/' . $videoId . '/captions',
             '/videos/' . $videoId . '/renditions',
-            '/videos/' . $videoId . '/timeline',
+            '/videos/' . $videoId . '/timelines',
             '/videos/' . $videoId . '/outputs/hls/master.m3u8',
         ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->sessionHeaders());
@@ -263,7 +263,7 @@ final class VideosCustomClientTest extends Scope
     public function testGuestCannotPlayPrivateVideo(string $videoId): void
     {
         foreach ([
-            '/videos/' . $videoId . '/timeline',
+            '/videos/' . $videoId . '/timelines',
             '/videos/' . $videoId . '/outputs/hls/master.m3u8',
         ] as $path) {
             $response = $this->client->call(Client::METHOD_GET, $path, $this->anonymousHeaders());
@@ -390,7 +390,7 @@ final class VideosCustomClientTest extends Scope
             $client,
             fn (array $message) => ($message['type'] ?? '') === 'event'
                 && \in_array(
-                    'videos.' . $videoId . '.timeline.update',
+                    'videos.' . $videoId . '.timelines.update',
                     $message['data']['events'] ?? [],
                     true
                 )
@@ -538,7 +538,7 @@ final class VideosCustomClientTest extends Scope
                 $this->assertNotContains('videos.' . $videoId, $frame['data']['channels'] ?? []);
                 foreach ($frame['data']['events'] ?? [] as $eventName) {
                     $this->assertStringNotContainsString(
-                        'videos.' . $videoId . '.timeline.update',
+                        'videos.' . $videoId . '.timelines.update',
                         (string) $eventName
                     );
                     $this->assertStringNotContainsString(
@@ -632,29 +632,29 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertNotEmpty($segment['body']);
 
-        $guestTimeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->anonymousHeaders());
+        $guestTimeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
         $this->assertEquals(200, $guestTimeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $guestTimeline['body']);
 
         $projectId = $this->getProject()['$id'];
         $this->assertMatchesRegularExpression(
-            '/previews\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
+            '/sprites\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
             (string) $guestTimeline['body']
         );
         $this->assertSame(
             1,
-            \preg_match('~previews/([a-zA-Z0-9]+)\?project=~', (string) $guestTimeline['body'], $previewMatch)
+            \preg_match('~sprites/([a-zA-Z0-9]+)\?project=~', (string) $guestTimeline['body'], $spriteMatch)
         );
         // No X-Appwrite-Project: mirrors a player resolving the VTT cue URL.
-        $preview = $this->client->call(
+        $sprite = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/previews/' . $previewMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/sprites/' . $spriteMatch[1] . '?project=' . $projectId,
             [
                 'content-type' => 'application/json',
             ]
         );
-        $this->assertEquals(200, $preview['headers']['status-code']);
-        $this->assertNotEmpty($preview['body']);
+        $this->assertEquals(200, $sprite['headers']['status-code']);
+        $this->assertNotEmpty($sprite['body']);
 
         return ['videoId' => $videoId, 'renditionId' => $renditionId];
     }
@@ -680,7 +680,7 @@ final class VideosCustomClientTest extends Scope
 
         $denied = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/timeline',
+            '/videos/' . $videoId . '/timelines',
             $this->anonymousHeaders()
         );
         $this->assertEquals(404, $denied['headers']['status-code']);
@@ -759,7 +759,7 @@ final class VideosCustomClientTest extends Scope
 
         $guestTimeline = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/timeline',
+            '/videos/' . $videoId . '/timelines',
             $this->anonymousHeaders()
         );
         $this->assertEquals(200, $guestTimeline['headers']['status-code']);
@@ -833,7 +833,7 @@ final class VideosCustomClientTest extends Scope
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->anonymousHeaders());
         $this->assertEquals(401, $delete['headers']['status-code']);
 
-        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->anonymousHeaders());
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->anonymousHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
     }
 
@@ -843,7 +843,7 @@ final class VideosCustomClientTest extends Scope
         $videoId = $play['videoId'];
         $renditionId = $play['renditionId'];
 
-        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->sessionHeaders());
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
 
@@ -951,7 +951,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $stillThere['headers']['status-code']);
         $this->assertEquals($renditionId, $stillThere['body']['$id']);
 
-        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->sessionHeaders());
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
     }
 
@@ -1025,7 +1025,7 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertNotEmpty($segment['body']);
 
-        $timelinePath = '/videos/' . $videoId . '/timeline';
+        $timelinePath = '/videos/' . $videoId . '/timelines';
         $timeline = $this->client->call(Client::METHOD_GET, $timelinePath, $this->anonymousHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);

@@ -510,7 +510,7 @@ function TimelineFilePreview({ vtt }: { vtt: string }) {
 function previewIdFromCue(cue: VideoTimelineCue): string | null {
   try {
     const segments = new URL(cue.imageUrl).pathname.split('/')
-    const index = segments.lastIndexOf('previews')
+    const index = segments.lastIndexOf('sprites')
     return index >= 0 ? (segments[index + 1] ?? null) || null : null
   } catch {
     return null

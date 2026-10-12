@@ -1,8 +1,7 @@
 import { useState } from 'react'
 import type { Models } from '@appwrite.io/console'
 import { VIDEOS_PRODUCT_ICON } from '@/lib/videos/product-icon'
-import { sdk } from '@/lib/appwrite/sdk'
-import { withAdminMode } from '@/lib/appwrite/admin-resource-url'
+import { getVideoSpriteUrl } from '@/lib/react-query/hooks/videos'
 import { cn } from '@/lib/utils'
 import { formatVideoDuration } from '@/lib/utils/video-format'
 
@@ -23,13 +22,7 @@ export function VideoThumb({
   const [failed, setFailed] = useState(false)
   const src =
     video.previewId && !failed
-      ? withAdminMode(
-          sdk.forProject(projectId).videos.getPreview({
-            videoId: video.$id,
-            previewId: video.previewId,
-            width,
-          }),
-        )
+      ? getVideoSpriteUrl(projectId, video.$id, video.previewId, { width })
       : null
 
   return (

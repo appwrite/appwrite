@@ -696,17 +696,17 @@ trait VideoCustom
      */
     public function timelinePreviewIds(string $vtt): array
     {
-        // Cues are `previews/{id}?project=...#xywh=...` (serve-time rewrite) or
+        // Cues are `sprites/{id}?project=...#xywh=...` (serve-time rewrite) or
         // the older on-disk form without the query; stop before either.
         $ids = [];
 
         foreach (\explode("\n", $vtt) as $line) {
             $line = \rtrim($line, "\r");
-            if (!\str_starts_with($line, 'previews/')) {
+            if (!\str_starts_with($line, 'sprites/')) {
                 continue;
             }
 
-            $cue = \substr($line, \strlen('previews/'));
+            $cue = \substr($line, \strlen('sprites/'));
             $end = false;
             foreach (['?', '#'] as $stop) {
                 $position = \strpos($cue, $stop);
@@ -735,7 +735,7 @@ trait VideoCustom
         $response = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));
@@ -794,7 +794,7 @@ trait VideoCustom
         $response = [];
 
         while (\time() < $deadline) {
-            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', \array_merge([
+            $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', \array_merge([
                 'content-type' => 'application/json',
                 'x-appwrite-project' => $this->getProject()['$id'],
             ], $this->getHeaders()));

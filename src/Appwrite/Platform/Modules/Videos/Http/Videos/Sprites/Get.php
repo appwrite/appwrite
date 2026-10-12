@@ -1,6 +1,6 @@
 <?php
 
-namespace Appwrite\Platform\Modules\Videos\Http\Videos\Previews;
+namespace Appwrite\Platform\Modules\Videos\Http\Videos\Sprites;
 
 use Appwrite\Extend\Exception;
 use Appwrite\Platform\Modules\Videos\Base;
@@ -30,27 +30,27 @@ class Get extends Base
 
     public static function getName()
     {
-        return 'getPreview';
+        return 'getSprite';
     }
 
     public function __construct()
     {
         $this
             ->setHttpMethod(Action::HTTP_REQUEST_METHOD_GET)
-            ->setHttpPath('/v1/videos/:videoId/previews/:previewId')
-            ->desc('Get preview')
+            ->setHttpPath('/v1/videos/:videoId/sprites/:spriteId')
+            ->desc('Get sprite')
             ->groups(['api', 'videos'])
             ->label('scope', ['videos.play', 'videos.read'])
             ->label('resourceType', RESOURCE_TYPE_VIDEOS)
             ->label('usage.resource', 'video/{request.videoId}')
             ->label('cache', true)
             ->label('cache.resourceType', 'video/{request.videoId}')
-            ->label('cache.resource', 'preview/{request.previewId}')
+            ->label('cache.resource', 'sprite/{request.spriteId}')
             ->label('sdk', new Method(
                 namespace: 'videos',
                 group: 'videos',
-                name: 'getPreview',
-                description: '/docs/references/videos/get-preview.md',
+                name: 'getSprite',
+                description: '/docs/references/videos/get-sprite.md',
                 auth: [AuthType::ADMIN, AuthType::SESSION, AuthType::KEY, AuthType::JWT],
                 responses: [
                     new SDKResponse(
@@ -63,9 +63,9 @@ class Get extends Base
                 locationAuth: ['Project', 'ImpersonateUserId'],
             ))
             ->param('videoId', '', new UID(), 'Video unique ID.')
-            ->param('previewId', '', new UID(), 'Preview unique ID.')
-            ->param('width', 0, new Range(0, 4000), 'Resize preview image width, in pixels.', true)
-            ->param('height', 0, new Range(0, 4000), 'Resize preview image height, in pixels.', true)
+            ->param('spriteId', '', new UID(), 'Sprite unique ID.')
+            ->param('width', 0, new Range(0, 4000), 'Resize sprite image width, in pixels.', true)
+            ->param('height', 0, new Range(0, 4000), 'Resize sprite image height, in pixels.', true)
             ->param('output', '', new WhiteList(\array_keys(Config::getParam('storage-outputs')), true), 'Output format type (jpeg, jpg, png, gif and webp).', true, enum: new Enum(name: 'ImageFormat'))
             ->inject('request')
             ->inject('response')
@@ -78,7 +78,7 @@ class Get extends Base
 
     public function action(
         string $videoId,
-        string $previewId,
+        string $spriteId,
         int $width,
         int $height,
         string $output,
@@ -95,22 +95,22 @@ class Get extends Base
 
         $video = self::getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
 
-        $preview = $authorization->skip(fn () => $dbForProject->getDocument('videos_timelines', $previewId));
+        $sprite = $authorization->skip(fn () => $dbForProject->getDocument('videos_timelines', $spriteId));
 
         // The timeline cue file is stored beside the sprites so its bytes are
         // counted. It is not an image.
         if (
-            $preview->isEmpty()
-            || $preview->getAttribute('videoInternalId') !== $video->getSequence()
-            || $preview->getAttribute('name') === 'timeline.vtt'
+            $sprite->isEmpty()
+            || $sprite->getAttribute('videoInternalId') !== $video->getSequence()
+            || $sprite->getAttribute('name') === 'timeline.vtt'
         ) {
-            throw new Exception(Exception::VIDEO_PREVIEW_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_SPRITE_NOT_FOUND);
         }
 
-        $path = $preview->getAttribute('path', '');
+        $path = $sprite->getAttribute('path', '');
 
         if (empty($path) || !$deviceForVideos->exists($path)) {
-            throw new Exception(Exception::VIDEO_PREVIEW_NOT_FOUND);
+            throw new Exception(Exception::VIDEO_SPRITE_NOT_FOUND);
         }
 
         $outputs = Config::getParam('storage-outputs');

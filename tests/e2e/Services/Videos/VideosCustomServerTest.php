@@ -429,7 +429,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $response['body']);
         $this->assertMatchesRegularExpression(
-            '/previews\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=\d+,\d+,\d+,\d+/',
+            '/sprites\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=\d+,\d+,\d+,\d+/',
             (string) $response['body']
         );
 
@@ -438,17 +438,17 @@ final class VideosCustomServerTest extends Scope
 
         $this->assertSame(
             1,
-            \preg_match('~previews/([a-zA-Z0-9]+)\?project=~', (string) $response['body'], $previewMatch)
+            \preg_match('~sprites/([a-zA-Z0-9]+)\?project=~', (string) $response['body'], $spriteMatch)
         );
         // Private video: guest + ?project= alone is not enough for document ACL.
         // Headerless location-auth is covered on public videos in the client suite.
-        $preview = $this->client->call(
+        $sprite = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/previews/' . $previewMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/sprites/' . $spriteMatch[1] . '?project=' . $projectId,
             $this->headers()
         );
-        $this->assertEquals(200, $preview['headers']['status-code']);
-        $this->assertNotEmpty($preview['body']);
+        $this->assertEquals(200, $sprite['headers']['status-code']);
+        $this->assertNotEmpty($sprite['body']);
     }
 
     // --------------------------------------------------------------- captions
@@ -1289,20 +1289,20 @@ final class VideosCustomServerTest extends Scope
 
         $projectId = $this->getProject()['$id'];
         $this->assertMatchesRegularExpression(
-            '/previews\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
+            '/sprites\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
             (string) $timeline['body']
         );
         $this->assertSame(
             1,
-            \preg_match('~previews/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $previewMatch)
+            \preg_match('~sprites/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $spriteMatch)
         );
-        $preview = $this->client->call(
+        $sprite = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/previews/' . $previewMatch[1] . '?project=' . $projectId,
+            '/videos/' . $videoId . '/sprites/' . $spriteMatch[1] . '?project=' . $projectId,
             $this->headers()
         );
-        $this->assertEquals(200, $preview['headers']['status-code']);
-        $this->assertNotEmpty($preview['body']);
+        $this->assertEquals(200, $sprite['headers']['status-code']);
+        $this->assertNotEmpty($sprite['body']);
     }
 
     // ---------------------------------------------------- embedded captions
@@ -1798,9 +1798,9 @@ final class VideosCustomServerTest extends Scope
         $this->assertSame(0, (int) $probed['width']);
         $this->assertSame(0, (int) $probed['height']);
 
-        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->headers());
+        $response = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timelines', $this->headers());
         $this->assertEquals(404, $response['headers']['status-code']);
-        $this->assertEquals('video_timeline_not_found', $response['body']['type']);
+        $this->assertEquals('video_timelines_not_found', $response['body']['type']);
     }
 
     /**
@@ -1818,7 +1818,7 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(404, $response['headers']['status-code']);
         $this->assertEquals('video_not_found', $response['body']['type']);
 
-        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $unknown . '/timeline', $this->headers());
+        $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $unknown . '/timelines', $this->headers());
         $this->assertEquals(404, $timeline['headers']['status-code']);
         $this->assertEquals('video_not_found', $timeline['body']['type']);
 
