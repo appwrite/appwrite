@@ -239,6 +239,7 @@ class V25 extends Migration
                         }
                         if ($id === 'functions') {
                             $attributes[] = 'interval';
+                            $attributes[] = 'description';
                         }
                         try {
                             $this->createAttributesFromCollection($this->dbForProject, $id, $attributes);
