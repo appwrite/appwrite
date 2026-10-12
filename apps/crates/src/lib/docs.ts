@@ -42,7 +42,16 @@ export interface LibrarySummary {
   rust: { name: string; crate: string; dir: string; group: string; version: string } | null
   compat: { complete: boolean; operations: number; cases: number; summary: string } | null
   sync: { state: SyncState; estimated: boolean | null; behind: number | null; releases: number; upstream: number | null }
-  counts: { items: number; documented: number; examples: number; guide: boolean; php_symbols: number; linked: number }
+  counts: {
+    items: number
+    documented: number
+    examples: number
+    guide: boolean
+    php_symbols: number
+    linked: number
+    /** The PHP library's tasks and how many the crate ports or waives (older data leaves it out). */
+    tasks?: { total: number; ported: number; waived: number; pending: number }
+  }
   /** Geometric mean of the benchmark speedups (PHP time / Rust time), compat benchmarks left out. */
   bench: { speedup: number; benchmarks: number } | null
 }
@@ -122,6 +131,59 @@ export interface PhpSymbol {
 
 export type GuideBlock = { text: string } | { example: Example }
 
+/** A `- `name`: description` entry of a task's documentation. */
+export interface TaskEntry {
+  name: string
+  description: string
+}
+
+/** The PHP program a task is, as `compat coverage` discovers it. */
+export interface PhpTask {
+  /** The program's repository path, or `<package>/composer.json#<script>`. */
+  id: string
+  kind: 'bin' | 'script' | 'file'
+  /** The package directory it runs from. */
+  dir: string
+  /** How PHP runs it, from the package directory. */
+  command: string
+  /** Composer scripts that run it. */
+  scripts: { name: string; command: string }[]
+}
+
+/**
+ * A program the library ships besides its API (a data import, a generator). A ported task is a
+ * binary of the crate; a waived one has a reason; a pending one is PHP only.
+ */
+export type Task =
+  | {
+      name: string
+      status: 'ported'
+      bin: string
+      package: string
+      /** `cargo run -p <package> --bin <bin>`. */
+      command: string
+      summary: string
+      /** Shell examples from the binary's docs. */
+      usage: string[]
+      /** The rest of its docs, as Markdown. */
+      doc: string
+      commands: TaskEntry[]
+      arguments: TaskEntry[]
+      environment: TaskEntry[]
+      exit_codes: TaskEntry[]
+      php_notes: string
+      /** Repository paths of the files it writes. */
+      writes: string[]
+      /** Case files that run it on both runtimes. */
+      cases: string[]
+      php: PhpTask
+    }
+  | { name: string; status: 'waived'; reason: string; php: PhpTask }
+  | { name: string; status: 'pending'; php: PhpTask }
+
+/** A task's anchor on its library's page. */
+export const taskHash = (name: string) => `task.${name}`
+
 /** One runtime's timing of a benchmark (`compat bench`): nanoseconds per call. */
 export interface Timing {
   ns: number
@@ -168,6 +230,8 @@ export interface Library {
   overview: string
   overview_notes: string
   guide: GuideBlock[]
+  /** Older data leaves it out. */
+  tasks?: Task[]
   sync: Sync
   examples: Example[]
   modules: Module[]
@@ -281,6 +345,7 @@ export function navigation(lib: Library) {
     modules: lib.modules.map((m) => ({ ...m, summary: summary(m.doc), doc: '', examples: [] as Example[] })),
     items: lib.items.map((i) => ({ ...i, doc: '', inherited_doc: null, signature: '', examples: [] as Example[] })),
     reexports: lib.reexports,
+    tasks: (lib.tasks ?? []).map((t) => ({ name: t.name, status: t.status, bin: t.status === 'ported' ? t.bin : null })),
     phpClasses: [...new Set(lib.php_api.map((p) => p.class ?? p.namespace))].filter(Boolean) as string[],
   }
 }

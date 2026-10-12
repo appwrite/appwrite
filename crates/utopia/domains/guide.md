@@ -274,3 +274,13 @@ $registrar = new Registrar(new NameCom('user', 'token', 'https://api.dev.name.co
 echo $registrar->getAuthCode('example.com'), "\n"; // secret
 echo $replay->urls[0], "\n"; // https://api.dev.name.com/core/v1/domains/example.com:getAuthCode
 ```
+
+## Tasks
+
+The Public Suffix List changes every week as registries and platforms add suffixes. The crate embeds its own copy, `data/public-suffix-list.txt`, so a binary needs no data files at runtime. The `domains-import` task downloads the current list and rewrites that file; rebuild afterwards to embed it.
+
+```sh
+cargo run -p utopia-domains --bin domains-import
+```
+
+It keeps every rule with its section (`ICANN`, `PRIVATE`) and the comment lines above it, and fails without writing anything (exit code 1, the reason on standard error) when the list cannot be downloaded or has no `com` rule. `UTOPIA_DOMAINS_PSL_URL` downloads from another address, such as a mirror, and `UTOPIA_DOMAINS_DATA_DIR` writes the list to another directory.

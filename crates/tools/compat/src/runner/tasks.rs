@@ -93,6 +93,8 @@ pub struct Entry {
     /// The repository path of the program, or `<dir>/composer.json#<script>`.
     pub id: String,
     pub kind: Kind,
+    /// The package directory (repository path) it runs from.
+    pub dir: String,
     /// How PHP runs it, from the package directory.
     pub command: String,
     /// Composer scripts that run it (`composer import:all` → `php import.php all --commit=true`).
@@ -151,6 +153,7 @@ pub fn discover(root: &Path, dir: &str) -> Vec<Entry> {
         entries.push(Entry {
             id: format!("{dir}/{rel}"),
             kind: Kind::File,
+            dir: dir.to_owned(),
             command: format!("php {rel}"),
             scripts: Vec::new(),
         });
@@ -162,7 +165,13 @@ pub fn discover(root: &Path, dir: &str) -> Vec<Entry> {
             continue;
         }
         let name = bin.rsplit('/').next().unwrap_or(bin);
-        entries.push(Entry { id, kind: Kind::Bin, command: format!("vendor/bin/{name}"), scripts: Vec::new() });
+        entries.push(Entry {
+            id,
+            kind: Kind::Bin,
+            dir: dir.to_owned(),
+            command: format!("vendor/bin/{name}"),
+            scripts: Vec::new(),
+        });
     }
     if let Some(scripts) = manifest["scripts"].as_object() {
         for (name, command) in scripts {
@@ -188,6 +197,7 @@ pub fn discover(root: &Path, dir: &str) -> Vec<Entry> {
             entries.push(Entry {
                 id: format!("{dir}/composer.json#{name}"),
                 kind: Kind::Script,
+                dir: dir.to_owned(),
                 command: format!("composer {name}"),
                 scripts: vec![(name.clone(), line)],
             });
@@ -372,8 +382,8 @@ fn rust_bin_missing(root: &Path, spec: &Spec, rust: &RustTask) -> Option<String>
 }
 
 /// The tasks of a library for the docs (`compat crates`): each PHP task with
-/// its state, and for ported ones the Rust binary, its documentation and
-/// what it writes.
+/// its state, and for ported ones the Rust binary, its documentation (see
+/// [`BinDoc`]) and what it writes.
 pub fn docs(root: &Path, lib: &str, php_dir: Option<&str>, rust_dir: Option<&str>) -> Vec<Value> {
     let spec = spec::load(root, lib).ok();
     let report = spec.as_ref().map(|s| check(root, lib, s));
@@ -387,9 +397,11 @@ pub fn docs(root: &Path, lib: &str, php_dir: Option<&str>, rust_dir: Option<&str
         let php = json!({
             "id": entry.id,
             "kind": entry.kind.as_str(),
+            "dir": entry.dir,
             "command": entry.command,
             "scripts": entry.scripts.iter().map(|(n, c)| json!({ "name": n, "command": c })).collect::<Vec<_>>(),
         });
+        let name = entry.id.rsplit(['/', '#']).next().unwrap_or(&entry.id).trim_end_matches(".php");
         let declared = spec.as_ref().and_then(|s| s.tasks.iter().find(|(_, t)| t.php == entry.id));
         if let Some((name, task)) = declared {
             let source = rust_dir
@@ -397,27 +409,122 @@ pub fn docs(root: &Path, lib: &str, php_dir: Option<&str>, rust_dir: Option<&str
                 .and_then(|p| std::fs::read_to_string(p).ok())
                 .unwrap_or_default();
             let doc = module_doc(&source);
-            let doc = if doc.is_empty() { task.doc.clone() } else { doc };
+            let doc = BinDoc::parse(if doc.is_empty() { &task.doc } else { &doc });
             out.push(json!({
                 "name": name,
                 "status": "ported",
                 "bin": task.rust.bin,
                 "package": task.rust.package,
                 "command": task.rust.command(),
-                "doc": doc,
+                "summary": doc.summary,
+                "usage": doc.usage,
+                "doc": doc.text,
+                "commands": doc.lists.get("Commands").cloned().unwrap_or_default(),
+                "arguments": doc.lists.get("Arguments").cloned().unwrap_or_default(),
+                "environment": doc.lists.get("Environment").cloned().unwrap_or_default(),
+                "exit_codes": doc.lists.get("Exit codes").cloned().unwrap_or_default(),
+                "php_notes": doc.php_notes,
                 "writes": task.writes,
                 "cases": task.covered_by,
                 "php": php,
             }));
         } else if let Some(reason) = report.as_ref().and_then(|r| r.waived.get(&entry.id)) {
-            out.push(
-                json!({ "name": entry.id.rsplit(['/', '#']).next(), "status": "waived", "reason": reason, "php": php }),
-            );
+            out.push(json!({ "name": name, "status": "waived", "reason": reason, "php": php }));
         } else {
-            out.push(json!({ "name": entry.id.rsplit(['/', '#']).next(), "status": "pending", "php": php }));
+            out.push(json!({ "name": name, "status": "pending", "php": php }));
         }
     }
     out
+}
+
+/// A task binary's `//!` documentation, split for the docs site: the first
+/// paragraph, the shell examples, the `- `name`: description` lists under
+/// `# Commands`, `# Arguments`, `# Environment` and `# Exit codes`, the rest
+/// as Markdown, and the paragraphs about PHP (the migration view's).
+#[derive(Debug, Default)]
+pub struct BinDoc {
+    pub summary: String,
+    pub usage: Vec<String>,
+    pub text: String,
+    pub lists: BTreeMap<String, Vec<Value>>,
+    pub php_notes: String,
+}
+
+/// The sections whose lists become tables.
+const LISTS: &[&str] = &["Commands", "Arguments", "Environment", "Exit codes"];
+
+impl BinDoc {
+    pub fn parse(doc: &str) -> Self {
+        let (doc, php_notes) = super::crates::migration_notes(doc);
+        let mut out = BinDoc { php_notes, ..Default::default() };
+        let mut rest: Vec<String> = Vec::new();
+        let mut section: Option<&str> = None;
+        for block in blocks(&doc) {
+            if let Some(heading) = block.strip_prefix("# ") {
+                section = LISTS.iter().copied().find(|s| *s == heading.trim());
+                if section.is_none() {
+                    rest.push(block);
+                }
+                continue;
+            }
+            if let Some(code) = block.strip_prefix("```sh\n").and_then(|b| b.strip_suffix("\n```")) {
+                out.usage.push(code.to_owned());
+                continue;
+            }
+            match section {
+                Some(name) if block.starts_with("- ") => {
+                    out.lists.entry(name.to_owned()).or_default().extend(list_items(&block));
+                }
+                _ if out.summary.is_empty() && section.is_none() => out.summary = block.replace('\n', " "),
+                _ => rest.push(block),
+            }
+        }
+        out.text = rest.join("\n\n");
+        out
+    }
+}
+
+/// Blank-line separated blocks, keeping fenced code in one block.
+fn blocks(doc: &str) -> Vec<String> {
+    let mut out = Vec::new();
+    let mut current: Vec<&str> = Vec::new();
+    let mut fenced = false;
+    for line in doc.lines() {
+        if line.trim_start().starts_with("```") {
+            fenced = !fenced;
+        }
+        if !fenced && line.trim().is_empty() {
+            if !current.is_empty() {
+                out.push(current.join("\n"));
+                current.clear();
+            }
+            continue;
+        }
+        current.push(line);
+    }
+    if !current.is_empty() {
+        out.push(current.join("\n"));
+    }
+    out
+}
+
+/// `- `name`: description` items (a description may continue on indented
+/// lines) as `{name, description}`.
+fn list_items(block: &str) -> Vec<Value> {
+    let mut items: Vec<(String, String)> = Vec::new();
+    for line in block.lines() {
+        if let Some(item) = line.strip_prefix("- ") {
+            let (name, description) = match item.strip_prefix('`').and_then(|r| r.split_once('`')) {
+                Some((name, rest)) => (name.to_owned(), rest.trim_start_matches(':').trim().to_owned()),
+                None => (String::new(), item.trim().to_owned()),
+            };
+            items.push((name, description));
+        } else if let Some((_, description)) = items.last_mut() {
+            description.push(' ');
+            description.push_str(line.trim());
+        }
+    }
+    items.into_iter().map(|(name, description)| json!({ "name": name, "description": description })).collect()
 }
 
 /// The `//!` doc comment at the top of a Rust source file.
@@ -472,6 +579,22 @@ mod tests {
         assert_eq!(ids("packages/agents"), ["packages/agents/scripts/sync-openrouter-models.php"]);
         assert_eq!(ids("packages/nats").len(), 4);
         assert!(ids("packages/dsn").is_empty());
+    }
+
+    #[test]
+    fn bin_docs() {
+        let doc = BinDoc::parse(
+            "Imports the list.\n\n```sh\ncargo run --bin x\n```\n\nRebuild after.\n\n# Arguments\n\n- `--commit=<bool>`: write it\n  (default `false`).\n\n# Exit codes\n\n- `0`: done.\n\nPHP: `php import.php`.",
+        );
+        assert_eq!(doc.summary, "Imports the list.");
+        assert_eq!(doc.usage, ["cargo run --bin x"]);
+        assert_eq!(doc.text, "Rebuild after.");
+        assert_eq!(
+            doc.lists["Arguments"],
+            [json!({ "name": "--commit=<bool>", "description": "write it (default `false`)." })]
+        );
+        assert_eq!(doc.lists["Exit codes"][0]["name"], "0");
+        assert!(doc.php_notes.contains("php import.php"));
     }
 
     #[test]

@@ -13,7 +13,9 @@
 //!   spec exists), started (a crate exists) or planned (PHP only);
 //! - its text: the crate's `//!` docs, or the PHP README; modules and items
 //!   from their doc comments; PHP signatures and docblocks by reflection;
-//! - its examples: code blocks in doc comments (see [`super::examples`]).
+//! - its examples: code blocks in doc comments (see [`super::examples`]);
+//! - its tasks: the PHP package's programs besides its API, and the crate's
+//!   binaries that port them (see [`super::tasks`]).
 //!
 //! `<out>/index.json` lists categories and libraries; `<out>/<slug>.json`
 //! holds one library.
@@ -287,6 +289,13 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             .unwrap_or_default();
         example_count += guide.iter().filter(|b| matches!(b, examples::Block::Example(_))).count();
         let documented = items.iter().filter(|i| !i.doc.is_empty() || i.inherits.is_some()).count();
+        let tasks = super::tasks::docs(
+            root,
+            &lib.slug,
+            lib.php.as_ref().map(|p| p.dir.as_str()),
+            lib.rust.as_ref().map(|r| r.dir.as_str()),
+        );
+        let count = |status: &str| tasks.iter().filter(|t| t["status"] == status).count();
         let sync = super::sync::status(
             root,
             &lib.slug,
@@ -345,6 +354,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
                 "guide": !guide.is_empty(),
                 "php_symbols": php_api.len(),
                 "linked": php_api.iter().filter(|p| p["rust"].as_array().is_some_and(|r| !r.is_empty())).count(),
+                "tasks": { "total": tasks.len(), "ported": count("ported"), "waived": count("waived"), "pending": count("pending") },
             },
         });
         let install = json!({
@@ -359,6 +369,7 @@ pub fn write(mut engine: Option<&mut Engine>, root: &Path, out: &Path) -> Result
             "sync": sync,
             "bench": bench,
             "guide": guide.iter().map(examples::Block::to_json).collect::<Vec<_>>(),
+            "tasks": tasks,
             "examples": overview_examples.iter().map(examples::Example::to_json).collect::<Vec<_>>(),
             "modules": modules.iter().map(|m| {
                 let (doc, list) = examples::split(&m.doc);
