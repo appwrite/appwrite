@@ -2600,6 +2600,10 @@ Http::post('/v1/account/tokens/magic-url')
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
+            // A signed-in caller's attributes must not become part of the new account.
+            if (!$user->isEmpty()) {
+                $user = new User();
+            }
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -2631,7 +2635,6 @@ Http::post('/v1/account/tokens/magic-url')
                 'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
-            $user->removeAttribute('$sequence');
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
@@ -2934,6 +2937,10 @@ Http::post('/v1/account/tokens/email')
                 throw new Exception(Exception::USER_EMAIL_NOT_CORPORATE);
             }
 
+            // A signed-in caller's attributes must not become part of the new account.
+            if (!$user->isEmpty()) {
+                $user = new User();
+            }
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -2963,7 +2970,6 @@ Http::post('/v1/account/tokens/email')
                 'emailIsFree' => $emailMetadata['emailIsFree'],
             ]);
 
-            $user->removeAttribute('$sequence');
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
@@ -3342,6 +3348,10 @@ Http::post('/v1/account/tokens/phone')
             }
 
             $userId = $userId == 'unique()' ? ID::unique() : $userId;
+            // A signed-in caller's attributes must not become part of the new account.
+            if (!$user->isEmpty()) {
+                $user = new User();
+            }
             $user->setAttributes([
                 '$id' => $userId,
                 '$permissions' => [
@@ -3371,7 +3381,6 @@ Http::post('/v1/account/tokens/phone')
                 'emailIsFree' => null,
             ]);
 
-            $user->removeAttribute('$sequence');
             try {
                 $user = $authorization->skip(fn () => $dbForProject->createDocument('users', $user));
             } catch (Duplicate) {
