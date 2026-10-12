@@ -1,5 +1,5 @@
 import { createFileRoute, getRouteApi, notFound } from '@tanstack/react-router'
-import { CardGrid, LibraryCard, PageHeader, Section } from '@/components/Page'
+import { LayoutToggle, LibraryList, PageHeader, Section } from '@/components/Page'
 import { loadIndex, STATUS, type Status } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 
@@ -27,32 +27,24 @@ function CategoryPage() {
     const rust = libs.filter((l) => l.rust)
     return (
       <div className="mx-auto grid max-w-[1100px] gap-10">
-        <PageHeader eyebrow="Category" title={c.title}>
+        <PageHeader eyebrow="Category" title={c.title} aside={<LayoutToggle />}>
           {c.description}
         </PageHeader>
-        <CardGrid>
-          {rust.map((l) => (
-            <LibraryCard key={l.slug} lib={l} />
-          ))}
-        </CardGrid>
+        <LibraryList libs={rust} />
         {rust.length ? null : <p className="m-0 text-muted-foreground">No libraries in this category are available in Rust yet.</p>}
       </div>
     )
   }
   return (
     <div className="mx-auto grid max-w-[1100px] gap-10">
-      <PageHeader eyebrow="Category" title={c.title}>
+      <PageHeader eyebrow="Category" title={c.title} aside={<LayoutToggle />}>
         {c.description}
       </PageHeader>
       {groups.map((s) => {
         const list = libs.filter((l) => l.status === s)
         return list.length ? (
           <Section key={s} title={STATUS[s].label} description={STATUS[s].note}>
-            <CardGrid>
-              {list.map((l) => (
-                <LibraryCard key={l.slug} lib={l} />
-              ))}
-            </CardGrid>
+            <LibraryList libs={list} />
           </Section>
         ) : null
       })}

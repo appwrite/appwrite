@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
-import { BookOpen, Code2, FlaskConical, Package } from 'lucide-react'
+import { BookOpen, Code2, FlaskConical, LayoutGrid, List, Package } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { LibrarySummary } from '@/lib/docs'
-import { useMigration } from '@/lib/prefs'
+import { setLayout, useLayout, useMigration, type Layout } from '@/lib/prefs'
 import { MigrationOnly } from './Migration'
 import { StatusBadge } from './Status'
 import { SyncBadge } from './Sync'
@@ -88,6 +88,92 @@ export function LibraryCard({ lib }: { lib: LibrarySummary }) {
 
 export function CardGrid({ children }: { children: ReactNode }) {
   return <div className="grid grid-cols-[repeat(auto-fill,minmax(270px,1fr))] gap-3">{children}</div>
+}
+
+/** A library as one row of a list: name and crate, what it does, its counts. */
+export function LibraryRow({ lib }: { lib: LibrarySummary }) {
+  return (
+    <Link
+      to="/$lib"
+      params={{ lib: lib.slug }}
+      className="grid items-center gap-x-4 gap-y-1 px-4 py-2.5 transition-colors hover:bg-accent/40 sm:grid-cols-[minmax(150px,220px)_minmax(0,1fr)_auto]"
+    >
+      <span className="grid min-w-0 gap-0.5">
+        <span className="truncate font-display text-[14.5px] font-medium">{lib.title}</span>
+        <span className="truncate font-mono text-[11px] text-muted-foreground">{lib.rust?.crate ?? lib.php?.package ?? lib.slug}</span>
+      </span>
+      <span className="min-w-0 truncate text-[13px] text-muted-foreground">{lib.description}</span>
+      <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] whitespace-nowrap text-muted-foreground sm:justify-end">
+        {lib.rust ? (
+          <span className="inline-flex items-center gap-1">
+            <Package className="size-3" />
+            {lib.counts.items}
+          </span>
+        ) : null}
+        {lib.counts.examples ? (
+          <span className="inline-flex items-center gap-1">
+            <Code2 className="size-3" />
+            {lib.counts.examples}
+          </span>
+        ) : null}
+        <MigrationOnly>
+          {lib.compat ? (
+            <span className="inline-flex items-center gap-1">
+              <FlaskConical className="size-3" />
+              {lib.compat.cases}
+            </span>
+          ) : null}
+          <SpeedupBadge bench={lib.bench} />
+          <SyncBadge sync={lib.sync} />
+          <StatusBadge status={lib.status} />
+        </MigrationOnly>
+      </span>
+    </Link>
+  )
+}
+
+/** Libraries as the reader chose to see them: cards or rows. */
+export function LibraryList({ libs }: { libs: LibrarySummary[] }) {
+  const layout = useLayout()
+  if (layout === 'list') {
+    return (
+      <div className="grid divide-y divide-border overflow-hidden rounded-lg border border-border bg-card">
+        {libs.map((lib) => (
+          <LibraryRow key={lib.slug} lib={lib} />
+        ))}
+      </div>
+    )
+  }
+  return (
+    <CardGrid>
+      {libs.map((lib) => (
+        <LibraryCard key={lib.slug} lib={lib} />
+      ))}
+    </CardGrid>
+  )
+}
+
+/** Grid or list: switches every list of libraries, remembered in this browser. */
+export function LayoutToggle() {
+  const layout = useLayout()
+  const option = (value: Layout, label: string, Icon: typeof List) => (
+    <button
+      type="button"
+      aria-pressed={layout === value}
+      aria-label={`${label} view`}
+      title={`${label} view`}
+      onClick={() => setLayout(value)}
+      className="inline-flex size-7 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground aria-pressed:bg-accent aria-pressed:text-foreground"
+    >
+      <Icon className="size-4" />
+    </button>
+  )
+  return (
+    <div role="group" aria-label="Layout" className="inline-flex h-9 items-center gap-0.5 rounded-md border border-border bg-card px-1">
+      {option('grid', 'Grid', LayoutGrid)}
+      {option('list', 'List', List)}
+    </div>
+  )
 }
 
 /** "On this page": a sticky rail of anchors beside long pages (wide screens). */

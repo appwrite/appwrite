@@ -1,6 +1,6 @@
 import { Link, createFileRoute, getRouteApi } from '@tanstack/react-router'
 import { Search, X } from 'lucide-react'
-import { CardGrid, LibraryCard, PageHeader, Section } from '@/components/Page'
+import { LayoutToggle, LibraryList, PageHeader, Section } from '@/components/Page'
 import { StatusDot } from '@/components/Status'
 import { MigrationCard } from '@/components/Migration'
 import { useMigration } from '@/lib/prefs'
@@ -118,6 +118,7 @@ function Home() {
               </option>
             ))}
           </select>
+          <LayoutToggle />
           {filtered ? (
             <button
               type="button"
@@ -171,11 +172,7 @@ function Home() {
         const libs = c.libraries.map((s) => bySlug.get(s)).filter((l): l is LibrarySummary => !!l && visible(l))
         return libs.length ? (
         <Section key={c.id} id={c.id} title={c.title} description={c.description}>
-          <CardGrid>
-            {libs.map((lib) => (
-              <LibraryCard key={lib.slug} lib={lib} />
-            ))}
-          </CardGrid>
+          <LibraryList libs={libs} />
           <Link to="/categories/$category" params={{ category: c.id }} className="justify-self-start text-[13px] text-muted-foreground hover:text-foreground">
             About {c.title.toLowerCase()} →
           </Link>

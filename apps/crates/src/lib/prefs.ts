@@ -1,12 +1,13 @@
 import { useSyncExternalStore } from 'react'
 
 // Per-reader preferences, kept in this browser: migration mode (PHP and the
-// conversion's status next to the Rust docs) and the theme. The server renders
+// conversion's status next to the Rust docs), the theme, and how library lists
+// are laid out (cards or rows). The server renders
 // the defaults (the Rust docs alone, the system theme); the stored choice
 // applies once the page hydrates.
 
-type Key = 'migration' | 'theme'
-const DEFAULTS: Record<Key, string> = { migration: 'off', theme: 'system' }
+type Key = 'migration' | 'theme' | 'layout'
+const DEFAULTS: Record<Key, string> = { migration: 'off', theme: 'system', layout: 'grid' }
 const listeners = new Set<() => void>()
 
 function read(key: Key): string {
@@ -48,6 +49,11 @@ export const useMigration = () => usePref('migration') === 'on'
 export const setMigration = (on: boolean) => write('migration', on ? 'on' : 'off')
 
 export const useTheme = () => usePref('theme') as 'light' | 'dark' | 'system'
+
+/** How lists of libraries are shown: a grid of cards, or one row per library. */
+export type Layout = 'grid' | 'list'
+export const useLayout = () => (usePref('layout') === 'list' ? 'list' : 'grid') as Layout
+export const setLayout = (layout: Layout) => write('layout', layout)
 
 export function applyTheme(theme: string) {
   const dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
