@@ -291,7 +291,7 @@ final class IntegerOperatorsTest extends TestCase
     {
         $operators = new IntegerOperators(Engine::PostgreSQL);
 
-        foreach ([Operator::multiply('1e1000000000', 1.5), new Operator(OperatorType::Divide, 'count', ['1e-1000000000', 0.5])] as $operator) {
+        foreach ([Operator::multiply('1e1000000000', 1.5), new Operator(OperatorType::Divide, 'count', ['1e-1000000000', 0.5]), Operator::multiply('1e99999999999999999999', 1.5)] as $operator) {
             $this->assertSame($operator, $operators->resolve($operator, 10));
         }
     }
@@ -306,6 +306,9 @@ final class IntegerOperatorsTest extends TestCase
         yield 'a tiny positive maximum holds back a positive result' => [Operator::multiply(1.5, '1e-1000000000'), 10];
         yield 'a huge negative minimum holds nothing back' => [Operator::divide(0.5, '-1e1000000000'), 20];
         yield 'a tiny negative minimum lets a positive result through' => [Operator::divide(0.5, '-1e-1000000000'), 20];
+        yield 'a maximum with many fractional digits just above one holds back 15' => [Operator::multiply(1.5, '1.' . \str_repeat('0', 80) . '1'), 10];
+        yield 'a maximum with many fractional digits just below sixteen lets 15 through' => [Operator::multiply(1.5, '15.' . \str_repeat('9', 80)), 15];
+        yield 'a tiny factor leaves zero' => [Operator::multiply('1e-1000000000', 100), 0];
     }
 
     #[DataProvider('oversizedLimits')]

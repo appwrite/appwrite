@@ -25,10 +25,13 @@ final readonly class IntegerOperators
      * PostgreSQL computed these in NUMERIC, exactly at any size, where the other engines used a double.
      */
     /**
-     * Digits of an operand worth computing exactly: far past a BIGINT and the precision of any fraction an engine
-     * kept; longer ones only overflow, so the library refuses them.
+     * The largest power of ten an operand is written out with: far past a BIGINT and the precision of any fraction
+     * an engine kept. A larger one is never expanded (it would take a billion digits for 1e1000000000); such a
+     * number is beyond every result, or closer to zero than any.
      */
     private const int MAXIMUM_DIGITS = 64;
+
+    private const int MAXIMUM_EXPONENT_DIGITS = 4;
 
     private const array EXACT_ON_POSTGRESQL = [OperatorType::Multiply, OperatorType::Divide, OperatorType::Modulo];
 
@@ -153,7 +156,7 @@ final readonly class IntegerOperators
     {
         $decimal = self::decimal($amount);
         if ($decimal === null) {
-            return null;
+            return self::isTiny($amount) && $method !== OperatorType::Divide ? [0, 1] : null;
         }
         [$numerator, $scale] = $decimal;
         $power = self::powerOfTen($scale);
@@ -202,13 +205,13 @@ final readonly class IntegerOperators
     }
 
     /**
-     * How a result with at most MAXIMUM_DIGITS digits compares with a limit too long to write out: one beyond every
-     * such result in magnitude, or one closer to zero than any of them but zero.
+     * How a result compares with a limit whose exponent is past MAXIMUM_DIGITS: one beyond every result in
+     * magnitude, or one closer to zero than any of them but zero.
      */
     private static function compareWithOversized(int|string $numerator, int|float|string $limit): int
     {
         $negative = \str_starts_with(\ltrim((string) $limit), '-');
-        if (\abs((float) $limit) >= 1) {
+        if (!self::isTiny($limit)) {
             return $negative ? 1 : -1;
         }
 
@@ -218,8 +221,16 @@ final readonly class IntegerOperators
     }
 
     /**
-     * A number as an integer and the power of ten that divides it, from the text main bound for it; null when it
-     * has more digits than any integer column result could need, which is left for the library to refuse.
+     * Whether a number decimal() leaves out is closer to zero than any result, not beyond every result.
+     */
+    private static function isTiny(int|float|string $value): bool
+    {
+        return \str_starts_with(\explode('e', \strtolower(\trim((string) $value)), 2)[1] ?? '', '-');
+    }
+
+    /**
+     * A number as an integer and the power of ten that divides it, from the text main bound for it; null when its
+     * exponent is past MAXIMUM_DIGITS.
      *
      * @return array{int|string, int}|null
      */
@@ -228,7 +239,10 @@ final readonly class IntegerOperators
         $text = \strtolower(\trim((string) $value));
         [$mantissa, $exponent] = \explode('e', $text, 2) + [1 => '0'];
         [$whole, $fraction] = \explode('.', $mantissa, 2) + [1 => ''];
-        if (\strlen($exponent) > self::MAXIMUM_DIGITS || \abs((int) $exponent) + \strlen($whole . $fraction) > self::MAXIMUM_DIGITS) {
+        if (\ltrim(\ltrim($whole, '+-') . $fraction, '0') === '') {
+            return [0, 0];
+        }
+        if (\strlen(\ltrim($exponent, '+-')) > self::MAXIMUM_EXPONENT_DIGITS || \abs((int) $exponent) > self::MAXIMUM_DIGITS) {
             return null;
         }
 
