@@ -1461,16 +1461,7 @@ Http::patch('/v1/users/:userId/password')
         }
 
         if (\strlen($password) === 0) {
-            $user
-                ->setAttribute('password', '')
-                ->setAttribute('passwordUpdate', DateTime::now());
-
-            $user = $dbForProject->updateDocument('users', $user->getId(), new Document([
-                'password' => $user->getAttribute('password'),
-                'passwordUpdate' => $user->getAttribute('passwordUpdate'),
-            ]));
-            $queueForEvents->setParam('userId', $user->getId());
-            $response->dynamic($user, Response::MODEL_USER);
+            throw new Exception(Exception::USER_PASSWORD_EMPTY);
         }
 
         $hooks->trigger('passwordValidator', [$dbForProject, $project, $password, &$user, true]);
@@ -2391,6 +2382,10 @@ Http::post('/v1/users/:userId/sessions')
         $user = $dbForProject->getDocument('users', $userId);
         if ($user->isEmpty()) {
             throw new Exception(Exception::USER_NOT_FOUND);
+        }
+
+        if (false === $user->getAttribute('status')) { // Account is blocked
+            throw new Exception(Exception::USER_BLOCKED);
         }
 
         $secret = $proofForToken->generate();
