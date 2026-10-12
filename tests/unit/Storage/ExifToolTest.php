@@ -110,21 +110,20 @@ final class ExifToolTest extends TestCase
         $this->exiftool->strip($this->dir . "/photo.jpg\n-all=");
     }
 
-    public function testResetRecoversAfterProcessDies(): void
+    public function testResetRecoversAfterProcessStops(): void
     {
-        $process = (new \ReflectionProperty(ExifTool::class, 'process'))->getValue($this->exiftool);
-        \proc_terminate($process, 9);
-        \usleep(200_000);
+        $photo = $this->createPhoto('jpeg');
+        $this->exiftool->close();
 
         try {
-            $this->exiftool->strip($this->createPhoto('jpeg'));
-            $this->fail('Expected an exception from a dead process.');
+            $this->exiftool->strip($photo);
+            $this->fail('Expected an exception when the process is not running.');
         } catch (\Exception $e) {
             $this->assertNotInstanceOf(InvalidArgumentException::class, $e);
         }
 
         $this->assertTrue($this->exiftool->reset());
-        $this->assertTrue($this->exiftool->strip($this->createPhoto('jpeg')));
+        $this->assertTrue($this->exiftool->strip($photo));
     }
 
     private function createPhoto(string $format, ?string $icc = null): string

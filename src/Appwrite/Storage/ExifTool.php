@@ -6,19 +6,13 @@ use Exception;
 use InvalidArgumentException;
 
 /**
- * A long-running exiftool process (`-stay_open`) that removes metadata from images.
- *
- * Starting exiftool loads Perl and its modules, which takes hundreds of milliseconds.
- * Keeping one process open and sending it commands brings each strip down to milliseconds.
+ * Keeps one exiftool process open (-stay_open) so each strip skips the Perl startup.
  */
 class ExifTool
 {
     private const READY = '{ready}';
 
-    /**
-     * A 1x1 JPEG stripped once on start. exiftool loads its writer modules on the
-     * first write, which otherwise adds about 100ms to the first real strip.
-     */
+    // Stripped on start so exiftool loads its writer modules before the first real upload.
     private const WARM_UP_JPEG = '/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAFA3PEY8MlBGQUZaVVBfeMiCeG5uePWvuZHI////////////////////////////////////////////////////wAALCAABAAEBAREA/8QAFAABAAAAAAAAAAAAAAAAAAAABP/EABQQAQAAAAAAAAAAAAAAAAAAAAD/2gAIAQEAAD8Aa//Z';
 
     /** @var resource|null */
@@ -40,22 +34,11 @@ class ExifTool
     }
 
     /**
-     * Remove all metadata from the image at $path, in place.
-     *
-     * The colour profile and orientation are written back so the image still renders
-     * the same way. Pixel data is not re-encoded.
-     *
-     * Returns false when exiftool could not write the file, for example a corrupt or
-     * unsupported image. Throws only when the process itself failed, so callers that
-     * pool this resource restart it only when it is actually broken.
-     *
-     * @throws InvalidArgumentException when $path is not a safe argument
-     * @throws Exception when the exiftool process fails or times out
+     * Returns false when the file can't be rewritten; throws only when the process itself fails.
      */
     public function strip(string $path): bool
     {
-        // Every argument is one line on exiftool's stdin: a newline would start a new
-        // argument and a leading dash would be read as an option.
+        // Each argument is one stdin line, so a line break or leading dash could inject options.
         if (!\str_starts_with($path, '/') || \strpbrk($path, "\r\n") !== false) {
             throw new InvalidArgumentException('Path must be absolute and must not contain line breaks.');
         }
@@ -74,9 +57,7 @@ class ExifTool
             || \str_contains($output, '1 image files unchanged');
     }
 
-    /**
-     * Restart the process. Utopia Pool calls this to recover a resource after a failure.
-     */
+    // Utopia Pool calls reset() to recover a resource after a failure.
     public function reset(): bool
     {
         $this->close();
@@ -114,8 +95,7 @@ class ExifTool
             [
                 0 => ['pipe', 'r'],
                 1 => ['pipe', 'w'],
-                // Results are read from the summary on stdout. A stderr pipe nobody
-                // reads would eventually fill up and block the process.
+                // An unread stderr pipe would fill up and block the process.
                 2 => ['file', '/dev/null', 'w'],
             ],
             $pipes
@@ -149,7 +129,6 @@ class ExifTool
 
     /**
      * @param array<string> $args
-     * @throws Exception
      */
     private function execute(array $args): string
     {

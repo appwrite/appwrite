@@ -65,9 +65,6 @@ class Create extends Action
      */
     private const UPLOADER_ID = 'uploaderId';
 
-    /**
-     * Image types exiftool can rewrite when a bucket strips metadata.
-     */
     private const METADATA_MIME_TYPES = [
         'image/jpeg',
         'image/png',
@@ -645,13 +642,11 @@ class Create extends Action
     }
 
     /**
-     * Remove metadata from a stored image and return its new size. Returns null when
-     * the file is left as uploaded: stripping is best effort and never fails an upload.
+     * Returns the stripped size, or null when the file is kept as uploaded.
      */
     private function stripMetadata(Pool $exiftool, Device $deviceForFiles, string $path, string $mimeType): ?int
     {
-        // Work on a temporary copy without an extension: exiftool then detects the format from the
-        // content, so a JPEG uploaded as "photo.png" is still stripped. It also works for remote devices.
+        // No extension, so exiftool detects the format from content and a renamed JPEG is still stripped.
         $copy = \tempnam(\sys_get_temp_dir(), 'strip');
         if ($copy === false) {
             Console::warning("Image metadata was not removed from {$path}: a temporary file could not be created.");
@@ -669,15 +664,18 @@ class Create extends Action
                 return null;
             }
 
-            \clearstatcache(true, $copy);
-            $stripped = (string) \file_get_contents($copy);
+            $stripped = \file_get_contents($copy);
+            if ($stripped === false || $stripped === '') {
+                Console::warning("Image metadata was not removed from {$path}: the stripped file could not be read.");
+                return null;
+            }
 
             if (!$deviceForFiles->write($path, new Stream($stripped), $mimeType)) {
                 Console::warning("Image metadata was not removed from {$path}: the stripped file could not be saved.");
                 return null;
             }
 
-            // The device may have cached the previous size, so report the length we wrote.
+            // Later size checks stat this path again.
             \clearstatcache(true, $path);
 
             return \strlen($stripped);

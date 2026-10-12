@@ -137,7 +137,7 @@ abstract class Base extends Action
         if ($bucket->isEmpty() || !$bucket->getAttribute('enabled', true)) {
             throw new AppwriteException(AppwriteException::STORAGE_BUCKET_NOT_FOUND);
         }
-        // S3 clients expect stored bytes to match what they uploaded, so any setting that rewrites files is incompatible.
+        // S3 clients expect stored bytes to match the upload, so settings that rewrite files are refused.
         if ($bucket->getAttribute('encryption', true) || $bucket->getAttribute('compression', 'none') !== 'none' || $bucket->getAttribute('stripMetadata', false)) {
             throw new AppwriteException(AppwriteException::GENERAL_ARGUMENT_INVALID, 'S3 access requires a bucket with encryption, compression and metadata stripping disabled.');
         }

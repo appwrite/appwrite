@@ -586,7 +586,6 @@ final class StorageCustomServerTest extends Scope
         $stripBucket = $this->createBucketForStripping(true);
         $keepBucket = $this->createBucketForStripping(false);
 
-        // Bucket with stripping on: private metadata is gone, orientation stays.
         $file = $this->uploadFile($stripBucket, new CURLFile($photo, 'image/jpeg', 'photo.jpg'));
         $this->assertSame(201, $file['headers']['status-code']);
         $this->assertLessThan(\filesize($photo), $file['body']['sizeOriginal']);
@@ -604,14 +603,12 @@ final class StorageCustomServerTest extends Scope
         $this->assertSame(201, $file['headers']['status-code']);
         $this->assertArrayNotHasKey('GPSLatitude', $this->readTags($this->downloadFile($stripBucket, $file['body']['$id'])));
 
-        // Bucket with stripping off: the file is stored exactly as uploaded.
         $file = $this->uploadFile($keepBucket, new CURLFile($photo, 'image/jpeg', 'photo.jpg'));
         $this->assertSame(201, $file['headers']['status-code']);
         $download = $this->downloadFile($keepBucket, $file['body']['$id']);
         $this->assertSame(\file_get_contents($photo), $download);
         $this->assertArrayHasKey('GPSLatitude', $this->readTags($download));
 
-        // Files that aren't images are never touched.
         $file = $this->uploadFile($stripBucket, new CURLFile($text, 'text/plain', 'notes.txt'));
         $this->assertSame(201, $file['headers']['status-code']);
         $this->assertSame(\file_get_contents($text), $this->downloadFile($stripBucket, $file['body']['$id']));
