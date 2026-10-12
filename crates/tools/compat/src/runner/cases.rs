@@ -45,18 +45,24 @@ pub struct Case {
     /// Written in the short single-step form.
     pub short: bool,
     /// What the machine must provide for the case to mean anything
-    /// (`case-sensitive-files`); the case is skipped where it does not.
+    /// (`case-sensitive-files`; `driver-process`: each runtime in its own
+    /// driver process, without arguments, so not in `replay`); the case is
+    /// skipped where it does not.
     pub requires: Vec<String>,
 }
 
 /// The requirements a case may list. Anything else is an error in the case
 /// file, so a misspelt requirement cannot quietly skip a case everywhere.
-const REQUIREMENTS: &[&str] = &["case-sensitive-files"];
+const REQUIREMENTS: &[&str] = &["case-sensitive-files", "driver-process"];
 
 /// Why this machine cannot run a case with these requirements, if it cannot.
 pub fn unmet(requires: &[String]) -> Option<String> {
     requires.iter().find_map(|r| match r.as_str() {
         "case-sensitive-files" => folds_case().then(|| "/tmp/compat-fs folds filename case".to_owned()),
+        // Each runtime's own driver process, started without arguments (what
+        // a case reading the process's arguments sees); `replay` runs the
+        // Rust adapters in its own process instead.
+        "driver-process" => None,
         _ => None,
     })
 }

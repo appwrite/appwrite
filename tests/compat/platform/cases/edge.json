@@ -842,6 +842,9 @@
     },
     {
       "name": "tasks without a CLI build one from the process's arguments",
+      "requires": [
+        "driver-process"
+      ],
       "op": "platform.run",
       "args": {
         "core": {
