@@ -95,6 +95,7 @@ class Create extends Base
         VideoPublisher $publisherForVideos
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+        $this->assertCanUpdateVideo($authorization, $user, $video);
         $file = $this->assertFileAccess($dbForProject, $authorization, $user, $bucketId, $fileId);
 
         if (!\in_array($file->getAttribute('mimeType', ''), self::CAPTION_MIME_TYPES, true)) {

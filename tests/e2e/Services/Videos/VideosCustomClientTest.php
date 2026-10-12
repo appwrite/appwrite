@@ -853,13 +853,14 @@ final class VideosCustomClientTest extends Scope
 
     /**
      * A guest-playable video grants read("any"). Sessions with videos.read can
-     * therefore get, list, play, and create child resources, but cannot update
-     * or delete without those permissions on the document.
+     * get, list, and play, but cannot update or delete the video or mutate
+     * renditions and captions without update permission on the document.
      */
     #[Depends('testGuestCanPlayPublicVideo')]
     public function testSessionCannotManagePlayableVideoWithoutDocumentAcl(array $play): void
     {
         $videoId = $play['videoId'];
+        $renditionId = $play['renditionId'];
 
         $get = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
         $this->assertEquals(200, $get['headers']['status-code']);
@@ -877,6 +878,72 @@ final class VideosCustomClientTest extends Scope
         $delete = $this->client->call(Client::METHOD_DELETE, '/videos/' . $videoId, $this->sessionHeaders());
         $this->assertEquals(401, $delete['headers']['status-code']);
         $this->assertEquals('user_unauthorized', $delete['body']['type']);
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
+        $this->assertNotEmpty($profileId);
+
+        $createRendition = $this->client->call(
+            Client::METHOD_POST,
+            '/videos/' . $videoId . '/renditions',
+            $this->sessionHeaders(),
+            [
+                'profileId' => $profileId,
+                'output' => 'hls',
+            ]
+        );
+        $this->assertEquals(401, $createRendition['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $createRendition['body']['type']);
+
+        $deleteRendition = $this->client->call(
+            Client::METHOD_DELETE,
+            '/videos/' . $videoId . '/renditions/' . $renditionId,
+            $this->sessionHeaders()
+        );
+        $this->assertEquals(401, $deleteRendition['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $deleteRendition['body']['type']);
+
+        $createCaption = $this->client->call(
+            Client::METHOD_POST,
+            '/videos/' . $videoId . '/captions',
+            $this->sessionHeaders(),
+            [
+                'bucketId' => $this->getVideoBucket()['$id'],
+                'fileId' => $this->getCaptionFile()['$id'],
+                'name' => 'Hijack',
+                'code' => 'eng',
+            ]
+        );
+        $this->assertEquals(401, $createCaption['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $createCaption['body']['type']);
+
+        $updateCaption = $this->client->call(
+            Client::METHOD_PATCH,
+            '/videos/' . $videoId . '/captions/doesnotexist',
+            $this->sessionHeaders(),
+            [
+                'name' => 'Hijack',
+            ]
+        );
+        $this->assertEquals(401, $updateCaption['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $updateCaption['body']['type']);
+
+        $deleteCaption = $this->client->call(
+            Client::METHOD_DELETE,
+            '/videos/' . $videoId . '/captions/doesnotexist',
+            $this->sessionHeaders()
+        );
+        $this->assertEquals(401, $deleteCaption['headers']['status-code']);
+        $this->assertEquals('user_unauthorized', $deleteCaption['body']['type']);
+
+        $stillThere = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/renditions/' . $renditionId,
+            $this->serverHeaders()
+        );
+        $this->assertEquals(200, $stillThere['headers']['status-code']);
+        $this->assertEquals($renditionId, $stillThere['body']['$id']);
 
         $timeline = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId . '/timeline', $this->sessionHeaders());
         $this->assertEquals(200, $timeline['headers']['status-code']);
@@ -1003,6 +1070,62 @@ final class VideosCustomClientTest extends Scope
         ]);
         $this->assertEquals(200, $updated['headers']['status-code']);
         $this->assertEquals('renamed-owned', $updated['body']['name']);
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $profileId = $profiles['body']['profiles'][0]['$id'] ?? '';
+        $this->assertNotEmpty($profileId);
+
+        $rendition = $this->client->call(
+            Client::METHOD_POST,
+            '/videos/' . $videoId . '/renditions',
+            $this->sessionHeaders(),
+            [
+                'profileId' => $profileId,
+                'output' => 'hls',
+            ]
+        );
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $renditionId = $rendition['body']['$id'];
+
+        $deleteRendition = $this->client->call(
+            Client::METHOD_DELETE,
+            '/videos/' . $videoId . '/renditions/' . $renditionId,
+            $this->sessionHeaders()
+        );
+        $this->assertEquals(204, $deleteRendition['headers']['status-code']);
+
+        $caption = $this->client->call(
+            Client::METHOD_POST,
+            '/videos/' . $videoId . '/captions',
+            $this->sessionHeaders(),
+            [
+                'bucketId' => $this->getVideoBucket()['$id'],
+                'fileId' => $this->getCaptionFile()['$id'],
+                'name' => 'Owned',
+                'code' => 'eng',
+            ]
+        );
+        $this->assertEquals(201, $caption['headers']['status-code']);
+        $captionId = $caption['body']['$id'];
+
+        $updateCaption = $this->client->call(
+            Client::METHOD_PATCH,
+            '/videos/' . $videoId . '/captions/' . $captionId,
+            $this->sessionHeaders(),
+            [
+                'name' => 'Owned Renamed',
+            ]
+        );
+        $this->assertEquals(200, $updateCaption['headers']['status-code']);
+        $this->assertEquals('Owned Renamed', $updateCaption['body']['name']);
+
+        $deleteCaption = $this->client->call(
+            Client::METHOD_DELETE,
+            '/videos/' . $videoId . '/captions/' . $captionId,
+            $this->sessionHeaders()
+        );
+        $this->assertEquals(204, $deleteCaption['headers']['status-code']);
 
         $deniedRole = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->sessionHeaders(), [
             'name' => 'bad-role',

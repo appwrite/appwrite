@@ -293,6 +293,30 @@ abstract class Base extends UtopiaAction
     }
 
     /**
+     * Asserts the caller may update the parent video before mutating children
+     * (renditions, captions). Child rows have no `$permissions`, so writes
+     * skip document authorization after this check.
+     *
+     * Privileged users and API keys skip authorization, matching updateVideo
+     * and deleteVideo.
+     */
+    protected function assertCanUpdateVideo(
+        Authorization $authorization,
+        User $user,
+        Document $video
+    ): void {
+        $roles = $authorization->getRoles();
+
+        if ($user->isKey($roles) || $user->isPrivileged($roles)) {
+            return;
+        }
+
+        if (!$authorization->isValid(new Input(Database::PERMISSION_UPDATE, $video->getUpdate()))) {
+            throw new Exception(Exception::USER_UNAUTHORIZED, $authorization->getDescription());
+        }
+    }
+
+    /**
      * Asserts the caller may read the bucket/file backing a video, and returns
      * the file document.
      *

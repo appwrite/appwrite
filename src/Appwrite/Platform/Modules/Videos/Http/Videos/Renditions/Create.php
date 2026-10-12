@@ -86,6 +86,7 @@ class Create extends Base
         VideoPublisher $publisherForVideos
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+        $this->assertCanUpdateVideo($authorization, $user, $video);
 
         $profile = $authorization->skip(fn () => $dbForProject->getDocument('videos_profiles', $profileId));
 

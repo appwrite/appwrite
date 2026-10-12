@@ -79,6 +79,7 @@ class Delete extends Base
         DeletePublisher $publisherForDeletes
     ): void {
         $video = $this->getAuthorizedVideo($dbForProject, $authorization, $user, $videoId);
+        $this->assertCanUpdateVideo($authorization, $user, $video);
 
         $caption = $authorization->skip(fn () => $dbForProject->getDocument('videos_captions', $captionId));
 
