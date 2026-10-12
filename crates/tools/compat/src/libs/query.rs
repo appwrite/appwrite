@@ -7,6 +7,9 @@
 //! PHP classes and methods onto the crate: [`core`] (queries, statements,
 //! hooks), [`builder`], [`schema`], [`ast`], [`tokenizer`], [`classifier`].
 
+// Dispatch arms are `(|| -> Outcome { ... })()` blocks so `?` returns from the arm.
+#![allow(clippy::redundant_closure_call)]
+
 use serde_json::Value;
 
 use utopia_query::Query;

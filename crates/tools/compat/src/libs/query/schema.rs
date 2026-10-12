@@ -1308,6 +1308,7 @@ impl Object for TableObj {
 // ---------------------------------------------------------------------------
 
 /// Where a column object's column lives.
+#[allow(clippy::large_enum_variant)]
 enum Slot {
     /// In its table, at this index.
     Index(usize),

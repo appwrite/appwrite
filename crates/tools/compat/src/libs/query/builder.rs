@@ -12,7 +12,7 @@ use utopia_query::builder::{
     AnyBuilder, Builder, CaseExpression, Dialect, ExplainOptions, JoinBuilder, JoinType, MySql, MySqlDialect,
     MySqlFamily, Operator, SpatialDistanceFilter, Statement, WindowFrame,
 };
-use utopia_query::{Array, Compiler, Query, Value};
+use utopia_query::{Compiler, Query, Value};
 
 use super::core::{executor_arg, hook_arg};
 use super::engine::{Args, Callback, Failure, Object, Outcome, Ret, fault};
@@ -248,10 +248,6 @@ fn join_type(a: &Args, index: usize, name: &str) -> Result<JoinType, Failure> {
 
 fn frame(a: &Args, index: usize, name: &str) -> Result<Option<WindowFrame>, Failure> {
     a.opt_object::<WindowFrame>(index, name)
-}
-
-fn values(array: Array) -> Vec<Value> {
-    array.values().cloned().collect()
 }
 
 /// A test closure taking the builder (`when`, `beforeBuild`).
