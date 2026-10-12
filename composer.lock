@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d8dee0b68c34008cd9d6a230b705881d",
+    "content-hash": "bfb4360ae557c0feabc15e79c1347275",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,27 +69,32 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "27.1.0",
+            "version": "30.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "24685bc34928c0e5479d4977dc47ea4aa721f025"
+                "reference": "1aace0da1d7b01704882e12735f9e05abc218f13"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/24685bc34928c0e5479d4977dc47ea4aa721f025",
-                "reference": "24685bc34928c0e5479d4977dc47ea4aa721f025",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/1aace0da1d7b01704882e12735f9e05abc218f13",
+                "reference": "1aace0da1d7b01704882e12735f9e05abc218f13",
                 "shasum": ""
             },
             "require": {
                 "adhocore/jwt": "^1.1",
                 "ext-curl": "*",
                 "ext-json": "*",
-                "php": ">=8.2.0"
+                "php": ">=8.5",
+                "utopia-php/client": "^0.6"
             },
             "require-dev": {
-                "mockery/mockery": "1.6.12",
-                "phpunit/phpunit": "^12"
+                "laravel/pint": "^1.25",
+                "mockery/mockery": "1.6.15",
+                "phpstan/phpstan": "^2.1",
+                "phpstan/phpstan-mockery": "^2.0",
+                "phpunit/phpunit": "^12",
+                "rector/rector": "^2.2"
             },
             "type": "library",
             "autoload": {
@@ -105,10 +110,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/27.1.0",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/30.2.1",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-07-24T06:10:52+00:00"
+            "time": "2026-10-12T09:42:07+00:00"
         },
         {
             "name": "brick/math",
