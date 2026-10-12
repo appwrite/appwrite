@@ -571,6 +571,7 @@ dependencies = [
  "image",
  "image-webp",
  "indexmap",
+ "libc",
  "mimalloc",
  "p256",
  "php-std",
