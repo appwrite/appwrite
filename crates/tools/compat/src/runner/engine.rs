@@ -277,7 +277,13 @@ impl Engine {
                     break;
                 }
             };
-            let ar = substitute(&step.args, &br, &ns_r)?;
+            let ar = match substitute(&step.args, &br, &ns_r) {
+                Ok(a) => a,
+                Err(e) => {
+                    report.faults.push(format!("{at}: rust: {e}"));
+                    break;
+                }
+            };
             let (php, rust) = self.drivers()?;
             let idp = php.send(lib, &step.op, &ap)?;
             let idr = rust.send(lib, &step.op, &ar)?;
@@ -375,7 +381,13 @@ impl Engine {
                 let side: &'static str = if step.side.as_deref() == Some("a") { a } else { b };
                 let at =
                     format!("step {} `{}` (side {} = {side})", i + 1, step.op, step.side.as_deref().unwrap_or("?"));
-                let args = substitute(&step.args, &binds, &ns)?;
+                let args = match substitute(&step.args, &binds, &ns) {
+                    Ok(a) => a,
+                    Err(e) => {
+                        report.faults.push(format!("{at}: {e}"));
+                        break;
+                    }
+                };
                 match self.driver(side)?.call(lib, &step.op, &args)? {
                     Ok(out) => {
                         let c = comparable(&out, &ns, &step_masks(spec, step), &scrub);
@@ -471,7 +483,13 @@ impl Engine {
                 let mut binds = HashMap::new();
                 let mut out = Vec::new();
                 for (i, step) in case.steps.iter().enumerate() {
-                    let args = substitute(&step.args, &binds, &ns)?;
+                    let args = match substitute(&step.args, &binds, &ns) {
+                        Ok(a) => a,
+                        Err(e) => {
+                            faults.push(format!("{name}: step {} `{}`: {e}", i + 1, step.op));
+                            break;
+                        }
+                    };
                     match self.driver("php")?.call(lib, &step.op, &args)? {
                         Ok(o) => {
                             let c = comparable(&o, &ns, &step_masks(&spec, step), &scrub);
@@ -495,7 +513,11 @@ impl Engine {
                 self.cleanup(&kinds, &ns)?;
                 results.push(out);
             }
-            cases::write_expectations(file, &results)?;
+            // A file none of whose cases ran stays untouched, so records of
+            // disjoint filters can run side by side.
+            if results.iter().any(|r| r.iter().any(Option::is_some)) {
+                cases::write_expectations(file, &results)?;
+            }
         }
         Ok((written, changed, faults))
     }
@@ -854,7 +876,14 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
             let mut binds = HashMap::new();
             let mut failed = false;
             for (i, step) in case.steps.iter().enumerate() {
-                let args = substitute(&step.args, &binds, &ns)?;
+                let args = match substitute(&step.args, &binds, &ns) {
+                    Ok(a) => a,
+                    Err(e) => {
+                        report.faults.push(format!("{}: step {}: {e}", label(lib, file, case), i + 1));
+                        failed = true;
+                        break;
+                    }
+                };
                 let request = json!({ "lib": lib, "op": step.op, "args": args });
                 let result: OpResult = crate::driver::handle(&request, &mut session).await;
                 match result {
