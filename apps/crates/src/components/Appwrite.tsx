@@ -354,7 +354,7 @@ export function EndpointBench({ step, route, bench }: { step: ReturnType<typeof 
             ) : null}
             <Duel label="Median" php={p?.p50} rust={r?.p50} format={millis} compact />
             <Duel label="p99" php={p?.p99} rust={r?.p99} format={millis} compact />
-            {p && !r ? <span className="text-[11px] text-muted-foreground">No Rust timing recorded</span> : null}
+            {p && !r && step?.rust ? <span className="text-[11px] text-muted-foreground">No Rust timing recorded</span> : null}
             {p?.errors || r?.errors ? (
               <span className="text-[11px] text-red-700 dark:text-red-300">
                 Server errors: PHP {p?.errors ?? 0}, Rust {r?.errors ?? 0}

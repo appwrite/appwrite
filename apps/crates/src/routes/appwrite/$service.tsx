@@ -159,7 +159,7 @@ function ServicePage() {
                 <tr className="border-b border-border text-left text-[11px] tracking-wider text-muted-foreground uppercase">
                   <th className="px-3 py-2 font-semibold">Endpoint</th>
                   <th className="px-3 py-2 font-semibold">Status</th>
-                  <th className="px-3 py-2 font-semibold">{bench.step?.rust ? 'PHP vs Rust' : 'Benchmark'}</th>
+                  <th className="px-3 py-2 font-semibold">{bench.step?.rust ? 'PHP vs Rust' : bench.step ? 'PHP baseline (Rust does not serve it yet)' : 'Benchmark'}</th>
                 </tr>
               </thead>
               <tbody>
