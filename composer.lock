@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "bfb4360ae557c0feabc15e79c1347275",
+    "content-hash": "29449fc2362aa9af364bdf8af14c0fb5",
     "packages": [
         {
             "name": "adhocore/jwt",
@@ -69,16 +69,16 @@
         },
         {
             "name": "appwrite/appwrite",
-            "version": "30.2.1",
+            "version": "30.2.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/appwrite/sdk-for-php.git",
-                "reference": "1aace0da1d7b01704882e12735f9e05abc218f13"
+                "reference": "ec301b5d92af2fd99e8a7b1155a8f1016310b2a4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/1aace0da1d7b01704882e12735f9e05abc218f13",
-                "reference": "1aace0da1d7b01704882e12735f9e05abc218f13",
+                "url": "https://api.github.com/repos/appwrite/sdk-for-php/zipball/ec301b5d92af2fd99e8a7b1155a8f1016310b2a4",
+                "reference": "ec301b5d92af2fd99e8a7b1155a8f1016310b2a4",
                 "shasum": ""
             },
             "require": {
@@ -110,10 +110,10 @@
             "support": {
                 "email": "team@appwrite.io",
                 "issues": "https://github.com/appwrite/sdk-for-php/issues",
-                "source": "https://github.com/appwrite/sdk-for-php/tree/30.2.1",
+                "source": "https://github.com/appwrite/sdk-for-php/tree/30.2.2",
                 "url": "https://appwrite.io/support"
             },
-            "time": "2026-10-12T09:42:07+00:00"
+            "time": "2026-10-12T13:46:08+00:00"
         },
         {
             "name": "brick/math",
