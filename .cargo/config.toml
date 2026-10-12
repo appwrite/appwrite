@@ -1,6 +1,8 @@
 # The SQLite library rusqlite builds in (utopia-database's SQLite adapter) gets
 # the compile options of the SQLite PHP's pdo_sqlite links in the dev image
 # (`PRAGMA compile_options`): math functions (`POWER`, `LN`), 250000 bound
-# parameters, recursive triggers, secure delete, and no foreign keys by default.
+# parameters, recursive triggers, secure delete, and no foreign keys by default;
+# and, as its configure script finds, fdatasync() for syncs on Linux (macOS
+# syncs with F_FULLFSYNC either way).
 [env]
-LIBSQLITE3_FLAGS = "SQLITE_ENABLE_MATH_FUNCTIONS SQLITE_MAX_VARIABLE_NUMBER=250000 SQLITE_DEFAULT_RECURSIVE_TRIGGERS SQLITE_SECURE_DELETE -USQLITE_DEFAULT_FOREIGN_KEYS"
+LIBSQLITE3_FLAGS = "SQLITE_ENABLE_MATH_FUNCTIONS SQLITE_MAX_VARIABLE_NUMBER=250000 SQLITE_DEFAULT_RECURSIVE_TRIGGERS SQLITE_SECURE_DELETE -USQLITE_DEFAULT_FOREIGN_KEYS -DHAVE_FDATASYNC=1"
