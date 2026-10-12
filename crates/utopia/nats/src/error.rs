@@ -252,6 +252,11 @@ impl Error {
                 bytes.extend_from_slice(&cause.message_bytes());
                 std::borrow::Cow::Owned(bytes)
             }
+            // A library error a callback raised again keeps its own bytes,
+            // as `php_class()` keeps its class.
+            Error::Callback(inner) if inner.downcast_ref::<Error>().is_some() => std::borrow::Cow::Owned(
+                inner.downcast_ref::<Error>().map(|e| e.message_bytes().into_owned()).unwrap_or_default(),
+            ),
             other => std::borrow::Cow::Owned(other.to_string().into_bytes()),
         }
     }
@@ -263,3 +268,16 @@ impl Error {
 
 /// The result of a NATS operation.
 pub type Result<T, E = Error> = std::result::Result<T, E>;
+
+#[cfg(test)]
+mod message_bytes_tests {
+    use super::Error;
+
+    #[test]
+    fn a_protocol_error_raised_by_a_callback_keeps_its_bytes() {
+        let raw = b"Unknown protocol operation: \xa9".to_vec();
+        let wrapped = Error::Callback(std::sync::Arc::new(Error::protocol_bytes(raw.clone())));
+        assert_eq!(wrapped.message_bytes().as_ref(), raw.as_slice());
+        assert_eq!(wrapped.php_class(), "Utopia\\NATS\\Exception\\ProtocolException");
+    }
+}
