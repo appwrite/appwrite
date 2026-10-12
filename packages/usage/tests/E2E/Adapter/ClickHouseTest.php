@@ -16,6 +16,8 @@ class ClickHouseTest extends TestCase
 {
     use UsageBase;
 
+    private const string UPGRADE_EVENTS_TABLE = 'utopia_usage_upgrade_usage_events';
+
     protected function initializeUsage(): void
     {
         $host = getenv('CLICKHOUSE_HOST') ?: 'clickhouse';
@@ -107,14 +109,12 @@ class ClickHouseTest extends TestCase
         $usage->setup();
         $usage->purge('1');
 
-        $query = new \ReflectionMethod($adapter, 'query');
-        $table = (new \ReflectionMethod($adapter, 'escapeIdentifier'))->invoke($adapter, getenv('CLICKHOUSE_DATABASE') ?: 'default')
-            . '.' . (new \ReflectionMethod($adapter, 'escapeIdentifier'))->invoke($adapter, (new \ReflectionMethod($adapter, 'getEventsTableName'))->invoke($adapter));
+        $table = '`' . (getenv('CLICKHOUSE_DATABASE') ?: 'default') . '`.`' . self::UPGRADE_EVENTS_TABLE . '`';
         $this->assertTrue($usage->addBatch([
             ['tenant' => '1', 'metric' => 'before-ordinal', 'value' => 3, 'tags' => ['service' => 'storage']],
         ], Usage::TYPE_EVENT));
-        $query->invoke($adapter, "ALTER TABLE {$table} DROP INDEX IF EXISTS `index-ordinal`");
-        $query->invoke($adapter, "ALTER TABLE {$table} DROP COLUMN IF EXISTS `ordinal`");
+        $this->clickHouse("ALTER TABLE {$table} DROP INDEX IF EXISTS `index-ordinal`");
+        $this->clickHouse("ALTER TABLE {$table} DROP COLUMN IF EXISTS `ordinal`");
 
         $usage->setup();
 
@@ -129,10 +129,29 @@ class ClickHouseTest extends TestCase
         $after = $usage->find('1', [Query::equal('metric', ['after-ordinal']), Query::equal('ordinal', ['1'])], Usage::TYPE_EVENT);
         $this->assertCount(1, $after, 'setup() must add the ordinal column to an existing events table');
 
-        $indexes = $query->invoke($adapter, "SELECT name FROM system.data_skipping_indices WHERE database = currentDatabase() AND table = '" . (new \ReflectionMethod($adapter, 'getEventsTableName'))->invoke($adapter) . "' AND name = 'index-ordinal' FORMAT TabSeparated");
+        $indexes = $this->clickHouse("SELECT name FROM system.data_skipping_indices WHERE database = currentDatabase() AND table = '" . self::UPGRADE_EVENTS_TABLE . "' AND name = 'index-ordinal' FORMAT TabSeparated");
         $this->assertSame('index-ordinal', \trim($indexes), 'setup() must add the ordinal skip index to an existing events table');
 
         $usage->purge('1');
+    }
+
+    private function clickHouse(string $sql): string
+    {
+        $scheme = (bool) (getenv('CLICKHOUSE_SECURE') ?: false) ? 'https' : 'http';
+        $host = getenv('CLICKHOUSE_HOST') ?: 'clickhouse';
+        $port = (int) (getenv('CLICKHOUSE_PORT') ?: 8123);
+        $response = file_get_contents("{$scheme}://{$host}:{$port}/", false, stream_context_create(['http' => [
+            'method' => 'POST',
+            'header' => \implode("\r\n", [
+                'X-ClickHouse-User: ' . (getenv('CLICKHOUSE_USER') ?: 'default'),
+                'X-ClickHouse-Key: ' . (getenv('CLICKHOUSE_PASSWORD') ?: 'clickhouse'),
+                'X-ClickHouse-Database: ' . (getenv('CLICKHOUSE_DATABASE') ?: 'default'),
+            ]),
+            'content' => $sql,
+        ]]));
+        $this->assertIsString($response, 'ClickHouse refused: ' . $sql);
+
+        return $response;
     }
 
     /**
