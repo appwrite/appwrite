@@ -235,7 +235,7 @@ class Videos extends Action
             Base::JOB_TIMELINE,
             \uniqid('', true)
         );
-        $permissions = $this->sourceReadPermissions($dbForProject, $video);
+        $permissions = $this->readPermissions($video);
         $started = \microtime(true);
         $stage = 'download';
         $outcome = 'error';
@@ -436,7 +436,7 @@ class Videos extends Action
             Base::JOB_CAPTION,
             \uniqid('', true)
         );
-        $permissions = $this->sourceReadPermissions($dbForProject, $video);
+        $permissions = $this->readPermissions($video);
         Span::add('caption.code', (string) $caption->getAttribute('code', ''));
         Span::add('caption.default', (bool) $caption->getAttribute('default', false));
         Span::add('caption.bucket.id', (string) $caption->getAttribute('bucketId', ''));
@@ -600,7 +600,7 @@ class Videos extends Action
         $output = $videoMessage->output !== ''
             ? $videoMessage->output
             : (string) $rendition->getAttribute('output', Base::OUTPUT_HLS);
-        $permissions = $this->sourceReadPermissions($dbForProject, $videoMessage->video);
+        $permissions = $this->readPermissions($videoMessage->video);
         $claimed = false;
         $codec = Base::normalizeCodec(
             $rendition->getAttribute('codec')
@@ -2200,40 +2200,19 @@ class Videos extends Action
     }
 
     /**
-     * Read permissions to stamp onto realtime payloads so delivery stays within
-     * the video ACL: the video's readers when set, otherwise the source
-     * bucket's and file's readers. Console delivery is routed separately via
-     * setSubscribers() — do not broaden roles with the project team.
+     * Read permissions to stamp onto realtime payloads so delivery matches
+     * getAuthorizedVideo(): only the video's own read roles. A video without
+     * an ACL yields an empty set and session events are dropped. Console
+     * delivery is routed separately via setSubscribers() — do not broaden
+     * roles with the project team.
      *
      * @return array<string>
      */
-    private function sourceReadPermissions(Database $dbForProject, Document $video): array
+    private function readPermissions(Document $video): array
     {
-        $roles = [];
-
-        $own = $video->getAttribute('$permissions', []);
-        if (\is_array($own) && $own !== []) {
-            $roles = $video->getRead();
-        } else {
-            try {
-                $bucket = $dbForProject->getDocument('buckets', $video->getAttribute('bucketId', ''));
-                if (!$bucket->isEmpty()) {
-                    $roles = \array_merge($roles, $bucket->getRead());
-
-                    $file = $dbForProject->getDocument(
-                        'bucket_' . $bucket->getSequence(),
-                        $video->getAttribute('fileId', '')
-                    );
-                    $roles = \array_merge($roles, $file->getRead());
-                }
-            } catch (\Throwable) {
-                // Source may be mid-delete; leave roles empty so the event is dropped.
-            }
-        }
-
         return \array_map(
             static fn (string $role) => Permission::read(Role::parse($role)),
-            \array_values(\array_unique($roles))
+            $video->getRead()
         );
     }
 
@@ -2244,10 +2223,9 @@ class Videos extends Action
      * permissions — an empty set means the event is silently dropped. A payload
      * with its own `$permissions` (a video with an ACL) keeps them. Otherwise
      * (video child rows, timeline payloads, a video without an ACL) the given
-     * $permissions are stamped on: the video's read roles when it has an ACL,
-     * else the source bucket's and file's read roles combined (see
-     * sourceReadPermissions()). Console updates are routed via
-     * setSubscribers(['console', …]).
+     * $permissions are stamped on from readPermissions() — the video's read
+     * roles only. A video without an ACL produces no session events. Console
+     * updates are routed via setSubscribers(['console', …]).
      *
      * @param array<string, string> $params
      * @param array<string> $permissions

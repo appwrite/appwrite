@@ -1102,7 +1102,7 @@ class Realtime extends MessagingAdapter
                 if ($project !== null && !$project->isEmpty()) {
                     $channels[] = 'projects.' . $project->getId();
                 }
-                // Renditions and captions inherit the source file's permissions, which the
+                // Renditions and captions inherit the video's read permissions, which the
                 // publisher stamps onto the payload before it reaches Realtime.
                 $roles = $payload->getRead();
                 break;

@@ -366,11 +366,11 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * Realtime rendition events inherit the source bucket/file read roles.
-     * The fixture bucket grants read("any"), so a session subscribed to the
-     * `videos` channel must receive rendition processing events.
+     * Realtime events inherit the video document's read roles. A video that
+     * grants read("any") must deliver timeline, rendition and caption events
+     * to a session subscribed to the `videos` channel.
      */
-    public function testRealtimeEventsDeliveredForReadableSource(): void
+    public function testRealtimeEventsDeliveredForReadableVideo(): void
     {
         $client = $this->getWebsocket(['videos'], $this->websocketHeaders());
         $connected = \json_decode($client->receive(), true);
@@ -379,6 +379,9 @@ final class VideosCustomClientTest extends Scope
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
             'bucketId' => $this->getVideoBucket()['$id'],
             'fileId' => $this->getVideoFile()['$id'],
+            'permissions' => [
+                Permission::read(Role::any()),
+            ],
         ]);
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
@@ -444,31 +447,20 @@ final class VideosCustomClientTest extends Scope
     }
 
     /**
-     * A video backed by a bucket that grants the caller nothing must not leak
-     * processing events: realtime roles are stamped from the source bucket and
-     * file, so a plain session sees no frames for it.
+     * A video with an empty ACL on a public source bucket must not leak
+     * processing events: realtime roles are stamped from the video document
+     * only, so a plain session sees no frames for it.
      */
-    public function testRealtimeEventsWithheldForPrivateSource(): void
+    public function testRealtimeEventsWithheldForPrivateVideo(): void
     {
-        $bucket = $this->client->call(Client::METHOD_POST, '/storage/buckets', $this->serverHeaders(), [
-            'bucketId' => 'unique()',
-            'name' => 'Private realtime bucket',
-            'fileSecurity' => false,
-            'permissions' => [],
-        ]);
-        $this->assertEquals(201, $bucket['headers']['status-code']);
-
-        $file = $this->uploadVideoTo($bucket['body']['$id'], [], [
-            'x-appwrite-key' => $this->getProject()['apiKey'],
-        ]);
-
         $client = $this->getWebsocket(['videos'], $this->websocketHeaders());
         $connected = \json_decode($client->receive(), true);
         $this->assertEquals('connected', $connected['type'] ?? '');
 
         $created = $this->client->call(Client::METHOD_POST, '/videos', $this->serverHeaders(), [
-            'bucketId' => $bucket['body']['$id'],
-            'fileId' => $file['$id'],
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'permissions' => [],
         ]);
         $this->assertEquals(201, $created['headers']['status-code']);
         $videoId = $created['body']['$id'];
@@ -659,6 +651,117 @@ final class VideosCustomClientTest extends Scope
         $this->assertNotEmpty($preview['body']);
 
         return ['videoId' => $videoId, 'renditionId' => $renditionId];
+    }
+
+    /**
+     * A session creates a member-owned video. Guests cannot play it until an
+     * API key publishes read("any") — sessions cannot assign Role::any()
+     * themselves. After that, a guest with videos.play can stream it.
+     */
+    public function testGuestCanPlayMemberCreatedVideo(): void
+    {
+        $userId = $this->getUser()['$id'];
+
+        $created = $this->client->call(Client::METHOD_POST, '/videos', $this->sessionHeaders(), [
+            'bucketId' => $this->getVideoBucket()['$id'],
+            'fileId' => $this->getVideoFile()['$id'],
+            'name' => 'member-public-' . ID::unique(),
+        ]);
+        $this->assertEquals(201, $created['headers']['status-code']);
+        $videoId = $created['body']['$id'];
+        $this->assertContains((string) Permission::read(Role::user($userId)), $created['body']['$permissions']);
+        $this->assertNotContains((string) Permission::read(Role::any()), $created['body']['$permissions']);
+
+        $denied = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/timeline',
+            $this->anonymousHeaders()
+        );
+        $this->assertEquals(404, $denied['headers']['status-code']);
+
+        $published = $this->client->call(Client::METHOD_PUT, '/videos/' . $videoId, $this->serverHeaders(), [
+            'name' => $created['body']['name'],
+            'permissions' => [
+                Permission::read(Role::any()),
+                Permission::update(Role::user($userId)),
+                Permission::delete(Role::user($userId)),
+            ],
+        ]);
+        $this->assertEquals(200, $published['headers']['status-code']);
+        $this->assertContains((string) Permission::read(Role::any()), $published['body']['$permissions']);
+
+        $timeline = $this->waitForTimeline($videoId);
+        $this->assertEquals(200, $timeline['headers']['status-code']);
+
+        $profiles = $this->client->call(Client::METHOD_GET, '/project/profiles', $this->serverHeaders());
+        $this->assertEquals(200, $profiles['headers']['status-code']);
+        $profile = null;
+        foreach ($profiles['body']['profiles'] as $candidate) {
+            if (($candidate['name'] ?? '') === '360p') {
+                $profile = $candidate;
+                break;
+            }
+        }
+        $this->assertNotNull($profile, 'Seeded 360p profile missing');
+
+        $rendition = $this->client->call(Client::METHOD_POST, '/videos/' . $videoId . '/renditions', $this->serverHeaders(), [
+            'profileId' => $profile['$id'],
+            'output' => 'hls',
+        ]);
+        $this->assertEquals(202, $rendition['headers']['status-code']);
+        $renditionId = $rendition['body']['$id'];
+
+        $body = $this->waitForRenditionTerminalState($videoId, $renditionId);
+        $this->assertEquals('ready', $body['status'], 'Member-created guest-play rendition did not finish');
+
+        $master = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/master.m3u8',
+            $this->anonymousHeaders()
+        );
+        $this->assertEquals(200, $master['headers']['status-code']);
+        $this->assertStringContainsString('#EXTM3U', (string) $master['body']);
+
+        $streamId = $this->playlistToken(
+            (string) $master['body'],
+            'renditions/' . $renditionId . '/streams/',
+            '/playlist.m3u8',
+            'HLS master playlist did not reference a stream playlist'
+        );
+
+        $variant = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/streams/' . $streamId . '/playlist.m3u8',
+            $this->anonymousHeaders()
+        );
+        $this->assertEquals(200, $variant['headers']['status-code']);
+
+        $segmentId = $this->playlistToken(
+            (string) $variant['body'],
+            '/segments/',
+            '?',
+            'HLS variant playlist did not reference a segment'
+        );
+
+        $segment = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/outputs/hls/renditions/' . $renditionId . '/segments/' . $segmentId,
+            $this->anonymousHeaders()
+        );
+        $this->assertEquals(200, $segment['headers']['status-code']);
+        $this->assertNotEmpty($segment['body']);
+
+        $guestTimeline = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/timeline',
+            $this->anonymousHeaders()
+        );
+        $this->assertEquals(200, $guestTimeline['headers']['status-code']);
+        $this->assertStringContainsString('WEBVTT', (string) $guestTimeline['body']);
+
+        $owner = $this->client->call(Client::METHOD_GET, '/videos/' . $videoId, $this->sessionHeaders());
+        $this->assertEquals(200, $owner['headers']['status-code']);
+        $this->assertEquals($videoId, $owner['body']['$id']);
     }
 
     #[Depends('testGuestCanPlayPublicVideo')]
