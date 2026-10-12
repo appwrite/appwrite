@@ -14,12 +14,15 @@ pub enum Error {
     /// PHP: `Utopia\Query\Exception`.
     #[error("{message}")]
     Query {
-        /// The message.
+        /// The message (lossy when [`Error::message_bytes`] is not UTF-8).
         message: String,
         /// The code (`0` unless given to [`Error::new`]).
         code: i64,
         /// The error this one wraps.
         previous: Option<Arc<dyn std::error::Error + Send + Sync>>,
+        /// The exact message, when it is not UTF-8 (a message quoting part
+        /// of a multi-byte character of the input).
+        raw: Option<Arc<[u8]>>,
     },
     /// An input the library refuses: an unsafe identifier, a missing table, an
     /// invalid option.
@@ -80,7 +83,7 @@ impl Error {
     /// echo (new Exception('test', 'abc'))->getCode(), "\n"; // 0
     /// ```
     pub fn new(message: impl Into<String>, code: impl Into<Code>) -> Self {
-        Error::Query { message: message.into(), code: code.into().0, previous: None }
+        Error::Query { message: message.into(), code: code.into().0, previous: None, raw: None }
     }
 
     /// A [`Error::Query`] wrapping `previous`, as `new Exception($message, $code, $previous)`.
@@ -89,12 +92,40 @@ impl Error {
         code: impl Into<Code>,
         previous: Arc<dyn std::error::Error + Send + Sync>,
     ) -> Self {
-        Error::Query { message: message.into(), code: code.into().0, previous: Some(previous) }
+        Error::Query { message: message.into(), code: code.into().0, previous: Some(previous), raw: None }
     }
 
     /// A [`Error::Query`] with code 0.
     pub(crate) fn query(message: impl Into<String>) -> Self {
         Error::new(message, 0)
+    }
+
+    /// A [`Error::Query`] with code 0 whose message is bytes (PHP strings
+    /// are: a message can quote a partial UTF-8 character).
+    pub(crate) fn query_bytes(message: Vec<u8>) -> Self {
+        match String::from_utf8(message) {
+            Ok(message) => Error::query(message),
+            Err(e) => {
+                let bytes = e.into_bytes();
+                Error::Query {
+                    message: String::from_utf8_lossy(&bytes).into_owned(),
+                    code: 0,
+                    previous: None,
+                    raw: Some(bytes.into()),
+                }
+            }
+        }
+    }
+
+    /// The message as PHP has it, byte for byte (`to_string()` is the same
+    /// text, lossy where it is not UTF-8).
+    ///
+    /// PHP: `getMessage()`.
+    pub fn message_bytes(&self) -> std::borrow::Cow<'_, [u8]> {
+        match self {
+            Error::Query { raw: Some(raw), .. } => std::borrow::Cow::Borrowed(raw),
+            other => std::borrow::Cow::Owned(other.to_string().into_bytes()),
+        }
     }
 
     /// The code: what [`Error::new`] was given, `0` for every error the library raises.

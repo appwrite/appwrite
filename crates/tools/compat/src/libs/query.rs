@@ -71,7 +71,7 @@ fn last(program: Vec<Value>) -> OpResult {
 fn lib(result: utopia_query::Result<Value>) -> OpResult {
     Ok(match result {
         Ok(v) => Outcome::Ok(v),
-        Err(e) => Outcome::err(e.php_class(), e.to_string()),
+        Err(e) => Outcome::err_bytes(e.php_class(), &e.message_bytes()),
     })
 }
 
@@ -93,8 +93,31 @@ fn build_with<D: utopia_query::builder::Dialect>(queries: &[Query]) -> utopia_qu
     builder.from("t", "").queries(queries.iter().cloned());
     let statement = builder.build()?;
     let cx = engine::standalone();
-    let bindings: Vec<Value> = statement.bindings.iter().map(|v| cx.export_value(v)).collect();
+    let bindings: Vec<Value> = statement.bindings.iter().map(|v| encode(&cx, v)).collect();
     Ok(serde_json::json!({"query": statement.query, "bindings": bindings}))
+}
+
+/// A binding as the PHP driver's `Codec::encode` writes the value the
+/// adapter returns: arrays and `stdClass` as JSON (an empty `stdClass` is
+/// `{}`), strings that are not UTF-8 and non-finite floats tagged.
+fn encode(cx: &engine::Cx, value: &utopia_query::Value) -> Value {
+    use utopia_query::Value as V;
+    let entries = |a: &utopia_query::Array| {
+        a.iter()
+            .map(|(k, v)| {
+                let key = match k {
+                    php_std::types::KeyRef::Int(i) => i.to_string(),
+                    php_std::types::KeyRef::Str(s) => String::from_utf8_lossy(s).into_owned(),
+                };
+                (key, encode(cx, v))
+            })
+            .collect::<serde_json::Map<String, Value>>()
+    };
+    match value {
+        V::Array(a) if a.is_list() => Value::Array(a.values().map(|v| encode(cx, v)).collect()),
+        V::Array(a) | V::Object(a) => Value::Object(entries(a)),
+        other => cx.export_value(other),
+    }
 }
 
 /// Benchmarks: name and what each times.

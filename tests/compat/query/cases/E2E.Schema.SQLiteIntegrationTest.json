@@ -16,7 +16,7 @@
               "$o": 1
             },
             "args": [
-              "test_basic_6acc915386607"
+              "test_basic_6acc000000001"
             ]
           },
           {
@@ -87,13 +87,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_basic_6acc915386607` (`age` INTEGER NOT NULL, `name` VARCHAR(100) NOT NULL, `score` REAL NOT NULL)",
+            "query": "CREATE TABLE `test_basic_6acc000000001` (`age` INTEGER NOT NULL, `name` VARCHAR(100) NOT NULL, `score` REAL NOT NULL)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_basic_6acc915386607` (`age` INTEGER NOT NULL, `name` VARCHAR(100) NOT NULL, `score` REAL NOT NULL)"
+        "CREATE TABLE `test_basic_6acc000000001` (`age` INTEGER NOT NULL, `name` VARCHAR(100) NOT NULL, `score` REAL NOT NULL)"
       ]
     },
     {
@@ -111,7 +111,7 @@
               "$o": 1
             },
             "args": [
-              "test_pk_unique_6acc91538669e"
+              "test_pk_unique_6acc000000001"
             ]
           },
           {
@@ -191,13 +191,13 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_pk_unique_6acc91538669e` (`id` INTEGER NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))",
+            "query": "CREATE TABLE `test_pk_unique_6acc000000001` (`id` INTEGER NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_pk_unique_6acc91538669e` (`id` INTEGER NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))"
+        "CREATE TABLE `test_pk_unique_6acc000000001` (`id` INTEGER NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))"
       ]
     },
     {
@@ -215,7 +215,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_add_6acc9153866e4"
+              "test_alter_add_6acc000000001"
             ]
           },
           {
@@ -253,7 +253,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_add_6acc9153866e4"
+              "test_alter_add_6acc000000001"
             ]
           },
           {
@@ -304,13 +304,13 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_alter_add_6acc9153866e4` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_alter_add_6acc000000001` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_alter_add_6acc9153866e4` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_alter_add_6acc000000001` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
         {
           "$object": "Schema\\Table\\SQLite",
           "id": 5
@@ -323,13 +323,13 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "ALTER TABLE `test_alter_add_6acc9153866e4` ADD COLUMN `description` TEXT NOT NULL",
+            "query": "ALTER TABLE `test_alter_add_6acc000000001` ADD COLUMN `description` TEXT NOT NULL",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "ALTER TABLE `test_alter_add_6acc9153866e4` ADD COLUMN `description` TEXT NOT NULL"
+        "ALTER TABLE `test_alter_add_6acc000000001` ADD COLUMN `description` TEXT NOT NULL"
       ]
     },
     {
@@ -347,7 +347,7 @@
               "$o": 1
             },
             "args": [
-              "test_index_6acc915386728"
+              "test_index_6acc000000001"
             ]
           },
           {
@@ -395,8 +395,8 @@
               "$o": 1
             },
             "args": [
-              "test_index_6acc915386728",
-              "idx_test_index_6acc915386728_email",
+              "test_index_6acc000000001",
+              "idx_test_index_6acc000000001_email",
               [
                 "email"
               ]
@@ -435,24 +435,24 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_index_6acc915386728` (`id` INTEGER NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_index_6acc000000001` (`id` INTEGER NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_index_6acc915386728` (`id` INTEGER NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_index_6acc000000001` (`id` INTEGER NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
         {
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE INDEX `idx_test_index_6acc915386728_email` ON `test_index_6acc915386728` (`email`)",
+            "query": "CREATE INDEX `idx_test_index_6acc000000001_email` ON `test_index_6acc000000001` (`email`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE INDEX `idx_test_index_6acc915386728_email` ON `test_index_6acc915386728` (`email`)"
+        "CREATE INDEX `idx_test_index_6acc000000001_email` ON `test_index_6acc000000001` (`email`)"
       ]
     },
     {
@@ -470,7 +470,7 @@
               "$o": 1
             },
             "args": [
-              "test_drop_6acc9153867c9"
+              "test_drop_6acc000000001"
             ]
           },
           {
@@ -508,7 +508,7 @@
               "$o": 1
             },
             "args": [
-              "test_drop_6acc9153867c9"
+              "test_drop_6acc000000001"
             ]
           },
           {
@@ -547,13 +547,13 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_drop_6acc9153867c9` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_drop_6acc000000001` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_drop_6acc9153867c9` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_drop_6acc000000001` (`id` INTEGER NOT NULL, PRIMARY KEY (`id`))",
         {
           "$object": "Schema\\Table\\SQLite",
           "id": 5
@@ -562,13 +562,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "DROP TABLE `test_drop_6acc9153867c9`",
+            "query": "DROP TABLE `test_drop_6acc000000001`",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "DROP TABLE `test_drop_6acc9153867c9`"
+        "DROP TABLE `test_drop_6acc000000001`"
       ]
     }
   ]

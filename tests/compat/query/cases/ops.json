@@ -883,6 +883,13 @@
             ]
           }
         ]
+      },
+      "expect": {
+        "query": "SELECT * FROM `t` WHERE (`a` IN (?, ?) OR `a` IS NULL) GROUP BY `b`, `2`",
+        "bindings": [
+          1,
+          "x"
+        ]
       }
     }
   ]

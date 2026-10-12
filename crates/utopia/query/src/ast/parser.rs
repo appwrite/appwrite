@@ -82,13 +82,13 @@ impl Parser {
     /// [`Tokenizer`] (as builders read their CTE queries).
     ///
     /// PHP: `$parser->parse(Tokenizer::filter((new Tokenizer())->tokenize($sql)))`.
-    pub fn parse_sql(&self, sql: &str) -> Result<Select> {
+    pub fn parse_sql<S: AsRef<[u8]> + ?Sized>(&self, sql: &S) -> Result<Select> {
         let tokens = Tokenizer::filter(Tokenizer::new().tokenize(sql)?);
         self.parse(&tokens)
     }
 }
 
-static EOF: Token<'static> = Token { kind: TokenType::Eof, value: Cow::Borrowed(""), position: 0 };
+static EOF: Token<'static> = Token { kind: TokenType::Eof, value: Cow::Borrowed(b""), position: 0 };
 
 struct State<'t, 'a> {
     tokens: &'t [Token<'a>],
@@ -101,18 +101,52 @@ fn error(message: String) -> Error {
     Error::query(message)
 }
 
-fn eq_upper(value: &str, upper: &str) -> bool {
-    value.eq_ignore_ascii_case(upper)
+/// An error quoting a token's value: `before`, the value's bytes, `after`
+/// (the message is not UTF-8 when the value is part of a character).
+fn quoting(before: String, value: &[u8], after: &str) -> Error {
+    let mut message = before.into_bytes();
+    message.extend_from_slice(value);
+    message.extend_from_slice(after.as_bytes());
+    Error::query_bytes(message)
 }
 
-fn unquote(raw: &str) -> String {
-    let inner = raw.get(1..raw.len().saturating_sub(1).max(1)).unwrap_or("");
-    match raw.as_bytes().first() {
-        Some(b'`') => inner.replace("``", "`"),
-        Some(b'"') => inner.replace("\"\"", "\""),
-        Some(b'[') => inner.replace("]]", "]"),
-        _ => inner.to_owned(),
+fn eq_upper(value: &[u8], upper: &str) -> bool {
+    value.eq_ignore_ascii_case(upper.as_bytes())
+}
+
+/// `substr($raw, 1, -1)`.
+fn inner(raw: &[u8]) -> &[u8] {
+    raw.get(1..raw.len().saturating_sub(1).max(1)).unwrap_or(b"")
+}
+
+/// `str_replace($from, $to, $subject)` on bytes.
+fn replace(subject: &[u8], from: &[u8], to: &[u8]) -> Vec<u8> {
+    let mut out = Vec::with_capacity(subject.len());
+    let mut i = 0;
+    while i < subject.len() {
+        if subject[i..].starts_with(from) {
+            out.extend_from_slice(to);
+            i += from.len();
+        } else {
+            out.push(subject[i]);
+            i += 1;
+        }
     }
+    out
+}
+
+fn text(bytes: &[u8]) -> String {
+    String::from_utf8_lossy(bytes).into_owned()
+}
+
+fn unquote(raw: &[u8]) -> String {
+    let inner = inner(raw);
+    text(&match raw.first() {
+        Some(b'`') => replace(inner, b"``", b"`"),
+        Some(b'"') => replace(inner, b"\"\"", b"\""),
+        Some(b'[') => replace(inner, b"]]", b"]"),
+        _ => inner.to_vec(),
+    })
 }
 
 impl<'t, 'a> State<'t, 'a> {
@@ -153,7 +187,11 @@ impl<'t, 'a> State<'t, 'a> {
     fn consume_keyword(&mut self, keyword: &str) -> Result<()> {
         if !self.match_keyword(keyword) {
             let t = self.current();
-            return Err(error(format!("Expected keyword '{keyword}' at position {}, got '{}'", t.position, t.value)));
+            return Err(quoting(
+                format!("Expected keyword '{keyword}' at position {}, got '", t.position),
+                &t.value,
+                "'",
+            ));
         }
         self.advance();
         Ok(())
@@ -162,7 +200,7 @@ impl<'t, 'a> State<'t, 'a> {
     fn expect(&mut self, kind: TokenType) -> Result<()> {
         let t = self.current();
         if t.kind != kind {
-            return Err(error(format!("Expected {} at position {}, got '{}'", kind.name(), t.position, t.value)));
+            return Err(quoting(format!("Expected {} at position {}, got '", kind.name(), t.position), &t.value, "'"));
         }
         self.advance();
         Ok(())
@@ -180,7 +218,7 @@ impl<'t, 'a> State<'t, 'a> {
     fn expect_null(&mut self) -> Result<()> {
         let t = self.current();
         if t.kind != TokenType::Null {
-            return Err(error(format!("Expected NULL at position {}, got '{}'", t.position, t.value)));
+            return Err(quoting(format!("Expected NULL at position {}, got '", t.position), &t.value, "'"));
         }
         self.advance();
         Ok(())
@@ -192,19 +230,18 @@ impl<'t, 'a> State<'t, 'a> {
             self.advance();
             return Ok(());
         }
-        Err(error(format!("Expected '{value}' at position {}, got '{}'", t.position, t.value)))
+        Err(quoting(format!("Expected '{value}' at position {}, got '", t.position), &t.value, "'"))
     }
 
     fn extract_identifier(&self, t: &Token<'_>) -> Result<String> {
         match t.kind {
-            TokenType::Identifier | TokenType::Keyword => Ok(t.value.clone().into_owned()),
+            TokenType::Identifier | TokenType::Keyword => Ok(text(&t.value)),
             TokenType::QuotedIdentifier => Ok(unquote(&t.value)),
-            _ => Err(error(format!(
-                "Expected identifier at position {}, got '{}' ({})",
-                t.position,
-                t.value,
-                t.kind.name()
-            ))),
+            _ => Err(quoting(
+                format!("Expected identifier at position {}, got '", t.position),
+                &t.value,
+                &format!("' ({})", t.kind.name()),
+            )),
         }
     }
 
@@ -491,8 +528,8 @@ impl<'t, 'a> State<'t, 'a> {
         }
 
         let t = self.current();
-        if t.kind == TokenType::Operator && matches!(&*t.value, "=" | "!=" | "<>" | "<" | ">" | "<=" | ">=") {
-            let operator = t.value.clone().into_owned();
+        if t.kind == TokenType::Operator && matches!(&*t.value, b"=" | b"!=" | b"<>" | b"<" | b">" | b"<=" | b">=") {
+            let operator = text(&t.value);
             self.advance();
             let right = self.addition()?;
             return self.postfix(Binary::new(left, operator, right).into());
@@ -530,8 +567,8 @@ impl<'t, 'a> State<'t, 'a> {
         let mut left = self.multiplication()?;
         loop {
             let t = self.current();
-            if t.kind == TokenType::Operator && matches!(&*t.value, "+" | "-" | "||") {
-                let operator = t.value.clone().into_owned();
+            if t.kind == TokenType::Operator && matches!(&*t.value, b"+" | b"-" | b"||") {
+                let operator = text(&t.value);
                 self.advance();
                 let right = self.multiplication()?;
                 left = Binary::new(left, operator, right).into();
@@ -547,8 +584,8 @@ impl<'t, 'a> State<'t, 'a> {
             let t = self.current();
             let operator = match t.kind {
                 TokenType::Star => "*",
-                TokenType::Operator if t.value == "/" => "/",
-                TokenType::Operator if t.value == "%" => "%",
+                TokenType::Operator if *t.value == *b"/" => "/",
+                TokenType::Operator if *t.value == *b"%" => "%",
                 _ => return Ok(left),
             };
             self.advance();
@@ -562,8 +599,8 @@ impl<'t, 'a> State<'t, 'a> {
         let mut operators = Vec::new();
         loop {
             let t = self.current();
-            if t.kind == TokenType::Operator && (t.value == "-" || t.value == "+") {
-                operators.push(if t.value == "-" { "-" } else { "+" });
+            if t.kind == TokenType::Operator && (*t.value == *b"-" || *t.value == *b"+") {
+                operators.push(if *t.value == *b"-" { "-" } else { "+" });
                 if operators.len() > MAX_PREFIX {
                     return Err(Error::Validation("Expression nesting too deep".into()));
                 }
@@ -574,7 +611,7 @@ impl<'t, 'a> State<'t, 'a> {
         }
 
         let mut expression = self.primary()?;
-        while self.current().kind == TokenType::Operator && self.current().value == "::" {
+        while self.current().kind == TokenType::Operator && *self.current().value == *b"::" {
             self.advance();
             let data_type = self.expect_identifier()?;
             expression = Cast::new(expression, data_type).into();
@@ -612,18 +649,16 @@ impl<'t, 'a> State<'t, 'a> {
         match t.kind {
             TokenType::Integer => {
                 self.advance();
-                return Ok(Literal { value: Value::Int(str_to_int(t.value.as_bytes())) }.into());
+                return Ok(Literal { value: Value::Int(str_to_int(&t.value)) }.into());
             }
             TokenType::Float => {
                 self.advance();
-                return Ok(Literal { value: Value::Float(str_to_float(t.value.as_bytes())) }.into());
+                return Ok(Literal { value: Value::Float(str_to_float(&t.value)) }.into());
             }
             TokenType::String => {
                 self.advance();
-                let raw: &str = &t.value;
-                let inner = raw.get(1..raw.len().saturating_sub(1).max(1)).unwrap_or("");
-                let inner = inner.replace("''", "'").replace("\\'", "'");
-                return Ok(Literal { value: Value::Str(Str::from(inner)) }.into());
+                let unescaped = replace(&replace(inner(&t.value), b"''", b"'"), b"\\'", b"'");
+                return Ok(Literal { value: Value::Str(Str::from(unescaped)) }.into());
             }
             TokenType::Boolean => {
                 self.advance();
@@ -635,7 +670,7 @@ impl<'t, 'a> State<'t, 'a> {
             }
             TokenType::Placeholder | TokenType::NamedPlaceholder | TokenType::NumberedPlaceholder => {
                 self.advance();
-                return Ok(Placeholder::new(t.value.clone().into_owned()).into());
+                return Ok(Placeholder::new(text(&t.value)).into());
             }
             TokenType::Star => {
                 self.advance();
@@ -663,7 +698,11 @@ impl<'t, 'a> State<'t, 'a> {
             return self.identifier_expression();
         }
 
-        Err(error(format!("Unexpected token '{}' ({}) at position {}", t.value, t.kind.name(), t.position)))
+        Err(quoting(
+            "Unexpected token '".into(),
+            &t.value,
+            &format!("' ({}) at position {}", t.kind.name(), t.position),
+        ))
     }
 
     fn identifier_expression(&mut self) -> Result<Expression> {
@@ -913,10 +952,11 @@ impl<'t, 'a> State<'t, 'a> {
                 nulls = Some(NullsPosition::Last);
             } else {
                 let t = self.current();
-                return Err(error(format!(
-                    "Expected FIRST or LAST after NULLS at position {}, got '{}'",
-                    t.position, t.value
-                )));
+                return Err(quoting(
+                    format!("Expected FIRST or LAST after NULLS at position {}, got '", t.position),
+                    &t.value,
+                    "'",
+                ));
             }
         }
 
@@ -952,7 +992,7 @@ impl<'t, 'a> State<'t, 'a> {
             specification.order_by = self.order_by_list()?;
         }
         if self.match_keyword("ROWS") || self.match_keyword("RANGE") {
-            specification.frame_type = Some(self.current().value.to_ascii_uppercase());
+            specification.frame_type = Some(text(&self.current().value.to_ascii_uppercase()));
             self.advance();
             if self.match_keyword("BETWEEN") {
                 self.advance();
@@ -991,7 +1031,7 @@ impl<'t, 'a> State<'t, 'a> {
         }
 
         if self.is(TokenType::Integer) {
-            let n = self.current().value.clone();
+            let n = text(&self.current().value);
             self.advance();
             for keyword in ["PRECEDING", "FOLLOWING"] {
                 if self.match_keyword(keyword) {
@@ -1006,7 +1046,7 @@ impl<'t, 'a> State<'t, 'a> {
         }
 
         let t = self.current();
-        Err(error(format!("Unexpected frame bound token '{}' at position {}", t.value, t.position)))
+        Err(quoting("Unexpected frame bound token '".into(), &t.value, &format!("' at position {}", t.position)))
     }
 }
 

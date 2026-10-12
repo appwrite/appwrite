@@ -254,7 +254,7 @@ impl Cx {
     /// The output of a library error, numbering the error object.
     fn error_output(&self, error: &Error) -> Json {
         let id = self.register(Box::new(ErrorObject::from_error(error)));
-        json!({"$error": {"class": error.php_class(), "message": error.to_string()}, "id": id})
+        json!({"$error": {"class": error.php_class(), "message": bytes_value(&error.message_bytes())}, "id": id})
     }
 
     fn engine_error(&self, class: &str, message: &str) -> Json {

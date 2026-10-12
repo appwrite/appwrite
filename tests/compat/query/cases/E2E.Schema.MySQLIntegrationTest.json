@@ -16,7 +16,7 @@
               "$o": 1
             },
             "args": [
-              "test_basic_6acc91534b4be"
+              "test_basic_6acc000000001"
             ]
           },
           {
@@ -87,13 +87,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_basic_6acc91534b4be` (`age` INT NOT NULL, `name` VARCHAR(100) NOT NULL, `active` TINYINT(1) NOT NULL)",
+            "query": "CREATE TABLE `test_basic_6acc000000001` (`age` INT NOT NULL, `name` VARCHAR(100) NOT NULL, `active` TINYINT(1) NOT NULL)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_basic_6acc91534b4be` (`age` INT NOT NULL, `name` VARCHAR(100) NOT NULL, `active` TINYINT(1) NOT NULL)"
+        "CREATE TABLE `test_basic_6acc000000001` (`age` INT NOT NULL, `name` VARCHAR(100) NOT NULL, `active` TINYINT(1) NOT NULL)"
       ]
     },
     {
@@ -111,7 +111,7 @@
               "$o": 1
             },
             "args": [
-              "test_collation_6acc91534b56f"
+              "test_collation_6acc000000001"
             ]
           },
           {
@@ -169,13 +169,13 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_collation_6acc91534b56f` (`name` VARCHAR(100) COLLATE utf8mb4_bin NOT NULL)",
+            "query": "CREATE TABLE `test_collation_6acc000000001` (`name` VARCHAR(100) COLLATE utf8mb4_bin NOT NULL)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_collation_6acc91534b56f` (`name` VARCHAR(100) COLLATE utf8mb4_bin NOT NULL)"
+        "CREATE TABLE `test_collation_6acc000000001` (`name` VARCHAR(100) COLLATE utf8mb4_bin NOT NULL)"
       ]
     },
     {
@@ -193,7 +193,7 @@
               "$o": 1
             },
             "args": [
-              "test_pk_uniq_6acc91534b5ab"
+              "test_pk_uniq_6acc000000001"
             ]
           },
           {
@@ -273,13 +273,13 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_pk_uniq_6acc91534b5ab` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))",
+            "query": "CREATE TABLE `test_pk_uniq_6acc000000001` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_pk_uniq_6acc91534b5ab` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))"
+        "CREATE TABLE `test_pk_uniq_6acc000000001` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))"
       ]
     },
     {
@@ -297,7 +297,7 @@
               "$o": 1
             },
             "args": [
-              "test_autoinc_6acc91534b5ff"
+              "test_autoinc_6acc000000001"
             ]
           },
           {
@@ -353,13 +353,13 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_autoinc_6acc91534b5ff` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `label` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_autoinc_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `label` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_autoinc_6acc91534b5ff` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `label` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))"
+        "CREATE TABLE `test_autoinc_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `label` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))"
       ]
     },
     {
@@ -377,7 +377,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_add_6acc91534b628"
+              "test_alter_add_6acc000000001"
             ]
           },
           {
@@ -415,7 +415,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_add_6acc91534b628"
+              "test_alter_add_6acc000000001"
             ]
           },
           {
@@ -466,13 +466,13 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_alter_add_6acc91534b628` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_alter_add_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_alter_add_6acc91534b628` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_alter_add_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
         {
           "$object": "Schema\\Table\\MySQL",
           "id": 5
@@ -485,13 +485,13 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "ALTER TABLE `test_alter_add_6acc91534b628` ADD COLUMN `description` TEXT NOT NULL",
+            "query": "ALTER TABLE `test_alter_add_6acc000000001` ADD COLUMN `description` TEXT NOT NULL",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "ALTER TABLE `test_alter_add_6acc91534b628` ADD COLUMN `description` TEXT NOT NULL"
+        "ALTER TABLE `test_alter_add_6acc000000001` ADD COLUMN `description` TEXT NOT NULL"
       ]
     },
     {
@@ -509,7 +509,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_drop_6acc91534b661"
+              "test_alter_drop_6acc000000001"
             ]
           },
           {
@@ -557,7 +557,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_drop_6acc91534b661"
+              "test_alter_drop_6acc000000001"
             ]
           },
           {
@@ -609,13 +609,13 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_alter_drop_6acc91534b661` (`id` INT NOT NULL, `temp` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_alter_drop_6acc000000001` (`id` INT NOT NULL, `temp` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_alter_drop_6acc91534b661` (`id` INT NOT NULL, `temp` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_alter_drop_6acc000000001` (`id` INT NOT NULL, `temp` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`))",
         {
           "$object": "Schema\\Table\\MySQL",
           "id": 6
@@ -628,13 +628,13 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "ALTER TABLE `test_alter_drop_6acc91534b661` DROP COLUMN `temp`",
+            "query": "ALTER TABLE `test_alter_drop_6acc000000001` DROP COLUMN `temp`",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "ALTER TABLE `test_alter_drop_6acc91534b661` DROP COLUMN `temp`"
+        "ALTER TABLE `test_alter_drop_6acc000000001` DROP COLUMN `temp`"
       ]
     },
     {
@@ -652,7 +652,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_idx_6acc91534b693"
+              "test_alter_idx_6acc000000001"
             ]
           },
           {
@@ -700,7 +700,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_idx_6acc91534b693"
+              "test_alter_idx_6acc000000001"
             ]
           },
           {
@@ -755,13 +755,13 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_alter_idx_6acc91534b693` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_alter_idx_6acc000000001` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_alter_idx_6acc91534b693` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_alter_idx_6acc000000001` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
         {
           "$object": "Schema\\Table\\MySQL",
           "id": 6
@@ -774,13 +774,13 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "ALTER TABLE `test_alter_idx_6acc91534b693` ADD INDEX `idx_email` (`email`)",
+            "query": "ALTER TABLE `test_alter_idx_6acc000000001` ADD INDEX `idx_email` (`email`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "ALTER TABLE `test_alter_idx_6acc91534b693` ADD INDEX `idx_email` (`email`)"
+        "ALTER TABLE `test_alter_idx_6acc000000001` ADD INDEX `idx_email` (`email`)"
       ]
     },
     {
@@ -798,7 +798,7 @@
               "$o": 1
             },
             "args": [
-              "test_drop_6acc91534b6ce"
+              "test_drop_6acc000000001"
             ]
           },
           {
@@ -836,7 +836,7 @@
               "$o": 1
             },
             "args": [
-              "test_drop_6acc91534b6ce"
+              "test_drop_6acc000000001"
             ]
           },
           {
@@ -875,13 +875,13 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_drop_6acc91534b6ce` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_drop_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_drop_6acc91534b6ce` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_drop_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
         {
           "$object": "Schema\\Table\\MySQL",
           "id": 5
@@ -890,13 +890,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "DROP TABLE `test_drop_6acc91534b6ce`",
+            "query": "DROP TABLE `test_drop_6acc000000001`",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "DROP TABLE `test_drop_6acc91534b6ce`"
+        "DROP TABLE `test_drop_6acc000000001`"
       ]
     },
     {
@@ -914,7 +914,7 @@
               "$o": 1
             },
             "args": [
-              "test_fk_parent_6acc91534b6f5"
+              "test_fk_parent_6acc000000001"
             ]
           },
           {
@@ -943,7 +943,7 @@
               "$o": 1
             },
             "args": [
-              "test_fk_child_6acc91534b6f6"
+              "test_fk_child_6acc000000002"
             ]
           },
           {
@@ -993,7 +993,7 @@
               "$o": 8
             },
             "args": [
-              "test_fk_parent_6acc91534b6f5"
+              "test_fk_parent_6acc000000001"
             ]
           },
           {
@@ -1039,13 +1039,13 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_fk_parent_6acc91534b6f5` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_fk_parent_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_fk_parent_6acc91534b6f5` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_fk_parent_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
         {
           "$object": "Schema\\Table\\MySQL",
           "id": 5
@@ -1082,13 +1082,13 @@
           "$value": "Builder\\Statement",
           "id": 9,
           "props": {
-            "query": "CREATE TABLE `test_fk_child_6acc91534b6f6` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `parent_id` BIGINT UNSIGNED NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`parent_id`) REFERENCES `test_fk_parent_6acc91534b6f5` (`id`) ON DELETE CASCADE)",
+            "query": "CREATE TABLE `test_fk_child_6acc000000002` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `parent_id` BIGINT UNSIGNED NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`parent_id`) REFERENCES `test_fk_parent_6acc000000001` (`id`) ON DELETE CASCADE)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_fk_child_6acc91534b6f6` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `parent_id` BIGINT UNSIGNED NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`parent_id`) REFERENCES `test_fk_parent_6acc91534b6f5` (`id`) ON DELETE CASCADE)"
+        "CREATE TABLE `test_fk_child_6acc000000002` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `parent_id` BIGINT UNSIGNED NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`parent_id`) REFERENCES `test_fk_parent_6acc000000001` (`id`) ON DELETE CASCADE)"
       ]
     },
     {
@@ -1106,7 +1106,7 @@
               "$o": 1
             },
             "args": [
-              "test_null_def_6acc91535367d"
+              "test_null_def_6acc000000001"
             ]
           },
           {
@@ -1225,13 +1225,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_null_def_6acc91535367d` (`id` INT NOT NULL, `nickname` VARCHAR(100) NULL DEFAULT 'anonymous', `score` INT NOT NULL DEFAULT 0, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_null_def_6acc000000001` (`id` INT NOT NULL, `nickname` VARCHAR(100) NULL DEFAULT 'anonymous', `score` INT NOT NULL DEFAULT 0, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_null_def_6acc91535367d` (`id` INT NOT NULL, `nickname` VARCHAR(100) NULL DEFAULT 'anonymous', `score` INT NOT NULL DEFAULT 0, PRIMARY KEY (`id`))"
+        "CREATE TABLE `test_null_def_6acc000000001` (`id` INT NOT NULL, `nickname` VARCHAR(100) NULL DEFAULT 'anonymous', `score` INT NOT NULL DEFAULT 0, PRIMARY KEY (`id`))"
       ]
     },
     {
@@ -1249,7 +1249,7 @@
               "$o": 1
             },
             "args": [
-              "test_check_6acc9153537ae"
+              "test_check_6acc000000001"
             ]
           },
           {
@@ -1318,13 +1318,13 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_check_6acc9153537ae` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `age` INT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `age_range` CHECK (`age` >= 0 AND `age` < 150))",
+            "query": "CREATE TABLE `test_check_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `age` INT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `age_range` CHECK (`age` >= 0 AND `age` < 150))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_check_6acc9153537ae` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `age` INT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `age_range` CHECK (`age` >= 0 AND `age` < 150))"
+        "CREATE TABLE `test_check_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `age` INT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `age_range` CHECK (`age` >= 0 AND `age` < 150))"
       ]
     },
     {
@@ -1342,7 +1342,7 @@
               "$o": 1
             },
             "args": [
-              "test_generated_6acc9153537e1"
+              "test_generated_6acc000000001"
             ]
           },
           {
@@ -1447,13 +1447,13 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "CREATE TABLE `test_generated_6acc9153537e1` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `width` INT NOT NULL, `height` INT NOT NULL, `area` INT GENERATED ALWAYS AS (`width` * `height`) STORED NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_generated_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `width` INT NOT NULL, `height` INT NOT NULL, `area` INT GENERATED ALWAYS AS (`width` * `height`) STORED NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_generated_6acc9153537e1` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `width` INT NOT NULL, `height` INT NOT NULL, `area` INT GENERATED ALWAYS AS (`width` * `height`) STORED NOT NULL, PRIMARY KEY (`id`))"
+        "CREATE TABLE `test_generated_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `width` INT NOT NULL, `height` INT NOT NULL, `area` INT GENERATED ALWAYS AS (`width` * `height`) STORED NOT NULL, PRIMARY KEY (`id`))"
       ]
     },
     {
@@ -1471,7 +1471,7 @@
               "$o": 1
             },
             "args": [
-              "test_partition_6acc915353871"
+              "test_partition_6acc000000001"
             ]
           },
           {
@@ -1545,14 +1545,14 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_partition_6acc915353871` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)",
+            "query": "CREATE TABLE `test_partition_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_partition_6acc915353871` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)",
-        "CREATE TABLE `test_partition_6acc915353871` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)"
+        "CREATE TABLE `test_partition_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)",
+        "CREATE TABLE `test_partition_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)"
       ]
     },
     {
@@ -1570,7 +1570,7 @@
               "$o": 1
             },
             "args": [
-              "test_composite_idx_6acc915365c6c"
+              "test_composite_idx_6acc000000001"
             ]
           },
           {
@@ -1657,13 +1657,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_composite_idx_6acc915365c6c` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `first_name` VARCHAR(100) NOT NULL, `last_name` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`), INDEX `idx_name` (`last_name`, `first_name`))",
+            "query": "CREATE TABLE `test_composite_idx_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `first_name` VARCHAR(100) NOT NULL, `last_name` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`), INDEX `idx_name` (`last_name`, `first_name`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_composite_idx_6acc915365c6c` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `first_name` VARCHAR(100) NOT NULL, `last_name` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`), INDEX `idx_name` (`last_name`, `first_name`))"
+        "CREATE TABLE `test_composite_idx_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `first_name` VARCHAR(100) NOT NULL, `last_name` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`), INDEX `idx_name` (`last_name`, `first_name`))"
       ]
     },
     {
@@ -1681,7 +1681,7 @@
               "$o": 1
             },
             "args": [
-              "test_fulltext_6acc915365ce6"
+              "test_fulltext_6acc000000001"
             ]
           },
           {
@@ -1767,13 +1767,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_fulltext_6acc915365ce6` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `title` VARCHAR(200) NOT NULL, `body` TEXT NOT NULL, PRIMARY KEY (`id`), FULLTEXT INDEX `ft_title_body` (`title`, `body`))",
+            "query": "CREATE TABLE `test_fulltext_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `title` VARCHAR(200) NOT NULL, `body` TEXT NOT NULL, PRIMARY KEY (`id`), FULLTEXT INDEX `ft_title_body` (`title`, `body`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_fulltext_6acc915365ce6` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `title` VARCHAR(200) NOT NULL, `body` TEXT NOT NULL, PRIMARY KEY (`id`), FULLTEXT INDEX `ft_title_body` (`title`, `body`))"
+        "CREATE TABLE `test_fulltext_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `title` VARCHAR(200) NOT NULL, `body` TEXT NOT NULL, PRIMARY KEY (`id`), FULLTEXT INDEX `ft_title_body` (`title`, `body`))"
       ]
     },
     {
@@ -1791,7 +1791,7 @@
               "$o": 1
             },
             "args": [
-              "test_truncate_6acc915365d6d"
+              "test_truncate_6acc000000001"
             ]
           },
           {
@@ -1839,7 +1839,7 @@
               "$o": 1
             },
             "args": [
-              "test_truncate_6acc915365d6d"
+              "test_truncate_6acc000000001"
             ]
           },
           {
@@ -1882,13 +1882,13 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_truncate_6acc915365d6d` (`id` INT NOT NULL, `name` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
+            "query": "CREATE TABLE `test_truncate_6acc000000001` (`id` INT NOT NULL, `name` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_truncate_6acc915365d6d` (`id` INT NOT NULL, `name` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
+        "CREATE TABLE `test_truncate_6acc000000001` (`id` INT NOT NULL, `name` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
         {
           "$object": "Schema\\Table\\MySQL",
           "id": 6
@@ -1897,13 +1897,13 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "TRUNCATE TABLE `test_truncate_6acc915365d6d`",
+            "query": "TRUNCATE TABLE `test_truncate_6acc000000001`",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "TRUNCATE TABLE `test_truncate_6acc915365d6d`"
+        "TRUNCATE TABLE `test_truncate_6acc000000001`"
       ]
     }
   ]

@@ -16,7 +16,7 @@
               "$o": 1
             },
             "args": [
-              "test_mergetree_6acc91527ce17"
+              "test_mergetree_6acc000000001"
             ]
           },
           {
@@ -98,13 +98,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_mergetree_6acc91527ce17` (`id` Int32, `name` String, `value` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
+            "query": "CREATE TABLE `test_mergetree_6acc000000001` (`id` Int32, `name` String, `value` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_mergetree_6acc91527ce17` (`id` Int32, `name` String, `value` Int32) ENGINE = MergeTree() ORDER BY (`id`)"
+        "CREATE TABLE `test_mergetree_6acc000000001` (`id` Int32, `name` String, `value` Int32) ENGINE = MergeTree() ORDER BY (`id`)"
       ]
     },
     {
@@ -122,7 +122,7 @@
               "$o": 1
             },
             "args": [
-              "test_nullable_6acc91527ef31"
+              "test_nullable_6acc000000001"
             ]
           },
           {
@@ -226,13 +226,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_nullable_6acc91527ef31` (`id` Int32, `optional_name` Nullable(String), `optional_count` Nullable(Int32)) ENGINE = MergeTree() ORDER BY (`id`)",
+            "query": "CREATE TABLE `test_nullable_6acc000000001` (`id` Int32, `optional_name` Nullable(String), `optional_count` Nullable(Int32)) ENGINE = MergeTree() ORDER BY (`id`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_nullable_6acc91527ef31` (`id` Int32, `optional_name` Nullable(String), `optional_count` Nullable(Int32)) ENGINE = MergeTree() ORDER BY (`id`)"
+        "CREATE TABLE `test_nullable_6acc000000001` (`id` Int32, `optional_name` Nullable(String), `optional_count` Nullable(Int32)) ENGINE = MergeTree() ORDER BY (`id`)"
       ]
     },
     {
@@ -250,7 +250,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_add_6acc91527efd4"
+              "test_alter_add_6acc000000001"
             ]
           },
           {
@@ -288,7 +288,7 @@
               "$o": 1
             },
             "args": [
-              "test_alter_add_6acc91527efd4"
+              "test_alter_add_6acc000000001"
             ]
           },
           {
@@ -340,13 +340,13 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_alter_add_6acc91527efd4` (`id` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
+            "query": "CREATE TABLE `test_alter_add_6acc000000001` (`id` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_alter_add_6acc91527efd4` (`id` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
+        "CREATE TABLE `test_alter_add_6acc000000001` (`id` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
         {
           "$object": "Schema\\Table\\ClickHouse",
           "id": 5
@@ -359,13 +359,13 @@
           "$value": "Builder\\Statement",
           "id": 7,
           "props": {
-            "query": "ALTER TABLE `test_alter_add_6acc91527efd4` ADD COLUMN `description` String",
+            "query": "ALTER TABLE `test_alter_add_6acc000000001` ADD COLUMN `description` String",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "ALTER TABLE `test_alter_add_6acc91527efd4` ADD COLUMN `description` String"
+        "ALTER TABLE `test_alter_add_6acc000000001` ADD COLUMN `description` String"
       ]
     },
     {
@@ -383,7 +383,7 @@
               "$o": 1
             },
             "args": [
-              "test_drop_6acc91527f023"
+              "test_drop_6acc000000001"
             ]
           },
           {
@@ -421,7 +421,7 @@
               "$o": 1
             },
             "args": [
-              "test_drop_6acc91527f023"
+              "test_drop_6acc000000001"
             ]
           },
           {
@@ -460,13 +460,13 @@
           "$value": "Builder\\Statement",
           "id": 4,
           "props": {
-            "query": "CREATE TABLE `test_drop_6acc91527f023` (`id` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
+            "query": "CREATE TABLE `test_drop_6acc000000001` (`id` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_drop_6acc91527f023` (`id` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
+        "CREATE TABLE `test_drop_6acc000000001` (`id` Int32) ENGINE = MergeTree() ORDER BY (`id`)",
         {
           "$object": "Schema\\Table\\ClickHouse",
           "id": 5
@@ -475,13 +475,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "DROP TABLE `test_drop_6acc91527f023`",
+            "query": "DROP TABLE `test_drop_6acc000000001`",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "DROP TABLE `test_drop_6acc91527f023`"
+        "DROP TABLE `test_drop_6acc000000001`"
       ]
     },
     {
@@ -499,7 +499,7 @@
               "$o": 1
             },
             "args": [
-              "test_dt64_6acc91527f057"
+              "test_dt64_6acc000000001"
             ]
           },
           {
@@ -582,13 +582,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_dt64_6acc91527f057` (`id` Int32, `created_at` DateTime64(3), `updated_at` DateTime64(6)) ENGINE = MergeTree() ORDER BY (`id`)",
+            "query": "CREATE TABLE `test_dt64_6acc000000001` (`id` Int32, `created_at` DateTime64(3), `updated_at` DateTime64(6)) ENGINE = MergeTree() ORDER BY (`id`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_dt64_6acc91527f057` (`id` Int32, `created_at` DateTime64(3), `updated_at` DateTime64(6)) ENGINE = MergeTree() ORDER BY (`id`)"
+        "CREATE TABLE `test_dt64_6acc000000001` (`id` Int32, `created_at` DateTime64(3), `updated_at` DateTime64(6)) ENGINE = MergeTree() ORDER BY (`id`)"
       ]
     },
     {
@@ -606,7 +606,7 @@
               "$o": 1
             },
             "args": [
-              "test_replacing_6acc91527f0fb"
+              "test_replacing_6acc000000001"
             ]
           },
           {
@@ -725,13 +725,13 @@
           "$value": "Builder\\Statement",
           "id": 6,
           "props": {
-            "query": "CREATE TABLE `test_replacing_6acc91527f0fb` (`id` UInt32, `name` String, `version` UInt32) ENGINE = ReplacingMergeTree(`version`) ORDER BY (`id`)",
+            "query": "CREATE TABLE `test_replacing_6acc000000001` (`id` UInt32, `name` String, `version` UInt32) ENGINE = ReplacingMergeTree(`version`) ORDER BY (`id`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_replacing_6acc91527f0fb` (`id` UInt32, `name` String, `version` UInt32) ENGINE = ReplacingMergeTree(`version`) ORDER BY (`id`)"
+        "CREATE TABLE `test_replacing_6acc000000001` (`id` UInt32, `name` String, `version` UInt32) ENGINE = ReplacingMergeTree(`version`) ORDER BY (`id`)"
       ]
     },
     {
@@ -749,7 +749,7 @@
               "$o": 1
             },
             "args": [
-              "test_summing_6acc91527f143"
+              "test_summing_6acc000000001"
             ]
           },
           {
@@ -855,13 +855,13 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_summing_6acc91527f143` (`key` UInt32, `total` UInt64) ENGINE = SummingMergeTree(`total`) ORDER BY (`key`)",
+            "query": "CREATE TABLE `test_summing_6acc000000001` (`key` UInt32, `total` UInt64) ENGINE = SummingMergeTree(`total`) ORDER BY (`key`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_summing_6acc91527f143` (`key` UInt32, `total` UInt64) ENGINE = SummingMergeTree(`total`) ORDER BY (`key`)"
+        "CREATE TABLE `test_summing_6acc000000001` (`key` UInt32, `total` UInt64) ENGINE = SummingMergeTree(`total`) ORDER BY (`key`)"
       ]
     },
     {
@@ -915,7 +915,7 @@
               "$o": 1
             },
             "args": [
-              "test_partition_6acc91527f21e"
+              "test_partition_6acc000000001"
             ]
           },
           {
@@ -1002,14 +1002,14 @@
           "$value": "Builder\\Statement",
           "id": 5,
           "props": {
-            "query": "CREATE TABLE `test_partition_6acc91527f21e` (`id` Int32, `ts` DateTime) ENGINE = MergeTree() PARTITION BY toYYYYMM(`ts`) ORDER BY (`id`)",
+            "query": "CREATE TABLE `test_partition_6acc000000001` (`id` Int32, `ts` DateTime) ENGINE = MergeTree() PARTITION BY toYYYYMM(`ts`) ORDER BY (`id`)",
             "bindings": [],
             "readOnly": false,
             "namedBindings": null
           }
         },
-        "CREATE TABLE `test_partition_6acc91527f21e` (`id` Int32, `ts` DateTime) ENGINE = MergeTree() PARTITION BY toYYYYMM(`ts`) ORDER BY (`id`)",
-        "CREATE TABLE `test_partition_6acc91527f21e` (`id` Int32, `ts` DateTime) ENGINE = MergeTree() PARTITION BY toYYYYMM(`ts`) ORDER BY (`id`)"
+        "CREATE TABLE `test_partition_6acc000000001` (`id` Int32, `ts` DateTime) ENGINE = MergeTree() PARTITION BY toYYYYMM(`ts`) ORDER BY (`id`)",
+        "CREATE TABLE `test_partition_6acc000000001` (`id` Int32, `ts` DateTime) ENGINE = MergeTree() PARTITION BY toYYYYMM(`ts`) ORDER BY (`id`)"
       ]
     }
   ]

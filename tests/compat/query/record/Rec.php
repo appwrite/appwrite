@@ -45,6 +45,7 @@ final class Rec
 
     public static function begin(): void
     {
+        self::$fixed = 0;
         self::$replay = new Replay();
         self::$events = [];
         self::$collectors = [];
@@ -543,6 +544,26 @@ final class Rec
     public static function second(): mixed
     {
         return self::$second;
+    }
+
+    private static int $fixed = 0;
+
+    /**
+     * uniqid() / rand() made deterministic, so recording twice writes the
+     * same programs.
+     *
+     * @param array<int|string, mixed> $args
+     */
+    public static function fixed(string $function, array $args): string|int
+    {
+        self::$fixed++;
+        if ($function === 'uniqid') {
+            return ($args[0] ?? '') . \sprintf('%013x', 0x6acc000000000 + self::$fixed);
+        }
+        $min = (int) ($args[0] ?? 0);
+        $max = (int) ($args[1] ?? \getrandmax());
+
+        return $min + (self::$fixed * 7919) % \max(1, $max - $min + 1);
     }
 
     public static function soft(mixed ...$args): void

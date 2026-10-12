@@ -238,6 +238,10 @@ final class Rewriter extends NodeVisitorAbstract
             if ($name === 'class_implements' && \count($node->args) === 1) {
                 return $this->rec('impls', [$node->args[0]->value]);
             }
+            // Recordings are deterministic: uniqid() and rand() replay the same values.
+            if ($name === 'uniqid' || $name === 'rand' || $name === 'mt_rand') {
+                return $this->rec('fixed', [new String_($name), $this->argArray($node->args)]);
+            }
             if ($name === 'get_class' && \count($node->args) === 1) {
                 return $this->rec('cls', [$node->args[0]->value]);
             }

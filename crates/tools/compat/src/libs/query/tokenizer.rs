@@ -35,7 +35,7 @@ pub(crate) fn construct(class: &str, a: &mut Args) -> Option<Outcome> {
                 None => return Err(fault("missing token type")),
             };
             let position = usize::try_from(a.int(2, "position")?).map_err(|_| fault("negative position"))?;
-            Ok(Ret::obj(Token::new(kind, a.str(1, "value")?, position)))
+            Ok(Ret::obj(Token::new(kind, bytes_arg(a, 1, "value")?, position)))
         })());
     }
     let (class, tokenizer) = tokenizer_of(class)?;
@@ -67,6 +67,14 @@ pub(crate) fn enum_call(_class: &str, _case: &str, _method: &str, _args: &mut Ar
     None
 }
 
+/// A string argument as PHP's bytes (`$bytes` values included).
+fn bytes_arg(a: &Args, index: usize, name: &str) -> Result<Vec<u8>, super::engine::Failure> {
+    match a.value(index, name)? {
+        utopia_query::Value::Str(s) => Ok(s.as_bytes().to_vec()),
+        _ => Ok(a.str(index, name)?.into_bytes()),
+    }
+}
+
 /// Tokens as a PHP list.
 pub(crate) fn tokens_ret(tokens: Vec<Token<'static>>) -> Ret {
     Ret::List(tokens.into_iter().map(Ret::obj).collect())
@@ -79,7 +87,7 @@ impl Object for TokenizerObject {
     fn call(&mut self, method: &str, a: &mut Args) -> Option<Outcome> {
         match method {
             "tokenize" => Some((|| -> Outcome {
-                let sql = a.str(0, "sql")?;
+                let sql = bytes_arg(a, 0, "sql")?;
                 let tokens = self.tokenizer.tokenize(&sql)?;
                 Ok(tokens_ret(tokens.into_iter().map(Token::into_owned).collect()))
             })()),
@@ -106,7 +114,7 @@ impl Object for Token<'static> {
     fn props(&self) -> Vec<(&'static str, Ret)> {
         vec![
             ("type", Ret::Enum("Tokenizer\\TokenType".into(), self.kind.name())),
-            ("value", Ret::str(self.value.as_bytes())),
+            ("value", Ret::str(&*self.value)),
             ("position", Ret::int(self.position as i64)),
         ]
     }

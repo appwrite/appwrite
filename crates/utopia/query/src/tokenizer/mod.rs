@@ -28,7 +28,7 @@
 //! let tokens = Tokenizer::filter(Tokenizer::new().tokenize("SELECT * FROM users")?);
 //! let kinds: Vec<TokenType> = tokens.iter().map(|t| t.kind).collect();
 //! assert_eq!(kinds, [TokenType::Keyword, TokenType::Star, TokenType::Keyword, TokenType::Identifier, TokenType::Eof]);
-//! assert_eq!(tokens[3].value, "users");
+//! assert_eq!(tokens[3].text(), "users");
 //! # Ok::<(), utopia_query::Error>(())
 //! ```
 //!
@@ -167,8 +167,12 @@ impl TokenType {
 
 /// One token: its type, its text and its byte position in the SQL.
 ///
-/// The value borrows the SQL text, except for keywords, `NULL` and booleans
-/// (upper-cased) and tokens of MySQL SQL whose `#` comments were rewritten.
+/// The value is bytes, as PHP's strings are: a character the tokenizer does
+/// not know outside quotes is one operator token per byte, so a multi-byte
+/// UTF-8 character becomes several tokens that are not UTF-8 on their own
+/// ([`Token::text`] reads a value as text). It borrows the SQL text, except
+/// for keywords, `NULL` and booleans (upper-cased) and tokens of MySQL SQL
+/// whose `#` comments were rewritten.
 ///
 /// PHP: `Utopia\Query\Tokenizer\Token` (`type`, `value`, `position`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -180,7 +184,7 @@ pub struct Token<'a> {
     /// Its text.
     ///
     /// PHP: `$value`.
-    pub value: Cow<'a, str>,
+    pub value: Cow<'a, [u8]>,
     /// Its byte offset in the SQL.
     ///
     /// PHP: `$position`.
@@ -191,8 +195,13 @@ impl<'a> Token<'a> {
     /// A token.
     ///
     /// PHP: `new Token($type, $value, $position)`.
-    pub fn new(kind: TokenType, value: impl Into<Cow<'a, str>>, position: usize) -> Self {
+    pub fn new(kind: TokenType, value: impl Into<Cow<'a, [u8]>>, position: usize) -> Self {
         Token { kind, value: value.into(), position }
+    }
+
+    /// The value as text (lossy where it is not UTF-8).
+    pub fn text(&self) -> Cow<'_, str> {
+        String::from_utf8_lossy(&self.value)
     }
 
     /// The token, owning its value.
@@ -386,7 +395,7 @@ impl Tokenizer {
     ///
     /// let tokens = Tokenizer::mysql().tokenize("SELECT 1 #note")?;
     /// assert_eq!(tokens[4].kind, TokenType::LineComment);
-    /// assert_eq!(tokens[4].value, "-- note");
+    /// assert_eq!(tokens[4].text(), "-- note");
     /// assert!(Tokenizer::new().tokenize("SELECT 'open").is_err());
     /// # Ok::<(), utopia_query::Error>(())
     /// ```
@@ -397,7 +406,8 @@ impl Tokenizer {
     /// $tokens = (new MySQL())->tokenize('SELECT 1 #note');
     /// echo $tokens[4]->type->name, ' ', $tokens[4]->value, "\n"; // LineComment -- note
     /// ```
-    pub fn tokenize<'a>(&self, sql: &'a str) -> Result<Vec<Token<'a>>> {
+    pub fn tokenize<'a, S: AsRef<[u8]> + ?Sized>(&self, sql: &'a S) -> Result<Vec<Token<'a>>> {
+        let sql: &'a [u8] = sql.as_ref();
         if self.hash_comments
             && let Some(rewritten) = replace_hash_comments(sql)
         {
@@ -419,19 +429,18 @@ impl Tokenizer {
         tokens
     }
 
-    fn scan<'a>(&self, sql: &'a str) -> Result<Vec<Token<'a>>> {
-        let mut scanner = Scanner { sql, bytes: sql.as_bytes(), pos: 0 };
+    fn scan<'a>(&self, sql: &'a [u8]) -> Result<Vec<Token<'a>>> {
+        let mut scanner = Scanner { bytes: sql, pos: 0 };
         let mut tokens = Vec::with_capacity(sql.len() / 3 + 1);
         while scanner.pos < scanner.bytes.len() {
             tokens.push(scanner.next(self.quote)?);
         }
-        tokens.push(Token { kind: TokenType::Eof, value: Cow::Borrowed(""), position: scanner.pos });
+        tokens.push(Token { kind: TokenType::Eof, value: Cow::Borrowed(b""), position: scanner.pos });
         Ok(tokens)
     }
 }
 
 struct Scanner<'a> {
-    sql: &'a str,
     bytes: &'a [u8],
     pos: usize,
 }
@@ -446,12 +455,12 @@ impl<'a> Scanner<'a> {
     }
 
     fn token(&self, kind: TokenType, start: usize) -> Token<'a> {
-        Token { kind, value: Cow::Borrowed(&self.sql[start..self.pos]), position: start }
+        Token { kind, value: Cow::Borrowed(&self.bytes[start..self.pos]), position: start }
     }
 
     fn fixed(&mut self, kind: TokenType, value: &'static str, start: usize) -> Token<'a> {
         self.pos += value.len();
-        Token { kind, value: Cow::Borrowed(value), position: start }
+        Token { kind, value: Cow::Borrowed(value.as_bytes()), position: start }
     }
 
     fn next(&mut self, quote: u8) -> Result<Token<'a>> {
@@ -617,7 +626,7 @@ impl<'a> Scanner<'a> {
                 *u = c.to_ascii_uppercase();
             }
             if let Some((kind, value)) = keyword(&upper[..word.len()]) {
-                return Token { kind, value: Cow::Borrowed(value), position: start };
+                return Token { kind, value: Cow::Borrowed(value.as_bytes()), position: start };
             }
         }
         self.token(TokenType::Identifier, start)
@@ -638,19 +647,17 @@ impl<'a> Scanner<'a> {
         if let Some(op) = single_operator(c) {
             return self.fixed(TokenType::Operator, op, start);
         }
-        // Any other character is a one-character operator. PHP splits a
-        // multi-byte UTF-8 character into one token per byte; a `str` cannot
-        // hold a partial character, so it stays one token here.
-        let width = if c < 0x80 { 1 } else { self.sql[start..].chars().next().map_or(1, char::len_utf8) };
-        self.pos += width;
+        // Any other byte is a one-byte operator (a multi-byte UTF-8
+        // character is one token per byte, as in PHP).
+        self.pos += 1;
         self.token(TokenType::Operator, start)
     }
 }
 
 /// MySQL's `#` comments rewritten to `-- ` outside strings and quoted
 /// identifiers (`None` when the SQL has none).
-fn replace_hash_comments(sql: &str) -> Option<String> {
-    let bytes = sql.as_bytes();
+fn replace_hash_comments(sql: &[u8]) -> Option<Vec<u8>> {
+    let bytes = sql;
     let len = bytes.len();
     let mut hashes = Vec::new();
     let mut i = 0;
@@ -685,14 +692,14 @@ fn replace_hash_comments(sql: &str) -> Option<String> {
     if hashes.is_empty() {
         return None;
     }
-    let mut out = String::with_capacity(len + hashes.len() * 2);
+    let mut out = Vec::with_capacity(len + hashes.len() * 2);
     let mut from = 0;
     for h in hashes {
-        out.push_str(&sql[from..h]);
-        out.push_str("-- ");
+        out.extend_from_slice(&sql[from..h]);
+        out.extend_from_slice(b"-- ");
         from = h + 1;
     }
-    out.push_str(&sql[from.min(len)..]);
+    out.extend_from_slice(&sql[from.min(len)..]);
     Some(out)
 }
 
@@ -701,12 +708,12 @@ fn is_op(t: &Token<'_>) -> bool {
 }
 
 /// PostgreSQL's multi-character operators, merged from adjacent tokens.
-fn merge_postgres_operators<'a>(sql: &'a str, tokens: &mut Vec<Token<'a>>) {
+fn merge_postgres_operators<'a>(sql: &'a [u8], tokens: &mut Vec<Token<'a>>) {
     let count = tokens.len();
     let mut out = 0;
     let mut i = 0;
     // Adjacent tokens cover adjacent text: a merged operator is the span.
-    let span = |tokens: &[Token<'a>], from: usize, to: usize| -> &'a str {
+    let span = |tokens: &[Token<'a>], from: usize, to: usize| -> &'a [u8] {
         let start = tokens[from].position;
         let end = tokens[to].position + tokens[to].value.len();
         &sql[start..end]
@@ -715,13 +722,13 @@ fn merge_postgres_operators<'a>(sql: &'a str, tokens: &mut Vec<Token<'a>>) {
         let mut merged = None;
         if i + 2 < count && is_op(&tokens[i]) && is_op(&tokens[i + 1]) && is_op(&tokens[i + 2]) {
             let three = span(tokens, i, i + 2);
-            if three == "<->" || three == "<#>" {
+            if three == b"<->" || three == b"<#>" {
                 merged = Some((three, 3));
             }
         }
         if merged.is_none() && i + 1 < count && is_op(&tokens[i]) && is_op(&tokens[i + 1]) {
             let two = span(tokens, i, i + 1);
-            if two == "@>" || two == "<@" || two == "<=>" {
+            if two == b"@>" || two == b"<@" || two == b"<=>" {
                 merged = Some((two, 2));
             }
         }
@@ -729,7 +736,7 @@ fn merge_postgres_operators<'a>(sql: &'a str, tokens: &mut Vec<Token<'a>>) {
             && i + 1 < count
             && tokens[i].kind == TokenType::Placeholder
             && tokens[i + 1].kind == TokenType::Operator
-            && (tokens[i + 1].value == "|" || tokens[i + 1].value == "&")
+            && (*tokens[i + 1].value == *b"|" || *tokens[i + 1].value == *b"&")
         {
             merged = Some((span(tokens, i, i + 1), 2));
         }
