@@ -201,6 +201,8 @@ impl Database {
     /// A query value with documents turned into arrays, recursively.
     ///
     /// PHP: `Database::normalizeQueryCacheQueryValue()` (private).
+    // A method like PHP's (Rust 1.88's clippy flags `self` as only recursed with).
+    #[allow(clippy::only_used_in_recursion)]
     pub(crate) fn normalize_query_cache_query_value(&self, value: Value) -> Value {
         let value = match value {
             Value::Ext(Ext::Document(d)) => Value::Array(d.array_copy(&[], &[])),

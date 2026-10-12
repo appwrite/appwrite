@@ -688,8 +688,6 @@ impl Database {
     /// Returns the updated index.
     ///
     /// PHP: `Database::updateIndexMeta()` (protected).
-    // TEMPORARY: called by the relationships area (`updateRelationship`) once it lands.
-    #[allow(dead_code)]
     pub(crate) async fn update_index_meta<F>(&self, collection: &str, id: &str, update: F) -> Result<Document>
     where
         F: FnOnce(&mut Document, &Document, usize) -> Result<()> + Send,

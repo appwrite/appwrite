@@ -89,9 +89,17 @@
 //! behaviour is the same and `create()` works before `get_document` does.
 //!
 //! Schema area: `collections.rs`, `attributes.rs`, `indexes.rs` and
-//! `metadata.rs` are complete. `update_index_meta` and
-//! `rollback_attribute_metadata` wait for their callers in
-//! `relationships.rs` (`updateRelationship`, `createRelationship`).
+//! `metadata.rs` are complete.
+//!
+//! Relationships area (`relationships.rs`) is complete: relationship
+//! attributes (with their junction collections and rollbacks), population,
+//! writes, on-delete rules and relationship queries. Population keeps the
+//! documents it reads in an arena and resolves which document holds which
+//! once, deepest first, as PHP's shared objects would show them.
+//! `process_relationship_queries` rewrites the `select` queries
+//! it is given, as PHP rewrites the query objects (`getDocument` passes the
+//! rewritten queries to the adapter; `find` works on `groupByType`'s
+//! clones, so its callers' queries are untouched).
 //!
 //! Cache keys are shared with PHP, so the default filters' signatures are
 //! PHP's (`file:line` of their closures in the PHP runtime's image:
@@ -243,9 +251,6 @@ struct Inner {
 }
 
 /// The mutable properties of PHP's `Database`.
-// TEMPORARY (phase B): the relationship stacks are read once the relationships
-// area is implemented.
-#[allow(dead_code)]
 pub(crate) struct State {
     /// `$cache`.
     pub(crate) cache: Arc<Cache>,
@@ -299,8 +304,7 @@ pub(crate) struct State {
     pub(crate) global_collections: Vec<String>,
     /// `$relationshipWriteStack`: collection ids.
     pub(crate) relationship_write_stack: Vec<String>,
-    /// `$relationshipFetchStack`.
-    pub(crate) relationship_fetch_stack: Vec<Document>,
+    // PHP's `$relationshipFetchStack` is never read nor written: not kept.
     /// `$relationshipDeleteStack`.
     pub(crate) relationship_delete_stack: Vec<Document>,
     /// `$documentTypes`: collection => document class name.
@@ -349,7 +353,6 @@ impl Database {
                     migrating: false,
                     global_collections: Vec::new(),
                     relationship_write_stack: Vec::new(),
-                    relationship_fetch_stack: Vec::new(),
                     relationship_delete_stack: Vec::new(),
                     document_types: Vec::new(),
                     authorization,

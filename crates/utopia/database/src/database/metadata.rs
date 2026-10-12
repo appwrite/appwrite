@@ -229,8 +229,6 @@ impl Database {
     /// `attributes` (in memory).
     ///
     /// PHP: `Database::rollbackAttributeMetadata()` (private).
-    // TEMPORARY: called by the relationships area (`createRelationship`) once it lands.
-    #[allow(dead_code)]
     pub(crate) fn rollback_attribute_metadata(&self, collection: &mut Document, attribute_ids: &[String]) {
         let kept: Vec<Document> = documents_at(collection, "attributes")
             .into_iter()

@@ -10,10 +10,6 @@
 //! and a library error (`?` on a `utopia_database::Result`) becomes the
 //! operation's `{"$error": ...}` while a [`Fault`] stops the case.
 
-// TEMPORARY (phase B): parts of the shared API are only used once the
-// relationships area is glued (the documents area is).
-#![allow(dead_code)]
-
 use std::collections::HashMap;
 use std::sync::{Arc, LazyLock, Mutex as StdMutex};
 
@@ -487,14 +483,6 @@ impl<'a> Args<'a> {
         }
         Ok(Arc::new(authorization))
     }
-
-    /// A `Database` (or `Adapter`) parameter: a database handle.
-    pub fn database(&self, key: &str, session: &mut Session) -> R<Database> {
-        let Some(j) = self.raw(key) else {
-            return self.missing(key);
-        };
-        Ok(session.get::<Db>(j).map_err(|_| Fault::new(format!("`${key}` takes a database handle")))?.database.clone())
-    }
 }
 
 /// A cache by kind (`Core::cache`): `"memory"` or `"none"`.
@@ -563,11 +551,6 @@ impl<'s> Calls<'s> {
         let mut record = lock(&self.record);
         record.push((name.to_owned(), Vec::new()));
         Ok(Some(Cb { calls: self, slot: record.len() - 1, steps: steps.into() }))
-    }
-
-    /// Whether any callback was made.
-    pub fn any(&self) -> bool {
-        !lock(&self.record).is_empty()
     }
 
     /// The operation's result: an error as is; with callbacks, `{"result":
