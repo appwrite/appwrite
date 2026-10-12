@@ -3681,10 +3681,16 @@ dependencies = [
 name = "utopia-emails"
 version = "0.1.0"
 dependencies = [
+ "indexmap",
  "php-std",
  "serde_json",
  "thiserror",
+ "tokio",
+ "utopia-cli",
+ "utopia-client",
+ "utopia-console",
  "utopia-domains",
+ "utopia-servers",
  "utopia-validators",
 ]
 

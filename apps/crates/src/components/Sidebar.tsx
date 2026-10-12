@@ -169,6 +169,12 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         <Link to="/$lib" params={{ lib: slug }} activeOptions={{ exact: true, includeHash: false }} className={row}>
           Overview
         </Link>
+        {nav.tasks.some((t) => t.status === 'ported') || (migration && nav.tasks.length) ? (
+          <Link to="/$lib" params={{ lib: slug }} hash="tasks" activeOptions={{ exact: true, includeHash: true }} className={row}>
+            <span className="truncate">Tasks</span>
+            <span className="ml-auto text-[10.5px] text-muted-foreground tabular-nums">{migration ? nav.tasks.length : nav.tasks.filter((t) => t.status === 'ported').length}</span>
+          </Link>
+        ) : null}
         <Fold.Provider value={fold}>{body}</Fold.Provider>
       </div>
     </nav>

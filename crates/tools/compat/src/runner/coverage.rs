@@ -1,6 +1,7 @@
 //! API coverage: how much of the PHP library's public API the operations
 //! cover, whether both drivers implement every operation, whether every
-//! operation has cases and every PHP test class is ported.
+//! operation has cases, every PHP test class is ported and every PHP task
+//! has a Rust binary.
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::Path;
@@ -8,6 +9,7 @@ use std::path::Path;
 use super::cases;
 use super::engine::Engine;
 use super::spec::{self, Spec};
+use super::tasks;
 
 #[derive(Default)]
 pub struct Coverage {
@@ -30,6 +32,14 @@ pub struct Coverage {
     pub steps_without_expect: usize,
     pub tests: usize,
     pub tests_unported: Vec<String>,
+    /// The PHP library's tasks (see [`super::tasks`]).
+    pub tasks: usize,
+    pub tasks_ported: usize,
+    pub tasks_waived: usize,
+    /// Tasks neither ported nor waived.
+    pub tasks_pending: Vec<String>,
+    /// Declared tasks that do not hold, and waivers matching no task.
+    pub tasks_broken: Vec<String>,
 }
 
 impl Coverage {
@@ -48,11 +58,22 @@ impl Coverage {
             && self.ops_without_cases.is_empty()
             && self.tests_unported.is_empty()
             && self.steps_without_expect == 0
+            && self.tasks_pending.is_empty()
+            && self.tasks_broken.is_empty()
+    }
+
+    /// `ported + waived / total` for the status table.
+    pub fn tasks_cell(&self) -> String {
+        if self.tasks == 0 {
+            "—".to_owned()
+        } else {
+            format!("{}/{}", self.tasks_ported + self.tasks_waived, self.tasks)
+        }
     }
 
     pub fn render(&self) -> String {
         let mut out = format!(
-            "{}: API {:.1}% ({} symbols: {} covered, {} waived, {} uncovered); {} ops; {} cases, {} steps ({} without expect); PHP tests ported {}/{}\n",
+            "{}: API {:.1}% ({} symbols: {} covered, {} waived, {} uncovered); {} ops; {} cases, {} steps ({} without expect); PHP tests ported {}/{}; tasks {} ({} ported, {} waived, {} pending)\n",
             self.lib,
             self.percent(),
             self.symbols,
@@ -64,7 +85,11 @@ impl Coverage {
             self.steps,
             self.steps_without_expect,
             self.tests - self.tests_unported.len(),
-            self.tests
+            self.tests,
+            self.tasks,
+            self.tasks_ported,
+            self.tasks_waived,
+            self.tasks_pending.len()
         );
         let mut list = |title: &str, items: &[String]| {
             if !items.is_empty() {
@@ -82,6 +107,8 @@ impl Coverage {
         list("Rust adapter ops not in spec.json", &self.unknown_rust);
         list("ops without cases", &self.ops_without_cases);
         list("PHP test files not ported", &self.tests_unported);
+        list("PHP tasks not ported or waived", &self.tasks_pending);
+        list("task problems", &self.tasks_broken);
         out
     }
 }
@@ -183,6 +210,14 @@ pub fn coverage(engine: &mut Engine, lib: &str) -> Result<Coverage, String> {
     c.tests = tests.len();
     c.tests_unported =
         tests.into_iter().filter(|t| !sources.contains(t) && !spec.tests_waived.contains_key(t)).collect();
+
+    let t = tasks::check(&root, lib, &spec);
+    c.tasks = t.total();
+    c.tasks_ported = t.ported.len();
+    c.tasks_waived = t.waived.len();
+    c.tasks_pending = t.pending;
+    c.tasks_broken = t.broken;
+    c.tasks_broken.extend(t.dangling.into_iter().map(|id| format!("{id}: waived, but no such task")));
     Ok(c)
 }
 

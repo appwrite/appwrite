@@ -8,7 +8,8 @@
 //! | `get()`, `getApex()`, `getTLD()`, `getSuffix()`, `getRule()` | [`Domain::get`], [`Domain::apex`], [`Domain::tld`], [`Domain::suffix`], [`Domain::rule`] |
 //! | `getRegisterable()`, `getName()`, `getSub()` | [`Domain::registerable`], [`Domain::name`], [`Domain::sub`] |
 //! | `isKnown()`, `isICANN()`, `isPrivate()`, `isTest()` | [`Domain::is_known`], [`Domain::is_icann`], [`Domain::is_private`], [`Domain::is_test`] |
-//! | `data/data.php` (the list `Domain` includes) | [`PublicSuffixList`] |
+//! | `data/data.php` (the list `Domain` includes) | [`PublicSuffixList`] ([`PublicSuffixList::EMBEDDED`]) |
+//! | `data/import.php` | the `domains-import` binary |
 //! | `Validator\PublicDomain`, `ApexDomain`, `RegistrableDomain` | [`validator::PublicDomain`], [`validator::ApexDomain`], [`validator::RegistrableDomain`] |
 //! | `PublicDomain::allow()` | [`validator::PublicDomain::allow`] |
 //! | `Utopia\Domains\Cache` | [`Cache`] over a [`Store`] ([`MemoryStore`], [`NoStore`]) |
@@ -31,17 +32,18 @@
 //! | `Utopia\Domains\Adapter` (`call()`) | [`api::Api`] |
 //! | `Utopia\Domains\Exception`, `Registrar\Exception\*` | [`Error`], one variant per class |
 //!
-//! The Public Suffix List is read once, from
-//! [`PublicSuffixList::default_path`] unless a list is installed with
-//! [`PublicSuffixList::install`] (a server ships the file with its assets).
+//! The Public Suffix List is embedded in the crate
+//! (`data/public-suffix-list.txt`) and parsed once, on first use, unless a
+//! list is installed with [`PublicSuffixList::install`]. The `domains-import`
+//! task refreshes it from publicsuffix.org (see the guide).
 //!
 //! Registrar calls are async. Their settings travel with the
 //! [`registrar::Registrar`], so one adapter can serve several registrars
 //! with different caches.
 //!
 //! PHP: the list is the data file shipped with the PHP package
-//! (`packages/domains/data/data.php`). PHP sets the registrar settings on
-//! the adapter.
+//! (`data/data.php`), with the same rules in the same order. PHP sets the
+//! registrar settings on the adapter.
 
 #![warn(missing_docs)]
 
@@ -49,7 +51,6 @@ pub mod api;
 mod cache;
 mod domain;
 mod error;
-mod literal;
 mod php;
 pub mod registrar;
 pub mod transport;

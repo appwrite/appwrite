@@ -301,6 +301,12 @@
         "Utopia\\Emails\\Canonicals\\Providers\\Walla::getSupportedDomains",
         "Utopia\\Emails\\Canonicals\\Providers\\Generic::getSupportedDomains"
       ]
+    },
+    "import.run": {
+      "doc": "The import task (PHP import.php, Rust emails-import) with `argv`, its sources served by the `emails-http` fixture server (`sources`: \"<list>.<source>\" -> path; any other source answers 404) and the data directory of the run seeded with `seed` (file stem -> domains, in each runtime's format): {exit, stdout, stderr, lists}, where lists are the free and disposable lists in the data directory afterwards (null when absent)"
+    },
+    "data.digest": {
+      "doc": "The `list` (free or disposable) Email reads (PHP data/<list>-domains.php, Rust Lists::FREE / Lists::DISPOSABLE) as one domain per line: {domains, sha256}, so both runtimes ship the same domains in the same order"
     }
   },
   "generators": {
@@ -405,6 +411,24 @@
   },
   "waivers": {},
   "tests_waived": {},
+  "tasks": {
+    "import": {
+      "doc": "Refreshes the free and disposable email domain lists from their sources, and reports statistics about them.",
+      "php": "packages/emails/import.php",
+      "rust": {
+        "package": "utopia-emails",
+        "bin": "emails-import"
+      },
+      "writes": [
+        "crates/utopia/emails/data/disposable-domains.txt",
+        "crates/utopia/emails/data/free-domains.txt"
+      ],
+      "covered_by": [
+        "cases/import.json"
+      ]
+    }
+  },
+  "tasks_waived": {},
   "quirks": [
     {
       "symbol": "Utopia\\Emails\\Email::hasValidLocal",

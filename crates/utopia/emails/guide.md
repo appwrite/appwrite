@@ -313,3 +313,22 @@ $canonical = function (string $address) use ($acme): string {
 echo $canonical('jane-news@acme.net'), "\n";  // jane@acme.com
 echo $canonical('jane+news@gmail.com'), "\n"; // jane@gmail.com
 ```
+
+## Tasks
+
+The free and disposable domain lists are embedded in the crate (`data/free-domains.txt`, `data/disposable-domains.txt`), so a binary needs no data files at runtime. The `emails-import` task refreshes them from the public lists they are built from, merged with the manual lists next to them (`data/*-domains-manual.txt`); rebuild afterwards to embed them.
+
+```sh
+# Preview what would change in the disposable domains, then write it.
+cargo run -p utopia-emails --bin emails-import -- disposable
+cargo run -p utopia-emails --bin emails-import -- disposable --commit=true
+
+# Both lists from every source, even when nothing changed.
+cargo run -p utopia-emails --bin emails-import -- all --commit=true --force=true
+
+# One source only, and statistics about the current lists.
+cargo run -p utopia-emails --bin emails-import -- free --source=kikobeats
+cargo run -p utopia-emails --bin emails-import -- stats
+```
+
+A source that cannot be downloaded is reported and skipped; the task fails (exit code 1) only when no source gives a domain. To add a domain by hand, add a line to the manual list and run the task: an edit to the generated lists is lost on the next import. `UTOPIA_EMAILS_DATA_DIR` reads and writes the lists in another directory, and `UTOPIA_EMAILS_<TYPE>_<SOURCE>_URL` (such as `UTOPIA_EMAILS_DISPOSABLE_MARTENSON_URL`) downloads a source from another address.

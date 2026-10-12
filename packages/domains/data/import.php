@@ -1,8 +1,25 @@
 <?php
 
-$data = file_get_contents('https://publicsuffix.org/list/public_suffix_list.dat');
+/**
+ * Downloads the Public Suffix List and writes data/data.php, the list Domain reads.
+ *
+ *   php data/import.php
+ *
+ * Environment (both optional; tests point them at fixtures, never at the internet):
+ *   UTOPIA_DOMAINS_PSL_URL   where to download the list from (default: publicsuffix.org)
+ *   UTOPIA_DOMAINS_DATA_DIR  the directory data.php is written to (default: this directory)
+ *
+ * Fails with a message on standard error and exit code 1 when the list cannot be
+ * downloaded, has no `com` rule or cannot be written. The Rust port is the
+ * `domains-import` binary of crates/utopia/domains.
+ */
+$url = getenv('UTOPIA_DOMAINS_PSL_URL') ?: 'https://publicsuffix.org/list/public_suffix_list.dat';
+$dir = getenv('UTOPIA_DOMAINS_DATA_DIR') ?: __DIR__;
+
+$data = @file_get_contents($url);
 if ($data === false) {
-    throw new RuntimeException('Could not download public suffix list');
+    fwrite(STDERR, "Could not download public suffix list\n");
+    exit(1);
 }
 
 $list = explode("\n", $data);
@@ -81,7 +98,11 @@ foreach ($list as $key => $line) {
 }
 
 if (! isset($domains['com'])) {
-    throw new RuntimeException('.com is missing from public suffix list; it must be corrupted');
+    fwrite(STDERR, ".com is missing from public suffix list; it must be corrupted\n");
+    exit(1);
 }
 
-file_put_contents(__DIR__ . '/data.php', "<?php\n\nreturn " . arrayToCode($domains) . ';');
+if (@file_put_contents($dir . '/data.php', "<?php\n\nreturn " . arrayToCode($domains) . ';') === false) {
+    fwrite(STDERR, "Could not write {$dir}/data.php\n");
+    exit(1);
+}

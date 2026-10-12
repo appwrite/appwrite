@@ -20,6 +20,26 @@
 
 $path = parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/';
 
+// The import task's sources (`import.run`): /files/<name> serves fixtures/files/<name>
+// (404 when there is none), /to/<path> redirects to /<path>.
+if (str_starts_with($path, '/files/')) {
+    $file = __DIR__ . '/files/' . basename($path);
+    if (!is_file($file)) {
+        http_response_code(404);
+
+        return true;
+    }
+    header('Content-Type: text/plain; charset=utf-8');
+    readfile($file);
+
+    return true;
+}
+if (str_starts_with($path, '/to/')) {
+    header('Location: ' . substr($path, 3), true, 302);
+
+    return true;
+}
+
 if (str_ends_with($path, '/redirect')) {
     header('Location: /json?redirected=1', true, 302);
 

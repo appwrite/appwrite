@@ -6,6 +6,7 @@ use Tests\Compat\Adapter as Base;
 use Tests\Compat\Benchmarks;
 use Tests\Compat\Fault;
 use Tests\Compat\Session;
+use Tests\Compat\Task;
 use Utopia\Emails\Canonicals\Provider;
 use Utopia\Emails\Canonicals\Providers\Fastmail;
 use Utopia\Emails\Canonicals\Providers\Generic;
@@ -104,6 +105,58 @@ final class Adapter implements Base, Benchmarks
             'provider.canonical' => fn (array $a, Session $s) => self::provider($a)->getCanonical($a['local'], $a['domain']),
             'provider.canonical_domain' => fn (array $a, Session $s) => self::provider($a)->getCanonicalDomain(),
             'provider.supported_domains' => fn (array $a, Session $s) => self::provider($a)->getSupportedDomains(),
+
+            'import.run' => fn (array $a, Session $s) => self::import($a, $s),
+            // The list Email reads, one domain per line, as the Rust crate embeds it.
+            'data.digest' => function (array $a, Session $s) {
+                $domains = include __DIR__ . '/../../../packages/emails/data/' . $a['list'] . '-domains.php';
+
+                return ['domains' => \count($domains), 'sha256' => hash('sha256', implode("\n", $domains) . "\n")];
+            },
+        ];
+    }
+
+    /** The import task's downloaded sources, as `<list>.<source>`. */
+    private const SOURCES = [
+        'disposable.martenson',
+        'disposable.disposable',
+        'disposable.wesbos',
+        'disposable.fakefilter',
+        'disposable.adamloving',
+        'free.kikobeats',
+    ];
+
+    /**
+     * import.php with `argv`: every source on the `emails-http` fixture server (404 unless
+     * `sources` names a path), the data directory of the run seeded with `seed` (file stem ->
+     * domains, as PHP data files).
+     *
+     * @return array<string, mixed>
+     */
+    private static function import(array $a, Session $s): array
+    {
+        $dir = '/tmp/compat-fs/' . $s->ns . '/emails';
+        @mkdir($dir, 0777, true);
+        foreach ($a['seed'] ?? [] as $stem => $domains) {
+            file_put_contents("{$dir}/{$stem}.php", "<?php\n\nreturn " . var_export($domains, true) . ";\n");
+        }
+        $env = ['UTOPIA_EMAILS_DATA_DIR' => $dir];
+        foreach (self::SOURCES as $source) {
+            [$list, $key] = explode('.', $source);
+            $path = $a['sources'][$source] ?? "/missing/{$list}-{$key}";
+            $env['UTOPIA_EMAILS_' . strtoupper($list) . '_' . strtoupper($key) . '_URL'] = $s->service('emails-http') . $path;
+        }
+        $out = Task::run('packages/emails/import.php', $a['argv'], $env);
+        $disposable = "{$dir}/disposable-domains.php";
+        $free = "{$dir}/free-domains.php";
+        $clean = fn (string $text) => str_replace([$disposable, $free, $dir], ['${data}/disposable-domains', '${data}/free-domains', '${data}'], $text);
+        $read = fn (string $file) => \is_array($data = Task::data($file)) ? array_values($data) : null;
+
+        return [
+            'exit' => $out['exit'],
+            'stdout' => $clean($out['stdout']),
+            'stderr' => $clean($out['stderr']),
+            'lists' => ['disposable' => $read($disposable), 'free' => $read($free)],
         ];
     }
 

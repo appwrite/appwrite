@@ -154,8 +154,8 @@ pub enum Error {
     Engine(String),
     /// The suffix list could not be read or parsed.
     ///
-    /// PHP: the file is not a PHP array literal; PHP fails with a warning and
-    /// a `TypeError` on the first lookup.
+    /// PHP: the data file is not a PHP array; PHP fails with a warning and a
+    /// `TypeError` on the first lookup.
     #[error("{0}")]
     Data(String),
 }

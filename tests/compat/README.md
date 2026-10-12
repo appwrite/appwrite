@@ -30,7 +30,7 @@ The standard it enforces is [crates/CONVERSION.md](../../crates/CONVERSION.md). 
 bin/compat run [<lib>...] [--case <text>] [--fail-fast] [-v]   # every case on both runtimes
 bin/compat fuzz <lib> [--op <op>] [--iterations <n>] [--seed <n>] [--save]
 bin/compat record <lib>          # store PHP's results as `expect` in the case files
-bin/compat coverage <lib>        # API coverage, adapter parity, ported tests
+bin/compat coverage <lib>        # API coverage, adapter parity, ported tests, ported tasks
 bin/compat check <lib>           # coverage + run + fuzz: the conversion gate
 bin/compat ci                    # run + fuzz every library; check the complete ones
 bin/compat status --write        # regenerate STATUS.md
@@ -92,11 +92,13 @@ for s in tests/compat/*/services.sh; do "$s" down; done
   "generators": { "scalar": { "gen": "one_of", "of": [{ "gen": "string", "tricky": 0.5 }, { "gen": "int" }] } },
   "waivers": { "Utopia\\Validator\\PHPStan\\*": "PHPStan extension, no runtime behaviour" },
   "tests_waived": {},
+  "tasks": {},
+  "tasks_waived": {},
   "quirks": [{ "symbol": "...", "description": "...", "case": "Text.json#..." }]
 }
 ```
 
-A large spec can be split: `spec.d/*.json` files hold more `ops`, `generators`, `waivers`, `tests_waived`, `quirks` and `deviations` (one file per area or owner), merged into `spec.json`; a name defined twice is an error.
+A large spec can be split: `spec.d/*.json` files hold more `ops`, `generators`, `waivers`, `tests_waived`, `tasks`, `tasks_waived`, `quirks` and `deviations` (one file per area or owner), merged into `spec.json`; a name defined twice is an error.
 
 A fuzz profile with `"isolate": true` runs in fresh PHP and Rust driver processes, for functions with process-wide state that other operations touch on one side only (PHP's PCRE cache and JIT switch, which engine functions like `filter_var` also fill). Each library's `run`, `fuzz` and `record` also starts fresh drivers, so a library never inherits another's process-wide state: after `php-std`'s fuzzing has switched the PCRE JIT off, `user-agent`'s backtracking cases would run interpreted, much slower. A library behaves in `ci` exactly as it does alone.
 
@@ -129,18 +131,50 @@ A fuzz profile with `"isolate": true` runs in fresh PHP and Rust driver processe
 - `state` on a case overrides the spec's snapshot kinds (`[]` for none).
 - Interop cases run twice, with sides `a`/`b` as PHP/Rust and then Rust/PHP on one shared namespace; both directions must agree with each other and with `expect`.
 - `expect` is written by `bin/compat record`, never by hand.
+- `requires` lists what a case needs from the machine: `case-sensitive-files`, `driver-process` (each runtime's own driver process, so not replayed in-process), or `services` (a service of `compat.json`, such as a fixture server, in a library whose spec lists none, so `cargo test -p compat` replays it only with `COMPAT_SERVICES=1`).
+
+## Tasks
+
+A library's tasks are the programs it ships besides its API: a data import, a code generator, a maintenance command ([CONVERSION.md](../../crates/CONVERSION.md) §2 rule 6). `bin/compat coverage` discovers them in the PHP package (the parent of each `php.src` directory), so none can be missed:
+
+- every `bin` of `composer.json`;
+- every `composer.json` script except development tooling (`test`, `lint`, `format`, `analyze`, `check`, `refactor`, `bench` and the like, with any `:<suffix>`). A script that only runs a PHP file of the package (`"import:all": "php import.php all --commit=true"`) is a way to run that file's task, listed with it;
+- every PHP file outside `src/`, `tests/` and `vendor/` that is a program: a file whose first statement (after `declare`, `namespace` and `use`) is `return` is data or configuration (`data/data.php`, `rector.php`), not a program.
+
+Each one is ported or waived in `spec.json`, by its id (the program's repository path, or `<package>/composer.json#<script>`); anything else is pending and the library is not converted:
+
+```json
+"tasks": {
+  "import": {
+    "doc": "Refreshes the free and disposable email domain lists from their sources.",
+    "php": "packages/emails/import.php",
+    "rust": { "package": "utopia-emails", "bin": "emails-import" },
+    "writes": ["crates/utopia/emails/data/disposable-domains.txt", "crates/utopia/emails/data/free-domains.txt"],
+    "covered_by": ["cases/import.json"]
+  }
+},
+"tasks_waived": {
+  "packages/user-agent/benchmark/benchmark.php": "A benchmark of the PHP parser: bin/compat bench compares both runtimes"
+}
+```
+
+A ported task needs the binary (`src/bin/<bin>.rs` of the crate, or a `[[bin]]`) and case files that run it. Cases run each runtime's task as its own process, the way a developer runs it: `Tests\Compat\Task::run()` (`tests/compat/php/Task.php`) starts `php <script>` from the repository root, and `compat::task::run()` (`crates/tools/compat/src/task.rs`) builds the binary with cargo, into the driver's own target directory, and starts it. Both pass extra environment variables, and an operation per task (`import.run`) returns `{exit, stdout, stderr}` and what the task wrote, read back by each adapter from its own format (PHP's data files, the crate's), with each runtime's paths replaced by placeholders.
+
+Tasks that download never reach the internet in tests: the PHP script and the Rust binary both read each source's URL from an environment variable (`UTOPIA_DOMAINS_PSL_URL`, `UTOPIA_EMAILS_<TYPE>_<SOURCE>_URL`) and where to write (`UTOPIA_DOMAINS_DATA_DIR`, `UTOPIA_EMAILS_DATA_DIR`), and the cases serve fixture files from a server the library's `services.sh` starts (`domains-http`, `emails-http`). The data a task writes is the crate's own (`crates/utopia/<name>/data/`), embedded at compile time; a `data.digest` case checks it holds the same entries in the same order as the PHP library's data files.
+
+`bin/compat crates` documents each crate's tasks on the docs site: the binary's `//!` comment (its first paragraph, then `# Commands`, `# Arguments`, `# Environment` and `# Exit codes` sections), the files it writes, and the PHP command it replaces.
 
 ## Adding a library
 
 1. `bin/compat new <lib>`, then read the PHP source and tests end to end.
 2. `bin/compat coverage <lib>` lists every public symbol. Design operations that exercise them and add them to `spec.json` with `covers`.
-3. Implement them in `Adapter.php` and `src/libs/<lib>.rs`, port every PHP test class to a case file, add interop cases for shared formats and fuzz profiles for pure operations.
+3. Implement them in `Adapter.php` and `src/libs/<lib>.rs`, port every PHP test class to a case file, add interop cases for shared formats and fuzz profiles for pure operations. Port every task `coverage` lists (or waive it), with cases that run both runtimes' tasks against fixtures ([Tasks](#tasks)).
 4. Converge: `bin/compat run`, `fuzz`, `coverage`. A difference is a Rust bug, a PHP quirk to keep and record, or a missing case. Never loosen a comparison to make it pass.
 5. `bin/compat record <lib>`, set `"complete": true` once `bin/compat check <lib>` passes, and `bin/compat status --write`.
 
 ## Benchmarks
 
-A converted library's hot paths are benchmarked against PHP ([CONVERSION.md](../../crates/CONVERSION.md) §2 rule 7). Each benchmark is a name both adapters declare: `BENCHES` and `bench(name, session)` in `crates/tools/compat/src/libs/<lib>.rs` (listed in `libs::benches` and `libs::bench`), and `benchmarks()` in `Adapter.php` (implementing `Tests\Compat\Benchmarks`). It is a setup that returns the closure to time, so only the library call is measured, not argument decoding:
+A converted library's hot paths are benchmarked against PHP ([CONVERSION.md](../../crates/CONVERSION.md) §2 rule 8). Each benchmark is a name both adapters declare: `BENCHES` and `bench(name, session)` in `crates/tools/compat/src/libs/<lib>.rs` (listed in `libs::benches` and `libs::bench`), and `benchmarks()` in `Adapter.php` (implementing `Tests\Compat\Benchmarks`). It is a setup that returns the closure to time, so only the library call is measured, not argument decoding:
 
 ```php
 'parse' => ['Parse a Redis connection string', fn (Session $s) => fn () => new DSN(self::DSN)],

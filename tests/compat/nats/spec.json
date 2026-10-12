@@ -4450,5 +4450,11 @@
     "bound": {
       "server_request": "A round trip to the NATS server (out to the subscriber and back), the same on both runtimes, dominates the call"
     }
+  },
+  "tasks_waived": {
+    "packages/nats/examples/jetstream.php": "A usage example of the PHP client against a live server, not a task of the library: the crate's doc examples cover the same flows, each with a PHP twin that bin/compat examples runs",
+    "packages/nats/examples/publish.php": "A usage example of the PHP client against a live server, not a task of the library: the crate's doc examples cover the same flows, each with a PHP twin that bin/compat examples runs",
+    "packages/nats/examples/request_reply.php": "A usage example of the PHP client against a live server, not a task of the library: the crate's doc examples cover the same flows, each with a PHP twin that bin/compat examples runs",
+    "packages/nats/examples/subscribe.php": "A usage example of the PHP client against a live server, not a task of the library: the crate's doc examples cover the same flows, each with a PHP twin that bin/compat examples runs"
   }
 }

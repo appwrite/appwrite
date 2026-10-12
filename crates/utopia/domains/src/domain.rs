@@ -3,12 +3,12 @@
 
 use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::sync::OnceLock;
 
 use php_std::mb;
 
-use crate::{Error, literal};
+use crate::Error;
 
 /// The section of the Public Suffix List a rule comes from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -34,28 +34,26 @@ pub struct PublicSuffixList {
 static GLOBAL: OnceLock<PublicSuffixList> = OnceLock::new();
 
 impl PublicSuffixList {
-    /// Where the list is read from by default.
+    /// The list the crate embeds, `data/public-suffix-list.txt`, written by
+    /// the `domains-import` task (see the crate's guide).
     ///
-    /// PHP: `data/data.php` of the library's PHP package in this repository
-    /// (`packages/domains/data/data.php`).
-    pub fn default_path() -> PathBuf {
-        Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../packages/domains/data/data.php")
-    }
+    /// One line per entry: `<section>\t<rule>` for a rule (section `ICANN`,
+    /// `PRIVATE`, or `-` outside both), after a `#\t<comment>` line for each
+    /// comment the list gives the rule.
+    ///
+    /// PHP: `data/data.php`, the same rules, sections and comments in the
+    /// same order, written by `data/import.php`.
+    pub const EMBEDDED: &'static str = include_str!("../data/public-suffix-list.txt");
 
-    /// Parses the list file: an array of rules, each with its suffix, its
-    /// section (`ICANN` or `PRIVATE`) and comments.
-    ///
-    /// PHP: the file is PHP source, `return ['<rule>' => ['suffix' => ...,
-    /// 'type' => 'ICANN' | 'PRIVATE', 'comments' => [...]], ...];`.
+    /// Parses a list in the format of [`Self::EMBEDDED`].
     ///
     /// ```
     /// use utopia_domains::{PublicSuffixList, Section};
     ///
-    /// let list = PublicSuffixList::parse(
-    ///     "<?php return ['com' => ['suffix' => 'com', 'type' => 'ICANN', 'comments' => []]];",
-    /// )?;
-    /// assert_eq!(list.len(), 1);
+    /// let list = PublicSuffixList::parse("#\tcom : the commercial TLD\nICANN\tcom\nPRIVATE\tgithub.io\n")?;
+    /// assert_eq!(list.len(), 2);
     /// assert_eq!(list.section("com"), Some(Section::Icann));
+    /// assert_eq!(list.section("github.io"), Some(Section::Private));
     /// # Ok::<(), utopia_domains::Error>(())
     /// ```
     ///
@@ -66,29 +64,41 @@ impl PublicSuffixList {
     /// var_dump((new Domain('example.com'))->isICANN()); // bool(true)
     /// ```
     pub fn parse(source: &str) -> Result<Self, Error> {
-        let entries = literal::parse(source).map_err(Error::Data)?;
         let mut list = PublicSuffixList::default();
-        for (key, value) in entries.into_map().ok_or_else(|| Error::Data("the list is not an array".into()))? {
-            let section = match value.get("type").and_then(literal::Literal::as_str) {
-                Some("ICANN") => Section::Icann,
-                Some("PRIVATE") => Section::Private,
-                _ => Section::Other,
+        for (n, line) in source.split('\n').enumerate() {
+            if line.is_empty() {
+                continue;
+            }
+            let Some((kind, rule)) = line.split_once('\t') else {
+                return Err(Error::Data(format!("line {}: expected `<section>\\t<rule>`", n + 1)));
             };
-            if let Some(rest) = key.strip_prefix('!') {
+            let section = match kind {
+                "#" => continue,
+                "ICANN" => Section::Icann,
+                "PRIVATE" => Section::Private,
+                "-" => Section::Other,
+                other => return Err(Error::Data(format!("line {}: unknown section `{other}`", n + 1))),
+            };
+            if let Some(rest) = rule.strip_prefix('!') {
                 list.exceptions.insert(rest.into());
             }
-            if let Some(rest) = key.strip_prefix("*.") {
+            if let Some(rest) = rule.strip_prefix("*.") {
                 list.wildcards.insert(rest.into());
             }
-            list.rules.insert(key.into_boxed_str(), section);
+            list.rules.insert(rule.into(), section);
         }
         Ok(list)
     }
 
-    /// Reads and parses a list file.
+    /// Reads and parses a list file in the format of [`Self::EMBEDDED`].
     pub fn load(path: &Path) -> Result<Self, Error> {
         let source = std::fs::read_to_string(path).map_err(|e| Error::Data(format!("{}: {e}", path.display())))?;
         Self::parse(&source)
+    }
+
+    /// The embedded list ([`Self::EMBEDDED`]), parsed.
+    pub fn embedded() -> Self {
+        Self::parse(Self::EMBEDDED).unwrap_or_default()
     }
 
     /// Installs the process-wide list used by [`Domain::new`]. The first list
@@ -97,10 +107,10 @@ impl PublicSuffixList {
         GLOBAL.set(self).is_ok()
     }
 
-    /// The process-wide list: the installed one, else [`Self::default_path`]
-    /// (empty when that file cannot be read).
+    /// The process-wide list: the installed one, else the embedded one,
+    /// parsed on first use.
     pub fn global() -> &'static Self {
-        GLOBAL.get_or_init(|| Self::load(&Self::default_path()).unwrap_or_default())
+        GLOBAL.get_or_init(Self::embedded)
     }
 
     /// The number of rules.
@@ -396,14 +406,8 @@ mod tests {
     use super::*;
 
     fn list() -> PublicSuffixList {
-        PublicSuffixList::parse(
-            "<?php\n\nreturn [\n\t'com' => [\n\t\t'suffix' => 'com',\n\t\t'type' => 'ICANN',\n\t\t'comments' => [\n\t\t\t'it\\'s',\n\t\t],\n\t],\n\
-             \t'co.uk' => ['suffix' => 'co.uk', 'type' => 'ICANN', 'comments' => []],\n\
-             \t'*.ck' => ['suffix' => '*.ck', 'type' => 'ICANN', 'comments' => []],\n\
-             \t'!www.ck' => ['suffix' => '!www.ck', 'type' => 'ICANN', 'comments' => []],\n\
-             \t'github.io' => ['suffix' => 'github.io', 'type' => 'PRIVATE', 'comments' => []],\n];\n",
-        )
-        .unwrap()
+        PublicSuffixList::parse("#\tit's\nICANN\tcom\nICANN\tco.uk\nICANN\t*.ck\nICANN\t!www.ck\nPRIVATE\tgithub.io\n")
+            .unwrap()
     }
 
     #[test]
@@ -439,9 +443,11 @@ mod tests {
     }
 
     #[test]
-    fn data_file() {
-        let list = PublicSuffixList::load(&PublicSuffixList::default_path()).unwrap();
+    fn embedded() {
+        let list = PublicSuffixList::embedded();
         assert!(list.len() > 9000);
         assert_eq!(list.section("com"), Some(Section::Icann));
+        assert_eq!(list.section("github.io"), Some(Section::Private));
+        assert!(PublicSuffixList::parse("ICANN com").is_err() && PublicSuffixList::parse("X\tcom").is_err());
     }
 }

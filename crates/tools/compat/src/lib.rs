@@ -13,3 +13,4 @@ pub mod bench;
 pub mod driver;
 pub mod libs;
 pub mod runner;
+pub mod task;

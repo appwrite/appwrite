@@ -6,9 +6,10 @@ import { PageHeader, Section, WithToc } from '@/components/Page'
 import { StatusBadge } from '@/components/Status'
 import { SyncBadge, SyncPanel } from '@/components/Sync'
 import { Performance, SpeedupBadge } from '@/components/Bench'
-import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, slug, summary, type Status } from '@/lib/docs'
+import { KIND_ORDER, KIND_TITLE, STATUS, guideHeadings, isTopLevel, itemHash, loadLibrary, moduleSplat, slug, summary, taskHash, type Status } from '@/lib/docs'
 import { useMigration } from '@/lib/prefs'
 import { MigrationCard, MigrationOnly, PhpNotes } from '@/components/Migration'
+import { Tasks } from '@/components/Tasks'
 
 const root = getRouteApi('__root__')
 
@@ -30,6 +31,7 @@ export const Route = createFileRoute('/$lib/')({
       overview: lib.overview,
       overview_notes: lib.overview_notes,
       guide: lib.guide,
+      tasks: lib.tasks ?? [],
       sync: lib.sync,
       bench: lib.bench,
       examples: lib.examples,
@@ -77,6 +79,7 @@ function LibraryPage() {
   const migration = useMigration()
   const l = d.library
   const category = index?.categories.find((c) => c.id === l.category)
+  const ported = d.tasks.flatMap((t) => (t.status === 'ported' ? [{ name: t.name, bin: t.bin }] : []))
   const toc = [
     ...(migration ? [{ id: 'migration', label: 'Conversion status' }] : []),
     ...(migration && d.bench?.results.length ? [{ id: 'performance', label: 'Performance' }] : []),
@@ -85,6 +88,7 @@ function LibraryPage() {
     ...(d.overview || d.examples.length || (migration && d.overview_notes) ? [{ id: 'overview', label: d.guide.length ? 'Reference' : 'Overview' }] : []),
     ...(d.modules.length ? [{ id: 'namespaces', label: 'Namespaces' }] : []),
     ...(d.root.length ? [{ id: 'api', label: 'API' }] : []),
+    ...(ported.length || (migration && d.tasks.length) ? [{ id: 'tasks', label: 'Tasks' }, ...ported.map((t) => ({ id: taskHash(t.name), label: t.bin ?? t.name, depth: 1 }))] : []),
     ...(migration && !l.rust && d.classes.length ? [{ id: 'php-api', label: 'PHP API' }] : []),
   ]
   const eyebrow = category ? (
@@ -131,6 +135,7 @@ function LibraryPage() {
             {l.rust ? <Fact label="Documented" value={`${l.counts.documented} of ${l.counts.items} items`} /> : null}
             {l.rust ? <Fact label="Examples" value={l.counts.examples ? `${l.counts.examples}, Rust and PHP` : 'None yet'} /> : null}
             {l.counts.php_symbols ? <Fact label="PHP API mapped" value={`${l.counts.linked} of ${l.counts.php_symbols} methods`} /> : null}
+            {l.counts.tasks?.total ? <Fact label="Tasks ported" value={`${l.counts.tasks.ported} of ${l.counts.tasks.total}${l.counts.tasks.waived ? `, ${l.counts.tasks.waived} waived` : ''}`} /> : null}
           </div>
           {l.status === 'progress' && l.compat?.summary ? <p className="m-0 text-[13px] text-muted-foreground">{l.compat.summary}</p> : null}
         </div>
@@ -206,6 +211,8 @@ function LibraryPage() {
           })}
         </Section>
       ) : null}
+
+      <Tasks id="tasks" tasks={d.tasks} />
 
       {migration && !l.rust && d.classes.length ? (
         <MigrationCard id="php-api" title="PHP API">

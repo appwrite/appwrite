@@ -13,6 +13,14 @@ serde_json.workspace = true
 thiserror.workspace = true
 utopia-domains.workspace = true
 utopia-validators.workspace = true
+# The emails-import task (src/bin), as PHP's import.php requires utopia-php/cli,
+# utopia-php/console and an HTTP client (dev requirements of the PHP package).
+indexmap.workspace = true
+tokio = { workspace = true, features = ["rt"] }
+utopia-cli.workspace = true
+utopia-client.workspace = true
+utopia-console.workspace = true
+utopia-servers.workspace = true
 
 [package.metadata.utopia]
 php-sync = "927f3f7331b5030c5188304291941dd8a861bd29"
