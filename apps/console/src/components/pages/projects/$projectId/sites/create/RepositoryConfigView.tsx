@@ -390,7 +390,7 @@ export function RepositoryConfigView({
       // The site exists by now. Leaving the owner on this form would make
       // the next attempt create a second one, so open the site instead.
       if (createdSiteId) {
-        void queryClient.invalidateQueries({
+        await queryClient.refetchQueries({
           queryKey: ['sites', 'project', projectId],
         })
         navigate({

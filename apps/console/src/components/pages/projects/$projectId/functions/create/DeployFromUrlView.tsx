@@ -221,7 +221,7 @@ export function DeployFromUrlView({
       // The function exists by now. Leaving the owner on this form would make
       // the next attempt create a second one, so open the function instead.
       if (created) {
-        void queryClient.invalidateQueries({
+        await queryClient.refetchQueries({
           queryKey: ['functions', 'project', projectId],
         })
         navigate({
