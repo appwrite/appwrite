@@ -143,7 +143,6 @@
         "a b",
         "-1",
         "0",
-        "? q",
         "&k a",
         "*k",
         "",
@@ -217,7 +216,11 @@
             "<<: [*m, {z: 1}]",
             "m: &m {k: v, j: 1}",
             "x: &x 5",
-            "%YAML 1.1\n---"
+            "%YAML 1.1\n---",
+            "? q: r",
+            "n: &n 1\n? q: *n",
+            "? [a]\n: b",
+            "? q\n: v"
           ]
         }
       ]
@@ -259,6 +262,11 @@
       "symbol": "yaml_parse()",
       "php": "an alias inside the node its anchor names builds a recursive array of references",
       "reason": "Rust values cannot be recursive: such an alias is refused as unknown (false)"
+    },
+    {
+      "symbol": "yaml_parse()",
+      "php": "ext-yaml corrupts its heap when a document that defined an anchor has a block mapping under an explicit key (`?`) whose value is an unknown alias, and then fails to parse (`m: &m v\\n? q: *x\\n- b`): the process dies later with 'zend_mm_heap corrupted', or the corruption shows in later parses.",
+      "reason": "Memory corruption is undefined behaviour with no answer to compare; Rust refuses the document like any unknown alias. The fuzz profile keeps explicit keys to their own lines (`? q: r`, `n: &n 1\\n? q: *n`, `? [a]\\n: b`), so their values are never an unknown alias (the alias's anchor comes on the line before)."
     }
   ]
 }
