@@ -170,7 +170,7 @@ class Create extends Action
                     throw new Exception($this->getParentInvalidTypeException(), "Cannot create an index for a relationship $contextType: " . $oldAttributes[$attributeIndex]['key']);
                 }
 
-                if ($attributeStatus !== 'available') {
+                if ($attributeStatus !== 'available' && !$this->isAvailable($dbForProject, $db, $collection, $attribute)) {
                     throw new Exception($this->getParentNotAvailableException(), params: [$oldAttributes[$attributeIndex]['key']]);
                 }
 
@@ -240,5 +240,14 @@ class Create extends Action
         $response
             ->setStatusCode(SwooleResponse::STATUS_CODE_ACCEPTED)
             ->dynamic($index, $this->getResponseModel());
+    }
+
+    /**
+     * The worker marks an attribute available before it purges the cached collection, so for that moment the
+     * collection still embeds the old status; the attribute document itself is authoritative.
+     */
+    private function isAvailable(Database $dbForProject, Document $database, Document $collection, string $key): bool
+    {
+        return $dbForProject->getDocument('attributes', $database->getSequence() . '_' . $collection->getSequence() . '_' . $key)->getAttribute('status') === 'available';
     }
 }
