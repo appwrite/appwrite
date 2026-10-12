@@ -16,6 +16,7 @@ use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Limit as LimitException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
+use Utopia\Database\Exception\Type as TypeException;
 use Utopia\Database\Permission;
 use Utopia\Database\Role;
 use Utopia\Database\Validator\Authorization;
@@ -366,6 +367,14 @@ final class CounterTest extends TestCase
         }
 
         $this->assertSame(3, $this->database->getDocument(self::COLLECTION, $document->getId())->getAttribute('count'));
+    }
+
+    public function testTheLibraryRefusesTheFractionalBoundItselfOnAnInteger(): void
+    {
+        $document = $this->database->createDocument(self::COLLECTION, new Document(['$id' => 'raw', 'count' => 8]));
+
+        $this->expectException(TypeException::class);
+        $this->database->increaseDocumentAttribute(self::COLLECTION, $document->getId(), 'count', 1, 10.5);
     }
 
     /**
