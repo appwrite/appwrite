@@ -5,10 +5,10 @@ use serde_json::Value;
 use utopia_validators::Validator;
 use utopia_validators::php::{self, Number};
 
-use crate::datetime;
-use crate::id::Uid;
-use crate::query::{Method, Query};
-use crate::schema::{Attribute, AttributeType, Collection, INTERNAL};
+use crate::legacy::datetime;
+use crate::legacy::id::Uid;
+use crate::legacy::query::{Method, Query};
+use crate::legacy::schema::{Attribute, AttributeType, Collection, INTERNAL};
 
 /// Upper bound printed by PHP's `number_format(PHP_INT_MAX)` (float cast).
 const PHP_INT_MAX_FORMATTED: &str = "9,223,372,036,854,775,808";

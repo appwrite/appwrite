@@ -6,7 +6,7 @@
 use serde::Serialize;
 use serde_json::value::RawValue;
 use serde_json::{Map, Value, json};
-use utopia_database::{datetime, id};
+use utopia_database::legacy::{datetime, id};
 
 /// `Event::generateEvents($pattern, $params)`.
 pub fn generate_events(pattern: &str, params: &[(String, String)]) -> Result<Vec<String>, String> {

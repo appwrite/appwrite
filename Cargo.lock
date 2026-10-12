@@ -3567,6 +3567,7 @@ dependencies = [
 name = "utopia-database"
 version = "0.1.0"
 dependencies = [
+ "async-trait",
  "bytes",
  "chrono",
  "deadpool-postgres",
@@ -3574,7 +3575,10 @@ dependencies = [
  "getrandom 0.3.4",
  "hex",
  "md-5 0.10.6",
+ "php-std",
  "serde_json",
+ "thiserror",
+ "tokio",
  "tokio-postgres",
  "tracing",
  "utopia-cache",

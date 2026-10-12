@@ -16,7 +16,7 @@ use std::time::{Duration, Instant};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
-use utopia_database::{Database, Param, datetime, row};
+use utopia_database::legacy::{Database, Param, datetime, row};
 use utopia_validators::php;
 
 use crate::Result;
@@ -190,7 +190,7 @@ impl Project {
 
     /// Roles granted `read` on the project document.
     pub fn read_roles(&self) -> Vec<String> {
-        utopia_database::permission::roles_for(&self.permissions, "read").collect()
+        utopia_database::legacy::permission::roles_for(&self.permissions, "read").collect()
     }
 
     /// Payload used in queue messages (`$id`, `$sequence`, `database`, ...).
@@ -232,7 +232,7 @@ fn json_strings(v: Option<&Value>) -> Vec<String> {
 
 /// Loads a project with keys, platforms and webhooks in one statement.
 pub async fn load(platform: &Database, id: &str) -> Result<Option<Project>> {
-    let mut b = utopia_database::sql::Builder::new();
+    let mut b = utopia_database::legacy::sql::Builder::new();
     let p = b.bind(Param::text(id));
     let sql = format!(
         r#"SELECT p."_id", p."_uid", p."_createdAt", p."_permissions", p."name", p."database", p."region",

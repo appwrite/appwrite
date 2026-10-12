@@ -1,12 +1,10 @@
-//! Compat adapter for `database`: maps `tests/compat/database/spec.json` operations onto the Rust crate.
-//!
-//! Not converted yet: no operations. See crates/CONVERSION.md §5.
+//! document.*, id.*, role.*, permission.*, datetime.*, authorization.*: Document, the helpers, DateTime and Authorization.
 
 use serde_json::Value;
 
 use crate::adapter::{Fault, OpResult, Session};
 
-/// Operations this adapter implements (must match `spec.json`).
+/// Operations of this area (must match `spec.d/` and `ops/helpers.php`).
 pub const OPS: &[&str] = &[];
 
 pub async fn call(op: &str, _args: &Value, _session: &mut Session) -> OpResult {

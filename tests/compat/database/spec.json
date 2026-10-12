@@ -1,0 +1,40 @@
+{
+  "lib": "database",
+  "description": "utopia-php/database 7.4: Database (collections, attributes, indexes, documents, bulk operations, upserts, increments, relationships, permissions, tenancy, caching, transactions), Document, Query, Operator, DateTime, the helpers and validators, over the PostgreSQL adapter. Phase 1 of 3: the other adapters are waived until phases 2 and 3 convert them.",
+  "complete": false,
+  "php": {
+    "src": [
+      "vendor/utopia-php/database/src"
+    ],
+    "tests": [
+      "vendor/utopia-php/database/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/database"
+  },
+  "services": [
+    "database-postgres"
+  ],
+  "state": [
+    "postgres@database-postgres"
+  ],
+  "ops": {},
+  "generators": {},
+  "waivers": {
+    "Utopia\\Database\\Adapter\\MariaDB::*": "Phase 2: the MariaDB adapter is not converted yet",
+    "Utopia\\Database\\Adapter\\MySQL::*": "Phase 2: the MySQL adapter is not converted yet",
+    "Utopia\\Database\\Adapter\\SQLite::*": "Phase 2: the SQLite adapter is not converted yet",
+    "Utopia\\Database\\Adapter\\Mongo::*": "Phase 3: the MongoDB adapter (and utopia-php/mongo) is not converted yet",
+    "Utopia\\Database\\Adapter\\Memory::*": "Phase 2: the Memory adapter is not converted yet",
+    "Utopia\\Database\\Adapter\\Redis::*": "Phase 3: the Redis database adapter is not converted yet",
+    "Utopia\\Database\\Adapter\\Pool::*": "Phase 3: the Pool adapter (over utopia-php/pools) is not converted yet",
+    "Utopia\\Database\\Mirror::*": "Phase 3: Mirror (two databases kept in step) is not converted yet",
+    "Utopia\\Database\\Mirroring\\*": "Phase 3: the Mirroring filters of Mirror are not converted yet",
+    "Utopia\\Database\\PDO::*": "PHP runtime plumbing: a PDO wrapper that reconnects; the Rust adapter owns its tokio-postgres connection (reconnect behaviour is converted with Adapter::reconnect)",
+    "Utopia\\Database\\PDOStatement::*": "PHP runtime plumbing: the PDOStatement wrapper of Utopia\\Database\\PDO"
+  },
+  "tests_waived": {},
+  "quirks": [],
+  "deviations": []
+}

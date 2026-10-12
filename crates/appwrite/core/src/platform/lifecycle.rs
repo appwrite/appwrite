@@ -8,9 +8,9 @@ use std::sync::Arc;
 use bytes::Bytes;
 use http::{Method, StatusCode};
 use serde_json::Value;
-use utopia_database::Param;
-use utopia_database::datetime;
-use utopia_database::sql::Builder;
+use utopia_database::legacy::Param;
+use utopia_database::legacy::datetime;
+use utopia_database::legacy::sql::Builder;
 use utopia_http::{Compression, Request, Response};
 
 use super::context::{Context, Mode};
@@ -358,7 +358,10 @@ pub(super) async fn authenticate(ctx: &mut Context) -> Result<()> {
     Ok(())
 }
 
-async fn load_team_id(platform_db: &utopia_database::Database, team_internal_id: &str) -> Result<Option<String>> {
+async fn load_team_id(
+    platform_db: &utopia_database::legacy::Database,
+    team_internal_id: &str,
+) -> Result<Option<String>> {
     let Ok(sequence) = team_internal_id.parse::<i64>() else {
         return Ok(None);
     };
@@ -483,7 +486,7 @@ async fn resolve_user(ctx: &mut Context) -> Result<()> {
     Ok(())
 }
 
-async fn find_user_id(db: &utopia_database::Database, column: &str, value: &str) -> Result<Option<String>> {
+async fn find_user_id(db: &utopia_database::legacy::Database, column: &str, value: &str) -> Result<Option<String>> {
     let mut b = Builder::new();
     let p = b.bind(Param::text(value));
     let tenant = db.tenant_condition(&mut b, "main");
