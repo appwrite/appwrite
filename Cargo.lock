@@ -606,6 +606,7 @@ dependencies = [
  "utopia-lock",
  "utopia-platform",
  "utopia-pools",
+ "utopia-query",
  "utopia-queue",
  "utopia-registry",
  "utopia-schedule",
@@ -3718,6 +3719,15 @@ dependencies = [
  "thiserror",
  "tokio",
  "utopia-telemetry",
+]
+
+[[package]]
+name = "utopia-query"
+version = "0.1.0"
+dependencies = [
+ "md-5 0.10.6",
+ "php-std",
+ "thiserror",
 ]
 
 [[package]]

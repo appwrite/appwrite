@@ -817,9 +817,14 @@ pub async fn replay(cfg: &Config, lib: &str) -> Result<Report, String> {
         return Ok(report);
     }
     let files = cases::load_dir(&spec::lib_dir(&cfg.root, lib).join("cases"))?;
+    // `COMPAT_CASE` keeps only the cases whose label contains it.
+    let only = std::env::var("COMPAT_CASE").ok().filter(|f| !f.is_empty());
     let mut counter = 0;
     for file in &files {
         for case in &file.cases {
+            if only.as_deref().is_some_and(|f| !label(lib, file, case).contains(f)) {
+                continue;
+            }
             let kinds = Engine::state_kinds(&spec, case);
             // Replay runs the adapters in this process, not in a driver.
             if (!kinds.is_empty() && !services)
