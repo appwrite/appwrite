@@ -10,9 +10,9 @@
  *   GET  /ping                            ->  true
  */
 
-require '/usr/src/code/vendor/autoload.php';
-require_once '/usr/src/code/tests/compat/php/Fault.php';
-require_once '/usr/src/code/tests/compat/php/Codec.php';
+require __DIR__ . '/../../../../vendor/autoload.php';
+require_once __DIR__ . '/../../php/Fault.php';
+require_once __DIR__ . '/../../php/Codec.php';
 require_once __DIR__ . '/../Operations.php';
 
 use Tests\Compat\Codec;

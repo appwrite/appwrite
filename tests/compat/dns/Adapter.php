@@ -138,7 +138,7 @@ final class Adapter implements Base, Benchmarks
                 try {
                     Message::decode($a['packet']);
 
-                    return null;
+                    return;
                 } catch (DecodingException $e) {
                     return [
                         'class' => $e::class,
@@ -184,7 +184,7 @@ final class Adapter implements Base, Benchmarks
                 try {
                     File::import($a['content'], $a['defaultOrigin'] ?? null, $a['defaultTTL'] ?? 3600);
 
-                    return null;
+                    return;
                 } catch (ImportException $e) {
                     $previous = $e->getPrevious();
 
@@ -230,12 +230,12 @@ final class Adapter implements Base, Benchmarks
             'client.new' => function (array $a, Session $s) {
                 new Client($a['server'], $a['port'] ?? 53, $a['timeout'] ?? 5, $a['tcp'] ?? false);
 
-                return null;
+                return;
             },
             'lookup.new' => function (array $a, Session $s) {
                 new Recursive($a['servers']);
 
-                return null;
+                return;
             },
             'resolver.new' => function (array $a, Session $s) {
                 match ($a['resolver']) {
@@ -245,7 +245,7 @@ final class Adapter implements Base, Benchmarks
                     default => throw new Fault('unknown resolver'),
                 };
 
-                return null;
+                return;
             },
             'adapter.new' => function (array $a, Session $s) {
                 match ($a['adapter']) {
@@ -255,7 +255,7 @@ final class Adapter implements Base, Benchmarks
                     default => throw new Fault('unknown adapter'),
                 };
 
-                return null;
+                return;
             },
 
             'server.run' => fn (array $a, Session $s) => Servers::run($a['servers'], $a['steps']),
@@ -644,7 +644,7 @@ final class Servers
                 $body = @file_get_contents($url, false, $context);
                 $status = 0;
                 $contentType = null;
-                foreach ($http_response_header ?? [] as $line) {
+                foreach (http_get_last_response_headers() ?? [] as $line) {
                     if (preg_match('#^HTTP/\S+ (\d+)#', $line, $m) === 1) {
                         $status = (int) $m[1];
                     } elseif (stripos($line, 'content-type:') === 0) {

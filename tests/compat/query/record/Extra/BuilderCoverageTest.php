@@ -135,10 +135,10 @@ class BuilderCoverageTest extends TestCase
         foreach (VectorMetric::cases() as $metric) {
             $this->assertNotSame('', $metric->toOperator());
         }
-        $this->assertIsBool(Method::And->isNested());
-        $this->assertIsBool(Method::Or->isNested());
-        $this->assertIsBool(Method::Equal->isNested());
-        $this->assertIsBool(Method::Having->isNested());
+        $this->assertTrue(Method::And->isNested());
+        $this->assertTrue(Method::Or->isNested());
+        $this->assertFalse(Method::Equal->isNested());
+        $this->assertTrue(Method::Having->isNested());
     }
 
     public function testWindowFrame(): void

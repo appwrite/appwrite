@@ -571,9 +571,21 @@
             }
           },
           {
-            "get": "operator",
+            "is": "AST\\Expression\\Binary",
             "on": {
               "$o": 46
+            }
+          },
+          {
+            "get": "where",
+            "on": {
+              "$o": 36
+            }
+          },
+          {
+            "get": "operator",
+            "on": {
+              "$o": 53
             }
           }
         ]
@@ -1017,6 +1029,60 @@
                 "right": {
                   "$value": "AST\\Literal",
                   "id": 52,
+                  "props": {
+                    "value": 7
+                  }
+                }
+              }
+            }
+          }
+        },
+        true,
+        {
+          "$value": "AST\\Expression\\Binary",
+          "id": 53,
+          "props": {
+            "left": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 54,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 55,
+                  "props": {
+                    "name": "active",
+                    "table": null,
+                    "schema": null
+                  }
+                },
+                "operator": "=",
+                "right": {
+                  "$value": "AST\\Literal",
+                  "id": 56,
+                  "props": {
+                    "value": true
+                  }
+                }
+              }
+            },
+            "operator": "AND",
+            "right": {
+              "$value": "AST\\Expression\\Binary",
+              "id": 57,
+              "props": {
+                "left": {
+                  "$value": "AST\\Reference\\Column",
+                  "id": 58,
+                  "props": {
+                    "name": "tenant",
+                    "table": null,
+                    "schema": null
+                  }
+                },
+                "operator": "=",
+                "right": {
+                  "$value": "AST\\Literal",
+                  "id": 59,
                   "props": {
                     "value": 7
                   }

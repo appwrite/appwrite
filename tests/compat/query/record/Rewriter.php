@@ -23,9 +23,6 @@ final class Rewriter extends NodeVisitorAbstract
 {
     private const REC = 'Tests\\Compat\\Query\\Record\\Rec';
 
-    /** @var list<Node> */
-    private array $skip = [];
-
     private int $constDepth = 0;
 
     /** @var list<bool> whether each enclosing class implements a library interface */
@@ -49,7 +46,7 @@ final class Rewriter extends NodeVisitorAbstract
         return (new Standard())->prettyPrintFile($ast);
     }
 
-    public function enterNode(Node $node)
+    public function enterNode(Node $node): null
     {
         // Constant expressions cannot hold calls.
         if ($node instanceof Node\Param || $node instanceof Stmt\ClassConst || $node instanceof Node\PropertyItem
@@ -111,7 +108,7 @@ final class Rewriter extends NodeVisitorAbstract
         }
     }
 
-    public function leaveNode(Node $node)
+    public function leaveNode(Node $node): ?Node
     {
         if ($node instanceof Node\Param || $node instanceof Stmt\ClassConst || $node instanceof Node\PropertyItem
             || $node instanceof Node\Attribute || $node instanceof Stmt\Const_ || $node instanceof Node\Const_
@@ -330,7 +327,7 @@ final class Rewriter extends NodeVisitorAbstract
         return new Expr\ClassConstFetch(new Name\FullyQualified(\ltrim($name->toString(), '\\')), 'class');
     }
 
-    private function name(Node $name): Expr
+    private function name(Node\Identifier|Expr $name): Expr
     {
         return $name instanceof Node\Identifier ? new String_($name->toString()) : $name;
     }

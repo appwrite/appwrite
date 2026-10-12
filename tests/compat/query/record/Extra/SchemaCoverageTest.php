@@ -112,9 +112,12 @@ class SchemaCoverageTest extends TestCase
 
     public function testEngines(): void
     {
+        // Only Memory, Log, TinyLog and StripeLog do without an ORDER BY.
+        $unordered = 0;
         foreach (Engine::cases() as $engine) {
-            $this->assertIsBool($engine->requiresOrderBy());
+            $unordered += $engine->requiresOrderBy() ? 0 : 1;
         }
+        $this->assertSame(4, $unordered);
     }
 
     public function testForeignKeyActions(): void

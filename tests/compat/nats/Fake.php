@@ -2,7 +2,6 @@
 
 namespace Tests\Compat\Nats;
 
-use Utopia\NATS\Exception\ConnectionException;
 use Utopia\NATS\Exception\TimeoutException;
 use Utopia\NATS\Transport\Transport;
 

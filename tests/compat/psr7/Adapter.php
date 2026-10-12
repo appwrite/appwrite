@@ -3,6 +3,7 @@
 namespace Tests\Compat\Psr7;
 
 use Psr\Http\Message\MessageInterface;
+use Psr\Http\Message\RequestInterface;
 use Psr\Http\Message\StreamInterface;
 use Psr\Http\Message\UriInterface;
 use Tests\Compat\Adapter as Base;
@@ -74,7 +75,7 @@ final class Adapter implements Base, Benchmarks
                 }
                 file_put_contents($a['path'], $a['content'] ?? '');
 
-                return null;
+                return;
             },
 
             // One-shot forms for fuzzing.
@@ -147,7 +148,7 @@ final class Adapter implements Base, Benchmarks
                 return $a['method'] === 'getUploadedFiles' ? self::dumpFiles($result) : $result;
             },
             'message.body' => fn (array $a, Session $s) => $s->handle(self::message($a['message'], $s)->getBody()),
-            'message.uri' => fn (array $a, Session $s) => $s->handle(self::message($a['message'], $s)->getUri()),
+            'message.uri' => fn (array $a, Session $s) => $s->handle(self::request($a['message'], $s)->getUri()),
             'message.dump' => fn (array $a, Session $s) => self::dumpMessage(self::message($a['message'], $s)),
             'response.call' => fn (array $a, Session $s) => self::responseCall(self::message($a['message'], $s), $a['method'], $a['args'] ?? [], $a['lookup'] ?? []),
 
@@ -250,6 +251,13 @@ final class Adapter implements Base, Benchmarks
         $message = $s->get($handle);
 
         return $message instanceof MessageInterface ? $message : throw new Fault('not a message');
+    }
+
+    private static function request(mixed $handle, Session $s): RequestInterface
+    {
+        $request = self::message($handle, $s);
+
+        return $request instanceof RequestInterface ? $request : throw new Fault('not a request');
     }
 
     private static function part(mixed $handle, Session $s): Part
