@@ -598,8 +598,8 @@ class Appwrite extends Source
         if (\in_array(Resource::TYPE_ENVIRONMENT_VARIABLE, $resources)) {
             $report[Resource::TYPE_ENVIRONMENT_VARIABLE] = 0;
             foreach ($functions as $function) {
-                // function model contains `vars`, we don't need to fetch the list again.
-                $report[Resource::TYPE_ENVIRONMENT_VARIABLE] += count($function->vars ?? []);
+                // A function list's `vars` also holds a site's variables when the two share an internal ID.
+                $report[Resource::TYPE_ENVIRONMENT_VARIABLE] += $this->functions->listVariables($function->id)->total;
             }
         }
     }
@@ -2297,7 +2297,7 @@ class Appwrite extends Source
 
                 $convertedResources[] = $convertedFunc;
 
-                foreach ($function->vars as $var) {
+                foreach ($this->functions->listVariables($function->id)->variables as $var) {
                     $convertedResources[] = new EnvVar(
                         $var->id,
                         $convertedFunc,
