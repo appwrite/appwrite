@@ -23,6 +23,8 @@ class Func extends Resource
      * @param array<string> $scopes
      * @param string $specification
      * @param string $buildSpecification
+     * @param int $interval
+     * @param int $deploymentRetention
      */
     public function __construct(
         string $id,
@@ -39,7 +41,9 @@ class Func extends Resource
         private readonly bool $logging = true,
         private readonly array $scopes = [],
         private readonly string $specification = '',
-        private readonly string $buildSpecification = ''
+        private readonly string $buildSpecification = '',
+        private readonly int $interval = 0,
+        private readonly int $deploymentRetention = 0
     ) {
         $this->id = $id;
     }
@@ -65,7 +69,9 @@ class Func extends Resource
             $array['logging'] ?? true,
             $array['scopes'] ?? [],
             $array['runtimeSpecification'] ?? $array['specification'] ?? '',
-            $array['buildSpecification'] ?? $array['specification'] ?? ''
+            $array['buildSpecification'] ?? $array['specification'] ?? '',
+            $array['interval'] ?? 0,
+            $array['deploymentRetention'] ?? 0
         );
     }
 
@@ -91,6 +97,8 @@ class Func extends Resource
             'specification' => $this->specification,
             'runtimeSpecification' => $this->specification,
             'buildSpecification' => $this->buildSpecification,
+            'interval' => $this->interval,
+            'deploymentRetention' => $this->deploymentRetention,
         ];
     }
 
@@ -138,6 +146,16 @@ class Func extends Resource
     public function getSchedule(): string
     {
         return $this->schedule;
+    }
+
+    public function getInterval(): int
+    {
+        return $this->interval;
+    }
+
+    public function getDeploymentRetention(): int
+    {
+        return $this->deploymentRetention;
     }
 
     public function getTimeout(): int

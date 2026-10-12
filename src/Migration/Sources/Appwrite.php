@@ -598,8 +598,8 @@ class Appwrite extends Source
         if (\in_array(Resource::TYPE_ENVIRONMENT_VARIABLE, $resources)) {
             $report[Resource::TYPE_ENVIRONMENT_VARIABLE] = 0;
             foreach ($functions as $function) {
-                // function model contains `vars`, we don't need to fetch the list again.
-                $report[Resource::TYPE_ENVIRONMENT_VARIABLE] += count($function->vars ?? []);
+                // A function list's `vars` also holds a site's variables when the two share an internal ID.
+                $report[Resource::TYPE_ENVIRONMENT_VARIABLE] += $this->functions->listVariables($function->id)->total;
             }
         }
     }
@@ -809,6 +809,12 @@ class Appwrite extends Source
         $sessionLimit = $this->project->getPolicy(ProjectPolicyId::SESSIONLIMIT());
         $userLimit = $this->project->getPolicy(ProjectPolicyId::USERLIMIT());
         $membershipPrivacy = $this->project->getPolicy(ProjectPolicyId::MEMBERSHIPPRIVACY());
+        $passwordStrength = $this->getPolicyIfSupported(ProjectPolicyId::PASSWORDSTRENGTH());
+        $mfaFactors = $this->getPolicyIfSupported(ProjectPolicyId::MFAFACTORS());
+        $denyAliasedEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYALIASEDEMAIL());
+        $denyDisposableEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYDISPOSABLEEMAIL());
+        $denyFreeEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYFREEEMAIL());
+        $denyCorporateEmail = $this->getPolicyIfSupported(ProjectPolicyId::DENYCORPORATEEMAIL());
 
         $policies = new Policies(
             $this->projectId,
@@ -825,9 +831,45 @@ class Appwrite extends Source
             $membershipPrivacy->userName,
             $membershipPrivacy->userMFA,
             $membershipPrivacy->userPhone,
+            $membershipPrivacy->userAccessedAt,
+            $passwordStrength === null ? null : [
+                'min' => $passwordStrength->min,
+                'uppercase' => $passwordStrength->uppercase,
+                'lowercase' => $passwordStrength->lowercase,
+                'number' => $passwordStrength->number,
+                'symbols' => $passwordStrength->symbols,
+            ],
+            $mfaFactors === null ? null : [
+                'totp' => $mfaFactors->totp,
+                'email' => $mfaFactors->email,
+                'phone' => $mfaFactors->phone,
+                'custom' => $mfaFactors->custom,
+            ],
+            $denyAliasedEmail?->enabled,
+            $denyDisposableEmail?->enabled,
+            $denyFreeEmail?->enabled,
+            $denyCorporateEmail?->enabled,
         );
 
         $this->callback([$policies]);
+    }
+
+    /**
+     * A source older than a policy rejects its ID, so the policy is left to the destination.
+     *
+     * @throws AppwriteException
+     */
+    private function getPolicyIfSupported(ProjectPolicyId $policyId): mixed
+    {
+        try {
+            return $this->project->getPolicy($policyId);
+        } catch (AppwriteException $e) {
+            if ($e->getCode() === 400 || $e->getCode() === 404) {
+                return null;
+            }
+
+            throw $e;
+        }
     }
 
     private function exportAuthMethods(): void
@@ -1620,6 +1662,7 @@ class Appwrite extends Source
                             $file->mimeType,
                             $file->permissions,
                             $file->sizeOriginal,
+                            folder: $file->folder,
                         ));
                     } catch (Aborted $abort) {
                         throw $abort;
@@ -2247,17 +2290,20 @@ class Appwrite extends Source
                     $function->scopes ?? [],
                     $function->runtimeSpecification ?: '',
                     $function->buildSpecification ?: '',
+                    $function->interval ?? 0,
+                    $function->deploymentRetention,
                 );
                 $functions[] = $convertedFunc;
 
                 $convertedResources[] = $convertedFunc;
 
-                foreach ($function->vars as $var) {
+                foreach ($this->functions->listVariables($function->id)->variables as $var) {
                     $convertedResources[] = new EnvVar(
                         $var->id,
                         $convertedFunc,
                         $var->key,
                         $var->value,
+                        $var->secret,
                     );
                 }
             }
@@ -2843,7 +2889,10 @@ class Appwrite extends Source
                     $site->fallbackFile ?? '',
                     $site->runtimeSpecification ?: '',
                     $site->deploymentId ?? '',
-                    $site->buildSpecification ?: ''
+                    $site->buildSpecification ?: '',
+                    $site->startCommand,
+                    $site->deploymentRetention,
+                    $site->scopes,
                 );
                 $sites[] = $convertedSite;
                 $convertedResources[] = $convertedSite;
@@ -2854,7 +2903,8 @@ class Appwrite extends Source
                         $var->id,
                         $convertedSite,
                         $var->key,
-                        $var->value
+                        $var->value,
+                        $var->secret,
                     );
                 }
             }
