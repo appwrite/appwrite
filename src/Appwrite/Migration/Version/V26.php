@@ -3,14 +3,11 @@
 namespace Appwrite\Migration\Version;
 
 use Appwrite\Migration\Migration;
+use Appwrite\Video\Profiles;
 use Exception;
 use Throwable;
-use Utopia\Config\Config;
 use Utopia\Console;
 use Utopia\Database\Database;
-use Utopia\Database\Document;
-use Utopia\Database\Exception\Duplicate;
-use Utopia\Database\Helpers\ID;
 
 class V26 extends Migration
 {
@@ -44,7 +41,7 @@ class V26 extends Migration
         $this->createVideoCollections();
 
         Console::info('Seeding default video encode profiles');
-        $this->seedVideoProfiles();
+        Profiles::seed($this->dbForProject);
     }
 
     /**
@@ -76,33 +73,5 @@ class V26 extends Migration
                 }
             }
         });
-    }
-
-    /**
-     * Seeds the default encoding ladder into the current project tenant.
-     *
-     * Renditions are always encoded against a profile, so a project with no
-     * profiles cannot transcode anything until one is created by hand. The
-     * presets live in app/config/videos-profiles.php. Unique indexes on shared
-     * tables lead with _tenant, so each project gets its own ladder.
-     */
-    private function seedVideoProfiles(): void
-    {
-        foreach (Config::getParam('videos-profiles', []) as $profile) {
-            try {
-                $this->dbForProject->createDocument('videos_profiles', new Document([
-                    '$id' => ID::unique(),
-                    'name' => $profile['name'],
-                    'codec' => $profile['codec'] ?? 'h264',
-                    'videoBitRate' => $profile['videoBitRate'],
-                    'audioBitRate' => $profile['audioBitRate'],
-                    'width' => $profile['width'],
-                    'height' => $profile['height'],
-                    'search' => $profile['name'],
-                ]));
-            } catch (Duplicate) {
-                // Profile already seeded for this tenant.
-            }
-        }
     }
 }
