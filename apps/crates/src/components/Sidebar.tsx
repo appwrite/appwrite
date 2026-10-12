@@ -273,7 +273,7 @@ export function Sidebar({ onNavigate }: { onNavigate?: () => void }) {
         return (
           <Group key={c.id} label={c.title} open={!!term || c.id === activeCategory} badge={<span className="text-[11px] text-muted-foreground tabular-nums">{libs.length}</span>}>
             <Link to="/categories/$category" params={{ category: c.id }} className={row}>
-              About {c.title.toLowerCase()}
+              Overview
             </Link>
             {libs.map((l) =>
               l ? (
