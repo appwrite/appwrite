@@ -132,16 +132,6 @@ abstract class Base extends VideosAction
     }
 
     /**
-     * Playback routes authenticate via a `project` query parameter (see the
-     * `locationAuth` on each SDK method), so every URL a player follows out of a
-     * manifest has to carry it forward or the next request has no project context.
-     */
-    protected function withProject(string $uri, Document $project): string
-    {
-        return $uri . (\str_contains($uri, '?') ? '&' : '?') . 'project=' . \urlencode($project->getId());
-    }
-
-    /**
      * Renders a template from `app/views/videos/` and sends it with an explicit
      * content type.
      */
@@ -150,7 +140,7 @@ abstract class Base extends VideosAction
         $response
             ->setContentType($contentType)
             // Manifests change as renditions come and go, so they must not be cached
-            // the way immutable segments are.
+            // the way segment bytes are.
             ->addHeader('Cache-Control', 'no-store, no-cache, must-revalidate')
             ->send($body);
     }

@@ -109,8 +109,10 @@ class Get extends Base
 
         $response
             ->setContentType($contentType)
-            // Segments are immutable once written, so they can be cached hard.
-            ->addHeader('Cache-Control', 'public, max-age=31536000, immutable')
+            // Permission-gated. A shared cache would keep serving this URL after
+            // access is revoked or the video is deleted, and nothing can purge it.
+            // The bytes never change, so a private cache may hold them.
+            ->addHeader('Cache-Control', 'private, max-age=31536000, immutable')
             ->addHeader('Accept-Ranges', 'bytes')
             ->addHeader('X-Peak', \memory_get_peak_usage());
 

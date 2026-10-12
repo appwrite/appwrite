@@ -266,6 +266,17 @@ abstract class Base extends UtopiaAction
     }
 
     /**
+     * Playback routes authenticate via a `project` query parameter (see the
+     * `locationAuth` on each SDK method), so every URL a player follows out of a
+     * manifest or timeline has to carry it forward or the next request has no
+     * project context.
+     */
+    protected function withProject(string $uri, Document $project): string
+    {
+        return $uri . (\str_contains($uri, '?') ? '&' : '?') . 'project=' . \urlencode($project->getId());
+    }
+
+    /**
      * Loads a video enforcing document `$permissions` for sessions.
      *
      * Privileged users and API keys skip authorization. Empty → VIDEO_NOT_FOUND.
@@ -411,10 +422,11 @@ abstract class Base extends UtopiaAction
     /**
      * Cache policy for caption WebVTT served at a stable URL.
      *
-     * Captions/Update can replace the source and the worker rewrites the same
-     * `captions/{captionId}.vtt` path, so bytes must not be immutable. Short
-     * max-age plus stale-while-revalidate lets CDNs serve quickly while still
-     * revalidating; ETag tracks `$updatedAt`, source file id and size.
+     * The response is permission-gated, so only a private cache may store it.
+     * A shared cache would keep serving the URL after access is revoked or the
+     * caption is deleted. Captions/Update can replace the source and the worker
+     * rewrites the same `captions/{captionId}.vtt` path, so the private lifetime
+     * stays short. ETag tracks `$updatedAt`, source file id and size.
      *
      * @return bool true when If-None-Match matched and a 304 was sent
      */
@@ -432,7 +444,7 @@ abstract class Base extends UtopiaAction
         ) . '"';
 
         $response
-            ->addHeader('Cache-Control', 'public, max-age=300, stale-while-revalidate=86400')
+            ->addHeader('Cache-Control', 'private, max-age=300')
             ->addHeader('ETag', $etag);
 
         if ($request->getHeaderLine('if-none-match') === $etag) {

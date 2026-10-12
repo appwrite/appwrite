@@ -12,6 +12,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response;
 use Utopia\Database\Database;
+use Utopia\Database\Document;
 use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Database\Validator\UID;
@@ -57,6 +58,7 @@ class Get extends Base
             ->param('videoId', '', new UID(), 'Video unique ID.')
             ->inject('response')
             ->inject('dbForProject')
+            ->inject('project')
             ->inject('user')
             ->inject('authorization')
             ->inject('deviceForVideos')
@@ -67,6 +69,7 @@ class Get extends Base
         string $videoId,
         Response $response,
         Database $dbForProject,
+        Document $project,
         User $user,
         Authorization $authorization,
         Device $deviceForVideos
@@ -91,9 +94,42 @@ class Get extends Base
             throw new Exception(Exception::VIDEO_TIMELINE_NOT_FOUND);
         }
 
+        // Disk stores bare `previews/{id}#xywh=...`. Players resolve those
+        // without inheriting the timeline's ?project=, and cannot send the
+        // project header, so every cue URL must carry the query itself.
+        $vtt = $this->withProjectOnPreviewCues((string) $deviceForVideos->read($path), $project);
+
         $response
             ->setContentType('text/vtt')
             ->addHeader('Cache-Control', 'private, max-age=3888000') // 45 days
-            ->send((string) $deviceForVideos->read($path));
+            ->send($vtt);
+    }
+
+    /**
+     * Appends `?project=` to each `previews/{id}` cue URI, before any `#xywh=`
+     * fragment. The on-disk VTT is left unchanged.
+     */
+    private function withProjectOnPreviewCues(string $vtt, Document $project): string
+    {
+        $lines = \explode("\n", $vtt);
+
+        foreach ($lines as $index => $line) {
+            $trimmed = \rtrim($line, "\r");
+
+            if (!\str_starts_with($trimmed, 'previews/')) {
+                continue;
+            }
+
+            $fragment = '';
+            $hash = \strpos($trimmed, '#');
+            if ($hash !== false) {
+                $fragment = \substr($trimmed, $hash);
+                $trimmed = \substr($trimmed, 0, $hash);
+            }
+
+            $lines[$index] = $this->withProject($trimmed, $project) . $fragment;
+        }
+
+        return \implode("\n", $lines);
     }
 }

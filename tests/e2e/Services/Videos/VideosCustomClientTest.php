@@ -636,16 +636,22 @@ final class VideosCustomClientTest extends Scope
         $this->assertEquals(200, $guestTimeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $guestTimeline['body']);
 
-        $previewId = $this->playlistToken(
-            (string) $guestTimeline['body'],
-            'previews/',
-            '#xywh=',
-            'Timeline VTT did not reference a preview image'
+        $projectId = $this->getProject()['$id'];
+        $this->assertMatchesRegularExpression(
+            '/previews\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
+            (string) $guestTimeline['body']
         );
+        $this->assertSame(
+            1,
+            \preg_match('~previews/([a-zA-Z0-9]+)\?project=~', (string) $guestTimeline['body'], $previewMatch)
+        );
+        // No X-Appwrite-Project: mirrors a player resolving the VTT cue URL.
         $preview = $this->client->call(
             Client::METHOD_GET,
-            '/videos/' . $videoId . '/previews/' . $previewId,
-            $this->anonymousHeaders()
+            '/videos/' . $videoId . '/previews/' . $previewMatch[1] . '?project=' . $projectId,
+            [
+                'content-type' => 'application/json',
+            ]
         );
         $this->assertEquals(200, $preview['headers']['status-code']);
         $this->assertNotEmpty($preview['body']);

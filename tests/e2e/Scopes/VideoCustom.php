@@ -696,7 +696,9 @@ trait VideoCustom
      */
     public function timelinePreviewIds(string $vtt): array
     {
-        \preg_match_all('#previews/([A-Za-z0-9]+)#', $vtt, $matches);
+        // Cues are `previews/{id}?project=...#xywh=...` (serve-time rewrite) or
+        // the older on-disk form without the query; stop before either.
+        \preg_match_all('#previews/([A-Za-z0-9]+)(?:\?|#)#', $vtt, $matches);
 
         return $matches[1];
     }

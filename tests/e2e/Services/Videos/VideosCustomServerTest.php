@@ -418,18 +418,37 @@ final class VideosCustomServerTest extends Scope
 
     /**
      * The sprite timeline is produced when the video is created.
+     * Cue URLs carry ?project= so a player can load sprites without a header.
      */
     #[Depends('testVideoIsProbedByJob')]
     public function testTimelineAvailable(string $videoId): void
     {
         $response = $this->waitForTimeline($videoId);
+        $projectId = $this->getProject()['$id'];
 
         $this->assertEquals(200, $response['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $response['body']);
-        $this->assertMatchesRegularExpression('/previews\/[a-zA-Z0-9]+#xywh=\d+,\d+,\d+,\d+/', $response['body']);
+        $this->assertMatchesRegularExpression(
+            '/previews\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=\d+,\d+,\d+,\d+/',
+            (string) $response['body']
+        );
 
         $xywh = \explode(',', \explode("\n", \explode('#xywh=', (string) $response['body'], 2)[1], 2)[0]);
         $this->assertSame(480, (int) $xywh[2], 'timeline thumbnails should be 480px wide');
+
+        $this->assertSame(
+            1,
+            \preg_match('~previews/([a-zA-Z0-9]+)\?project=~', (string) $response['body'], $previewMatch)
+        );
+        // Private video: guest + ?project= alone is not enough for document ACL.
+        // Headerless location-auth is covered on public videos in the client suite.
+        $preview = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/previews/' . $previewMatch[1] . '?project=' . $projectId,
+            $this->headers()
+        );
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertNotEmpty($preview['body']);
     }
 
     // --------------------------------------------------------------- captions
@@ -1099,6 +1118,12 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $segment['headers']['status-code']);
         $this->assertNotEmpty($segment['body']);
         $this->assertStringContainsString('video/mp2t', (string) ($segment['headers']['content-type'] ?? ''));
+        // Permission-gated bytes stay in the private cache. A public year-long
+        // response would keep playing from a CDN after access is revoked.
+        $this->assertSame(
+            'private, max-age=31536000, immutable',
+            $segment['headers']['cache-control'] ?? null
+        );
 
         // Ranged fetch of a TS segment: a mid-file slice returns exactly the
         // requested bytes with a matching Content-Range.
@@ -1262,15 +1287,22 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $timeline['headers']['status-code']);
         $this->assertStringContainsString('WEBVTT', (string) $timeline['body']);
 
-        if (\preg_match('~previews/([a-zA-Z0-9]+)#xywh=~', $timeline['body'], $previewMatch) === 1) {
-            $preview = $this->client->call(
-                Client::METHOD_GET,
-                '/videos/' . $videoId . '/previews/' . $previewMatch[1],
-                $this->headers()
-            );
-            $this->assertEquals(200, $preview['headers']['status-code']);
-            $this->assertNotEmpty($preview['body']);
-        }
+        $projectId = $this->getProject()['$id'];
+        $this->assertMatchesRegularExpression(
+            '/previews\/[a-zA-Z0-9]+\?project=' . \preg_quote($projectId, '/') . '#xywh=/',
+            (string) $timeline['body']
+        );
+        $this->assertSame(
+            1,
+            \preg_match('~previews/([a-zA-Z0-9]+)\?project=~', (string) $timeline['body'], $previewMatch)
+        );
+        $preview = $this->client->call(
+            Client::METHOD_GET,
+            '/videos/' . $videoId . '/previews/' . $previewMatch[1] . '?project=' . $projectId,
+            $this->headers()
+        );
+        $this->assertEquals(200, $preview['headers']['status-code']);
+        $this->assertNotEmpty($preview['body']);
     }
 
     // ---------------------------------------------------- embedded captions
@@ -1648,10 +1680,10 @@ final class VideosCustomServerTest extends Scope
         $this->assertEquals(200, $vtt['headers']['status-code']);
         $this->assertStringContainsString('OVERRIDE CUE', (string) $vtt['body']);
         $this->assertStringNotContainsString('EMBEDDED CUE', (string) $vtt['body']);
-        // Caption bytes share a stable URL across source replacements, so they
-        // must revalidate rather than cache as immutable year-long.
+        // Caption bytes are permission-gated and share a stable URL across
+        // source replacements, so only a private cache may store them, briefly.
         $this->assertSame(
-            'public, max-age=300, stale-while-revalidate=86400',
+            'private, max-age=300',
             $vtt['headers']['cache-control'] ?? null
         );
         $etag = $vtt['headers']['etag'] ?? '';
