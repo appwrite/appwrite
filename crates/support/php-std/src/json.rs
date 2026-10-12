@@ -673,6 +673,12 @@ pub fn next_utf8_char(s: &[u8]) -> Result<(u32, usize), usize> {
 /// Errors: [`Error::Json`] with PHP's code (empty input is a syntax error),
 /// [`Error::Value`] when `depth` is not in `1..=i32::MAX`.
 pub fn decode(json: &[u8], assoc: Option<bool>, depth: i64, flags: Flags) -> Result<Value, Error> {
+    decode_ext(json, assoc, depth, flags)
+}
+
+/// [`decode`] into a [`Value`] of any extension `X` (a decoded value never
+/// holds one), so a library with its own object type decodes without a copy.
+pub fn decode_ext<X: Extension>(json: &[u8], assoc: Option<bool>, depth: i64, flags: Flags) -> Result<Value<X>, Error> {
     let mut flags = flags;
     match assoc {
         Some(true) => flags |= Flags::OBJECT_AS_ARRAY,
@@ -680,7 +686,7 @@ pub fn decode(json: &[u8], assoc: Option<bool>, depth: i64, flags: Flags) -> Res
         None => {}
     }
     let depth = decode_depth(json, depth, "json_decode(): Argument #3 ($depth)")?;
-    let builder = PhpBuilder { assoc: flags.contains(Flags::OBJECT_AS_ARRAY) };
+    let builder = PhpBuilder::<X> { assoc: flags.contains(Flags::OBJECT_AS_ARRAY), ext: std::marker::PhantomData };
     parse(json, flags, depth, &builder).map_err(ParseError::into_error)
 }
 
@@ -1209,17 +1215,18 @@ impl ParseError {
     }
 }
 
-struct PhpBuilder {
+struct PhpBuilder<X> {
     assoc: bool,
+    ext: std::marker::PhantomData<fn() -> X>,
 }
 
-impl Build for PhpBuilder {
-    type Value = Value;
+impl<X: Extension> Build for PhpBuilder<X> {
+    type Value = Value<X>;
     type Key = ArrayKey;
 
     /// The PHP value of a scalar token.
     #[inline(always)]
-    fn scalar(&self, token: Scalar<'_>) -> Result<Value, ParseError> {
+    fn scalar(&self, token: Scalar<'_>) -> Result<Value<X>, ParseError> {
         Ok(match token {
             Scalar::Null => Value::Null,
             Scalar::True => Value::Bool(true),
@@ -1246,7 +1253,7 @@ impl Build for PhpBuilder {
     }
 
     /// The decoded list as a PHP array.
-    fn array(&self, items: Vec<Value>) -> Value {
+    fn array(&self, items: Vec<Value<X>>) -> Value<X> {
         if items.is_empty() {
             return Value::Array(Array::new());
         }
@@ -1254,7 +1261,7 @@ impl Build for PhpBuilder {
     }
 
     /// The object as a PHP array (assoc mode) or a `stdClass`.
-    fn object(&self, members: Vec<(ArrayKey, Value)>) -> Value {
+    fn object(&self, members: Vec<(ArrayKey, Value<X>)>) -> Value<X> {
         // Each member assigned in order, as `$a[$k] = $v`.
         let object = Array::from_pairs(members);
         if self.assoc { Value::Array(object) } else { Value::Object(object) }

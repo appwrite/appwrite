@@ -1,0 +1,1747 @@
+{
+  "source": "packages/query/tests/API/FilterTest.php",
+  "cases": [
+    {
+      "name": "testEqual",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John",
+                "Jane"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John",
+              "Jane"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Equal"
+        },
+        "name",
+        [
+          "John",
+          "Jane"
+        ]
+      ]
+    },
+    {
+      "name": "testNotEqual",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notEqual",
+            "class": "Query",
+            "args": [
+              "name",
+              "John"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotEqual"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotEqual"
+        },
+        [
+          "John"
+        ]
+      ]
+    },
+    {
+      "name": "testNotEqualWithList",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notEqual",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John",
+                "Jane"
+              ]
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotEqual"
+            },
+            "attribute": "name",
+            "values": [
+              "John",
+              "Jane"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          "John",
+          "Jane"
+        ]
+      ]
+    },
+    {
+      "name": "testNotEqualWithMap",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notEqual",
+            "class": "Query",
+            "args": [
+              "data",
+              {
+                "key": "value"
+              }
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotEqual"
+            },
+            "attribute": "data",
+            "values": [
+              {
+                "key": "value"
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          {
+            "key": "value"
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testLessThan",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "age",
+              30
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "age",
+            "values": [
+              30
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::LessThan"
+        },
+        "age",
+        [
+          30
+        ]
+      ]
+    },
+    {
+      "name": "testLessThanEqual",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "lessThanEqual",
+            "class": "Query",
+            "args": [
+              "age",
+              30
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThanEqual"
+            },
+            "attribute": "age",
+            "values": [
+              30
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::LessThanEqual"
+        },
+        [
+          30
+        ]
+      ]
+    },
+    {
+      "name": "testGreaterThan",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "age",
+              18
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "age",
+            "values": [
+              18
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::GreaterThan"
+        },
+        [
+          18
+        ]
+      ]
+    },
+    {
+      "name": "testGreaterThanEqual",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "greaterThanEqual",
+            "class": "Query",
+            "args": [
+              "age",
+              18
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThanEqual"
+            },
+            "attribute": "age",
+            "values": [
+              18
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::GreaterThanEqual"
+        },
+        [
+          18
+        ]
+      ]
+    },
+    {
+      "name": "testContains",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "containsString",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                "php",
+                "js"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Contains"
+            },
+            "attribute": "tags",
+            "values": [
+              "php",
+              "js"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Contains"
+        },
+        [
+          "php",
+          "js"
+        ]
+      ]
+    },
+    {
+      "name": "testContainsAny",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "containsAny",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                "php",
+                "js"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::ContainsAny"
+            },
+            "attribute": "tags",
+            "values": [
+              "php",
+              "js"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::ContainsAny"
+        },
+        [
+          "php",
+          "js"
+        ]
+      ]
+    },
+    {
+      "name": "testNotContains",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notContains",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                "php"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotContains"
+            },
+            "attribute": "tags",
+            "values": [
+              "php"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotContains"
+        },
+        [
+          "php"
+        ]
+      ]
+    },
+    {
+      "name": "testContainsDeprecated",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "containsString",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                "a",
+                "b"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Contains"
+            },
+            "attribute": "tags",
+            "values": [
+              "a",
+              "b"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Contains"
+        },
+        [
+          "a",
+          "b"
+        ]
+      ]
+    },
+    {
+      "name": "testBetween",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "between",
+            "class": "Query",
+            "args": [
+              "age",
+              18,
+              65
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Between"
+            },
+            "attribute": "age",
+            "values": [
+              18,
+              65
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Between"
+        },
+        [
+          18,
+          65
+        ]
+      ]
+    },
+    {
+      "name": "testNotBetween",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notBetween",
+            "class": "Query",
+            "args": [
+              "age",
+              18,
+              65
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotBetween"
+            },
+            "attribute": "age",
+            "values": [
+              18,
+              65
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotBetween"
+        },
+        [
+          18,
+          65
+        ]
+      ]
+    },
+    {
+      "name": "testSearch",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "search",
+            "class": "Query",
+            "args": [
+              "content",
+              "hello world"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Search"
+            },
+            "attribute": "content",
+            "values": [
+              "hello world"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Search"
+        },
+        [
+          "hello world"
+        ]
+      ]
+    },
+    {
+      "name": "testNotSearch",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notSearch",
+            "class": "Query",
+            "args": [
+              "content",
+              "hello"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotSearch"
+            },
+            "attribute": "content",
+            "values": [
+              "hello"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotSearch"
+        },
+        [
+          "hello"
+        ]
+      ]
+    },
+    {
+      "name": "testIsNull",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "isNull",
+            "class": "Query",
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::IsNull"
+            },
+            "attribute": "email",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::IsNull"
+        },
+        "email",
+        []
+      ]
+    },
+    {
+      "name": "testIsNotNull",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "isNotNull",
+            "class": "Query",
+            "args": [
+              "email"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::IsNotNull"
+            },
+            "attribute": "email",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::IsNotNull"
+        }
+      ]
+    },
+    {
+      "name": "testStartsWith",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "startsWith",
+            "class": "Query",
+            "args": [
+              "name",
+              "Jo"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::StartsWith"
+            },
+            "attribute": "name",
+            "values": [
+              "Jo"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::StartsWith"
+        },
+        [
+          "Jo"
+        ]
+      ]
+    },
+    {
+      "name": "testNotStartsWith",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notStartsWith",
+            "class": "Query",
+            "args": [
+              "name",
+              "Jo"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotStartsWith"
+            },
+            "attribute": "name",
+            "values": [
+              "Jo"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotStartsWith"
+        }
+      ]
+    },
+    {
+      "name": "testEndsWith",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "endsWith",
+            "class": "Query",
+            "args": [
+              "email",
+              ".com"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::EndsWith"
+            },
+            "attribute": "email",
+            "values": [
+              ".com"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::EndsWith"
+        },
+        [
+          ".com"
+        ]
+      ]
+    },
+    {
+      "name": "testNotEndsWith",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notEndsWith",
+            "class": "Query",
+            "args": [
+              "email",
+              ".com"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotEndsWith"
+            },
+            "attribute": "email",
+            "values": [
+              ".com"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotEndsWith"
+        }
+      ]
+    },
+    {
+      "name": "testRegex",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "regex",
+            "class": "Query",
+            "args": [
+              "name",
+              "^Jo.*"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Regex"
+            },
+            "attribute": "name",
+            "values": [
+              "^Jo.*"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Regex"
+        },
+        [
+          "^Jo.*"
+        ]
+      ]
+    },
+    {
+      "name": "testExists",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "exists",
+            "class": "Query",
+            "args": [
+              [
+                "name",
+                "email"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Exists"
+            },
+            "attribute": "",
+            "values": [
+              "name",
+              "email"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Exists"
+        },
+        "",
+        [
+          "name",
+          "email"
+        ]
+      ]
+    },
+    {
+      "name": "testNotExistsArray",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notExists",
+            "class": "Query",
+            "args": [
+              [
+                "name"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotExists"
+            },
+            "attribute": "",
+            "values": [
+              "name"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::NotExists"
+        },
+        [
+          "name"
+        ]
+      ]
+    },
+    {
+      "name": "testNotExistsScalar",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "notExists",
+            "class": "Query",
+            "args": [
+              "name"
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::NotExists"
+            },
+            "attribute": "",
+            "values": [
+              "name"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          "name"
+        ]
+      ]
+    },
+    {
+      "name": "testCreatedBefore",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "createdBefore",
+            "class": "Query",
+            "args": [
+              "2024-01-01"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "$createdAt",
+            "values": [
+              "2024-01-01"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::LessThan"
+        },
+        "$createdAt",
+        [
+          "2024-01-01"
+        ]
+      ]
+    },
+    {
+      "name": "testCreatedAfter",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "createdAfter",
+            "class": "Query",
+            "args": [
+              "2024-01-01"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "$createdAt",
+            "values": [
+              "2024-01-01"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::GreaterThan"
+        },
+        "$createdAt"
+      ]
+    },
+    {
+      "name": "testUpdatedBefore",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "updatedBefore",
+            "class": "Query",
+            "args": [
+              "2024-06-01"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "$updatedAt",
+            "values": [
+              "2024-06-01"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::LessThan"
+        },
+        "$updatedAt"
+      ]
+    },
+    {
+      "name": "testUpdatedAfter",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "updatedAfter",
+            "class": "Query",
+            "args": [
+              "2024-06-01"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "$updatedAt",
+            "values": [
+              "2024-06-01"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::GreaterThan"
+        },
+        "$updatedAt"
+      ]
+    },
+    {
+      "name": "testCreatedBetween",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "createdBetween",
+            "class": "Query",
+            "args": [
+              "2024-01-01",
+              "2024-12-31"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Between"
+            },
+            "attribute": "$createdAt",
+            "values": [
+              "2024-01-01",
+              "2024-12-31"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Between"
+        },
+        "$createdAt",
+        [
+          "2024-01-01",
+          "2024-12-31"
+        ]
+      ]
+    },
+    {
+      "name": "testUpdatedBetween",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "updatedBetween",
+            "class": "Query",
+            "args": [
+              "2024-01-01",
+              "2024-12-31"
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Between"
+            },
+            "attribute": "$updatedAt",
+            "values": [
+              "2024-01-01",
+              "2024-12-31"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Between"
+        },
+        "$updatedAt"
+      ]
+    }
+  ]
+}

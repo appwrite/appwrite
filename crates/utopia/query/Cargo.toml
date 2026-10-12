@@ -1,0 +1,17 @@
+[package]
+name = "utopia-query"
+description = "Queries as data, compiled to SQL (MySQL, MariaDB, PostgreSQL, SQLite, ClickHouse) and MongoDB commands; schema builders; a SQL tokenizer, parser, serializer and statement classifier."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+publish.workspace = true
+
+[dependencies]
+md-5.workspace = true
+php-std.workspace = true
+thiserror.workspace = true
+
+[package.metadata.utopia]
+category = "data"
+php-sync = "da0119eda7c139b8f99b13d814e5a99f9b5ac418"

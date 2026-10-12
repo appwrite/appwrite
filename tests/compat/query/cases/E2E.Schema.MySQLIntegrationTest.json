@@ -1,0 +1,1910 @@
+{
+  "source": "packages/query/tests/E2E/Schema/MySQLIntegrationTest.php",
+  "cases": [
+    {
+      "name": "testCreateTableWithBasicColumns",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_basic_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              100
+            ]
+          },
+          {
+            "call": "boolean",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "active"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `test_basic_6acc000000001` (`age` INT NOT NULL, `name` VARCHAR(100) NOT NULL, `active` TINYINT(1) NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_basic_6acc000000001` (`age` INT NOT NULL, `name` VARCHAR(100) NOT NULL, `active` TINYINT(1) NOT NULL)"
+      ]
+    },
+    {
+      "name": "testColumnCollationIsAppliedByTheServer",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_collation_6acc000000001"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "name",
+              100
+            ]
+          },
+          {
+            "call": "collation",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "utf8mb4_bin"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `test_collation_6acc000000001` (`name` VARCHAR(100) COLLATE utf8mb4_bin NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_collation_6acc000000001` (`name` VARCHAR(100) COLLATE utf8mb4_bin NOT NULL)"
+      ]
+    },
+    {
+      "name": "testCreateTableWithPrimaryKeyAndUnique",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_pk_uniq_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "email",
+              255
+            ]
+          },
+          {
+            "call": "unique",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `test_pk_uniq_6acc000000001` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_pk_uniq_6acc000000001` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`), UNIQUE (`email`))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithAutoIncrement",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_autoinc_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "label",
+              50
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `test_autoinc_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `label` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_autoinc_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `label` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))"
+      ]
+    },
+    {
+      "name": "testAlterTableAddColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_add_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_add_6acc000000001"
+            ]
+          },
+          {
+            "call": "addColumn",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "description",
+              {
+                "$enum": "Schema\\ColumnType::Text"
+              }
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `test_alter_add_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_alter_add_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "ALTER TABLE `test_alter_add_6acc000000001` ADD COLUMN `description` TEXT NOT NULL",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `test_alter_add_6acc000000001` ADD COLUMN `description` TEXT NOT NULL"
+      ]
+    },
+    {
+      "name": "testAlterTableDropColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_drop_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "temp",
+              100
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_drop_6acc000000001"
+            ]
+          },
+          {
+            "call": "dropColumn",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "temp"
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `test_alter_drop_6acc000000001` (`id` INT NOT NULL, `temp` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_alter_drop_6acc000000001` (`id` INT NOT NULL, `temp` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "ALTER TABLE `test_alter_drop_6acc000000001` DROP COLUMN `temp`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `test_alter_drop_6acc000000001` DROP COLUMN `temp`"
+      ]
+    },
+    {
+      "name": "testAlterTableAddIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_idx_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "email",
+              255
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_alter_idx_6acc000000001"
+            ]
+          },
+          {
+            "call": "addIndex",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "idx_email",
+              [
+                "email"
+              ]
+            ]
+          },
+          {
+            "call": "alter",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `test_alter_idx_6acc000000001` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_alter_idx_6acc000000001` (`id` INT NOT NULL, `email` VARCHAR(255) NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "ALTER TABLE `test_alter_idx_6acc000000001` ADD INDEX `idx_email` (`email`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "ALTER TABLE `test_alter_idx_6acc000000001` ADD INDEX `idx_email` (`email`)"
+      ]
+    },
+    {
+      "name": "testDropTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_drop_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_drop_6acc000000001"
+            ]
+          },
+          {
+            "call": "drop",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `test_drop_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_drop_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "DROP TABLE `test_drop_6acc000000001`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "DROP TABLE `test_drop_6acc000000001`"
+      ]
+    },
+    {
+      "name": "testCreateTableWithForeignKey",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_fk_parent_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_fk_child_6acc000000002"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "call": "bigInteger",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "parent_id"
+            ]
+          },
+          {
+            "call": "unsigned",
+            "on": {
+              "$o": 7
+            },
+            "args": []
+          },
+          {
+            "call": "foreignKey",
+            "on": {
+              "$o": 7
+            },
+            "args": [
+              "parent_id"
+            ]
+          },
+          {
+            "call": "references",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              "test_fk_parent_6acc000000001"
+            ]
+          },
+          {
+            "call": "onDelete",
+            "on": {
+              "$o": 8
+            },
+            "args": [
+              {
+                "$enum": "Schema\\ForeignKeyAction::Cascade"
+              }
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 8
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 9
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `test_fk_parent_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_fk_parent_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 7
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 8
+        },
+        {
+          "$object": "Schema\\ForeignKey\\MySQL",
+          "id": 8
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 9,
+          "props": {
+            "query": "CREATE TABLE `test_fk_child_6acc000000002` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `parent_id` BIGINT UNSIGNED NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`parent_id`) REFERENCES `test_fk_parent_6acc000000001` (`id`) ON DELETE CASCADE)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_fk_child_6acc000000002` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `parent_id` BIGINT UNSIGNED NOT NULL, PRIMARY KEY (`id`), FOREIGN KEY (`parent_id`) REFERENCES `test_fk_parent_6acc000000001` (`id`) ON DELETE CASCADE)"
+      ]
+    },
+    {
+      "name": "testCreateTableWithNullableAndDefault",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_null_def_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "nickname",
+              100
+            ]
+          },
+          {
+            "call": "nullable",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "anonymous"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "score"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              0
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 5
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `test_null_def_6acc000000001` (`id` INT NOT NULL, `nickname` VARCHAR(100) NULL DEFAULT 'anonymous', `score` INT NOT NULL DEFAULT 0, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_null_def_6acc000000001` (`id` INT NOT NULL, `nickname` VARCHAR(100) NULL DEFAULT 'anonymous', `score` INT NOT NULL DEFAULT 0, PRIMARY KEY (`id`))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithCheckConstraint",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_check_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "age"
+            ]
+          },
+          {
+            "call": "check",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "age_range",
+              "`age` >= 0 AND `age` < 150"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `test_check_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `age` INT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `age_range` CHECK (`age` >= 0 AND `age` < 150))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_check_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `age` INT NOT NULL, PRIMARY KEY (`id`), CONSTRAINT `age_range` CHECK (`age` >= 0 AND `age` < 150))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithGeneratedColumn",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_generated_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "width"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "height"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "area"
+            ]
+          },
+          {
+            "call": "generatedAs",
+            "on": {
+              "$o": 6
+            },
+            "args": [
+              "`width` * `height`"
+            ]
+          },
+          {
+            "call": "stored",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 6
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "CREATE TABLE `test_generated_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `width` INT NOT NULL, `height` INT NOT NULL, `area` INT GENERATED ALWAYS AS (`width` * `height`) STORED NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_generated_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `width` INT NOT NULL, `height` INT NOT NULL, `area` INT GENERATED ALWAYS AS (`width` * `height`) STORED NOT NULL, PRIMARY KEY (`id`))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithPartitioning",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_partition_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "partitionByHash",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "`id`"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `test_partition_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_partition_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)",
+        "CREATE TABLE `test_partition_6acc000000001` (`id` INT NOT NULL, PRIMARY KEY (`id`)) PARTITION BY HASH(`id`)"
+      ]
+    },
+    {
+      "name": "testCreateTableWithCompositeIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_composite_idx_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "first_name",
+              100
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "last_name",
+              100
+            ]
+          },
+          {
+            "call": "addIndex",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              "idx_name",
+              [
+                "last_name",
+                "first_name"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `test_composite_idx_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `first_name` VARCHAR(100) NOT NULL, `last_name` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`), INDEX `idx_name` (`last_name`, `first_name`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_composite_idx_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `first_name` VARCHAR(100) NOT NULL, `last_name` VARCHAR(100) NOT NULL, PRIMARY KEY (`id`), INDEX `idx_name` (`last_name`, `first_name`))"
+      ]
+    },
+    {
+      "name": "testCreateTableWithFullTextIndex",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_fulltext_6acc000000001"
+            ]
+          },
+          {
+            "call": "id",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "title",
+              200
+            ]
+          },
+          {
+            "call": "text",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "body"
+            ]
+          },
+          {
+            "call": "fulltextIndex",
+            "on": {
+              "$o": 5
+            },
+            "args": [
+              [
+                "title",
+                "body"
+              ],
+              "ft_title_body"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 5
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "CREATE TABLE `test_fulltext_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `title` VARCHAR(200) NOT NULL, `body` TEXT NOT NULL, PRIMARY KEY (`id`), FULLTEXT INDEX `ft_title_body` (`title`, `body`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_fulltext_6acc000000001` (`id` BIGINT UNSIGNED AUTO_INCREMENT NOT NULL, `title` VARCHAR(200) NOT NULL, `body` TEXT NOT NULL, PRIMARY KEY (`id`), FULLTEXT INDEX `ft_title_body` (`title`, `body`))"
+      ]
+    },
+    {
+      "name": "testTruncateTable",
+      "op": "schema",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_truncate_6acc000000001"
+            ]
+          },
+          {
+            "call": "integer",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "id"
+            ]
+          },
+          {
+            "call": "primary",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "name",
+              50
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 5
+            }
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "test_truncate_6acc000000001"
+            ]
+          },
+          {
+            "call": "truncate",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 7
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 5,
+          "props": {
+            "query": "CREATE TABLE `test_truncate_6acc000000001` (`id` INT NOT NULL, `name` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `test_truncate_6acc000000001` (`id` INT NOT NULL, `name` VARCHAR(50) NOT NULL, PRIMARY KEY (`id`))",
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 6
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 7,
+          "props": {
+            "query": "TRUNCATE TABLE `test_truncate_6acc000000001`",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "TRUNCATE TABLE `test_truncate_6acc000000001`"
+      ]
+    }
+  ]
+}

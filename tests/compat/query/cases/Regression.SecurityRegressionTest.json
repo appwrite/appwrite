@@ -1,0 +1,1901 @@
+{
+  "source": "packages/query/tests/Regression/SecurityRegressionTest.php",
+  "cases": [
+    {
+      "name": "testAlterColumnTypeRejectsSemicolonInUsingExpression",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "alterColumnType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "age",
+              "INTEGER",
+              "age::integer; DROP TABLE users"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid USING expression: age::integer; DROP TABLE users"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testAlterColumnTypeRejectsDisallowedTypeCharacters",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "alterColumnType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "age",
+              "INTEGER'; DROP TABLE users; --"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column type: INTEGER'; DROP TABLE users; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testCreatePartitionRejectsCommentInjection",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "createPartition",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "orders",
+              "p1",
+              "FOR VALUES IN ('a') /* evil */"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid partition expression: FOR VALUES IN ('a') /* evil */"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testExtractKeywordIgnoresKeywordInsideStringLiteral",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SELECT 'DELETE FROM users' AS x"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        "SELECT"
+      ]
+    },
+    {
+      "name": "testExtractKeywordIgnoresKeywordInsideBlockComment",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MySQL",
+            "args": []
+          },
+          {
+            "call": "extractKeyword",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "/* DELETE FROM users */ SELECT 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MySQL",
+          "id": 1
+        },
+        "SELECT"
+      ]
+    },
+    {
+      "name": "testCteClassifierIgnoresKeywordHiddenInStringLiteral",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classifySQL",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "WITH x AS (SELECT 'INSERT INTO users VALUES(1)' AS s) SELECT * FROM x"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testMongoBuilderRejectsDollarPrefixedFieldNameInPush",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "push",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "$where",
+              "value"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid MongoDB field name: $where"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testMongoBuilderRejectsEmptyFieldNameInSet",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "set",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "": "value"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid MongoDB field name: "
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testMySqlCreateTableEnumEscapesTrailingBackslash",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "widgets"
+            ]
+          },
+          {
+            "call": "enum",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "grade",
+              [
+                "A",
+                "B",
+                "bad\\"
+              ]
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `widgets` (`grade` ENUM('A','B','bad\\\\') NOT NULL)",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `widgets` (`grade` ENUM('A','B','bad\\\\') NOT NULL)"
+      ]
+    },
+    {
+      "name": "testPostgreSqlCreateCollationRejectsInvalidOptionKey",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "createCollation",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c1",
+              {
+                "provider = 'x', danger": "icu"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid collation option key: provider = 'x', danger"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testPostgreSqlTablesampleRejectsInvalidMethod",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "tablesample",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              10.0,
+              "BERNOULLI); DROP TABLE users; --"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid TABLESAMPLE method: BERNOULLI); DROP TABLE users; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testDdlStringLiteralEscapesBackslashes",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\MySQL",
+            "args": []
+          },
+          {
+            "call": "table",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "notes"
+            ]
+          },
+          {
+            "call": "string",
+            "on": {
+              "$o": 2
+            },
+            "args": [
+              "body"
+            ]
+          },
+          {
+            "call": "default",
+            "on": {
+              "$o": 3
+            },
+            "args": [
+              "evil\\"
+            ]
+          },
+          {
+            "call": "create",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Schema\\Table\\MySQL",
+          "id": 2
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$object": "Schema\\Column\\MySQL",
+          "id": 3
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "CREATE TABLE `notes` (`body` VARCHAR(255) NOT NULL DEFAULT 'evil\\\\')",
+            "bindings": [],
+            "readOnly": false,
+            "namedBindings": null
+          }
+        },
+        "CREATE TABLE `notes` (`body` VARCHAR(255) NOT NULL DEFAULT 'evil\\\\')"
+      ]
+    },
+    {
+      "name": "testQueryParseRejectsRawByDefault",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Raw"
+            }
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "raw",
+                "values": [
+                  "SELECT * FROM users; DROP TABLE users"
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "raw",
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseAcceptsRawWhenAllowRawTrue",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Raw"
+            }
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": {
+              "0": {
+                "method": "raw",
+                "values": [
+                  "trusted_raw"
+                ]
+              },
+              "allowRaw": true
+            }
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        "raw",
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Raw"
+            },
+            "attribute": "",
+            "values": [
+              "trusted_raw"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Raw"
+        }
+      ]
+    },
+    {
+      "name": "testQueryParseRejectsRawNestedInsideOr",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Or"
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Equal"
+            }
+          },
+          {
+            "get": "value",
+            "on": {
+              "$enum": "Method::Raw"
+            }
+          },
+          {
+            "static": "parseQuery",
+            "class": "Query",
+            "args": [
+              {
+                "method": "or",
+                "values": [
+                  {
+                    "method": "equal",
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ]
+                  },
+                  {
+                    "method": "raw",
+                    "values": [
+                      "DROP TABLE users"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        "or",
+        "equal",
+        "raw",
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Raw queries cannot be parsed from untrusted input; construct via Query::raw() in code"
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testSelectWindowRejectsInjectionInsideParens",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectWindow",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "ROW_NUMBER(1); DROP TABLE x;-- )",
+              "w"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid window function: ROW_NUMBER(1); DROP TABLE x;-- )"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectWindowRejectsSemicolonInsideArgs",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectWindow",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SUM(a; DROP TABLE x)",
+              "w"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid window function: SUM(a; DROP TABLE x)"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectWindowAcceptsValidArgs",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectWindow",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "SUM(\"amount\")",
+              "w",
+              [
+                "dept"
+              ]
+            ]
+          },
+          {
+            "is": "Builder\\PostgreSQL",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        true
+      ]
+    },
+    {
+      "name": "testCreateIndexRejectsDoubleQuoteInCollation",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\Index",
+            "args": {
+              "name": "idx_name",
+              "columns": [
+                "name"
+              ],
+              "collations": {
+                "name": "\"en_US\""
+              }
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid collation: \"en_US\""
+          },
+          "id": 1
+        }
+      ]
+    },
+    {
+      "name": "testCreateProcedureRejectsCommaInjectionInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "createProcedure",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "p",
+              [
+                [
+                  {
+                    "$enum": "Schema\\ParameterDirection::In"
+                  },
+                  "x",
+                  "VARCHAR(255), DROP TABLE x --"
+                ]
+              ],
+              "SELECT 1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid procedure parameter type: VARCHAR(255), DROP TABLE x --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectCastRejectsCommaInjectionInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "VARCHAR(255), DROP TABLE x --",
+              "a"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: VARCHAR(255), DROP TABLE x --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectCastRejectsQuoteInjectionInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "INT'; DROP TABLE x; --",
+              "a"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: INT'; DROP TABLE x; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectCastRejectsCommentSequenceInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "INT /* danger */",
+              "a"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid cast type: INT /* danger */"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testAlterColumnTypeRejectsCommaInjectionInType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Schema\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "alterColumnType",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users",
+              "age",
+              "INTEGER, DROP TABLE users --"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Schema\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column type: INTEGER, DROP TABLE users --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testSelectCastAcceptsStructuredType",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "t"
+            ]
+          },
+          {
+            "call": "selectCast",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "c",
+              "DECIMAL(10, 2)",
+              "a"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT CAST(`c` AS DECIMAL(10, 2)) AS `a` FROM `t`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT CAST(`c` AS DECIMAL(10, 2)) AS `a` FROM `t`"
+      ]
+    },
+    {
+      "name": "testExtractFirstBsonKeyRejectsOutOfBoundsDocLength",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\MongoDB",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$bytes": "JAAAAAEAAAAAAAAA3QcAAAAAAAAA////fxBmaW5kAAEAAAAA"
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\MongoDB",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testQuoteRejectsNullByteInIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users\u0000 DROP TABLE x"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Identifier contains control character"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testQuoteRejectsControlByteInIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users\u001f"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Identifier contains control character"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testQuoteAcceptsValidIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users"
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `users`",
+            "bindings": [],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `users`"
+      ]
+    },
+    {
+      "name": "testJoinOnRejectsInjectionInLeftIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.id); DROP TABLE users; --",
+              "orders.user_id"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column name: users.id); DROP TABLE users; --"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testJoinOnRejectsInjectionInRightIdentifier",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.id",
+              "orders.user_id OR 1=1"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\ValidationException",
+            "message": "Invalid column name: orders.user_id OR 1=1"
+          },
+          "id": 2
+        }
+      ]
+    },
+    {
+      "name": "testJoinOnAcceptsValidIdentifiers",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\JoinBuilder",
+            "args": []
+          },
+          {
+            "call": "on",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "users.id",
+              "orders.user_id"
+            ]
+          },
+          {
+            "get": "ons",
+            "on": {
+              "$o": 1
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\JoinBuilder",
+          "id": 1
+        },
+        [
+          {
+            "$value": "Builder\\JoinOn",
+            "id": 2,
+            "props": {
+              "left": "users.id",
+              "operator": "=",
+              "right": "orders.user_id"
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testMongoBuilderRejectsFilterHookInsteadOfDroppingIt",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\UnsupportedException",
+            "message": "Filter hooks are not supported on the MongoDB builder: Utopia\\Query\\Hook\\Filter returns a SQL expression, which has no place in an operation document. Express the constraint as a Query passed to filter() instead."
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testMongoBuilderRejectsJoinFilterHook",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ],
+              "org_id"
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$error": {
+            "class": "Utopia\\Query\\Exception\\UnsupportedException",
+            "message": "Filter hooks are not supported on the MongoDB builder: Utopia\\Query\\Hook\\Filter returns a SQL expression, which has no place in an operation document. Express the constraint as a Query passed to filter() instead."
+          },
+          "id": 3
+        }
+      ]
+    },
+    {
+      "name": "testSqlBuildersStillScopeByTenantHook",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                "a"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 3
+            }
+          },
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "new": "Hook\\Filter\\Tenant",
+            "args": [
+              [
+                "7"
+              ]
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              {
+                "$o": 5
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "call": "select",
+            "on": {
+              "$o": 4
+            },
+            "args": [
+              [
+                "a"
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 4
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 6
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 6
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 2
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 3,
+          "props": {
+            "query": "SELECT `a` FROM `docs` WHERE tenant_id IN (?)",
+            "bindings": [
+              "7"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT `a` FROM `docs` WHERE tenant_id IN (?)",
+        [
+          "7"
+        ],
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Hook\\Filter\\Tenant",
+          "id": 5
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 4
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 6,
+          "props": {
+            "query": "SELECT \"a\" FROM \"docs\" WHERE tenant_id IN (?)",
+            "bindings": [
+              "7"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT \"a\" FROM \"docs\" WHERE tenant_id IN (?)",
+        [
+          "7"
+        ]
+      ]
+    },
+    {
+      "name": "testMongoBuilderStillAppliesAttributeHooks",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MongoDB",
+            "args": []
+          },
+          {
+            "new": "Hook\\Attribute\\Map",
+            "args": [
+              {
+                "a": "renamed"
+              }
+            ]
+          },
+          {
+            "call": "addHook",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              {
+                "$o": 2
+              }
+            ]
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "docs"
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "a",
+              [
+                "x"
+              ]
+            ]
+          },
+          {
+            "call": "filter",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 4
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Hook\\Attribute\\Map",
+          "id": 2,
+          "props": []
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "a",
+            "values": [
+              "x"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$object": "Builder\\MongoDB",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 4,
+          "props": {
+            "query": "{\"collection\":\"docs\",\"operation\":\"find\",\"filter\":{\"renamed\":\"?\"}}",
+            "bindings": [
+              "x"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "{\"collection\":\"docs\",\"operation\":\"find\",\"filter\":{\"renamed\":\"?\"}}",
+        "{\"collection\":\"docs\",\"operation\":\"find\",\"filter\":{\"renamed\":\"?\"}}"
+      ]
+    }
+  ]
+}

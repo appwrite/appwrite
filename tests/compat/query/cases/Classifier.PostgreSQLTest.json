@@ -1,0 +1,965 @@
+{
+  "source": "packages/query/tests/Classifier/PostgreSQLTest.php",
+  "cases": [
+    {
+      "name": "testSelectQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000%SELECT * FROM users WHERE id = 1\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testSelectLowercase",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u001fselect id, name from users\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testSelectMixedCase",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u0018SeLeCt * FROM users\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testShowQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u0010SHOW TABLES\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testDescribeQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u0013DESCRIBE users\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testExplainQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000 EXPLAIN SELECT * FROM users\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testTableQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u0010TABLE users\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testValuesQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u001eVALUES (1, 'a'), (2, 'b')\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Read"
+        }
+      ]
+    },
+    {
+      "name": "testInsertQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000-INSERT INTO users (name) VALUES ('test')\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testUpdateQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u00000UPDATE users SET name = 'test' WHERE id = 1\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDeleteQuery",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000#DELETE FROM users WHERE id = 1\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testCreateTable",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000+CREATE TABLE test (id INT PRIMARY KEY)\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDropTable",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u001eDROP TABLE IF EXISTS test\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testAlterTable",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000,ALTER TABLE users ADD COLUMN email TEXT\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testTruncate",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u0019TRUNCATE TABLE users\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testGrant",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000&GRANT SELECT ON users TO readonly\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testRevoke",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000$REVOKE ALL ON users FROM public\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testLockTable",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000.LOCK TABLE users IN ACCESS EXCLUSIVE MODE\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testCall",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u0018CALL my_procedure()\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testDo",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000-DO $$ BEGIN RAISE NOTICE 'hello'; END $$\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testBeginTransaction",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\nBEGIN\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        }
+      ]
+    },
+    {
+      "name": "testStartTransaction",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u0016START TRANSACTION\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionBegin"
+        }
+      ]
+    },
+    {
+      "name": "testCommit",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u000bCOMMIT\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionEnd"
+        }
+      ]
+    },
+    {
+      "name": "testRollback",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\rROLLBACK\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::TransactionEnd"
+        }
+      ]
+    },
+    {
+      "name": "testSavepoint",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u0012SAVEPOINT sp1\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Transaction"
+        }
+      ]
+    },
+    {
+      "name": "testReleaseSavepoint",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000\u001aRELEASE SAVEPOINT sp1\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Transaction"
+        }
+      ]
+    },
+    {
+      "name": "testSetCommand",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q\u0000\u0000\u0000 SET search_path TO 'public'\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Transaction"
+        }
+      ]
+    },
+    {
+      "name": "testParseMessageRoutesToWrite",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "P\u0000\u0000\u0000 stmt1\u0000SELECT * FROM users\u0000\u0000\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testBindMessageRoutesToWrite",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "B\u0000\u0000\u0000\f\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testExecuteMessageRoutesToWrite",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "E\u0000\u0000\u0000\t\u0000\u0000\u0000\u0000\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Write"
+        }
+      ]
+    },
+    {
+      "name": "testTooShortPacket",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "Q"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    },
+    {
+      "name": "testUnknownMessageType",
+      "op": "classifier",
+      "args": {
+        "program": [
+          {
+            "new": "Classifier\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "classify",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "X\u0000\u0000\u0000\u0005\u0000"
+            ]
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Classifier\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$enum": "Type::Unknown"
+        }
+      ]
+    }
+  ]
+}

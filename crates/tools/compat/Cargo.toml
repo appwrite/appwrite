@@ -86,3 +86,4 @@ utopia-platform.workspace = true
 utopia-servers.workspace = true
 utopia-orchestration.workspace = true
 utopia-cdn.workspace = true
+utopia-query.workspace = true

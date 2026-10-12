@@ -1,0 +1,238 @@
+{
+  "lib": "query",
+  "environment": {
+    "date": "2026-10-12T12:00:54Z",
+    "commit": "d99b85963a",
+    "machine": {
+      "os": "macos",
+      "arch": "aarch64",
+      "cpu": "Apple M4 Max"
+    },
+    "php": {
+      "version": "8.5.10",
+      "opcache": true,
+      "jit": "tracing",
+      "runs": "in a container of the dev image (bin/compat-php)",
+      "image": "appwrite-dev",
+      "os": "Alpine Linux v3.24",
+      "kernel": "6.10.14-linuxkit"
+    },
+    "rust": {
+      "version": "rustc 1.88.0 (6b00bc388 2025-06-23)",
+      "profile": "release",
+      "runs": "in a container on the same Docker network (bin/compat-rust)",
+      "image": "compat-rust:1.88",
+      "os": "Debian GNU/Linux 12 (bookworm)",
+      "kernel": "6.10.14-linuxkit"
+    }
+  },
+  "results": [
+    {
+      "name": "parse",
+      "description": "Parse a query from its JSON (an equal filter with two values)",
+      "php": {
+        "ns": 1958.4872914567238,
+        "min": 1730.8019258761617,
+        "max": 3963.4232448773932,
+        "samples": 15,
+        "calls": 8931
+      },
+      "rust": {
+        "ns": 1007.1293564152926,
+        "min": 908.4239254556251,
+        "max": 1070.9073676517608,
+        "samples": 15,
+        "calls": 21893,
+        "allocations": 9.000003045113354,
+        "bytes": 1302.0003654136026
+      },
+      "speedup": 1.9446233782993176,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "mysql_select",
+      "description": "Build a MySQL select: three filters, an order, a limit and an offset",
+      "php": {
+        "ns": 50426.619047619046,
+        "min": 15680.57142857143,
+        "max": 131067.42857142857,
+        "samples": 15,
+        "calls": 21
+      },
+      "rust": {
+        "ns": 4716.967904978519,
+        "min": 4363.7963103361135,
+        "max": 7209.86024766237,
+        "samples": 15,
+        "calls": 3957,
+        "allocations": 111.0000168477803,
+        "bytes": 6641.002021733637
+      },
+      "speedup": 10.690473215727485,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "postgresql_select",
+      "description": "Build the same select for PostgreSQL",
+      "php": {
+        "ns": 19492.555073720727,
+        "min": 16730.62966175195,
+        "max": 39364.195143104946,
+        "samples": 15,
+        "calls": 1153
+      },
+      "rust": {
+        "ns": 5127.219627394385,
+        "min": 4827.265547100498,
+        "max": 19283.455785882972,
+        "samples": 15,
+        "calls": 3811,
+        "allocations": 111.00001749322138,
+        "bytes": 6646.002099186565
+      },
+      "speedup": 3.801778837320199,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "clickhouse_select",
+      "description": "Build the same select for ClickHouse",
+      "php": {
+        "ns": 14655.8538404176,
+        "min": 12583.48918717375,
+        "max": 42934.843400447426,
+        "samples": 15,
+        "calls": 1341
+      },
+      "rust": {
+        "ns": 4653.266724967206,
+        "min": 4516.078268473983,
+        "max": 5721.241582859641,
+        "samples": 15,
+        "calls": 4574,
+        "allocations": 102.00001457513483,
+        "bytes": 6529.001749016178
+      },
+      "speedup": 3.149583874438422,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "mongodb_find",
+      "description": "Build the same query as a MongoDB find command",
+      "php": {
+        "ns": 13759.36744560838,
+        "min": 12057.917002417405,
+        "max": 21825.10797743755,
+        "samples": 15,
+        "calls": 1241
+      },
+      "rust": {
+        "ns": 8163.537743190662,
+        "min": 7955.739299610895,
+        "max": 8812.175875486382,
+        "samples": 15,
+        "calls": 2570,
+        "allocations": 121.00002594033722,
+        "bytes": 12989.003112840466
+      },
+      "speedup": 1.6854662621098666,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "tokenize",
+      "description": "Tokenize a 190-byte select with a join, grouping and ordering",
+      "php": {
+        "ns": 56476.14509803922,
+        "min": 48093.46666666667,
+        "max": 67787.74509803922,
+        "samples": 15,
+        "calls": 255
+      },
+      "rust": {
+        "ns": 3044.862888198758,
+        "min": 2744.1316770186336,
+        "max": 9726.080434782609,
+        "samples": 15,
+        "calls": 6440,
+        "allocations": 2.0000103519668735,
+        "bytes": 7560.001242236025
+      },
+      "speedup": 18.548009277175918,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "classify",
+      "description": "Classify a 190-byte select as a read",
+      "php": {
+        "ns": 475.426833692051,
+        "min": 428.80360813523254,
+        "max": 617.9395177867524,
+        "samples": 15,
+        "calls": 41351
+      },
+      "rust": {
+        "ns": 23.1922810621968,
+        "min": 22.506355893852724,
+        "max": 24.395278220259215,
+        "samples": 15,
+        "calls": 883904,
+        "allocations": 7.542297202712814e-8,
+        "bytes": 9.050756643255376e-6
+      },
+      "speedup": 20.499356333991326,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "ast_roundtrip",
+      "description": "Parse the 190-byte select into an AST and serialize it back",
+      "php": {
+        "ns": 135688.80571428573,
+        "min": 115260.95428571428,
+        "max": 174825.95428571428,
+        "samples": 15,
+        "calls": 175
+      },
+      "rust": {
+        "ns": 9223.17994628469,
+        "min": 8251.790510295434,
+        "max": 12401.745747538049,
+        "samples": 15,
+        "calls": 2234,
+        "allocations": 53.000029841838256,
+        "bytes": 10292.00358102059
+      },
+      "speedup": 14.711716187316101,
+      "bound": null,
+      "compat": null
+    },
+    {
+      "name": "schema_create",
+      "description": "Compile a MySQL CREATE TABLE with four columns, a unique index and a primary key",
+      "php": {
+        "ns": 9311.20143884892,
+        "min": 5153.9268585131895,
+        "max": 17129.796163069543,
+        "samples": 15,
+        "calls": 834
+      },
+      "rust": {
+        "ns": 1614.5445247933885,
+        "min": 1442.686776859504,
+        "max": 2291.352479338843,
+        "samples": 15,
+        "calls": 9680,
+        "allocations": 47.00000688705234,
+        "bytes": 4051.000826446281
+      },
+      "speedup": 5.767076284279286,
+      "bound": null,
+      "compat": null
+    }
+  ]
+}

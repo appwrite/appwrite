@@ -1,0 +1,1027 @@
+{
+  "source": "packages/query/tests/Builder/Feature/SpatialTest.php",
+  "cases": [
+    {
+      "name": "testFilterDistanceBindsPointAndDistanceInOrder",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "places"
+            ]
+          },
+          {
+            "call": "filterDistance",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "coords",
+              [
+                10.5,
+                20.25
+              ],
+              "<",
+              100.0
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `places` WHERE ST_Distance(ST_SRID(`coords`, 0), ST_GeomFromText(?, 0, 'axis-order=long-lat')) < ?",
+            "bindings": [
+              "POINT(10.5 20.25)",
+              100.0
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `places` WHERE ST_Distance(ST_SRID(`coords`, 0), ST_GeomFromText(?, 0, 'axis-order=long-lat')) < ?",
+        [
+          "POINT(10.5 20.25)",
+          100.0
+        ],
+        [
+          "POINT(10.5 20.25)",
+          100.0
+        ],
+        "SELECT * FROM `places` WHERE ST_Distance(ST_SRID(`coords`, 0), ST_GeomFromText(?, 0, 'axis-order=long-lat')) < ?",
+        [
+          "POINT(10.5 20.25)",
+          100.0
+        ]
+      ]
+    },
+    {
+      "name": "testFilterIntersectsQuotesIdentifierForMySQL",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterIntersects",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "area",
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `zones` WHERE ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+            "bindings": [
+              "POINT(1 2)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `zones` WHERE ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        [
+          "POINT(1 2)"
+        ],
+        [
+          "POINT(1 2)"
+        ],
+        "SELECT * FROM `zones` WHERE ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        "SELECT * FROM `zones` WHERE ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))"
+      ]
+    },
+    {
+      "name": "testFilterIntersectsQuotesIdentifierForPostgreSQL",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterIntersects",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "area",
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"zones\" WHERE ST_Intersects(\"area\", ST_GeomFromText(?, 4326))",
+            "bindings": [
+              "POINT(1 2)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"zones\" WHERE ST_Intersects(\"area\", ST_GeomFromText(?, 4326))",
+        [
+          "POINT(1 2)"
+        ],
+        [
+          "POINT(1 2)"
+        ],
+        "SELECT * FROM \"zones\" WHERE ST_Intersects(\"area\", ST_GeomFromText(?, 4326))",
+        "SELECT * FROM \"zones\" WHERE ST_Intersects(\"area\", ST_GeomFromText(?, 4326))"
+      ]
+    },
+    {
+      "name": "testFilterNotIntersectsWrapsWithNot",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterNotIntersects",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "area",
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `zones` WHERE NOT ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+            "bindings": [
+              "POINT(1 2)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `zones` WHERE NOT ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        [
+          "POINT(1 2)"
+        ],
+        [
+          "POINT(1 2)"
+        ],
+        "SELECT * FROM `zones` WHERE NOT ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        "SELECT * FROM `zones` WHERE NOT ST_Intersects(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))"
+      ]
+    },
+    {
+      "name": "testFilterCoversProducesStCoversOnPostgreSQL",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\PostgreSQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterCovers",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "region",
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\PostgreSQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM \"zones\" WHERE ST_Covers(\"region\", ST_GeomFromText(?, 4326))",
+            "bindings": [
+              "POINT(1 2)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM \"zones\" WHERE ST_Covers(\"region\", ST_GeomFromText(?, 4326))",
+        [
+          "POINT(1 2)"
+        ],
+        [
+          "POINT(1 2)"
+        ],
+        "SELECT * FROM \"zones\" WHERE ST_Covers(\"region\", ST_GeomFromText(?, 4326))",
+        "SELECT * FROM \"zones\" WHERE ST_Covers(\"region\", ST_GeomFromText(?, 4326))"
+      ]
+    },
+    {
+      "name": "testFilterSpatialEqualsProducesStEquals",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterSpatialEquals",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "area",
+              [
+                3.0,
+                4.0
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `zones` WHERE ST_Equals(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+            "bindings": [
+              "POINT(3 4)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `zones` WHERE ST_Equals(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        [
+          "POINT(3 4)"
+        ],
+        [
+          "POINT(3 4)"
+        ],
+        "SELECT * FROM `zones` WHERE ST_Equals(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        "SELECT * FROM `zones` WHERE ST_Equals(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))"
+      ]
+    },
+    {
+      "name": "testFilterTouchesProducesStTouches",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterTouches",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "area",
+              [
+                1.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `zones` WHERE ST_Touches(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+            "bindings": [
+              "POINT(1 2)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `zones` WHERE ST_Touches(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        [
+          "POINT(1 2)"
+        ],
+        [
+          "POINT(1 2)"
+        ],
+        "SELECT * FROM `zones` WHERE ST_Touches(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        "SELECT * FROM `zones` WHERE ST_Touches(`area`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))"
+      ]
+    },
+    {
+      "name": "testFilterCrossesLineStringBindingIsLinestringWkt",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "paths"
+            ]
+          },
+          {
+            "call": "filterCrosses",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "path",
+              [
+                [
+                  0.0,
+                  0.0
+                ],
+                [
+                  1.0,
+                  1.0
+                ]
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `paths` WHERE ST_Crosses(`path`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+            "bindings": [
+              "LINESTRING(0 0, 1 1)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `paths` WHERE ST_Crosses(`path`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        [
+          "LINESTRING(0 0, 1 1)"
+        ],
+        [
+          "LINESTRING(0 0, 1 1)"
+        ],
+        "SELECT * FROM `paths` WHERE ST_Crosses(`path`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        [
+          "LINESTRING(0 0, 1 1)"
+        ],
+        [
+          "LINESTRING(0 0, 1 1)"
+        ]
+      ]
+    },
+    {
+      "name": "testFilterOverlapsChainedAddsAllBindings",
+      "op": "builder",
+      "args": {
+        "program": [
+          {
+            "new": "Builder\\MySQL",
+            "args": []
+          },
+          {
+            "call": "from",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "zones"
+            ]
+          },
+          {
+            "call": "filterOverlaps",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "a",
+              [
+                1.0,
+                1.0
+              ]
+            ]
+          },
+          {
+            "call": "filterNotOverlaps",
+            "on": {
+              "$o": 1
+            },
+            "args": [
+              "b",
+              [
+                2.0,
+                2.0
+              ]
+            ]
+          },
+          {
+            "call": "build",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "query",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          },
+          {
+            "get": "bindings",
+            "on": {
+              "$o": 2
+            }
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$object": "Builder\\MySQL",
+          "id": 1
+        },
+        {
+          "$value": "Builder\\Statement",
+          "id": 2,
+          "props": {
+            "query": "SELECT * FROM `zones` WHERE ST_Overlaps(`a`, ST_GeomFromText(?, 4326, 'axis-order=long-lat')) AND NOT ST_Overlaps(`b`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+            "bindings": [
+              "POINT(1 1)",
+              "POINT(2 2)"
+            ],
+            "readOnly": true,
+            "namedBindings": null
+          }
+        },
+        "SELECT * FROM `zones` WHERE ST_Overlaps(`a`, ST_GeomFromText(?, 4326, 'axis-order=long-lat')) AND NOT ST_Overlaps(`b`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        [
+          "POINT(1 1)",
+          "POINT(2 2)"
+        ],
+        [
+          "POINT(1 1)",
+          "POINT(2 2)"
+        ],
+        "SELECT * FROM `zones` WHERE ST_Overlaps(`a`, ST_GeomFromText(?, 4326, 'axis-order=long-lat')) AND NOT ST_Overlaps(`b`, ST_GeomFromText(?, 4326, 'axis-order=long-lat'))",
+        [
+          "POINT(1 1)",
+          "POINT(2 2)"
+        ],
+        [
+          "POINT(1 1)",
+          "POINT(2 2)"
+        ],
+        [
+          "POINT(1 1)",
+          "POINT(2 2)"
+        ]
+      ]
+    }
+  ]
+}

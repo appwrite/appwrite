@@ -1,0 +1,1145 @@
+{
+  "source": "packages/query/tests/API/LogicalTest.php",
+  "cases": [
+    {
+      "name": "testOr",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "John"
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "name",
+              [
+                "Jane"
+              ]
+            ]
+          },
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "John"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "name",
+            "values": [
+              "Jane"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "John"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "name",
+                  "values": [
+                    "Jane"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::Or"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "John"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 7,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "name",
+              "values": [
+                "Jane"
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testAnd",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "greaterThan",
+            "class": "Query",
+            "args": [
+              "age",
+              18
+            ]
+          },
+          {
+            "static": "lessThan",
+            "class": "Query",
+            "args": [
+              "age",
+              65
+            ]
+          },
+          {
+            "static": "and",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 3
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::GreaterThan"
+            },
+            "attribute": "age",
+            "values": [
+              18
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::LessThan"
+            },
+            "attribute": "age",
+            "values": [
+              65
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::GreaterThan"
+                  },
+                  "attribute": "age",
+                  "values": [
+                    18
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::LessThan"
+                  },
+                  "attribute": "age",
+                  "values": [
+                    65
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::And"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 6,
+            "props": {
+              "method": {
+                "$enum": "Method::GreaterThan"
+              },
+              "attribute": "age",
+              "values": [
+                18
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 7,
+            "props": {
+              "method": {
+                "$enum": "Method::LessThan"
+              },
+              "attribute": "age",
+              "values": [
+                65
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    },
+    {
+      "name": "testContainsAll",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "containsAll",
+            "class": "Query",
+            "args": [
+              "tags",
+              [
+                "php",
+                "js"
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::ContainsAll"
+            },
+            "attribute": "tags",
+            "values": [
+              "php",
+              "js"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::ContainsAll"
+        },
+        [
+          "php",
+          "js"
+        ]
+      ]
+    },
+    {
+      "name": "testElemMatch",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "field",
+              [
+                "val"
+              ]
+            ]
+          },
+          {
+            "static": "elemMatch",
+            "class": "Query",
+            "args": [
+              "items",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          },
+          {
+            "call": "getAttribute",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "field",
+            "values": [
+              "val"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::ElemMatch"
+            },
+            "attribute": "items",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "field",
+                  "values": [
+                    "val"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$enum": "Method::ElemMatch"
+        },
+        "items"
+      ]
+    },
+    {
+      "name": "testOrIsNested",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "x",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isNested",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "testAndIsNested",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "x",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "and",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isNested",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "x",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "x",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "testElemMatchIsNested",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "field",
+              [
+                "val"
+              ]
+            ]
+          },
+          {
+            "static": "elemMatch",
+            "class": "Query",
+            "args": [
+              "items",
+              [
+                {
+                  "$o": 1
+                }
+              ]
+            ]
+          },
+          {
+            "call": "isNested",
+            "on": {
+              "$o": 2
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "field",
+            "values": [
+              "val"
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::ElemMatch"
+            },
+            "attribute": "items",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 3,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "field",
+                  "values": [
+                    "val"
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        true
+      ]
+    },
+    {
+      "name": "testEmptyAnd",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "and",
+            "class": "Query",
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        []
+      ]
+    },
+    {
+      "name": "testEmptyOr",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              []
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 1
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        []
+      ]
+    },
+    {
+      "name": "testNestedAndOr",
+      "op": "query",
+      "args": {
+        "program": [
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "a",
+              [
+                1
+              ]
+            ]
+          },
+          {
+            "static": "equal",
+            "class": "Query",
+            "args": [
+              "b",
+              [
+                2
+              ]
+            ]
+          },
+          {
+            "static": "or",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 1
+                },
+                {
+                  "$o": 2
+                }
+              ]
+            ]
+          },
+          {
+            "static": "and",
+            "class": "Query",
+            "args": [
+              [
+                {
+                  "$o": 3
+                }
+              ]
+            ]
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 6
+            },
+            "args": []
+          },
+          {
+            "call": "getMethod",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          },
+          {
+            "call": "getValues",
+            "on": {
+              "$o": 10
+            },
+            "args": []
+          }
+        ]
+      },
+      "expect": [
+        {
+          "$value": "Query",
+          "id": 1,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "a",
+            "values": [
+              1
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 2,
+          "props": {
+            "method": {
+              "$enum": "Method::Equal"
+            },
+            "attribute": "b",
+            "values": [
+              2
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 3,
+          "props": {
+            "method": {
+              "$enum": "Method::Or"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 4,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "a",
+                  "values": [
+                    1
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              },
+              {
+                "$value": "Query",
+                "id": 5,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Equal"
+                  },
+                  "attribute": "b",
+                  "values": [
+                    2
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        {
+          "$value": "Query",
+          "id": 6,
+          "props": {
+            "method": {
+              "$enum": "Method::And"
+            },
+            "attribute": "",
+            "values": [
+              {
+                "$value": "Query",
+                "id": 7,
+                "props": {
+                  "method": {
+                    "$enum": "Method::Or"
+                  },
+                  "attribute": "",
+                  "values": [
+                    {
+                      "$value": "Query",
+                      "id": 8,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Equal"
+                        },
+                        "attribute": "a",
+                        "values": [
+                          1
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    },
+                    {
+                      "$value": "Query",
+                      "id": 9,
+                      "props": {
+                        "method": {
+                          "$enum": "Method::Equal"
+                        },
+                        "attribute": "b",
+                        "values": [
+                          2
+                        ],
+                        "alias": "",
+                        "onArray": false,
+                        "attributeType": ""
+                      }
+                    }
+                  ],
+                  "alias": "",
+                  "onArray": false,
+                  "attributeType": ""
+                }
+              }
+            ],
+            "alias": "",
+            "onArray": false,
+            "attributeType": ""
+          }
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 10,
+            "props": {
+              "method": {
+                "$enum": "Method::Or"
+              },
+              "attribute": "",
+              "values": [
+                {
+                  "$value": "Query",
+                  "id": 11,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::Equal"
+                    },
+                    "attribute": "a",
+                    "values": [
+                      1
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                },
+                {
+                  "$value": "Query",
+                  "id": 12,
+                  "props": {
+                    "method": {
+                      "$enum": "Method::Equal"
+                    },
+                    "attribute": "b",
+                    "values": [
+                      2
+                    ],
+                    "alias": "",
+                    "onArray": false,
+                    "attributeType": ""
+                  }
+                }
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ],
+        {
+          "$enum": "Method::Or"
+        },
+        [
+          {
+            "$value": "Query",
+            "id": 13,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "a",
+              "values": [
+                1
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          },
+          {
+            "$value": "Query",
+            "id": 14,
+            "props": {
+              "method": {
+                "$enum": "Method::Equal"
+              },
+              "attribute": "b",
+              "values": [
+                2
+              ],
+              "alias": "",
+              "onArray": false,
+              "attributeType": ""
+            }
+          }
+        ]
+      ]
+    }
+  ]
+}
