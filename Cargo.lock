@@ -604,6 +604,7 @@ dependencies = [
  "utopia-image",
  "utopia-locale",
  "utopia-lock",
+ "utopia-openapi",
  "utopia-platform",
  "utopia-pools",
  "utopia-queue",
@@ -3691,6 +3692,15 @@ dependencies = [
  "rustix",
  "thiserror",
  "tokio",
+]
+
+[[package]]
+name = "utopia-openapi"
+version = "0.1.0"
+dependencies = [
+ "indexmap",
+ "php-std",
+ "thiserror",
 ]
 
 [[package]]

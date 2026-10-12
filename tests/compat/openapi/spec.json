@@ -1,0 +1,2213 @@
+{
+  "lib": "openapi",
+  "description": "utopia-php/openapi: OpenAPI 2.0, 3.0 and 3.1 documents (JSON or decoded arrays) read into one version-independent model; local $ref resolution, schema dialects, annotated string enums.",
+  "complete": false,
+  "php": {
+    "src": [
+      "packages/openapi/src"
+    ],
+    "tests": [
+      "packages/openapi/tests"
+    ]
+  },
+  "rust": {
+    "crate": "crates/utopia/openapi"
+  },
+  "services": [],
+  "state": [],
+  "ops": {
+    "openapi.parse": {
+      "doc": "Parser::parse(input, version?) (or (new Parser())->read with via: read) of {text} | {fixture} | {document}, dumped",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser::parse",
+        "Utopia\\OpenAPI\\Parser::read",
+        "Utopia\\OpenAPI\\Parser\\AbstractReader::__construct",
+        "Utopia\\OpenAPI\\Parser\\OpenAPI2::read",
+        "Utopia\\OpenAPI\\Parser\\OpenAPI3::read",
+        "Utopia\\OpenAPI\\Parser\\Schema\\Dialect::__construct",
+        "Utopia\\OpenAPI\\Parser\\Schema\\Dialect::for",
+        "Utopia\\OpenAPI\\Parser\\Schema\\Reader::__construct",
+        "Utopia\\OpenAPI\\Parser\\Schema\\Reader::read",
+        "Utopia\\OpenAPI\\Parser\\Schema\\Reader::readParameterFields",
+        "Utopia\\OpenAPI\\Reference\\LocalResolver::__construct",
+        "Utopia\\OpenAPI\\Reference\\LocalResolver::resolve",
+        "Utopia\\OpenAPI\\Reference\\LocalResolver::resolveObject",
+        "Utopia\\OpenAPI\\Reference\\Reference::__construct",
+        "Utopia\\OpenAPI\\Reference\\ResolutionContext::__construct",
+        "Utopia\\OpenAPI\\Specification::__construct",
+        "Utopia\\OpenAPI\\Specification::operations",
+        "Utopia\\OpenAPI\\Version::fromDocumentVersion",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::stringEnum",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::openStringEnumBranch",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::conditionalReferences",
+        "Utopia\\OpenAPI\\Model\\Operation::acceptedSecuritySchemeNames",
+        "Utopia\\OpenAPI\\Model\\Operation::requiredSecuritySchemeNames",
+        "Utopia\\OpenAPI\\Model\\Parameter::identity",
+        "Utopia\\OpenAPI\\Model\\ArraySchema::__construct",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Contact::__construct",
+        "Utopia\\OpenAPI\\Model\\Discriminator::__construct",
+        "Utopia\\OpenAPI\\Model\\Encoding::__construct",
+        "Utopia\\OpenAPI\\Model\\Example::__construct",
+        "Utopia\\OpenAPI\\Model\\ExternalDocumentation::__construct",
+        "Utopia\\OpenAPI\\Model\\Header::__construct",
+        "Utopia\\OpenAPI\\Model\\Info::__construct",
+        "Utopia\\OpenAPI\\Model\\IntegerSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\License::__construct",
+        "Utopia\\OpenAPI\\Model\\MediaType::__construct",
+        "Utopia\\OpenAPI\\Model\\NumberSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\OAuthFlow::__construct",
+        "Utopia\\OpenAPI\\Model\\ObjectSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Operation::__construct",
+        "Utopia\\OpenAPI\\Model\\Parameter::__construct",
+        "Utopia\\OpenAPI\\Model\\PathItem::__construct",
+        "Utopia\\OpenAPI\\Model\\ReferenceSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\RequestBody::__construct",
+        "Utopia\\OpenAPI\\Model\\Response::__construct",
+        "Utopia\\OpenAPI\\Model\\Schema::__construct",
+        "Utopia\\OpenAPI\\Model\\SecurityRequirement::__construct",
+        "Utopia\\OpenAPI\\Model\\SecurityScheme::__construct",
+        "Utopia\\OpenAPI\\Model\\Server::__construct",
+        "Utopia\\OpenAPI\\Model\\ServerVariable::__construct",
+        "Utopia\\OpenAPI\\Model\\StringSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Tag::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "valid 3.x",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "document": {
+                "gen": "ref",
+                "name": "vdoc3"
+              },
+              "via": {
+                "gen": "pick",
+                "from": [
+                  "read"
+                ]
+              }
+            },
+            "optional": [
+              "via"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "valid 3.x text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "vdoc3"
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "valid 2.0",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "document": {
+                "gen": "ref",
+                "name": "vdoc2"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "valid 2.0 text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "vdoc2"
+                  }
+                ]
+              },
+              "version": {
+                "gen": "pick",
+                "from": [
+                  "2.0"
+                ]
+              }
+            },
+            "optional": [
+              "version"
+            ]
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "document 3.x",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "document": {
+                "gen": "ref",
+                "name": "doc3"
+              },
+              "version": {
+                "gen": "pick",
+                "from": [
+                  "2.0",
+                  "3.0",
+                  "3.1"
+                ]
+              }
+            },
+            "optional": [
+              "version"
+            ]
+          },
+          "iterations": 2500
+        },
+        {
+          "name": "document 2.0",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "document": {
+                "gen": "ref",
+                "name": "doc2"
+              },
+              "version": {
+                "gen": "pick",
+                "from": [
+                  "2.0",
+                  "3.0"
+                ]
+              }
+            },
+            "optional": [
+              "version"
+            ]
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "json text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "doc3"
+                  }
+                ]
+              },
+              "via": {
+                "gen": "pick",
+                "from": [
+                  "read"
+                ]
+              }
+            },
+            "optional": [
+              "via"
+            ]
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "openapi 2.0 text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "doc2"
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "mutated text",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "",
+                      "",
+                      " ",
+                      "{",
+                      "[",
+                      "\"",
+                      "x",
+                      "\u0000"
+                    ]
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "doc3"
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "",
+                      "",
+                      "}",
+                      "]",
+                      ",",
+                      " ",
+                      "x",
+                      "\n"
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        },
+        {
+          "name": "json fragments",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "string",
+                "alphabet": "{}[]\":,0123.e-tfnulrsaeoip \\\u0000",
+                "min": 0,
+                "max": 24
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        },
+        {
+          "name": "roots",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "pick",
+                "from": [
+                  "1",
+                  "\"x\"",
+                  "null",
+                  "[]",
+                  "{}",
+                  "[1]",
+                  "{\"0\":1}",
+                  "true",
+                  "{\"openapi\":1}",
+                  "{\"swagger\":[]}",
+                  "{\"\\u0000a\":1}",
+                  "{\"openapi\":\"3.1.0\",\"\\u0000\":1}",
+                  "1e999",
+                  "{\"openapi\":\"3.1.0\",\"info\":{\"title\":\"t\",\"version\":\"1\"},\"x-big\":12345678901234567890}",
+                  "",
+                  " ",
+                  "{\"a\":1,\"a\":2}",
+                  "{\"\":1,\"openapi\":\"3.1.0\",\"info\":{\"title\":\"t\",\"version\":\"1\"}}",
+                  "{\"openapi\":\"3.1.0\",\"info\":{\"title\":\"t\",\"version\":\"1\"},\"components\":{\"schemas\":{\"-0\":{},\"01\":{},\"9223372036854775808\":{},\"1\":{},\"-1\":{}}}}",
+                  "{\"openapi\":\"3.1.0\",\"openapi\":\"2.0\",\"info\":{\"title\":\"t\",\"version\":\"1\"}}"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 300
+        }
+      ]
+    },
+    "openapi.operation": {
+      "doc": "$spec->paths[path]?->operation(HttpMethod::from(method)), dumped",
+      "covers": [
+        "Utopia\\OpenAPI\\Model\\PathItem::operation"
+      ],
+      "fuzz": [
+        {
+          "name": "lookup",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "text": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "ref",
+                    "name": "vdoc3"
+                  }
+                ]
+              },
+              "path": {
+                "gen": "pick",
+                "from": [
+                  "/pets",
+                  "/pets/{id}",
+                  "/missing",
+                  "1",
+                  "/ref"
+                ]
+              },
+              "method": {
+                "gen": "pick",
+                "from": [
+                  "get",
+                  "post",
+                  "delete",
+                  "put",
+                  "trace"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 800
+        }
+      ]
+    },
+    "openapi.operations_by_tag": {
+      "doc": "[path, method, id] of each $spec->operationsByTag(tag)",
+      "covers": [
+        "Utopia\\OpenAPI\\Specification::operationsByTag"
+      ],
+      "fuzz": [
+        {
+          "name": "tags",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "document": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "vdoc3"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "vdoc2"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "doc2"
+                  }
+                ]
+              },
+              "tag": {
+                "gen": "pick",
+                "from": [
+                  "pets",
+                  "users",
+                  "",
+                  "1"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "openapi.resolve_schema": {
+      "doc": "$spec->resolveSchema(schema at `at`): the name of the identical schema in $spec->schemas (or null), whether it is the input itself, and its dump",
+      "covers": [
+        "Utopia\\OpenAPI\\Specification::resolveSchema"
+      ],
+      "fuzz": [
+        {
+          "name": "chains",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "document": {
+                "gen": "object",
+                "fields": {
+                  "openapi": {
+                    "gen": "pick",
+                    "from": [
+                      "3.1.0",
+                      "3.0.0"
+                    ]
+                  },
+                  "info": {
+                    "gen": "pick",
+                    "from": [
+                      {
+                        "title": "R",
+                        "version": "1"
+                      }
+                    ]
+                  },
+                  "components": {
+                    "gen": "object",
+                    "fields": {
+                      "schemas": {
+                        "gen": "object",
+                        "fields": {
+                          "A": {
+                            "gen": "one_of",
+                            "of": [
+                              {
+                                "gen": "object",
+                                "fields": {
+                                  "$ref": {
+                                    "gen": "ref",
+                                    "name": "schema_ref"
+                                  }
+                                },
+                                "optional": []
+                              },
+                              {
+                                "gen": "pick",
+                                "from": [
+                                  {
+                                    "type": "string"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "B": {
+                            "gen": "one_of",
+                            "of": [
+                              {
+                                "gen": "object",
+                                "fields": {
+                                  "$ref": {
+                                    "gen": "ref",
+                                    "name": "schema_ref"
+                                  }
+                                },
+                                "optional": []
+                              },
+                              {
+                                "gen": "pick",
+                                "from": [
+                                  {
+                                    "type": "integer"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "C~/D": {
+                            "gen": "one_of",
+                            "of": [
+                              {
+                                "gen": "object",
+                                "fields": {
+                                  "$ref": {
+                                    "gen": "ref",
+                                    "name": "schema_ref"
+                                  }
+                                },
+                                "optional": []
+                              },
+                              {
+                                "gen": "pick",
+                                "from": [
+                                  {
+                                    "type": "boolean"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "E F": {
+                            "gen": "one_of",
+                            "of": [
+                              {
+                                "gen": "object",
+                                "fields": {
+                                  "$ref": {
+                                    "gen": "ref",
+                                    "name": "schema_ref"
+                                  }
+                                },
+                                "optional": []
+                              },
+                              {
+                                "gen": "pick",
+                                "from": [
+                                  {
+                                    "type": "number"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          "1": {
+                            "gen": "one_of",
+                            "of": [
+                              {
+                                "gen": "object",
+                                "fields": {
+                                  "$ref": {
+                                    "gen": "ref",
+                                    "name": "schema_ref"
+                                  }
+                                },
+                                "optional": []
+                              },
+                              {
+                                "gen": "pick",
+                                "from": [
+                                  {}
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "optional": [
+                          "C~/D",
+                          "E F",
+                          "1"
+                        ]
+                      }
+                    },
+                    "optional": []
+                  }
+                },
+                "optional": []
+              },
+              "at": {
+                "gen": "pick",
+                "from": [
+                  [
+                    "schemas",
+                    "A"
+                  ],
+                  [
+                    "schemas",
+                    "B"
+                  ]
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "version.from": {
+      "doc": "Version::fromDocumentVersion(version)->value",
+      "covers": [
+        "Utopia\\OpenAPI\\Version::fromDocumentVersion"
+      ],
+      "fuzz": [
+        {
+          "name": "strings",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "version": {
+                "gen": "string",
+                "alphabet": "0123.\n x",
+                "min": 0,
+                "max": 7
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        },
+        {
+          "name": "near",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "version": {
+                "gen": "concat",
+                "parts": [
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "2",
+                      "3",
+                      "3.0",
+                      "3.1",
+                      "2.0",
+                      "3.2",
+                      "03.0",
+                      ""
+                    ]
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      "",
+                      ".0",
+                      ".1",
+                      ".",
+                      ".00",
+                      ".99999999999999999999",
+                      "\n",
+                      ".1\n",
+                      "a",
+                      ".-1",
+                      ".٣"
+                    ]
+                  }
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1000
+        }
+      ]
+    },
+    "dialect.for": {
+      "doc": "the flags of Dialect::for(Version::from(version))",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Schema\\Dialect::for",
+        "Utopia\\OpenAPI\\Parser\\Schema\\Dialect::__construct"
+      ]
+    },
+    "schema.read": {
+      "doc": "(new Schema\\Reader(Dialect::for(version ?? 3.1)))->read(raw, location ?? '#/x'), dumped",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Schema\\Reader::__construct",
+        "Utopia\\OpenAPI\\Parser\\Schema\\Reader::read",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::stringEnum",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::openStringEnumBranch",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::conditionalReferences",
+        "Utopia\\OpenAPI\\Model\\ArraySchema::__construct",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Contact::__construct",
+        "Utopia\\OpenAPI\\Model\\Discriminator::__construct",
+        "Utopia\\OpenAPI\\Model\\Encoding::__construct",
+        "Utopia\\OpenAPI\\Model\\Example::__construct",
+        "Utopia\\OpenAPI\\Model\\ExternalDocumentation::__construct",
+        "Utopia\\OpenAPI\\Model\\Header::__construct",
+        "Utopia\\OpenAPI\\Model\\Info::__construct",
+        "Utopia\\OpenAPI\\Model\\IntegerSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\License::__construct",
+        "Utopia\\OpenAPI\\Model\\MediaType::__construct",
+        "Utopia\\OpenAPI\\Model\\NumberSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\OAuthFlow::__construct",
+        "Utopia\\OpenAPI\\Model\\ObjectSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Operation::__construct",
+        "Utopia\\OpenAPI\\Model\\Parameter::__construct",
+        "Utopia\\OpenAPI\\Model\\PathItem::__construct",
+        "Utopia\\OpenAPI\\Model\\ReferenceSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\RequestBody::__construct",
+        "Utopia\\OpenAPI\\Model\\Response::__construct",
+        "Utopia\\OpenAPI\\Model\\Schema::__construct",
+        "Utopia\\OpenAPI\\Model\\SecurityRequirement::__construct",
+        "Utopia\\OpenAPI\\Model\\SecurityScheme::__construct",
+        "Utopia\\OpenAPI\\Model\\Server::__construct",
+        "Utopia\\OpenAPI\\Model\\ServerVariable::__construct",
+        "Utopia\\OpenAPI\\Model\\StringSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Tag::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "schemas",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "raw": {
+                "gen": "ref",
+                "name": "schema"
+              },
+              "version": {
+                "gen": "pick",
+                "from": [
+                  "2.0",
+                  "3.0",
+                  "3.1",
+                  "3.1"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 5000
+        },
+        {
+          "name": "unions",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "raw": {
+                "gen": "object",
+                "fields": {
+                  "oneOf": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "schema2"
+                    },
+                    "min": 0,
+                    "max": 4
+                  },
+                  "anyOf": {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "schema2"
+                    },
+                    "min": 0,
+                    "max": 4
+                  },
+                  "title": {
+                    "gen": "pick",
+                    "from": [
+                      "Event",
+                      null,
+                      ""
+                    ]
+                  },
+                  "description": {
+                    "gen": "pick",
+                    "from": [
+                      "d",
+                      ""
+                    ]
+                  },
+                  "nullable": {
+                    "gen": "pick",
+                    "from": [
+                      true
+                    ]
+                  },
+                  "default": {
+                    "gen": "pick",
+                    "from": [
+                      "a",
+                      null
+                    ]
+                  },
+                  "x-u": {
+                    "gen": "pick",
+                    "from": [
+                      1
+                    ]
+                  },
+                  "enum": {
+                    "gen": "pick",
+                    "from": [
+                      [
+                        "a"
+                      ]
+                    ]
+                  },
+                  "discriminator": {
+                    "gen": "pick",
+                    "from": [
+                      "kind"
+                    ]
+                  },
+                  "not": {
+                    "gen": "pick",
+                    "from": [
+                      {
+                        "type": "string"
+                      }
+                    ]
+                  }
+                },
+                "optional": [
+                  "oneOf",
+                  "title",
+                  "description",
+                  "nullable",
+                  "default",
+                  "x-u",
+                  "enum",
+                  "discriminator",
+                  "not"
+                ]
+              },
+              "version": {
+                "gen": "pick",
+                "from": [
+                  "3.0",
+                  "3.1"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 4000
+        },
+        {
+          "name": "any",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "raw": {
+                "gen": "any",
+                "depth": 3
+              },
+              "version": {
+                "gen": "pick",
+                "from": [
+                  "2.0",
+                  "3.0",
+                  "3.1"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "schema.read_parameter_fields": {
+      "doc": "(new Schema\\Reader(Dialect::for(version ?? 3.1)))->readParameterFields(data, location ?? '#/x'), dumped",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Schema\\Reader::readParameterFields"
+      ],
+      "fuzz": [
+        {
+          "name": "parameters",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "type": {
+                        "gen": "pick",
+                        "from": [
+                          "string",
+                          "integer",
+                          "number",
+                          "boolean",
+                          "array",
+                          "object",
+                          "null",
+                          "file",
+                          "widget",
+                          [
+                            "string",
+                            "null"
+                          ],
+                          [
+                            "string",
+                            "integer"
+                          ],
+                          [
+                            "integer",
+                            "null",
+                            "string"
+                          ],
+                          [
+                            "null"
+                          ],
+                          [],
+                          [
+                            "string"
+                          ],
+                          [
+                            1,
+                            "string"
+                          ],
+                          [
+                            null
+                          ],
+                          {
+                            "a": "string"
+                          },
+                          5,
+                          null
+                        ]
+                      },
+                      "format": {
+                        "gen": "pick",
+                        "from": [
+                          "int64",
+                          "binary",
+                          "email",
+                          null,
+                          1
+                        ]
+                      },
+                      "enum": {
+                        "gen": "pick",
+                        "from": [
+                          [
+                            "a",
+                            "b"
+                          ],
+                          [
+                            "a"
+                          ],
+                          [
+                            "b"
+                          ],
+                          [
+                            1
+                          ],
+                          [
+                            2
+                          ],
+                          [
+                            2.0
+                          ],
+                          [
+                            true
+                          ],
+                          [
+                            false
+                          ],
+                          [
+                            null
+                          ],
+                          [
+                            []
+                          ],
+                          [
+                            {
+                              "a": 1
+                            }
+                          ],
+                          [],
+                          "x",
+                          null,
+                          {
+                            "a": 1
+                          },
+                          [
+                            1,
+                            "1"
+                          ]
+                        ]
+                      },
+                      "const": {
+                        "gen": "pick",
+                        "from": [
+                          "a",
+                          "b",
+                          "user.created",
+                          1,
+                          2,
+                          2.0,
+                          false,
+                          true,
+                          null,
+                          {
+                            "a": 1
+                          },
+                          [
+                            "x"
+                          ],
+                          {}
+                        ]
+                      },
+                      "title": {
+                        "gen": "pick",
+                        "from": [
+                          "T",
+                          "UserCreated",
+                          "",
+                          null,
+                          3
+                        ]
+                      },
+                      "description": {
+                        "gen": "pick",
+                        "from": [
+                          "d",
+                          "",
+                          null,
+                          1
+                        ]
+                      },
+                      "nullable": {
+                        "gen": "pick",
+                        "from": [
+                          true,
+                          false,
+                          "0",
+                          1,
+                          null
+                        ]
+                      },
+                      "default": {
+                        "gen": "ref",
+                        "name": "value"
+                      },
+                      "example": {
+                        "gen": "ref",
+                        "name": "value"
+                      },
+                      "minLength": {
+                        "gen": "pick",
+                        "from": [
+                          1,
+                          0,
+                          1.5,
+                          "3",
+                          null
+                        ]
+                      },
+                      "maxLength": {
+                        "gen": "pick",
+                        "from": [
+                          10,
+                          null,
+                          -1
+                        ]
+                      },
+                      "pattern": {
+                        "gen": "pick",
+                        "from": [
+                          "^a$",
+                          null,
+                          2
+                        ]
+                      },
+                      "minimum": {
+                        "gen": "pick",
+                        "from": [
+                          1,
+                          1.5,
+                          -0.0,
+                          "x",
+                          null
+                        ]
+                      },
+                      "maximum": {
+                        "gen": "pick",
+                        "from": [
+                          10,
+                          2.5,
+                          null,
+                          true
+                        ]
+                      },
+                      "exclusiveMinimum": {
+                        "gen": "pick",
+                        "from": [
+                          true,
+                          false,
+                          5,
+                          5.5,
+                          "yes",
+                          "",
+                          null,
+                          0
+                        ]
+                      },
+                      "exclusiveMaximum": {
+                        "gen": "pick",
+                        "from": [
+                          true,
+                          false,
+                          7,
+                          0.5,
+                          null
+                        ]
+                      },
+                      "multipleOf": {
+                        "gen": "pick",
+                        "from": [
+                          2,
+                          0.5,
+                          null,
+                          "2"
+                        ]
+                      },
+                      "readOnly": {
+                        "gen": "pick",
+                        "from": [
+                          true,
+                          false,
+                          1
+                        ]
+                      },
+                      "writeOnly": {
+                        "gen": "pick",
+                        "from": [
+                          true,
+                          false
+                        ]
+                      },
+                      "deprecated": {
+                        "gen": "pick",
+                        "from": [
+                          true,
+                          false,
+                          "false"
+                        ]
+                      },
+                      "x-ext": {
+                        "gen": "ref",
+                        "name": "value"
+                      },
+                      "X-Up": {
+                        "gen": "pick",
+                        "from": [
+                          1,
+                          "u"
+                        ]
+                      },
+                      "$ref": {
+                        "gen": "pick",
+                        "from": [
+                          "#/components/schemas/A",
+                          "#/definitions/A",
+                          "#/components/schemas/Pet",
+                          "other.json#/A",
+                          5,
+                          null
+                        ]
+                      },
+                      "required": {
+                        "gen": "pick",
+                        "from": [
+                          [
+                            "a"
+                          ],
+                          [
+                            "a",
+                            "b"
+                          ],
+                          [],
+                          [
+                            "0"
+                          ],
+                          "a",
+                          [
+                            1,
+                            1.5
+                          ],
+                          [
+                            []
+                          ],
+                          null,
+                          {
+                            "a": 1
+                          }
+                        ]
+                      },
+                      "minItems": {
+                        "gen": "pick",
+                        "from": [
+                          1,
+                          1.5,
+                          null
+                        ]
+                      },
+                      "maxItems": {
+                        "gen": "pick",
+                        "from": [
+                          3,
+                          null
+                        ]
+                      },
+                      "uniqueItems": {
+                        "gen": "pick",
+                        "from": [
+                          true,
+                          false,
+                          "1"
+                        ]
+                      },
+                      "minProperties": {
+                        "gen": "pick",
+                        "from": [
+                          1,
+                          null,
+                          "1"
+                        ]
+                      },
+                      "maxProperties": {
+                        "gen": "pick",
+                        "from": [
+                          2,
+                          null
+                        ]
+                      },
+                      "discriminator": {
+                        "gen": "pick",
+                        "from": [
+                          "kind",
+                          {
+                            "propertyName": "kind"
+                          },
+                          {
+                            "propertyName": "kind",
+                            "mapping": {
+                              "a": "#/x",
+                              "1": "#/y"
+                            }
+                          },
+                          {
+                            "mapping": {
+                              "a": 1
+                            }
+                          },
+                          {
+                            "propertyName": 3
+                          },
+                          5,
+                          null,
+                          {
+                            "propertyName": "k",
+                            "x-m": [
+                              1
+                            ]
+                          },
+                          []
+                        ]
+                      },
+                      "properties": {
+                        "gen": "pick",
+                        "from": [
+                          {},
+                          [],
+                          null,
+                          "p",
+                          {
+                            "a": true
+                          }
+                        ]
+                      },
+                      "additionalProperties": {
+                        "gen": "pick",
+                        "from": [
+                          true,
+                          false,
+                          null,
+                          5,
+                          {}
+                        ]
+                      },
+                      "items": {
+                        "gen": "pick",
+                        "from": [
+                          null,
+                          true,
+                          {},
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "type",
+                      "format",
+                      "enum",
+                      "const",
+                      "title",
+                      "description",
+                      "nullable",
+                      "default",
+                      "example",
+                      "minLength",
+                      "maxLength",
+                      "pattern",
+                      "minimum",
+                      "maximum",
+                      "exclusiveMinimum",
+                      "exclusiveMaximum",
+                      "multipleOf",
+                      "readOnly",
+                      "writeOnly",
+                      "deprecated",
+                      "x-ext",
+                      "X-Up",
+                      "$ref",
+                      "required",
+                      "minItems",
+                      "maxItems",
+                      "uniqueItems",
+                      "minProperties",
+                      "maxProperties",
+                      "discriminator",
+                      "properties",
+                      "additionalProperties",
+                      "items"
+                    ]
+                  },
+                  {
+                    "gen": "object",
+                    "fields": {
+                      "name": {
+                        "gen": "pick",
+                        "from": [
+                          "n"
+                        ]
+                      },
+                      "in": {
+                        "gen": "pick",
+                        "from": [
+                          "query"
+                        ]
+                      },
+                      "type": {
+                        "gen": "pick",
+                        "from": [
+                          "integer",
+                          "string",
+                          "array"
+                        ]
+                      },
+                      "items": {
+                        "gen": "pick",
+                        "from": [
+                          {
+                            "type": "string"
+                          }
+                        ]
+                      },
+                      "required": {
+                        "gen": "pick",
+                        "from": [
+                          true
+                        ]
+                      },
+                      "x-nullable": {
+                        "gen": "pick",
+                        "from": [
+                          true
+                        ]
+                      },
+                      "collectionFormat": {
+                        "gen": "pick",
+                        "from": [
+                          "csv"
+                        ]
+                      },
+                      "minimum": {
+                        "gen": "pick",
+                        "from": [
+                          1,
+                          "x"
+                        ]
+                      }
+                    },
+                    "optional": [
+                      "name",
+                      "in",
+                      "type",
+                      "items",
+                      "required",
+                      "x-nullable",
+                      "collectionFormat",
+                      "minimum"
+                    ]
+                  },
+                  {
+                    "gen": "pick",
+                    "from": [
+                      [],
+                      {
+                        "0": "a"
+                      }
+                    ]
+                  }
+                ]
+              },
+              "version": {
+                "gen": "pick",
+                "from": [
+                  "2.0",
+                  "3.1"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 2000
+        }
+      ]
+    },
+    "composite.new": {
+      "doc": "new CompositeSchema(composition, schemas read under 3.1, not, discriminator, annotations..., location), dumped",
+      "covers": [
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::stringEnum",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::openStringEnumBranch",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::conditionalReferences",
+        "Utopia\\OpenAPI\\Model\\Discriminator::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "members",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "composition": {
+                "gen": "pick",
+                "from": [
+                  "oneOf",
+                  "anyOf",
+                  "allOf"
+                ]
+              },
+              "schemas": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "schema2"
+                },
+                "min": 0,
+                "max": 4
+              },
+              "not": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "type": "string"
+                  }
+                ]
+              },
+              "discriminator": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "propertyName": "kind"
+                  },
+                  {
+                    "propertyName": "k",
+                    "mapping": {
+                      "a": "#/a"
+                    },
+                    "extensions": {
+                      "x-a": 1
+                    }
+                  }
+                ]
+              },
+              "title": {
+                "gen": "pick",
+                "from": [
+                  "Event",
+                  ""
+                ]
+              },
+              "description": {
+                "gen": "pick",
+                "from": [
+                  "d"
+                ]
+              },
+              "nullable": {
+                "gen": "pick",
+                "from": [
+                  true
+                ]
+              },
+              "default": {
+                "gen": "pick",
+                "from": [
+                  "a",
+                  1
+                ]
+              },
+              "enum": {
+                "gen": "pick",
+                "from": [
+                  [
+                    "a"
+                  ],
+                  []
+                ]
+              },
+              "format": {
+                "gen": "pick",
+                "from": [
+                  "f"
+                ]
+              },
+              "readOnly": {
+                "gen": "pick",
+                "from": [
+                  true
+                ]
+              },
+              "writeOnly": {
+                "gen": "pick",
+                "from": [
+                  true
+                ]
+              },
+              "deprecated": {
+                "gen": "pick",
+                "from": [
+                  true
+                ]
+              },
+              "example": {
+                "gen": "pick",
+                "from": [
+                  "e"
+                ]
+              },
+              "extensions": {
+                "gen": "pick",
+                "from": [
+                  {
+                    "x-e": 1
+                  }
+                ]
+              },
+              "location": {
+                "gen": "pick",
+                "from": [
+                  "#/l"
+                ]
+              }
+            },
+            "optional": [
+              "composition",
+              "not",
+              "discriminator",
+              "title",
+              "description",
+              "nullable",
+              "default",
+              "enum",
+              "format",
+              "readOnly",
+              "writeOnly",
+              "deprecated",
+              "example",
+              "extensions",
+              "location"
+            ]
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "value.object": {
+      "doc": "Value::object(value, location)",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Value::object"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "shape_value"
+              },
+              "location": {
+                "gen": "pick",
+                "from": [
+                  "#/x"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "value.list": {
+      "doc": "Value::list(value, location)",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Value::list"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "shape_value"
+              },
+              "location": {
+                "gen": "pick",
+                "from": [
+                  "#/x"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "value.string_list": {
+      "doc": "Value::stringList(value, location)",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Value::stringList"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "shape_value"
+                  },
+                  {
+                    "gen": "array",
+                    "items": {
+                      "gen": "ref",
+                      "name": "small"
+                    },
+                    "min": 0,
+                    "max": 3
+                  }
+                ]
+              },
+              "location": {
+                "gen": "pick",
+                "from": [
+                  "#/tags"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "value.required_string": {
+      "doc": "Value::requiredString(data, key, location)",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Value::requiredString"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "shape_data"
+              },
+              "key": {
+                "gen": "pick",
+                "from": [
+                  "title",
+                  "0",
+                  "x"
+                ]
+              },
+              "location": {
+                "gen": "pick",
+                "from": [
+                  "#/info"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "value.optional_string": {
+      "doc": "Value::optionalString(data, key)",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Value::optionalString"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "shape_data"
+              },
+              "key": {
+                "gen": "pick",
+                "from": [
+                  "title",
+                  "0",
+                  "x"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "value.nullable_int": {
+      "doc": "Value::nullableInt(value, location)",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Value::nullableInt"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "shape_value"
+              },
+              "location": {
+                "gen": "pick",
+                "from": [
+                  "#/x"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "value.nullable_number": {
+      "doc": "Value::nullableNumber(value, location)",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Value::nullableNumber"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "shape_value"
+              },
+              "location": {
+                "gen": "pick",
+                "from": [
+                  "#/x"
+                ]
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "value.extensions": {
+      "doc": "Value::extensions(data)",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\Value::extensions"
+      ],
+      "fuzz": [
+        {
+          "name": "keys",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "data": {
+                "gen": "ref",
+                "name": "shape_data"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 1500
+        }
+      ]
+    },
+    "reference.is_local": {
+      "doc": "(new Reference(value))->isLocal()",
+      "covers": [
+        "Utopia\\OpenAPI\\Reference\\Reference::__construct",
+        "Utopia\\OpenAPI\\Reference\\Reference::isLocal"
+      ],
+      "fuzz": [
+        {
+          "name": "values",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "value": {
+                "gen": "ref",
+                "name": "pointer"
+              }
+            },
+            "optional": []
+          },
+          "iterations": 500
+        }
+      ]
+    },
+    "resolver.resolve": {
+      "doc": "(new LocalResolver(document))->resolve(new Reference(reference), new ResolutionContext(trail ?? [], baseUri ?? null))",
+      "covers": [
+        "Utopia\\OpenAPI\\Reference\\LocalResolver::__construct",
+        "Utopia\\OpenAPI\\Reference\\LocalResolver::resolve",
+        "Utopia\\OpenAPI\\Reference\\Reference::__construct",
+        "Utopia\\OpenAPI\\Reference\\ResolutionContext::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "pointers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "document": {
+                "gen": "ref",
+                "name": "resolver_document"
+              },
+              "reference": {
+                "gen": "ref",
+                "name": "pointer"
+              },
+              "trail": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "pointer"
+                },
+                "min": 0,
+                "max": 2
+              }
+            },
+            "optional": [
+              "trail"
+            ]
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "resolver.resolve_object": {
+      "doc": "(new LocalResolver(document))->resolveObject(reference, trail ?? [])",
+      "covers": [
+        "Utopia\\OpenAPI\\Reference\\LocalResolver::resolveObject"
+      ],
+      "fuzz": [
+        {
+          "name": "chains",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "document": {
+                "gen": "ref",
+                "name": "resolver_document"
+              },
+              "reference": {
+                "gen": "ref",
+                "name": "pointer"
+              },
+              "trail": {
+                "gen": "array",
+                "items": {
+                  "gen": "ref",
+                  "name": "pointer"
+                },
+                "min": 0,
+                "max": 2
+              }
+            },
+            "optional": [
+              "trail"
+            ]
+          },
+          "iterations": 4000
+        }
+      ]
+    },
+    "operation.security_names": {
+      "doc": "accepted/requiredSecuritySchemeNames() of an Operation with these security alternatives",
+      "covers": [
+        "Utopia\\OpenAPI\\Model\\Operation::__construct",
+        "Utopia\\OpenAPI\\Model\\SecurityRequirement::__construct",
+        "Utopia\\OpenAPI\\Model\\Operation::acceptedSecuritySchemeNames",
+        "Utopia\\OpenAPI\\Model\\Operation::requiredSecuritySchemeNames"
+      ],
+      "fuzz": [
+        {
+          "name": "alternatives",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "security": {
+                "gen": "array",
+                "items": {
+                  "gen": "one_of",
+                  "of": [
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "Project": {
+                          "gen": "pick",
+                          "from": [
+                            [],
+                            [
+                              "read"
+                            ]
+                          ]
+                        },
+                        "Session": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        },
+                        "Key": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        },
+                        "0": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        },
+                        "00": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        },
+                        "123": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        }
+                      },
+                      "optional": [
+                        "Session",
+                        "Key",
+                        "0",
+                        "00",
+                        "123"
+                      ]
+                    },
+                    {
+                      "gen": "object",
+                      "fields": {
+                        "Session": {
+                          "gen": "pick",
+                          "from": [
+                            [],
+                            [
+                              "write"
+                            ]
+                          ]
+                        },
+                        "00": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        },
+                        "123": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        },
+                        "Project": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        },
+                        "JWT": {
+                          "gen": "pick",
+                          "from": [
+                            []
+                          ]
+                        }
+                      },
+                      "optional": [
+                        "00",
+                        "123",
+                        "Project",
+                        "JWT"
+                      ]
+                    },
+                    {
+                      "gen": "pick",
+                      "from": [
+                        []
+                      ]
+                    }
+                  ]
+                },
+                "min": 0,
+                "max": 4
+              }
+            },
+            "optional": []
+          },
+          "iterations": 3000
+        }
+      ]
+    },
+    "reader.read": {
+      "doc": "(new OpenAPI2|OpenAPI30|OpenAPI31(document, Version::from(version), sourceVersion, new Schema\\Reader(Dialect::for(dialect ?? version))))->read(), dumped",
+      "covers": [
+        "Utopia\\OpenAPI\\Parser\\OpenAPI2::read",
+        "Utopia\\OpenAPI\\Parser\\OpenAPI3::read",
+        "Utopia\\OpenAPI\\Parser\\AbstractReader::__construct",
+        "Utopia\\OpenAPI\\Model\\ArraySchema::__construct",
+        "Utopia\\OpenAPI\\Model\\CompositeSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Contact::__construct",
+        "Utopia\\OpenAPI\\Model\\Discriminator::__construct",
+        "Utopia\\OpenAPI\\Model\\Encoding::__construct",
+        "Utopia\\OpenAPI\\Model\\Example::__construct",
+        "Utopia\\OpenAPI\\Model\\ExternalDocumentation::__construct",
+        "Utopia\\OpenAPI\\Model\\Header::__construct",
+        "Utopia\\OpenAPI\\Model\\Info::__construct",
+        "Utopia\\OpenAPI\\Model\\IntegerSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\License::__construct",
+        "Utopia\\OpenAPI\\Model\\MediaType::__construct",
+        "Utopia\\OpenAPI\\Model\\NumberSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\OAuthFlow::__construct",
+        "Utopia\\OpenAPI\\Model\\ObjectSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Operation::__construct",
+        "Utopia\\OpenAPI\\Model\\Parameter::__construct",
+        "Utopia\\OpenAPI\\Model\\PathItem::__construct",
+        "Utopia\\OpenAPI\\Model\\ReferenceSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\RequestBody::__construct",
+        "Utopia\\OpenAPI\\Model\\Response::__construct",
+        "Utopia\\OpenAPI\\Model\\Schema::__construct",
+        "Utopia\\OpenAPI\\Model\\SecurityRequirement::__construct",
+        "Utopia\\OpenAPI\\Model\\SecurityScheme::__construct",
+        "Utopia\\OpenAPI\\Model\\Server::__construct",
+        "Utopia\\OpenAPI\\Model\\ServerVariable::__construct",
+        "Utopia\\OpenAPI\\Model\\StringSchema::__construct",
+        "Utopia\\OpenAPI\\Model\\Tag::__construct"
+      ],
+      "fuzz": [
+        {
+          "name": "readers",
+          "args": {
+            "gen": "object",
+            "fields": {
+              "reader": {
+                "gen": "pick",
+                "from": [
+                  "2.0",
+                  "3.0",
+                  "3.1"
+                ]
+              },
+              "version": {
+                "gen": "pick",
+                "from": [
+                  "2.0",
+                  "3.0",
+                  "3.1"
+                ]
+              },
+              "dialect": {
+                "gen": "pick",
+                "from": [
+                  "2.0",
+                  "3.0",
+                  "3.1"
+                ]
+              },
+              "sourceVersion": {
+                "gen": "pick",
+                "from": [
+                  "x",
+                  "3.1.0"
+                ]
+              },
+              "document": {
+                "gen": "one_of",
+                "of": [
+                  {
+                    "gen": "ref",
+                    "name": "vdoc3"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "vdoc2"
+                  },
+                  {
+                    "gen": "ref",
+                    "name": "doc3"
+                  }
+                ]
+              }
+            },
+            "optional": [
+              "dialect"
+            ]
+          },
+          "iterations": 2000
+        }
+      ]
+    }
+  },
+  "waivers": {},
+  "tests_waived": {},
+  "quirks": [
+    {
+      "symbol": "Utopia\\OpenAPI\\Parser\\OpenAPI3::read",
+      "description": "Lists of names (tags, required, consumes, produces, schemes, server variable enums, security scopes) are cast item by item with strval()/(string): a nested array becomes \"Array\" (with a warning), true \"1\", null \"\", a float its precision-14 form (1e25 is \"1.0E+25\"), instead of being refused. Rust casts the same way.",
+      "case": "edge.json#scalar lists are cast with (string): arrays become Array (quirk)"
+    },
+    {
+      "symbol": "Utopia\\OpenAPI\\Parser\\Schema\\Reader::read",
+      "description": "A schema's enum list and its discriminator are checked against the literal locations 'schema/enum' and 'schema/discriminator', so their errors do not name where the schema is (every other schema error does).",
+      "case": "edge.json#enum errors name schema/enum, not the location (quirk)"
+    },
+    {
+      "symbol": "Utopia\\OpenAPI\\Parser\\Schema\\Reader::read",
+      "description": "Under 3.1 a type list keeps every item that is not the string 'null'; a JSON null item is kept and then read as no type, so `type: [null]` is an any schema that is not nullable.",
+      "case": "edge.json#type [null] is any, not nullable-only (quirk)"
+    }
+  ],
+  "deviations": [
+    {
+      "symbol": "Utopia\\OpenAPI\\Parser::parse",
+      "php": "Given a decoded document (an array) whose strings are not valid UTF-8, or that holds objects of classes other than stdClass, PHP keeps the bytes in names, descriptions and references, and treats foreign objects like stdClass (or fails to cast them).",
+      "reason": "The Rust model holds text as String: a decoded document's non-UTF-8 text is converted lossily (U+FFFD), and php_std::Value has no foreign objects. JSON input, the library's own decoding path, is always valid UTF-8 (json_decode refuses anything else), so this only concerns hand-built arrays; free-form values (default, example, enum, extensions) keep their bytes exactly."
+    }
+  ]
+}

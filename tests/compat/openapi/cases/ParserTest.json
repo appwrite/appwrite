@@ -1,0 +1,3652 @@
+{
+  "source": "packages/openapi/tests/ParserTest.php",
+  "cases": [
+    {
+      "name": "security scheme names: none",
+      "op": "operation.security_names",
+      "args": {
+        "security": []
+      },
+      "expect": {
+        "accepted": [],
+        "required": [],
+        "security": []
+      }
+    },
+    {
+      "name": "security scheme names: anonymous",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          []
+        ]
+      },
+      "expect": {
+        "accepted": [],
+        "required": [],
+        "security": [
+          []
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: single AND requirement",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "Project": [],
+            "Session": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "Project",
+          "Session"
+        ],
+        "required": [
+          "Project",
+          "Session"
+        ],
+        "security": [
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "Session",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: optional credential",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "Project": []
+          },
+          {
+            "Project": [],
+            "Session": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "Project",
+          "Session"
+        ],
+        "required": [
+          "Project"
+        ],
+        "security": [
+          [
+            [
+              "Project",
+              []
+            ]
+          ],
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "Session",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: reversed alternatives",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "Session": [],
+            "Project": []
+          },
+          {
+            "Project": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "Session",
+          "Project"
+        ],
+        "required": [
+          "Project"
+        ],
+        "security": [
+          [
+            [
+              "Session",
+              []
+            ],
+            [
+              "Project",
+              []
+            ]
+          ],
+          [
+            [
+              "Project",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: disjoint alternatives",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "Key": []
+          },
+          {
+            "Session": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "Key",
+          "Session"
+        ],
+        "required": [],
+        "security": [
+          [
+            [
+              "Key",
+              []
+            ]
+          ],
+          [
+            [
+              "Session",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: anonymous last",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "Key": []
+          },
+          []
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "Key"
+        ],
+        "required": [],
+        "security": [
+          [
+            [
+              "Key",
+              []
+            ]
+          ],
+          []
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: anonymous first",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          [],
+          {
+            "Key": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "Key"
+        ],
+        "required": [],
+        "security": [
+          [],
+          [
+            [
+              "Key",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: duplicates",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "Project": [],
+            "Key": []
+          },
+          {
+            "Project": [],
+            "Key": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "Project",
+          "Key"
+        ],
+        "required": [
+          "Project",
+          "Key"
+        ],
+        "security": [
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "Key",
+              []
+            ]
+          ],
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "Key",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: three alternatives",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "Project": [],
+            "Key": []
+          },
+          {
+            "Project": [],
+            "Session": []
+          },
+          {
+            "Project": [],
+            "JWT": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "Project",
+          "Key",
+          "Session",
+          "JWT"
+        ],
+        "required": [
+          "Project"
+        ],
+        "security": [
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "Key",
+              []
+            ]
+          ],
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "Session",
+              []
+            ]
+          ],
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "JWT",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: distinct OAuth scopes",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "OAuth": [
+              "read"
+            ]
+          },
+          {
+            "OAuth": [
+              "write"
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "OAuth"
+        ],
+        "required": [
+          "OAuth"
+        ],
+        "security": [
+          [
+            [
+              "OAuth",
+              [
+                "read"
+              ]
+            ]
+          ],
+          [
+            [
+              "OAuth",
+              [
+                "write"
+              ]
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: numeric name",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "123": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "123"
+        ],
+        "required": [
+          "123"
+        ],
+        "security": [
+          [
+            [
+              "123",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: zero name",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "0": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "0"
+        ],
+        "required": [
+          "0"
+        ],
+        "security": [
+          [
+            [
+              "0",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: mixed names and duplicates",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "$array": [
+              [
+                "123",
+                []
+              ],
+              [
+                "Key",
+                []
+              ],
+              [
+                "0",
+                []
+              ]
+            ]
+          },
+          {
+            "$array": [
+              [
+                "0",
+                []
+              ],
+              [
+                "123",
+                []
+              ],
+              [
+                "Session",
+                []
+              ]
+            ]
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "123",
+          "Key",
+          "0",
+          "Session"
+        ],
+        "required": [
+          "123",
+          "0"
+        ],
+        "security": [
+          [
+            [
+              "123",
+              []
+            ],
+            [
+              "Key",
+              []
+            ],
+            [
+              "0",
+              []
+            ]
+          ],
+          [
+            [
+              "0",
+              []
+            ],
+            [
+              "123",
+              []
+            ],
+            [
+              "Session",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "security scheme names: distinct numeric-looking names",
+      "op": "operation.security_names",
+      "args": {
+        "security": [
+          {
+            "$array": [
+              [
+                "0",
+                []
+              ],
+              [
+                "00",
+                []
+              ]
+            ]
+          },
+          {
+            "00": []
+          }
+        ]
+      },
+      "expect": {
+        "accepted": [
+          "0",
+          "00"
+        ],
+        "required": [
+          "00"
+        ],
+        "security": [
+          [
+            [
+              "0",
+              []
+            ],
+            [
+              "00",
+              []
+            ]
+          ],
+          [
+            [
+              "00",
+              []
+            ]
+          ]
+        ]
+      }
+    },
+    {
+      "name": "parses OpenAPI 3.1 into the canonical model",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "openapi": "3.1.1",
+          "info": {
+            "title": "Pets",
+            "version": "1.0.0",
+            "x-owner": "team"
+          },
+          "servers": [
+            {
+              "url": "https://api.example.com/{version}",
+              "variables": {
+                "version": {
+                  "default": "v1"
+                }
+              }
+            }
+          ],
+          "tags": [
+            {
+              "name": "pets"
+            }
+          ],
+          "security": [
+            {
+              "Project": [],
+              "Session": []
+            },
+            {
+              "Project": [],
+              "JWT": []
+            }
+          ],
+          "paths": {
+            "/pets/{id}": {
+              "parameters": [
+                {
+                  "name": "id",
+                  "in": "path",
+                  "required": true,
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "get": {
+                "operationId": "getPet",
+                "tags": [
+                  "pets"
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "description": "override",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "$array": [
+                            [
+                              "$ref",
+                              "#/components/schemas/Pet"
+                            ]
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "delete": {
+                "security": [],
+                "responses": {
+                  "204": {
+                    "description": "Deleted"
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "parent": {
+                    "$array": [
+                      [
+                        "$ref",
+                        "#/components/schemas/Pet"
+                      ]
+                    ]
+                  },
+                  "nickname": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "Identifier": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              }
+            },
+            "securitySchemes": {
+              "Project": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Project"
+              },
+              "Session": {
+                "type": "http",
+                "scheme": "bearer"
+              },
+              "JWT": {
+                "type": "http",
+                "scheme": "bearer"
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "version": "3.1",
+        "sourceVersion": "3.1.1",
+        "jsonSchemaDialect": null,
+        "info": {
+          "title": "Pets",
+          "description": "",
+          "version": "1.0.0",
+          "termsOfService": null,
+          "contact": null,
+          "license": null,
+          "extensions": {
+            "$array": [
+              [
+                "x-owner",
+                "team"
+              ]
+            ]
+          }
+        },
+        "servers": [
+          {
+            "url": "https://api.example.com/{version}",
+            "description": "",
+            "variables": [
+              [
+                "version",
+                {
+                  "default": "v1",
+                  "enum": [],
+                  "description": "",
+                  "extensions": []
+                }
+              ]
+            ],
+            "extensions": []
+          }
+        ],
+        "tags": [
+          [
+            "pets",
+            {
+              "name": "pets",
+              "description": "",
+              "externalDocumentation": null,
+              "extensions": []
+            }
+          ]
+        ],
+        "paths": [
+          [
+            "/pets/{id}",
+            {
+              "path": "/pets/{id}",
+              "operations": [
+                [
+                  "get",
+                  {
+                    "id": "getPet",
+                    "method": "get",
+                    "path": "/pets/{id}",
+                    "tags": [
+                      "pets"
+                    ],
+                    "summary": "",
+                    "description": "",
+                    "deprecated": false,
+                    "parameters": [
+                      {
+                        "name": "id",
+                        "location": "path",
+                        "description": "override",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                          "kind": "string",
+                          "minLength": null,
+                          "maxLength": null,
+                          "pattern": null,
+                          "enumName": null,
+                          "enumKeys": [],
+                          "open": false,
+                          "title": null,
+                          "description": "",
+                          "nullable": false,
+                          "default": null,
+                          "enum": [],
+                          "format": null,
+                          "readOnly": false,
+                          "writeOnly": false,
+                          "deprecated": false,
+                          "example": null,
+                          "extensions": []
+                        },
+                        "content": [],
+                        "style": null,
+                        "explode": null,
+                        "allowReserved": false,
+                        "extensions": [],
+                        "identity": "path\u0000id"
+                      }
+                    ],
+                    "requestBody": null,
+                    "responses": [
+                      [
+                        "200",
+                        {
+                          "description": "OK",
+                          "headers": [],
+                          "content": [
+                            [
+                              "application/json",
+                              {
+                                "schema": {
+                                  "kind": "reference",
+                                  "reference": "#/components/schemas/Pet",
+                                  "title": null,
+                                  "description": "",
+                                  "nullable": false,
+                                  "default": null,
+                                  "enum": [],
+                                  "format": null,
+                                  "readOnly": false,
+                                  "writeOnly": false,
+                                  "deprecated": false,
+                                  "example": null,
+                                  "extensions": []
+                                },
+                                "example": null,
+                                "examples": [],
+                                "encoding": [],
+                                "extensions": []
+                              }
+                            ]
+                          ],
+                          "extensions": []
+                        }
+                      ]
+                    ],
+                    "security": [
+                      [
+                        [
+                          "Project",
+                          []
+                        ],
+                        [
+                          "Session",
+                          []
+                        ]
+                      ],
+                      [
+                        [
+                          "Project",
+                          []
+                        ],
+                        [
+                          "JWT",
+                          []
+                        ]
+                      ]
+                    ],
+                    "servers": [
+                      {
+                        "url": "https://api.example.com/{version}",
+                        "description": "",
+                        "variables": [
+                          [
+                            "version",
+                            {
+                              "default": "v1",
+                              "enum": [],
+                              "description": "",
+                              "extensions": []
+                            }
+                          ]
+                        ],
+                        "extensions": []
+                      }
+                    ],
+                    "externalDocumentation": null,
+                    "extensions": [],
+                    "accepted": [
+                      "Project",
+                      "Session",
+                      "JWT"
+                    ],
+                    "required": [
+                      "Project"
+                    ]
+                  }
+                ],
+                [
+                  "delete",
+                  {
+                    "id": "",
+                    "method": "delete",
+                    "path": "/pets/{id}",
+                    "tags": [],
+                    "summary": "",
+                    "description": "",
+                    "deprecated": false,
+                    "parameters": [
+                      {
+                        "name": "id",
+                        "location": "path",
+                        "description": "",
+                        "required": true,
+                        "deprecated": false,
+                        "allowEmptyValue": false,
+                        "schema": {
+                          "kind": "string",
+                          "minLength": null,
+                          "maxLength": null,
+                          "pattern": null,
+                          "enumName": null,
+                          "enumKeys": [],
+                          "open": false,
+                          "title": null,
+                          "description": "",
+                          "nullable": false,
+                          "default": null,
+                          "enum": [],
+                          "format": null,
+                          "readOnly": false,
+                          "writeOnly": false,
+                          "deprecated": false,
+                          "example": null,
+                          "extensions": []
+                        },
+                        "content": [],
+                        "style": null,
+                        "explode": null,
+                        "allowReserved": false,
+                        "extensions": [],
+                        "identity": "path\u0000id"
+                      }
+                    ],
+                    "requestBody": null,
+                    "responses": [
+                      [
+                        "204",
+                        {
+                          "description": "Deleted",
+                          "headers": [],
+                          "content": [],
+                          "extensions": []
+                        }
+                      ]
+                    ],
+                    "security": [],
+                    "servers": [
+                      {
+                        "url": "https://api.example.com/{version}",
+                        "description": "",
+                        "variables": [
+                          [
+                            "version",
+                            {
+                              "default": "v1",
+                              "enum": [],
+                              "description": "",
+                              "extensions": []
+                            }
+                          ]
+                        ],
+                        "extensions": []
+                      }
+                    ],
+                    "externalDocumentation": null,
+                    "extensions": [],
+                    "accepted": [],
+                    "required": []
+                  }
+                ]
+              ],
+              "parameters": [
+                {
+                  "name": "id",
+                  "location": "path",
+                  "description": "",
+                  "required": true,
+                  "deprecated": false,
+                  "allowEmptyValue": false,
+                  "schema": {
+                    "kind": "string",
+                    "minLength": null,
+                    "maxLength": null,
+                    "pattern": null,
+                    "enumName": null,
+                    "enumKeys": [],
+                    "open": false,
+                    "title": null,
+                    "description": "",
+                    "nullable": false,
+                    "default": null,
+                    "enum": [],
+                    "format": null,
+                    "readOnly": false,
+                    "writeOnly": false,
+                    "deprecated": false,
+                    "example": null,
+                    "extensions": []
+                  },
+                  "content": [],
+                  "style": null,
+                  "explode": null,
+                  "allowReserved": false,
+                  "extensions": [],
+                  "identity": "path\u0000id"
+                }
+              ],
+              "summary": "",
+              "description": "",
+              "servers": [
+                {
+                  "url": "https://api.example.com/{version}",
+                  "description": "",
+                  "variables": [
+                    [
+                      "version",
+                      {
+                        "default": "v1",
+                        "enum": [],
+                        "description": "",
+                        "extensions": []
+                      }
+                    ]
+                  ],
+                  "extensions": []
+                }
+              ],
+              "extensions": []
+            }
+          ]
+        ],
+        "schemas": [
+          [
+            "Pet",
+            {
+              "kind": "object",
+              "properties": [
+                [
+                  "name",
+                  {
+                    "kind": "string",
+                    "minLength": null,
+                    "maxLength": null,
+                    "pattern": null,
+                    "enumName": null,
+                    "enumKeys": [],
+                    "open": false,
+                    "title": null,
+                    "description": "",
+                    "nullable": false,
+                    "default": null,
+                    "enum": [],
+                    "format": null,
+                    "readOnly": false,
+                    "writeOnly": false,
+                    "deprecated": false,
+                    "example": null,
+                    "extensions": []
+                  }
+                ],
+                [
+                  "parent",
+                  {
+                    "kind": "reference",
+                    "reference": "#/components/schemas/Pet",
+                    "title": null,
+                    "description": "",
+                    "nullable": false,
+                    "default": null,
+                    "enum": [],
+                    "format": null,
+                    "readOnly": false,
+                    "writeOnly": false,
+                    "deprecated": false,
+                    "example": null,
+                    "extensions": []
+                  }
+                ],
+                [
+                  "nickname",
+                  {
+                    "kind": "string",
+                    "minLength": null,
+                    "maxLength": null,
+                    "pattern": null,
+                    "enumName": null,
+                    "enumKeys": [],
+                    "open": false,
+                    "title": null,
+                    "description": "",
+                    "nullable": true,
+                    "default": null,
+                    "enum": [],
+                    "format": null,
+                    "readOnly": false,
+                    "writeOnly": false,
+                    "deprecated": false,
+                    "example": null,
+                    "extensions": []
+                  }
+                ]
+              ],
+              "required": [
+                "name"
+              ],
+              "additionalProperties": false,
+              "minProperties": null,
+              "maxProperties": null,
+              "title": null,
+              "description": "",
+              "nullable": false,
+              "default": null,
+              "enum": [],
+              "format": null,
+              "readOnly": false,
+              "writeOnly": false,
+              "deprecated": false,
+              "example": null,
+              "extensions": []
+            }
+          ],
+          [
+            "Identifier",
+            {
+              "kind": "composite",
+              "composition": "oneOf",
+              "schemas": [
+                {
+                  "kind": "string",
+                  "minLength": null,
+                  "maxLength": null,
+                  "pattern": null,
+                  "enumName": null,
+                  "enumKeys": [],
+                  "open": false,
+                  "title": null,
+                  "description": "",
+                  "nullable": false,
+                  "default": null,
+                  "enum": [],
+                  "format": null,
+                  "readOnly": false,
+                  "writeOnly": false,
+                  "deprecated": false,
+                  "example": null,
+                  "extensions": []
+                },
+                {
+                  "kind": "integer",
+                  "minimum": null,
+                  "maximum": null,
+                  "exclusiveMinimum": false,
+                  "exclusiveMaximum": false,
+                  "multipleOf": null,
+                  "title": null,
+                  "description": "",
+                  "nullable": false,
+                  "default": null,
+                  "enum": [],
+                  "format": null,
+                  "readOnly": false,
+                  "writeOnly": false,
+                  "deprecated": false,
+                  "example": null,
+                  "extensions": []
+                }
+              ],
+              "not": null,
+              "discriminator": null,
+              "stringEnum": null,
+              "openStringEnumBranch": null,
+              "conditionalReferences": [],
+              "title": null,
+              "description": "",
+              "nullable": false,
+              "default": null,
+              "enum": [],
+              "format": null,
+              "readOnly": false,
+              "writeOnly": false,
+              "deprecated": false,
+              "example": null,
+              "extensions": []
+            }
+          ]
+        ],
+        "securitySchemes": [
+          [
+            "Project",
+            {
+              "type": "apiKey",
+              "description": "",
+              "name": "X-Project",
+              "location": "header",
+              "scheme": null,
+              "bearerFormat": null,
+              "flows": [],
+              "openIdConnectUrl": null,
+              "extensions": []
+            }
+          ],
+          [
+            "Session",
+            {
+              "type": "http",
+              "description": "",
+              "name": null,
+              "location": null,
+              "scheme": "bearer",
+              "bearerFormat": null,
+              "flows": [],
+              "openIdConnectUrl": null,
+              "extensions": []
+            }
+          ],
+          [
+            "JWT",
+            {
+              "type": "http",
+              "description": "",
+              "name": null,
+              "location": null,
+              "scheme": "bearer",
+              "bearerFormat": null,
+              "flows": [],
+              "openIdConnectUrl": null,
+              "extensions": []
+            }
+          ]
+        ],
+        "security": [
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "Session",
+              []
+            ]
+          ],
+          [
+            [
+              "Project",
+              []
+            ],
+            [
+              "JWT",
+              []
+            ]
+          ]
+        ],
+        "extensions": [],
+        "externalDocumentation": null,
+        "operations": [
+          [
+            "/pets/{id}",
+            "get"
+          ],
+          [
+            "/pets/{id}",
+            "delete"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "3.1: operations by tag",
+      "op": "openapi.operations_by_tag",
+      "args": {
+        "document": {
+          "openapi": "3.1.1",
+          "info": {
+            "title": "Pets",
+            "version": "1.0.0",
+            "x-owner": "team"
+          },
+          "servers": [
+            {
+              "url": "https://api.example.com/{version}",
+              "variables": {
+                "version": {
+                  "default": "v1"
+                }
+              }
+            }
+          ],
+          "tags": [
+            {
+              "name": "pets"
+            }
+          ],
+          "security": [
+            {
+              "Project": [],
+              "Session": []
+            },
+            {
+              "Project": [],
+              "JWT": []
+            }
+          ],
+          "paths": {
+            "/pets/{id}": {
+              "parameters": [
+                {
+                  "name": "id",
+                  "in": "path",
+                  "required": true,
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "get": {
+                "operationId": "getPet",
+                "tags": [
+                  "pets"
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "description": "override",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "$array": [
+                            [
+                              "$ref",
+                              "#/components/schemas/Pet"
+                            ]
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "delete": {
+                "security": [],
+                "responses": {
+                  "204": {
+                    "description": "Deleted"
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "parent": {
+                    "$array": [
+                      [
+                        "$ref",
+                        "#/components/schemas/Pet"
+                      ]
+                    ]
+                  },
+                  "nickname": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "Identifier": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              }
+            },
+            "securitySchemes": {
+              "Project": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Project"
+              },
+              "Session": {
+                "type": "http",
+                "scheme": "bearer"
+              },
+              "JWT": {
+                "type": "http",
+                "scheme": "bearer"
+              }
+            }
+          }
+        },
+        "tag": "pets"
+      },
+      "expect": [
+        [
+          "/pets/{id}",
+          "get",
+          "getPet"
+        ]
+      ]
+    },
+    {
+      "name": "3.1: the delete operation",
+      "op": "openapi.operation",
+      "args": {
+        "document": {
+          "openapi": "3.1.1",
+          "info": {
+            "title": "Pets",
+            "version": "1.0.0",
+            "x-owner": "team"
+          },
+          "servers": [
+            {
+              "url": "https://api.example.com/{version}",
+              "variables": {
+                "version": {
+                  "default": "v1"
+                }
+              }
+            }
+          ],
+          "tags": [
+            {
+              "name": "pets"
+            }
+          ],
+          "security": [
+            {
+              "Project": [],
+              "Session": []
+            },
+            {
+              "Project": [],
+              "JWT": []
+            }
+          ],
+          "paths": {
+            "/pets/{id}": {
+              "parameters": [
+                {
+                  "name": "id",
+                  "in": "path",
+                  "required": true,
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              ],
+              "get": {
+                "operationId": "getPet",
+                "tags": [
+                  "pets"
+                ],
+                "parameters": [
+                  {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "description": "override",
+                    "schema": {
+                      "type": "string"
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "content": {
+                      "application/json": {
+                        "schema": {
+                          "$array": [
+                            [
+                              "$ref",
+                              "#/components/schemas/Pet"
+                            ]
+                          ]
+                        }
+                      }
+                    }
+                  }
+                }
+              },
+              "delete": {
+                "security": [],
+                "responses": {
+                  "204": {
+                    "description": "Deleted"
+                  }
+                }
+              }
+            }
+          },
+          "components": {
+            "schemas": {
+              "Pet": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "parent": {
+                    "$array": [
+                      [
+                        "$ref",
+                        "#/components/schemas/Pet"
+                      ]
+                    ]
+                  },
+                  "nickname": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              },
+              "Identifier": {
+                "oneOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "type": "integer"
+                  }
+                ]
+              }
+            },
+            "securitySchemes": {
+              "Project": {
+                "type": "apiKey",
+                "in": "header",
+                "name": "X-Project"
+              },
+              "Session": {
+                "type": "http",
+                "scheme": "bearer"
+              },
+              "JWT": {
+                "type": "http",
+                "scheme": "bearer"
+              }
+            }
+          }
+        },
+        "path": "/pets/{id}",
+        "method": "delete"
+      },
+      "expect": {
+        "id": "",
+        "method": "delete",
+        "path": "/pets/{id}",
+        "tags": [],
+        "summary": "",
+        "description": "",
+        "deprecated": false,
+        "parameters": [
+          {
+            "name": "id",
+            "location": "path",
+            "description": "",
+            "required": true,
+            "deprecated": false,
+            "allowEmptyValue": false,
+            "schema": {
+              "kind": "string",
+              "minLength": null,
+              "maxLength": null,
+              "pattern": null,
+              "enumName": null,
+              "enumKeys": [],
+              "open": false,
+              "title": null,
+              "description": "",
+              "nullable": false,
+              "default": null,
+              "enum": [],
+              "format": null,
+              "readOnly": false,
+              "writeOnly": false,
+              "deprecated": false,
+              "example": null,
+              "extensions": []
+            },
+            "content": [],
+            "style": null,
+            "explode": null,
+            "allowReserved": false,
+            "extensions": [],
+            "identity": "path\u0000id"
+          }
+        ],
+        "requestBody": null,
+        "responses": [
+          [
+            "204",
+            {
+              "description": "Deleted",
+              "headers": [],
+              "content": [],
+              "extensions": []
+            }
+          ]
+        ],
+        "security": [],
+        "servers": [
+          {
+            "url": "https://api.example.com/{version}",
+            "description": "",
+            "variables": [
+              [
+                "version",
+                {
+                  "default": "v1",
+                  "enum": [],
+                  "description": "",
+                  "extensions": []
+                }
+              ]
+            ],
+            "extensions": []
+          }
+        ],
+        "externalDocumentation": null,
+        "extensions": [],
+        "accepted": [],
+        "required": []
+      }
+    },
+    {
+      "name": "parses OpenAPI 3.0 nullability and request body",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "openapi": "3.0.3",
+          "info": {
+            "title": "Test",
+            "version": "1"
+          },
+          "paths": {
+            "/items": {
+              "post": {
+                "requestBody": {
+                  "required": true,
+                  "content": {
+                    "application/json": {
+                      "schema": {
+                        "type": "string",
+                        "nullable": true
+                      }
+                    }
+                  }
+                },
+                "responses": {
+                  "201": {
+                    "description": "Created"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "version": "3.0",
+        "sourceVersion": "3.0.3",
+        "jsonSchemaDialect": null,
+        "info": {
+          "title": "Test",
+          "description": "",
+          "version": "1",
+          "termsOfService": null,
+          "contact": null,
+          "license": null,
+          "extensions": []
+        },
+        "servers": [],
+        "tags": [],
+        "paths": [
+          [
+            "/items",
+            {
+              "path": "/items",
+              "operations": [
+                [
+                  "post",
+                  {
+                    "id": "",
+                    "method": "post",
+                    "path": "/items",
+                    "tags": [],
+                    "summary": "",
+                    "description": "",
+                    "deprecated": false,
+                    "parameters": [],
+                    "requestBody": {
+                      "description": "",
+                      "required": true,
+                      "content": [
+                        [
+                          "application/json",
+                          {
+                            "schema": {
+                              "kind": "string",
+                              "minLength": null,
+                              "maxLength": null,
+                              "pattern": null,
+                              "enumName": null,
+                              "enumKeys": [],
+                              "open": false,
+                              "title": null,
+                              "description": "",
+                              "nullable": true,
+                              "default": null,
+                              "enum": [],
+                              "format": null,
+                              "readOnly": false,
+                              "writeOnly": false,
+                              "deprecated": false,
+                              "example": null,
+                              "extensions": []
+                            },
+                            "example": null,
+                            "examples": [],
+                            "encoding": [],
+                            "extensions": []
+                          }
+                        ]
+                      ],
+                      "extensions": []
+                    },
+                    "responses": [
+                      [
+                        "201",
+                        {
+                          "description": "Created",
+                          "headers": [],
+                          "content": [],
+                          "extensions": []
+                        }
+                      ]
+                    ],
+                    "security": [],
+                    "servers": [],
+                    "externalDocumentation": null,
+                    "extensions": [],
+                    "accepted": [],
+                    "required": []
+                  }
+                ]
+              ],
+              "parameters": [],
+              "summary": "",
+              "description": "",
+              "servers": [],
+              "extensions": []
+            }
+          ]
+        ],
+        "schemas": [],
+        "securitySchemes": [],
+        "security": [],
+        "extensions": [],
+        "externalDocumentation": null,
+        "operations": [
+          [
+            "/items",
+            "post"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "parses OpenAPI 2.0 directly",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "swagger": "2.0",
+          "info": {
+            "title": "Legacy",
+            "version": "2"
+          },
+          "host": "api.example.com",
+          "basePath": "/v1",
+          "schemes": [
+            "https"
+          ],
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "securityDefinitions": {
+            "Basic": {
+              "type": "basic"
+            }
+          },
+          "definitions": {
+            "Pet": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "paths": {
+            "/pets": {
+              "post": {
+                "parameters": [
+                  {
+                    "name": "pet",
+                    "in": "body",
+                    "required": true,
+                    "schema": {
+                      "$array": [
+                        [
+                          "$ref",
+                          "#/definitions/Pet"
+                        ]
+                      ]
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "schema": {
+                      "$array": [
+                        [
+                          "$ref",
+                          "#/definitions/Pet"
+                        ]
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "version": "2.0",
+        "sourceVersion": "2.0",
+        "jsonSchemaDialect": null,
+        "info": {
+          "title": "Legacy",
+          "description": "",
+          "version": "2",
+          "termsOfService": null,
+          "contact": null,
+          "license": null,
+          "extensions": []
+        },
+        "servers": [
+          {
+            "url": "https://api.example.com/v1",
+            "description": "",
+            "variables": [],
+            "extensions": []
+          }
+        ],
+        "tags": [],
+        "paths": [
+          [
+            "/pets",
+            {
+              "path": "/pets",
+              "operations": [
+                [
+                  "post",
+                  {
+                    "id": "",
+                    "method": "post",
+                    "path": "/pets",
+                    "tags": [],
+                    "summary": "",
+                    "description": "",
+                    "deprecated": false,
+                    "parameters": [],
+                    "requestBody": {
+                      "description": "",
+                      "required": true,
+                      "content": [
+                        [
+                          "application/json",
+                          {
+                            "schema": {
+                              "kind": "reference",
+                              "reference": "#/definitions/Pet",
+                              "title": null,
+                              "description": "",
+                              "nullable": false,
+                              "default": null,
+                              "enum": [],
+                              "format": null,
+                              "readOnly": false,
+                              "writeOnly": false,
+                              "deprecated": false,
+                              "example": null,
+                              "extensions": []
+                            },
+                            "example": null,
+                            "examples": [],
+                            "encoding": [],
+                            "extensions": []
+                          }
+                        ]
+                      ],
+                      "extensions": []
+                    },
+                    "responses": [
+                      [
+                        "200",
+                        {
+                          "description": "OK",
+                          "headers": [],
+                          "content": [
+                            [
+                              "application/json",
+                              {
+                                "schema": {
+                                  "kind": "reference",
+                                  "reference": "#/definitions/Pet",
+                                  "title": null,
+                                  "description": "",
+                                  "nullable": false,
+                                  "default": null,
+                                  "enum": [],
+                                  "format": null,
+                                  "readOnly": false,
+                                  "writeOnly": false,
+                                  "deprecated": false,
+                                  "example": null,
+                                  "extensions": []
+                                },
+                                "example": null,
+                                "examples": [],
+                                "encoding": [],
+                                "extensions": []
+                              }
+                            ]
+                          ],
+                          "extensions": []
+                        }
+                      ]
+                    ],
+                    "security": [],
+                    "servers": [],
+                    "externalDocumentation": null,
+                    "extensions": [],
+                    "accepted": [],
+                    "required": []
+                  }
+                ]
+              ],
+              "parameters": [],
+              "summary": "",
+              "description": "",
+              "servers": [],
+              "extensions": []
+            }
+          ]
+        ],
+        "schemas": [
+          [
+            "Pet",
+            {
+              "kind": "object",
+              "properties": [
+                [
+                  "name",
+                  {
+                    "kind": "string",
+                    "minLength": null,
+                    "maxLength": null,
+                    "pattern": null,
+                    "enumName": null,
+                    "enumKeys": [],
+                    "open": false,
+                    "title": null,
+                    "description": "",
+                    "nullable": false,
+                    "default": null,
+                    "enum": [],
+                    "format": null,
+                    "readOnly": false,
+                    "writeOnly": false,
+                    "deprecated": false,
+                    "example": null,
+                    "extensions": []
+                  }
+                ]
+              ],
+              "required": [],
+              "additionalProperties": null,
+              "minProperties": null,
+              "maxProperties": null,
+              "title": null,
+              "description": "",
+              "nullable": false,
+              "default": null,
+              "enum": [],
+              "format": null,
+              "readOnly": false,
+              "writeOnly": false,
+              "deprecated": false,
+              "example": null,
+              "extensions": []
+            }
+          ]
+        ],
+        "securitySchemes": [
+          [
+            "Basic",
+            {
+              "type": "http",
+              "description": "",
+              "name": null,
+              "location": null,
+              "scheme": "basic",
+              "bearerFormat": null,
+              "flows": [],
+              "openIdConnectUrl": null,
+              "extensions": []
+            }
+          ]
+        ],
+        "security": [],
+        "extensions": [],
+        "externalDocumentation": null,
+        "operations": [
+          [
+            "/pets",
+            "post"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "2.0: the response schema resolves to the definition",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "swagger": "2.0",
+          "info": {
+            "title": "Legacy",
+            "version": "2"
+          },
+          "host": "api.example.com",
+          "basePath": "/v1",
+          "schemes": [
+            "https"
+          ],
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "securityDefinitions": {
+            "Basic": {
+              "type": "basic"
+            }
+          },
+          "definitions": {
+            "Pet": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "paths": {
+            "/pets": {
+              "post": {
+                "parameters": [
+                  {
+                    "name": "pet",
+                    "in": "body",
+                    "required": true,
+                    "schema": {
+                      "$array": [
+                        [
+                          "$ref",
+                          "#/definitions/Pet"
+                        ]
+                      ]
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "schema": {
+                      "$array": [
+                        [
+                          "$ref",
+                          "#/definitions/Pet"
+                        ]
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "at": [
+          "response",
+          "/pets",
+          "post",
+          "200",
+          "application/json"
+        ]
+      },
+      "expect": {
+        "name": "Pet",
+        "same": false,
+        "schema": {
+          "kind": "object",
+          "properties": [
+            [
+              "name",
+              {
+                "kind": "string",
+                "minLength": null,
+                "maxLength": null,
+                "pattern": null,
+                "enumName": null,
+                "enumKeys": [],
+                "open": false,
+                "title": null,
+                "description": "",
+                "nullable": false,
+                "default": null,
+                "enum": [],
+                "format": null,
+                "readOnly": false,
+                "writeOnly": false,
+                "deprecated": false,
+                "example": null,
+                "extensions": []
+              }
+            ]
+          ],
+          "required": [],
+          "additionalProperties": null,
+          "minProperties": null,
+          "maxProperties": null,
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": null,
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "2.0: the body schema resolves to the definition",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "swagger": "2.0",
+          "info": {
+            "title": "Legacy",
+            "version": "2"
+          },
+          "host": "api.example.com",
+          "basePath": "/v1",
+          "schemes": [
+            "https"
+          ],
+          "consumes": [
+            "application/json"
+          ],
+          "produces": [
+            "application/json"
+          ],
+          "securityDefinitions": {
+            "Basic": {
+              "type": "basic"
+            }
+          },
+          "definitions": {
+            "Pet": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "paths": {
+            "/pets": {
+              "post": {
+                "parameters": [
+                  {
+                    "name": "pet",
+                    "in": "body",
+                    "required": true,
+                    "schema": {
+                      "$array": [
+                        [
+                          "$ref",
+                          "#/definitions/Pet"
+                        ]
+                      ]
+                    }
+                  }
+                ],
+                "responses": {
+                  "200": {
+                    "description": "OK",
+                    "schema": {
+                      "$array": [
+                        [
+                          "$ref",
+                          "#/definitions/Pet"
+                        ]
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "at": [
+          "body",
+          "/pets",
+          "post",
+          "application/json"
+        ]
+      },
+      "expect": {
+        "name": "Pet",
+        "same": false,
+        "schema": {
+          "kind": "object",
+          "properties": [
+            [
+              "name",
+              {
+                "kind": "string",
+                "minLength": null,
+                "maxLength": null,
+                "pattern": null,
+                "enumName": null,
+                "enumKeys": [],
+                "open": false,
+                "title": null,
+                "description": "",
+                "nullable": false,
+                "default": null,
+                "enum": [],
+                "format": null,
+                "readOnly": false,
+                "writeOnly": false,
+                "deprecated": false,
+                "example": null,
+                "extensions": []
+              }
+            ]
+          ],
+          "required": [],
+          "additionalProperties": null,
+          "minProperties": null,
+          "maxProperties": null,
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": null,
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "parses OpenAPI 2.0 formData as a request body",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "swagger": "2.0",
+          "info": {
+            "title": "Upload",
+            "version": "1"
+          },
+          "paths": {
+            "/upload": {
+              "post": {
+                "consumes": [
+                  "multipart/form-data"
+                ],
+                "parameters": [
+                  {
+                    "name": "file",
+                    "in": "formData",
+                    "required": true,
+                    "type": "file"
+                  },
+                  {
+                    "name": "label",
+                    "in": "formData",
+                    "type": "string"
+                  }
+                ],
+                "responses": {
+                  "204": {
+                    "description": "Done"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "expect": {
+        "version": "2.0",
+        "sourceVersion": "2.0",
+        "jsonSchemaDialect": null,
+        "info": {
+          "title": "Upload",
+          "description": "",
+          "version": "1",
+          "termsOfService": null,
+          "contact": null,
+          "license": null,
+          "extensions": []
+        },
+        "servers": [],
+        "tags": [],
+        "paths": [
+          [
+            "/upload",
+            {
+              "path": "/upload",
+              "operations": [
+                [
+                  "post",
+                  {
+                    "id": "",
+                    "method": "post",
+                    "path": "/upload",
+                    "tags": [],
+                    "summary": "",
+                    "description": "",
+                    "deprecated": false,
+                    "parameters": [],
+                    "requestBody": {
+                      "description": "",
+                      "required": true,
+                      "content": [
+                        [
+                          "multipart/form-data",
+                          {
+                            "schema": {
+                              "kind": "object",
+                              "properties": [
+                                [
+                                  "file",
+                                  {
+                                    "kind": "string",
+                                    "minLength": null,
+                                    "maxLength": null,
+                                    "pattern": null,
+                                    "enumName": null,
+                                    "enumKeys": [],
+                                    "open": false,
+                                    "title": null,
+                                    "description": "",
+                                    "nullable": false,
+                                    "default": null,
+                                    "enum": [],
+                                    "format": "binary",
+                                    "readOnly": false,
+                                    "writeOnly": false,
+                                    "deprecated": false,
+                                    "example": null,
+                                    "extensions": []
+                                  }
+                                ],
+                                [
+                                  "label",
+                                  {
+                                    "kind": "string",
+                                    "minLength": null,
+                                    "maxLength": null,
+                                    "pattern": null,
+                                    "enumName": null,
+                                    "enumKeys": [],
+                                    "open": false,
+                                    "title": null,
+                                    "description": "",
+                                    "nullable": false,
+                                    "default": null,
+                                    "enum": [],
+                                    "format": null,
+                                    "readOnly": false,
+                                    "writeOnly": false,
+                                    "deprecated": false,
+                                    "example": null,
+                                    "extensions": []
+                                  }
+                                ]
+                              ],
+                              "required": [
+                                "file"
+                              ],
+                              "additionalProperties": null,
+                              "minProperties": null,
+                              "maxProperties": null,
+                              "title": null,
+                              "description": "",
+                              "nullable": false,
+                              "default": null,
+                              "enum": [],
+                              "format": null,
+                              "readOnly": false,
+                              "writeOnly": false,
+                              "deprecated": false,
+                              "example": null,
+                              "extensions": []
+                            },
+                            "example": null,
+                            "examples": [],
+                            "encoding": [
+                              [
+                                "file",
+                                {
+                                  "contentType": "application/octet-stream",
+                                  "headers": [],
+                                  "style": null,
+                                  "explode": null,
+                                  "allowReserved": false,
+                                  "extensions": []
+                                }
+                              ],
+                              [
+                                "label",
+                                {
+                                  "contentType": null,
+                                  "headers": [],
+                                  "style": null,
+                                  "explode": null,
+                                  "allowReserved": false,
+                                  "extensions": []
+                                }
+                              ]
+                            ],
+                            "extensions": []
+                          }
+                        ]
+                      ],
+                      "extensions": []
+                    },
+                    "responses": [
+                      [
+                        "204",
+                        {
+                          "description": "Done",
+                          "headers": [],
+                          "content": [],
+                          "extensions": []
+                        }
+                      ]
+                    ],
+                    "security": [],
+                    "servers": [],
+                    "externalDocumentation": null,
+                    "extensions": [],
+                    "accepted": [],
+                    "required": []
+                  }
+                ]
+              ],
+              "parameters": [],
+              "summary": "",
+              "description": "",
+              "servers": [],
+              "extensions": []
+            }
+          ]
+        ],
+        "schemas": [],
+        "securitySchemes": [],
+        "security": [],
+        "extensions": [],
+        "externalDocumentation": null,
+        "operations": [
+          [
+            "/upload",
+            "post"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "resolves schema references explicitly: Binary",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "References",
+            "version": "1"
+          },
+          "paths": [],
+          "components": {
+            "schemas": {
+              "Binary": {
+                "type": "string",
+                "format": "binary"
+              },
+              "Alias": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "Chained": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Alias"
+                  ]
+                ]
+              },
+              "Encoded Name": {
+                "type": "string"
+              },
+              "Encoded": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Encoded%20Name"
+                  ]
+                ]
+              },
+              "Missing": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Unknown"
+                  ]
+                ]
+              },
+              "External": {
+                "$array": [
+                  [
+                    "$ref",
+                    "schemas.json#/Binary"
+                  ]
+                ]
+              },
+              "EncodedExternal": {
+                "$array": [
+                  [
+                    "$ref",
+                    "%23/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "CycleA": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleB"
+                  ]
+                ]
+              },
+              "CycleB": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleA"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "at": [
+          "schemas",
+          "Binary"
+        ]
+      },
+      "expect": {
+        "name": "Binary",
+        "same": true,
+        "schema": {
+          "kind": "string",
+          "minLength": null,
+          "maxLength": null,
+          "pattern": null,
+          "enumName": null,
+          "enumKeys": [],
+          "open": false,
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": "binary",
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "resolves schema references explicitly: Alias",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "References",
+            "version": "1"
+          },
+          "paths": [],
+          "components": {
+            "schemas": {
+              "Binary": {
+                "type": "string",
+                "format": "binary"
+              },
+              "Alias": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "Chained": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Alias"
+                  ]
+                ]
+              },
+              "Encoded Name": {
+                "type": "string"
+              },
+              "Encoded": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Encoded%20Name"
+                  ]
+                ]
+              },
+              "Missing": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Unknown"
+                  ]
+                ]
+              },
+              "External": {
+                "$array": [
+                  [
+                    "$ref",
+                    "schemas.json#/Binary"
+                  ]
+                ]
+              },
+              "EncodedExternal": {
+                "$array": [
+                  [
+                    "$ref",
+                    "%23/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "CycleA": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleB"
+                  ]
+                ]
+              },
+              "CycleB": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleA"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "at": [
+          "schemas",
+          "Alias"
+        ]
+      },
+      "expect": {
+        "name": "Binary",
+        "same": false,
+        "schema": {
+          "kind": "string",
+          "minLength": null,
+          "maxLength": null,
+          "pattern": null,
+          "enumName": null,
+          "enumKeys": [],
+          "open": false,
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": "binary",
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "resolves schema references explicitly: Chained",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "References",
+            "version": "1"
+          },
+          "paths": [],
+          "components": {
+            "schemas": {
+              "Binary": {
+                "type": "string",
+                "format": "binary"
+              },
+              "Alias": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "Chained": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Alias"
+                  ]
+                ]
+              },
+              "Encoded Name": {
+                "type": "string"
+              },
+              "Encoded": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Encoded%20Name"
+                  ]
+                ]
+              },
+              "Missing": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Unknown"
+                  ]
+                ]
+              },
+              "External": {
+                "$array": [
+                  [
+                    "$ref",
+                    "schemas.json#/Binary"
+                  ]
+                ]
+              },
+              "EncodedExternal": {
+                "$array": [
+                  [
+                    "$ref",
+                    "%23/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "CycleA": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleB"
+                  ]
+                ]
+              },
+              "CycleB": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleA"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "at": [
+          "schemas",
+          "Chained"
+        ]
+      },
+      "expect": {
+        "name": "Binary",
+        "same": false,
+        "schema": {
+          "kind": "string",
+          "minLength": null,
+          "maxLength": null,
+          "pattern": null,
+          "enumName": null,
+          "enumKeys": [],
+          "open": false,
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": "binary",
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "resolves schema references explicitly: Encoded",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "References",
+            "version": "1"
+          },
+          "paths": [],
+          "components": {
+            "schemas": {
+              "Binary": {
+                "type": "string",
+                "format": "binary"
+              },
+              "Alias": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "Chained": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Alias"
+                  ]
+                ]
+              },
+              "Encoded Name": {
+                "type": "string"
+              },
+              "Encoded": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Encoded%20Name"
+                  ]
+                ]
+              },
+              "Missing": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Unknown"
+                  ]
+                ]
+              },
+              "External": {
+                "$array": [
+                  [
+                    "$ref",
+                    "schemas.json#/Binary"
+                  ]
+                ]
+              },
+              "EncodedExternal": {
+                "$array": [
+                  [
+                    "$ref",
+                    "%23/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "CycleA": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleB"
+                  ]
+                ]
+              },
+              "CycleB": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleA"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "at": [
+          "schemas",
+          "Encoded"
+        ]
+      },
+      "expect": {
+        "name": "Encoded Name",
+        "same": false,
+        "schema": {
+          "kind": "string",
+          "minLength": null,
+          "maxLength": null,
+          "pattern": null,
+          "enumName": null,
+          "enumKeys": [],
+          "open": false,
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": null,
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "resolves schema references explicitly: Missing",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "References",
+            "version": "1"
+          },
+          "paths": [],
+          "components": {
+            "schemas": {
+              "Binary": {
+                "type": "string",
+                "format": "binary"
+              },
+              "Alias": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "Chained": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Alias"
+                  ]
+                ]
+              },
+              "Encoded Name": {
+                "type": "string"
+              },
+              "Encoded": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Encoded%20Name"
+                  ]
+                ]
+              },
+              "Missing": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Unknown"
+                  ]
+                ]
+              },
+              "External": {
+                "$array": [
+                  [
+                    "$ref",
+                    "schemas.json#/Binary"
+                  ]
+                ]
+              },
+              "EncodedExternal": {
+                "$array": [
+                  [
+                    "$ref",
+                    "%23/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "CycleA": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleB"
+                  ]
+                ]
+              },
+              "CycleB": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleA"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "at": [
+          "schemas",
+          "Missing"
+        ]
+      },
+      "expect": {
+        "name": "Missing",
+        "same": true,
+        "schema": {
+          "kind": "reference",
+          "reference": "#/components/schemas/Unknown",
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": null,
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "resolves schema references explicitly: External",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "References",
+            "version": "1"
+          },
+          "paths": [],
+          "components": {
+            "schemas": {
+              "Binary": {
+                "type": "string",
+                "format": "binary"
+              },
+              "Alias": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "Chained": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Alias"
+                  ]
+                ]
+              },
+              "Encoded Name": {
+                "type": "string"
+              },
+              "Encoded": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Encoded%20Name"
+                  ]
+                ]
+              },
+              "Missing": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Unknown"
+                  ]
+                ]
+              },
+              "External": {
+                "$array": [
+                  [
+                    "$ref",
+                    "schemas.json#/Binary"
+                  ]
+                ]
+              },
+              "EncodedExternal": {
+                "$array": [
+                  [
+                    "$ref",
+                    "%23/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "CycleA": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleB"
+                  ]
+                ]
+              },
+              "CycleB": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleA"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "at": [
+          "schemas",
+          "External"
+        ]
+      },
+      "expect": {
+        "name": "External",
+        "same": true,
+        "schema": {
+          "kind": "reference",
+          "reference": "schemas.json#/Binary",
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": null,
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "resolves schema references explicitly: EncodedExternal",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "References",
+            "version": "1"
+          },
+          "paths": [],
+          "components": {
+            "schemas": {
+              "Binary": {
+                "type": "string",
+                "format": "binary"
+              },
+              "Alias": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "Chained": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Alias"
+                  ]
+                ]
+              },
+              "Encoded Name": {
+                "type": "string"
+              },
+              "Encoded": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Encoded%20Name"
+                  ]
+                ]
+              },
+              "Missing": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Unknown"
+                  ]
+                ]
+              },
+              "External": {
+                "$array": [
+                  [
+                    "$ref",
+                    "schemas.json#/Binary"
+                  ]
+                ]
+              },
+              "EncodedExternal": {
+                "$array": [
+                  [
+                    "$ref",
+                    "%23/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "CycleA": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleB"
+                  ]
+                ]
+              },
+              "CycleB": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleA"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "at": [
+          "schemas",
+          "EncodedExternal"
+        ]
+      },
+      "expect": {
+        "name": "EncodedExternal",
+        "same": true,
+        "schema": {
+          "kind": "reference",
+          "reference": "%23/components/schemas/Binary",
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": null,
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "resolves schema references explicitly: CycleA",
+      "op": "openapi.resolve_schema",
+      "args": {
+        "document": {
+          "openapi": "3.1.0",
+          "info": {
+            "title": "References",
+            "version": "1"
+          },
+          "paths": [],
+          "components": {
+            "schemas": {
+              "Binary": {
+                "type": "string",
+                "format": "binary"
+              },
+              "Alias": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "Chained": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Alias"
+                  ]
+                ]
+              },
+              "Encoded Name": {
+                "type": "string"
+              },
+              "Encoded": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Encoded%20Name"
+                  ]
+                ]
+              },
+              "Missing": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/Unknown"
+                  ]
+                ]
+              },
+              "External": {
+                "$array": [
+                  [
+                    "$ref",
+                    "schemas.json#/Binary"
+                  ]
+                ]
+              },
+              "EncodedExternal": {
+                "$array": [
+                  [
+                    "$ref",
+                    "%23/components/schemas/Binary"
+                  ]
+                ]
+              },
+              "CycleA": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleB"
+                  ]
+                ]
+              },
+              "CycleB": {
+                "$array": [
+                  [
+                    "$ref",
+                    "#/components/schemas/CycleA"
+                  ]
+                ]
+              }
+            }
+          }
+        },
+        "at": [
+          "schemas",
+          "CycleA"
+        ]
+      },
+      "expect": {
+        "name": "CycleA",
+        "same": true,
+        "schema": {
+          "kind": "reference",
+          "reference": "#/components/schemas/CycleB",
+          "title": null,
+          "description": "",
+          "nullable": false,
+          "default": null,
+          "enum": [],
+          "format": null,
+          "readOnly": false,
+          "writeOnly": false,
+          "deprecated": false,
+          "example": null,
+          "extensions": []
+        }
+      }
+    },
+    {
+      "name": "resolves an escaped local JSON pointer",
+      "op": "resolver.resolve_object",
+      "args": {
+        "document": {
+          "components": {
+            "parameters": {
+              "a/b~c": {
+                "name": "id"
+              }
+            }
+          },
+          "a": {
+            "$array": [
+              [
+                "$ref",
+                "#/b"
+              ]
+            ]
+          },
+          "b": {
+            "$array": [
+              [
+                "$ref",
+                "#/a"
+              ]
+            ]
+          }
+        },
+        "reference": "#/components/parameters/a~1b~0c"
+      },
+      "expect": {
+        "$array": [
+          [
+            "name",
+            "id"
+          ]
+        ]
+      }
+    },
+    {
+      "name": "detects reference cycles",
+      "op": "resolver.resolve_object",
+      "args": {
+        "document": {
+          "components": {
+            "parameters": {
+              "a/b~c": {
+                "name": "id"
+              }
+            }
+          },
+          "a": {
+            "$array": [
+              [
+                "$ref",
+                "#/b"
+              ]
+            ]
+          },
+          "b": {
+            "$array": [
+              [
+                "$ref",
+                "#/a"
+              ]
+            ]
+          }
+        },
+        "reference": "#/a"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\CircularReference",
+          "message": "Circular reference: #/a -> #/b -> #/a"
+        }
+      }
+    },
+    {
+      "name": "empty JSON objects are not confused with lists",
+      "op": "openapi.parse",
+      "args": {
+        "text": "{\"openapi\":\"3.1.0\",\"info\":{\"title\":\"Empty\",\"version\":\"1\"},\"paths\":{},\"components\":{\"schemas\":{\"Anything\":{}}}}"
+      },
+      "expect": {
+        "version": "3.1",
+        "sourceVersion": "3.1.0",
+        "jsonSchemaDialect": null,
+        "info": {
+          "title": "Empty",
+          "description": "",
+          "version": "1",
+          "termsOfService": null,
+          "contact": null,
+          "license": null,
+          "extensions": []
+        },
+        "servers": [],
+        "tags": [],
+        "paths": [],
+        "schemas": [
+          [
+            "Anything",
+            {
+              "kind": "any",
+              "title": null,
+              "description": "",
+              "nullable": false,
+              "default": null,
+              "enum": [],
+              "format": null,
+              "readOnly": false,
+              "writeOnly": false,
+              "deprecated": false,
+              "example": null,
+              "extensions": []
+            }
+          ]
+        ],
+        "securitySchemes": [],
+        "security": [],
+        "extensions": [],
+        "externalDocumentation": null,
+        "operations": []
+      }
+    },
+    {
+      "name": "controlled errors: invalid JSON",
+      "op": "openapi.parse",
+      "args": {
+        "text": "{"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\ParseException",
+          "message": "Invalid JSON: Syntax error"
+        }
+      }
+    },
+    {
+      "name": "controlled errors: version mismatch",
+      "op": "openapi.parse",
+      "args": {
+        "document": {
+          "openapi": "3.0.0",
+          "info": {
+            "title": "x",
+            "version": "1"
+          },
+          "paths": []
+        },
+        "version": "3.1"
+      },
+      "expect": {
+        "$error": {
+          "class": "Utopia\\OpenAPI\\Exception\\InvalidSpecification",
+          "message": "Expected OpenAPI 3.1, document declares 3.0.0"
+        }
+      }
+    }
+  ]
+}
