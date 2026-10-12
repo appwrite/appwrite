@@ -1105,6 +1105,69 @@ final class MessagingTest extends TestCase
         $this->assertNotContains('memberships.membership_id.status', $membershipResult['channels']);
     }
 
+    public function testMembershipDeleteReachesSubjectAfterTeamRoleIsRevoked(): void
+    {
+        // Delete is published with permissionsChanged, and the realtime worker
+        // re-resolves the subject before fan-out. By then they no longer hold
+        // team:{teamId}. The delete must also be addressed to user:{userId}
+        // so that connection still matches. Create and update stay team-only.
+        $teamId = 'team_id';
+        $userId = 'user_id';
+        $membershipId = 'membership_id';
+        $teamRole = Role::team(ID::custom($teamId))->toString();
+        $userRole = Role::user(ID::custom($userId))->toString();
+
+        $delete = Realtime::fromPayload(
+            event: "teams.{$teamId}.memberships.{$membershipId}.delete",
+            payload: new Document([
+                '$id' => ID::custom($membershipId),
+                'userId' => $userId,
+                'teamId' => $teamId,
+            ])
+        );
+
+        $this->assertContains($teamRole, $delete['roles']);
+        $this->assertContains($userRole, $delete['roles']);
+        $this->assertContains('memberships', $delete['channels']);
+        $this->assertContains('memberships.delete', $delete['channels']);
+        $this->assertContains("memberships.{$membershipId}", $delete['channels']);
+        $this->assertContains("memberships.{$membershipId}.delete", $delete['channels']);
+
+        foreach (['create', 'update'] as $action) {
+            $result = Realtime::fromPayload(
+                event: "teams.{$teamId}.memberships.{$membershipId}.{$action}",
+                payload: new Document([
+                    '$id' => ID::custom($membershipId),
+                    'userId' => $userId,
+                    'teamId' => $teamId,
+                ])
+            );
+            $this->assertContains($teamRole, $result['roles'], $action);
+            $this->assertNotContains($userRole, $result['roles'], $action);
+        }
+
+        $realtime = new Realtime();
+        // Subject after the membership is revoked: user role only.
+        $realtime->subscribe('1', 1, 'subject', [$userRole], ['memberships'], [], $userId);
+        // Teammate who still holds the team.
+        $realtime->subscribe('1', 2, 'teammate', [$teamRole], ['memberships']);
+        // Another user subscribed to the same channel.
+        $realtime->subscribe('1', 3, 'other', [Role::user(ID::custom('other'))->toString()], ['memberships']);
+
+        $event = [
+            'project' => '1',
+            'roles' => $delete['roles'],
+            'data' => [
+                'channels' => $delete['channels'],
+                'payload' => ['$id' => $membershipId, 'userId' => $userId],
+            ],
+        ];
+        $receivers = $realtime->getSubscribers($event);
+        $this->assertArrayHasKey(1, $receivers);
+        $this->assertArrayHasKey(2, $receivers);
+        $this->assertArrayNotHasKey(3, $receivers);
+    }
+
     public function testFromPayloadDoesNotSuffixAccountForNestedUserEvents(): void
     {
         // Nested user events (challenges/sessions/recovery/verification) emit only

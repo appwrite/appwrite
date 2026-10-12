@@ -1,0 +1,31 @@
+rules:
+  - id: php.appwrite.debug-output-in-handler
+    message: >
+      Debug output (var_dump, print_r / var_export without return,
+      debug_zval_dump, phpinfo, native header()) in request-serving code.
+      Under Swoole this writes to worker stdout, can copy document or
+      credential contents into logs, and skips the Response. Use the
+      logger or Span::add() with non-secret values.
+    languages: [php]
+    severity: ERROR
+    metadata:
+      category: correctness
+      technology: [php]
+    paths:
+      include:
+        - "**/src/Appwrite/Platform/Modules/**"
+        - "**/app/controllers/**"
+        - "**/app/init/**"
+    pattern-either:
+      - pattern: var_dump(...)
+      - pattern: \var_dump(...)
+      - pattern: debug_zval_dump(...)
+      - pattern: \debug_zval_dump(...)
+      - pattern: phpinfo(...)
+      - pattern: \phpinfo(...)
+      - pattern: header(...)
+      - pattern: \header(...)
+      - pattern: print_r($VALUE)
+      - pattern: \print_r($VALUE)
+      - pattern: var_export($VALUE)
+      - pattern: \var_export($VALUE)

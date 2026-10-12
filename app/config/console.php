@@ -4,7 +4,9 @@
  * Initializes console project document.
  */
 
+use Appwrite\Auth\Passkey\Console as PasskeyConsole;
 use Appwrite\Network\Platform;
+use Utopia\Config\Config;
 use Utopia\Database\Helpers\ID;
 use Utopia\System\System;
 
@@ -50,7 +52,9 @@ $console = [
         'canonicalEmails' => false,
         'freeEmails' => false,
         'corporateEmails' => false,
-        'invalidateSessions' => true
+        'invalidateSessions' => true,
+        // Passkey sign-in bound to the console's host; _APP_CONSOLE_PASSKEY_ORIGINS adds origins under it
+        ...PasskeyConsole::getAuths(Config::getParam('platform')['consoleUrl'], System::getEnv('_APP_CONSOLE_PASSKEY_ORIGINS', '')),
     ],
     'authWhitelistEmails' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_EMAILS', null)) : [],
     'authWhitelistIPs' => (!empty(System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null))) ? \explode(',', System::getEnv('_APP_CONSOLE_WHITELIST_IPS', null)) : [],

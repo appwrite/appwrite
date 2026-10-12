@@ -36,7 +36,7 @@
         "php": ">=8.5",
         "ext-sockets": "*",
         "utopia-php/telemetry": "^0.4",
-        "utopia-php/validators": "^1.0",
+        "utopia-php/validators": "^2.0",
         "utopia-php/domains": "^4.0.0"
     },
     "require-dev": {

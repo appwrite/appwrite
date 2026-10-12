@@ -12,7 +12,7 @@ use Utopia\Servers\Hook;
 use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Histogram;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Server
 {

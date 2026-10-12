@@ -1,0 +1,1003 @@
+/**
+ * React Query hooks for Firewall (WAF service)
+ */
+
+import { useMemo } from 'react'
+import {
+  useMutation,
+  useQuery,
+  useQueries,
+  useQueryClient,
+  queryOptions,
+  keepPreviousData,
+} from '@tanstack/react-query'
+import { ID, Query, WafRuleAction, type Models } from '@appwrite.io/console'
+import { sdk } from '@/lib/appwrite/sdk'
+import { Dependencies } from './dependencies'
+import { DEFAULT_PAGE_SIZE, DEFAULT_STALE_TIME, LONG_STALE_TIME } from './constants'
+import {
+  CHALLENGE_DIFFICULTY_DEFAULT,
+  CHALLENGE_TTL_DEFAULT,
+  getRuleChallenge,
+  type FirewallCreatableAction,
+} from '@/lib/firewall/actions'
+import {
+  ATTACK_MODE_PRIORITY,
+  ATTACK_MODE_RULE_DESCRIPTION,
+  ATTACK_MODE_RULE_NAME,
+  getAttackModeConditions,
+  getAttackModeRuleId,
+  isAttackModeRuleForResource,
+  isAttackModeScope,
+} from '@/lib/firewall/attack-mode'
+import {
+  fetchFirewallRuleImpact,
+  buildFirewallUsageConditionSnapshots,
+  buildFirewallResourceUsageQueries,
+  draftsFromUsageConditionSnapshots,
+  firewallConditionBreakdownDimension,
+  mergeFirewallRuleImpactUnion,
+  type FirewallRuleImpactData,
+  type FirewallUsageConditionSnapshot,
+} from '@/lib/firewall/usage'
+import type {
+  FirewallConditionAttribute,
+  FirewallConditionDraft,
+  FirewallResourceType,
+} from '@/lib/firewall/conditions'
+import {
+  requestsBreakdownQueryOptions,
+  PREMIUM_GEO_REQUEST_DIMENSIONS,
+} from './usage-events'
+import {
+  REQUESTS_BREAKDOWN_SECTIONS,
+  type RequestsBreakdownSection,
+} from '@/lib/usage/requests-breakdowns'
+import type {
+  UsageBreakdownItem,
+  UsageEventBreakdownDimension,
+} from '@/lib/usage/usage-events-common'
+import { isHttpNotFoundError } from '@/lib/utils/error-formatting'
+import type { DateRange } from 'react-day-picker'
+import type { UsageChartInterval } from '@/lib/usage/chart-interval'
+import {
+  fetchProjectFunctionsByIds,
+  functionsQueryOptions,
+} from './functions'
+import { fetchProjectSitesByIds, sitesQueryOptions } from './sites'
+
+export type CreateFirewallRuleInput = {
+  ruleId?: string
+  action: FirewallCreatableAction
+  resourceType: string
+  resourceId?: string
+  name: string
+  description?: string
+  priority?: number
+  enabled?: boolean
+  /** Query condition strings (API expects an array). */
+  conditions?: string[]
+  limit?: number
+  interval?: number
+  /** Rate-limit bucket key: `ip` or `userId`. */
+  key?: string
+  /** Rate-limit algorithm: `fixedWindow`, `slidingWindow`, or `tokenBucket`. */
+  strategy?: string
+  /** Token-bucket burst capacity. */
+  maxBucketSize?: number
+  location?: string
+  statusCode?: number
+  challengeType?: string
+  difficulty?: number
+  ttl?: number
+}
+
+export type UpdateFirewallRuleInput = {
+  ruleId: string
+  action: WafRuleAction | string
+  resourceType?: string
+  resourceId?: string
+  name?: string
+  description?: string
+  priority?: number
+  enabled?: boolean
+  conditions?: string[]
+  limit?: number
+  interval?: number
+  /** Rate-limit bucket key: `ip` or `userId`. */
+  key?: string
+  /** Rate-limit algorithm: `fixedWindow`, `slidingWindow`, or `tokenBucket`. */
+  strategy?: string
+  /** Token-bucket burst capacity. */
+  maxBucketSize?: number
+  location?: string
+  statusCode?: number
+  challengeType?: string
+  difficulty?: number
+  ttl?: number
+}
+
+function conditionsPayload(conditions?: string[]) {
+  if (!conditions || conditions.length === 0) return undefined
+  // SDK types this as string; API expects Query string array.
+  return conditions as unknown as string
+}
+
+function invalidateFirewallAttackMode(
+  queryClient: ReturnType<typeof useQueryClient>,
+  projectId: string | null | undefined,
+) {
+  queryClient.invalidateQueries({
+    queryKey: ['firewall-attack-mode', 'project', projectId],
+  })
+}
+
+export async function fetchFirewallRules(
+  projectId: string,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  resourceType?: FirewallResourceType,
+  resourceId?: string,
+) {
+  if (!projectId) {
+    return { rules: [] as Models.WafRule[], total: 0 }
+  }
+
+  const queries = [
+    Query.orderDesc('priority'),
+    Query.limit(limit),
+    Query.offset(page * limit),
+  ]
+
+  if (resourceType) {
+    queries.unshift(Query.equal('resourceType', resourceType))
+  }
+
+  const normalizedResourceId = resourceId?.trim()
+  if (normalizedResourceId && resourceType && resourceType !== 'api') {
+    queries.unshift(Query.equal('resourceId', normalizedResourceId))
+  }
+
+  const response = await sdk.forProject(projectId).waf.listRules({
+    queries,
+    search: search?.trim() || undefined,
+    total: true,
+  })
+
+  return {
+    rules: response.rules || [],
+    total: response.total || 0,
+  }
+}
+
+/** Map of resource ID → display name from functions/sites list calls. */
+export type FirewallResourceNameMap = Record<string, string>
+
+function normalizeFirewallResourceIds(resourceIds: string[]): string[] {
+  return [
+    ...new Set(
+      resourceIds.filter((id) => typeof id === 'string' && id.trim()),
+    ),
+  ].sort()
+}
+
+/**
+ * Resolve function/site names for firewall rule grouping.
+ * Makes one list call per resource type (functions + sites) in parallel with
+ * the relevant IDs. Skips a side when that ID list is empty.
+ */
+export async function fetchFirewallResourceNames(
+  projectId: string,
+  idsByType: {
+    functions?: string[]
+    sites?: string[]
+  },
+): Promise<FirewallResourceNameMap> {
+  const functionIds = normalizeFirewallResourceIds(idsByType.functions ?? [])
+  const siteIds = normalizeFirewallResourceIds(idsByType.sites ?? [])
+  if (!projectId || (functionIds.length === 0 && siteIds.length === 0)) {
+    return {}
+  }
+
+  const [functionsResult, sitesResult] = await Promise.all([
+    functionIds.length > 0
+      ? fetchProjectFunctionsByIds(projectId, functionIds)
+      : Promise.resolve({ functions: [] as Models.Function[] }),
+    siteIds.length > 0
+      ? fetchProjectSitesByIds(projectId, siteIds)
+      : Promise.resolve({ sites: [] as Models.Site[] }),
+  ])
+
+  const names: FirewallResourceNameMap = {}
+  for (const fn of functionsResult.functions) {
+    names[fn.$id] = fn.name
+  }
+  for (const site of sitesResult.sites) {
+    names[site.$id] = site.name
+  }
+  return names
+}
+
+export async function fetchFirewallRule(
+  projectId: string,
+  ruleId: string,
+): Promise<Models.WafRule> {
+  if (!projectId || !ruleId) {
+    throw new Error('Project ID and rule ID are required')
+  }
+  return await sdk.forProject(projectId).waf.getRule({ ruleId })
+}
+
+export function firewallRulesQueryOptions(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  resourceType?: FirewallResourceType,
+  resourceId?: string,
+) {
+  const normalizedSearch = search?.trim() || undefined
+  const normalizedResourceId = resourceId?.trim() || undefined
+  return queryOptions({
+    queryKey: [
+      'firewall-rules',
+      'project',
+      projectId,
+      page,
+      limit,
+      normalizedSearch,
+      resourceType ?? null,
+      normalizedResourceId ?? null,
+    ],
+    queryFn: () =>
+      fetchFirewallRules(
+        projectId!,
+        page,
+        limit,
+        normalizedSearch,
+        resourceType,
+        normalizedResourceId,
+      ),
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    // Keep showing the previous list until the new search/page request finishes.
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useFirewallRules(
+  projectId: string | null | undefined,
+  page: number = 0,
+  limit: number = DEFAULT_PAGE_SIZE,
+  search?: string,
+  resourceType?: FirewallResourceType,
+  resourceId?: string,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    firewallRulesQueryOptions(
+      projectId,
+      page,
+      limit,
+      search,
+      resourceType,
+      resourceId,
+    ),
+  )
+
+  return {
+    rules: data?.rules || [],
+    total: data?.total || 0,
+    isLoading,
+    isFetching,
+    error,
+    refetch,
+  }
+}
+
+export function firewallResourceNamesQueryOptions(
+  projectId: string | null | undefined,
+  resourceType: Extract<FirewallResourceType, 'functions' | 'sites'> | null,
+  resourceIds: string[],
+) {
+  const ids = normalizeFirewallResourceIds(resourceIds)
+  return queryOptions({
+    queryKey: [
+      'firewall-resource-names',
+      'project',
+      projectId,
+      resourceType,
+      ids,
+    ],
+    queryFn: () =>
+      fetchFirewallResourceNames(projectId!, {
+        functions: resourceType === 'functions' ? ids : undefined,
+        sites: resourceType === 'sites' ? ids : undefined,
+      }),
+    enabled: !!projectId && !!resourceType && ids.length > 0,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useFirewallResourceNames(
+  projectId: string | null | undefined,
+  resourceType: Extract<FirewallResourceType, 'functions' | 'sites'> | null,
+  resourceIds: string[],
+) {
+  const { data, isLoading, isFetching } = useQuery(
+    firewallResourceNamesQueryOptions(projectId, resourceType, resourceIds),
+  )
+
+  return {
+    names: (data ?? {}) as FirewallResourceNameMap,
+    isLoading,
+    isFetching,
+  }
+}
+
+async function createFirewallRule(
+  projectId: string,
+  input: CreateFirewallRuleInput,
+) {
+  const waf = sdk.forProject(projectId).waf
+  const ruleId = input.ruleId?.trim() || ID.unique()
+  const base = {
+    ruleId,
+    resourceType: input.resourceType,
+    name: input.name,
+    resourceId: input.resourceId?.trim() || undefined,
+    description: input.description?.trim() || undefined,
+    priority: input.priority,
+    enabled: input.enabled ?? true,
+    conditions: conditionsPayload(input.conditions),
+  }
+
+  switch (input.action) {
+    case WafRuleAction.Bypass:
+      return waf.createBypassRule(base)
+    case WafRuleAction.Deny:
+      return waf.createDenyRule(base)
+    case WafRuleAction.Challenge:
+      // challengeType is optional; omit to let the API apply its default.
+      return waf.createChallengeRule({
+        ...base,
+        challengeType: input.challengeType?.trim() || undefined,
+        difficulty: input.difficulty,
+        ttl: input.ttl,
+      })
+    case WafRuleAction.RateLimit:
+      return waf.createRateLimitRule({
+        ...base,
+        limit: input.limit ?? 100,
+        interval: input.interval ?? 60,
+        key: input.key,
+        strategy: input.strategy,
+        // Only meaningful for tokenBucket; ignored by the API otherwise.
+        maxBucketSize:
+          input.strategy === 'tokenBucket' ? input.maxBucketSize : undefined,
+      })
+    case WafRuleAction.Redirect:
+      return waf.createRedirectRule({
+        ...base,
+        location: input.location?.trim() || '/',
+        statusCode: input.statusCode ?? 302,
+      })
+    default:
+      throw new Error(`Unsupported firewall action: ${input.action}`)
+  }
+}
+
+async function updateFirewallRule(
+  projectId: string,
+  input: UpdateFirewallRuleInput,
+) {
+  const waf = sdk.forProject(projectId).waf
+  const base = {
+    ruleId: input.ruleId,
+    resourceType: input.resourceType,
+    resourceId: input.resourceId,
+    name: input.name,
+    description: input.description,
+    priority: input.priority,
+    enabled: input.enabled,
+    conditions: conditionsPayload(input.conditions),
+  }
+
+  switch (input.action) {
+    case WafRuleAction.Bypass:
+      return waf.updateBypassRule(base)
+    case WafRuleAction.Deny:
+      return waf.updateDenyRule(base)
+    case WafRuleAction.Challenge:
+      return waf.updateChallengeRule({
+        ...base,
+        challengeType: input.challengeType,
+        difficulty: input.difficulty,
+        ttl: input.ttl,
+      })
+    case WafRuleAction.RateLimit:
+      return waf.updateRateLimitRule({
+        ...base,
+        limit: input.limit,
+        interval: input.interval,
+        key: input.key,
+        // strategy is immutable after creation, so it is never sent here.
+        // maxBucketSize is only forwarded for existing token-bucket rules.
+        maxBucketSize:
+          input.strategy === 'tokenBucket' ? input.maxBucketSize : undefined,
+      })
+    case WafRuleAction.Redirect:
+      return waf.updateRedirectRule({
+        ...base,
+        location: input.location,
+        statusCode: input.statusCode,
+      })
+    default:
+      throw new Error(`Unsupported firewall action: ${input.action}`)
+  }
+}
+
+export function useCreateFirewallRule(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: CreateFirewallRuleInput) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return createFirewallRule(projectId, input)
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['firewall-rules', 'project', projectId],
+      })
+      queryClient.invalidateQueries({ queryKey: Dependencies.FIREWALL_RULES })
+      invalidateFirewallAttackMode(queryClient, projectId)
+    },
+  })
+}
+
+export function useUpdateFirewallRule(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (input: UpdateFirewallRuleInput) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return updateFirewallRule(projectId, input)
+    },
+    onSuccess: async (_data, variables) => {
+      await queryClient.refetchQueries({
+        queryKey: ['firewall-rules', 'project', projectId],
+      })
+      queryClient.invalidateQueries({ queryKey: Dependencies.FIREWALL_RULES })
+      queryClient.invalidateQueries({
+        queryKey: ['firewall-rule', 'project', projectId, variables.ruleId],
+      })
+      invalidateFirewallAttackMode(queryClient, projectId)
+    },
+  })
+}
+
+export function useDeleteFirewallRule(projectId: string | null | undefined) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (ruleId: string) => {
+      if (!projectId) throw new Error('Project ID is required')
+      return await sdk.forProject(projectId).waf.deleteRule({ ruleId })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['firewall-rules', 'project', projectId],
+      })
+      queryClient.invalidateQueries({ queryKey: Dependencies.FIREWALL_RULES })
+      invalidateFirewallAttackMode(queryClient, projectId)
+    },
+  })
+}
+
+export async function fetchAttackModeRule(
+  projectId: string,
+  resourceType: FirewallResourceType,
+  resourceId?: string,
+): Promise<Models.WafRule | null> {
+  if (!projectId) return null
+  if (!isAttackModeScope(resourceType, resourceId)) return null
+
+  const waf = sdk.forProject(projectId).waf
+  const ruleId = getAttackModeRuleId(resourceId)
+
+  try {
+    const rule = await waf.getRule({ ruleId })
+    if (isAttackModeRuleForResource(rule, resourceType, resourceId)) {
+      return rule
+    }
+  } catch (error) {
+    if (!isHttpNotFoundError(error)) throw error
+  }
+
+  const queries = [
+    Query.equal('resourceType', resourceType),
+    Query.limit(25),
+  ]
+  const normalizedResourceId = resourceId?.trim()
+  if (normalizedResourceId) {
+    queries.unshift(Query.equal('resourceId', normalizedResourceId))
+  }
+
+  const response = await waf.listRules({
+    queries,
+    search: ATTACK_MODE_RULE_NAME,
+    total: false,
+  }).catch(() => null)
+
+  return (
+    (response?.rules || []).find((rule) =>
+      isAttackModeRuleForResource(rule, resourceType, resourceId),
+    ) ?? null
+  )
+}
+
+export function attackModeRuleQueryOptions(
+  projectId: string | null | undefined,
+  resourceType: FirewallResourceType,
+  resourceId?: string,
+) {
+  const normalizedResourceId = resourceId?.trim() || undefined
+  return queryOptions({
+    queryKey: [
+      'firewall-attack-mode',
+      'project',
+      projectId,
+      resourceType,
+      normalizedResourceId ?? null,
+    ],
+    queryFn: () =>
+      fetchAttackModeRule(projectId!, resourceType, normalizedResourceId),
+    enabled: !!projectId && isAttackModeScope(resourceType, normalizedResourceId),
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+  })
+}
+
+export function useAttackModeRule(
+  projectId: string | null | undefined,
+  resourceType: FirewallResourceType,
+  resourceId?: string,
+) {
+  const { data, isLoading, isFetching, error } = useQuery(
+    attackModeRuleQueryOptions(projectId, resourceType, resourceId),
+  )
+
+  return {
+    rule: data ?? null,
+    isOn: data?.enabled === true,
+    isLoading,
+    isFetching,
+    error,
+  }
+}
+
+export function useSetFirewallAttackMode(
+  projectId: string | null | undefined,
+  resourceType: FirewallResourceType,
+  resourceId?: string,
+) {
+  const queryClient = useQueryClient()
+  const normalizedResourceId = resourceId?.trim() || undefined
+
+  return useMutation({
+    mutationFn: async (enabled: boolean) => {
+      if (!projectId) throw new Error('Project ID is required')
+      if (!isAttackModeScope(resourceType, normalizedResourceId)) {
+        throw new Error('Attack mode is only available for sites')
+      }
+
+      const existing = await fetchAttackModeRule(
+        projectId,
+        resourceType,
+        normalizedResourceId,
+      )
+
+      if (!enabled) {
+        if (!existing?.enabled) return existing
+        const challenge = getRuleChallenge(existing)
+        return updateFirewallRule(projectId, {
+          ruleId: existing.$id,
+          action: WafRuleAction.Challenge,
+          enabled: false,
+          resourceType: existing.resourceType || resourceType,
+          resourceId: existing.resourceId,
+          name: existing.name,
+          description: existing.description,
+          priority: existing.priority,
+          difficulty:
+            challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
+          ttl: challenge?.ttl ?? CHALLENGE_TTL_DEFAULT,
+        })
+      }
+
+      const conditions = getAttackModeConditions()
+      if (existing) {
+        const challenge = getRuleChallenge(existing)
+        return updateFirewallRule(projectId, {
+          ruleId: existing.$id,
+          action: WafRuleAction.Challenge,
+          enabled: true,
+          resourceType,
+          resourceId: normalizedResourceId,
+          name: ATTACK_MODE_RULE_NAME,
+          description: ATTACK_MODE_RULE_DESCRIPTION,
+          priority: ATTACK_MODE_PRIORITY,
+          conditions,
+          difficulty:
+            challenge?.difficulty ?? CHALLENGE_DIFFICULTY_DEFAULT,
+          ttl: challenge?.ttl ?? CHALLENGE_TTL_DEFAULT,
+        })
+      }
+
+      return createFirewallRule(projectId, {
+        ruleId: getAttackModeRuleId(normalizedResourceId),
+        action: WafRuleAction.Challenge,
+        resourceType,
+        resourceId: normalizedResourceId,
+        name: ATTACK_MODE_RULE_NAME,
+        description: ATTACK_MODE_RULE_DESCRIPTION,
+        priority: ATTACK_MODE_PRIORITY,
+        enabled: true,
+        conditions,
+        difficulty: CHALLENGE_DIFFICULTY_DEFAULT,
+        ttl: CHALLENGE_TTL_DEFAULT,
+      })
+    },
+    onSuccess: async () => {
+      await queryClient.refetchQueries({
+        queryKey: ['firewall-rules', 'project', projectId],
+      })
+      queryClient.invalidateQueries({ queryKey: Dependencies.FIREWALL_RULES })
+      await queryClient.refetchQueries({
+        queryKey: [
+          'firewall-attack-mode',
+          'project',
+          projectId,
+          resourceType,
+          normalizedResourceId ?? null,
+        ],
+      })
+    },
+  })
+}
+
+export function firewallRuleImpactQueryOptions(
+  projectId: string | null | undefined,
+  conditions: FirewallConditionDraft[],
+  resourceType: FirewallResourceType,
+  resourceId?: string,
+  dateRange?: DateRange,
+  chartInterval?: UsageChartInterval,
+  logRetentionHours?: number,
+  action?: FirewallCreatableAction,
+) {
+  const normalizedResourceId = resourceId?.trim() || undefined
+  const conditionSnapshots = buildFirewallUsageConditionSnapshots(conditions)
+  const from = dateRange?.from?.toISOString()
+  const to = dateRange?.to?.toISOString()
+
+  return queryOptions({
+    queryKey: [
+      'firewall-impact',
+      'project',
+      projectId,
+      resourceType,
+      normalizedResourceId ?? '',
+      conditionSnapshots,
+      from ?? '',
+      to ?? '',
+      chartInterval ?? '',
+      logRetentionHours ?? null,
+      action ?? '',
+    ] as const,
+    queryFn: ({ queryKey }) => {
+      const [
+        ,
+        ,
+        impactProjectId,
+        impactResourceType,
+        impactResourceId,
+        impactConditions,
+        impactFrom,
+        impactTo,
+        impactChartInterval,
+        impactLogRetentionHours,
+        impactAction,
+      ] = queryKey
+
+      return fetchFirewallRuleImpact(String(impactProjectId), {
+        conditions: draftsFromUsageConditionSnapshots(
+          impactConditions as FirewallUsageConditionSnapshot[],
+        ),
+        resourceType: impactResourceType as FirewallResourceType,
+        resourceId: impactResourceId ? String(impactResourceId) : undefined,
+        dateRange: impactFrom
+          ? {
+              from: new Date(String(impactFrom)),
+              to: impactTo ? new Date(String(impactTo)) : undefined,
+            }
+          : undefined,
+        chartInterval: impactChartInterval
+          ? (impactChartInterval as UsageChartInterval)
+          : undefined,
+        logRetentionHours:
+          typeof impactLogRetentionHours === 'number'
+            ? impactLogRetentionHours
+            : undefined,
+        action: impactAction
+          ? (impactAction as FirewallCreatableAction)
+          : undefined,
+      })
+    },
+    enabled: !!projectId,
+    staleTime: DEFAULT_STALE_TIME,
+    retry: false,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    placeholderData: keepPreviousData,
+    gcTime: projectId ? 5 * 60 * 1000 : 0,
+    meta: {
+      skipInitialLoader: true,
+    },
+  })
+}
+
+export function useFirewallRuleImpact(
+  projectId: string | null | undefined,
+  conditions: FirewallConditionDraft[],
+  resourceType: FirewallResourceType,
+  resourceId?: string,
+  dateRange?: DateRange,
+  chartInterval?: UsageChartInterval,
+  logRetentionHours?: number,
+  action?: FirewallCreatableAction,
+) {
+  const { data, isLoading, isFetching, error, refetch } = useQuery(
+    firewallRuleImpactQueryOptions(
+      projectId,
+      conditions,
+      resourceType,
+      resourceId,
+      dateRange,
+      chartInterval,
+      logRetentionHours,
+      action,
+    ),
+  )
+
+  return {
+    impact: data as FirewallRuleImpactData | undefined,
+    isLoading,
+    isFetching,
+    isError: !!error,
+    error,
+    refetch,
+  }
+}
+
+export function useFirewallRuleImpactUnion(
+  projectId: string | null | undefined,
+  conditionSets: FirewallConditionDraft[][],
+  resourceType: FirewallResourceType,
+  resourceId: string | undefined,
+  dateRange: DateRange | undefined,
+  chartInterval: UsageChartInterval | undefined,
+  logRetentionHours: number | undefined,
+  action: FirewallCreatableAction | undefined,
+  enabled: boolean,
+) {
+  const queries = useQueries({
+    queries: conditionSets.map((conditions) => ({
+      ...firewallRuleImpactQueryOptions(
+        projectId,
+        conditions,
+        resourceType,
+        resourceId,
+        dateRange,
+        chartInterval,
+        logRetentionHours,
+        action,
+      ),
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  const isLoading = queries.some((query) => query.isLoading)
+  const isFetching = queries.some((query) => query.isFetching)
+  const isError = enabled && queries.some((query) => query.isError)
+  const error = queries.find((query) => query.error)?.error
+  const impactDataKey = queries
+    .map((query) => query.dataUpdatedAt ?? 0)
+    .join(',')
+  const impact = useMemo(() => {
+    if (!enabled || conditionSets.length === 0) return undefined
+    const results = queries
+      .map((query) => query.data as FirewallRuleImpactData | undefined)
+      .filter((data): data is FirewallRuleImpactData => data != null)
+    if (results.length !== conditionSets.length) return undefined
+    return mergeFirewallRuleImpactUnion(results)
+  }, [enabled, conditionSets.length, impactDataKey, queries])
+
+  return {
+    impact,
+    isLoading,
+    isFetching,
+    isError,
+    error,
+    refetch: () => Promise.all(queries.map((query) => query.refetch())),
+  }
+}
+
+export type FirewallConditionBreakdownEntry = {
+  attribute: FirewallConditionAttribute
+  section: RequestsBreakdownSection
+  items: UsageBreakdownItem[]
+  isLoading: boolean
+  isError: boolean
+  error: unknown
+}
+
+/**
+ * One usage breakdown per distinct condition attribute that maps to a usage
+ * dimension, scoped to the rule's resource. Mirrors the usage requests cards so
+ * the rule builder can show what values exist for a selected attribute. Skips
+ * attributes with no usage dimension (headers / query keys, continent, state,
+ * and the request/extended-geo attributes) - those simply render no graph.
+ *
+ * `allowPremiumGeo` should be false on self-hosted, where the CE backend does
+ * not enumerate the premium geo dimensions - the same gate the usage requests
+ * cards apply - so a city/network condition doesn't send an unsupported request.
+ */
+export function useFirewallConditionBreakdowns(
+  projectId: string | null | undefined,
+  conditions: FirewallConditionDraft[],
+  resourceType: FirewallResourceType,
+  resourceId: string | undefined,
+  dateRange: DateRange | undefined,
+  enabled = true,
+  allowPremiumGeo = true,
+  logRetentionHours?: number,
+): FirewallConditionBreakdownEntry[] {
+  const entries = useMemo(() => {
+    // Non-API scopes must target a specific resource; without a resourceId the
+    // breakdown would aggregate every function/site in the project and present a
+    // project-wide distribution as evidence for an incomplete rule target.
+    if (resourceType !== 'api' && !resourceId?.trim()) return []
+
+    const seen = new Set<UsageEventBreakdownDimension>()
+    const result: {
+      attribute: FirewallConditionAttribute
+      dimension: UsageEventBreakdownDimension
+      section: RequestsBreakdownSection
+    }[] = []
+    for (const condition of conditions) {
+      const dimension = firewallConditionBreakdownDimension(condition.attribute)
+      if (!dimension || seen.has(dimension)) continue
+      // Self-hosted backends reject premium geo dimensions; skip them so the
+      // card doesn't render an error instead of following the premium gate.
+      if (!allowPremiumGeo && PREMIUM_GEO_REQUEST_DIMENSIONS.has(dimension)) {
+        continue
+      }
+      const section = REQUESTS_BREAKDOWN_SECTIONS.find(
+        (candidate) => candidate.dimension === dimension,
+      )
+      if (!section) continue
+      seen.add(dimension)
+      result.push({ attribute: condition.attribute, dimension, section })
+    }
+    return result
+  }, [conditions, resourceType, resourceId, allowPremiumGeo])
+
+  const filterQueries = useMemo(
+    () => buildFirewallResourceUsageQueries(resourceType, resourceId),
+    [resourceType, resourceId],
+  )
+
+  const queries = useQueries({
+    queries: entries.map((entry) => ({
+      ...requestsBreakdownQueryOptions(
+        projectId,
+        dateRange,
+        entry.dimension,
+        filterQueries,
+        logRetentionHours,
+      ),
+      // The base options keep previous data per-project as placeholder, which
+      // would show a different resource's breakdown while switching
+      // functions/sites. Drop the placeholder so a resource switch shows a
+      // loading state instead of stale cross-resource data.
+      placeholderData: undefined,
+      enabled: enabled && !!projectId,
+    })),
+  })
+
+  return useMemo(
+    () =>
+      entries.map((entry, index) => {
+        const query = queries[index]
+        return {
+          attribute: entry.attribute,
+          section: entry.section,
+          items: query.data ?? [],
+          isLoading: query.isPending && !query.data && !query.isError,
+          isError: query.isError,
+          error: query.error,
+        }
+      }),
+    [entries, queries],
+  )
+}
+
+/** Page size for the firewall resource scope picker (API / sites / functions). */
+export const FIREWALL_RESOURCE_PICKER_LIMIT = 25
+
+/**
+ * Isolated query keys for the firewall resource picker so project realtime
+ * invalidations on `['functions'|'sites', 'project', …]` do not refetch the
+ * open dropdown on every deployment or execution event.
+ */
+export function firewallResourcePickerFunctionsQueryOptions(
+  projectId: string | null | undefined,
+  search?: string,
+) {
+  const base = functionsQueryOptions(
+    projectId,
+    0,
+    FIREWALL_RESOURCE_PICKER_LIMIT,
+    search,
+  )
+  return queryOptions({
+    ...base,
+    queryKey: [
+      'firewall',
+      'resource-picker',
+      'functions',
+      projectId,
+      search ?? null,
+    ],
+    staleTime: LONG_STALE_TIME,
+  })
+}
+
+export function firewallResourcePickerSitesQueryOptions(
+  projectId: string | null | undefined,
+  search?: string,
+) {
+  const base = sitesQueryOptions(
+    projectId,
+    0,
+    FIREWALL_RESOURCE_PICKER_LIMIT,
+    search,
+  )
+  return queryOptions({
+    ...base,
+    queryKey: [
+      'firewall',
+      'resource-picker',
+      'sites',
+      projectId,
+      search ?? null,
+    ],
+    staleTime: LONG_STALE_TIME,
+  })
+}

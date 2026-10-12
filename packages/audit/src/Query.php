@@ -77,9 +77,9 @@ class Query extends BaseQuery
      *
      * @param  array<mixed>  $values
      */
-    public function __construct(Method|string $method, string $attribute = '', array $values = [])
+    public function __construct(Method|string $method, string $attribute = '', array $values = [], string $alias = '')
     {
-        parent::__construct($method, $attribute, $values);
+        parent::__construct($method, $attribute, $values, $alias);
     }
 
     /**

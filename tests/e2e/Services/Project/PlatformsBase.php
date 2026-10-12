@@ -894,6 +894,61 @@ trait PlatformsBase
         $this->deletePlatform($platformId);
     }
 
+    public function testAndroidPlatformFingerprints(): void
+    {
+        $release = '14:6D:E9:83:C5:73:06:50:D8:EE:B9:95:2F:34:FC:64:16:A0:83:42:E6:1D:BE:A8:8A:04:96:B2:3F:CF:44:E5';
+        $debug = \implode(':', \array_fill(0, 32, 'FA'));
+
+        /**
+         * Test for SUCCESS
+         */
+        $platform = $this->createAndroidPlatform(ID::unique(), 'Android', 'com.example.android', fingerprints: [\strtolower($release)]);
+        $this->assertSame(201, $platform['headers']['status-code'], \json_encode($platform['body']));
+        $this->assertSame([$release], $platform['body']['fingerprints']);
+        $platformId = $platform['body']['$id'];
+
+        // Omitting fingerprints keeps them
+        $updated = $this->updateAndroidPlatform($platformId, 'Android', 'com.example.android');
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame([$release], $updated['body']['fingerprints']);
+
+        $updated = $this->updateAndroidPlatform($platformId, 'Android', 'com.example.android', fingerprints: [$release, $debug, $release]);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame([$release, $debug], $updated['body']['fingerprints']);
+
+        $get = $this->getPlatform($platformId);
+        $this->assertSame([$release, $debug], $get['body']['fingerprints']);
+
+        $updated = $this->updateAndroidPlatform($platformId, 'Android', 'com.example.android', fingerprints: []);
+        $this->assertSame(200, $updated['headers']['status-code']);
+        $this->assertSame([], $updated['body']['fingerprints']);
+
+        $platform = $this->createAndroidPlatform(ID::unique(), 'No fingerprints', 'com.example.plain');
+        $this->assertSame(201, $platform['headers']['status-code']);
+        $this->assertSame([], $platform['body']['fingerprints']);
+        $this->deletePlatform($platform['body']['$id']);
+
+        /**
+         * Test for FAILURE
+         */
+        $invalid = [
+            \str_replace(':', '', $release),
+            \substr($release, 3),
+            $release . ':00',
+            \str_replace('14', 'G4', $release),
+            \str_replace(':', '-', $release),
+        ];
+        foreach ($invalid as $fingerprint) {
+            $response = $this->createAndroidPlatform(ID::unique(), 'Android', 'com.example.invalid', fingerprints: [$fingerprint]);
+            $this->assertSame(400, $response['headers']['status-code'], $fingerprint);
+
+            $response = $this->updateAndroidPlatform($platformId, 'Android', 'com.example.android', fingerprints: [$fingerprint]);
+            $this->assertSame(400, $response['headers']['status-code'], $fingerprint);
+        }
+
+        $this->deletePlatform($platformId);
+    }
+
     public function testUpdateAndroidPlatformWithoutAuthentication(): void
     {
         $platform = $this->createAndroidPlatform(ID::unique(), 'Auth Update Android', 'com.example.authupdate');
@@ -1601,7 +1656,7 @@ trait PlatformsBase
         return $this->client->call(Client::METHOD_POST, '/project/platforms/apple', $headers, $params);
     }
 
-    protected function createAndroidPlatform(string $platformId, ?string $name, ?string $applicationId, bool $authenticated = true): mixed
+    protected function createAndroidPlatform(string $platformId, ?string $name, ?string $applicationId, bool $authenticated = true, ?array $fingerprints = null): mixed
     {
         $params = [
             'platformId' => $platformId,
@@ -1613,6 +1668,10 @@ trait PlatformsBase
 
         if ($applicationId !== null) {
             $params['applicationId'] = $applicationId;
+        }
+
+        if ($fingerprints !== null) {
+            $params['fingerprints'] = $fingerprints;
         }
 
         $headers = [
@@ -1727,7 +1786,7 @@ trait PlatformsBase
         return $this->client->call(Client::METHOD_PUT, '/project/platforms/apple/' . $platformId, $headers, $params);
     }
 
-    protected function updateAndroidPlatform(string $platformId, ?string $name = null, ?string $applicationId = null, bool $authenticated = true): mixed
+    protected function updateAndroidPlatform(string $platformId, ?string $name = null, ?string $applicationId = null, bool $authenticated = true, ?array $fingerprints = null): mixed
     {
         $params = [];
 
@@ -1737,6 +1796,10 @@ trait PlatformsBase
 
         if ($applicationId !== null) {
             $params['applicationId'] = $applicationId;
+        }
+
+        if ($fingerprints !== null) {
+            $params['fingerprints'] = $fingerprints;
         }
 
         $headers = [
