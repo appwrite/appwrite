@@ -114,6 +114,7 @@ class Create extends DocumentCreate
             ->inject('plan')
             ->inject('authorization')
             ->inject('eventProcessor')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 }

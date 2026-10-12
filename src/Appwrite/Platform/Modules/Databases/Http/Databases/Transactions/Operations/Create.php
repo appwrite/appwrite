@@ -229,15 +229,11 @@ class Create extends Action
                             $data = [];
                         }
 
+                        $stagedView = $transactionState->stagedView($database, $transaction, $staged);
                         $this->authorizeStagedWrite(
                             fn () => $creates
-                                ? $dbForDatabases->authorizeCreate($collectionKey, new Document($data))
-                                : $dbForDatabases->authorizeUpdate($collectionKey, $document ?? new Document(), new Document($data)),
-                            $dbForProject,
-                            $transaction,
-                            $operation[$this->getResourceId()] ?? null,
-                            $data,
-                            $staged,
+                                ? $dbForDatabases->authorizeCreate($collectionKey, new Document($data), $stagedView)
+                                : $dbForDatabases->authorizeUpdate($collectionKey, $stagedView($collectionKey, $operation[$this->getResourceId()]) ?? $document ?? new Document(), new Document($data), $stagedView),
                             Exception::COLLECTION_NOT_FOUND,
                             $operation[$this->getGroupId()],
                         );

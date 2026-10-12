@@ -218,13 +218,9 @@ class Update extends Action
             }
 
             if (!$isAPIKey && !$isPrivilegedUser) {
+                $stagedView = $transactionState->stagedView($database, $transaction);
                 $this->authorizeStagedWrite(
-                    fn () => $dbForDatabases->authorizeUpdate($collectionTableId, $document, $newDocument),
-                    $dbForProject,
-                    $transaction,
-                    $documentId,
-                    $data,
-                    [],
+                    fn () => $dbForDatabases->authorizeUpdate($collectionTableId, $stagedView($collectionTableId, $documentId) ?? $document, $newDocument, $stagedView),
                     $this->getParentNotFoundException(),
                     $collectionId,
                 );

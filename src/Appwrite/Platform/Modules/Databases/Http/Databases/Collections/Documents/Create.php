@@ -3,6 +3,7 @@
 namespace Appwrite\Platform\Modules\Databases\Http\Databases\Collections\Documents;
 
 use Appwrite\Databases\RelationshipValues;
+use Appwrite\Databases\TransactionState;
 use Appwrite\Event\Event;
 use Appwrite\Event\Publisher\Func as FunctionPublisher;
 use Appwrite\Extend\Exception;
@@ -148,10 +149,11 @@ class Create extends Action
             ->inject('plan')
             ->inject('authorization')
             ->inject('eventProcessor')
+            ->inject('transactionState')
             ->callback($this->action(...));
     }
 
-    public function action(string $databaseId, ?string $documentId, string $collectionId, string|array|\stdClass|null $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor): void
+    public function action(string $databaseId, ?string $documentId, string $collectionId, string|array|\stdClass|null $data, ?array $permissions, ?array $documents, ?string $transactionId, UtopiaResponse $response, Database $dbForProject, callable $getDatabasesDB, User $user, Event $queueForEvents, Context $usage, Event $queueForRealtime, FunctionPublisher $publisherForFunctions, Event $queueForWebhooks, array $plan, Authorization $authorization, EventProcessor $eventProcessor, TransactionState $transactionState): void
     {
         $data = $this->normalizeData($data ?? []);
 
@@ -347,12 +349,7 @@ class Create extends Action
             if (!$isAPIKey && !$isPrivilegedUser) {
                 foreach ($documents as $document) {
                     $this->authorizeStagedWrite(
-                        fn () => $dbForDatabases->authorizeCreate($collectionTableId, $document),
-                        $dbForProject,
-                        $transaction,
-                        $document->getId(),
-                        $document->getArrayCopy(),
-                        [],
+                        fn () => $dbForDatabases->authorizeCreate($collectionTableId, $document, $transactionState->stagedView($database, $transaction)),
                         $this->getParentNotFoundException(),
                         $collectionId,
                     );

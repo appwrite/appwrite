@@ -348,6 +348,54 @@ class TransactionState
     }
 
     /**
+     * The staged view of a transaction for a permission pre-check (Database::authorizeCreate() and
+     * authorizeUpdate()): given a collection identifier and a document ID, an empty document when the staged writes
+     * delete it, the document as they leave it, read without the caller's permissions, or null when they leave it
+     * as stored. $pending are operations of the same request, staged before the one being checked and not stored yet.
+     *
+     * @param array<Document> $pending
+     * @return callable(string, string): ?Document
+     */
+    public function stagedView(Document $database, Document $transaction, array $pending = []): callable
+    {
+        $state = null;
+
+        return function (string $collection, string $id) use ($database, $transaction, $pending, &$state): ?Document {
+            $state ??= $this->replay([
+                ...$this->authorization->skip(fn (): array => $this->dbForProject->find('transactionLogs', [
+                    Query::equal('transactionInternalId', [$transaction->getSequence()]),
+                    Query::orderAsc(),
+                    Query::limit(PHP_INT_MAX),
+                ])),
+                ...$pending,
+            ]);
+
+            $staged = $state[$collection][$id] ?? null;
+            if ($staged === null) {
+                return null;
+            }
+            if (!$staged['exists']) {
+                return new Document();
+            }
+            if ($staged['action'] === 'create') {
+                return new Document($staged['document']->getArrayCopy());
+            }
+
+            $stored = $this->authorization->skip(fn (): Document => ($this->getDatabasesDB)($database)->getDocument($collection, $id));
+            if ($stored->isEmpty()) {
+                return new Document($staged['document']->getArrayCopy());
+            }
+            foreach ($staged['document']->getAttributes() as $key => $value) {
+                if ($key !== '$id') {
+                    $stored->setAttribute($key, $value);
+                }
+            }
+
+            return $stored;
+        };
+    }
+
+    /**
      * Get the current state of a transaction by replaying its operations
      *
      * @param string $transactionId Transaction ID
@@ -374,6 +422,17 @@ class TransactionState
             Query::limit(PHP_INT_MAX)
         ]));
 
+        return $this->replay($operations);
+    }
+
+    /**
+     * The state staged operations leave, keyed by collection and document ID.
+     *
+     * @param iterable<Document|array<string, mixed>> $operations
+     * @return array<string, array<string, array<string, mixed>>>
+     */
+    private function replay(iterable $operations): array
+    {
         $state = [];
 
         foreach ($operations as $operation) {
