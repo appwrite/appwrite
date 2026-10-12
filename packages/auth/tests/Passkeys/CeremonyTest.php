@@ -269,6 +269,24 @@ final class CeremonyTest extends TestCase
         $ceremony->verifyRegistration($challenge->state, (new Authenticator())->register($challenge->options, 'https://example.com:8443', 'example.com'));
     }
 
+    public function testAndroidAppOriginMatchesExactly(): void
+    {
+        $app = 'android:apk-key-hash:FG3pg8VzBlDY7rmVLzT8ZBagg0LmHb6oigSWsj_PROU';
+        $ceremony = new Ceremony(new RelyingParty('example.com', 'Test', ['https://example.com', $app]));
+        $authenticator = new Authenticator();
+
+        $challenge = $ceremony->register('user@example.com', 'User');
+        $registered = $ceremony->verifyRegistration($challenge->state, $authenticator->register($challenge->options, $app));
+
+        $challenge = $ceremony->authenticate();
+        $signedIn = $ceremony->verifyAuthentication($challenge->state, $authenticator->authenticate($challenge->options, 'https://example.com'), $registered->record);
+        $this->assertSame($registered->identifier, $signedIn->identifier);
+
+        $challenge = $ceremony->authenticate();
+        $this->expectException(Exception::class);
+        $ceremony->verifyAuthentication($challenge->state, $authenticator->authenticate($challenge->options, 'android:apk-key-hash:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'), $registered->record);
+    }
+
     public function testFingerprintIgnoresOriginOrder(): void
     {
         $a = new RelyingParty('example.com', 'A', ['https://a.example.com', 'https://example.com']);
