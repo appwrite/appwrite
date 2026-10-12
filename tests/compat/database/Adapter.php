@@ -6,8 +6,12 @@ use Tests\Compat\Adapter as Base;
 use Tests\Compat\Benchmarks;
 use Tests\Compat\Session;
 use Utopia\Cache\Adapter\None as NoneCache;
+use Utopia\Cache\Adapter\Redis as RedisCache;
 use Utopia\Cache\Cache;
+use Utopia\Cache\Codec\Json;
+use Utopia\Database\Adapter as DatabaseAdapter;
 use Utopia\Database\Adapter\Postgres;
+use Utopia\Database\Adapter\Redis as RedisAdapter;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Helpers\ID;
@@ -140,21 +144,46 @@ final class Adapter implements Base, Benchmarks
                     return $db->updateDocument('users', 'alice', new Document(['age' => ++$age]));
                 };
             }],
+            'cached_get_document' => ['Read a user document by id from a Redis cache (Json entries): one HGET round trip and the decode', function (Session $s) use ($document) {
+                $cache = new Cache(new RedisCache(self::redis($s, 'database-redis'), new Json()));
+                [$db] = self::database($s, 'cached_get_document', cache: $cache);
+                $db->createDocument('users', $document());
+                $db->getDocument('users', 'alice');
+
+                return fn () => $db->getDocument('users', 'alice');
+            }],
+            'redis_get_document' => ['Read a user document by id on the Redis adapter, uncached (a GET and its permissions in one MULTI)', function (Session $s) use ($document) {
+                [$db] = self::database($s, 'redis_get_document', new RedisAdapter(self::redis($s, 'database-redis-adapter')));
+                $db->createDocument('users', $document());
+
+                return fn () => $db->getDocument('users', 'alice');
+            }],
+            'redis_find' => ['Find users on the Redis adapter: load 100 documents and filter, order and limit them in the process', function (Session $s) use ($document) {
+                [$db] = self::database($s, 'redis_find', new RedisAdapter(self::redis($s, 'database-redis-adapter')));
+                $doc = $document();
+                $db->createDocuments('users', array_map(fn (int $i) => (clone $doc)->setAttribute('$id', "u{$i}")->setAttribute('name', $i % 2 ? 'Alice' : 'Bob')->setAttribute('age', $i), range(1, 100)));
+                $queries = Query::parseQueries(self::QUERIES);
+
+                return fn () => $db->find('users', $queries);
+            }],
         ];
     }
 
     /**
-     * A database of the benchmarks' collection on the compat PostgreSQL,
-     * uncached, in a schema of its own (dropped first when a run left it).
+     * A database of the benchmarks' collection on the compat PostgreSQL (or
+     * `adapter`), uncached (or on `cache`), in a schema of its own (dropped
+     * first when a run left it).
      *
      * @return array{Database, Document}
      */
-    private static function database(Session $s, string $name): array
+    private static function database(Session $s, string $name, ?DatabaseAdapter $adapter = null, ?Cache $cache = null): array
     {
-        $url = parse_url($s->service('database-postgres'));
-        $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
-        $pdo = new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes());
-        $db = new Database(new Postgres($pdo), new Cache(new NoneCache()));
+        if ($adapter === null) {
+            $url = parse_url($s->service('database-postgres'));
+            $dsn = 'pgsql:host=' . ($url['host'] ?? '') . ';port=' . ($url['port'] ?? 5432) . ';dbname=' . ltrim($url['path'] ?? '', '/');
+            $adapter = new Postgres(new PDO($dsn, urldecode($url['user'] ?? ''), urldecode($url['pass'] ?? ''), Postgres::getPDOAttributes()));
+        }
+        $db = new Database($adapter, $cache ?? new Cache(new NoneCache()));
         $authorization = new Authorization();
         $authorization->addRole('any');
         $db->setAuthorization($authorization);
@@ -168,5 +197,18 @@ final class Adapter implements Base, Benchmarks
         $collection = $db->createCollection('users', $attributes, $indexes, ['read("any")', 'create("any")', 'update("any")'], false);
 
         return [$db, $collection];
+    }
+
+    /**
+     * A connection to a Redis service of `compat.json`, on its database.
+     */
+    private static function redis(Session $s, string $service): \Redis
+    {
+        $url = parse_url($s->service($service));
+        $redis = new \Redis();
+        $redis->connect($url['host'] ?? 'redis', $url['port'] ?? 6379);
+        $redis->select((int) ltrim($url['path'] ?? '', '/'));
+
+        return $redis;
     }
 }
