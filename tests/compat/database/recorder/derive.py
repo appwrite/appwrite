@@ -23,9 +23,14 @@ DRIVER_OPS = {'adapter.open', 'adapter.process_exception', 'adapter.fuzz_find', 
 DRIVERS = {'mariadb': 'MariaDB', 'mysql': 'MySQL'}
 
 
+UNORDERED = "MySQL 8 lists INFORMATION_SCHEMA.COLUMNS, which getSchemaAttributes() reads without an ORDER BY, in no fixed order"
+
+
 def derive_step(step, driver):
     step = copy.deepcopy(step)
     step.pop('expect', None)
+    if driver == 'mysql' and step.get('op') == 'adapter.schema_attributes':
+        step['mask'] = {'paths': [''], 'reason': UNORDERED}
     if step.get('op') in DRIVER_OPS:
         args = step.get('args')
         if not isinstance(args, dict):

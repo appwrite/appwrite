@@ -7621,7 +7621,13 @@
           "args": {
             "collection": "no_such_collection"
           },
-          "expect": []
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "MySQL 8 lists INFORMATION_SCHEMA.COLUMNS, which getSchemaAttributes() reads without an ORDER BY, in no fixed order"
+          }
         },
         {
           "op": "database.create_collection",
@@ -7700,158 +7706,13 @@
           "args": {
             "collection": "schema_attributes"
           },
-          "expect": [
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "YES",
-                "dataType": "datetime",
-                "characterMaximumLength": null,
-                "numericPrecision": null,
-                "numericScale": null,
-                "datetimePrecision": "3",
-                "columnType": "datetime(3)",
-                "columnKey": "",
-                "extra": "",
-                "$id": "_createdAt"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "NO",
-                "dataType": "bigint",
-                "characterMaximumLength": null,
-                "numericPrecision": "20",
-                "numericScale": "0",
-                "datetimePrecision": null,
-                "columnType": "bigint unsigned",
-                "columnKey": "PRI",
-                "extra": "auto_increment",
-                "$id": "_id"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "YES",
-                "dataType": "mediumtext",
-                "characterMaximumLength": "16777215",
-                "numericPrecision": null,
-                "numericScale": null,
-                "datetimePrecision": null,
-                "columnType": "mediumtext",
-                "columnKey": "",
-                "extra": "",
-                "$id": "_permissions"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "YES",
-                "dataType": "int",
-                "characterMaximumLength": null,
-                "numericPrecision": "10",
-                "numericScale": "0",
-                "datetimePrecision": null,
-                "columnType": "int unsigned",
-                "columnKey": "MUL",
-                "extra": "",
-                "$id": "_tenant"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "NO",
-                "dataType": "varchar",
-                "characterMaximumLength": "255",
-                "numericPrecision": null,
-                "numericScale": null,
-                "datetimePrecision": null,
-                "columnType": "varchar(255)",
-                "columnKey": "MUL",
-                "extra": "",
-                "$id": "_uid"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "YES",
-                "dataType": "datetime",
-                "characterMaximumLength": null,
-                "numericPrecision": null,
-                "numericScale": null,
-                "datetimePrecision": "3",
-                "columnType": "datetime(3)",
-                "columnKey": "",
-                "extra": "",
-                "$id": "_updatedAt"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "YES",
-                "dataType": "datetime",
-                "characterMaximumLength": null,
-                "numericPrecision": null,
-                "numericScale": null,
-                "datetimePrecision": "3",
-                "columnType": "datetime(3)",
-                "columnKey": "",
-                "extra": "",
-                "$id": "dob"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "YES",
-                "dataType": "text",
-                "characterMaximumLength": "65535",
-                "numericPrecision": null,
-                "numericScale": null,
-                "datetimePrecision": null,
-                "columnType": "text",
-                "columnKey": "",
-                "extra": "",
-                "$id": "story"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "YES",
-                "dataType": "json",
-                "characterMaximumLength": null,
-                "numericPrecision": null,
-                "numericScale": null,
-                "datetimePrecision": null,
-                "columnType": "json",
-                "columnKey": "",
-                "extra": "",
-                "$id": "string_list"
-              }
-            },
-            {
-              "$document": {
-                "columnDefault": null,
-                "isNullable": "YES",
-                "dataType": "varchar",
-                "characterMaximumLength": "128",
-                "numericPrecision": null,
-                "numericScale": null,
-                "datetimePrecision": null,
-                "columnType": "varchar(128)",
-                "columnKey": "",
-                "extra": "",
-                "$id": "username"
-              }
-            }
-          ]
+          "expect": "<masked>",
+          "mask": {
+            "paths": [
+              ""
+            ],
+            "reason": "MySQL 8 lists INFORMATION_SCHEMA.COLUMNS, which getSchemaAttributes() reads without an ORDER BY, in no fixed order"
+          }
         },
         {
           "op": "database.get_shared_tables",

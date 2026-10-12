@@ -21,7 +21,6 @@
 namespace Tests\Compat\Database\Recorder;
 
 use Tests\Compat\Codec;
-use Tests\Compat\Session;
 use Utopia\Database\Adapter\MariaDB;
 use Utopia\Database\Adapter\Postgres;
 use Utopia\Database\Database;
