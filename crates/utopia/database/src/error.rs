@@ -75,6 +75,12 @@ pub enum Kind {
     Json,
     /// `Exception`: PHP's base exception, thrown by library code with `new \Exception`.
     Exception,
+    /// `DateMalformedIntervalStringException`: `DateInterval` rejected an
+    /// interval string (`DateTime::addSeconds` with `PHP_INT_MIN` seconds).
+    DateMalformedIntervalString,
+    /// `Error`: an engine error (using an object as an array, a string
+    /// offset that cannot be assigned or unset, ...).
+    Error,
 }
 
 impl Kind {
@@ -106,7 +112,45 @@ impl Kind {
             Kind::ValueError => "ValueError",
             Kind::Json => "JsonException",
             Kind::Exception => "Exception",
+            Kind::DateMalformedIntervalString => "DateMalformedIntervalStringException",
+            Kind::Error => "Error",
         }
+    }
+
+    /// The kind of errors of the PHP class `class` (the inverse of
+    /// [`Kind::php_class`]); `None` for a class no kind stands for.
+    pub fn from_php_class(class: &str) -> Option<Kind> {
+        const ALL: [Kind; 27] = [
+            Kind::Database,
+            Kind::Authorization,
+            Kind::Character,
+            Kind::Conflict,
+            Kind::Dependency,
+            Kind::Duplicate,
+            Kind::Index,
+            Kind::Limit,
+            Kind::NotFound,
+            Kind::Operator,
+            Kind::Order,
+            Kind::Query,
+            Kind::Relationship,
+            Kind::Restricted,
+            Kind::Structure,
+            Kind::Timeout,
+            Kind::Transaction,
+            Kind::Truncate,
+            Kind::Type,
+            Kind::Unique,
+            Kind::Pdo,
+            Kind::TypeError,
+            Kind::ValueError,
+            Kind::Json,
+            Kind::Exception,
+            Kind::DateMalformedIntervalString,
+            Kind::Error,
+        ];
+        let class = class.strip_prefix('\\').unwrap_or(class);
+        ALL.into_iter().find(|k| k.php_class().eq_ignore_ascii_case(class))
     }
 
     /// The kind this kind's PHP class extends, if it extends another
@@ -115,7 +159,14 @@ impl Kind {
     pub fn parent(self) -> Option<Kind> {
         match self {
             Kind::Unique => Some(Kind::Duplicate),
-            Kind::Database | Kind::Pdo | Kind::TypeError | Kind::ValueError | Kind::Json | Kind::Exception => None,
+            Kind::Database
+            | Kind::Pdo
+            | Kind::TypeError
+            | Kind::ValueError
+            | Kind::Json
+            | Kind::Exception
+            | Kind::DateMalformedIntervalString
+            | Kind::Error => None,
             _ => Some(Kind::Database),
         }
     }
@@ -133,6 +184,31 @@ impl Error {
     pub fn with_code(mut self, code: i64) -> Self {
         self.code = code;
         self
+    }
+
+    /// The integer a string code becomes (`Utopia\Database\Exception`'s
+    /// constructor): a numeric string is cast to an integer (`"12"` is 12,
+    /// `" 1.9"` is 1, `"1e3"` is 1000, beyond `i64` it saturates), anything
+    /// else is 0.
+    ///
+    /// ```
+    /// use utopia_database::Error;
+    ///
+    /// assert_eq!(Error::string_code(b"42"), 42);
+    /// assert_eq!(Error::string_code(b"1.5"), 1);
+    /// assert_eq!(Error::string_code(b"HY000"), 0);
+    /// ```
+    ///
+    /// PHP: `Utopia\Database\Exception::__construct` with a string `$code`
+    /// (`is_numeric($code) ? (int) $code : 0`).
+    pub fn string_code(code: &[u8]) -> i64 {
+        if php_std::value::numeric_bytes_ex(code).is_some() { php_std::format::str_to_int(code) } else { 0 }
+    }
+
+    /// The same error with a string code, as [`Error::string_code`] turns it
+    /// into an integer.
+    pub fn with_string_code(self, code: &[u8]) -> Self {
+        self.with_code(Self::string_code(code))
     }
 
     /// The same error wrapping `previous`.
@@ -208,6 +284,7 @@ impl From<php_std::EngineError> for Error {
             "TypeError" => Kind::TypeError,
             "ValueError" => Kind::ValueError,
             "JsonException" => Kind::Json,
+            "Error" => Kind::Error,
             _ => Kind::Exception,
         };
         Error::new(kind, e.message)
