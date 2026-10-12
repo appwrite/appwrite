@@ -63,7 +63,9 @@ function Group({ label, open: initial, children, depth = 0, badge }: { label: Re
   )
 }
 
-const heading = 'px-2 pt-2 pb-1 text-[11px] font-semibold tracking-wider text-muted-foreground uppercase'
+// A group's title: strong ink and a rule above it, so it never reads as one of the rows below.
+const heading =
+  'mt-2 border-t border-border px-2 pt-3 pb-1 text-[11px] font-semibold tracking-wider text-sidebar-strong uppercase first:mt-0 first:border-t-0 first:pt-1'
 
 /** A library's own menu, a second column beside the catalog: its sections, modules (PHP: namespaces) and items. */
 export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?: () => void }) {
@@ -89,7 +91,7 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
     for (const c of nav.phpClasses.filter(hit)) byNamespace.set(nsOf(c), [...(byNamespace.get(nsOf(c)) ?? []), c])
     body = (
       <>
-        <div className="flex items-center justify-between pr-1">
+        <div className="mt-2 flex items-center justify-between border-t border-border pt-2 pr-1">
           <div className={heading}>PHP API</div>
           <FoldControls fold={fold} onFold={setFold} />
         </div>
