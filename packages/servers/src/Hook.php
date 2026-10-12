@@ -2,7 +2,7 @@
 
 namespace Utopia\Servers;
 
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Hook
 {

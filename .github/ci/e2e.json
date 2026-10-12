@@ -1,0 +1,468 @@
+{
+  "paths": {
+    "all": [
+      ".github/workflows/ci.yml",
+      ".github/actions/",
+      ".github/ci/",
+      ".github/scripts/changes.mjs",
+      ".github/scripts/check-native-crashes.sh",
+      ".github/gcrunner.yml"
+    ],
+    "console": [
+      "apps/console/",
+      ".github/workflows/console",
+      ".github/scripts/console/"
+    ],
+    "ignore": [
+      "apps/",
+      "*.md",
+      ".github/ISSUE_TEMPLATE/",
+      ".github/PULL_REQUEST_TEMPLATE",
+      "LICENSE"
+    ],
+    "checks": [
+      ".github/",
+      "docs/",
+      "tests/unit/",
+      "tests/benchmarks/",
+      "packages/*/tests/",
+      "src/Appwrite/Platform/Tasks/Specs.php",
+      "src/Appwrite/Platform/Tasks/SDKs.php",
+      "src/Appwrite/Platform/Tasks/Install.php",
+      "src/Appwrite/Platform/Tasks/Upgrade.php",
+      "src/Appwrite/Platform/Tasks/Doctor.php",
+      "src/Appwrite/Platform/Tasks/Vars.php",
+      "src/Appwrite/Platform/Tasks/Version.php",
+      "src/Appwrite/Platform/Tasks/Migrate.php",
+      "src/Appwrite/Platform/Installer/",
+      "app/views/install/"
+    ]
+  },
+  "services": [
+    {
+      "name": "Account",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Account/",
+        "app/controllers/api/account.php",
+        "src/Appwrite/Auth/OAuth2",
+        "src/Appwrite/Auth/OIDC/",
+        "src/Appwrite/Auth/Passkey/",
+        "src/Appwrite/Auth/MFA/",
+        "src/Appwrite/Platform/Workers/Mails.php",
+        "app/config/oAuthProviders.php",
+        "packages/messaging/",
+        "app/config/locale/"
+      ]
+    },
+    {
+      "name": "Avatars",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": ["src/Appwrite/Platform/Modules/Avatars/"]
+    },
+    {
+      "name": "Console",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": ["src/Appwrite/Platform/Modules/Console/"]
+    },
+    {
+      "name": "Databases",
+      "runner": "e2e-large",
+      "functional": false,
+      "processes": 3,
+      "documentsdb": true,
+      "embedding": true,
+      "paths": ["src/Appwrite/Platform/Modules/Databases/"]
+    },
+    {
+      "name": "TablesDB",
+      "runner": "e2e-large",
+      "functional": false,
+      "processes": 3,
+      "paths": ["src/Appwrite/Platform/Modules/Databases/"]
+    },
+    {
+      "name": "Functions",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Functions/",
+        "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Platform/Workers/Functions.php",
+        "src/Appwrite/Platform/Workers/Executions.php",
+        "src/Appwrite/Platform/Tasks/ScheduleFunctions.php",
+        "src/Appwrite/Platform/Tasks/ScheduleExecutions.php",
+        "src/Appwrite/Platform/Tasks/QueueRetry.php",
+        "packages/vcs/"
+      ]
+    },
+    {
+      "name": "FunctionsSchedule",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Functions/",
+        "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Workers/Functions.php",
+        "src/Appwrite/Platform/Tasks/ScheduleFunctions.php",
+        "src/Appwrite/Platform/Tasks/ScheduleExecutions.php",
+        "src/Appwrite/Platform/Tasks/Interval.php"
+      ]
+    },
+    {
+      "name": "GraphQL",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "app/controllers/api/graphql.php",
+        "app/controllers/api/account.php",
+        "app/controllers/api/locale.php",
+        "src/Appwrite/Platform/Modules/Account/",
+        "src/Appwrite/Platform/Modules/Avatars/",
+        "src/Appwrite/Platform/Modules/Databases/",
+        "src/Appwrite/Platform/Modules/Functions/",
+        "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Modules/Messaging/",
+        "src/Appwrite/Platform/Modules/Presences/",
+        "src/Appwrite/Platform/Modules/Storage/",
+        "src/Appwrite/Platform/Modules/Teams/",
+        "src/Appwrite/Platform/Modules/Users/",
+        "app/config/locale/",
+        "src/Appwrite/GraphQL/"
+      ]
+    },
+    {
+      "name": "Health",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": ["src/Appwrite/Platform/Modules/Health/"]
+    },
+    {
+      "name": "Advisor",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": ["src/Appwrite/Platform/Modules/Advisor/"]
+    },
+    {
+      "name": "Locale",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": ["app/controllers/api/locale.php", "app/config/locale/"]
+    },
+    {
+      "name": "Projects",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "documentsdb": true,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Projects/",
+        "app/controllers/api/projects.php",
+        "src/Appwrite/Platform/Workers/StatsResources.php",
+        "src/Appwrite/Platform/Workers/StatsUsage.php",
+        "src/Appwrite/Platform/Workers/Certificates.php"
+      ]
+    },
+    {
+      "name": "Realtime",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "documentsdb": true,
+      "paths": [
+        "app/realtime.php",
+        "src/Appwrite/Realtime/",
+        "src/Appwrite/Platform/Modules/Account/",
+        "app/controllers/api/account.php",
+        "src/Appwrite/Platform/Modules/Databases/",
+        "src/Appwrite/Platform/Modules/Functions/",
+        "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Modules/Messaging/",
+        "src/Appwrite/Platform/Modules/Storage/",
+        "src/Appwrite/Platform/Modules/Teams/",
+        "src/Appwrite/Platform/Modules/Users/",
+        "src/Appwrite/Platform/Workers/Functions.php",
+        "src/Appwrite/Messaging/Adapter/Realtime.php"
+      ]
+    },
+    {
+      "name": "Sites",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Sites/",
+        "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Modules/VCS/",
+        "src/Appwrite/Platform/Tasks/Screenshot.php",
+        "packages/vcs/"
+      ]
+    },
+    {
+      "name": "Proxy",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Proxy/",
+        "src/Appwrite/Platform/Workers/Certificates.php"
+      ]
+    },
+    {
+      "name": "Storage",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Storage/",
+        "src/Appwrite/Platform/Modules/S3/",
+        "src/Appwrite/Platform/Modules/Tokens/"
+      ]
+    },
+    {
+      "name": "Tokens",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Tokens/",
+        "src/Appwrite/Platform/Modules/Storage/"
+      ]
+    },
+    {
+      "name": "Teams",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Teams/",
+        "src/Appwrite/Platform/Modules/Organization/",
+        "src/Appwrite/Platform/Workers/Mails.php",
+        "app/config/locale/"
+      ]
+    },
+    {
+      "name": "Usage",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Usage/",
+        "src/Appwrite/Platform/Modules/Databases/",
+        "src/Appwrite/Platform/Modules/Functions/",
+        "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Modules/Storage/",
+        "src/Appwrite/Platform/Workers/StatsResources.php",
+        "src/Appwrite/Platform/Workers/StatsUsage.php",
+        "src/Appwrite/Platform/Tasks/StatsResources.php",
+        "src/Appwrite/Platform/Tasks/UsageSetup.php",
+        "src/Appwrite/Platform/Workers/Executions.php"
+      ]
+    },
+    {
+      "name": "Users",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Users/",
+        "src/Appwrite/Auth/MFA/",
+        "src/Appwrite/Auth/Passkey/",
+        "src/Appwrite/Platform/Workers/Mails.php"
+      ]
+    },
+    {
+      "name": "ProjectWebhooks",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Webhooks/",
+        "src/Appwrite/Platform/Workers/Webhooks.php"
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Webhooks/",
+        "src/Appwrite/Platform/Modules/Account/",
+        "app/controllers/api/account.php",
+        "src/Appwrite/Platform/Modules/Databases/",
+        "src/Appwrite/Platform/Modules/Functions/",
+        "src/Appwrite/Platform/Modules/Compute/",
+        "src/Appwrite/Platform/Modules/Storage/",
+        "src/Appwrite/Platform/Modules/Teams/",
+        "src/Appwrite/Platform/Modules/Users/",
+        "src/Appwrite/Platform/Workers/Webhooks.php",
+        "src/Appwrite/Platform/Tasks/QueueRetry.php"
+      ]
+    },
+    {
+      "name": "VCSGitHub",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": ["src/Appwrite/Platform/Modules/VCS/", "packages/vcs/"]
+    },
+    {
+      "name": "VCSGitea",
+      "runner": "e2e",
+      "functional": false,
+      "processes": null,
+      "paths": ["src/Appwrite/Platform/Modules/VCS/", "packages/vcs/"]
+    },
+    {
+      "name": "Messaging",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Messaging/",
+        "src/Appwrite/Platform/Workers/Messaging.php",
+        "src/Appwrite/Platform/Tasks/ScheduleMessages.php",
+        "src/Appwrite/Messaging/Adapter/Push/",
+        "packages/messaging/"
+      ]
+    },
+    {
+      "name": "Notifications",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Notifications/",
+        "src/Appwrite/Platform/Modules/Messaging/",
+        "src/Appwrite/Platform/Workers/Notifications.php",
+        "src/Appwrite/Messaging/Adapter/Push/",
+        "packages/messaging/"
+      ]
+    },
+    {
+      "name": "Migrations",
+      "runner": "e2e",
+      "functional": true,
+      "processes": 1,
+      "documentsdb": true,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Migrations/",
+        "src/Appwrite/Platform/Modules/Databases/",
+        "src/Appwrite/Platform/Workers/Migrations.php"
+      ]
+    },
+    {
+      "name": "Project",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Project/",
+        "app/controllers/api/project.php",
+        "src/Appwrite/Platform/Workers/StatsResources.php",
+        "src/Appwrite/Platform/Workers/StatsUsage.php"
+      ]
+    },
+    {
+      "name": "Organization",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Organization/",
+        "src/Appwrite/Platform/Modules/Teams/"
+      ]
+    },
+    {
+      "name": "Presences",
+      "runner": "e2e",
+      "functional": true,
+      "processes": null,
+      "paths": [
+        "src/Appwrite/Platform/Modules/Presences/",
+        "src/Appwrite/Presences/",
+        "app/realtime.php",
+        "src/Appwrite/Realtime/",
+        "src/Appwrite/Messaging/Adapter/Realtime.php"
+      ]
+    },
+    {
+      "name": "Mqtt",
+      "runner": "e2e",
+      "functional": false,
+      "processes": 1,
+      "paths": [
+        "app/mqtt.php",
+        "src/Appwrite/Mqtt/",
+        "src/Appwrite/Messaging/Adapter/Mqtt.php"
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "label": "Abuse",
+      "group": "abuseEnabled",
+      "path": "/usr/src/code/tests/e2e",
+      "options_abuse": "enabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "",
+      "wait": "",
+      "services": ["Account"]
+    },
+    {
+      "label": "Screenshots",
+      "group": "screenshots",
+      "path": "/usr/src/code/tests/e2e/Services/Sites",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "",
+      "wait": "executor",
+      "services": ["Sites"]
+    },
+    {
+      "label": "Antivirus",
+      "group": "antivirus",
+      "path": "/usr/src/code/tests/e2e/Services/Storage",
+      "options_abuse": "disabled",
+      "storage_antivirus": "enabled",
+      "compose_profiles": "antivirus",
+      "wait": "clamav",
+      "services": ["Storage"]
+    },
+    {
+      "label": "S3 Storage",
+      "group": "s3",
+      "path": "/usr/src/code/tests/e2e/Services",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "s3",
+      "wait": "executor",
+      "storage_device": "s3",
+      "services": ["Functions", "Storage"]
+    },
+    {
+      "label": "Queue Retry",
+      "group": "queueRetry",
+      "path": "/usr/src/code/tests/e2e/Services",
+      "options_abuse": "disabled",
+      "storage_antivirus": "disabled",
+      "compose_profiles": "",
+      "wait": "executor",
+      "services": ["Functions", "Webhooks"]
+    }
+  ]
+}

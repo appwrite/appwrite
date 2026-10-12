@@ -18,6 +18,7 @@ use Appwrite\SDK\Response as SDKResponse;
 use Appwrite\Usage\Context;
 use Appwrite\Utopia\Database\Documents\User;
 use Appwrite\Utopia\Response as UtopiaResponse;
+use Utopia\Console;
 use Utopia\Database\Database;
 use Utopia\Database\Document;
 use Utopia\Database\Exception\Authorization as AuthorizationException;
@@ -188,7 +189,7 @@ class Update extends Action
 
             $dbForDatabases = $getDatabasesDB($databaseDoc);
 
-            $transaction = $authorization->skip(fn () => $dbForProject->withTransaction(function () use ($dbForProject, $transactionId) {
+            $claim = function () use ($dbForProject, $transactionId) {
                 // Re-read under a lock, a concurrent commit of the same transaction must not apply its operations twice
                 $current = $dbForProject->getDocument('transactions', $transactionId, forUpdate: true);
 
@@ -197,7 +198,11 @@ class Update extends Action
                 }
 
                 return $dbForProject->updateDocument('transactions', $transactionId, new Document(['status' => 'committing']));
-            }));
+            };
+
+            $transaction = ($isAPIKey || $isPrivilegedUser)
+                ? $authorization->skip(fn () => $dbForProject->withTransaction($claim))
+                : $dbForProject->withTransaction($claim);
 
             if ($transaction->isEmpty()) {
                 throw new Exception(Exception::TRANSACTION_NOT_READY);
@@ -235,7 +240,7 @@ class Update extends Action
                     }
                 }
 
-                $dbForDatabases->withTransaction(function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections, $isAPIKey, $isPrivilegedUser, $authorization) {
+                $commit = function () use ($dbForDatabases, $transactionState, &$operations, &$totalOperations, &$databaseOperations, &$currentDocumentId, $collections, $isAPIKey, $isPrivilegedUser, $authorization) {
                     $state = [];
 
                     foreach ($operations as $operation) {
@@ -322,7 +327,22 @@ class Update extends Action
                         }
                     }
 
-                });
+                };
+
+                // Every write purges its cached rows, nested and cascaded rows included, inside a savepoint of
+                // this transaction, so a read before COMMIT can cache the old row again. Purge them again after COMMIT.
+                $purged = $dbForDatabases->getCache()->recordPurges(fn () => $dbForDatabases->withTransaction($commit));
+
+                // The commit already landed, so a cache error must not fail it
+                foreach ($purged as $key => $hashes) {
+                    foreach (\array_keys($hashes) as $hash) {
+                        try {
+                            $dbForDatabases->getCache()->purge($key, $hash);
+                        } catch (\Throwable $e) {
+                            Console::warning('Failed to purge committed document from cache: ' . $e->getMessage());
+                        }
+                    }
+                }
 
                 $transaction = $authorization->skip(fn () => $dbForProject->updateDocument(
                     'transactions',
@@ -509,6 +529,9 @@ class Update extends Action
                 $webhooksEvents = $eventProcessor->getWebhooksEvents($project);
 
                 foreach ($documentsToTrigger as $doc) {
+                    $doc->removeAttribute('$collection');
+                    $doc->removeAttribute('$tenant');
+
                     // Match the key set processDocument() gives every other row and document
                     // event: the synthetic $databaseId, plus whichever of $tableId or
                     // $collectionId belongs to the surface that was called.

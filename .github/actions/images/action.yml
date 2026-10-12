@@ -1,0 +1,45 @@
+name: Images
+description: Pull the CI Appwrite image and the compose service images.
+
+inputs:
+  username:
+    description: Docker Hub username
+    required: false
+    default: ''
+  token:
+    description: Docker Hub token; pulls run anonymously without it
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Login to Docker Hub
+      if: inputs.token != ''
+      uses: docker/login-action@4907a6ddec9925e35a0a9e82d7399ccc52663121 # v4.1.0
+      with:
+        username: ${{ inputs.username }}
+        password: ${{ inputs.token }}
+
+    - name: Pull images
+      shell: bash
+      run: |
+        image="${GCRUNNER_REGISTRY_PULL}/appwrite:${IMAGE}-${GITHUB_SHA}"
+        docker pull --quiet "$image" &
+        pull=$!
+
+        # Docker Hub registry timeouts are a common transient CI failure, so retry
+        # the pull; `up` stays single-shot so genuine health failures still surface.
+        for attempt in 1 2 3; do
+          if docker compose pull --quiet --ignore-buildable; then
+            break
+          elif [ "$attempt" -eq 3 ]; then
+            echo "::error::docker compose pull failed after 3 attempts; aborting"
+            exit 1
+          fi
+          echo "::warning::docker compose pull failed (attempt ${attempt}/3); retrying in 15s"
+          sleep 15
+        done
+
+        wait "$pull"
+        docker tag "$image" "$IMAGE"

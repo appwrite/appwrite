@@ -1,0 +1,52 @@
+---
+layout: article
+title: Support SLA
+description: Learn about Appwrite's support service level agreement (SLA) including response times, severity levels, and support commitments for different subscription tiers.
+---
+
+This Support Service Level Agreement ("SLA") describes the support services provided by APPWRITE ("we," "us," or "our") to users of our products and services ("you" or "user"). By using our services, you agree to the terms of this SLA.
+
+# Scope
+
+This SLA outlines our commitments for providing support services via email, including response and resolution processes based on issue severity. The specific response times depend on the support tier associated with your support plan: **Silver**, **Gold**, or **Platinum**.
+
+# Severity levels
+
+Support issues are categorized into the following severity levels:
+
+- **Critical**: System is down or a critical component is non-functional, causing a complete stoppage of work or significant business impact.
+- **High**: Major functionality is impaired, but a workaround is available, or a critical component is significantly degraded.
+- **Medium**: Minor functionality is impaired without significant business impact.
+- **Low**: Issue has minor impact on business operations; workaround is not necessary.
+- **Question**: Requests for information, general guidance, or feature requests.
+
+# Response time targets
+
+| Severity | Silver | Gold | Platinum |
+| --- | --- | --- | --- |
+| Critical | Unsupported | 1 hour (24/7/365) | 15 minutes (24/7/365) |
+| High | Unsupported | 4 hours (24/7/365) | 1 hour (24/7/365) |
+| Medium | 2 business days | 1 business day | 12 hours (24/7/365) |
+| Low | 3 business days | 2 business days | 24 hours (24/7/365) |
+| Question | 4 business days | 3 business days | 1 business day |
+
+# Business hours and days
+
+Our standard business hours are from **9:00 AM to 5:00 PM Pacific Time**, Monday through Friday, excluding public holidays. Platinum and Gold support plan customers receive extended support 24/7/365.
+
+# User responsibilities
+
+To ensure effective support, users are expected to:
+
+- Provide detailed information about each issue, including screenshots, error messages, logs, and steps to reproduce the problem.
+- Ensure relevant personnel are available to assist in diagnosing and resolving issues.
+- Implement reasonable recommendations provided by our support team.
+
+# Limitations and exclusions
+
+- This SLA applies only to support requests submitted via the Appwrite Console.
+- SLA obligations may be affected by factors outside our reasonable control, including but not limited to force majeure events, third-party dependencies, or actions taken by the user.
+
+{% partial file="policy-modifications.md" /%}
+
+{% partial file="policy-contact-us.md" /%}

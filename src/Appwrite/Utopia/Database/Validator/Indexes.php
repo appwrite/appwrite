@@ -4,7 +4,7 @@ namespace Appwrite\Utopia\Database\Validator;
 
 use Utopia\Database\Database;
 use Utopia\Database\Validator\Key;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Indexes extends Validator
 {

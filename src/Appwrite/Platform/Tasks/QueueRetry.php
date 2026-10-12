@@ -2,7 +2,7 @@
 
 namespace Appwrite\Platform\Tasks;
 
-use Utopia\Console;
+use Utopia\Console\Console;
 use Utopia\Platform\Action;
 use Utopia\Queue\Publisher\Synchronous as Publisher;
 use Utopia\Queue\Queue;
@@ -22,7 +22,7 @@ class QueueRetry extends Action
         $this
             ->desc('Retry failed jobs from a specific queue identified by the name parameter')
             ->param('name', '', new Text(100), 'Queue name')
-            ->param('limit', 0, new Wildcard(), 'jobs limit', true)
+            ->param('limit', '', new Wildcard(), 'Maximum number of failed jobs to retry. Retries all of them when omitted.', true)
             ->inject('publisher')
             ->callback($this->action(...));
     }
@@ -39,7 +39,18 @@ class QueueRetry extends Action
             return;
         }
 
-        $limit = (int)$limit;
+        // Every broker reads a null limit as "no cap" and 0 as "retry nothing",
+        // so an omitted --limit must stay null rather than be cast to 0.
+        if ($limit === null || $limit === '') {
+            $limit = null;
+        } elseif (\ctype_digit((string) $limit) && (int) $limit > 0) {
+            $limit = (int) $limit;
+        } else {
+            Console::error('Parameter --limit must be a positive whole number of jobs.');
+            Console::exit(1);
+            return;
+        }
+
         Console::log('Retrying failed jobs...');
         $publisher->retry(new Queue($name), $limit);
     }

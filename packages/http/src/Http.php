@@ -8,7 +8,7 @@ use Utopia\Telemetry\Adapter as Telemetry;
 use Utopia\Telemetry\Adapter\None as NoTelemetry;
 use Utopia\Telemetry\Histogram;
 use Utopia\Telemetry\UpDownCounter;
-use Utopia\Validator;
+use Utopia\Validator\Validator;
 
 class Http
 {

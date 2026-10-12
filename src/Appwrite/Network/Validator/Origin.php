@@ -3,8 +3,8 @@
 namespace Appwrite\Network\Validator;
 
 use Appwrite\Network\Platform;
-use Utopia\Validator;
 use Utopia\Validator\Hostname;
+use Utopia\Validator\Validator;
 
 class Origin extends Validator
 {

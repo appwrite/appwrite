@@ -1,0 +1,38 @@
+---
+layout: article
+title: Pro
+description: Understand Appwrite's pricing plans, behaviors, billing cycles, and limitations.
+---
+
+Appwrite Cloud's Pro plan is designed for professional developers or development teams that need to build applications at scale.
+When applications outgrow Appwrite's Free plan, organizations can switch to a Pro plan to continue growing their apps.
+You can learn more about the Pro plan on the [pricing page](https://appwrite.io/pricing).
+
+# Create a Pro plan organization {% #create-a-pro-plan-organizations %}
+
+Appwrite's plans are applied to an entire organization, but resources are allocated per project.
+Get started with a Pro plan organization by visiting the [pricing page](https://appwrite.io/pricing) and click **Start building**
+or create a new organization from the Appwrite Console and select **Pro plan**.
+
+## Switch to Pro plan {% #switch-to-pro-plan %}
+
+You can access your organization's overview through the profile menu at the top right of your Appwrite Console.
+Under the **Billing** tab, you can click **Change plan** to update your organization's plan.
+
+# Resource limits {% #resource-limits %}
+
+Each plan in Appwrite Cloud has a set of resource limits per project. You can find the details of these resource limits on the [pricing page](https://appwrite.io/pricing).
+
+Additional resources are automatically purchased when your organization exceeds the resource limits to continue scaling until the budget cap is reached.
+Each resource limit is applied per billing period and resets at the beginning of each billing period.
+
+## Budget cap {% #budget-cap %}
+
+Appwrite allows organizations to set budget caps when using a Pro plan.
+Appwrite will automatically scale Pro plan projects as they require more resources.
+Budget caps limit the amount of automatic scaling and prevent unexpected bills.
+
+Organization budget caps can be set by navigating to the organization's **Billing** tab, under **Budget cap**, toggling, and setting a budget cap.
+Appwrite will send emails to warn organization members when they are near the budget cap.
+
+{% partial file="resource-limits.md" /%}
