@@ -51,6 +51,8 @@ export interface LibrarySummary {
     linked: number
     /** The PHP library's tasks and how many the crate ports or waives (older data leaves it out). */
     tasks?: { total: number; ported: number; waived: number; pending: number }
+    /** How many dependencies of each kind (older data leaves it out). `php` counts the PHP package's `require`. */
+    dependencies?: { rust: number; dev: number; build: number; used_by: number; php: number }
   }
   /** Geometric mean of the benchmark speedups (PHP time / Rust time), compat benchmarks left out. */
   bench: { speedup: number; benchmarks: number } | null
@@ -223,6 +225,53 @@ export function duration(ns: number) {
 /** `2.167` → `2.2×`. */
 export const times = (x: number) => `${x >= 10 ? Math.round(x) : x.toFixed(1)}×`
 
+/** A dependency of the Rust crate, from its `Cargo.toml` (workspace entries resolved). */
+export interface RustDependency {
+  /** The key in the manifest. */
+  name: string
+  /** The crate's name on crates.io (differs from `name` when renamed). */
+  package: string
+  kind: 'normal' | 'dev' | 'build'
+  /** A `[target.'cfg(…)'.dependencies]` table's target. */
+  target: string | null
+  requirement: string | null
+  /** Repository path of a workspace member. */
+  path: string | null
+  git: string | null
+  workspace: boolean
+  optional: boolean
+  default_features: boolean
+  features: string[]
+  /** The crate features that turn an optional dependency on. */
+  enabled_by: string[]
+  /** The version `Cargo.lock` resolved. */
+  locked: string | null
+  /** The library's slug, for another Utopia crate of this repository. */
+  utopia: string | null
+  /** The comment above the entry, in the crate's manifest or the workspace's. */
+  note: string | null
+}
+
+/** A requirement of the PHP package's `composer.json`. */
+export interface PhpDependency {
+  name: string
+  kind: 'normal' | 'dev'
+  requirement: string
+  /** `php`, `ext-*` and `lib-*`: the runtime, not a package. */
+  platform: boolean
+  locked: string | null
+  utopia: string | null
+}
+
+export interface Dependencies {
+  rust: RustDependency[]
+  dev: RustDependency[]
+  build: RustDependency[]
+  /** The Utopia crates that depend on this one, and how. */
+  used_by: { slug: string; kinds: RustDependency['kind'][] }[]
+  php: PhpDependency[]
+}
+
 export interface Library {
   library: LibrarySummary
   bench: Bench | null
@@ -232,6 +281,8 @@ export interface Library {
   guide: GuideBlock[]
   /** Older data leaves it out. */
   tasks?: Task[]
+  /** Older data leaves it out. */
+  dependencies?: Dependencies
   sync: Sync
   examples: Example[]
   modules: Module[]
