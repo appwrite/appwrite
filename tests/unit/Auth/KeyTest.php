@@ -6,7 +6,9 @@ namespace Tests\Unit\Auth;
 
 use Ahc\Jwt\JWT;
 use Appwrite\Auth\Key;
+use Appwrite\Extend\Exception;
 use Appwrite\Utopia\Database\Documents\User;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use Utopia\Config\Config;
 use Utopia\Database\Document;
@@ -25,7 +27,6 @@ final class KeyTest extends TestCase
             'documents.read',
         ];
         $roleScopes = Config::getParam('roles', [])[User::ROLE_KEYS]['scopes'];
-        $guestRoleScopes = Config::getParam('roles', [])[User::ROLE_GUESTS]['scopes'];
 
         $key = self::generateKey($projectId, $usage, $scopes);
         $decoded = Key::decode(
@@ -76,39 +77,6 @@ final class KeyTest extends TestCase
         $this->assertEquals(true, $decoded->isDeploymentStatusIgnored());
         $this->assertTrue($decoded->isRuntimeEphemeral());
 
-        // Decode invalid ephemeral key
-        $invalidKey = API_KEY_EPHEMERAL . '_invalid_jwt_token';
-        $decoded = Key::decode(
-            project: new Document(['$id' => $projectId]),
-            team: new Document(),
-            user: new Document(),
-            key: $invalidKey,
-        );
-        $this->assertSame($projectId, $decoded->getProjectId());
-        $this->assertSame('', $decoded->getTeamId());
-        $this->assertSame('', $decoded->getUserId());
-        $this->assertSame(API_KEY_EPHEMERAL, $decoded->getType());
-        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
-        $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertSame('UNKNOWN', $decoded->getName());
-
-        // Decode expired ephemeral key
-        $expiredKey = self::generateKey($projectId, $usage, $scopes, maxAge: 1, timestamp: time() - 60);
-        \sleep(2);
-        $decoded = Key::decode(
-            project: new Document(['$id' => $projectId]),
-            team: new Document(),
-            user: new Document(),
-            key: $expiredKey,
-        );
-        $this->assertSame($projectId, $decoded->getProjectId());
-        $this->assertSame('', $decoded->getTeamId());
-        $this->assertSame('', $decoded->getUserId());
-        $this->assertSame(API_KEY_EPHEMERAL, $decoded->getType());
-        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
-        $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertSame('UNKNOWN', $decoded->getName());
-
         // Decode standard key
         $scopes = ['custom.write'];
         $decoded = Key::decode(
@@ -154,29 +122,6 @@ final class KeyTest extends TestCase
         $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertEquals(\array_merge($scopes, $roleScopes), $decoded->getScopes());
         $this->assertSame('Standard key', $decoded->getName());
-
-        // Decode invalid standard key
-        $scopes = ['custom.write'];
-        $decoded = Key::decode(
-            project: new Document(['$id' => $projectId, 'keys' => [
-                new Document([
-                    'secret' => 'standard_abcd1234',
-                    'expire' => null,
-                    'name' => 'Standard key',
-                    'scopes' => ['custom.write']
-                ])
-            ]]),
-            team: new Document(),
-            user: new Document(),
-            key: 'standard_efgh5678',
-        );
-        $this->assertSame($projectId, $decoded->getProjectId());
-        $this->assertSame('', $decoded->getTeamId());
-        $this->assertSame('', $decoded->getUserId());
-        $this->assertSame(API_KEY_STANDARD, $decoded->getType());
-        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
-        $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertSame('UNKNOWN', $decoded->getName());
 
         // Decode expired standard key
         $scopes = ['custom.write'];
@@ -227,29 +172,6 @@ final class KeyTest extends TestCase
         $this->assertSame($scopes, $decoded->getScopes());
         $this->assertSame('Account key', $decoded->getName());
 
-        // Decode invalid account key
-        $scopes = ['teams.write'];
-        $decoded = Key::decode(
-            project: new Document(['$id' => $projectId]),
-            team: new Document(),
-            user: new Document(['$id' => $userId, 'keys' => [
-                new Document([
-                    'secret' => 'account_abcd1234',
-                    'expire' => null,
-                    'name' => 'Account key',
-                    'scopes' => $scopes
-                ])
-            ]]),
-            key: 'account_efgh5678',
-        );
-        $this->assertSame($projectId, $decoded->getProjectId());
-        $this->assertSame('', $decoded->getTeamId());
-        $this->assertSame('', $decoded->getUserId());
-        $this->assertSame(API_KEY_ACCOUNT, $decoded->getType());
-        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
-        $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertSame('UNKNOWN', $decoded->getName());
-
         // Decode expired account key
         $scopes = ['teams.write'];
         $decoded = Key::decode(
@@ -298,29 +220,6 @@ final class KeyTest extends TestCase
         $this->assertSame($scopes, $decoded->getScopes());
         $this->assertSame('Organization key', $decoded->getName());
 
-        // Decode invalid organization key
-        $scopes = ['projects.write'];
-        $decoded = Key::decode(
-            project: new Document(['$id' => $projectId]),
-            team: new Document(['$id' => $teamId, 'keys' => [
-                new Document([
-                    'secret' => 'organization_abcd1234',
-                    'expire' => null,
-                    'name' => 'Organization key',
-                    'scopes' => $scopes
-                ])
-            ]]),
-            user: new Document(),
-            key: 'organization_efgh5678',
-        );
-        $this->assertSame($projectId, $decoded->getProjectId());
-        $this->assertSame('', $decoded->getTeamId());
-        $this->assertSame('', $decoded->getUserId());
-        $this->assertSame(API_KEY_ORGANIZATION, $decoded->getType());
-        $this->assertSame(User::ROLE_GUESTS, $decoded->getRole());
-        $this->assertEquals($guestRoleScopes, $decoded->getScopes());
-        $this->assertSame('UNKNOWN', $decoded->getName());
-
         // Decode expired organization key
         $scopes = ['projects.write'];
         $decoded = Key::decode(
@@ -344,6 +243,124 @@ final class KeyTest extends TestCase
         $this->assertSame(User::ROLE_KEYS, $decoded->getRole());
         $this->assertSame($scopes, $decoded->getScopes());
         $this->assertSame('Organization key', $decoded->getName());
+    }
+
+    #[DataProvider('invalidKeys')]
+    public function testDecodeInvalid(Document $project, Document $team, Document $user, string $key): void
+    {
+        try {
+            Key::decode(
+                project: $project,
+                team: $team,
+                user: $user,
+                key: $key,
+            );
+            $this->fail('Invalid key must be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::USER_UNAUTHORIZED, $error->getType());
+        }
+    }
+
+    /**
+     * @return array<string, array{0: Document, 1: Document, 2: Document, 3: string}>
+     */
+    public static function invalidKeys(): array
+    {
+        $projectId = 'test';
+        $userId = 'user123';
+        $teamId = 'team123';
+        $storedStandard = new Document(['$id' => $projectId, 'keys' => [
+            new Document([
+                'secret' => 'standard_abcd1234',
+                'expire' => null,
+                'name' => 'Standard key',
+                'scopes' => ['custom.write'],
+            ]),
+        ]]);
+        $storedAccount = new Document(['$id' => $userId, 'keys' => [
+            new Document([
+                'secret' => 'account_abcd1234',
+                'expire' => null,
+                'name' => 'Account key',
+                'scopes' => ['teams.write'],
+            ]),
+        ]]);
+        $storedOrganization = new Document(['$id' => $teamId, 'keys' => [
+            new Document([
+                'secret' => 'organization_abcd1234',
+                'expire' => null,
+                'name' => 'Organization key',
+                'scopes' => ['projects.write'],
+            ]),
+        ]]);
+
+        return [
+            'invalid ephemeral jwt' => [
+                new Document(['$id' => $projectId]),
+                new Document(),
+                new Document(),
+                API_KEY_EPHEMERAL . '_invalid_jwt_token',
+            ],
+            'invalid dynamic jwt' => [
+                new Document(['$id' => $projectId]),
+                new Document(),
+                new Document(),
+                'dynamic_totally_invalid',
+            ],
+            'mismatched ephemeral project' => [
+                new Document(['$id' => $projectId]),
+                new Document(),
+                new Document(),
+                self::generateKey('other-project', false, ['documents.read']),
+            ],
+            'invalid standard key' => [
+                $storedStandard,
+                new Document(),
+                new Document(),
+                'standard_efgh5678',
+            ],
+            'unknown prefix' => [
+                new Document(['$id' => $projectId]),
+                new Document(),
+                new Document(),
+                'unknown_prefix_secret',
+            ],
+            'random secret' => [
+                new Document(['$id' => $projectId]),
+                new Document(),
+                new Document(),
+                'not-a-real-key',
+            ],
+            'invalid account key' => [
+                new Document(['$id' => $projectId]),
+                new Document(),
+                $storedAccount,
+                'account_efgh5678',
+            ],
+            'invalid organization key' => [
+                new Document(['$id' => $projectId]),
+                $storedOrganization,
+                new Document(),
+                'organization_efgh5678',
+            ],
+        ];
+    }
+
+    public function testDecodeExpiredEphemeral(): void
+    {
+        $expiredKey = self::generateKey('test', false, ['documents.read'], maxAge: 1, timestamp: time() - 60);
+
+        try {
+            Key::decode(
+                project: new Document(['$id' => 'test']),
+                team: new Document(),
+                user: new Document(),
+                key: $expiredKey,
+            );
+            $this->fail('Expired ephemeral key must be refused');
+        } catch (Exception $error) {
+            $this->assertSame(Exception::USER_UNAUTHORIZED, $error->getType());
+        }
     }
 
     private static function generateKey(
