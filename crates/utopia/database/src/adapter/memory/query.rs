@@ -362,7 +362,7 @@ impl Store {
             let Value::Array(row) = row else { continue };
             if ctx.shared {
                 let tenant = row.get_str("_tenant").cloned().unwrap_or(Value::Null);
-                if !(allow_null_tenant && matches!(tenant, Value::Null)) && !tenant.strict_eq(&ctx.tenant) {
+                if !(tenant.strict_eq(&ctx.tenant) || (allow_null_tenant && matches!(tenant, Value::Null))) {
                     continue;
                 }
             }

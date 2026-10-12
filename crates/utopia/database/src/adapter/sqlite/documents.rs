@@ -884,7 +884,7 @@ impl Sqlite {
                         value = sql::json_encode(&value);
                     }
                     let bind_key = format!("key_{bind_index}");
-                    if !(is_spatial(key.as_ref(), &spatial) && !matches!(value, Value::Null)) {
+                    if !is_spatial(key.as_ref(), &spatial) || matches!(value, Value::Null) {
                         value = int_bool(value);
                     }
                     bind_keys.push(format!(":{bind_key}"));
