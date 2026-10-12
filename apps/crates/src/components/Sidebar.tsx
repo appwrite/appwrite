@@ -129,12 +129,9 @@ export function LibraryMenu({ nav, onNavigate }: { nav: Navigation; onNavigate?:
         {shown.map((m) => {
           const parts = below(m.path).length
           return (
-            <Link key={m.path} to="/$lib/$" params={{ lib: slug, _splat: moduleSplat(m.path) }} className={`${row} items-start`} title={m.summary || m.path}>
-              <span className="grid min-w-0 gap-0.5">
-                <span className="truncate font-mono text-[12.5px]">{m.path}</span>
-                {m.summary ? <span className="line-clamp-1 text-[11.5px] text-muted-foreground">{m.summary}</span> : null}
-              </span>
-              {parts ? <span className="ml-auto pt-0.5 text-[10.5px] whitespace-nowrap text-muted-foreground">{parts} {parts === 1 ? 'submodule' : 'submodules'}</span> : null}
+            <Link key={m.path} to="/$lib/$" params={{ lib: slug, _splat: moduleSplat(m.path) }} className={row} title={m.summary || m.path}>
+              <span className="truncate font-mono text-[12.5px]">{m.path}</span>
+              {parts ? <span className="ml-auto text-[10.5px] whitespace-nowrap text-muted-foreground">{parts} {parts === 1 ? 'submodule' : 'submodules'}</span> : null}
             </Link>
           )
         })}
