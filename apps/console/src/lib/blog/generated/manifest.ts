@@ -3,6 +3,20 @@ import type { BlogPostMeta } from '../types'
 
 export const BLOG_POSTS: BlogPostMeta[] = [
   {
+    "slug": "announcing-passkeys",
+    "href": "/blog/post/announcing-passkeys",
+    "title": "Announcing passkeys: Sign in without a password on the web, Android, and iOS",
+    "description": "Appwrite Auth now supports passkeys. Users sign up and sign in with Face ID, Touch ID, a fingerprint, or the device PIN, and one passkey works on your website and in your Android and iOS apps.",
+    "date": "2026-10-12",
+    "lastUpdated": "2026-10-12",
+    "timeToRead": 6,
+    "author": "chirag-aggarwal",
+    "category": "announcements, security",
+    "featured": false,
+    "cover": "/images/blog/announcing-passkeys/cover.avif",
+    "hasCover": true
+  },
+  {
     "slug": "deno-deploy-alternative",
     "href": "/blog/post/deno-deploy-alternative",
     "title": "Appwrite Deno Functions as a Deno Deploy alternative",

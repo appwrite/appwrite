@@ -30,7 +30,7 @@ Today, Appwrite Auth supports passkeys on the web, Android, and Apple platforms.
 
 # Sign up and sign in with a passkey
 
-![Signing in with a passkey in an Android app against Appwrite Cloud](/images/blog/announcing-passkeys/android-signed-in.avif)
+![A web app offering to sign in with a passkey instead of a password](/images/blog/announcing-passkeys/web-sign-in.avif)
 
 After a user signs up, your app can offer to create a passkey. The next time they sign in, they pick it from the system sheet and confirm with Face ID, Touch ID, a fingerprint, or the device PIN. There is no email field and no password to type, because the passkey tells Appwrite which account it belongs to.
 
@@ -81,6 +81,8 @@ const token = await account.updatePasskeyToken({
 });
 await account.createSession({ userId: token.userId, secret: token.secret });
 ```
+
+![An Android app signing in with a saved passkey from the system sheet](/images/blog/announcing-passkeys/android-sign-in.avif)
 
 Android apps use Credential Manager, Apple apps use Authentication Services, and Flutter and React Native apps use the `passkeys` and `react-native-passkey` packages. All of them read and return the same WebAuthn JSON that Appwrite uses, so the calls to Appwrite stay the same.
 

@@ -76,7 +76,12 @@ await project.updateAuthMethod({ methodId: 'passkey', enabled: true });
 
 # Local development {% #local-development %}
 
-![Signing in with a passkey on http://localhost:5173 against Appwrite Cloud](/images/docs/auth/passkeys/web-signed-in.avif)
+{% only_dark %}
+![An app on http://localhost:5173 signed in with a passkey against Appwrite Cloud](/images/docs/auth/passkeys/dark/local-development.avif)
+{% /only_dark %}
+{% only_light %}
+![An app on http://localhost:5173 signed in with a passkey against Appwrite Cloud](/images/docs/auth/passkeys/local-development.avif)
+{% /only_light %}
 
 Add `localhost` as a web platform, and passkeys work on `http://localhost` on any port. Requests from localhost get their own relying party, `localhost`, so you can develop without a domain and without touching the production relying party ID.
 
@@ -165,7 +170,12 @@ Apple fetches the file through its CDN, so changes can take a while to reach dev
 
 # Register a passkey {% #register %}
 
-![A passkey created from an Android app and verified by Appwrite](/images/docs/auth/passkeys/android-passkey-created.avif)
+{% only_dark %}
+![An Android app creating an account, then saving a passkey for it](/images/docs/auth/passkeys/dark/android-register.avif)
+{% /only_dark %}
+{% only_light %}
+![An Android app creating an account, then saving a passkey for it](/images/docs/auth/passkeys/android-register.avif)
+{% /only_light %}
 
 A passkey is added to an account the user is already signed in to. For a new user, create the account and a session first, then register the passkey. For an existing user, offer to add a passkey after they sign in.
 
@@ -204,7 +214,12 @@ const passkey = await account.updatePasskeyVerification({
 {% tabsitem #register-flutter title="Flutter" %}
 Flutter apps call the platform's passkey API through the [`passkeys`](https://pub.dev/packages/passkeys) package, which reads and returns the same JSON Appwrite uses.
 
-![A passkey created from a Flutter app on Android](/images/docs/auth/passkeys/flutter-passkey-created.avif)
+{% only_dark %}
+![A Flutter app listing the passkeys on the signed-in account](/images/docs/auth/passkeys/dark/flutter-passkeys.avif)
+{% /only_dark %}
+{% only_light %}
+![A Flutter app listing the passkeys on the signed-in account](/images/docs/auth/passkeys/flutter-passkeys.avif)
+{% /only_light %}
 
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
@@ -353,7 +368,12 @@ const passkey = await account.updatePasskeyVerification({
 
 # Sign in with a passkey {% #sign-in %}
 
-![Signing in with a passkey from an Android app](/images/docs/auth/passkeys/android-signed-in.avif)
+{% only_dark %}
+![An Android app signing in with a saved passkey from the system sheet](/images/docs/auth/passkeys/dark/android-sign-in.avif)
+{% /only_dark %}
+{% only_light %}
+![An Android app signing in with a saved passkey from the system sheet](/images/docs/auth/passkeys/android-sign-in.avif)
+{% /only_light %}
 
 Sign-in needs no email or password. The user picks one of their passkeys for your domain, and Appwrite finds the account it belongs to.
 
@@ -394,8 +414,6 @@ const session = await account.createSession({
 {% /tabsitem %}
 
 {% tabsitem #sign-in-flutter title="Flutter" %}
-![Signing in with a passkey from a Flutter app on Android](/images/docs/auth/passkeys/flutter-signed-in.avif)
-
 ```client-flutter
 import 'package:appwrite/appwrite.dart';
 import 'package:passkeys/authenticator.dart';
@@ -543,6 +561,13 @@ const session = await account.createSession({
 {% /tabs %}
 
 # Manage passkeys {% #manage %}
+
+{% only_dark %}
+![A security settings page listing two passkeys with when each was added and last used](/images/docs/auth/passkeys/dark/manage-passkeys.avif)
+{% /only_dark %}
+{% only_light %}
+![A security settings page listing two passkeys with when each was added and last used](/images/docs/auth/passkeys/manage-passkeys.avif)
+{% /only_light %}
 
 Signed-in users can list, rename, and delete their own passkeys, for example from a security settings screen. Each passkey records its name and when it was last used. Like registration, deleting a passkey needs a session that signed in, or completed MFA, within the last 10 minutes.
 

@@ -1439,7 +1439,7 @@ export const DOCS_PAGES: DocsPageMeta[] = [
     "title": "Passkeys",
     "description": "Let users sign up and sign in with a passkey, a key pair stored on their device and unlocked with Face ID, Touch ID, a fingerprint, or a device PIN, on the web, Android, and Apple platforms.",
     "layout": "article",
-    "readingTimeMinutes": 8
+    "readingTimeMinutes": 9
   },
   {
     "slug": "products/auth/phone-sms",
