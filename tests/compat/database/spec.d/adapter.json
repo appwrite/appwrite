@@ -617,6 +617,9 @@
       "covers": [
         "Utopia\\Database\\Adapter\\SQL::find"
       ],
+      "services": [
+        "database-postgres"
+      ],
       "fuzz": [
         {
           "name": "filter programs",
@@ -729,6 +732,9 @@
       "covers": [
         "Utopia\\Database\\Adapter\\Postgres::createDocument",
         "Utopia\\Database\\Adapter\\SQL::getDocument"
+      ],
+      "services": [
+        "database-postgres"
       ],
       "fuzz": [
         {
