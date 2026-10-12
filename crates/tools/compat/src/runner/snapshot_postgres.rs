@@ -168,17 +168,15 @@ async fn table(client: &Client, ns: &str, oid: &str, name: &str) -> Result<Value
     let rows = if names.is_empty() {
         Vec::new()
     } else {
-        let mut order: Vec<String> = Vec::new();
-        if names.iter().any(|n| n == "_id") {
-            order.push(quote("_id"));
-        }
-        order.extend(names.iter().map(|n| format!("{}::text COLLATE \"C\"", quote(n))));
         let select: Vec<String> = names.iter().map(|n| format!("{}::text", quote(n))).collect();
-        texts(
-            client,
-            &format!("SELECT {} FROM {}.{} ORDER BY {}", select.join(", "), quote(ns), quote(name), order.join(", ")),
-        )
-        .await?
+        let mut rows =
+            texts(client, &format!("SELECT {} FROM {}.{}", select.join(", "), quote(ns), quote(name))).await?;
+        // Ordered here rather than with ORDER BY, which would put every
+        // column in the target list twice (PostgreSQL allows 1664 entries,
+        // and a table can have 1600 columns).
+        let id = names.iter().position(|n| n == "_id");
+        rows.sort_by(|a, b| order_rows(a, b, id));
+        rows
     };
     Ok(json!({
         "columns": columns,
@@ -189,6 +187,28 @@ async fn table(client: &Client, ns: &str, oid: &str, name: &str) -> Result<Value
             .collect::<Map<String, Value>>(),
         "rows": rows,
     }))
+}
+
+/// The order of `ORDER BY "_id", <every column>::text COLLATE "C"`: `_id`
+/// numerically (it is a `bigint`), then each column's text byte by byte,
+/// `NULL` last.
+fn order_rows(a: &[Value], b: &[Value], id: Option<usize>) -> std::cmp::Ordering {
+    let key = |row: &[Value]| id.and_then(|i| row.get(i)).and_then(Value::as_str).and_then(|s| s.parse::<i64>().ok());
+    let by_text = |x: &Value, y: &Value| match (x.as_str(), y.as_str()) {
+        (Some(x), Some(y)) => x.as_bytes().cmp(y.as_bytes()),
+        (Some(_), None) => std::cmp::Ordering::Less,
+        (None, Some(_)) => std::cmp::Ordering::Greater,
+        (None, None) => std::cmp::Ordering::Equal,
+    };
+    let by_id = match (key(a), key(b)) {
+        (Some(x), Some(y)) => x.cmp(&y),
+        (Some(_), None) => std::cmp::Ordering::Less,
+        (None, Some(_)) => std::cmp::Ordering::Greater,
+        (None, None) => std::cmp::Ordering::Equal,
+    };
+    by_id.then_with(|| {
+        a.iter().zip(b).map(|(x, y)| by_text(x, y)).find(|o| o.is_ne()).unwrap_or(std::cmp::Ordering::Equal)
+    })
 }
 
 pub fn cleanup(url: &str, ns: &str) -> Result<(), String> {
