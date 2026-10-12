@@ -16,6 +16,7 @@ use Utopia\Database\Exception\Authorization as AuthorizationException;
 use Utopia\Database\Exception\NotFound as NotFoundException;
 use Utopia\Database\Exception\Relationship as RelationshipException;
 use Utopia\Database\Operator;
+use Utopia\Database\Query;
 use Utopia\Database\Validator\Authorization;
 use Utopia\Query\Schema\ColumnType;
 
@@ -188,20 +189,99 @@ class Action extends AppwriteAction
 
     /**
      * Refuse a write when it is staged, not first when its transaction commits, answering as the write itself would.
+     * The library judges the write against stored documents, so a refusal that may rest on a document the
+     * transaction already stages a change to (a delete, a create, an update) is left to the commit, which sees it.
      *
      * @param callable(): void $authorize Database::authorizeCreate() or Database::authorizeUpdate() for the staged write
+     * @param array<string, mixed> $data The staged write's data
+     * @param array<Document> $pending Operations staged earlier in the same request, not stored yet
      * @throws Exception
      */
-    protected function authorizeStagedWrite(callable $authorize, string $notFoundType, string $collectionId): void
+    protected function authorizeStagedWrite(callable $authorize, Database $dbForProject, Document $transaction, ?string $documentId, array $data, array $pending, string $notFoundType, string $collectionId): void
     {
         try {
             $authorize();
-        } catch (AuthorizationException $error) {
-            throw new Exception(Exception::USER_UNAUTHORIZED, $error->getMessage(), previous: $error);
-        } catch (NotFoundException $error) {
-            throw new Exception($notFoundType, previous: $error, params: [$collectionId]);
-        } catch (RelationshipException $error) {
-            throw new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error);
+        } catch (AuthorizationException|NotFoundException|RelationshipException $error) {
+            if ($this->stagesAny($dbForProject, $transaction, [$documentId, ...$this->values($data)], $pending)) {
+                return;
+            }
+
+            throw match (true) {
+                $error instanceof AuthorizationException => new Exception(Exception::USER_UNAUTHORIZED, $error->getMessage(), previous: $error),
+                $error instanceof NotFoundException => new Exception($notFoundType, previous: $error, params: [$collectionId]),
+                default => new Exception(Exception::RELATIONSHIP_VALUE_INVALID, $error->getMessage(), previous: $error),
+            };
         }
+    }
+
+    /**
+     * @param array<mixed> $references
+     * @param array<Document> $pending
+     */
+    private function stagesAny(Database $dbForProject, Document $transaction, array $references, array $pending): bool
+    {
+        $references = \array_flip(\array_filter($references, fn (mixed $reference): bool => \is_string($reference) && $reference !== ''));
+        $stored = (int) $transaction->getAttribute('operations', 0);
+        $operations = $stored === 0 ? [] : $dbForProject->getAuthorization()->skip(fn (): array => $dbForProject->find('transactionLogs', [
+            Query::equal('transactionInternalId', [$transaction->getSequence()]),
+            Query::limit($stored),
+        ]));
+
+        foreach ([...$operations, ...$pending] as $operation) {
+            $data = $operation->getAttribute('data', []);
+            $data = $data instanceof Document ? $data->getArrayCopy() : $data;
+
+            foreach ([$operation->getAttribute('documentId'), ...$this->ids(\is_array($data) ? $data : [])] as $id) {
+                if (\is_string($id) && isset($references[$id])) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Every `$id` in staged data, at any depth: the documents the operation writes, nested ones included.
+     *
+     * @param array<mixed> $data
+     * @return array<mixed>
+     */
+    private function ids(array $data): array
+    {
+        $ids = [$data['$id'] ?? null];
+        foreach ($data as $value) {
+            if ($value instanceof Document) {
+                $value = $value->getArrayCopy();
+            }
+            if (\is_array($value)) {
+                \array_push($ids, ...$this->ids($value));
+            }
+        }
+
+        return $ids;
+    }
+
+    /**
+     * Every scalar in a write's data, at any depth: whatever documents it may name, by `$id` or by a linked ID.
+     *
+     * @param array<mixed> $data
+     * @return array<mixed>
+     */
+    private function values(array $data): array
+    {
+        $values = [];
+        foreach ($data as $value) {
+            if ($value instanceof Document) {
+                $value = $value->getArrayCopy();
+            }
+            if (\is_array($value)) {
+                \array_push($values, ...$this->values($value));
+            } else {
+                $values[] = $value;
+            }
+        }
+
+        return $values;
     }
 }

@@ -318,16 +318,6 @@ class Create extends Action
 
         // Handle transaction staging
         if ($transactionId !== null) {
-            if (!$isAPIKey && !$isPrivilegedUser) {
-                foreach ($documents as $document) {
-                    $this->authorizeStagedWrite(
-                        fn () => $dbForDatabases->authorizeCreate($collectionTableId, $document),
-                        $this->getParentNotFoundException(),
-                        $collectionId,
-                    );
-                }
-            }
-
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
@@ -352,6 +342,21 @@ class Create extends Action
                     Exception::TRANSACTION_LIMIT_EXCEEDED,
                     'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
                 );
+            }
+
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                foreach ($documents as $document) {
+                    $this->authorizeStagedWrite(
+                        fn () => $dbForDatabases->authorizeCreate($collectionTableId, $document),
+                        $dbForProject,
+                        $transaction,
+                        $document->getId(),
+                        $document->getArrayCopy(),
+                        [],
+                        $this->getParentNotFoundException(),
+                        $collectionId,
+                    );
+                }
             }
 
             $staged = new Document([

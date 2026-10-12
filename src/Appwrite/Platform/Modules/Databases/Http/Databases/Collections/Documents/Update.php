@@ -187,14 +187,6 @@ class Update extends Action
 
         // Handle transaction staging
         if ($transactionId !== null) {
-            if (!$isAPIKey && !$isPrivilegedUser) {
-                $this->authorizeStagedWrite(
-                    fn () => $dbForDatabases->authorizeUpdate($collectionTableId, $document, $newDocument),
-                    $this->getParentNotFoundException(),
-                    $collectionId,
-                );
-            }
-
             $transaction = ($isAPIKey || $isPrivilegedUser)
                 ? $authorization->skip(fn () => $dbForProject->getDocument('transactions', $transactionId))
                 : $dbForProject->getDocument('transactions', $transactionId);
@@ -218,6 +210,19 @@ class Update extends Action
                 throw new Exception(
                     Exception::TRANSACTION_LIMIT_EXCEEDED,
                     'Transaction already has ' . $existing . ' operations, adding 1 would exceed the maximum of ' . $maxBatch
+                );
+            }
+
+            if (!$isAPIKey && !$isPrivilegedUser) {
+                $this->authorizeStagedWrite(
+                    fn () => $dbForDatabases->authorizeUpdate($collectionTableId, $document, $newDocument),
+                    $dbForProject,
+                    $transaction,
+                    $documentId,
+                    $data,
+                    [],
+                    $this->getParentNotFoundException(),
+                    $collectionId,
                 );
             }
 

@@ -233,6 +233,11 @@ class Create extends Action
                             fn () => $creates
                                 ? $dbForDatabases->authorizeCreate($collectionKey, new Document($data))
                                 : $dbForDatabases->authorizeUpdate($collectionKey, $document ?? new Document(), new Document($data)),
+                            $dbForProject,
+                            $transaction,
+                            $operation[$this->getResourceId()] ?? null,
+                            $data,
+                            $staged,
                             Exception::COLLECTION_NOT_FOUND,
                             $operation[$this->getGroupId()],
                         );
