@@ -730,6 +730,11 @@ class Migrations extends Action
                     $destinationErrors,
                 ));
 
+                // Progress is only reported per written batch, so rows a source rejects after the last one are not counted yet.
+                if ($transfer !== null) {
+                    $migration->setAttribute('statusCounters', \json_encode($transfer->getStatusCounters()));
+                }
+
                 if ($migration->getAttribute('status', '') === 'failed') {
                     Console::error('Migration(' . $migration->getSequence() . ':' . $migration->getId() . ') failed, Project(' . $this->project->getSequence() . ':' . $this->project->getId() . ')');
 
